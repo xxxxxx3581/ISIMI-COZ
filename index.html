@@ -1,11 +1,10 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#07111f">
-<meta name="description" content="İşimi Çöz - İhtiyacın varsa, çözümü var. İzmir pilot hizmet platformu.">
-<title>İşimi Çöz | İzmir</title>
+<title>İşimi Çöz — İzmir</title>
 
 <style>
 *{
@@ -17,9 +16,9 @@ html,body{
   margin:0;
   padding:0;
   min-height:100%;
-  font-family:Arial,Helvetica,sans-serif;
   background:#07111f;
-  color:#f5f7fa;
+  color:#f5f7fb;
+  font-family:Arial,Helvetica,sans-serif;
 }
 
 body{
@@ -37,23 +36,9 @@ button{
   cursor:pointer;
 }
 
-:root{
-  --bg:#07111f;
-  --card:#0d1a2b;
-  --card2:#101f32;
-  --border:#20344d;
-  --text:#f5f7fa;
-  --muted:#91a2b7;
-  --primary:#39d98a;
-  --primary-dark:#20b86d;
-  --danger:#ff5c70;
-  --warning:#ffc857;
-  --blue:#4da3ff;
-}
-
 .app{
   width:100%;
-  max-width:760px;
+  max-width:1100px;
   margin:auto;
   min-height:100vh;
   padding-bottom:90px;
@@ -62,269 +47,294 @@ button{
 /* HEADER */
 
 .header{
-  padding:20px 18px 10px;
-  position:relative;
+  position:sticky;
+  top:0;
+  z-index:50;
+  background:rgba(7,17,31,.96);
+  backdrop-filter:blur(15px);
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+
+.header-inner{
+  min-height:72px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:12px 18px;
 }
 
 .brand{
   display:flex;
   align-items:center;
-  gap:12px;
+  gap:11px;
 }
 
 .logo{
   width:44px;
   height:44px;
-  border-radius:14px;
-  background:linear-gradient(135deg,#39d98a,#4da3ff);
-  display:flex;
-  align-items:center;
-  justify-content:center;
+  border-radius:13px;
+  display:grid;
+  place-items:center;
+  background:linear-gradient(135deg,#ffffff,#cbd5e1);
+  color:#07111f;
+  font-size:21px;
   font-weight:900;
-  color:#06121d;
-  font-size:20px;
-  box-shadow:0 8px 25px rgba(57,217,138,.18);
 }
 
 .brand-title{
-  font-size:21px;
+  font-size:18px;
   font-weight:900;
-  letter-spacing:.4px;
+  letter-spacing:.3px;
 }
 
 .brand-sub{
-  color:var(--muted);
-  font-size:12px;
+  color:#8fa2b8;
+  font-size:11px;
   margin-top:3px;
 }
 
 .location{
-  margin-top:14px;
-  display:inline-flex;
-  align-items:center;
-  gap:7px;
-  padding:8px 12px;
-  border:1px solid var(--border);
-  border-radius:999px;
-  background:#0b1727;
+  color:#8fa2b8;
   font-size:12px;
-  color:#dce6f0;
+  text-align:right;
 }
 
-/* VIEWS */
+/* PAGES */
 
-.view{
+.page{
   display:none;
-  padding:12px 16px 25px;
+  padding:22px 16px;
 }
 
-.view.active{
+.page.active{
   display:block;
 }
 
 /* HERO */
 
 .hero{
-  padding:25px 2px 20px;
+  padding:25px 4px 18px;
 }
 
-.eyebrow{
-  color:var(--primary);
-  font-size:12px;
+.badge{
+  display:inline-flex;
+  padding:7px 11px;
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:999px;
+  color:#b7c6d8;
+  font-size:11px;
   font-weight:800;
-  letter-spacing:1px;
-  margin-bottom:10px;
-}
-
-.hero h1{
-  margin:0;
-  font-size:34px;
-  line-height:1.08;
-  letter-spacing:-1px;
-}
-
-.hero p{
-  color:var(--muted);
-  line-height:1.6;
-  font-size:15px;
-  margin:14px 0 0;
-}
-
-/* CARDS */
-
-.card{
-  background:linear-gradient(145deg,var(--card),#0a1625);
-  border:1px solid var(--border);
-  border-radius:20px;
-  padding:17px;
   margin-bottom:13px;
 }
 
-.card h3{
-  margin:0 0 8px;
-  font-size:17px;
+.hero h1{
+  font-size:clamp(32px,8vw,54px);
+  line-height:1.02;
+  margin:0;
+  letter-spacing:-1.5px;
 }
 
-.card p{
-  margin:0;
-  color:var(--muted);
-  font-size:13px;
-  line-height:1.5;
+.hero h1 span{
+  color:#8fb9ff;
+}
+
+.hero p{
+  color:#aebdcd;
+  max-width:680px;
+  line-height:1.65;
+  margin:16px 0 20px;
 }
 
 /* BUTTONS */
 
+.actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
 .btn{
   border:0;
-  border-radius:14px;
-  padding:13px 16px;
-  font-weight:800;
-  transition:.15s;
+  border-radius:13px;
+  padding:14px 18px;
+  font-weight:900;
+  color:#07111f;
+  background:#fff;
+  min-height:48px;
 }
 
-.btn:active{
-  transform:scale(.98);
+.btn.secondary{
+  background:#16263a;
+  color:#fff;
+  border:1px solid rgba(255,255,255,.1);
 }
 
-.btn-primary{
-  background:var(--primary);
-  color:#06131d;
+.btn.ghost{
+  background:transparent;
+  color:#dce7f3;
+  border:1px solid rgba(255,255,255,.13);
 }
 
-.btn-primary:hover{
-  background:var(--primary-dark);
-}
-
-.btn-secondary{
-  background:#15263a;
-  color:white;
-  border:1px solid var(--border);
-}
-
-.btn-danger{
-  background:#341923;
-  color:#ffb3bd;
-  border:1px solid #5b2633;
-}
-
-.btn-block{
+.btn.full{
   width:100%;
 }
 
-.actions{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin:16px 0;
-}
+/* SECTION */
 
-/* SERVICES */
+.section{
+  margin-top:28px;
+}
 
 .section-title{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin:24px 0 12px;
+  font-size:20px;
+  font-weight:900;
+  margin-bottom:13px;
 }
 
-.section-title h2{
-  margin:0;
-  font-size:18px;
+.section-sub{
+  color:#8fa2b8;
+  font-size:13px;
+  line-height:1.5;
 }
 
-.section-title span{
-  color:var(--muted);
-  font-size:12px;
-}
+/* SERVICE GRID */
 
-.services{
+.service-grid{
   display:grid;
-  grid-template-columns:1fr 1fr;
+  grid-template-columns:repeat(2,1fr);
   gap:10px;
 }
 
-.service{
-  background:var(--card);
-  border:1px solid var(--border);
-  border-radius:18px;
+.service-card{
+  border:1px solid rgba(255,255,255,.08);
+  background:#0c1a2b;
+  border-radius:17px;
   padding:16px;
   min-height:135px;
-  transition:.15s;
+  transition:.18s;
 }
 
-.service:active{
+.service-card:active{
   transform:scale(.98);
 }
 
 .service-icon{
-  font-size:28px;
-  margin-bottom:10px;
+  font-size:27px;
 }
 
-.service strong{
-  display:block;
+.service-card h3{
+  margin:12px 0 5px;
   font-size:15px;
 }
 
-.service small{
-  display:block;
-  color:var(--muted);
-  margin-top:6px;
+.service-card p{
+  margin:0;
+  color:#8296ab;
+  font-size:11px;
   line-height:1.4;
+}
+
+/* WHY */
+
+.why{
+  display:grid;
+  gap:10px;
+}
+
+.why-item{
+  background:#0c1a2b;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:15px;
+  padding:15px;
+}
+
+.why-item strong{
+  display:block;
+  margin-bottom:5px;
+}
+
+.why-item span{
+  color:#8fa2b8;
+  font-size:12px;
+  line-height:1.5;
 }
 
 /* FORMS */
 
 .form-card{
-  background:var(--card);
-  border:1px solid var(--border);
+  background:#0b1929;
+  border:1px solid rgba(255,255,255,.09);
   border-radius:20px;
   padding:18px;
+  max-width:760px;
+  margin:auto;
 }
 
-label{
-  display:block;
+.back{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  color:#aebed0;
+  background:none;
+  border:0;
+  padding:0;
+  margin-bottom:20px;
+  font-weight:700;
+}
+
+.form-title{
+  font-size:28px;
+  margin:0 0 8px;
+}
+
+.form-description{
+  color:#8fa2b8;
   font-size:13px;
-  font-weight:800;
-  margin:16px 0 7px;
+  line-height:1.55;
+  margin-bottom:22px;
 }
 
-label:first-child{
-  margin-top:0;
+.field{
+  margin-bottom:17px;
+}
+
+.field label{
+  display:block;
+  font-size:12px;
+  font-weight:800;
+  margin-bottom:8px;
+  color:#cbd7e4;
+}
+
+.field label span{
+  color:#ff8585;
 }
 
 input,
 select,
 textarea{
   width:100%;
-  border:1px solid var(--border);
-  background:#081421;
-  color:white;
-  border-radius:13px;
-  padding:13px;
+  border:1px solid rgba(255,255,255,.1);
+  background:#07111f;
+  color:#fff;
+  border-radius:12px;
+  padding:13px 14px;
   outline:none;
 }
 
 input:focus,
 select:focus,
 textarea:focus{
-  border-color:var(--primary);
+  border-color:#7ea9ff;
 }
 
 textarea{
-  min-height:120px;
+  min-height:115px;
   resize:vertical;
 }
 
-.counter{
-  text-align:right;
-  color:var(--muted);
-  font-size:11px;
-  margin-top:4px;
-}
-
-.required{
-  color:#ff6d7e;
+select{
+  appearance:auto;
 }
 
 /* CHIPS */
@@ -336,183 +346,209 @@ textarea{
 }
 
 .chip{
-  border:1px solid var(--border);
-  background:#0a1726;
-  color:#dce6f0;
+  position:relative;
+}
+
+.chip input{
+  position:absolute;
+  opacity:0;
+  pointer-events:none;
+}
+
+.chip label{
+  display:block;
+  padding:10px 12px;
   border-radius:999px;
-  padding:9px 12px;
+  background:#101f31;
+  border:1px solid rgba(255,255,255,.09);
+  color:#b8c6d5;
+  cursor:pointer;
+  font-size:12px;
+  font-weight:800;
+  margin:0;
+}
+
+.chip input:checked + label{
+  background:#fff;
+  color:#07111f;
+  border-color:#fff;
+}
+
+/* HOURS */
+
+.hours{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+
+/* PHOTO */
+
+.photo-box{
+  border:1px dashed rgba(255,255,255,.2);
+  border-radius:15px;
+  padding:16px;
+  text-align:center;
+  color:#91a3b6;
   font-size:12px;
 }
 
-.chip.selected{
-  background:rgba(57,217,138,.13);
-  border-color:var(--primary);
-  color:var(--primary);
+.photo-preview{
+  max-width:130px;
+  max-height:130px;
+  border-radius:15px;
+  margin:12px auto 0;
+  display:none;
+  object-fit:cover;
+}
+
+/* PROFILE */
+
+.profile-card{
+  background:#0b1929;
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:19px;
+  padding:17px;
+  margin-bottom:12px;
+}
+
+.profile-head{
+  display:flex;
+  gap:13px;
+  align-items:center;
+}
+
+.profile-avatar{
+  width:58px;
+  height:58px;
+  border-radius:16px;
+  background:#16263a;
+  display:grid;
+  place-items:center;
+  font-size:25px;
+  overflow:hidden;
+  flex-shrink:0;
+}
+
+.profile-avatar img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.profile-name{
+  font-weight:900;
+  font-size:17px;
+}
+
+.profile-type{
+  color:#8fa2b8;
+  font-size:11px;
+  margin-top:4px;
+}
+
+.tags{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:14px;
+}
+
+.tag{
+  background:#132338;
+  color:#b9c9da;
+  padding:7px 9px;
+  border-radius:999px;
+  font-size:10px;
+  font-weight:800;
+}
+
+.profile-info{
+  display:grid;
+  gap:8px;
+  margin-top:14px;
+  color:#aab9c9;
+  font-size:12px;
+}
+
+.empty{
+  padding:30px 15px;
+  text-align:center;
+  color:#8396aa;
+  border:1px dashed rgba(255,255,255,.12);
+  border-radius:17px;
 }
 
 /* REQUEST */
 
-.request{
-  border:1px solid var(--border);
+.request-card{
+  background:#0b1929;
+  border:1px solid rgba(255,255,255,.08);
   border-radius:18px;
-  background:var(--card);
-  padding:15px;
+  padding:16px;
   margin-bottom:11px;
 }
 
-.request-head{
+.request-top{
   display:flex;
   justify-content:space-between;
   gap:10px;
 }
 
-.request-title{
+.request-category{
   font-weight:900;
 }
 
-.badge{
-  display:inline-flex;
-  padding:5px 8px;
-  border-radius:999px;
+.status{
   font-size:10px;
   font-weight:900;
-  background:#18293b;
-  color:#bcd0e4;
+  padding:6px 9px;
+  border-radius:999px;
+  background:#172b42;
+  color:#bcd0e5;
 }
 
-.badge.pending{
-  color:#ffd66b;
-  background:#322b16;
-}
-
-.badge.new{
-  color:#68b7ff;
-  background:#10283e;
-}
-
-.request-meta{
-  margin-top:9px;
-  color:var(--muted);
-  font-size:12px;
-  line-height:1.7;
-}
-
-.request-description{
-  margin-top:10px;
-  color:#dbe4ee;
+.request-text{
+  color:#aab8c7;
   font-size:13px;
   line-height:1.5;
-}
-
-/* PROVIDER */
-
-.provider{
-  border:1px solid var(--border);
-  background:var(--card);
-  border-radius:18px;
-  padding:15px;
-  margin-bottom:11px;
-}
-
-.provider-top{
-  display:flex;
-  align-items:center;
-  gap:12px;
-}
-
-.avatar{
-  width:46px;
-  height:46px;
-  border-radius:15px;
-  background:#162c43;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:20px;
-}
-
-.provider-name{
-  font-weight:900;
-}
-
-.provider-sub{
-  color:var(--muted);
-  font-size:12px;
-  margin-top:3px;
-}
-
-.provider-info{
-  margin-top:12px;
-  color:#c8d4e1;
-  font-size:12px;
-  line-height:1.6;
-}
-
-.provider-actions{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:8px;
-  margin-top:12px;
-}
-
-/* EMPTY */
-
-.empty{
-  text-align:center;
-  padding:35px 15px;
-  border:1px dashed var(--border);
-  border-radius:18px;
-  color:var(--muted);
-}
-
-.empty-icon{
-  font-size:35px;
-  margin-bottom:10px;
-}
-
-/* NOTICE */
-
-.notice{
-  padding:13px;
-  border-radius:14px;
-  background:#0b1e2d;
-  border:1px solid #18344a;
-  color:#a9bfd2;
-  font-size:12px;
-  line-height:1.6;
   margin:12px 0;
 }
 
-/* NAV */
-
-.nav{
-  position:fixed;
-  bottom:0;
-  left:0;
-  right:0;
-  z-index:50;
-  background:rgba(5,14,24,.96);
-  backdrop-filter:blur(15px);
-  border-top:1px solid var(--border);
-}
-
-.nav-inner{
-  max-width:760px;
-  margin:auto;
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-}
-
-.nav button{
-  border:0;
-  background:transparent;
-  color:#7f91a7;
-  padding:12px 5px 10px;
+.meta{
+  color:#7f93a8;
   font-size:11px;
 }
 
-.nav button.active{
-  color:var(--primary);
+/* BOTTOM NAV */
+
+.bottom-nav{
+  position:fixed;
+  left:50%;
+  bottom:0;
+  transform:translateX(-50%);
+  width:100%;
+  max-width:1100px;
+  z-index:100;
+  background:rgba(6,15,27,.97);
+  border-top:1px solid rgba(255,255,255,.09);
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  padding:7px 5px calc(7px + env(safe-area-inset-bottom));
+  backdrop-filter:blur(16px);
+}
+
+.nav-btn{
+  border:0;
+  background:transparent;
+  color:#708399;
+  padding:7px 3px;
+  font-size:10px;
+  font-weight:800;
+}
+
+.nav-btn.active{
+  color:#fff;
 }
 
 .nav-icon{
@@ -521,88 +557,55 @@ textarea{
   margin-bottom:3px;
 }
 
-/* MODAL */
-
-.modal{
-  position:fixed;
-  inset:0;
-  z-index:100;
-  background:rgba(0,0,0,.7);
-  display:none;
-  align-items:flex-end;
-  justify-content:center;
-}
-
-.modal.show{
-  display:flex;
-}
-
-.modal-box{
-  width:100%;
-  max-width:760px;
-  max-height:90vh;
-  overflow:auto;
-  background:#0b1726;
-  border:1px solid var(--border);
-  border-radius:24px 24px 0 0;
-  padding:20px;
-}
-
-.modal-header{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  margin-bottom:10px;
-}
-
-.modal-header h2{
-  margin:0;
-  font-size:20px;
-}
-
-.close{
-  border:0;
-  background:#17273a;
-  color:white;
-  width:36px;
-  height:36px;
-  border-radius:50%;
-}
-
 /* TOAST */
 
 .toast{
   position:fixed;
-  top:18px;
   left:50%;
-  transform:translateX(-50%) translateY(-20px);
-  z-index:200;
-  background:#102438;
-  border:1px solid #27445e;
-  color:white;
-  padding:12px 16px;
-  border-radius:13px;
+  bottom:85px;
+  transform:translate(-50%,20px);
+  background:#fff;
+  color:#07111f;
+  padding:13px 17px;
+  border-radius:12px;
   font-size:12px;
+  font-weight:900;
   opacity:0;
   pointer-events:none;
   transition:.25s;
+  z-index:200;
   max-width:90%;
   text-align:center;
 }
 
 .toast.show{
   opacity:1;
-  transform:translateX(-50%) translateY(0);
+  transform:translate(-50%,0);
 }
 
-@media(min-width:650px){
-  .services{
+/* RESPONSIVE */
+
+@media(min-width:700px){
+  .page{
+    padding:35px 28px;
+  }
+
+  .service-grid{
     grid-template-columns:repeat(4,1fr);
   }
 
-  .app{
-    border-left:1px solid #0d1c2d;
-    border-right:1px solid #0d1c2d;
+  .why{
+    grid-template-columns:repeat(3,1fr);
+  }
+}
+
+@media(max-width:420px){
+  .service-grid{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .btn{
+    flex:1;
   }
 }
 </style>
@@ -613,15 +616,17 @@ textarea{
 <div class="app">
 
 <header class="header">
-  <div class="brand">
-    <div class="logo">İÇ</div>
-    <div>
-      <div class="brand-title">İŞİMİ ÇÖZ</div>
-      <div class="brand-sub">İhtiyacın varsa, çözümü var.</div>
+  <div class="header-inner">
+    <div class="brand">
+      <div class="logo">✓</div>
+      <div>
+        <div class="brand-title">İŞİMİ ÇÖZ</div>
+        <div class="brand-sub">İZMİR PİLOT BÖLGESİ</div>
+      </div>
     </div>
-  </div>
 
-  <div class="location">📍 İzmir Pilot Bölgesi</div>
+    <div class="location">📍 İzmir</div>
+  </div>
 </header>
 
 
@@ -629,168 +634,269 @@ textarea{
      HOME
 ===================================================== -->
 
-<section id="home" class="view active">
+<main id="homePage" class="page active">
 
-  <div class="hero">
-    <div class="eyebrow">İZMİR'DE BAŞLIYORUZ</div>
-    <h1>İhtiyacın varsa,<br>çözümü var.</h1>
+  <section class="hero">
+
+    <div class="badge">🇹🇷 İZMİR'DE BAŞLIYORUZ</div>
+
+    <h1>
+      İhtiyacın varsa,<br>
+      <span>çözümü var.</span>
+    </h1>
 
     <p>
       Ev, iş yeri, araç ve günlük yaşam hizmetlerini
       tek yerden bul. İhtiyacını anlat, talebini oluştur.
     </p>
-  </div>
 
-  <div class="actions">
-    <button class="btn btn-primary" onclick="openRequest()">
-      📢 İşimi Çözdür
-    </button>
+    <div class="actions">
 
-    <button class="btn btn-secondary" onclick="openProvider()">
-      🛠️ Hizmet Ver
-    </button>
-  </div>
+      <button class="btn" onclick="openRequest()">
+        📢 İşimi Çözdür
+      </button>
 
-  <div class="section-title">
-    <h2>Hizmet kategorileri</h2>
-    <span>İzmir</span>
-  </div>
+      <button class="btn secondary" onclick="openProvider()">
+        🛠️ Hizmet Ver
+      </button>
 
-  <div id="services" class="services"></div>
+    </div>
 
-  <div class="section-title">
-    <h2>Neden İşimi Çöz?</h2>
-  </div>
+  </section>
 
-  <div class="card">
-    <h3>✓ Tek talep</h3>
-    <p>İhtiyacını bir kez anlat, uygun hizmet sağlayıcılarına ulaş.</p>
-  </div>
 
-  <div class="card">
-    <h3>✓ Bölgesel eşleştirme</h3>
-    <p>İlçe ve hizmet kategorisine göre uygun sağlayıcıları önceliklendir.</p>
-  </div>
+  <section class="section">
 
-  <div class="card">
-    <h3>✓ Şeffaf sistem</h3>
-    <p>İlerleyen aşamada puan, yorum, fiyat ve hizmet geçmişi görülebilecek.</p>
-  </div>
+    <div class="section-title">
+      Hizmet kategorileri
+    </div>
 
-</section>
+    <div class="service-grid" id="serviceGrid"></div>
+
+  </section>
+
+
+  <section class="section">
+
+    <div class="section-title">
+      Neden İşimi Çöz?
+    </div>
+
+    <div class="why">
+
+      <div class="why-item">
+        <strong>✓ Tek talep</strong>
+        <span>
+          İhtiyacını bir kez anlat,
+          uygun hizmet sağlayıcılarına ulaş.
+        </span>
+      </div>
+
+      <div class="why-item">
+        <strong>✓ Bölgesel eşleştirme</strong>
+        <span>
+          İlçe ve hizmet kategorisine göre
+          uygun sağlayıcıları önceliklendir.
+        </span>
+      </div>
+
+      <div class="why-item">
+        <strong>✓ Şeffaf sistem</strong>
+        <span>
+          Puan, yorum, fiyat ve hizmet geçmişini
+          zamanla tek yerde görebil.
+        </span>
+      </div>
+
+    </div>
+
+  </section>
+
+</main>
 
 
 <!-- =====================================================
-     REQUEST
+     REQUEST PAGE
 ===================================================== -->
 
-<section id="request" class="view">
+<section id="requestPage" class="page">
 
-  <div class="section-title">
-    <h2>← Yeni Hizmet Talebi</h2>
-    <span onclick="showView('home')" style="cursor:pointer">Ana Sayfa</span>
-  </div>
+  <button class="back" onclick="showPage('homePage')">
+    ← ANA SAYFAYA DÖN
+  </button>
 
   <div class="form-card">
 
-    <div class="eyebrow">TALEP OLUŞTUR</div>
+    <div class="badge">📋 YENİ HİZMET TALEBİ</div>
 
-    <h2 style="margin:0 0 8px">İhtiyacını anlat.</h2>
+    <h1 class="form-title">
+      İhtiyacını anlat.
+    </h1>
 
-    <p style="color:var(--muted);font-size:13px;line-height:1.5;margin-top:0">
-      Sorununu mümkün olduğunca açık anlat.
-      Böylece uygun hizmet sağlayıcılarını daha doğru eşleştirebiliriz.
+    <p class="form-description">
+      Ne yapılması gerektiğini mümkün olduğunca açık anlat.
+      Böylece sana uygun hizmet sağlayıcılarını daha doğru
+      eşleştirebiliriz.
     </p>
 
-    <label>
-      Hizmet kategorisi <span class="required">*</span>
-    </label>
+    <form id="requestForm">
 
-    <select id="requestCategory">
-      <option value="">Kategori seç</option>
-    </select>
+      <div class="field">
 
+        <label>
+          Hizmet kategorisi <span>*</span>
+        </label>
 
-    <label>
-      Sorunun / ihtiyacın <span class="required">*</span>
-    </label>
+        <select id="requestCategory" required>
+          <option value="">Kategori seç</option>
+        </select>
 
-    <textarea
-      id="requestDescription"
-      maxlength="1000"
-      placeholder="Örneğin: Klima çalışıyor fakat yeterince soğutmuyor."
-      oninput="updateCounter()"></textarea>
-
-    <div id="counter" class="counter">0 / 1000</div>
+      </div>
 
 
-    <label>
-      İlçe <span class="required">*</span>
-    </label>
+      <div class="field">
 
-    <select id="requestDistrict"></select>
+        <label>
+          Sorunun / ihtiyacın <span>*</span>
+        </label>
+
+        <textarea
+          id="requestDescription"
+          maxlength="1000"
+          placeholder="Örneğin: Klima çalışıyor fakat yeterince soğutmuyor."
+          required></textarea>
+
+        <div
+          id="requestCounter"
+          style="text-align:right;color:#6f8296;font-size:10px;margin-top:5px">
+          0/1000
+        </div>
+
+      </div>
 
 
-    <label>Mahalle</label>
+      <div class="field">
 
-    <input
-      id="requestNeighborhood"
-      placeholder="Mahalleni yaz">
+        <label>Fotoğraf</label>
+
+        <div class="photo-box">
+
+          📷 Sorunu gösteren fotoğraf ekleyebilirsin.
+
+          <input
+            id="requestPhoto"
+            type="file"
+            accept="image/*"
+            style="margin-top:12px">
+
+          <img
+            id="requestPhotoPreview"
+            class="photo-preview">
+
+        </div>
+
+      </div>
 
 
-    <label>Ne zaman gerekli?</label>
+      <div class="field">
 
-    <div class="chips" id="urgencyChips">
+        <label>
+          İlçe <span>*</span>
+        </label>
 
-      <button class="chip selected"
-        data-value="Acil"
-        onclick="selectUrgency(this)">
-        🔴 Acil
+        <select id="requestDistrict" required>
+          <option value="">İlçe seç</option>
+        </select>
+
+      </div>
+
+
+      <div class="field">
+
+        <label>Mahalle</label>
+
+        <input
+          id="requestNeighborhood"
+          placeholder="Mahalle adı">
+
+      </div>
+
+
+      <div class="field">
+
+        <label>Ne zaman gerekli?</label>
+
+        <div class="chips">
+
+          <div class="chip">
+            <input
+              type="radio"
+              name="urgency"
+              value="Acil"
+              id="urgent">
+            <label for="urgent">🔴 Acil</label>
+          </div>
+
+          <div class="chip">
+            <input
+              type="radio"
+              name="urgency"
+              value="Bugün"
+              id="today"
+              checked>
+            <label for="today">🟡 Bugün</label>
+          </div>
+
+          <div class="chip">
+            <input
+              type="radio"
+              name="urgency"
+              value="Uygun zamanda"
+              id="flexible">
+            <label for="flexible">🟢 Uygun zamanda</label>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="field">
+
+        <label>
+          Adınız <span>*</span>
+        </label>
+
+        <input
+          id="requestName"
+          required
+          placeholder="Adınız">
+
+      </div>
+
+
+      <div class="field">
+
+        <label>
+          Telefon <span>*</span>
+        </label>
+
+        <input
+          id="requestPhone"
+          type="tel"
+          required
+          placeholder="05XX XXX XX XX">
+
+      </div>
+
+
+      <button
+        class="btn full"
+        type="submit">
+        TALEBİ OLUŞTUR
       </button>
 
-      <button class="chip"
-        data-value="Bugün"
-        onclick="selectUrgency(this)">
-        🟡 Bugün
-      </button>
-
-      <button class="chip"
-        data-value="Uygun zamanda"
-        onclick="selectUrgency(this)">
-        🟢 Uygun zamanda
-      </button>
-
-    </div>
-
-
-    <label>
-      Adınız <span class="required">*</span>
-    </label>
-
-    <input id="requestName" placeholder="Adınız">
-
-
-    <label>
-      Telefon <span class="required">*</span>
-    </label>
-
-    <input
-      id="requestPhone"
-      type="tel"
-      inputmode="tel"
-      placeholder="05XX XXX XX XX">
-
-
-    <div class="notice">
-      🔒 Bu prototip aşamasında bilgiler yalnızca bu cihazda saklanır.
-      Gerçek kullanıcı hesabı ve güvenli sunucu sistemi sonraki aşamada bağlanacaktır.
-    </div>
-
-    <button
-      class="btn btn-primary btn-block"
-      onclick="createRequest()">
-      TALEBİ OLUŞTUR
-    </button>
+    </form>
 
   </div>
 
@@ -801,300 +907,377 @@ textarea{
      REQUESTS
 ===================================================== -->
 
-<section id="requests" class="view">
+<section id="requestsPage" class="page">
 
-  <div class="section-title">
-    <h2>▣ Taleplerim</h2>
-    <span id="requestCount">0 talep</span>
-  </div>
+  <div class="badge">▣ TALEPLERİM</div>
 
-  <div id="requestsList"></div>
+  <h1 class="form-title">
+    Oluşturduğun talepler.
+  </h1>
+
+  <p class="form-description">
+    Bu cihaz üzerinden oluşturduğun hizmet talepleri burada görünür.
+  </p>
+
+  <div id="requestList"></div>
 
 </section>
 
 
 <!-- =====================================================
-     PROVIDER
+     PROVIDER REGISTER
 ===================================================== -->
 
-<section id="provider" class="view">
+<section id="providerPage" class="page">
 
-  <div class="section-title">
-    <h2>🛠️ Hizmet Ver</h2>
-    <span>İzmir Pilot</span>
-  </div>
+  <button class="back" onclick="showPage('homePage')">
+    ← ANA SAYFAYA DÖN
+  </button>
 
   <div class="form-card">
 
-    <div class="eyebrow">HİZMET SAĞLAYICI</div>
+    <div class="badge">🛠️ HİZMET SAĞLAYICI</div>
 
-    <h2 style="margin:0 0 8px">
-      Sisteme katıl.
-    </h2>
+    <h1 class="form-title">
+      Hizmet ver.
+    </h1>
 
-    <p style="color:var(--muted);font-size:13px;line-height:1.5">
-      Usta veya işletme olarak hizmetlerini tanıt.
-      İlerleyen aşamada sana uygun müşteri taleplerini göstereceğiz.
+    <p class="form-description">
+      Usta veya işletme olarak sisteme katıl.
+      Hizmet verdiğin bölgeleri ve uzmanlıklarını belirt.
+      Böylece uygun talepler geldiğinde seni doğru
+      müşterilerle eşleştirebiliriz.
     </p>
 
 
-    <label>
-      Usta / işletme adı <span class="required">*</span>
-    </label>
+    <form id="providerForm">
 
-    <input
-      id="providerName"
-      placeholder="Örn. Ahmet Klima Servisi">
+      <div class="field">
 
+        <label>
+          Hesap türü <span>*</span>
+        </label>
 
-    <label>
-      Telefon <span class="required">*</span>
-    </label>
+        <div class="chips">
 
-    <input
-      id="providerPhone"
-      type="tel"
-      inputmode="tel"
-      placeholder="05XX XXX XX XX">
+          <div class="chip">
+            <input
+              type="radio"
+              name="providerType"
+              value="Bireysel Usta"
+              id="individual"
+              checked>
+            <label for="individual">👤 Bireysel Usta</label>
+          </div>
 
+          <div class="chip">
+            <input
+              type="radio"
+              name="providerType"
+              value="İşletme"
+              id="business">
+            <label for="business">🏢 İşletme</label>
+          </div>
 
-    <label>
-      Ana hizmet kategorisi <span class="required">*</span>
-    </label>
+        </div>
 
-    <select id="providerCategory">
-      <option value="">Kategori seç</option>
-    </select>
-
-
-    <label>
-      Hizmet verdiğin diğer alanlar
-    </label>
-
-    <div id="providerCategories" class="chips"></div>
+      </div>
 
 
-    <label>
-      Merkez ilçe <span class="required">*</span>
-    </label>
+      <div class="field">
 
-    <select id="providerDistrict"></select>
+        <label>
+          Adınız / işletme adınız <span>*</span>
+        </label>
 
+        <input
+          id="providerName"
+          required
+          placeholder="Örneğin: Ahmet Klima Servisi">
 
-    <label>
-      Hizmet verdiğin ilçeler
-    </label>
-
-    <div id="providerDistricts" class="chips"></div>
-
-
-    <label>
-      Deneyim
-    </label>
-
-    <select id="providerExperience">
-      <option value="">Seç</option>
-      <option value="0-1 yıl">0-1 yıl</option>
-      <option value="2-5 yıl">2-5 yıl</option>
-      <option value="6-10 yıl">6-10 yıl</option>
-      <option value="10+ yıl">10+ yıl</option>
-    </select>
+      </div>
 
 
-    <label>
-      Kısa tanıtım
-    </label>
+      <div class="field">
 
-    <textarea
-      id="providerBio"
-      maxlength="500"
-      placeholder="Hangi işleri yaptığını, uzmanlık alanlarını ve müşterilerine sunduğun hizmeti anlat."></textarea>
+        <label>
+          Telefon <span>*</span>
+        </label>
 
+        <input
+          id="providerPhone"
+          type="tel"
+          required
+          placeholder="05XX XXX XX XX">
 
-    <label>
-      Çalışma saatleri
-    </label>
-
-    <input
-      id="providerHours"
-      placeholder="Örn. Her gün 08:00 - 20:00">
+      </div>
 
 
-    <div class="notice">
-      💡 İlk aşamada kayıt bu cihazda tutulur.
-      Gerçek sağlayıcı hesabı, doğrulama, yorumlar ve müşteri iletişimi
-      sonraki sürümde sunucuya taşınacaktır.
-    </div>
+      <div class="field">
+
+        <label>
+          Hizmet kategorileri <span>*</span>
+        </label>
+
+        <div
+          class="chips"
+          id="providerCategories"></div>
+
+      </div>
 
 
-    <button
-      class="btn btn-primary btn-block"
-      onclick="createProvider()">
-      HİZMET SAĞLAYICI OL
-    </button>
+      <div class="field">
+
+        <label>
+          Hizmet verdiğiniz ilçeler <span>*</span>
+        </label>
+
+        <div
+          class="chips"
+          id="providerDistricts"></div>
+
+      </div>
+
+
+      <div class="field">
+
+        <label>
+          İşletme / hizmet açıklaması
+        </label>
+
+        <textarea
+          id="providerDescription"
+          maxlength="600"
+          placeholder="Hangi hizmetleri verdiğinizi, uzmanlık alanınızı ve müşterilerin neden sizi tercih etmesi gerektiğini kısaca anlatın."></textarea>
+
+      </div>
+
+
+      <div class="field">
+
+        <label>
+          Çalışma saatleri
+        </label>
+
+        <div class="hours">
+
+          <input
+            id="providerStart"
+            type="time"
+            value="09:00">
+
+          <input
+            id="providerEnd"
+            type="time"
+            value="18:00">
+
+        </div>
+
+      </div>
+
+
+      <div class="field">
+
+        <label>
+          WhatsApp üzerinden iletişim
+        </label>
+
+        <div class="chips">
+
+          <div class="chip">
+            <input
+              type="radio"
+              name="whatsapp"
+              value="Evet"
+              id="waYes"
+              checked>
+            <label for="waYes">✓ Evet</label>
+          </div>
+
+          <div class="chip">
+            <input
+              type="radio"
+              name="whatsapp"
+              value="Hayır"
+              id="waNo">
+            <label for="waNo">Hayır</label>
+          </div>
+
+        </div>
+
+      </div>
+
+
+      <div class="field">
+
+        <label>
+          Profil fotoğrafı / işletme logosu
+        </label>
+
+        <div class="photo-box">
+
+          📷 Fotoğraf seç
+
+          <input
+            id="providerPhoto"
+            type="file"
+            accept="image/*"
+            style="margin-top:12px">
+
+          <img
+            id="providerPhotoPreview"
+            class="photo-preview">
+
+        </div>
+
+      </div>
+
+
+      <button
+        class="btn full"
+        type="submit">
+        HİZMET SAĞLAYICI OLARAK KAYDOL
+      </button>
+
+    </form>
 
   </div>
-
-
-  <div class="section-title">
-    <h2>Kayıtlı sağlayıcılar</h2>
-    <span id="providerCount">0</span>
-  </div>
-
-  <div id="providersList"></div>
 
 </section>
 
 
 <!-- =====================================================
-     MATCHING
+     PROVIDERS
 ===================================================== -->
 
-<section id="matches" class="view">
+<section id="providersPage" class="page">
 
-  <div class="section-title">
-    <h2>🎯 Uygun Talepler</h2>
-    <span>Sağlayıcı görünümü</span>
-  </div>
+  <div class="badge">🛠️ HİZMET SAĞLAYICILAR</div>
 
-  <div class="notice">
-    Bu bölüm, kayıtlı hizmet sağlayıcısının kategori ve hizmet bölgesine
-    uygun müşteri taleplerini göstermek için hazırlanmıştır.
-  </div>
+  <h1 class="form-title">
+    Hizmet sağlayıcılarım.
+  </h1>
 
-  <div id="matchesList"></div>
+  <p class="form-description">
+    Bu cihazda oluşturduğun hizmet sağlayıcı profilleri.
+  </p>
+
+  <div id="providerList"></div>
 
 </section>
-
-</div>
 
 
 <!-- =====================================================
      BOTTOM NAV
 ===================================================== -->
 
-<nav class="nav">
-  <div class="nav-inner">
+<nav class="bottom-nav">
 
-    <button
-      id="navHome"
-      class="active"
-      onclick="showView('home')">
-      <span class="nav-icon">⌂</span>
-      ANA
-    </button>
+  <button
+    class="nav-btn active"
+    data-page="homePage"
+    onclick="showPage('homePage')">
 
-    <button
-      id="navRequest"
-      onclick="openRequest()">
-      <span class="nav-icon">＋</span>
-      TALEP
-    </button>
+    <span class="nav-icon">⌂</span>
+    ANA
+  </button>
 
-    <button
-      id="navRequests"
-      onclick="showView('requests')">
-      <span class="nav-icon">▣</span>
-      TALEPLER
-    </button>
 
-    <button
-      id="navProvider"
-      onclick="openProvider()">
-      <span class="nav-icon">🛠️</span>
-      HİZMET VER
-    </button>
+  <button
+    class="nav-btn"
+    data-page="requestPage"
+    onclick="openRequest()">
 
-  </div>
+    <span class="nav-icon">＋</span>
+    TALEP
+  </button>
+
+
+  <button
+    class="nav-btn"
+    data-page="requestsPage"
+    onclick="showPage('requestsPage')">
+
+    <span class="nav-icon">▣</span>
+    TALEPLER
+  </button>
+
+
+  <button
+    class="nav-btn"
+    data-page="providerPage"
+    onclick="openProvider()">
+
+    <span class="nav-icon">🛠️</span>
+    HİZMET VER
+  </button>
+
 </nav>
 
-
-<!-- =====================================================
-     PROVIDER PROFILE MODAL
-===================================================== -->
-
-<div id="providerModal" class="modal">
-
-  <div class="modal-box">
-
-    <div class="modal-header">
-      <h2 id="modalProviderName">Sağlayıcı</h2>
-
-      <button
-        class="close"
-        onclick="closeModal()">
-        ×
-      </button>
-    </div>
-
-    <div id="modalProviderContent"></div>
-
-  </div>
+<div id="toast" class="toast"></div>
 
 </div>
 
 
-<div id="toast" class="toast"></div>
-
-
 <script>
+
 /* =====================================================
    DATA
 ===================================================== */
 
-const CATEGORIES = [
+const categories = [
   {
     id:"klima",
     name:"Klima",
     icon:"❄️",
-    desc:"Bakım, montaj, arıza ve temizlik"
+    description:"Bakım, montaj, arıza ve temizlik"
   },
   {
     id:"elektrik",
     name:"Elektrik",
     icon:"⚡",
-    desc:"Arıza, priz, tesisat ve aydınlatma"
+    description:"Arıza, priz, tesisat ve aydınlatma"
   },
   {
     id:"tesisat",
     name:"Tesisat",
     icon:"🔧",
-    desc:"Su, gider, musluk ve kaçak sorunları"
+    description:"Su, gider, musluk ve kaçak sorunları"
   },
   {
     id:"beyaz-esya",
     name:"Beyaz Eşya",
     icon:"🧊",
-    desc:"Çamaşır, bulaşık, buzdolabı ve fırın"
+    description:"Çamaşır, bulaşık, buzdolabı ve fırın"
   },
   {
     id:"temizlik",
     name:"Temizlik",
     icon:"🧹",
-    desc:"Ev, ofis ve detaylı temizlik"
+    description:"Ev, ofis ve detaylı temizlik"
   },
   {
     id:"nakliye",
     name:"Nakliye",
     icon:"🚚",
-    desc:"Ev, ofis ve parça eşya taşıma"
+    description:"Ev, ofis ve parça eşya taşıma"
   },
   {
     id:"cilingir",
     name:"Çilingir",
     icon:"🔐",
-    desc:"Kilit, anahtar ve acil giriş"
+    description:"Kilit, anahtar ve acil giriş"
   },
   {
     id:"oto",
     name:"Oto",
     icon:"🚗",
-    desc:"Arıza, bakım, lastik ve yol yardımı"
+    description:"Arıza, bakım, lastik ve yol yardımı"
   }
 ];
 
 
-const DISTRICTS = [
+const districts = [
   "Aliağa",
   "Balçova",
   "Bayındır",
@@ -1139,1249 +1322,114 @@ const STORAGE = {
 
 
 function getRequests(){
+
   try{
+
     return JSON.parse(
       localStorage.getItem(STORAGE.requests) || "[]"
     );
+
   }catch{
+
     return [];
+
   }
+
 }
 
 
 function saveRequests(data){
+
   localStorage.setItem(
     STORAGE.requests,
     JSON.stringify(data)
   );
+
 }
 
 
 function getProviders(){
+
   try{
+
     return JSON.parse(
       localStorage.getItem(STORAGE.providers) || "[]"
     );
+
   }catch{
+
     return [];
+
   }
+
 }
 
 
 function saveProviders(data){
+
   localStorage.setItem(
     STORAGE.providers,
     JSON.stringify(data)
   );
+
 }
 
 
 /* =====================================================
-   INIT
+   PAGE NAVIGATION
 ===================================================== */
 
-document.addEventListener("DOMContentLoaded",()=>{
-  renderServices();
-  populateSelects();
-  renderProviderCategoryChips();
-  renderProviderDistrictChips();
-  renderRequests();
-  renderProviders();
-  renderMatches();
-});
+function showPage(id){
 
+  document.querySelectorAll(".page")
+    .forEach(page => {
+      page.classList.remove("active");
+    });
 
-/* =====================================================
-   SERVICES
-===================================================== */
-
-function renderServices(){
-
-  const container =
-    document.getElementById("services");
-
-  container.innerHTML =
-    CATEGORIES.map(cat=>`
-
-      <button
-        class="service"
-        onclick="openRequest('${cat.id}')">
-
-        <div class="service-icon">
-          ${cat.icon}
-        </div>
-
-        <strong>${escapeHTML(cat.name)}</strong>
-
-        <small>
-          ${escapeHTML(cat.desc)}
-        </small>
-
-      </button>
-
-    `).join("");
-}
-
-
-/* =====================================================
-   SELECTS
-===================================================== */
-
-function populateSelects(){
-
-  const categoryOptions =
-    `<option value="">Kategori seç</option>` +
-    CATEGORIES.map(c=>`
-      <option value="${c.id}">
-        ${escapeHTML(c.name)}
-      </option>
-    `).join("");
-
-
-  document.getElementById("requestCategory").innerHTML =
-    categoryOptions;
-
-  document.getElementById("providerCategory").innerHTML =
-    categoryOptions;
-
-
-  const districtOptions =
-    `<option value="">İlçe seç</option>` +
-    DISTRICTS.map(d=>`
-      <option value="${escapeHTML(d)}">
-        ${escapeHTML(d)}
-      </option>
-    `).join("");
-
-
-  document.getElementById("requestDistrict").innerHTML =
-    districtOptions;
-
-  document.getElementById("providerDistrict").innerHTML =
-    districtOptions;
-}
-
-
-/* =====================================================
-   PROVIDER CHIPS
-===================================================== */
-
-function renderProviderCategoryChips(){
-
-  const container =
-    document.getElementById("providerCategories");
-
-  container.innerHTML =
-    CATEGORIES.map(c=>`
-
-      <button
-        type="button"
-        class="chip"
-        data-category="${c.id}"
-        onclick="toggleChip(this)">
-
-        ${c.icon} ${escapeHTML(c.name)}
-
-      </button>
-
-    `).join("");
-}
-
-
-function renderProviderDistrictChips(){
-
-  const container =
-    document.getElementById("providerDistricts");
-
-  container.innerHTML =
-    DISTRICTS.map(d=>`
-
-      <button
-        type="button"
-        class="chip"
-        data-district="${escapeHTML(d)}"
-        onclick="toggleChip(this)">
-
-        ${escapeHTML(d)}
-
-      </button>
-
-    `).join("");
-}
-
-
-function toggleChip(button){
-
-  button.classList.toggle("selected");
-}
-
-
-/* =====================================================
-   NAVIGATION
-===================================================== */
-
-function showView(id){
-
-  document
-    .querySelectorAll(".view")
-    .forEach(v=>v.classList.remove("active"));
-
-  const target =
+  const page =
     document.getElementById(id);
 
-  if(target){
-    target.classList.add("active");
+  if(page){
+    page.classList.add("active");
   }
 
+  document.querySelectorAll(".nav-btn")
+    .forEach(btn => {
 
-  document
-    .querySelectorAll(".nav button")
-    .forEach(b=>b.classList.remove("active"));
+      btn.classList.toggle(
+        "active",
+        btn.dataset.page === id
+      );
 
-
-  const map = {
-    home:"navHome",
-    request:"navRequest",
-    requests:"navRequests",
-    provider:"navProvider"
-  };
-
-
-  if(map[id]){
-    document
-      .getElementById(map[id])
-      .classList.add("active");
-  }
-
+    });
 
   window.scrollTo({
     top:0,
     behavior:"smooth"
   });
 
-
-  if(id==="requests"){
+  if(id === "requestsPage"){
     renderRequests();
   }
 
-  if(id==="provider"){
+  if(id === "providersPage"){
     renderProviders();
   }
 
-  if(id==="matches"){
-    renderMatches();
-  }
 }
 
 
-function openRequest(category=""){
+function openRequest(){
 
-  showView("request");
+  showPage("requestPage");
 
-  if(category){
-    document.getElementById(
-      "requestCategory"
-    ).value = category;
-  }
 }
 
 
 function openProvider(){
 
-  showView("provider");
+  showPage("providerPage");
 
-}
-
-
-/* =====================================================
-   REQUEST
-===================================================== */
-
-let selectedUrgency = "Acil";
-
-
-function selectUrgency(button){
-
-  document
-    .querySelectorAll("#urgencyChips .chip")
-    .forEach(b=>b.classList.remove("selected"));
-
-  button.classList.add("selected");
-
-  selectedUrgency =
-    button.dataset.value;
-}
-
-
-function updateCounter(){
-
-  const value =
-    document.getElementById(
-      "requestDescription"
-    ).value;
-
-  document.getElementById(
-    "counter"
-  ).textContent =
-    value.length + " / 1000";
-}
-
-
-function createRequest(){
-
-  const category =
-    document.getElementById(
-      "requestCategory"
-    ).value;
-
-  const description =
-    document.getElementById(
-      "requestDescription"
-    ).value.trim();
-
-  const district =
-    document.getElementById(
-      "requestDistrict"
-    ).value;
-
-  const neighborhood =
-    document.getElementById(
-      "requestNeighborhood"
-    ).value.trim();
-
-  const name =
-    document.getElementById(
-      "requestName"
-    ).value.trim();
-
-  const phone =
-    document.getElementById(
-      "requestPhone"
-    ).value.trim();
-
-
-  if(!category){
-    toast("Lütfen hizmet kategorisini seç.");
-    return;
-  }
-
-  if(description.length < 5){
-    toast("Lütfen ihtiyacını biraz daha açık anlat.");
-    return;
-  }
-
-  if(!district){
-    toast("Lütfen ilçeni seç.");
-    return;
-  }
-
-  if(!name){
-    toast("Lütfen adını yaz.");
-    return;
-  }
-
-  if(!validPhone(phone)){
-    toast("Lütfen geçerli bir telefon numarası gir.");
-    return;
-  }
-
-
-  const cat =
-    CATEGORIES.find(
-      c=>c.id===category
-    );
-
-
-  const request = {
-
-    id:
-      "IC-" +
-      Date.now().toString(36).toUpperCase() +
-      "-" +
-      Math.random()
-        .toString(36)
-        .slice(2,7)
-        .toUpperCase(),
-
-    category,
-
-    categoryName:
-      cat ? cat.name : category,
-
-    description,
-
-    district,
-
-    neighborhood,
-
-    urgency:selectedUrgency,
-
-    name,
-
-    phone,
-
-    status:"Beklemede",
-
-    createdAt:
-      new Date().toISOString()
-
-  };
-
-
-  const requests =
-    getRequests();
-
-  requests.unshift(request);
-
-  saveRequests(requests);
-
-
-  document.getElementById(
-    "requestDescription"
-  ).value = "";
-
-  document.getElementById(
-    "requestNeighborhood"
-  ).value = "";
-
-  document.getElementById(
-    "requestName"
-  ).value = "";
-
-  document.getElementById(
-    "requestPhone"
-  ).value = "";
-
-  document.getElementById(
-    "requestCategory"
-  ).value = "";
-
-  document.getElementById(
-    "requestDistrict"
-  ).value = "";
-
-  updateCounter();
-
-
-  toast("Talebin başarıyla oluşturuldu.");
-
-  renderRequests();
-
-  renderMatches();
-
-  setTimeout(()=>{
-    showView("requests");
-  },400);
-}
-
-
-/* =====================================================
-   REQUEST LIST
-===================================================== */
-
-function renderRequests(){
-
-  const requests =
-    getRequests();
-
-  const container =
-    document.getElementById(
-      "requestsList"
-    );
-
-  document.getElementById(
-    "requestCount"
-  ).textContent =
-    requests.length + " talep";
-
-
-  if(!requests.length){
-
-    container.innerHTML = `
-      <div class="empty">
-
-        <div class="empty-icon">📋</div>
-
-        Henüz oluşturduğun bir hizmet talebi yok.
-
-        <br><br>
-
-        <button
-          class="btn btn-primary"
-          onclick="openRequest()">
-          İlk talebini oluştur
-        </button>
-
-      </div>
-    `;
-
-    return;
-  }
-
-
-  container.innerHTML =
-    requests.map(r=>`
-
-      <div class="request">
-
-        <div class="request-head">
-
-          <div class="request-title">
-            ${categoryIcon(r.category)}
-            ${escapeHTML(r.categoryName)}
-          </div>
-
-          <span class="badge pending">
-            ${escapeHTML(r.status)}
-          </span>
-
-        </div>
-
-        <div class="request-meta">
-
-          📅 ${formatDate(r.createdAt)}
-
-          <br>
-
-          📍 ${escapeHTML(r.district)}
-
-          ${r.neighborhood
-            ? " · " + escapeHTML(r.neighborhood)
-            : ""}
-
-          <br>
-
-          ⏱️ ${escapeHTML(r.urgency)}
-
-        </div>
-
-        <div class="request-description">
-          “${escapeHTML(r.description)}”
-        </div>
-
-        <div
-          style="margin-top:10px;color:var(--muted);font-size:11px">
-          Talep No: ${escapeHTML(r.id)}
-        </div>
-
-      </div>
-
-    `).join("");
-}
-
-
-/* =====================================================
-   PROVIDER
-===================================================== */
-
-function createProvider(){
-
-  const name =
-    document.getElementById(
-      "providerName"
-    ).value.trim();
-
-  const phone =
-    document.getElementById(
-      "providerPhone"
-    ).value.trim();
-
-  const category =
-    document.getElementById(
-      "providerCategory"
-    ).value;
-
-  const district =
-    document.getElementById(
-      "providerDistrict"
-    ).value;
-
-  const experience =
-    document.getElementById(
-      "providerExperience"
-    ).value;
-
-  const bio =
-    document.getElementById(
-      "providerBio"
-    ).value.trim();
-
-  const hours =
-    document.getElementById(
-      "providerHours"
-    ).value.trim();
-
-
-  if(!name){
-    toast("Usta veya işletme adını yaz.");
-    return;
-  }
-
-  if(!validPhone(phone)){
-    toast("Geçerli bir telefon numarası gir.");
-    return;
-  }
-
-  if(!category){
-    toast("Ana hizmet kategorisini seç.");
-    return;
-  }
-
-  if(!district){
-    toast("Merkez ilçeyi seç.");
-    return;
-  }
-
-
-  const additionalCategories =
-    [...document.querySelectorAll(
-      "#providerCategories .chip.selected"
-    )].map(
-      el=>el.dataset.category
-    );
-
-
-  const serviceDistricts =
-    [...document.querySelectorAll(
-      "#providerDistricts .chip.selected"
-    )].map(
-      el=>el.dataset.district
-    );
-
-
-  if(!additionalCategories.includes(category)){
-    additionalCategories.push(category);
-  }
-
-
-  if(!serviceDistricts.includes(district)){
-    serviceDistricts.push(district);
-  }
-
-
-  const cat =
-    CATEGORIES.find(
-      c=>c.id===category
-    );
-
-
-  const provider = {
-
-    id:
-      "SP-" +
-      Date.now().toString(36).toUpperCase() +
-      "-" +
-      Math.random()
-        .toString(36)
-        .slice(2,6)
-        .toUpperCase(),
-
-    name,
-
-    phone,
-
-    category,
-
-    categoryName:
-      cat ? cat.name : category,
-
-    categories:
-      additionalCategories,
-
-    district,
-
-    serviceDistricts,
-
-    experience,
-
-    bio,
-
-    hours,
-
-    rating:5,
-
-    reviews:0,
-
-    verified:false,
-
-    createdAt:
-      new Date().toISOString()
-
-  };
-
-
-  const providers =
-    getProviders();
-
-  providers.unshift(provider);
-
-  saveProviders(providers);
-
-
-  clearProviderForm();
-
-  toast("Hizmet sağlayıcı kaydı oluşturuldu.");
-
-  renderProviders();
-
-  renderMatches();
-
-  setTimeout(()=>{
-    showView("provider");
-  },400);
-}
-
-
-function clearProviderForm(){
-
-  document.getElementById(
-    "providerName"
-  ).value = "";
-
-  document.getElementById(
-    "providerPhone"
-  ).value = "";
-
-  document.getElementById(
-    "providerCategory"
-  ).value = "";
-
-  document.getElementById(
-    "providerDistrict"
-  ).value = "";
-
-  document.getElementById(
-    "providerExperience"
-  ).value = "";
-
-  document.getElementById(
-    "providerBio"
-  ).value = "";
-
-  document.getElementById(
-    "providerHours"
-  ).value = "";
-
-  document
-    .querySelectorAll(
-      "#providerCategories .chip.selected"
-    )
-    .forEach(
-      el=>el.classList.remove("selected")
-    );
-
-  document
-    .querySelectorAll(
-      "#providerDistricts .chip.selected"
-    )
-    .forEach(
-      el=>el.classList.remove("selected")
-    );
-}
-
-
-/* =====================================================
-   PROVIDERS LIST
-===================================================== */
-
-function renderProviders(){
-
-  const providers =
-    getProviders();
-
-  document.getElementById(
-    "providerCount"
-  ).textContent =
-    providers.length;
-
-
-  const container =
-    document.getElementById(
-      "providersList"
-    );
-
-
-  if(!providers.length){
-
-    container.innerHTML = `
-      <div class="empty">
-
-        <div class="empty-icon">🛠️</div>
-
-        Henüz kayıtlı hizmet sağlayıcı yok.
-
-      </div>
-    `;
-
-    return;
-  }
-
-
-  container.innerHTML =
-    providers.map(p=>`
-
-      <div class="provider">
-
-        <div class="provider-top">
-
-          <div class="avatar">
-            ${categoryIcon(p.category)}
-          </div>
-
-          <div>
-
-            <div class="provider-name">
-              ${escapeHTML(p.name)}
-            </div>
-
-            <div class="provider-sub">
-              ${escapeHTML(p.categoryName)}
-              · ${escapeHTML(p.district)}
-            </div>
-
-          </div>
-
-        </div>
-
-
-        <div class="provider-info">
-
-          ⭐ ${p.rating.toFixed(1)}
-          · ${p.reviews} yorum
-
-          <br>
-
-          📍 ${escapeHTML(
-            p.serviceDistricts.join(", ")
-          )}
-
-          ${p.experience
-            ? "<br>🧰 " + escapeHTML(p.experience)
-            : ""}
-
-        </div>
-
-
-        <div class="provider-actions">
-
-          <button
-            class="btn btn-secondary"
-            onclick="showProvider('${p.id}')">
-            Profili Gör
-          </button>
-
-          <button
-            class="btn btn-primary"
-            onclick="matchProvider('${p.id}')">
-            Uygun Talepler
-          </button>
-
-        </div>
-
-      </div>
-
-    `).join("");
-}
-
-
-/* =====================================================
-   MATCHING ENGINE
-===================================================== */
-
-function renderMatches(providerId=null){
-
-  const requests =
-    getRequests();
-
-  const providers =
-    getProviders();
-
-
-  const container =
-    document.getElementById(
-      "matchesList"
-    );
-
-
-  if(!providers.length){
-
-    container.innerHTML = `
-      <div class="empty">
-
-        <div class="empty-icon">🎯</div>
-
-        Önce bir hizmet sağlayıcı kaydı oluştur.
-
-      </div>
-    `;
-
-    return;
-  }
-
-
-  let provider =
-    providerId
-      ? providers.find(p=>p.id===providerId)
-      : providers[0];
-
-
-  if(!provider){
-    return;
-  }
-
-
-  const matches =
-    requests
-      .map(request=>{
-
-        let score = 0;
-
-        if(
-          provider.categories.includes(
-            request.category
-          )
-        ){
-          score += 60;
-        }
-
-        if(
-          provider.serviceDistricts.includes(
-            request.district
-          )
-        ){
-          score += 40;
-        }
-
-        return {
-          request,
-          score
-        };
-
-      })
-      .filter(
-        x=>x.score >= 60
-      )
-      .sort(
-        (a,b)=>b.score-a.score
-      );
-
-
-  if(!matches.length){
-
-    container.innerHTML = `
-      <div class="empty">
-
-        <div class="empty-icon">🔎</div>
-
-        <strong>
-          ${escapeHTML(provider.name)}
-        </strong>
-
-        için şu anda uygun talep bulunamadı.
-
-      </div>
-    `;
-
-    return;
-  }
-
-
-  container.innerHTML = `
-
-    <div class="card">
-
-      <h3>
-        ${escapeHTML(provider.name)}
-      </h3>
-
-      <p>
-        ${matches.length}
-        uygun müşteri talebi bulundu.
-      </p>
-
-    </div>
-
-    ${matches.map(m=>`
-
-      <div class="request">
-
-        <div class="request-head">
-
-          <div class="request-title">
-            ${categoryIcon(
-              m.request.category
-            )}
-            ${escapeHTML(
-              m.request.categoryName
-            )}
-          </div>
-
-          <span class="badge new">
-            %${m.score} eşleşme
-          </span>
-
-        </div>
-
-        <div class="request-meta">
-
-          📍 ${escapeHTML(
-            m.request.district
-          )}
-
-          <br>
-
-          ⏱️ ${escapeHTML(
-            m.request.urgency
-          )}
-
-        </div>
-
-        <div class="request-description">
-          ${escapeHTML(
-            m.request.description
-          )}
-        </div>
-
-        <button
-          class="btn btn-primary btn-block"
-          style="margin-top:12px"
-          onclick="showRequestContact('${m.request.id}')">
-
-          Talep Detayını Gör
-
-        </button>
-
-      </div>
-
-    `).join("")}
-  `;
-}
-
-
-function matchProvider(providerId){
-
-  showView("matches");
-
-  renderMatches(providerId);
-}
-
-
-/* =====================================================
-   PROVIDER MODAL
-===================================================== */
-
-function showProvider(id){
-
-  const provider =
-    getProviders().find(
-      p=>p.id===id
-    );
-
-  if(!provider){
-    return;
-  }
-
-
-  document.getElementById(
-    "modalProviderName"
-  ).textContent =
-    provider.name;
-
-
-  document.getElementById(
-    "modalProviderContent"
-  ).innerHTML = `
-
-    <div class="provider-top">
-
-      <div class="avatar">
-        ${categoryIcon(provider.category)}
-      </div>
-
-      <div>
-
-        <div class="provider-name">
-          ${escapeHTML(provider.name)}
-        </div>
-
-        <div class="provider-sub">
-          ${escapeHTML(provider.categoryName)}
-        </div>
-
-      </div>
-
-    </div>
-
-
-    <div class="provider-info">
-
-      ⭐ ${provider.rating.toFixed(1)}
-
-      · ${provider.reviews} yorum
-
-      <br><br>
-
-      📍 Merkez:
-      ${escapeHTML(provider.district)}
-
-      <br>
-
-      🗺️ Hizmet bölgeleri:
-      ${escapeHTML(
-        provider.serviceDistricts.join(", ")
-      )}
-
-      ${
-        provider.experience
-          ? `<br>🧰 Deneyim: ${escapeHTML(provider.experience)}`
-          : ""
-      }
-
-      ${
-        provider.hours
-          ? `<br>🕒 Çalışma: ${escapeHTML(provider.hours)}`
-          : ""
-      }
-
-    </div>
-
-
-    ${
-      provider.bio
-        ? `
-          <div class="notice">
-            ${escapeHTML(provider.bio)}
-          </div>
-        `
-        : ""
-    }
-
-
-    <button
-      class="btn btn-primary btn-block"
-      onclick="closeModal();matchProvider('${provider.id}')">
-
-      Uygun Talepleri Gör
-
-    </button>
-
-  `;
-
-
-  document
-    .getElementById(
-      "providerModal"
-    )
-    .classList.add("show");
-}
-
-
-function closeModal(){
-
-  document
-    .getElementById(
-      "providerModal"
-    )
-    .classList.remove("show");
-}
-
-
-/* =====================================================
-   REQUEST CONTACT
-===================================================== */
-
-function showRequestContact(id){
-
-  const request =
-    getRequests().find(
-      r=>r.id===id
-    );
-
-  if(!request){
-    return;
-  }
-
-
-  const ok =
-    confirm(
-      "Talep sahibinin iletişim bilgilerini görmek istiyor musun?"
-    );
-
-
-  if(!ok){
-    return;
-  }
-
-
-  alert(
-    "Talep sahibi: " +
-    request.name +
-    "\\nTelefon: " +
-    request.phone +
-    "\\n\\nBu prototipte iletişim doğrudan cihaz üzerinde gösterilmektedir. Gerçek sistemde güvenli mesajlaşma ve telefon doğrulama kullanılacaktır."
-  );
-}
-
-
-/* =====================================================
-   HELPERS
-===================================================== */
-
-function categoryIcon(id){
-
-  const cat =
-    CATEGORIES.find(
-      c=>c.id===id
-    );
-
-  return cat
-    ? cat.icon
-    : "🛠️";
-}
-
-
-function validPhone(phone){
-
-  const digits =
-    phone.replace(/\D/g,"");
-
-  return (
-    digits.length >= 10 &&
-    digits.length <= 11
-  );
-}
-
-
-function formatDate(date){
-
-  try{
-
-    return new Intl.DateTimeFormat(
-      "tr-TR",
-      {
-        dateStyle:"short",
-        timeStyle:"short"
-      }
-    ).format(
-      new Date(date)
-    );
-
-  }catch{
-
-    return date;
-
-  }
-}
-
-
-function escapeHTML(value){
-
-  return String(value ?? "")
-    .replace(/&/g,"&amp;")
-    .replace(/</g,"&lt;")
-    .replace(/>/g,"&gt;")
-    .replace(/"/g,"&quot;")
-    .replace(/'/g,"&#039;");
 }
 
 
@@ -2389,48 +1437,997 @@ function escapeHTML(value){
    TOAST
 ===================================================== */
 
-let toastTimer = null;
-
+let toastTimer;
 
 function toast(message){
 
   const el =
-    document.getElementById(
-      "toast"
-    );
+    document.getElementById("toast");
 
-  el.textContent =
-    message;
+  el.textContent = message;
 
   el.classList.add("show");
-
 
   clearTimeout(toastTimer);
 
   toastTimer =
-    setTimeout(()=>{
+    setTimeout(() => {
+
       el.classList.remove("show");
-    },2800);
+
+    },3000);
+
 }
 
 
 /* =====================================================
-   MODAL OUTSIDE CLICK
+   HOME SERVICES
+===================================================== */
+
+function renderServiceGrid(){
+
+  const grid =
+    document.getElementById("serviceGrid");
+
+  grid.innerHTML =
+    categories.map(c => `
+
+      <button
+        class="service-card"
+        onclick="selectCategory('${c.id}')">
+
+        <div class="service-icon">
+          ${c.icon}
+        </div>
+
+        <h3>${c.name}</h3>
+
+        <p>${c.description}</p>
+
+      </button>
+
+    `).join("");
+
+}
+
+
+function selectCategory(id){
+
+  const select =
+    document.getElementById("requestCategory");
+
+  select.value = id;
+
+  openRequest();
+
+}
+
+
+/* =====================================================
+   SELECTS
+===================================================== */
+
+function fillCategorySelect(){
+
+  const select =
+    document.getElementById("requestCategory");
+
+  select.innerHTML =
+    `<option value="">Kategori seç</option>` +
+    categories.map(c => `
+      <option value="${c.id}">
+        ${c.icon} ${c.name}
+      </option>
+    `).join("");
+
+}
+
+
+function fillDistrictSelect(){
+
+  const select =
+    document.getElementById("requestDistrict");
+
+  select.innerHTML =
+    `<option value="">İlçe seç</option>` +
+    districts.map(d => `
+      <option value="${d}">
+        ${d}
+      </option>
+    `).join("");
+
+}
+
+
+/* =====================================================
+   PROVIDER CHIPS
+===================================================== */
+
+function renderProviderCategories(){
+
+  const box =
+    document.getElementById("providerCategories");
+
+  box.innerHTML =
+    categories.map(c => `
+
+      <div class="chip">
+
+        <input
+          type="checkbox"
+          name="providerCategory"
+          value="${c.id}"
+          id="pc-${c.id}">
+
+        <label for="pc-${c.id}">
+          ${c.icon} ${c.name}
+        </label>
+
+      </div>
+
+    `).join("");
+
+}
+
+
+function renderProviderDistricts(){
+
+  const box =
+    document.getElementById("providerDistricts");
+
+  box.innerHTML =
+    districts.map((d,i) => `
+
+      <div class="chip">
+
+        <input
+          type="checkbox"
+          name="providerDistrict"
+          value="${d}"
+          id="pd-${i}">
+
+        <label for="pd-${i}">
+          ${d}
+        </label>
+
+      </div>
+
+    `).join("");
+
+}
+
+
+/* =====================================================
+   IMAGE PREVIEW
+===================================================== */
+
+function setupImagePreview(inputId,previewId){
+
+  const input =
+    document.getElementById(inputId);
+
+  const preview =
+    document.getElementById(previewId);
+
+  input.addEventListener(
+    "change",
+    () => {
+
+      const file =
+        input.files?.[0];
+
+      if(!file){
+
+        preview.style.display="none";
+        return;
+
+      }
+
+      if(!file.type.startsWith("image/")){
+
+        toast("Lütfen bir görsel seç.");
+
+        input.value="";
+
+        return;
+
+      }
+
+      const reader =
+        new FileReader();
+
+      reader.onload =
+        event => {
+
+          preview.src =
+            event.target.result;
+
+          preview.style.display =
+            "block";
+
+        };
+
+      reader.readAsDataURL(file);
+
+    }
+  );
+
+}
+
+
+/* =====================================================
+   REQUEST COUNTER
 ===================================================== */
 
 document
-  .getElementById("providerModal")
+  .getElementById("requestDescription")
   .addEventListener(
-    "click",
-    e=>{
-      if(
-        e.target.id ===
-        "providerModal"
-      ){
-        closeModal();
-      }
+    "input",
+    function(){
+
+      document
+        .getElementById("requestCounter")
+        .textContent =
+          `${this.value.length}/1000`;
+
     }
   );
+
+
+/* =====================================================
+   REQUEST PHOTO
+===================================================== */
+
+setupImagePreview(
+  "requestPhoto",
+  "requestPhotoPreview"
+);
+
+
+/* =====================================================
+   REQUEST FORM
+===================================================== */
+
+document
+  .getElementById("requestForm")
+  .addEventListener(
+    "submit",
+    function(event){
+
+      event.preventDefault();
+
+      const category =
+        document.getElementById(
+          "requestCategory"
+        ).value;
+
+      const description =
+        document.getElementById(
+          "requestDescription"
+        ).value.trim();
+
+      const district =
+        document.getElementById(
+          "requestDistrict"
+        ).value;
+
+      const neighborhood =
+        document.getElementById(
+          "requestNeighborhood"
+        ).value.trim();
+
+      const name =
+        document.getElementById(
+          "requestName"
+        ).value.trim();
+
+      const phone =
+        document.getElementById(
+          "requestPhone"
+        ).value.trim();
+
+      const urgency =
+        document.querySelector(
+          'input[name="urgency"]:checked'
+        )?.value || "Bugün";
+
+      if(
+        !category ||
+        !description ||
+        !district ||
+        !name ||
+        !phone
+      ){
+
+        toast(
+          "Lütfen zorunlu alanları doldur."
+        );
+
+        return;
+
+      }
+
+
+      const request = {
+
+        id:
+          "IC-" +
+          Date.now().toString(36).toUpperCase() +
+          "-" +
+          Math.random()
+            .toString(36)
+            .slice(2,7)
+            .toUpperCase(),
+
+        category,
+
+        description,
+
+        district,
+
+        neighborhood,
+
+        urgency,
+
+        name,
+
+        phone,
+
+        createdAt:
+          new Date().toISOString(),
+
+        status:"Beklemede"
+
+      };
+
+
+      const requests =
+        getRequests();
+
+      requests.unshift(request);
+
+      saveRequests(requests);
+
+
+      this.reset();
+
+      document
+        .getElementById(
+          "requestCounter"
+        )
+        .textContent="0/1000";
+
+      document
+        .getElementById(
+          "requestPhotoPreview"
+        )
+        .style.display="none";
+
+
+      toast(
+        "Talebiniz başarıyla oluşturuldu."
+      );
+
+
+      showPage("requestsPage");
+
+    }
+  );
+
+
+/* =====================================================
+   PROVIDER PHOTO
+===================================================== */
+
+setupImagePreview(
+  "providerPhoto",
+  "providerPhotoPreview"
+);
+
+
+/* =====================================================
+   PROVIDER FORM
+===================================================== */
+
+document
+  .getElementById("providerForm")
+  .addEventListener(
+    "submit",
+    function(event){
+
+      event.preventDefault();
+
+
+      const name =
+        document
+          .getElementById("providerName")
+          .value
+          .trim();
+
+      const phone =
+        document
+          .getElementById("providerPhone")
+          .value
+          .trim();
+
+      const description =
+        document
+          .getElementById("providerDescription")
+          .value
+          .trim();
+
+      const start =
+        document
+          .getElementById("providerStart")
+          .value;
+
+      const end =
+        document
+          .getElementById("providerEnd")
+          .value;
+
+
+      const type =
+        document.querySelector(
+          'input[name="providerType"]:checked'
+        )?.value || "Bireysel Usta";
+
+
+      const whatsapp =
+        document.querySelector(
+          'input[name="whatsapp"]:checked'
+        )?.value || "Evet";
+
+
+      const selectedCategories =
+        [...document.querySelectorAll(
+          'input[name="providerCategory"]:checked'
+        )]
+        .map(el => el.value);
+
+
+      const selectedDistricts =
+        [...document.querySelectorAll(
+          'input[name="providerDistrict"]:checked'
+        )]
+        .map(el => el.value);
+
+
+      if(
+        !name ||
+        !phone ||
+        selectedCategories.length === 0 ||
+        selectedDistricts.length === 0
+      ){
+
+        toast(
+          "Lütfen zorunlu alanları doldur."
+        );
+
+        return;
+
+      }
+
+
+      const file =
+        document
+          .getElementById("providerPhoto")
+          .files?.[0];
+
+
+      const createProvider = (
+        photoData = ""
+      ) => {
+
+        const provider = {
+
+          id:
+            "USTA-" +
+            Date.now()
+              .toString(36)
+              .toUpperCase(),
+
+          name,
+
+          phone,
+
+          type,
+
+          categories:
+            selectedCategories,
+
+          districts:
+            selectedDistricts,
+
+          description,
+
+          start,
+
+          end,
+
+          whatsapp,
+
+          photo:
+            photoData,
+
+          createdAt:
+            new Date().toISOString(),
+
+          status:"Aktif"
+
+        };
+
+
+        const providers =
+          getProviders();
+
+        providers.unshift(provider);
+
+        saveProviders(providers);
+
+
+        this.reset();
+
+        document
+          .getElementById(
+            "providerPhotoPreview"
+          )
+          .style.display="none";
+
+
+        toast(
+          "Hizmet sağlayıcı profilin oluşturuldu."
+        );
+
+
+        showPage("providersPage");
+
+      };
+
+
+      if(file){
+
+        const reader =
+          new FileReader();
+
+        reader.onload =
+          event => {
+
+            /*
+             * Fotoğrafı küçük tutuyoruz.
+             * Böylece localStorage aşırı büyümez.
+             */
+
+            compressImage(
+              event.target.result,
+              700,
+              0.72,
+              createProvider
+            );
+
+          };
+
+        reader.readAsDataURL(file);
+
+      }else{
+
+        createProvider("");
+
+      }
+
+    }
+  );
+
+
+/* =====================================================
+   IMAGE COMPRESSION
+===================================================== */
+
+function compressImage(
+  dataUrl,
+  maxSize,
+  quality,
+  callback
+){
+
+  const img =
+    new Image();
+
+  img.onload = () => {
+
+    let width =
+      img.width;
+
+    let height =
+      img.height;
+
+
+    if(width > height){
+
+      if(width > maxSize){
+
+        height =
+          Math.round(
+            height *
+            maxSize /
+            width
+          );
+
+        width =
+          maxSize;
+
+      }
+
+    }else{
+
+      if(height > maxSize){
+
+        width =
+          Math.round(
+            width *
+            maxSize /
+            height
+          );
+
+        height =
+          maxSize;
+
+      }
+
+    }
+
+
+    const canvas =
+      document.createElement("canvas");
+
+    canvas.width =
+      width;
+
+    canvas.height =
+      height;
+
+
+    const ctx =
+      canvas.getContext("2d");
+
+    ctx.drawImage(
+      img,
+      0,
+      0,
+      width,
+      height
+    );
+
+
+    callback(
+      canvas.toDataURL(
+        "image/jpeg",
+        quality
+      )
+    );
+
+  };
+
+
+  img.src =
+    dataUrl;
+
+}
+
+
+/* =====================================================
+   REQUEST LIST
+===================================================== */
+
+function categoryInfo(id){
+
+  return categories.find(
+    c => c.id === id
+  ) || {
+    name:id,
+    icon:"🛠️"
+  };
+
+}
+
+
+function formatDate(value){
+
+  try{
+
+    return new Intl.DateTimeFormat(
+      "tr-TR",
+      {
+        day:"2-digit",
+        month:"2-digit",
+        year:"numeric",
+        hour:"2-digit",
+        minute:"2-digit"
+      }
+    ).format(
+      new Date(value)
+    );
+
+  }catch{
+
+    return "";
+
+  }
+
+}
+
+
+function renderRequests(){
+
+  const box =
+    document.getElementById(
+      "requestList"
+    );
+
+  const requests =
+    getRequests();
+
+
+  if(!requests.length){
+
+    box.innerHTML = `
+
+      <div class="empty">
+
+        <div style="font-size:35px;margin-bottom:10px">
+          📋
+        </div>
+
+        Henüz oluşturduğun bir talep yok.
+
+        <div style="margin-top:15px">
+
+          <button
+            class="btn"
+            onclick="openRequest()">
+            + Yeni Talep
+          </button>
+
+        </div>
+
+      </div>
+
+    `;
+
+    return;
+
+  }
+
+
+  box.innerHTML =
+    requests.map(r => {
+
+      const c =
+        categoryInfo(r.category);
+
+      return `
+
+        <div class="request-card">
+
+          <div class="request-top">
+
+            <div class="request-category">
+              ${c.icon} ${c.name}
+            </div>
+
+            <div class="status">
+              ${r.status}
+            </div>
+
+          </div>
+
+          <div class="request-text">
+            “${escapeHtml(r.description)}”
+          </div>
+
+          <div class="meta">
+            📍 ${escapeHtml(r.district)}
+            ${r.neighborhood
+              ? " · 🏘️ " +
+                escapeHtml(r.neighborhood)
+              : ""}
+            <br>
+            ⏱️ ${escapeHtml(r.urgency)}
+            · ${formatDate(r.createdAt)}
+            <br>
+            Talep No:
+            ${escapeHtml(r.id)}
+          </div>
+
+        </div>
+
+      `;
+
+    }).join("");
+
+}
+
+
+/* =====================================================
+   PROVIDER LIST
+===================================================== */
+
+function renderProviders(){
+
+  const box =
+    document.getElementById(
+      "providerList"
+    );
+
+  const providers =
+    getProviders();
+
+
+  if(!providers.length){
+
+    box.innerHTML = `
+
+      <div class="empty">
+
+        <div style="font-size:35px;margin-bottom:10px">
+          🛠️
+        </div>
+
+        Henüz hizmet sağlayıcı profili
+        oluşturulmamış.
+
+        <div style="margin-top:15px">
+
+          <button
+            class="btn"
+            onclick="openProvider()">
+            Hizmet Vermeye Başla
+          </button>
+
+        </div>
+
+      </div>
+
+    `;
+
+    return;
+
+  }
+
+
+  box.innerHTML =
+    providers.map(p => {
+
+      const categoryNames =
+        p.categories.map(id => {
+
+          const c =
+            categoryInfo(id);
+
+          return `${c.icon} ${c.name}`;
+
+        });
+
+
+      const avatar =
+        p.photo
+          ? `<img src="${p.photo}" alt="">`
+          : "🛠️";
+
+
+      return `
+
+        <div class="profile-card">
+
+          <div class="profile-head">
+
+            <div class="profile-avatar">
+              ${avatar}
+            </div>
+
+            <div>
+
+              <div class="profile-name">
+                ${escapeHtml(p.name)}
+              </div>
+
+              <div class="profile-type">
+                ${escapeHtml(p.type)}
+                · ${escapeHtml(p.status)}
+              </div>
+
+            </div>
+
+          </div>
+
+
+          <div class="tags">
+
+            ${categoryNames
+              .map(x =>
+                `<span class="tag">
+                  ${escapeHtml(x)}
+                </span>`
+              )
+              .join("")}
+
+          </div>
+
+
+          <div class="profile-info">
+
+            <div>
+              📍 ${p.districts
+                .map(escapeHtml)
+                .join(", ")}
+            </div>
+
+            <div>
+              📞 ${escapeHtml(p.phone)}
+            </div>
+
+            <div>
+              🕐 ${escapeHtml(p.start)}
+              – ${escapeHtml(p.end)}
+            </div>
+
+            <div>
+              💬 WhatsApp:
+              ${escapeHtml(p.whatsapp)}
+            </div>
+
+            ${
+              p.description
+              ? `<div>
+                   📝 ${escapeHtml(p.description)}
+                 </div>`
+              : ""
+            }
+
+          </div>
+
+        </div>
+
+      `;
+
+    }).join("");
+
+}
+
+
+/* =====================================================
+   SECURITY
+===================================================== */
+
+function escapeHtml(value){
+
+  return String(value ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+
+}
+
+
+/* =====================================================
+   INITIALIZE
+===================================================== */
+
+renderServiceGrid();
+
+fillCategorySelect();
+
+fillDistrictSelect();
+
+renderProviderCategories();
+
+renderProviderDistricts();
+
+renderRequests();
+
+renderProviders();
 
 </script>
 
