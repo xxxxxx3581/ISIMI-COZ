@@ -1,10 +1,10 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="utf-8">
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
-<meta name="theme-color" content="#071018">
-<title>İşimi Çöz — İzmir</title>
+<meta name="theme-color" content="#07111f">
+<title>İşimi Çöz — İzmir Pilot</title>
 
 <style>
 *{box-sizing:border-box}
@@ -13,602 +13,469 @@ html,body{
   margin:0;
   padding:0;
   min-height:100%;
-  background:#071018;
-  color:#f5f8fb;
-  font-family:Inter,Arial,sans-serif
+  background:#07111f;
+  color:#f4f7fb;
+  font-family:Arial,Helvetica,sans-serif;
 }
 
 body{
-  overflow-x:hidden
-}
-
-:root{
-  --cyan:#20dcff;
-  --purple:#9d75ff;
-  --green:#39e58c;
-  --text:#f5f8fb;
-  --muted:#8495a6;
-  --line:#ffffff14;
-  --panel:#ffffff08;
-  --danger:#ff6577;
+  min-height:100vh;
 }
 
 button,
 input,
 textarea,
 select{
-  font:inherit
+  font:inherit;
 }
 
 button{
-  cursor:pointer
+  cursor:pointer;
 }
 
 .app{
+  width:100%;
+  max-width:760px;
+  margin:auto;
   min-height:100vh;
-  position:relative;
-  overflow:hidden;
-  background:
-    radial-gradient(circle at 80% -10%,#17485b 0,#0d202c 28%,#071018 68%);
-}
-
-.bg{
-  position:fixed;
-  inset:0;
-  pointer-events:none;
-  opacity:.35
+  background:#0a1626;
 }
 
 header{
-  position:relative;
-  z-index:5;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  padding:16px 16px 10px;
-  max-width:900px;
-  margin:auto
+  padding:20px 18px 18px;
+  background:linear-gradient(135deg,#0b1b30,#102b46);
+  border-bottom:1px solid rgba(255,255,255,.08);
 }
 
 .brand{
   display:flex;
   align-items:center;
-  gap:10px
+  gap:12px;
 }
 
 .logo{
-  width:43px;
-  height:43px;
+  width:46px;
+  height:46px;
   border-radius:14px;
-  border:1px solid #20dcff45;
-  display:grid;
-  place-items:center;
-  background:#ffffff09;
-  box-shadow:0 0 28px #20dcff16;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#fff;
+  color:#0b1b30;
+  font-size:25px;
   font-weight:900;
-  color:#20dcff
 }
 
-.brand-title{
-  font-size:13px;
-  font-weight:900;
-  letter-spacing:1.5px
+.brand h1{
+  margin:0;
+  font-size:22px;
 }
 
-.brand-sub{
-  color:#748698;
-  font-size:7px;
-  letter-spacing:1.7px;
-  margin-top:3px
+.brand small{
+  display:block;
+  margin-top:4px;
+  color:#9fb3c8;
+}
+
+.pilot{
+  margin-top:16px;
+  padding:9px 12px;
+  border-radius:10px;
+  background:rgba(51,211,153,.12);
+  color:#61e6b2;
+  font-size:12px;
+  font-weight:700;
+  display:inline-block;
 }
 
 main{
-  position:relative;
-  z-index:2;
-  max-width:900px;
-  margin:auto;
-  padding:15px 15px 105px
-}
-
-.view{
-  display:none;
-  animation:appear .3s ease
-}
-
-.view.active{
-  display:block
-}
-
-@keyframes appear{
-  from{
-    opacity:0;
-    transform:translateY(8px)
-  }
-  to{
-    opacity:1;
-    transform:none
-  }
+  padding:18px;
+  padding-bottom:100px;
 }
 
 .hero{
-  padding:15px 0 4px
+  padding:24px 4px 20px;
 }
 
-.badge{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  border:1px solid #20dcff35;
-  background:#20dcff09;
-  color:#61e5ff;
-  border-radius:999px;
-  padding:7px 10px;
-  font-size:8px;
-  letter-spacing:1.5px;
-  font-weight:800
+.hero h2{
+  margin:0;
+  font-size:31px;
+  line-height:1.08;
 }
 
-.badge-dot{
-  width:6px;
-  height:6px;
-  border-radius:50%;
-  background:var(--cyan);
-  box-shadow:0 0 10px var(--cyan)
-}
-
-h1{
-  font-size:39px;
-  line-height:.98;
-  letter-spacing:-2px;
-  margin:17px 0 10px
-}
-
-h1 span{
-  display:block;
-  background:linear-gradient(90deg,#fff,var(--cyan),var(--purple));
-  -webkit-background-clip:text;
-  background-clip:text;
-  color:transparent
-}
-
-.desc{
-  color:#899aaa;
-  font-size:11px;
-  line-height:1.6;
-  max-width:650px
+.hero p{
+  color:#aebdcd;
+  line-height:1.55;
+  margin:12px 0 0;
 }
 
 .section-title{
-  font-size:18px;
-  margin:25px 0 10px;
-  letter-spacing:-.5px
+  margin:25px 0 12px;
+  font-size:19px;
 }
 
 .grid{
   display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:9px;
-  margin-top:18px
-}
-
-.service{
-  position:relative;
-  min-height:112px;
-  padding:14px;
-  border-radius:18px;
-  border:1px solid var(--line);
-  background:#ffffff07;
-  transition:.2s
-}
-
-.service:active{
-  transform:scale(.98)
-}
-
-.service.selected{
-  border-color:#20dcff80;
-  background:#20dcff0c;
-  box-shadow:0 0 25px #20dcff0b
-}
-
-.service-icon{
-  font-size:24px
-}
-
-.service-name{
-  margin-top:8px;
-  font-size:11px;
-  font-weight:900
-}
-
-.service-desc{
-  margin-top:5px;
-  color:#778999;
-  font-size:8px;
-  line-height:1.4
-}
-
-.checkmark{
-  position:absolute;
-  right:10px;
-  top:10px;
-  width:20px;
-  height:20px;
-  border-radius:50%;
-  display:none;
-  place-items:center;
-  background:var(--cyan);
-  color:#031018;
-  font-size:12px;
-  font-weight:900
-}
-
-.service.selected .checkmark{
-  display:grid
+  grid-template-columns:repeat(2,1fr);
+  gap:11px;
 }
 
 .card{
-  border:1px solid var(--line);
-  background:#ffffff07;
-  border-radius:20px;
-  padding:15px;
-  margin-top:12px
+  border:1px solid rgba(255,255,255,.08);
+  background:#0f2033;
+  border-radius:17px;
+  padding:17px;
+  transition:.15s;
+}
+
+.card:active{
+  transform:scale(.98);
+}
+
+.service-card{
+  cursor:pointer;
+}
+
+.icon{
+  font-size:28px;
+  margin-bottom:9px;
+}
+
+.card h3{
+  margin:0 0 6px;
+  font-size:16px;
+}
+
+.card p{
+  margin:0;
+  color:#94a8bd;
+  font-size:12px;
+  line-height:1.4;
+}
+
+.action-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-top:20px;
+}
+
+.big-action{
+  border:0;
+  border-radius:16px;
+  padding:18px;
+  text-align:left;
+  color:#fff;
+  background:#173654;
+}
+
+.big-action.primary{
+  background:linear-gradient(135deg,#147b68,#0e9d7d);
+}
+
+.big-action .action-icon{
+  font-size:26px;
+}
+
+.big-action strong{
+  display:block;
+  margin-top:9px;
+}
+
+.big-action span{
+  display:block;
+  color:#c3d4e5;
+  font-size:12px;
+  margin-top:5px;
+}
+
+.panel{
+  background:#0f2033;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:18px;
+  padding:18px;
+  margin-top:16px;
+}
+
+.panel h2{
+  margin:0 0 6px;
+  font-size:21px;
+}
+
+.panel-intro{
+  margin:0 0 18px;
+  color:#9fb0c1;
+  line-height:1.5;
+  font-size:14px;
 }
 
 label{
   display:block;
-  font-size:9px;
-  font-weight:800;
-  color:#b9c6d2;
-  margin-bottom:7px
+  margin:14px 0 7px;
+  font-size:13px;
+  font-weight:700;
 }
 
-.field{
-  margin-bottom:15px
-}
-
-.input,
-.textarea,
-.select{
+input,
+textarea,
+select{
   width:100%;
-  border:1px solid var(--line);
-  background:#ffffff08;
+  border:1px solid #263b51;
+  background:#081421;
   color:#fff;
-  border-radius:13px;
-  padding:12px;
+  border-radius:11px;
+  padding:13px;
   outline:none;
-  font-size:10px
 }
 
-.input:focus,
-.textarea:focus,
-.select:focus{
-  border-color:#20dcff55;
-  box-shadow:0 0 0 3px #20dcff08
+input:focus,
+textarea:focus,
+select:focus{
+  border-color:#25c89b;
 }
 
-.textarea{
-  min-height:110px;
+textarea{
+  min-height:125px;
   resize:vertical;
-  line-height:1.5
-}
-
-.select option{
-  background:#0b1720;
-  color:#fff
 }
 
 .row{
   display:grid;
   grid-template-columns:1fr 1fr;
-  gap:10px
+  gap:10px;
 }
 
-.priority{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:7px
-}
-
-.priority button{
-  border:1px solid var(--line);
-  background:#ffffff07;
-  color:#94a4b2;
-  border-radius:12px;
-  padding:11px 6px;
-  font-size:8px;
-  font-weight:800
-}
-
-.priority button.active{
-  color:#fff;
-  border-color:#20dcff65;
-  background:#20dcff10
-}
-
-.photo-box{
-  border:1px dashed #ffffff25;
-  border-radius:14px;
-  padding:15px;
-  text-align:center;
-  background:#ffffff04
-}
-
-.photo-box input{
-  display:none
-}
-
-.photo-button{
-  display:inline-block;
-  padding:10px 13px;
-  border-radius:11px;
-  background:#ffffff09;
-  border:1px solid var(--line);
-  color:#c4d0da;
-  font-size:8px;
-  font-weight:800
-}
-
-.photo-info{
-  color:#728493;
-  font-size:8px;
-  margin-top:8px
-}
-
-.preview{
-  display:flex;
-  flex-wrap:wrap;
-  gap:7px;
-  margin-top:10px
-}
-
-.preview img{
-  width:65px;
-  height:65px;
-  object-fit:cover;
-  border-radius:10px;
-  border:1px solid #ffffff18
-}
-
-.primary{
+.btn{
   width:100%;
   border:0;
-  border-radius:14px;
+  border-radius:12px;
   padding:14px;
-  background:linear-gradient(90deg,var(--cyan),var(--purple));
-  color:#031018;
-  font-size:10px;
-  font-weight:900;
-  letter-spacing:.4px;
-  margin-top:4px
+  margin-top:16px;
+  font-weight:800;
 }
 
-.secondary{
-  width:100%;
-  border:1px solid var(--line);
-  border-radius:14px;
-  padding:12px;
-  background:#ffffff07;
-  color:#b8c5d0;
-  font-size:9px;
-  font-weight:800;
-  margin-top:8px
+.btn-primary{
+  background:#16a982;
+  color:#fff;
+}
+
+.btn-secondary{
+  background:#19334e;
+  color:#fff;
+}
+
+.btn-danger{
+  background:#512735;
+  color:#ffd8df;
 }
 
 .back{
-  border:1px solid var(--line);
-  background:#ffffff07;
-  color:#b8c5d0;
-  border-radius:11px;
-  padding:9px 12px;
-  font-size:8px;
-  margin-bottom:15px
+  border:0;
+  background:none;
+  color:#8edcc7;
+  padding:0;
+  margin-bottom:16px;
+  font-weight:700;
+}
+
+.hidden{
+  display:none!important;
 }
 
 .notice{
-  border:1px solid #39e58c28;
-  background:#39e58c08;
-  color:#9be9bd;
-  padding:12px;
-  border-radius:13px;
-  font-size:8px;
+  padding:13px;
+  border-radius:12px;
+  background:#10283c;
+  color:#abc0d4;
+  font-size:13px;
   line-height:1.5;
-  margin-top:12px
+  margin-top:14px;
 }
 
 .empty{
-  border:1px dashed #ffffff20;
-  border-radius:18px;
-  padding:28px 18px;
   text-align:center;
-  color:#718291;
-  font-size:9px;
-  line-height:1.6
-}
-
-.empty-icon{
-  font-size:30px;
-  margin-bottom:10px
+  padding:35px 15px;
+  color:#8ea3b8;
 }
 
 .request{
-  border:1px solid var(--line);
-  border-radius:17px;
-  background:#ffffff07;
-  padding:14px;
-  margin-bottom:10px
+  border:1px solid rgba(255,255,255,.08);
+  background:#0d1c2c;
+  border-radius:16px;
+  padding:16px;
+  margin-bottom:12px;
 }
 
-.request-head{
+.request-top{
   display:flex;
   justify-content:space-between;
   gap:10px;
-  align-items:flex-start
+  align-items:flex-start;
 }
 
-.request-title{
+.request h3{
+  margin:0;
+  font-size:16px;
+}
+
+.badge{
+  padding:6px 9px;
+  border-radius:8px;
+  background:#17354d;
+  color:#8fdac5;
   font-size:11px;
-  font-weight:900
+  white-space:nowrap;
 }
 
-.request-date{
-  color:#6e8191;
-  font-size:7px;
-  margin-top:4px
-}
-
-.status{
-  border-radius:999px;
-  padding:5px 8px;
-  background:#20dcff0d;
-  border:1px solid #20dcff25;
-  color:#5ee4ff;
-  font-size:7px;
-  font-weight:800;
-  white-space:nowrap
-}
-
-.request-desc{
-  color:#8b9baa;
-  font-size:8px;
+.request p{
+  color:#a8b8c9;
+  font-size:13px;
   line-height:1.5;
-  margin-top:10px
-}
-
-.request-meta{
-  display:flex;
-  flex-wrap:wrap;
-  gap:6px;
-  margin-top:10px
 }
 
 .meta{
-  border:1px solid #ffffff10;
-  border-radius:8px;
-  padding:5px 7px;
-  color:#9caab7;
-  font-size:7px
-}
-
-.success{
-  text-align:center;
-  padding:25px 8px
-}
-
-.success-icon{
-  width:68px;
-  height:68px;
-  margin:0 auto 15px;
-  border-radius:50%;
-  display:grid;
-  place-items:center;
-  background:#39e58c12;
-  border:1px solid #39e58c45;
-  color:var(--green);
-  font-size:30px
-}
-
-.success h2{
-  font-size:21px;
-  margin:8px 0
-}
-
-.success p{
-  color:#8192a1;
-  font-size:9px;
-  line-height:1.6
-}
-
-.bottom{
-  position:fixed;
-  z-index:20;
-  bottom:0;
-  left:0;
-  right:0;
-  padding:9px 9px 12px;
   display:flex;
-  justify-content:center;
-  gap:6px;
-  background:linear-gradient(transparent,#071018 30%,#071018)
+  flex-wrap:wrap;
+  gap:7px;
+  margin-top:10px;
 }
 
-.nav{
-  flex:1;
-  max-width:160px;
-  border:1px solid var(--line);
-  background:#0b1720;
-  color:#7f909f;
-  border-radius:13px;
-  padding:10px 6px;
-  font-size:7px;
-  font-weight:800
+.meta span{
+  padding:6px 8px;
+  background:#13263a;
+  border-radius:7px;
+  color:#a9bdcf;
+  font-size:11px;
 }
 
-.nav.active{
-  color:#fff;
-  border-color:#20dcff55;
-  background:#102a35
-}
-
-.toast{
-  position:fixed;
-  z-index:100;
-  left:50%;
-  bottom:80px;
-  transform:translate(-50%,20px);
-  opacity:0;
-  pointer-events:none;
-  background:#12212b;
-  border:1px solid #ffffff18;
+.offer{
+  margin-top:12px;
+  padding:12px;
   border-radius:12px;
-  padding:10px 14px;
-  color:#eaf4f8;
-  font-size:8px;
-  box-shadow:0 10px 40px #0008;
-  transition:.25s;
-  white-space:nowrap
+  background:#12283c;
+  border:1px solid rgba(255,255,255,.06);
 }
 
-.toast.show{
-  opacity:1;
-  transform:translate(-50%,0)
+.offer strong{
+  display:block;
 }
 
-.required{
-  color:var(--cyan)
+.offer small{
+  color:#9eb0c2;
 }
 
-@media(min-width:650px){
-  header{
-    padding-left:25px;
-    padding-right:25px
-  }
+.offer-actions{
+  display:flex;
+  gap:8px;
+}
 
-  main{
-    padding-left:25px;
-    padding-right:25px
-  }
+.offer-actions button{
+  flex:1;
+  padding:10px;
+  border:0;
+  border-radius:9px;
+  margin-top:9px;
+  font-weight:700;
+}
 
-  h1{
-    font-size:55px
+.accept{
+  background:#16a982;
+  color:#fff;
+}
+
+.reject{
+  background:#25384b;
+  color:#ccd8e4;
+}
+
+.bottom-nav{
+  position:fixed;
+  bottom:0;
+  left:50%;
+  transform:translateX(-50%);
+  width:100%;
+  max-width:760px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  background:#081523;
+  border-top:1px solid rgba(255,255,255,.1);
+  z-index:20;
+}
+
+.bottom-nav button{
+  border:0;
+  background:none;
+  color:#8298ad;
+  padding:11px 5px;
+  font-size:11px;
+}
+
+.bottom-nav button.active{
+  color:#55dfb4;
+}
+
+.bottom-nav span{
+  display:block;
+  font-size:20px;
+  margin-bottom:3px;
+}
+
+.provider-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+}
+
+.provider-name{
+  font-size:17px;
+  font-weight:800;
+}
+
+.status{
+  color:#62dfb7;
+  font-size:11px;
+}
+
+.stats{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:9px;
+  margin-top:14px;
+}
+
+.stat{
+  padding:12px;
+  border-radius:12px;
+  background:#12283c;
+  text-align:center;
+}
+
+.stat strong{
+  display:block;
+  font-size:20px;
+}
+
+.stat small{
+  color:#91a5b9;
+  font-size:10px;
+}
+
+@media(max-width:430px){
+  .hero h2{
+    font-size:27px;
   }
 
   .grid{
-    grid-template-columns:repeat(4,1fr)
+    gap:8px;
   }
 
-  .service{
-    min-height:135px
+  .card{
+    padding:14px;
   }
-}
 
-@media(max-width:420px){
   .row{
-    grid-template-columns:1fr
-  }
-
-  .priority{
-    grid-template-columns:1fr
+    grid-template-columns:1fr;
   }
 }
 </style>
@@ -618,1412 +485,1078 @@ label{
 
 <div class="app">
 
-<canvas class="bg" id="bg"></canvas>
-
 <header>
   <div class="brand">
-    <div class="logo">İÇ</div>
+    <div class="logo">✓</div>
     <div>
-      <div class="brand-title">İŞİMİ ÇÖZ</div>
-      <div class="brand-sub">İZMİR PİLOT BÖLGESİ</div>
+      <h1>İŞİMİ ÇÖZ</h1>
+      <small>İhtiyacın varsa, çözümü var.</small>
     </div>
   </div>
+
+  <div class="pilot">📍 İZMİR PİLOT BÖLGESİ</div>
 </header>
 
 <main>
 
-<!-- =====================================================
-     ANA SAYFA
-====================================================== -->
-
-<section class="view active" id="home">
+<!-- ANA SAYFA -->
+<section id="home">
 
   <div class="hero">
-
-    <div class="badge">
-      <span class="badge-dot"></span>
-      İZMİR'DE BAŞLIYORUZ
-    </div>
-
-    <h1>
-      İhtiyacın varsa,
-      <span>çözümü var.</span>
-    </h1>
-
-    <p class="desc">
-      Ev, iş yeri, araç ve günlük yaşam hizmetlerini tek
-      yerden bul. İhtiyacını anlat, talebini oluştur.
+    <h2>İhtiyacın varsa,<br>çözümü var.</h2>
+    <p>
+      Ev, iş yeri, araç ve günlük yaşam hizmetlerini
+      tek yerden bul. İhtiyacını anlat, talebini oluştur.
     </p>
+  </div>
+
+  <h2 class="section-title">Hizmet kategorileri</h2>
+
+  <div class="grid" id="serviceGrid"></div>
+
+  <div class="action-grid">
+
+    <button class="big-action primary" onclick="showPage('request')">
+      <div class="action-icon">📢</div>
+      <strong>İşimi çözdür</strong>
+      <span>İhtiyacını anlat, talep oluştur.</span>
+    </button>
+
+    <button class="big-action" onclick="showPage('provider')">
+      <div class="action-icon">🛠️</div>
+      <strong>Hizmet ver</strong>
+      <span>Usta veya işletme olarak katıl.</span>
+    </button>
 
   </div>
 
-  <h2 class="section-title">
-    Hizmet kategorileri
-  </h2>
-
-  <div class="grid" id="serviceGrid">
-
-    <div class="service" data-service="Klima">
-      <div class="checkmark">✓</div>
-      <div class="service-icon">❄️</div>
-      <div class="service-name">Klima</div>
-      <div class="service-desc">Bakım, montaj, arıza ve temizlik</div>
-    </div>
-
-    <div class="service" data-service="Elektrik">
-      <div class="checkmark">✓</div>
-      <div class="service-icon">⚡</div>
-      <div class="service-name">Elektrik</div>
-      <div class="service-desc">Arıza, priz, tesisat ve aydınlatma</div>
-    </div>
-
-    <div class="service" data-service="Tesisat">
-      <div class="checkmark">✓</div>
-      <div class="service-icon">🔧</div>
-      <div class="service-name">Tesisat</div>
-      <div class="service-desc">Su, gider, musluk ve kaçak sorunları</div>
-    </div>
-
-    <div class="service" data-service="Beyaz Eşya">
-      <div class="checkmark">✓</div>
-      <div class="service-icon">🧊</div>
-      <div class="service-name">Beyaz Eşya</div>
-      <div class="service-desc">Çamaşır, bulaşık, buzdolabı ve fırın</div>
-    </div>
-
-    <div class="service" data-service="Temizlik">
-      <div class="checkmark">✓</div>
-      <div class="service-icon">🧹</div>
-      <div class="service-name">Temizlik</div>
-      <div class="service-desc">Ev, ofis ve detaylı temizlik</div>
-    </div>
-
-    <div class="service" data-service="Nakliye">
-      <div class="checkmark">✓</div>
-      <div class="service-icon">🚚</div>
-      <div class="service-name">Nakliye</div>
-      <div class="service-desc">Ev, ofis ve parça eşya taşıma</div>
-    </div>
-
-    <div class="service" data-service="Çilingir">
-      <div class="checkmark">✓</div>
-      <div class="service-icon">🔐</div>
-      <div class="service-name">Çilingir</div>
-      <div class="service-desc">Kilit, anahtar ve acil giriş</div>
-    </div>
-
-    <div class="service" data-service="Oto">
-      <div class="checkmark">✓</div>
-      <div class="service-icon">🚗</div>
-      <div class="service-name">Oto</div>
-      <div class="service-desc">Arıza, bakım, lastik ve yol yardımı</div>
-    </div>
-
-  </div>
-
-  <div class="notice">
-    💡 Bir hizmet seçtiğinde doğrudan talep oluşturma ekranına geçebilirsin.
+  <div class="panel">
+    <h2>💡 Nasıl çalışır?</h2>
+    <p class="panel-intro">
+      İhtiyacını oluştur → uygun hizmet sağlayıcıları
+      bul → teklifleri değerlendir → uygun sağlayıcıyı seç.
+    </p>
   </div>
 
 </section>
 
 
-<!-- =====================================================
-     TALEP OLUŞTUR
-====================================================== -->
+<!-- TALEP -->
+<section id="request" class="hidden">
 
-<section class="view" id="create">
-
-  <button class="back" data-view="home">
-    ← ANA SAYFAYA DÖN
+  <button class="back" onclick="showPage('home')">
+    ← Ana sayfaya dön
   </button>
 
-  <div class="badge">
-    📋 YENİ HİZMET TALEBİ
-  </div>
+  <div class="panel">
 
-  <h1>
-    İhtiyacını
-    <span>anlat.</span>
-  </h1>
+    <h2>📋 Yeni hizmet talebi</h2>
 
-  <p class="desc">
-    Ne yapılması gerektiğini mümkün olduğunca açık anlat.
-    Böylece ileride sana uygun hizmet sağlayıcıları daha doğru eşleştirebiliriz.
-  </p>
+    <p class="panel-intro">
+      İhtiyacını mümkün olduğunca açık anlat.
+      Böylece uygun hizmet sağlayıcılarını daha doğru eşleştirebiliriz.
+    </p>
 
-  <div class="card">
+    <label>Hizmet kategorisi *</label>
+    <select id="reqCategory">
+      <option value="">Kategori seç</option>
+    </select>
 
-    <div class="field">
+    <label>Sorunun / ihtiyacın *</label>
+    <textarea
+      id="reqDescription"
+      maxlength="1000"
+      placeholder="Örneğin: Klima çalışıyor fakat yeterince soğutmuyor."
+    ></textarea>
 
-      <label>
-        Hizmet kategorisi <span class="required">*</span>
-      </label>
+    <label>İlçe *</label>
+    <select id="reqDistrict">
+      <option value="">İlçe seç</option>
+    </select>
 
-      <select class="select" id="category">
-        <option value="">Kategori seç</option>
-        <option>Klima</option>
-        <option>Elektrik</option>
-        <option>Tesisat</option>
-        <option>Beyaz Eşya</option>
-        <option>Temizlik</option>
-        <option>Nakliye</option>
-        <option>Çilingir</option>
-        <option>Oto</option>
-      </select>
+    <label>Mahalle</label>
+    <input id="reqNeighborhood" placeholder="Mahalle adı">
 
-    </div>
+    <label>Ne zaman gerekli?</label>
+    <select id="reqUrgency">
+      <option value="Acil">🔴 Acil</option>
+      <option value="Bugün" selected>🟡 Bugün</option>
+      <option value="Uygun zamanda">🟢 Uygun zamanda</option>
+    </select>
 
-    <div class="field">
+    <label>Adınız *</label>
+    <input id="reqName" placeholder="Adınız">
 
-      <label>
-        Sorunun / ihtiyacın <span class="required">*</span>
-      </label>
+    <label>Telefon *</label>
+    <input id="reqPhone" type="tel" placeholder="05xx xxx xx xx">
 
-      <textarea
-        class="textarea"
-        id="description"
-        maxlength="1000"
-        placeholder="Örneğin: Klimam çalışıyor fakat yeterince soğutmuyor. Kontrol edilmesini istiyorum."
-      ></textarea>
-
-      <div style="text-align:right;color:#617383;font-size:7px;margin-top:5px">
-        <span id="charCount">0</span>/1000
-      </div>
-
-    </div>
-
-    <div class="field">
-
-      <label>
-        Fotoğraf ekle
-      </label>
-
-      <div class="photo-box">
-
-        <label
-          for="photos"
-          class="photo-button"
-        >
-          📷 Fotoğraf seç
-        </label>
-
-        <input
-          id="photos"
-          type="file"
-          accept="image/*"
-          multiple
-        >
-
-        <div class="photo-info">
-          Sorunu gösteren fotoğraflar daha sonra eşleştirmeye yardımcı olabilir.
-        </div>
-
-        <div
-          class="preview"
-          id="preview"
-        ></div>
-
-      </div>
-
-    </div>
-
-    <div class="row">
-
-      <div class="field">
-
-        <label>
-          İlçe <span class="required">*</span>
-        </label>
-
-        <select class="select" id="district">
-
-          <option value="">İlçe seç</option>
-
-          <option>Aliağa</option>
-          <option>Balçova</option>
-          <option>Bayındır</option>
-          <option>Bayraklı</option>
-          <option>Bergama</option>
-          <option>Beydağ</option>
-          <option>Bornova</option>
-          <option>Buca</option>
-          <option>Çeşme</option>
-          <option>Çiğli</option>
-          <option>Dikili</option>
-          <option>Foça</option>
-          <option>Gaziemir</option>
-          <option>Güzelbahçe</option>
-          <option>Karabağlar</option>
-          <option>Karaburun</option>
-          <option>Karşıyaka</option>
-          <option>Karataş</option>
-          <option>Kemalpaşa</option>
-          <option>Kınık</option>
-          <option>Kiraz</option>
-          <option>Konak</option>
-          <option>Menderes</option>
-          <option>Menemen</option>
-          <option>Narlıdere</option>
-          <option>Ödemiş</option>
-          <option>Seferihisar</option>
-          <option>Selçuk</option>
-          <option>Tire</option>
-          <option>Torbalı</option>
-          <option>Urla</option>
-
-        </select>
-
-      </div>
-
-      <div class="field">
-
-        <label>
-          Mahalle
-        </label>
-
-        <input
-          class="input"
-          id="neighborhood"
-          maxlength="100"
-          placeholder="Mahalle adı"
-        >
-
-      </div>
-
-    </div>
-
-    <div class="field">
-
-      <label>
-        Ne zaman gerekli?
-      </label>
-
-      <div class="priority">
-
-        <button
-          type="button"
-          data-priority="Acil"
-        >
-          🔴 Acil
-        </button>
-
-        <button
-          type="button"
-          data-priority="Bugün"
-          class="active"
-        >
-          🟡 Bugün
-        </button>
-
-        <button
-          type="button"
-          data-priority="Uygun zamanda"
-        >
-          🟢 Uygun zamanda
-        </button>
-
-      </div>
-
-    </div>
-
-    <div class="row">
-
-      <div class="field">
-
-        <label>
-          Adınız <span class="required">*</span>
-        </label>
-
-        <input
-          class="input"
-          id="name"
-          maxlength="80"
-          placeholder="Adınız"
-        >
-
-      </div>
-
-      <div class="field">
-
-        <label>
-          Telefon <span class="required">*</span>
-        </label>
-
-        <input
-          class="input"
-          id="phone"
-          type="tel"
-          maxlength="20"
-          placeholder="05XX XXX XX XX"
-        >
-
-      </div>
-
-    </div>
-
-    <button
-      class="primary"
-      id="submitRequest"
-      type="button"
-    >
+    <button class="btn btn-primary" onclick="createRequest()">
       TALEBİ OLUŞTUR
     </button>
 
-  </div>
-
-  <div class="notice">
-    🔒 Bu ilk pilot sürümde talepler cihazında güvenli şekilde yerel olarak saklanır.
-    Gerçek hizmet sağlayıcı eşleştirmesini bir sonraki aşamada bağlayacağız.
-  </div>
-
-</section>
-
-
-<!-- =====================================================
-     BAŞARILI
-====================================================== -->
-
-<section class="view" id="success">
-
-  <div class="card success">
-
-    <div class="success-icon">
-      ✓
+    <div class="notice">
+      🔒 Pilot sürüm: talepler bu cihazda yerel olarak saklanır.
+      Gerçek çevrim içi eşleştirme sonraki aşamada bağlanacaktır.
     </div>
 
-    <h2>
-      Talebin oluşturuldu.
-    </h2>
+  </div>
 
-    <p>
-      Bilgilerini kaydettik. Bir sonraki aşamada
-      bu talebi İzmir'deki uygun hizmet sağlayıcılarla
-      eşleştiren sistemi kuracağız.
+</section>
+
+
+<!-- TALEPLERİM -->
+<section id="requests" class="hidden">
+
+  <button class="back" onclick="showPage('home')">
+    ← Ana sayfaya dön
+  </button>
+
+  <div class="panel">
+
+    <h2>▣ Taleplerim</h2>
+
+    <p class="panel-intro">
+      Oluşturduğun hizmet talepleri ve gelen teklifler burada görünür.
     </p>
 
-    <button
-      class="primary"
-      id="successRequests"
-      type="button"
-    >
-      TALEPLERİMİ GÖR
-    </button>
-
-    <button
-      class="secondary"
-      id="successHome"
-      type="button"
-    >
-      ANA SAYFAYA DÖN
-    </button>
+    <div id="myRequests"></div>
 
   </div>
 
 </section>
 
 
-<!-- =====================================================
-     TALEPLERİM
-====================================================== -->
+<!-- HİZMET VER -->
+<section id="provider" class="hidden">
 
-<section class="view" id="requests">
-
-  <button class="back" data-view="home">
-    ← ANA SAYFAYA DÖN
+  <button class="back" onclick="showPage('home')">
+    ← Ana sayfaya dön
   </button>
 
-  <div class="badge">
-    ▣ TALEPLERİM
+  <div class="panel" id="providerRegister">
+
+    <h2>🛠️ Hizmet ver</h2>
+
+    <p class="panel-intro">
+      Usta veya işletme olarak İşimi Çöz'e katıl.
+      İzmir'deki uygun hizmet taleplerine ulaş.
+    </p>
+
+    <label>Adınız / İşletme adınız *</label>
+    <input id="providerName" placeholder="Örn. İzmir Klima Servisi">
+
+    <label>Telefon *</label>
+    <input id="providerPhone" type="tel" placeholder="05xx xxx xx xx">
+
+    <label>Hizmet kategoriniz *</label>
+    <select id="providerCategory">
+      <option value="">Kategori seç</option>
+    </select>
+
+    <label>Hizmet verdiğiniz ilçe *</label>
+    <select id="providerDistrict">
+      <option value="">İlçe seç</option>
+    </select>
+
+    <label>Hizmet açıklaması</label>
+    <textarea
+      id="providerDescription"
+      maxlength="600"
+      placeholder="Hangi hizmetleri verdiğinizi ve uzmanlık alanlarınızı anlatın."
+    ></textarea>
+
+    <button class="btn btn-primary" onclick="registerProvider()">
+      HİZMET VERMEYE BAŞLA
+    </button>
+
   </div>
 
-  <h1>
-    Oluşturduğun
-    <span>talepler.</span>
-  </h1>
 
-  <p class="desc">
-    Bu cihaz üzerinden oluşturduğun hizmet talepleri burada görünür.
-  </p>
+  <div class="panel hidden" id="providerDashboard">
 
-  <div id="requestList"></div>
+    <div class="provider-header">
+      <div>
+        <div class="provider-name" id="dashboardProviderName"></div>
+        <div class="status">● Hizmet sağlayıcı aktif</div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <strong id="openCount">0</strong>
+        <small>Açık talep</small>
+      </div>
+
+      <div class="stat">
+        <strong id="offerCount">0</strong>
+        <small>Teklifim</small>
+      </div>
+
+      <div class="stat">
+        <strong id="acceptedCount">0</strong>
+        <small>Kabul</small>
+      </div>
+    </div>
+
+    <h2 class="section-title">📍 Uygun hizmet talepleri</h2>
+
+    <div id="providerRequests"></div>
+
+    <button class="btn btn-secondary" onclick="logoutProvider()">
+      HİZMET SAĞLAYICI OTURUMUNU KAPAT
+    </button>
+
+  </div>
 
 </section>
 
 </main>
 
 
-<!-- =====================================================
-     ALT NAV
-====================================================== -->
+<!-- ALT MENÜ -->
+<nav class="bottom-nav">
 
-<nav class="bottom">
-
-  <button
-    class="nav active"
-    data-view="home"
-    type="button"
-  >
-    ⌂<br>ANA
+  <button id="navHome" class="active" onclick="showPage('home')">
+    <span>⌂</span>
+    Ana
   </button>
 
-  <button
-    class="nav"
-    data-view="create"
-    type="button"
-  >
-    ＋<br>TALEP
+  <button id="navRequest" onclick="showPage('request')">
+    <span>＋</span>
+    Talep
   </button>
 
-  <button
-    class="nav"
-    data-view="requests"
-    type="button"
-  >
-    ▣<br>TALEPLERİM
+  <button id="navRequests" onclick="showPage('requests')">
+    <span>▣</span>
+    Taleplerim
+  </button>
+
+  <button id="navProvider" onclick="showPage('provider')">
+    <span>🛠</span>
+    Hizmet Ver
   </button>
 
 </nav>
 
-<div
-  class="toast"
-  id="toast"
-></div>
+</div>
 
 
 <script>
-"use strict";
+const CATEGORIES = [
+  {
+    name:"Klima",
+    icon:"❄️",
+    description:"Bakım, montaj, arıza ve temizlik"
+  },
+  {
+    name:"Elektrik",
+    icon:"⚡",
+    description:"Arıza, priz, tesisat ve aydınlatma"
+  },
+  {
+    name:"Tesisat",
+    icon:"🔧",
+    description:"Su, gider, musluk ve kaçak sorunları"
+  },
+  {
+    name:"Beyaz Eşya",
+    icon:"🧊",
+    description:"Çamaşır, bulaşık, buzdolabı ve fırın"
+  },
+  {
+    name:"Temizlik",
+    icon:"🧹",
+    description:"Ev, ofis ve detaylı temizlik"
+  },
+  {
+    name:"Nakliye",
+    icon:"🚚",
+    description:"Ev, ofis ve parça eşya taşıma"
+  },
+  {
+    name:"Çilingir",
+    icon:"🔐",
+    description:"Kilit, anahtar ve acil giriş"
+  },
+  {
+    name:"Oto",
+    icon:"🚗",
+    description:"Arıza, bakım, lastik ve yol yardımı"
+  }
+];
 
-/* =========================================================
-   TEMEL YARDIMCILAR
-========================================================= */
+const DISTRICTS = [
+  "Aliağa",
+  "Balçova",
+  "Bayındır",
+  "Bayraklı",
+  "Bergama",
+  "Beydağ",
+  "Bornova",
+  "Buca",
+  "Çeşme",
+  "Çiğli",
+  "Dikili",
+  "Foça",
+  "Gaziemir",
+  "Güzelbahçe",
+  "Karabağlar",
+  "Karaburun",
+  "Karşıyaka",
+  "Kemalpaşa",
+  "Kınık",
+  "Kiraz",
+  "Konak",
+  "Menderes",
+  "Menemen",
+  "Narlıdere",
+  "Ödemiş",
+  "Seferihisar",
+  "Selçuk",
+  "Tire",
+  "Torbalı",
+  "Urla"
+];
 
-const $ = (selector) =>
-  document.querySelector(selector);
-
-const $$ = (selector) =>
-  [...document.querySelectorAll(selector)];
+const REQUEST_KEY = "isimi_coz_requests_v2";
+const PROVIDER_KEY = "isimi_coz_provider_v2";
 
 
-/* =========================================================
-   GÖRÜNÜM YÖNETİMİ
-========================================================= */
-
-const views = $$(".view");
-const navButtons = $$(".nav");
-
-function showView(id){
-
-  views.forEach((view) => {
-    view.classList.toggle(
-      "active",
-      view.id === id
+function getRequests(){
+  try{
+    return JSON.parse(
+      localStorage.getItem(REQUEST_KEY) || "[]"
     );
+  }catch{
+    return [];
+  }
+}
+
+
+function saveRequests(data){
+  localStorage.setItem(
+    REQUEST_KEY,
+    JSON.stringify(data)
+  );
+}
+
+
+function getProvider(){
+  try{
+    return JSON.parse(
+      localStorage.getItem(PROVIDER_KEY) || "null"
+    );
+  }catch{
+    return null;
+  }
+}
+
+
+function saveProvider(provider){
+  localStorage.setItem(
+    PROVIDER_KEY,
+    JSON.stringify(provider)
+  );
+}
+
+
+function id(){
+  return "IC-" +
+    Date.now().toString(36).toUpperCase() +
+    "-" +
+    Math.random()
+      .toString(36)
+      .substring(2,7)
+      .toUpperCase();
+}
+
+
+function populate(){
+
+  const grid =
+    document.getElementById("serviceGrid");
+
+  grid.innerHTML = CATEGORIES.map(c => `
+    <div
+      class="card service-card"
+      onclick="chooseCategory('${escapeHtml(c.name)}')"
+    >
+      <div class="icon">${c.icon}</div>
+      <h3>${escapeHtml(c.name)}</h3>
+      <p>${escapeHtml(c.description)}</p>
+    </div>
+  `).join("");
+
+
+  const categoryOptions =
+    CATEGORIES.map(c =>
+      `<option value="${escapeAttr(c.name)}">${escapeHtml(c.name)}</option>`
+    ).join("");
+
+
+  document.getElementById("reqCategory").innerHTML =
+    `<option value="">Kategori seç</option>` +
+    categoryOptions;
+
+  document.getElementById("providerCategory").innerHTML =
+    `<option value="">Kategori seç</option>` +
+    categoryOptions;
+
+
+  const districtOptions =
+    DISTRICTS.map(d =>
+      `<option value="${escapeAttr(d)}">${escapeHtml(d)}</option>`
+    ).join("");
+
+
+  document.getElementById("reqDistrict").innerHTML =
+    `<option value="">İlçe seç</option>` +
+    districtOptions;
+
+  document.getElementById("providerDistrict").innerHTML =
+    `<option value="">İlçe seç</option>` +
+    districtOptions;
+}
+
+
+function chooseCategory(category){
+  document.getElementById("reqCategory").value = category;
+  showPage("request");
+}
+
+
+function showPage(page){
+
+  [
+    "home",
+    "request",
+    "requests",
+    "provider"
+  ].forEach(p => {
+    document
+      .getElementById(p)
+      .classList.toggle(
+        "hidden",
+        p !== page
+      );
   });
 
-  navButtons.forEach((button) => {
-    button.classList.toggle(
-      "active",
-      button.dataset.view === id
-    );
-  });
+
+  document
+    .querySelectorAll(".bottom-nav button")
+    .forEach(b => b.classList.remove("active"));
+
+
+  const navMap = {
+    home:"navHome",
+    request:"navRequest",
+    requests:"navRequests",
+    provider:"navProvider"
+  };
+
+
+  document
+    .getElementById(navMap[page])
+    ?.classList.add("active");
+
+
+  if(page === "requests"){
+    renderMyRequests();
+  }
+
+  if(page === "provider"){
+    renderProvider();
+  }
 
   window.scrollTo({
     top:0,
     behavior:"smooth"
   });
-
 }
 
 
-/* =========================================================
-   NAVIGATION
-========================================================= */
+function createRequest(){
 
-$$("[data-view]").forEach((button) => {
+  const category =
+    document.getElementById("reqCategory").value;
 
-  button.addEventListener(
-    "click",
-    () => {
+  const description =
+    document.getElementById("reqDescription").value.trim();
 
-      const target =
-        button.dataset.view;
+  const district =
+    document.getElementById("reqDistrict").value;
 
-      if(target){
-        showView(target);
-      }
+  const neighborhood =
+    document.getElementById("reqNeighborhood").value.trim();
 
-    }
-  );
+  const urgency =
+    document.getElementById("reqUrgency").value;
 
-});
+  const name =
+    document.getElementById("reqName").value.trim();
+
+  const phone =
+    document.getElementById("reqPhone").value.trim();
 
 
-/* =========================================================
-   TOAST
-========================================================= */
-
-let toastTimer = null;
-
-function toast(message){
-
-  const element =
-    $("#toast");
-
-  if(!element){
+  if(
+    !category ||
+    !description ||
+    !district ||
+    !name ||
+    !phone
+  ){
+    alert("Lütfen zorunlu alanları doldurun.");
     return;
   }
 
-  element.textContent =
-    message;
 
-  element.classList.add("show");
+  const request = {
+    id:id(),
+    category,
+    description,
+    district,
+    neighborhood,
+    urgency,
+    name,
+    phone,
+    status:"Beklemede",
+    createdAt:new Date().toISOString(),
+    offers:[]
+  };
 
-  clearTimeout(toastTimer);
 
-  toastTimer =
-    setTimeout(() => {
+  const requests = getRequests();
 
-      element.classList.remove("show");
+  requests.unshift(request);
 
-    },2500);
+  saveRequests(requests);
 
+
+  alert(
+    "Talebiniz oluşturuldu.\n\nTalep No: " +
+    request.id
+  );
+
+
+  document.getElementById("reqDescription").value = "";
+  document.getElementById("reqNeighborhood").value = "";
+
+
+  showPage("requests");
 }
 
 
-/* =========================================================
-   SERVICE SELECTION
-========================================================= */
+function renderMyRequests(){
 
-$$(".service").forEach((service) => {
+  const box =
+    document.getElementById("myRequests");
 
-  service.addEventListener(
-    "click",
-    () => {
+  const requests = getRequests();
 
-      const category =
-        service.dataset.service;
 
-      if(!category){
-        return;
-      }
+  if(!requests.length){
+    box.innerHTML = `
+      <div class="empty">
+        Henüz oluşturduğun bir hizmet talebi yok.
+      </div>
+    `;
+    return;
+  }
 
-      $("#category").value =
-        category;
 
-      showView("create");
+  box.innerHTML = requests.map(request => {
 
-      setTimeout(() => {
+    const offers =
+      Array.isArray(request.offers)
+        ? request.offers
+        : [];
 
-        $("#description")?.focus();
 
-      },250);
+    return `
+      <div class="request">
 
-    }
+        <div class="request-top">
+          <h3>${escapeHtml(request.category)}</h3>
+          <span class="badge">${escapeHtml(request.status)}</span>
+        </div>
+
+        <p>
+          “${escapeHtml(request.description)}”
+        </p>
+
+        <div class="meta">
+          <span>📍 ${escapeHtml(request.district)}</span>
+          <span>⏱️ ${escapeHtml(request.urgency)}</span>
+          <span>📋 ${escapeHtml(request.id)}</span>
+        </div>
+
+        ${
+          offers.length
+          ? `
+            <h3 style="margin-top:18px">
+              Gelen teklifler (${offers.length})
+            </h3>
+
+            ${offers.map((offer,index) => `
+              <div class="offer">
+
+                <strong>
+                  ${escapeHtml(offer.providerName)}
+                </strong>
+
+                <small>
+                  ${escapeHtml(offer.message || "Teklif mesajı yok.")}
+                </small>
+
+                <div class="offer-actions">
+
+                  ${
+                    offer.status === "Bekliyor"
+                    ? `
+                      <button
+                        class="accept"
+                        onclick="acceptOffer('${request.id}',${index})"
+                      >
+                        Teklifi kabul et
+                      </button>
+
+                      <button
+                        class="reject"
+                        onclick="rejectOffer('${request.id}',${index})"
+                      >
+                        Reddet
+                      </button>
+                    `
+                    : `
+                      <button
+                        class="reject"
+                        disabled
+                      >
+                        ${escapeHtml(offer.status)}
+                      </button>
+                    `
+                  }
+
+                </div>
+              </div>
+            `).join("")}
+          `
+          : `
+            <div class="notice">
+              Henüz teklif gelmedi.
+            </div>
+          `
+        }
+
+      </div>
+    `;
+
+  }).join("");
+}
+
+
+function registerProvider(){
+
+  const name =
+    document.getElementById("providerName").value.trim();
+
+  const phone =
+    document.getElementById("providerPhone").value.trim();
+
+  const category =
+    document.getElementById("providerCategory").value;
+
+  const district =
+    document.getElementById("providerDistrict").value;
+
+  const description =
+    document.getElementById("providerDescription").value.trim();
+
+
+  if(!name || !phone || !category || !district){
+
+    alert(
+      "Lütfen ad/işletme, telefon, kategori ve ilçe alanlarını doldurun."
+    );
+
+    return;
+  }
+
+
+  const provider = {
+    id:"SP-" +
+      Date.now().toString(36).toUpperCase(),
+
+    name,
+    phone,
+    category,
+    district,
+    description,
+
+    createdAt:new Date().toISOString()
+  };
+
+
+  saveProvider(provider);
+
+
+  alert(
+    "Hizmet sağlayıcı profiliniz oluşturuldu."
   );
 
-});
+
+  renderProvider();
+}
 
 
-/* =========================================================
-   PRIORITY
-========================================================= */
+function renderProvider(){
 
-let selectedPriority =
-  "Bugün";
+  const provider = getProvider();
 
-$$("[data-priority]").forEach((button) => {
+  const register =
+    document.getElementById("providerRegister");
 
-  button.addEventListener(
-    "click",
-    () => {
+  const dashboard =
+    document.getElementById("providerDashboard");
 
-      selectedPriority =
-        button.dataset.priority;
 
-      $$("[data-priority]")
-        .forEach((item) => {
+  if(!provider){
 
-          item.classList.toggle(
-            "active",
-            item === button
+    register.classList.remove("hidden");
+    dashboard.classList.add("hidden");
+
+    return;
+  }
+
+
+  register.classList.add("hidden");
+  dashboard.classList.remove("hidden");
+
+
+  document.getElementById(
+    "dashboardProviderName"
+  ).textContent = provider.name;
+
+
+  const requests = getRequests();
+
+
+  const matching =
+    requests.filter(r =>
+      r.status !== "Tamamlandı" &&
+      r.status !== "İptal" &&
+      r.category === provider.category &&
+      r.district === provider.district
+    );
+
+
+  const myOffers =
+    requests.reduce((total,r) => {
+
+      const offers =
+        Array.isArray(r.offers)
+          ? r.offers
+          : [];
+
+      return total +
+        offers.filter(
+          o => o.providerId === provider.id
+        ).length;
+
+    },0);
+
+
+  const accepted =
+    requests.reduce((total,r) => {
+
+      const offers =
+        Array.isArray(r.offers)
+          ? r.offers
+          : [];
+
+      return total +
+        offers.filter(
+          o =>
+            o.providerId === provider.id &&
+            o.status === "Kabul edildi"
+        ).length;
+
+    },0);
+
+
+  document.getElementById("openCount")
+    .textContent = matching.length;
+
+  document.getElementById("offerCount")
+    .textContent = myOffers;
+
+  document.getElementById("acceptedCount")
+    .textContent = accepted;
+
+
+  const box =
+    document.getElementById("providerRequests");
+
+
+  if(!matching.length){
+
+    box.innerHTML = `
+      <div class="empty">
+        Şu anda profilinize uygun açık talep bulunmuyor.
+      </div>
+    `;
+
+    return;
+  }
+
+
+  box.innerHTML =
+    matching.map(r => {
+
+      const already =
+        (r.offers || [])
+          .some(
+            o => o.providerId === provider.id
           );
 
-        });
+
+      return `
+        <div class="request">
+
+          <div class="request-top">
+            <h3>${escapeHtml(r.category)}</h3>
+            <span class="badge">
+              ${escapeHtml(r.urgency)}
+            </span>
+          </div>
+
+          <p>
+            ${escapeHtml(r.description)}
+          </p>
+
+          <div class="meta">
+            <span>📍 ${escapeHtml(r.district)}</span>
+            ${
+              r.neighborhood
+              ? `<span>🏘️ ${escapeHtml(r.neighborhood)}</span>`
+              : ""
+            }
+          </div>
+
+          ${
+            already
+            ? `
+              <div class="notice">
+                ✓ Bu talebe daha önce teklif verdiniz.
+              </div>
+            `
+            : `
+              <button
+                class="btn btn-primary"
+                onclick="makeOffer('${r.id}')"
+              >
+                BU TALEBE TEKLİF VER
+              </button>
+            `
+          }
+
+        </div>
+      `;
+
+    }).join("");
+}
+
+
+function makeOffer(requestId){
+
+  const provider = getProvider();
+
+  if(!provider){
+    alert("Önce hizmet sağlayıcı profili oluşturmalısınız.");
+    return;
+  }
+
+
+  const message =
+    prompt(
+      "Müşteriye göndermek istediğiniz teklif mesajını yazın:",
+      "İhtiyacınızı inceleyebiliriz. Uygun olduğumuzda sizinle iletişime geçebiliriz."
+    );
+
+
+  if(message === null){
+    return;
+  }
+
+
+  const clean =
+    message.trim();
+
+
+  if(!clean){
+    alert("Teklif mesajı boş olamaz.");
+    return;
+  }
+
+
+  const requests = getRequests();
+
+  const request =
+    requests.find(
+      r => r.id === requestId
+    );
+
+
+  if(!request){
+    alert("Talep bulunamadı.");
+    return;
+  }
+
+
+  if(!Array.isArray(request.offers)){
+    request.offers = [];
+  }
+
+
+  if(
+    request.offers.some(
+      o => o.providerId === provider.id
+    )
+  ){
+    alert("Bu talebe zaten teklif verdiniz.");
+    return;
+  }
+
+
+  request.offers.push({
+
+    providerId:provider.id,
+
+    providerName:provider.name,
+
+    providerPhone:provider.phone,
+
+    message:clean,
+
+    status:"Bekliyor",
+
+    createdAt:new Date().toISOString()
+
+  });
+
+
+  saveRequests(requests);
+
+
+  alert(
+    "Teklifiniz oluşturuldu."
+  );
+
+
+  renderProvider();
+}
+
+
+function acceptOffer(requestId,offerIndex){
+
+  const requests = getRequests();
+
+  const request =
+    requests.find(
+      r => r.id === requestId
+    );
+
+
+  if(!request || !request.offers?.[offerIndex]){
+    return;
+  }
+
+
+  request.offers.forEach(
+    (offer,i) => {
+
+      if(i === offerIndex){
+        offer.status = "Kabul edildi";
+      }else if(
+        offer.status === "Bekliyor"
+      ){
+        offer.status = "Başka sağlayıcı seçildi";
+      }
 
     }
   );
 
-});
 
+  request.status = "Sağlayıcı seçildi";
 
-/* =========================================================
-   KARAKTER SAYACI
-========================================================= */
+  saveRequests(requests);
 
-const description =
-  $("#description");
+  renderMyRequests();
 
-const charCount =
-  $("#charCount");
-
-description?.addEventListener(
-  "input",
-  () => {
-
-    charCount.textContent =
-      description.value.length;
-
-  }
-);
-
-
-/* =========================================================
-   FOTOĞRAF ÖNİZLEME
-========================================================= */
-
-const photos =
-  $("#photos");
-
-const preview =
-  $("#preview");
-
-photos?.addEventListener(
-  "change",
-  () => {
-
-    preview.innerHTML = "";
-
-    const files =
-      [...photos.files];
-
-    if(files.length > 5){
-
-      toast(
-        "En fazla 5 fotoğraf seçebilirsin."
-      );
-
-      photos.value = "";
-
-      return;
-
-    }
-
-    files.forEach((file) => {
-
-      if(!file.type.startsWith("image/")){
-        return;
-      }
-
-      const reader =
-        new FileReader();
-
-      reader.onload =
-        (event) => {
-
-          const img =
-            document.createElement("img");
-
-          img.src =
-            event.target.result;
-
-          img.alt =
-            "Seçilen fotoğraf";
-
-          preview.appendChild(img);
-
-        };
-
-      reader.readAsDataURL(file);
-
-    });
-
-  }
-);
-
-
-/* =========================================================
-   LOCAL STORAGE
-========================================================= */
-
-const STORAGE_KEY =
-  "isimi_coz_requests_v1";
-
-function loadRequests(){
-
-  try{
-
-    const raw =
-      localStorage.getItem(
-        STORAGE_KEY
-      );
-
-    if(!raw){
-      return [];
-    }
-
-    const parsed =
-      JSON.parse(raw);
-
-    return Array.isArray(parsed)
-      ? parsed
-      : [];
-
-  }catch(error){
-
-    console.error(
-      "Talepler okunamadı:",
-      error
-    );
-
-    return [];
-
-  }
-
-}
-
-function saveRequests(requests){
-
-  try{
-
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(requests)
-    );
-
-    return true;
-
-  }catch(error){
-
-    console.error(
-      "Talepler kaydedilemedi:",
-      error
-    );
-
-    toast(
-      "Talep cihazda kaydedilemedi."
-    );
-
-    return false;
-
-  }
-
+  alert(
+    "Teklif kabul edildi. Hizmet sağlayıcı seçildi."
+  );
 }
 
 
-/* =========================================================
-   FORM TEMİZLEME
-========================================================= */
+function rejectOffer(requestId,offerIndex){
 
-function resetForm(){
+  const requests = getRequests();
 
-  $("#category").value = "";
+  const request =
+    requests.find(
+      r => r.id === requestId
+    );
 
-  $("#description").value = "";
 
-  $("#district").value = "";
+  if(!request || !request.offers?.[offerIndex]){
+    return;
+  }
 
-  $("#neighborhood").value = "";
 
-  $("#name").value = "";
+  request.offers[offerIndex].status =
+    "Reddedildi";
 
-  $("#phone").value = "";
 
-  $("#photos").value = "";
+  saveRequests(requests);
 
-  $("#preview").innerHTML = "";
-
-  $("#charCount").textContent =
-    "0";
-
-  selectedPriority =
-    "Bugün";
-
-  $$("[data-priority]")
-    .forEach((button) => {
-
-      button.classList.toggle(
-        "active",
-        button.dataset.priority === "Bugün"
-      );
-
-    });
-
+  renderMyRequests();
 }
 
 
-/* =========================================================
-   TELEFON TEMEL KONTROL
-========================================================= */
+function logoutProvider(){
 
-function normalizePhone(value){
+  localStorage.removeItem(PROVIDER_KEY);
 
-  return String(value)
-    .replace(/[^\d+]/g,"")
-    .trim();
-
-}
-
-function validPhone(value){
-
-  const digits =
-    normalizePhone(value)
-      .replace(/\D/g,"");
-
-  return (
-    digits.length >= 10 &&
-    digits.length <= 12
+  alert(
+    "Hizmet sağlayıcı oturumu kapatıldı."
   );
 
+  renderProvider();
 }
 
-
-/* =========================================================
-   TALEP ID
-========================================================= */
-
-function createRequestId(){
-
-  const time =
-    Date.now()
-      .toString(36)
-      .toUpperCase();
-
-  const random =
-    Math.random()
-      .toString(36)
-      .slice(2,7)
-      .toUpperCase();
-
-  return "IC-" + time + "-" + random;
-
-}
-
-
-/* =========================================================
-   TARİH
-========================================================= */
-
-function formatDate(value){
-
-  try{
-
-    return new Intl.DateTimeFormat(
-      "tr-TR",
-      {
-        day:"2-digit",
-        month:"2-digit",
-        year:"numeric",
-        hour:"2-digit",
-        minute:"2-digit"
-      }
-    ).format(
-      new Date(value)
-    );
-
-  }catch(_){
-
-    return "";
-
-  }
-
-}
-
-
-/* =========================================================
-   HTML ESCAPE
-========================================================= */
 
 function escapeHtml(value){
 
-  return String(value)
+  return String(value ?? "")
     .replace(/&/g,"&amp;")
     .replace(/</g,"&lt;")
     .replace(/>/g,"&gt;")
     .replace(/"/g,"&quot;")
     .replace(/'/g,"&#039;");
-
 }
 
 
-/* =========================================================
-   TALEP OLUŞTUR
-========================================================= */
-
-$("#submitRequest")?.addEventListener(
-  "click",
-  () => {
-
-    const category =
-      $("#category").value.trim();
-
-    const descriptionValue =
-      $("#description").value.trim();
-
-    const district =
-      $("#district").value.trim();
-
-    const neighborhood =
-      $("#neighborhood").value.trim();
-
-    const name =
-      $("#name").value.trim();
-
-    const phone =
-      normalizePhone(
-        $("#phone").value
-      );
-
-    /* -------------------------
-       ZORUNLU ALAN KONTROLLERİ
-    ------------------------- */
-
-    if(!category){
-
-      toast(
-        "Lütfen hizmet kategorisini seç."
-      );
-
-      showView("create");
-
-      $("#category").focus();
-
-      return;
-
-    }
-
-    if(descriptionValue.length < 10){
-
-      toast(
-        "Lütfen ihtiyacını en az 10 karakterle anlat."
-      );
-
-      $("#description").focus();
-
-      return;
-
-    }
-
-    if(!district){
-
-      toast(
-        "Lütfen ilçeni seç."
-      );
-
-      $("#district").focus();
-
-      return;
-
-    }
-
-    if(!name){
-
-      toast(
-        "Lütfen adını yaz."
-      );
-
-      $("#name").focus();
-
-      return;
-
-    }
-
-    if(!validPhone(phone)){
-
-      toast(
-        "Lütfen geçerli bir telefon numarası gir."
-      );
-
-      $("#phone").focus();
-
-      return;
-
-    }
-
-
-    /* -------------------------
-       FOTOĞRAF SAYISI
-    ------------------------- */
-
-    const selectedFiles =
-      photos?.files
-        ? [...photos.files]
-        : [];
-
-    if(selectedFiles.length > 5){
-
-      toast(
-        "En fazla 5 fotoğraf ekleyebilirsin."
-      );
-
-      return;
-
-    }
-
-
-    /* -------------------------
-       TALEP NESNESİ
-    ------------------------- */
-
-    const request = {
-
-      id:
-        createRequestId(),
-
-      category,
-
-      description:
-        descriptionValue,
-
-      district,
-
-      neighborhood,
-
-      priority:
-        selectedPriority,
-
-      name,
-
-      phone,
-
-      photoCount:
-        selectedFiles.length,
-
-      status:
-        "Beklemede",
-
-      createdAt:
-        new Date().toISOString()
-
-    };
-
-
-    /* -------------------------
-       KAYDET
-    ------------------------- */
-
-    const requests =
-      loadRequests();
-
-    requests.unshift(
-      request
-    );
-
-    const saved =
-      saveRequests(
-        requests
-      );
-
-    if(!saved){
-      return;
-    }
-
-
-    /* -------------------------
-       BAŞARILI
-    ------------------------- */
-
-    renderRequests();
-
-    resetForm();
-
-    showView("success");
-
-  }
-);
-
-
-/* =========================================================
-   TALEPLERİ RENDER
-========================================================= */
-
-function renderRequests(){
-
-  const container =
-    $("#requestList");
-
-  if(!container){
-    return;
-  }
-
-  const requests =
-    loadRequests();
-
-  if(!requests.length){
-
-    container.innerHTML = `
-      <div class="empty">
-        <div class="empty-icon">📋</div>
-        <strong>Henüz oluşturduğun bir talep yok.</strong>
-        <br>
-        İlk hizmet talebini oluşturduğunda burada görünecek.
-      </div>
-    `;
-
-    return;
-
-  }
-
-
-  container.innerHTML =
-    requests
-      .map((request) => {
-
-        const title =
-          escapeHtml(
-            request.category
-          );
-
-        const desc =
-          escapeHtml(
-            request.description
-          );
-
-        const district =
-          escapeHtml(
-            request.district
-          );
-
-        const neighborhood =
-          escapeHtml(
-            request.neighborhood || "—"
-          );
-
-        const priority =
-          escapeHtml(
-            request.priority
-          );
-
-        const date =
-          escapeHtml(
-            formatDate(
-              request.createdAt
-            )
-          );
-
-        const photoText =
-          request.photoCount > 0
-            ? `📷 ${request.photoCount} fotoğraf`
-            : "📷 Fotoğraf yok";
-
-        return `
-          <div class="request">
-
-            <div class="request-head">
-
-              <div>
-                <div class="request-title">
-                  ${title}
-                </div>
-
-                <div class="request-date">
-                  ${date}
-                </div>
-              </div>
-
-              <div class="status">
-                ${escapeHtml(request.status)}
-              </div>
-
-            </div>
-
-            <div class="request-desc">
-              ${desc}
-            </div>
-
-            <div class="request-meta">
-
-              <div class="meta">
-                📍 ${district}
-              </div>
-
-              <div class="meta">
-                🏘️ ${neighborhood}
-              </div>
-
-              <div class="meta">
-                ⏱️ ${priority}
-              </div>
-
-              <div class="meta">
-                ${photoText}
-              </div>
-
-            </div>
-
-            <div
-              style="
-                margin-top:10px;
-                color:#526676;
-                font-size:6.5px;
-              "
-            >
-              Talep No: ${escapeHtml(request.id)}
-            </div>
-
-          </div>
-        `;
-
-      })
-      .join("");
-
+function escapeAttr(value){
+  return escapeHtml(value);
 }
 
 
-/* =========================================================
-   BAŞARILI SAYFA BUTONLARI
-========================================================= */
-
-$("#successRequests")?.addEventListener(
-  "click",
-  () => {
-
-    renderRequests();
-
-    showView("requests");
-
-  }
-);
-
-$("#successHome")?.addEventListener(
-  "click",
-  () => {
-
-    showView("home");
-
-  }
-);
-
-
-/* =========================================================
-   BAŞLANGIÇ
-========================================================= */
-
-renderRequests();
-
-
-/* =========================================================
-   ARKA PLAN PARÇACIK ANİMASYONU
-========================================================= */
-
-const canvas =
-  $("#bg");
-
-const context =
-  canvas.getContext("2d");
-
-let width = 0;
-let height = 0;
-let ratio = 1;
-
-let particles = [];
-
-function resizeCanvas(){
-
-  ratio =
-    window.devicePixelRatio || 1;
-
-  width =
-    window.innerWidth;
-
-  height =
-    window.innerHeight;
-
-  canvas.width =
-    width * ratio;
-
-  canvas.height =
-    height * ratio;
-
-  context.setTransform(
-    ratio,
-    0,
-    0,
-    ratio,
-    0,
-    0
-  );
-
-  particles =
-    Array.from(
-      {
-        length:70
-      },
-      () => ({
-        x:
-          Math.random() * width,
-
-        y:
-          Math.random() * height,
-
-        speed:
-          .08 +
-          Math.random() * .25,
-
-        radius:
-          .3 +
-          Math.random() * .8
-      })
-    );
-
-}
-
-function animateBackground(){
-
-  context.clearRect(
-    0,
-    0,
-    width,
-    height
-  );
-
-  context.fillStyle =
-    "rgba(32,220,255,.28)";
-
-  particles.forEach(
-    (particle) => {
-
-      particle.y +=
-        particle.speed;
-
-      if(
-        particle.y >
-        height + 3
-      ){
-
-        particle.y = -3;
-
-      }
-
-      context.beginPath();
-
-      context.arc(
-        particle.x,
-        particle.y,
-        particle.radius,
-        0,
-        Math.PI * 2
-      );
-
-      context.fill();
-
-    }
-  );
-
-  requestAnimationFrame(
-    animateBackground
-  );
-
-}
-
-resizeCanvas();
-
-window.addEventListener(
-  "resize",
-  resizeCanvas
-);
-
-animateBackground();
+/* Başlat */
+populate();
+renderMyRequests();
+renderProvider();
 
 </script>
 
