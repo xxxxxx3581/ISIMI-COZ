@@ -1,0 +1,2026 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#07111f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>İşimi Çöz — İzmir</title>
+
+<style>
+*{box-sizing:border-box}
+
+html,body{
+  margin:0;
+  min-height:100%;
+  background:#07111f;
+  color:#f4f7fb;
+  font-family:Inter,Arial,sans-serif;
+}
+
+body{
+  overflow-x:hidden;
+}
+
+:root{
+  --bg:#07111f;
+  --panel:#0d1a2a;
+  --panel2:#101f32;
+  --line:#ffffff12;
+  --text:#f4f7fb;
+  --muted:#8ea0b5;
+  --blue:#25b9ff;
+  --green:#39d98a;
+  --orange:#ffb84d;
+  --danger:#ff657a;
+}
+
+button,input,select,textarea{
+  font:inherit;
+}
+
+button{
+  cursor:pointer;
+}
+
+.app{
+  min-height:100vh;
+  background:
+    radial-gradient(circle at 80% -10%,#164a68 0,transparent 35%),
+    radial-gradient(circle at -10% 40%,#102f4b 0,transparent 35%),
+    var(--bg);
+}
+
+/* HEADER */
+
+.header{
+  position:sticky;
+  top:0;
+  z-index:50;
+  padding:13px 16px;
+  background:rgba(7,17,31,.88);
+  backdrop-filter:blur(18px);
+  border-bottom:1px solid var(--line);
+}
+
+.header-inner{
+  max-width:900px;
+  margin:auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.logo{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.logo-mark{
+  width:42px;
+  height:42px;
+  border-radius:13px;
+  display:grid;
+  place-items:center;
+  font-weight:900;
+  font-size:13px;
+  color:#fff;
+  background:linear-gradient(135deg,#19baff,#1767ff);
+  box-shadow:0 8px 30px #168cff33;
+}
+
+.logo-title{
+  font-size:15px;
+  font-weight:900;
+  letter-spacing:-.4px;
+}
+
+.logo-sub{
+  margin-top:2px;
+  color:#8194a9;
+  font-size:8px;
+  letter-spacing:1.3px;
+}
+
+.location{
+  border:1px solid var(--line);
+  background:#ffffff08;
+  border-radius:12px;
+  padding:8px 10px;
+  color:#b7c5d3;
+  font-size:10px;
+}
+
+/* MAIN */
+
+main{
+  max-width:900px;
+  margin:auto;
+  padding:24px 15px 105px;
+}
+
+.screen{
+  display:none;
+  animation:appear .25s ease;
+}
+
+.screen.active{
+  display:block;
+}
+
+@keyframes appear{
+  from{
+    opacity:0;
+    transform:translateY(8px);
+  }
+  to{
+    opacity:1;
+    transform:none;
+  }
+}
+
+/* HERO */
+
+.hero{
+  padding:18px 0 8px;
+}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:7px 10px;
+  border-radius:99px;
+  background:#25b9ff0e;
+  border:1px solid #25b9ff22;
+  color:#65ccff;
+  font-size:9px;
+  font-weight:800;
+}
+
+.badge-dot{
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 10px var(--green);
+}
+
+.hero h1{
+  font-size:40px;
+  line-height:.98;
+  letter-spacing:-2px;
+  margin:15px 0 12px;
+}
+
+.hero h1 span{
+  display:block;
+  color:#48c8ff;
+}
+
+.hero p{
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.6;
+  max-width:650px;
+  margin:0;
+}
+
+/* SEARCH */
+
+.search-box{
+  margin-top:20px;
+  display:flex;
+  gap:8px;
+  padding:7px;
+  border:1px solid var(--line);
+  background:#ffffff07;
+  border-radius:17px;
+}
+
+.search-box input{
+  min-width:0;
+  flex:1;
+  border:0;
+  outline:0;
+  background:transparent;
+  color:#fff;
+  padding:11px;
+  font-size:12px;
+}
+
+.search-box button{
+  border:0;
+  border-radius:12px;
+  padding:0 16px;
+  background:var(--blue);
+  color:#03101a;
+  font-weight:900;
+  font-size:10px;
+}
+
+/* SECTION */
+
+.section-title{
+  margin:27px 0 12px;
+  display:flex;
+  justify-content:space-between;
+  align-items:end;
+}
+
+.section-title h2{
+  margin:0;
+  font-size:16px;
+}
+
+.section-title span{
+  color:#71859b;
+  font-size:9px;
+}
+
+/* CATEGORIES */
+
+.categories{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:9px;
+}
+
+.category{
+  position:relative;
+  min-height:108px;
+  border:1px solid var(--line);
+  border-radius:17px;
+  background:linear-gradient(145deg,#ffffff09,#ffffff03);
+  padding:14px;
+  color:#fff;
+  text-align:left;
+  transition:.15s;
+}
+
+.category:active{
+  transform:scale(.97);
+}
+
+.category-icon{
+  font-size:25px;
+}
+
+.category strong{
+  display:block;
+  margin-top:10px;
+  font-size:11px;
+}
+
+.category small{
+  display:block;
+  color:#71859a;
+  margin-top:4px;
+  font-size:8px;
+  line-height:1.4;
+}
+
+.category-arrow{
+  position:absolute;
+  right:12px;
+  bottom:11px;
+  color:#3fc5ff;
+}
+
+/* QUICK */
+
+.quick{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:9px;
+}
+
+.quick-card{
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:14px;
+  background:#ffffff06;
+}
+
+.quick-card b{
+  font-size:10px;
+}
+
+.quick-card p{
+  color:#8193a7;
+  font-size:8px;
+  line-height:1.45;
+  margin:6px 0 0;
+}
+
+/* FORMS */
+
+.page-title{
+  margin:5px 0 18px;
+}
+
+.back{
+  border:1px solid var(--line);
+  background:#ffffff08;
+  color:#aebdca;
+  border-radius:11px;
+  padding:9px 11px;
+  font-size:9px;
+  margin-bottom:15px;
+}
+
+.page-title h1{
+  margin:0;
+  font-size:29px;
+  letter-spacing:-1.2px;
+}
+
+.page-title p{
+  color:var(--muted);
+  font-size:10px;
+  line-height:1.5;
+  margin:8px 0 0;
+}
+
+.form-card{
+  border:1px solid var(--line);
+  border-radius:18px;
+  padding:15px;
+  background:#ffffff06;
+  margin-bottom:11px;
+}
+
+.form-label{
+  display:block;
+  color:#b7c5d3;
+  font-size:9px;
+  font-weight:800;
+  margin-bottom:7px;
+}
+
+.field{
+  width:100%;
+  border:1px solid #ffffff12;
+  background:#07111f;
+  color:#fff;
+  border-radius:11px;
+  padding:12px;
+  outline:none;
+  font-size:11px;
+}
+
+textarea.field{
+  min-height:100px;
+  resize:vertical;
+}
+
+.field:focus{
+  border-color:#25b9ff55;
+}
+
+.form-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:9px;
+}
+
+.primary{
+  width:100%;
+  border:0;
+  border-radius:13px;
+  padding:14px;
+  background:linear-gradient(90deg,#20baff,#287dff);
+  color:#03101a;
+  font-size:11px;
+  font-weight:900;
+}
+
+.secondary{
+  width:100%;
+  border:1px solid var(--line);
+  border-radius:13px;
+  padding:13px;
+  background:#ffffff07;
+  color:#c2ced9;
+  font-size:10px;
+  font-weight:800;
+}
+
+/* REQUEST */
+
+.request-summary{
+  border:1px solid #25b9ff22;
+  background:#25b9ff08;
+  border-radius:16px;
+  padding:14px;
+  margin-bottom:11px;
+}
+
+.request-summary b{
+  display:block;
+  font-size:11px;
+}
+
+.request-summary span{
+  display:block;
+  margin-top:5px;
+  color:#8fa4b7;
+  font-size:9px;
+}
+
+/* RESULTS */
+
+.result-list{
+  display:grid;
+  gap:9px;
+}
+
+.provider{
+  border:1px solid var(--line);
+  background:#ffffff06;
+  border-radius:17px;
+  padding:14px;
+}
+
+.provider-top{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+.provider-avatar{
+  width:43px;
+  height:43px;
+  border-radius:14px;
+  display:grid;
+  place-items:center;
+  background:#ffffff0b;
+  border:1px solid var(--line);
+  font-size:18px;
+}
+
+.provider-name{
+  flex:1;
+}
+
+.provider-name b{
+  font-size:11px;
+}
+
+.provider-name small{
+  display:block;
+  color:#7e91a5;
+  font-size:8px;
+  margin-top:3px;
+}
+
+.verified{
+  color:var(--green);
+  font-size:8px;
+  font-weight:800;
+}
+
+.rating{
+  margin-top:10px;
+  display:flex;
+  gap:9px;
+  color:#93a6b8;
+  font-size:8px;
+}
+
+.provider-action{
+  margin-top:12px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:7px;
+}
+
+.provider-action button{
+  border-radius:10px;
+  padding:10px;
+  font-size:9px;
+  font-weight:800;
+}
+
+/* STATUS */
+
+.status-box{
+  text-align:center;
+  padding:27px 15px;
+  border:1px solid var(--line);
+  border-radius:19px;
+  background:#ffffff06;
+}
+
+.status-icon{
+  width:64px;
+  height:64px;
+  margin:0 auto 14px;
+  border-radius:20px;
+  display:grid;
+  place-items:center;
+  font-size:27px;
+  background:#25b9ff10;
+  border:1px solid #25b9ff22;
+}
+
+.status-box h2{
+  margin:0;
+  font-size:18px;
+}
+
+.status-box p{
+  color:#8598ab;
+  font-size:10px;
+  line-height:1.5;
+}
+
+.timeline{
+  margin-top:18px;
+  text-align:left;
+}
+
+.timeline-item{
+  position:relative;
+  padding:0 0 18px 28px;
+  border-left:1px solid #ffffff18;
+  margin-left:9px;
+}
+
+.timeline-item:last-child{
+  border-left:0;
+}
+
+.timeline-dot{
+  position:absolute;
+  left:-6px;
+  top:0;
+  width:11px;
+  height:11px;
+  border-radius:50%;
+  background:#314355;
+}
+
+.timeline-item.done .timeline-dot{
+  background:var(--green);
+  box-shadow:0 0 10px #39d98a66;
+}
+
+.timeline-item b{
+  font-size:9px;
+}
+
+.timeline-item small{
+  display:block;
+  color:#7f92a5;
+  font-size:8px;
+  margin-top:3px;
+}
+
+/* BOTTOM NAV */
+
+.bottom{
+  position:fixed;
+  z-index:60;
+  left:0;
+  right:0;
+  bottom:0;
+  padding:8px 10px calc(8px + env(safe-area-inset-bottom));
+  background:linear-gradient(transparent,rgba(7,17,31,.97) 25%);
+}
+
+.bottom-inner{
+  max-width:700px;
+  margin:auto;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:5px;
+}
+
+.nav-btn{
+  border:1px solid transparent;
+  background:#0b1827;
+  color:#71869a;
+  border-radius:12px;
+  padding:9px 3px;
+  font-size:8px;
+}
+
+.nav-btn.active{
+  color:#fff;
+  border-color:#25b9ff33;
+  background:#102b40;
+}
+
+.nav-icon{
+  display:block;
+  font-size:16px;
+  margin-bottom:3px;
+}
+
+/* TOAST */
+
+.toast{
+  position:fixed;
+  z-index:100;
+  left:15px;
+  right:15px;
+  bottom:84px;
+  max-width:500px;
+  margin:auto;
+  padding:12px 14px;
+  border-radius:13px;
+  background:#16283a;
+  border:1px solid #ffffff15;
+  color:#dce7ef;
+  font-size:10px;
+  box-shadow:0 12px 35px #0008;
+  transform:translateY(20px);
+  opacity:0;
+  pointer-events:none;
+  transition:.25s;
+}
+
+.toast.show{
+  transform:none;
+  opacity:1;
+}
+
+/* DESKTOP */
+
+@media(min-width:650px){
+
+  .categories{
+    grid-template-columns:repeat(4,1fr);
+  }
+
+  .hero h1{
+    font-size:55px;
+  }
+
+  .quick{
+    grid-template-columns:repeat(4,1fr);
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="app">
+
+<header class="header">
+  <div class="header-inner">
+
+    <div class="logo">
+      <div class="logo-mark">İÇ</div>
+      <div>
+        <div class="logo-title">İŞİMİ ÇÖZ</div>
+        <div class="logo-sub">GÜVENİLİR HİZMET • İZMİR PİLOT</div>
+      </div>
+    </div>
+
+    <div class="location">📍 İzmir</div>
+
+  </div>
+</header>
+
+
+<main>
+
+<!-- ================= ANA SAYFA ================= -->
+
+<section class="screen active" id="home">
+
+  <div class="hero">
+
+    <div class="badge">
+      <span class="badge-dot"></span>
+      İZMİR'DE HİZMET BUL
+    </div>
+
+    <h1>
+      İşini anlat.
+      <span>Biz çözelim.</span>
+    </h1>
+
+    <p>
+      Evinde, iş yerinde veya günlük hayatında ihtiyacın olan
+      hizmeti kolayca bul. İhtiyacını bildir, uygun hizmet
+      sağlayıcıları karşılaştır ve işini çözüme ulaştır.
+    </p>
+
+    <div class="search-box">
+      <input
+        id="homeSearch"
+        type="text"
+        placeholder="Örn. klima temizliği, elektrikçi..."
+      >
+      <button id="searchBtn">BUL</button>
+    </div>
+
+  </div>
+
+
+  <div class="section-title">
+    <h2>Ne lazım?</h2>
+    <span>Hızlı seçim</span>
+  </div>
+
+
+  <div class="categories">
+
+    <button class="category" data-service="Elektrik">
+      <div class="category-icon">⚡</div>
+      <strong>Elektrik</strong>
+      <small>Arıza, tesisat, priz, aydınlatma</small>
+      <div class="category-arrow">→</div>
+    </button>
+
+    <button class="category" data-service="Su Tesisatı">
+      <div class="category-icon">💧</div>
+      <strong>Su Tesisatı</strong>
+      <small>Musluk, kaçak, gider, tesisat</small>
+      <div class="category-arrow">→</div>
+    </button>
+
+    <button class="category" data-service="Klima">
+      <div class="category-icon">❄️</div>
+      <strong>Klima</strong>
+      <small>Bakım, temizlik, montaj, arıza</small>
+      <div class="category-arrow">→</div>
+    </button>
+
+    <button class="category" data-service="Beyaz Eşya">
+      <div class="category-icon">🔧</div>
+      <strong>Beyaz Eşya</strong>
+      <small>Çamaşır, bulaşık, buzdolabı</small>
+      <div class="category-arrow">→</div>
+    </button>
+
+    <button class="category" data-service="Temizlik">
+      <div class="category-icon">🧹</div>
+      <strong>Temizlik</strong>
+      <small>Ev, ofis, taşınma sonrası</small>
+      <div class="category-arrow">→</div>
+    </button>
+
+    <button class="category" data-service="Boyacı">
+      <div class="category-icon">🎨</div>
+      <strong>Boya & Dekorasyon</strong>
+      <small>Boya, badana ve küçük tadilat</small>
+      <div class="category-arrow">→</div>
+    </button>
+
+    <button class="category" data-service="Mobilya">
+      <div class="category-icon">🪑</div>
+      <strong>Mobilya</strong>
+      <small>Montaj, kurulum, onarım</small>
+      <div class="category-arrow">→</div>
+    </button>
+
+    <button class="category" data-service="Diğer">
+      <div class="category-icon">＋</div>
+      <strong>Diğer</strong>
+      <small>İhtiyacını kendin anlat</small>
+      <div class="category-arrow">→</div>
+    </button>
+
+  </div>
+
+
+  <div class="section-title">
+    <h2>Nasıl çalışır?</h2>
+  </div>
+
+  <div class="quick">
+
+    <div class="quick-card">
+      <b>01 · İhtiyacını bildir</b>
+      <p>Ne yapılması gerektiğini birkaç cümleyle anlat.</p>
+    </div>
+
+    <div class="quick-card">
+      <b>02 · Uygun hizmeti bul</b>
+      <p>Konumuna ve hizmet türüne göre seçenekleri gör.</p>
+    </div>
+
+    <div class="quick-card">
+      <b>03 · Karşılaştır</b>
+      <p>Puan, deneyim ve fiyat tekliflerini karşılaştır.</p>
+    </div>
+
+    <div class="quick-card">
+      <b>04 · İşini çöz</b>
+      <p>Hizmet sağlayıcıyla iletişime geç ve işi tamamla.</p>
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- ================= TALEP OLUŞTUR ================= -->
+
+<section class="screen" id="request">
+
+  <button class="back" data-screen="home">← Ana sayfaya dön</button>
+
+  <div class="page-title">
+    <h1>İhtiyacını anlat.</h1>
+    <p>
+      Ne kadar net anlatırsan, sana uygun hizmeti bulmak o kadar kolay olur.
+    </p>
+  </div>
+
+
+  <div class="request-summary">
+    <b id="selectedService">Hizmet seçilmedi</b>
+    <span>İzmir pilot bölgesi</span>
+  </div>
+
+
+  <div class="form-card">
+
+    <label class="form-label">Ne yapılması gerekiyor?</label>
+
+    <textarea
+      class="field"
+      id="description"
+      placeholder="Örn. Klima çalışıyor ama yeterince soğutmuyor. Evde kontrol edilmesini istiyorum."
+    ></textarea>
+
+  </div>
+
+
+  <div class="form-card">
+
+    <label class="form-label">Hizmet adresi</label>
+
+    <input
+      class="field"
+      id="address"
+      placeholder="Mahalle / ilçe / açık adres"
+    >
+
+  </div>
+
+
+  <div class="form-card">
+
+    <div class="form-row">
+
+      <div>
+        <label class="form-label">İlçe</label>
+
+        <select class="field" id="district">
+
+          <option value="">Seç</option>
+          <option>Bornova</option>
+          <option>Karşıyaka</option>
+          <option>Bayraklı</option>
+          <option>Konak</option>
+          <option>Buca</option>
+          <option>Çiğli</option>
+          <option>Gaziemir</option>
+          <option>Balçova</option>
+          <option>Narlıdere</option>
+          <option>Güzelbahçe</option>
+          <option>Urla</option>
+          <option>Menemen</option>
+          <option>Torbalı</option>
+          <option>Aliağa</option>
+          <option>Seferihisar</option>
+          <option>Diğer</option>
+
+        </select>
+
+      </div>
+
+
+      <div>
+
+        <label class="form-label">Ne zaman?</label>
+
+        <select class="field" id="time">
+
+          <option value="Fark etmez">Fark etmez</option>
+          <option value="Bugün">Bugün</option>
+          <option value="Yarın">Yarın</option>
+          <option value="Bu hafta">Bu hafta</option>
+
+        </select>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+  <button class="primary" id="createRequest">
+    UYGUN HİZMETİ BUL
+  </button>
+
+</section>
+
+
+<!-- ================= SONUÇLAR ================= -->
+
+<section class="screen" id="results">
+
+  <button class="back" data-screen="request">← Talebe dön</button>
+
+  <div class="page-title">
+    <h1>Uygun seçenekler.</h1>
+    <p id="resultDescription">
+      Talebine uygun hizmet sağlayıcıları burada göreceksin.
+    </p>
+  </div>
+
+  <div class="result-list" id="providerList"></div>
+
+</section>
+
+
+<!-- ================= TALEP DURUMU ================= -->
+
+<section class="screen" id="statusScreen">
+
+  <button class="back" data-screen="home">← Ana sayfaya dön</button>
+
+  <div class="page-title">
+    <h1>İşin takipte.</h1>
+    <p>Talebinin durumunu buradan takip edebilirsin.</p>
+  </div>
+
+
+  <div class="status-box">
+
+    <div class="status-icon">✓</div>
+
+    <h2 id="statusTitle">Talep oluşturuldu</h2>
+
+    <p id="statusText">
+      Talebin sisteme kaydedildi.
+    </p>
+
+
+    <div class="timeline">
+
+      <div class="timeline-item done">
+        <div class="timeline-dot"></div>
+        <b>Talep oluşturuldu</b>
+        <small>İhtiyacın sisteme iletildi.</small>
+      </div>
+
+      <div class="timeline-item done">
+        <div class="timeline-dot"></div>
+        <b>Hizmet sağlayıcı aranıyor</b>
+        <small>Uygun seçenekler değerlendiriliyor.</small>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <b>Teklif / iletişim</b>
+        <small>Bir hizmet sağlayıcı seçildiğinde burada görünecek.</small>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-dot"></div>
+        <b>İş tamamlandı</b>
+        <small>Hizmet tamamlandığında talep kapatılacak.</small>
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- ================= PROFİL ================= -->
+
+<section class="screen" id="profile">
+
+  <div class="page-title">
+    <h1>İşimi Çöz</h1>
+    <p>
+      İlk aşamada İzmir'de başlıyor. Sistem büyüdükçe diğer şehirlere açılacak.
+    </p>
+  </div>
+
+
+  <div class="form-card">
+
+    <label class="form-label">Adın</label>
+
+    <input
+      class="field"
+      id="userName"
+      placeholder="Adını yaz"
+    >
+
+  </div>
+
+
+  <div class="form-card">
+
+    <label class="form-label">Telefon</label>
+
+    <input
+      class="field"
+      id="userPhone"
+      type="tel"
+      placeholder="05xx xxx xx xx"
+    >
+
+  </div>
+
+
+  <div class="form-card">
+
+    <label class="form-label">Varsayılan ilçe</label>
+
+    <select class="field" id="userDistrict">
+
+      <option value="">Seç</option>
+      <option>Bornova</option>
+      <option>Karşıyaka</option>
+      <option>Bayraklı</option>
+      <option>Konak</option>
+      <option>Buca</option>
+      <option>Çiğli</option>
+      <option>Gaziemir</option>
+      <option>Balçova</option>
+      <option>Narlıdere</option>
+      <option>Güzelbahçe</option>
+      <option>Urla</option>
+
+    </select>
+
+  </div>
+
+
+  <button class="primary" id="saveProfile">
+    PROFİLİ KAYDET
+  </button>
+
+</section>
+
+</main>
+
+
+<!-- ================= ALT MENÜ ================= -->
+
+<nav class="bottom">
+
+  <div class="bottom-inner">
+
+    <button class="nav-btn active" data-screen="home">
+      <span class="nav-icon">⌂</span>
+      Ana Sayfa
+    </button>
+
+    <button class="nav-btn" data-screen="request">
+      <span class="nav-icon">＋</span>
+      Talep
+    </button>
+
+    <button class="nav-btn" data-screen="statusScreen">
+      <span class="nav-icon">✓</span>
+      İşlerim
+    </button>
+
+    <button class="nav-btn" data-screen="profile">
+      <span class="nav-icon">●</span>
+      Profil
+    </button>
+
+  </div>
+
+</nav>
+
+
+<div class="toast" id="toast"></div>
+
+</div>
+
+
+<script>
+/* =========================================================
+   İŞİMİ ÇÖZ — FRONTEND ENGINE
+========================================================= */
+
+const screens =
+  [...document.querySelectorAll(".screen")];
+
+const navButtons =
+  [...document.querySelectorAll(".nav-btn")];
+
+let selectedService = "";
+
+let currentRequest = null;
+
+
+/* =========================================================
+   SCREEN NAVIGATION
+========================================================= */
+
+function showScreen(id){
+
+  screens.forEach(screen => {
+
+    screen.classList.toggle(
+      "active",
+      screen.id === id
+    );
+
+  });
+
+
+  navButtons.forEach(button => {
+
+    button.classList.toggle(
+      "active",
+      button.dataset.screen === id
+    );
+
+  });
+
+
+  window.scrollTo({
+    top:0,
+    behavior:"smooth"
+  });
+
+}
+
+
+document
+  .querySelectorAll("[data-screen]")
+  .forEach(button => {
+
+    button.addEventListener(
+      "click",
+      () => {
+
+        showScreen(
+          button.dataset.screen
+        );
+
+      }
+    );
+
+  });
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+let toastTimer = null;
+
+function toast(message){
+
+  const element =
+    document.getElementById("toast");
+
+  element.textContent =
+    message;
+
+  element.classList.add("show");
+
+  clearTimeout(toastTimer);
+
+  toastTimer =
+    setTimeout(() => {
+
+      element.classList.remove("show");
+
+    },3000);
+
+}
+
+
+/* =========================================================
+   SERVICE SELECTION
+========================================================= */
+
+document
+  .querySelectorAll(".category")
+  .forEach(button => {
+
+    button.addEventListener(
+      "click",
+      () => {
+
+        selectedService =
+          button.dataset.service;
+
+        document
+          .getElementById(
+            "selectedService"
+          )
+          .textContent =
+            selectedService;
+
+        showScreen("request");
+
+      }
+    );
+
+  });
+
+
+/* =========================================================
+   SEARCH
+========================================================= */
+
+document
+  .getElementById("searchBtn")
+  .addEventListener(
+    "click",
+    () => {
+
+      const value =
+        document
+          .getElementById("homeSearch")
+          .value
+          .trim();
+
+      if(!value){
+
+        toast(
+          "Önce hangi hizmete ihtiyacın olduğunu yaz."
+        );
+
+        return;
+
+      }
+
+      selectedService =
+        detectService(value);
+
+      document
+        .getElementById(
+          "selectedService"
+        )
+        .textContent =
+          selectedService;
+
+      document
+        .getElementById(
+          "description"
+        )
+        .value =
+          value;
+
+      showScreen("request");
+
+    }
+  );
+
+
+document
+  .getElementById("homeSearch")
+  .addEventListener(
+    "keydown",
+    event => {
+
+      if(event.key === "Enter"){
+
+        document
+          .getElementById(
+            "searchBtn"
+          )
+          .click();
+
+      }
+
+    }
+  );
+
+
+function detectService(text){
+
+  const value =
+    text.toLowerCase();
+
+  if(
+    value.includes("klima")
+  ){
+    return "Klima";
+  }
+
+  if(
+    value.includes("elektrik") ||
+    value.includes("priz") ||
+    value.includes("sigorta") ||
+    value.includes("lamba")
+  ){
+    return "Elektrik";
+  }
+
+  if(
+    value.includes("su") ||
+    value.includes("musluk") ||
+    value.includes("kaçak") ||
+    value.includes("tesisat")
+  ){
+    return "Su Tesisatı";
+  }
+
+  if(
+    value.includes("buzdolabı") ||
+    value.includes("çamaşır") ||
+    value.includes("bulaşık")
+  ){
+    return "Beyaz Eşya";
+  }
+
+  if(
+    value.includes("temizlik")
+  ){
+    return "Temizlik";
+  }
+
+  if(
+    value.includes("boya") ||
+    value.includes("badana")
+  ){
+    return "Boyacı";
+  }
+
+  if(
+    value.includes("mobilya") ||
+    value.includes("montaj")
+  ){
+    return "Mobilya";
+  }
+
+  return "Diğer";
+
+}
+
+
+/* =========================================================
+   CREATE REQUEST
+========================================================= */
+
+document
+  .getElementById("createRequest")
+  .addEventListener(
+    "click",
+    createRequest
+  );
+
+
+function createRequest(){
+
+  const description =
+    document
+      .getElementById("description")
+      .value
+      .trim();
+
+  const address =
+    document
+      .getElementById("address")
+      .value
+      .trim();
+
+  const district =
+    document
+      .getElementById("district")
+      .value;
+
+  const time =
+    document
+      .getElementById("time")
+      .value;
+
+
+  if(!selectedService){
+
+    toast(
+      "Lütfen önce bir hizmet seç."
+    );
+
+    return;
+
+  }
+
+
+  if(!description){
+
+    toast(
+      "İhtiyacını kısaca anlat."
+    );
+
+    return;
+
+  }
+
+
+  if(!district){
+
+    toast(
+      "Lütfen ilçeni seç."
+    );
+
+    return;
+
+  }
+
+
+  currentRequest = {
+
+    id:
+      "IC-" +
+      Date.now()
+        .toString()
+        .slice(-8),
+
+    service:
+      selectedService,
+
+    description,
+
+    address,
+
+    district,
+
+    time,
+
+    createdAt:
+      new Date()
+        .toLocaleString(
+          "tr-TR"
+        )
+
+  };
+
+
+  localStorage.setItem(
+    "isimicoz_current_request",
+    JSON.stringify(
+      currentRequest
+    )
+  );
+
+
+  renderProviders();
+
+  showScreen("results");
+
+}
+
+
+/* =========================================================
+   DEMO PROVIDERS
+========================================================= */
+
+const providerDatabase = {
+
+  "Klima":[
+
+    {
+      icon:"❄️",
+      name:"İzmir Klima Servis",
+      area:"Bornova • Bayraklı",
+      rating:"4.9",
+      jobs:"328",
+      verified:true
+    },
+
+    {
+      icon:"🔧",
+      name:"Ege Teknik Klima",
+      area:"Karşıyaka • Çiğli",
+      rating:"4.8",
+      jobs:"214",
+      verified:true
+    },
+
+    {
+      icon:"❄️",
+      name:"Hızlı Klima Çözüm",
+      area:"Konak • Buca",
+      rating:"4.7",
+      jobs:"167",
+      verified:true
+    }
+
+  ],
+
+
+  "Elektrik":[
+
+    {
+      icon:"⚡",
+      name:"İzmir Elektrik Ustası",
+      area:"Bornova • Bayraklı",
+      rating:"4.9",
+      jobs:"412",
+      verified:true
+    },
+
+    {
+      icon:"⚡",
+      name:"Ege Elektrik Teknik",
+      area:"Konak • Karşıyaka",
+      rating:"4.8",
+      jobs:"276",
+      verified:true
+    }
+
+  ],
+
+
+  "Su Tesisatı":[
+
+    {
+      icon:"💧",
+      name:"İzmir Tesisat Çözüm",
+      area:"Buca • Konak",
+      rating:"4.9",
+      jobs:"301",
+      verified:true
+    },
+
+    {
+      icon:"🔧",
+      name:"Ege Su Teknik",
+      area:"Bornova • Karşıyaka",
+      rating:"4.8",
+      jobs:"198",
+      verified:true
+    }
+
+  ],
+
+
+  "Beyaz Eşya":[
+
+    {
+      icon:"🔧",
+      name:"İzmir Beyaz Eşya Servis",
+      area:"Bornova • Bayraklı",
+      rating:"4.8",
+      jobs:"243",
+      verified:true
+    },
+
+    {
+      icon:"🔧",
+      name:"Ege Teknik Servis",
+      area:"Karşıyaka • Konak",
+      rating:"4.7",
+      jobs:"184",
+      verified:true
+    }
+
+  ],
+
+
+  "Temizlik":[
+
+    {
+      icon:"🧹",
+      name:"İzmir Temizlik Ekibi",
+      area:"Konak • Bornova",
+      rating:"4.9",
+      jobs:"389",
+      verified:true
+    },
+
+    {
+      icon:"🧹",
+      name:"Ege Temizlik Hizmetleri",
+      area:"Karşıyaka • Çiğli",
+      rating:"4.8",
+      jobs:"241",
+      verified:true
+    }
+
+  ],
+
+
+  "Boyacı":[
+
+    {
+      icon:"🎨",
+      name:"İzmir Boya Ustası",
+      area:"Bornova • Buca",
+      rating:"4.9",
+      jobs:"215",
+      verified:true
+    }
+
+  ],
+
+
+  "Mobilya":[
+
+    {
+      icon:"🪑",
+      name:"İzmir Mobilya Montaj",
+      area:"Bayraklı • Bornova",
+      rating:"4.8",
+      jobs:"176",
+      verified:true
+    }
+
+  ],
+
+
+  "Diğer":[
+
+    {
+      icon:"🛠️",
+      name:"İşimi Çöz Hizmet Ağı",
+      area:"İzmir",
+      rating:"4.8",
+      jobs:"520",
+      verified:true
+    }
+
+  ]
+
+};
+
+
+/* =========================================================
+   RENDER PROVIDERS
+========================================================= */
+
+function renderProviders(){
+
+  const list =
+    document.getElementById(
+      "providerList"
+    );
+
+  const description =
+    document.getElementById(
+      "resultDescription"
+    );
+
+
+  if(!currentRequest){
+
+    return;
+
+  }
+
+
+  description.textContent =
+    currentRequest.service +
+    " • " +
+    currentRequest.district +
+    " • " +
+    currentRequest.time;
+
+
+  const providers =
+    providerDatabase[
+      currentRequest.service
+    ] ||
+    providerDatabase["Diğer"];
+
+
+  list.innerHTML =
+    providers
+      .map(
+        provider => `
+
+          <div class="provider">
+
+            <div class="provider-top">
+
+              <div class="provider-avatar">
+                ${provider.icon}
+              </div>
+
+              <div class="provider-name">
+
+                <b>
+                  ${escapeHtml(
+                    provider.name
+                  )}
+                </b>
+
+                <small>
+                  ${escapeHtml(
+                    provider.area
+                  )}
+                </small>
+
+              </div>
+
+              ${
+                provider.verified
+                  ? `
+                    <div class="verified">
+                      ✓ DOĞRULANMIŞ
+                    </div>
+                  `
+                  : ""
+              }
+
+            </div>
+
+
+            <div class="rating">
+
+              <span>★ ${provider.rating}</span>
+
+              <span>
+                ${provider.jobs} iş
+              </span>
+
+              <span>
+                Hizmet sağlayıcı
+              </span>
+
+            </div>
+
+
+            <div class="provider-action">
+
+              <button
+                class="secondary"
+                onclick="contactProvider('${escapeAttribute(provider.name)}')"
+              >
+                DETAY
+              </button>
+
+              <button
+                class="primary"
+                onclick="selectProvider('${escapeAttribute(provider.name)}')"
+              >
+                İŞİ BAŞLAT
+              </button>
+
+            </div>
+
+          </div>
+
+        `
+      )
+      .join("");
+
+}
+
+
+/* =========================================================
+   PROVIDER ACTIONS
+========================================================= */
+
+function selectProvider(name){
+
+  if(!currentRequest){
+
+    toast(
+      "Önce bir talep oluştur."
+    );
+
+    return;
+
+  }
+
+
+  localStorage.setItem(
+    "isimicoz_selected_provider",
+    name
+  );
+
+
+  document
+    .getElementById(
+      "statusTitle"
+    )
+    .textContent =
+      "Hizmet sağlayıcı seçildi";
+
+
+  document
+    .getElementById(
+      "statusText"
+    )
+    .textContent =
+      name +
+      " ile iletişim sürecini başlatmak üzeresin.";
+
+
+  showScreen("statusScreen");
+
+  toast(
+    "İşin için hizmet sağlayıcı seçildi."
+  );
+
+}
+
+
+function contactProvider(name){
+
+  toast(
+    name +
+    " için detay sistemi sonraki sürümde açılacak."
+  );
+
+}
+
+
+/* =========================================================
+   PROFILE
+========================================================= */
+
+const profileFields = [
+
+  "userName",
+  "userPhone",
+  "userDistrict"
+
+];
+
+
+function loadProfile(){
+
+  const profile =
+    JSON.parse(
+      localStorage.getItem(
+        "isimicoz_profile"
+      ) ||
+      "null"
+    );
+
+
+  if(!profile){
+
+    return;
+
+  }
+
+
+  document
+    .getElementById(
+      "userName"
+    )
+    .value =
+      profile.name ||
+      "";
+
+
+  document
+    .getElementById(
+      "userPhone"
+    )
+    .value =
+      profile.phone ||
+      "";
+
+
+  document
+    .getElementById(
+      "userDistrict"
+    )
+    .value =
+      profile.district ||
+      "";
+
+}
+
+
+document
+  .getElementById("saveProfile")
+  .addEventListener(
+    "click",
+    () => {
+
+      const profile = {
+
+        name:
+          document
+            .getElementById(
+              "userName"
+            )
+            .value
+            .trim(),
+
+        phone:
+          document
+            .getElementById(
+              "userPhone"
+            )
+            .value
+            .trim(),
+
+        district:
+          document
+            .getElementById(
+              "userDistrict"
+            )
+            .value
+
+      };
+
+
+      localStorage.setItem(
+        "isimicoz_profile",
+        JSON.stringify(
+          profile
+        )
+      );
+
+
+      toast(
+        "Profilin kaydedildi."
+      );
+
+    }
+  );
+
+
+/* =========================================================
+   RESTORE REQUEST
+========================================================= */
+
+function loadRequest(){
+
+  const saved =
+    localStorage.getItem(
+      "isimicoz_current_request"
+    );
+
+
+  if(!saved){
+
+    return;
+
+  }
+
+
+  try{
+
+    currentRequest =
+      JSON.parse(saved);
+
+  }catch(_){
+
+    currentRequest =
+      null;
+
+  }
+
+}
+
+
+function escapeHtml(value){
+
+  return String(value)
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+
+}
+
+
+function escapeAttribute(value){
+
+  return String(value)
+    .replaceAll("\\","\\\\")
+    .replaceAll("'","\\'");
+
+}
+
+
+/* =========================================================
+   INITIALIZATION
+========================================================= */
+
+loadProfile();
+
+loadRequest();
+
+if(currentRequest){
+
+  selectedService =
+    currentRequest.service || "";
+
+}
+
+
+console.log(
+  "İŞİMİ ÇÖZ — İzmir Pilot v1 hazır."
+);
+
+</script>
+
+</body>
+</html>
