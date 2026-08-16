@@ -115,20 +115,47 @@ async function loadRequestsFromSupabase(){
 }
 function mapRequest(r){
  const kategori=pick(r,["kategori","category","service"],"");
+ const realId=pick(r,["id","request_id","uuid"],"");
+ const requestNo=pick(r,["talep_no","request_no","talepNo"],realId);
+
  return {
-  id:pick(r,["talep_no","id"],""),
-  talep_no:pick(r,["talep_no","request_no","id"],""),
-  service:serviceKeyFromValue(kategori),kategori:kategori,
+  /* ÖNEMLİ: offers.request_id UUID bekliyor.
+     Bu yüzden id alanında artık talep numarası değil,
+     Supabase'deki gerçek UUID tutuluyor. */
+  id:realId,
+  request_id:realId,
+  uuid:realId,
+
+  talep_no:requestNo,
+  request_no:requestNo,
+
+  service:serviceKeyFromValue(kategori),
+  kategori:kategori,
+
   description:pick(r,["aciklama","description"],""),
   aciklama:pick(r,["aciklama","description"],""),
+
   il:pick(r,["il","city"],"İzmir"),
-  district:pick(r,["ilce","district"],""),ilce:pick(r,["ilce","district"],""),
-  neighborhood:pick(r,["mahalle","neighborhood"],""),mahalle:pick(r,["mahalle","neighborhood"],""),
+  city:pick(r,["city","il"],"İzmir"),
+
+  district:pick(r,["ilce","district"],""),
+  ilce:pick(r,["ilce","district"],""),
+
+  neighborhood:pick(r,["mahalle","neighborhood"],""),
+  mahalle:pick(r,["mahalle","neighborhood"],""),
+
   urgency:pick(r,["aciliyet","urgency"],""),
   aciliyet:pick(r,["aciliyet","urgency"],""),
-  name:pick(r,["ad_soyad","name"],""),ad_soyad:pick(r,["ad_soyad","name"],""),
-  phone:pick(r,["telefon","phone"],""),telefon:pick(r,["telefon","phone"],""),
-  status:pick(r,["durum","status"],"Beklemede"),durum:pick(r,["durum","status"],"Beklemede"),
+
+  name:pick(r,["ad_soyad","name"],""),
+  ad_soyad:pick(r,["ad_soyad","name"],""),
+
+  phone:pick(r,["telefon","phone"],""),
+  telefon:pick(r,["telefon","phone"],""),
+
+  status:pick(r,["durum","status"],"Beklemede"),
+  durum:pick(r,["durum","status"],"Beklemede"),
+
   createdAt:pick(r,["created_at","createdAt"],"")
  };
 }
@@ -390,14 +417,14 @@ async function showRequests(){
 
  if(requests.length){
   for(const r of requests){
-   const rid=r.id||r.request_id||"";
+   const rid=r.request_id||r.uuid||r.id||"";
    if(rid) await showOffersForRequest(rid,"offers-"+CSS.escape(String(rid)));
   }
  }
 }
 function renderRequestWithOffers(r){
  const base=renderRequest(r);
- const rid=r.id||r.request_id||"";
+ const rid=r.request_id||r.uuid||r.id||"";
  if(!rid)return base;
  return base.replace("</article>",`
   <div id="offers-${escapeHTML(String(rid))}" style="margin-top:12px">
@@ -909,7 +936,7 @@ async function showProviderPanel(p){
 function renderProviderRequest(r,p){
  const k=serviceKeyFromValue(r.service||r.kategori),s=SERVICES[k]||{name:r.kategori||"Hizmet",emoji:"🛠️"};
  const phone=r.telefon||r.phone||"";
- const requestId=r.id||r.request_id||"";
+ const requestId=r.request_id||r.uuid||r.id||"";
  const requestNo=r.talep_no||r.request_no||"";
 
  return `<article class="request">
@@ -1003,6 +1030,12 @@ async function submitOffer(requestId,providerId){
 
  if(!requestId){
   alert("Talep kimliği bulunamadı. Bu kayıt için teklif oluşturulamıyor.");
+  return;
+ }
+
+ const uuidPattern=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+ if(!uuidPattern.test(String(requestId))){
+  alert("Talep kimliği geçersiz. Teklif için Supabase UUID gerekli.");
   return;
  }
 
