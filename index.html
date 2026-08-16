@@ -308,26 +308,68 @@ async function registerProvider(){
  const city=document.getElementById("pCity").value.trim()||"İzmir";
  const district=document.getElementById("pDistrict").value;
  const category=document.getElementById("pCategory").value;
- const neighborhood=document.getElementById("pNeighborhood").value.trim();
  const description=document.getElementById("pDescription").value.trim();
+
  if(!name){alert("Ad / işletme adı gerekli.");return}
  if(!phone){alert("Telefon gerekli.");return}
  if(!district){alert("İlçe seç.");return}
  if(!category){alert("Hizmet kategorisi seç.");return}
- const btn=document.getElementById("saveProviderBtn");btn.disabled=true;btn.textContent="KAYDEDİLİYOR...";
- const payload={name,işletme:name,telefon:phone,kategori:category,il:city,ilçe:district,mahalle:neighborhood,açıklama:description,aktif:true};
+
+ const btn=document.getElementById("saveProviderBtn");
+ if(btn){btn.disabled=true;btn.textContent="KAYDEDİLİYOR...";}
+
+ const now=new Date().toISOString();
+
+ /*
+  providers tablosu doğrulanmış kolonlar:
+  id, name, phone, district, description, active,
+  created_at, city, services, updated_at
+ */
+
+ const payload={
+  name:name,
+  phone:phone,
+  district:district,
+  description:description,
+  active:true,
+  created_at:now,
+  city:city,
+  services:[category],
+  updated_at:now
+ };
+
  try{
   const rows=await supabaseRequest("POST","providers",payload);
   const row=Array.isArray(rows)?rows[0]:rows;
-  const provider={id:row?.id||crypto.randomUUID?.()||uid("SP"),name,phone,city,district,neighborhood,description,services:[category],active:true};
-  write(KEYS.provider,provider);write(KEYS.providerLogged,true);
+
+  const provider={
+   id:row?.id||uid("SP"),
+   name:name,
+   phone:phone,
+   city:city,
+   district:district,
+   description:description,
+   active:true,
+   services:[category],
+   createdAt:now,
+   updatedAt:now,
+   mainServiceName:SERVICES[category]?.name||category
+  };
+
+  write(KEYS.provider,provider);
+  write(KEYS.providerLogged,true);
+
   setConnection(true,"Supabase bağlı ✓");
-  alert("Hizmet sağlayıcı kaydı başarıyla oluşturuldu.");
-  showProviderPanel(provider);
- }catch(e){
-  console.error(e);
-  alert("Kayıt oluşturulamadı.\n\nSupabase hatası:\n"+e.message);
- }finally{btn.disabled=false;btn.textContent="HİZMET SAĞLAYICI KAYDI OLUŞTUR";}
+
+  alert("Hizmet sağlayıcı başarıyla kaydedildi.");
+  showProviderPanel();
+
+ }catch(error){
+  console.error("Provider kayıt hatası:",error);
+  alert("Supabase kayıt hatası:\n\n"+(error?.message||String(error))+"\n\nKayıt oluşturulmadı.");
+ }finally{
+  if(btn){btn.disabled=false;btn.textContent="HİZMET SAĞLAYICI KAYDI OLUŞTUR";}
+ }
 }
 
 async function loadProviderDirectory(){
