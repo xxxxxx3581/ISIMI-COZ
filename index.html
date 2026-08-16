@@ -4,67 +4,97 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#07111f">
-<title>İŞİMİ ÇÖZ — İzmir Pilot</title>
+<title>İşimi Çöz — İzmir</title>
 
 <style>
 *{box-sizing:border-box}
-html,body{margin:0;padding:0;background:#07111f;color:#eef4fb;font-family:Arial,Helvetica,sans-serif}
+html,body{
+ margin:0;padding:0;
+ background:#07111f;color:#eef4fb;
+ font-family:Arial,Helvetica,sans-serif
+}
 body{min-height:100vh}
 button,input,select,textarea{font:inherit}
 button{cursor:pointer}
 a{text-decoration:none;color:inherit}
 
 :root{
---bg:#07111f;
---card:#0d1a2b;
---line:#20344d;
---text:#eef4fb;
---muted:#9eb0c5;
---primary:#19c37d;
---danger:#ef5350;
---warning:#f5b942;
+ --bg:#07111f;
+ --card:#0d1a2b;
+ --card2:#102238;
+ --line:#20344d;
+ --text:#eef4fb;
+ --muted:#9eb0c5;
+ --primary:#19c37d;
+ --primary2:#0fa968;
+ --danger:#ef5350;
+ --warning:#f5b942;
+ --blue:#4da3ff
 }
 
-.app{max-width:760px;margin:auto;min-height:100vh;padding-bottom:88px}
+.app{
+ max-width:760px;
+ margin:auto;
+ min-height:100vh;
+ padding-bottom:90px
+}
 
 .top{
-padding:18px 16px 14px;
-border-bottom:1px solid var(--line);
-background:rgba(7,17,31,.97);
-position:sticky;
-top:0;
-z-index:20
+ padding:17px 16px 14px;
+ border-bottom:1px solid var(--line);
+ background:rgba(7,17,31,.97);
+ position:sticky;
+ top:0;
+ z-index:20
 }
 
 .brand{display:flex;align-items:center;gap:10px}
+
 .logo{
-width:38px;height:38px;border-radius:12px;
-background:linear-gradient(135deg,#19c37d,#36a3ff);
-display:grid;place-items:center;
-font-size:21px;font-weight:900;color:#03120d
+ width:40px;height:40px;border-radius:13px;
+ background:linear-gradient(135deg,var(--primary),#36a3ff);
+ display:grid;place-items:center;
+ font-size:21px;font-weight:900;
+ color:#03120d
 }
+
 .brand strong{font-size:18px}
-.brand small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
+.brand small{
+ display:block;
+ color:var(--muted);
+ font-size:11px;
+ margin-top:2px
+}
 
 main{padding:16px}
 
 .hero{
-background:linear-gradient(145deg,#10243a,#0b1727);
-border:1px solid var(--line);
-border-radius:24px;
-padding:24px 20px;
-margin-bottom:16px
+ background:linear-gradient(145deg,#10243a,#0b1727);
+ border:1px solid var(--line);
+ border-radius:24px;
+ padding:24px 20px;
+ margin-bottom:16px
 }
 
 .badge{
-display:inline-flex;align-items:center;gap:6px;
-padding:7px 10px;border-radius:99px;
-background:rgba(25,195,125,.12);
-border:1px solid rgba(25,195,125,.28);
-color:#6df0b5;font-size:12px;font-weight:700
+ display:inline-flex;
+ align-items:center;
+ gap:6px;
+ padding:7px 10px;
+ border-radius:99px;
+ background:rgba(25,195,125,.12);
+ border:1px solid rgba(25,195,125,.28);
+ color:#6df0b5;
+ font-size:12px;
+ font-weight:700
 }
 
-h1{font-size:31px;line-height:1.08;margin:16px 0 10px}
+h1{
+ font-size:30px;
+ line-height:1.08;
+ margin:16px 0 10px
+}
+
 h2{font-size:22px;margin:0 0 8px}
 h3{font-size:16px;margin:0 0 6px}
 p{line-height:1.55}
@@ -72,307 +102,367 @@ p{line-height:1.55}
 .small{font-size:12px}
 
 .grid{
-display:grid;
-grid-template-columns:repeat(2,1fr);
-gap:10px
+ display:grid;
+ grid-template-columns:repeat(2,1fr);
+ gap:10px
 }
 
 .card{
-background:var(--card);
-border:1px solid var(--line);
-border-radius:18px;
-padding:16px
+ background:var(--card);
+ border:1px solid var(--line);
+ border-radius:18px;
+ padding:16px
 }
 
 .service{
-min-height:130px;
-transition:.15s transform
+ min-height:130px;
+ text-align:left;
+ color:var(--text);
+ transition:.15s transform,.15s border-color
 }
 
+.service:hover{border-color:#315270}
 .service:active{transform:scale(.98)}
 .service .emoji{font-size:28px}
-.service strong{display:block;margin-top:9px;font-size:16px}
+.service strong{
+ display:block;
+ margin-top:9px;
+ font-size:16px
+}
 .service span{
-display:block;
-color:var(--muted);
-font-size:12px;
-line-height:1.4;
-margin-top:5px
+ display:block;
+ color:var(--muted);
+ font-size:12px;
+ line-height:1.4;
+ margin-top:5px
 }
 
 .actions{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:10px;
-margin:16px 0
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:10px;
+ margin:16px 0
 }
 
 .btn{
-width:100%;
-border:0;
-border-radius:14px;
-padding:14px 15px;
-font-weight:800
+ width:100%;
+ border:0;
+ border-radius:14px;
+ padding:14px 15px;
+ font-weight:800
 }
 
-.btn.primary{background:var(--primary);color:#03130d}
+.btn.primary{
+ background:var(--primary);
+ color:#03130d
+}
+
 .btn.secondary{
-background:#14263b;
-color:var(--text);
-border:1px solid var(--line)
+ background:#14263b;
+ color:var(--text);
+ border:1px solid var(--line)
 }
+
+.btn.blue{
+ background:#256cae;
+ color:white
+}
+
 .btn.danger{
-background:#4a1f25;
-color:#ffb5b3;
-border:1px solid #6a2b32
+ background:#4a1f25;
+ color:#ffb5b3;
+ border:1px solid #6a2b32
 }
-.btn.smallBtn{padding:10px 12px;font-size:13px}
+
+.btn.smallBtn{
+ padding:10px 12px;
+ font-size:13px
+}
 
 .section{margin-top:18px}
+
 .sectionTitle{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:10px
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ margin-bottom:10px
 }
 
 .formCard{
-background:var(--card);
-border:1px solid var(--line);
-border-radius:20px;
-padding:18px;
-margin-bottom:14px
+ background:var(--card);
+ border:1px solid var(--line);
+ border-radius:20px;
+ padding:18px;
+ margin-bottom:14px
 }
 
 label{
-display:block;
-font-size:13px;
-font-weight:700;
-margin:14px 0 7px
+ display:block;
+ font-size:13px;
+ font-weight:700;
+ margin:14px 0 7px
 }
 
 input,select,textarea{
-width:100%;
-background:#081523;
-color:var(--text);
-border:1px solid #29415d;
-border-radius:12px;
-padding:13px;
-outline:none
+ width:100%;
+ background:#081523;
+ color:var(--text);
+ border:1px solid #29415d;
+ border-radius:12px;
+ padding:13px;
+ outline:none
 }
 
 input:focus,select:focus,textarea:focus{
-border-color:var(--primary)
+ border-color:var(--primary)
 }
 
 textarea{
-min-height:120px;
-resize:vertical
+ min-height:120px;
+ resize:vertical
 }
 
 .row{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:10px
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:10px
 }
 
 .checks{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:8px
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:8px
 }
 
 .check{
-display:flex;
-align-items:center;
-gap:8px;
-background:#091827;
-border:1px solid var(--line);
-padding:10px;
-border-radius:12px;
-font-size:13px
+ display:flex;
+ align-items:center;
+ gap:8px;
+ background:#091827;
+ border:1px solid var(--line);
+ padding:10px;
+ border-radius:12px;
+ font-size:13px
 }
 
 .check input{width:auto}
 
 .notice{
-background:#0b2030;
-border:1px solid #1e4c66;
-color:#b9ddf2;
-padding:12px;
-border-radius:13px;
-font-size:12px;
-line-height:1.5;
-margin:12px 0
+ background:#0b2030;
+ border:1px solid #1e4c66;
+ color:#b9ddf2;
+ padding:12px;
+ border-radius:13px;
+ font-size:12px;
+ line-height:1.5;
+ margin:12px 0
 }
 
 .success{
-background:#0b2b20;
-border:1px solid #185d43;
-color:#8bf1c4;
-padding:12px;
-border-radius:13px;
-font-size:13px
+ background:#0b2b20;
+ border:1px solid #185d43;
+ color:#8bf1c4;
+ padding:12px;
+ border-radius:13px;
+ font-size:13px
 }
 
 .warning{
-background:#30260e;
-border:1px solid #65501a;
-color:#f5d77c;
-padding:12px;
-border-radius:13px;
-font-size:13px
+ background:#30260e;
+ border:1px solid #65501a;
+ color:#f5d77c;
+ padding:12px;
+ border-radius:13px;
+ font-size:13px
 }
 
 .error{
-background:#35171b;
-border:1px solid #743038;
-color:#ffb8b8;
-padding:12px;
-border-radius:13px;
-font-size:13px;
-margin:12px 0
+ background:#35181b;
+ border:1px solid #70272d;
+ color:#ffb6b8;
+ padding:12px;
+ border-radius:13px;
+ font-size:13px;
+ margin:12px 0
 }
 
 .request{
-background:var(--card);
-border:1px solid var(--line);
-border-radius:18px;
-padding:16px;
-margin-bottom:11px
+ background:var(--card);
+ border:1px solid var(--line);
+ border-radius:18px;
+ padding:16px;
+ margin-bottom:11px
 }
 
 .requestTop{
-display:flex;
-justify-content:space-between;
-gap:10px
+ display:flex;
+ justify-content:space-between;
+ gap:10px
 }
 
 .status{
-padding:5px 9px;
-border-radius:99px;
-background:rgba(245,185,66,.12);
-color:#ffd76b;
-font-size:11px;
-font-weight:800;
-height:max-content
+ padding:5px 9px;
+ border-radius:99px;
+ background:rgba(245,185,66,.12);
+ color:#ffd76b;
+ font-size:11px;
+ font-weight:800;
+ height:max-content
 }
 
 .meta{
-display:flex;
-flex-wrap:wrap;
-gap:8px;
-color:var(--muted);
-font-size:12px;
-margin:10px 0
+ display:flex;
+ flex-wrap:wrap;
+ gap:8px;
+ color:var(--muted);
+ font-size:12px;
+ margin:10px 0
 }
 
 .meta span{
-background:#091827;
-padding:6px 8px;
-border-radius:8px
+ background:#091827;
+ padding:6px 8px;
+ border-radius:8px
 }
 
 .description{
-background:#091827;
-border-radius:12px;
-padding:11px;
-font-size:13px;
-line-height:1.5;
-margin:10px 0
+ background:#091827;
+ border-radius:12px;
+ padding:11px;
+ font-size:13px;
+ line-height:1.5;
+ margin:10px 0
 }
 
 .profileHeader{
-display:flex;
-align-items:center;
-gap:13px;
-padding:16px;
-background:var(--card);
-border:1px solid var(--line);
-border-radius:18px
+ display:flex;
+ align-items:center;
+ gap:13px;
+ padding:16px;
+ background:var(--card);
+ border:1px solid var(--line);
+ border-radius:18px
 }
 
 .avatar{
-width:52px;
-height:52px;
-border-radius:50%;
-display:grid;
-place-items:center;
-background:#17334d;
-font-weight:900;
-font-size:18px
+ width:52px;
+ height:52px;
+ border-radius:50%;
+ display:grid;
+ place-items:center;
+ background:#17334d;
+ font-weight:900;
+ font-size:18px
+}
+
+.activeDot{
+ width:9px;
+ height:9px;
+ background:var(--primary);
+ border-radius:50%;
+ display:inline-block;
+ margin-right:5px
 }
 
 .empty{
-text-align:center;
-padding:28px 15px;
-color:var(--muted)
+ text-align:center;
+ padding:28px 15px;
+ color:var(--muted)
 }
 
-.loading{
-text-align:center;
-padding:35px;
-color:var(--muted)
+.connection{
+ position:fixed;
+ top:10px;
+ right:10px;
+ z-index:100;
+ padding:6px 9px;
+ border-radius:99px;
+ font-size:10px;
+ font-weight:bold;
+ opacity:.9
+}
+
+.connection.online{
+ background:#0b2b20;
+ color:#8bf1c4
+}
+
+.connection.offline{
+ background:#30260e;
+ color:#f5d77c
 }
 
 .bottom{
-position:fixed;
-bottom:0;
-left:0;
-right:0;
-background:rgba(7,17,31,.97);
-border-top:1px solid var(--line);
-z-index:30
+ position:fixed;
+ bottom:0;
+ left:0;
+ right:0;
+ background:rgba(7,17,31,.98);
+ border-top:1px solid var(--line);
+ z-index:30
 }
 
 .bottomInner{
-max-width:760px;
-margin:auto;
-display:grid;
-grid-template-columns:repeat(4,1fr)
+ max-width:760px;
+ margin:auto;
+ display:grid;
+ grid-template-columns:repeat(4,1fr)
 }
 
 .navBtn{
-border:0;
-background:transparent;
-color:#8fa3b9;
-padding:11px 4px 10px;
-font-size:10px
+ border:0;
+ background:transparent;
+ color:#8fa3b9;
+ padding:11px 4px 10px;
+ font-size:10px
 }
 
 .navBtn b{
-display:block;
-font-size:19px;
-margin-bottom:3px
+ display:block;
+ font-size:19px;
+ margin-bottom:3px
 }
 
 .navBtn.active{color:var(--primary)}
 
 .back{margin-bottom:12px}
+.hidden{display:none!important}
 
 @media(max-width:430px){
-main{padding:12px}
-.hero{padding:20px 16px}
-h1{font-size:27px}
-.grid{gap:8px}
-.service{padding:13px;min-height:122px}
-.row{grid-template-columns:1fr}
+ main{padding:12px}
+ .hero{padding:20px 16px}
+ h1{font-size:27px}
+ .grid{gap:8px}
+ .service{
+  padding:13px;
+  min-height:122px
+ }
+ .row{grid-template-columns:1fr}
+}
+
+@media(max-width:360px){
+ .bottomInner{grid-template-columns:repeat(4,1fr)}
+ .navBtn{font-size:9px}
 }
 </style>
 </head>
 
 <body>
 
+<div id="connectionStatus" class="connection offline">
+ Supabase bağlanıyor...
+</div>
+
 <div class="app">
 
 <header class="top">
-<div class="brand">
-<div class="logo">✓</div>
-<div>
-<strong>İŞİMİ ÇÖZ</strong>
-<small>İzmir Pilot Bölgesi</small>
-</div>
-</div>
+ <div class="brand">
+  <div class="logo">✓</div>
+  <div>
+   <strong>İŞİMİ ÇÖZ</strong>
+   <small>İzmir Pilot Bölgesi</small>
+  </div>
+ </div>
 </header>
 
 <main id="app"></main>
@@ -380,101 +470,98 @@ h1{font-size:27px}
 </div>
 
 <nav class="bottom">
-<div class="bottomInner">
-<button class="navBtn" id="navHome" onclick="showHome()">
-<b>⌂</b>ANA
-</button>
+ <div class="bottomInner">
+  <button class="navBtn" id="navHome" onclick="showHome()">
+   <b>⌂</b>ANA
+  </button>
 
-<button class="navBtn" id="navRequest" onclick="showRequest()">
-<b>＋</b>TALEP
-</button>
+  <button class="navBtn" id="navRequest" onclick="showRequest()">
+   <b>＋</b>TALEP
+  </button>
 
-<button class="navBtn" id="navRequests" onclick="showRequests()">
-<b>▣</b>TALEPLER
-</button>
+  <button class="navBtn" id="navRequests" onclick="showRequests()">
+   <b>▣</b>TALEPLER
+  </button>
 
-<button class="navBtn" id="navProvider" onclick="showProviderEntry()">
-<b>🛠️</b>HİZMET VER
-</button>
-</div>
+  <button class="navBtn" id="navProvider" onclick="showProviderEntry()">
+   <b>🛠️</b>HİZMET VER
+  </button>
+ </div>
 </nav>
-
-<!-- SUPABASE -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
 
 /* =========================================================
-   SUPABASE AYARLARI
+   İŞİMİ ÇÖZ
+   TEK DOSYA SÜRÜM
+   GitHub -> index.html
    ========================================================= */
-
-const SUPABASE_URL = "https://zvffspbowdzvrrzefhkr.supabase.co";
-
-/*
-  BURAYA SENİN SUPABASE PUBLISHABLE KEY'İNİ YAPIŞTIR.
-  sb_publishable_ ile başlayan anahtar.
-*/
-const SUPABASE_KEY = "BURAYA_SB_PUBLISHABLE_KEY_YAPISTIR";
-
-const db = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
 
 
 /* =========================================================
-   HİZMETLER
+   SUPABASE
+   ========================================================= */
+
+const SUPABASE_URL =
+"https://zvffspbowdzvrrzefhkr.supabase.co";
+
+const SUPABASE_KEY =
+"sb_publishable_L_qb9Q4fHktE51PEqEhTAg_O4R0eDiW";
+
+
+/* =========================================================
+   SERVİSLER
    ========================================================= */
 
 const SERVICES = {
 
-klima:{
-name:"Klima",
-emoji:"❄️",
-desc:"Bakım, montaj, arıza ve temizlik"
-},
+ klima:{
+  name:"Klima",
+  emoji:"❄️",
+  desc:"Bakım, montaj, arıza ve temizlik"
+ },
 
-elektrik:{
-name:"Elektrik",
-emoji:"⚡",
-desc:"Arıza, priz, tesisat ve aydınlatma"
-},
+ elektrik:{
+  name:"Elektrik",
+  emoji:"⚡",
+  desc:"Arıza, priz, tesisat ve aydınlatma"
+ },
 
-tesisat:{
-name:"Tesisat",
-emoji:"🔧",
-desc:"Su, gider, musluk ve kaçak sorunları"
-},
+ tesisat:{
+  name:"Tesisat",
+  emoji:"🔧",
+  desc:"Su, gider, musluk ve kaçak sorunları"
+ },
 
-beyaz:{
-name:"Beyaz Eşya",
-emoji:"🧊",
-desc:"Çamaşır, bulaşık, buzdolabı ve fırın"
-},
+ beyaz:{
+  name:"Beyaz Eşya",
+  emoji:"🧊",
+  desc:"Çamaşır, bulaşık, buzdolabı ve fırın"
+ },
 
-temizlik:{
-name:"Temizlik",
-emoji:"🧹",
-desc:"Ev, ofis ve detaylı temizlik"
-},
+ temizlik:{
+  name:"Temizlik",
+  emoji:"🧹",
+  desc:"Ev, ofis ve detaylı temizlik"
+ },
 
-nakliye:{
-name:"Nakliye",
-emoji:"🚚",
-desc:"Ev, ofis ve parça eşya taşıma"
-},
+ nakliye:{
+  name:"Nakliye",
+  emoji:"🚚",
+  desc:"Ev, ofis ve parça eşya taşıma"
+ },
 
-cilingir:{
-name:"Çilingir",
-emoji:"🔐",
-desc:"Kilit, anahtar ve acil giriş"
-},
+ cilingir:{
+  name:"Çilingir",
+  emoji:"🔐",
+  desc:"Kilit, anahtar ve acil giriş"
+ },
 
-oto:{
-name:"Oto",
-emoji:"🚗",
-desc:"Arıza, bakım, lastik ve yol yardımı"
-}
+ oto:{
+  name:"Oto",
+  emoji:"🚗",
+  desc:"Arıza, bakım, lastik ve yol yardımı"
+ }
 
 };
 
@@ -483,7 +570,8 @@ desc:"Arıza, bakım, lastik ve yol yardımı"
    İLÇELER
    ========================================================= */
 
-const DISTRICTS=[
+const DISTRICTS = [
+
 "Aliağa",
 "Balçova",
 "Bayındır",
@@ -501,117 +589,497 @@ const DISTRICTS=[
 "Karabağlar",
 "Karaburun",
 "Karşıyaka",
-"Kemalpaşa",
-"Kınık",
-"Kiraz",
+"Bayraklı",
+"Bornova",
 "Konak",
-"Menderes",
 "Menemen",
+"Menderes",
 "Narlıdere",
 "Ödemiş",
 "Seferihisar",
 "Selçuk",
 "Tire",
 "Torbalı",
-"Urla"
+"Urla",
+"Kiraz",
+"Kemalpaşa",
+"Kınık"
+
 ];
 
 
 /* =========================================================
-   YARDIMCI FONKSİYONLAR
+   LOCAL STORAGE
+   ========================================================= */
+
+const KEYS = {
+
+ requests:"isimi_coz_requests_v4",
+
+ provider:"isimi_coz_provider_v4",
+
+ providerLogged:"isimi_coz_provider_logged_v4"
+
+};
+
+
+/* =========================================================
+   LOCAL STORAGE FONKSİYONLARI
+   ========================================================= */
+
+function read(key,fallback){
+
+ try{
+
+  const raw=localStorage.getItem(key);
+
+  return raw ? JSON.parse(raw) : fallback;
+
+ }catch(e){
+
+  return fallback;
+
+ }
+
+}
+
+
+function write(key,value){
+
+ localStorage.setItem(
+  key,
+  JSON.stringify(value)
+ );
+
+}
+
+
+function getRequests(){
+
+ return read(KEYS.requests,[]);
+
+}
+
+
+function getProvider(){
+
+ return read(KEYS.provider,null);
+
+}
+
+
+function providerLogged(){
+
+ return read(KEYS.providerLogged,false);
+
+}
+
+
+/* =========================================================
+   YARDIMCI
    ========================================================= */
 
 function escapeHTML(value){
 
-return String(value ?? "")
-.replaceAll("&","&amp;")
-.replaceAll("<","&lt;")
-.replaceAll(">","&gt;")
-.replaceAll('"',"&quot;")
-.replaceAll("'","&#039;");
+ return String(value ?? "")
+
+  .replaceAll("&","&amp;")
+  .replaceAll("<","&lt;")
+  .replaceAll(">","&gt;")
+  .replaceAll('"',"&quot;")
+  .replaceAll("'","&#039;");
+
+}
+
+
+function uid(prefix){
+
+ return prefix+"-"+
+
+ Date.now().toString(36).toUpperCase()+"-"+
+
+ Math.random()
+ .toString(36)
+ .slice(2,7)
+ .toUpperCase();
 
 }
 
 
 function setNav(active){
 
-[
-"navHome",
-"navRequest",
-"navRequests",
-"navProvider"
-].forEach(id=>{
-document.getElementById(id).classList.remove("active");
-});
+ [
+  "navHome",
+  "navRequest",
+  "navRequests",
+  "navProvider"
+ ].forEach(id=>{
 
-if(active){
-document.getElementById(active).classList.add("active");
-}
+  const el=document.getElementById(id);
+
+  if(el) el.classList.remove("active");
+
+ });
+
+ if(active){
+
+  const el=document.getElementById(active);
+
+  if(el) el.classList.add("active");
+
+ }
 
 }
 
 
 function app(html){
 
-document.getElementById("app").innerHTML=html;
+ document.getElementById("app").innerHTML=html;
 
-window.scrollTo({
-top:0,
-behavior:"instant"
-});
+ window.scrollTo(0,0);
 
 }
 
 
-function districtOptions(selected=""){
+/* =========================================================
+   SUPABASE DURUM
+   ========================================================= */
 
-return `<option value="">İlçe seç</option>`+
+function setConnection(online,text){
 
-DISTRICTS.map(d=>
+ const el=document.getElementById("connectionStatus");
 
-`<option value="${escapeHTML(d)}"
-${d===selected?"selected":""}>
-${escapeHTML(d)}
-</option>`
+ if(!el)return;
 
-).join("");
+ el.className=
+  "connection "+
+  (online?"online":"offline");
+
+ el.textContent=
+  text ||
+  (online?"Supabase bağlı":"Yerel mod");
 
 }
 
+
+/* =========================================================
+   SUPABASE REST İSTEK
+   ========================================================= */
+
+async function supabaseRequest(method,path,body=null){
+
+ const options={
+
+  method,
+
+  headers:{
+   "apikey":SUPABASE_KEY,
+   "Authorization":"Bearer "+SUPABASE_KEY,
+   "Content-Type":"application/json",
+   "Accept":"application/json",
+   "Prefer":"return=representation"
+  }
+
+ };
+
+ if(body!==null){
+
+  options.body=JSON.stringify(body);
+
+ }
+
+ const response=
+  await fetch(
+   SUPABASE_URL+
+   "/rest/v1/"+
+   path,
+   options
+  );
+
+ const text=await response.text();
+
+ let data=null;
+
+ try{
+  data=text ? JSON.parse(text) : null;
+ }catch(e){
+  data=text;
+ }
+
+ if(!response.ok){
+
+  throw new Error(
+   data?.message ||
+   data?.details ||
+   data?.hint ||
+   "Supabase işlemi başarısız."
+  );
+
+ }
+
+ return data;
+
+}
+
+
+/* =========================================================
+   SUPABASE TEST
+   ========================================================= */
+
+async function testSupabase(){
+
+ try{
+
+  await supabaseRequest(
+   "GET",
+   "talepler?select=talep_no&limit=1"
+  );
+
+  setConnection(
+   true,
+   "Supabase bağlı ✓"
+  );
+
+  return true;
+
+ }catch(error){
+
+  console.error(
+   "Supabase bağlantı hatası:",
+   error
+  );
+
+  setConnection(
+   false,
+   "Yerel mod"
+  );
+
+  return false;
+
+ }
+
+}
+
+
+/* =========================================================
+   KATEGORİ OPTION
+   ========================================================= */
 
 function serviceOptions(selected=""){
 
-return `<option value="">Kategori seç</option>`+
+ return `<option value="">Kategori seç</option>`+
 
-Object.entries(SERVICES).map(([key,s])=>
+ Object.entries(SERVICES)
 
-`<option value="${key}"
-${key===selected?"selected":""}>
-${s.emoji} ${s.name}
-</option>`
+ .map(([key,s])=>`
 
-).join("");
+  <option
+   value="${key}"
+   ${key===selected?"selected":""}
+  >
+   ${s.emoji} ${s.name}
+  </option>
+
+ `)
+
+ .join("");
+
+}
+
+
+/* =========================================================
+   İLÇE OPTION
+   ========================================================= */
+
+function districtOptions(selected=""){
+
+ const unique=
+  [...new Set(DISTRICTS)];
+
+ return `<option value="">İlçe seç</option>`+
+
+ unique
+
+ .map(d=>`
+
+  <option
+   value="${escapeHTML(d)}"
+   ${d===selected?"selected":""}
+  >
+   ${escapeHTML(d)}
+  </option>
+
+ `)
+
+ .join("");
 
 }
 
 
-function formatDate(date){
+/* =========================================================
+   TALEP NUMARASI
+   ========================================================= */
 
-try{
+function makeRequestNumber(){
 
-return new Intl.DateTimeFormat("tr-TR",{
-day:"2-digit",
-month:"2-digit",
-year:"numeric",
-hour:"2-digit",
-minute:"2-digit"
-}).format(new Date(date));
+ const date=
+  new Date();
 
-}catch(e){
+ const y=
+  date.getFullYear();
 
-return date;
+ const m=
+  String(date.getMonth()+1)
+  .padStart(2,"0");
+
+ const d=
+  String(date.getDate())
+  .padStart(2,"0");
+
+ const random=
+  Math.floor(
+   1000+
+   Math.random()*9000
+  );
+
+ return `IC-${y}${m}${d}-${random}`;
 
 }
+
+
+/* =========================================================
+   SUPABASE'A TALEP KAYDET
+   ========================================================= */
+
+async function saveRequestToSupabase(item){
+
+ const payload={
+
+  talep_no:item.talep_no,
+
+  kategori:item.kategori,
+
+  aciklama:item.aciklama,
+
+  il:item.il,
+
+  ilce:item.ilce,
+
+  mahalle:item.mahalle,
+
+  aciliyet:item.aciliyet,
+
+  ad_soyad:item.ad_soyad,
+
+  telefon:item.telefon,
+
+  durum:item.durum
+
+ };
+
+ return await supabaseRequest(
+  "POST",
+  "talepler",
+  payload
+ );
+
+}
+
+
+/* =========================================================
+   TALEPLERİ SUPABASE'DEN ÇEK
+   ========================================================= */
+
+async function loadRequestsFromSupabase(){
+
+ try{
+
+  const data=
+   await supabaseRequest(
+    "GET",
+    "talepler?select=*&limit=100"
+   );
+
+  if(Array.isArray(data)){
+
+   const mapped=
+    data.map(mapSupabaseRequest);
+
+   write(
+    KEYS.requests,
+    mapped
+   );
+
+   setConnection(
+    true,
+    "Supabase bağlı ✓"
+   );
+
+   return mapped;
+
+  }
+
+ }catch(error){
+
+  console.warn(
+   "Supabase talepleri alınamadı:",
+   error
+  );
+
+ }
+
+ return getRequests();
+
+}
+
+
+/* =========================================================
+   SUPABASE KAYDINI UYGULAMA FORMATINA ÇEVİR
+   ========================================================= */
+
+function mapSupabaseRequest(r){
+
+ return {
+
+  id:r.talep_no,
+
+  talep_no:r.talep_no,
+
+  service:r.kategori,
+
+  kategori:r.kategori,
+
+  description:r.aciklama,
+
+  aciklama:r.aciklama,
+
+  il:r.il || "İzmir",
+
+  district:r.ilce,
+
+  ilce:r.ilce,
+
+  neighborhood:r.mahalle,
+
+  mahalle:r.mahalle,
+
+  urgency:r.aciliyet,
+
+  aciliyet:r.aciliyet,
+
+  name:r.ad_soyad,
+
+  ad_soyad:r.ad_soyad,
+
+  phone:r.telefon,
+
+  telefon:r.telefon,
+
+  status:r.durum || "Beklemede",
+
+  durum:r.durum || "Beklemede"
+
+ };
 
 }
 
@@ -622,105 +1090,115 @@ return date;
 
 function showHome(){
 
-setNav("navHome");
+ setNav("navHome");
 
-app(`
+ app(`
 
-<section class="hero">
+ <section class="hero">
 
-<span class="badge">
-📍 İZMİR PİLOT BÖLGESİ
-</span>
+  <span class="badge">
+   📍 İZMİR PİLOT BÖLGESİ
+  </span>
 
-<h1>
-İhtiyacın varsa,<br>
-çözümü var.
-</h1>
+  <h1>
+   İhtiyacın varsa,<br>
+   çözümü var.
+  </h1>
 
-<p class="muted">
-Ev, iş yeri, araç ve günlük yaşam hizmetlerini
-tek yerden bul.
-İhtiyacını anlat, talebini oluştur.
-</p>
+  <p class="muted">
+   Ev, iş yeri, araç ve günlük yaşam
+   hizmetlerini tek yerden bul.
+   İhtiyacını anlat, talebini oluştur.
+  </p>
 
-<div class="actions">
+  <div class="actions">
 
-<button class="btn primary"
-onclick="showRequest()">
-📢 İşimi Çözdür
-</button>
+   <button
+    class="btn primary"
+    onclick="showRequest()"
+   >
+    📢 İşimi Çözdür
+   </button>
 
-<button class="btn secondary"
-onclick="showProviderEntry()">
-🛠️ Hizmet Ver
-</button>
+   <button
+    class="btn secondary"
+    onclick="showProviderEntry()"
+   >
+    🛠️ Hizmet Ver
+   </button>
 
-</div>
+  </div>
 
-</section>
-
-
-<div class="section">
-
-<div class="sectionTitle">
-
-<h2>
-Hizmet kategorileri
-</h2>
-
-<span class="small muted">
-İzmir
-</span>
-
-</div>
+ </section>
 
 
-<div class="grid">
+ <div class="section">
 
-${Object.entries(SERVICES).map(([key,s])=>`
+  <div class="sectionTitle">
 
-<button class="card service"
-onclick="showRequest('${key}')">
+   <h2>Hizmet kategorileri</h2>
 
-<div class="emoji">
-${s.emoji}
-</div>
+   <span class="small muted">
+    İzmir
+   </span>
 
-<strong>
-${s.name}
-</strong>
+  </div>
 
-<span>
-${s.desc}
-</span>
+  <div class="grid">
 
-</button>
+   ${
+    Object.entries(SERVICES)
 
-`).join("")}
+    .map(([key,s])=>`
 
-</div>
+     <button
+      class="card service"
+      onclick="showRequest('${key}')"
+     >
 
-</div>
+      <div class="emoji">
+       ${s.emoji}
+      </div>
+
+      <strong>
+       ${s.name}
+      </strong>
+
+      <span>
+       ${s.desc}
+      </span>
+
+     </button>
+
+    `)
+
+    .join("")
+   }
+
+  </div>
+
+ </div>
 
 
-<div class="section card">
+ <div class="section card">
 
-<h2>
-💡 Nasıl çalışıyor?
-</h2>
+  <h2>
+   💡 Nasıl çalışıyor?
+  </h2>
 
-<p class="muted small">
+  <p class="muted small">
 
-İhtiyacını oluştur.
-Kategori ve konum bilgilerini gir.
-Talebin doğrudan İŞİMİ ÇÖZ sistemindeki
-Supabase veritabanına kaydedilir.
+   İhtiyacını oluştur.
+   Hizmet kategorisini ve bölgeni seç.
+   Talebin sisteme kaydedilsin.
+   Uygun hizmet sağlayıcıları
+   talebini görebilsin.
 
-</p>
+  </p>
 
-</div>
+ </div>
 
-`);
+ `);
 
 }
 
@@ -731,179 +1209,206 @@ Supabase veritabanına kaydedilir.
 
 function showRequest(preselected=""){
 
-setNav("navRequest");
+ setNav("navRequest");
 
-app(`
+ app(`
 
-<div class="back">
+ <div class="back">
 
-<button class="btn secondary smallBtn"
-onclick="showHome()">
+  <button
+   class="btn secondary smallBtn"
+   onclick="showHome()"
+  >
+   ← Ana sayfaya dön
+  </button>
 
-← Ana sayfaya dön
+ </div>
 
-</button>
 
-</div>
+ <div class="formCard">
 
+  <span class="badge">
+   📋 YENİ HİZMET TALEBİ
+  </span>
 
-<div class="formCard">
+  <h1>
+   İhtiyacını anlat.
+  </h1>
 
-<span class="badge">
-📋 YENİ HİZMET TALEBİ
-</span>
+  <p class="muted small">
 
-<h1>
-İhtiyacını anlat.
-</h1>
+   Sorununu açıkça anlat.
+   Böylece doğru hizmet sağlayıcısına
+   ulaşmak kolaylaşır.
 
-<p class="muted small">
+  </p>
 
-İhtiyacını mümkün olduğunca açık anlat.
-Böylece doğru hizmet kategorisine
-daha kolay yönlendirebiliriz.
 
-</p>
+  <label>
+   Hizmet kategorisi *
+  </label>
 
+  <select id="reqService">
 
-<label>
-Hizmet kategorisi *
-</label>
+   ${serviceOptions(preselected)}
 
-<select id="reqService">
-${serviceOptions(preselected)}
-</select>
+  </select>
 
 
-<label>
-Sorunun / ihtiyacın *
-</label>
+  <label>
+   Sorunun / ihtiyacın *
+  </label>
 
-<textarea
-id="reqDescription"
-maxlength="1000"
-placeholder="Örneğin: Klima çalışıyor fakat yeterince soğutmuyor.">
-</textarea>
+  <textarea
+   id="reqDescription"
+   maxlength="1000"
+   placeholder="Örneğin: Klima çalışıyor fakat yeterince soğutmuyor."
+  ></textarea>
 
-<div class="small muted"
-id="charCount">
-0/1000
-</div>
+  <div
+   class="small muted"
+   id="charCount"
+  >
+   0/1000
+  </div>
 
 
-<div class="row">
+  <div class="row">
 
-<div>
+   <div>
 
-<label>
-İl *
-</label>
+    <label>
+     İl *
+    </label>
 
-<input
-id="reqCity"
-value="İzmir"
-readonly>
+    <select id="reqCity">
 
-</div>
+     <option value="İzmir" selected>
+      İzmir
+     </option>
 
+    </select>
 
-<div>
+   </div>
 
-<label>
-İlçe *
-</label>
 
-<select id="reqDistrict">
-${districtOptions()}
-</select>
+   <div>
 
-</div>
+    <label>
+     İlçe *
+    </label>
 
-</div>
+    <select id="reqDistrict">
 
+     ${districtOptions()}
 
-<label>
-Mahalle
-</label>
+    </select>
 
-<input
-id="reqNeighborhood"
-placeholder="Mahalle adı">
+   </div>
 
+  </div>
 
-<label>
-Ne zaman gerekli?
-</label>
 
-<select id="reqUrgency">
+  <label>
+   Mahalle
+  </label>
 
-<option value="Acil">
-🔴 Acil
-</option>
+  <input
+   id="reqNeighborhood"
+   placeholder="Mahalle adı"
+  >
 
-<option value="Bugün" selected>
-🟡 Bugün
-</option>
 
-<option value="Uygun zamanda">
-🟢 Uygun zamanda
-</option>
+  <label>
+   Ne zaman gerekli?
+  </label>
 
-</select>
+  <select id="reqUrgency">
 
+   <option value="Acil">
+    🔴 Acil
+   </option>
 
-<label>
-Ad Soyad *
-</label>
+   <option
+    value="Bugün"
+    selected
+   >
+    🟡 Bugün
+   </option>
 
-<input
-id="reqName"
-placeholder="Adınız Soyadınız">
+   <option value="Uygun zamanda">
+    🟢 Uygun zamanda
+   </option>
 
+  </select>
 
-<label>
-Telefon *
-</label>
 
-<input
-id="reqPhone"
-type="tel"
-placeholder="05xxxxxxxxx">
+  <label>
+   Adınız *
+  </label>
 
+  <input
+   id="reqName"
+   placeholder="Adınız Soyadınız"
+   autocomplete="name"
+  >
 
-<div id="requestMessage"></div>
 
+  <label>
+   Telefon *
+  </label>
 
-<div class="notice">
+  <input
+   id="reqPhone"
+   type="tel"
+   inputmode="tel"
+   placeholder="05xxxxxxxxx"
+   autocomplete="tel"
+  >
 
-🔒 Bilgileriniz hizmet talebinin
-oluşturulması amacıyla sisteme kaydedilir.
 
-</div>
+  <div class="notice">
 
+   🔒 Bilgileriniz hizmet talebinin
+   oluşturulması amacıyla kullanılır.
 
-<button
-id="createButton"
-class="btn primary"
-onclick="createRequest()">
+  </div>
 
-TALEBİ OLUŞTUR
 
-</button>
+  <button
+   class="btn primary"
+   id="createRequestButton"
+   onclick="createRequest()"
+  >
+   TALEBİ OLUŞTUR
+  </button>
 
-</div>
+ </div>
 
-`);
+ `);
 
 
-const ta=document.getElementById("reqDescription");
+ const ta=
+  document.getElementById(
+   "reqDescription"
+  );
 
-ta.addEventListener("input",()=>{
+ if(ta){
 
-document.getElementById("charCount")
-.textContent=ta.value.length+"/1000";
+  ta.addEventListener(
+   "input",
+   ()=>{
 
-});
+    document.getElementById(
+     "charCount"
+    ).textContent=
+     ta.value.length+
+     "/1000";
+
+   }
+  );
+
+ }
 
 }
 
@@ -914,643 +1419,1512 @@ document.getElementById("charCount")
 
 async function createRequest(){
 
-const button=document.getElementById("createButton");
+ const service=
+  document.getElementById(
+   "reqService"
+  ).value;
 
-const service=document.getElementById("reqService").value;
+ const description=
+  document.getElementById(
+   "reqDescription"
+  ).value.trim();
 
-const description=
-document.getElementById("reqDescription").value.trim();
+ const city=
+  document.getElementById(
+   "reqCity"
+  ).value;
 
-const city=
-document.getElementById("reqCity").value.trim();
+ const district=
+  document.getElementById(
+   "reqDistrict"
+  ).value;
 
-const district=
-document.getElementById("reqDistrict").value;
+ const neighborhood=
+  document.getElementById(
+   "reqNeighborhood"
+  ).value.trim();
 
-const neighborhood=
-document.getElementById("reqNeighborhood").value.trim();
+ const urgency=
+  document.getElementById(
+   "reqUrgency"
+  ).value;
 
-const urgency=
-document.getElementById("reqUrgency").value;
+ const name=
+  document.getElementById(
+   "reqName"
+  ).value.trim();
 
-const name=
-document.getElementById("reqName").value.trim();
+ const phone=
+  document.getElementById(
+   "reqPhone"
+  ).value.trim();
 
-const phone=
-document.getElementById("reqPhone").value.trim();
 
-const message=
-document.getElementById("requestMessage");
+ if(!service){
 
+  alert(
+   "Lütfen hizmet kategorisini seç."
+  );
 
-message.innerHTML="";
+  return;
 
+ }
 
-if(!service){
 
-message.innerHTML=
-`<div class="error">Lütfen hizmet kategorisini seç.</div>`;
+ if(description.length<5){
 
-return;
+  alert(
+   "Lütfen ihtiyacınızı biraz daha açık anlat."
+  );
 
-}
+  return;
 
+ }
 
-if(description.length<5){
 
-message.innerHTML=
-`<div class="error">Lütfen ihtiyacınızı biraz daha açık anlat.</div>`;
+ if(!district){
 
-return;
+  alert(
+   "Lütfen ilçe seç."
+  );
 
-}
+  return;
 
+ }
 
-if(!district){
 
-message.innerHTML=
-`<div class="error">Lütfen ilçe seç.</div>`;
+ if(!name){
 
-return;
+  alert(
+   "Lütfen adınızı ve soyadınızı yaz."
+  );
 
-}
+  return;
 
+ }
 
-if(!name){
 
-message.innerHTML=
-`<div class="error">Lütfen adınızı ve soyadınızı yaz.</div>`;
+ if(!phone){
 
-return;
+  alert(
+   "Lütfen telefon numaranızı yaz."
+  );
 
-}
+  return;
 
+ }
 
-if(!phone){
 
-message.innerHTML=
-`<div class="error">Lütfen telefon numaranızı yaz.</div>`;
+ const button=
+  document.getElementById(
+   "createRequestButton"
+  );
 
-return;
+ if(button){
 
-}
+  button.disabled=true;
 
+  button.textContent=
+   "TALEP KAYDEDİLİYOR...";
 
-button.disabled=true;
-button.textContent="KAYDEDİLİYOR...";
+ }
 
 
-try{
+ const talep_no=
+  makeRequestNumber();
 
 
-/*
-  talep_no'yu BOŞ bırakıyoruz.
-  Supabase trigger otomatik oluşturuyor.
-*/
+ const item={
 
-const {data,error}=await db
+  id:talep_no,
 
-.from("talepler")
+  talep_no,
 
-.insert({
+  service,
 
-kategori:SERVICES[service]?.name || service,
+  kategori:service,
 
-aciklama:description,
+  description,
 
-il:city || "İzmir",
+  aciklama:description,
 
-ilce:district,
+  il:city,
 
-mahalle:neighborhood || null,
+  district,
 
-aciliyet:urgency,
+  ilce:district,
 
-ad_soyad:name,
+  neighborhood,
 
-telefon:phone,
+  mahalle:neighborhood,
 
-durum:"beklemede",
+  urgency,
 
-kaynak:"uygulama"
+  aciliyet:urgency,
 
-})
+  name,
 
-.select("id,talep_no,created_at")
-.single();
+  ad_soyad:name,
 
+  phone,
 
-if(error){
+  telefon:phone,
 
-console.error(error);
+  status:"Beklemede",
 
-throw error;
+  durum:"Beklemede",
 
-}
+  createdAt:
+   new Date().toISOString()
 
+ };
 
-message.innerHTML=`
 
-<div class="success">
+ let savedOnline=false;
 
-<strong>✅ Talebiniz başarıyla oluşturuldu.</strong>
 
-<br><br>
+ try{
 
-Talep numaranız:
+  await saveRequestToSupabase(
+   item
+  );
 
-<strong>
-${escapeHTML(data.talep_no)}
-</strong>
+  savedOnline=true;
 
-<br><br>
+  setConnection(
+   true,
+   "Supabase bağlı ✓"
+  );
 
-Talebiniz artık Supabase veritabanında kayıtlıdır.
+ }catch(error){
 
-</div>
+  console.error(
+   "Supabase kayıt hatası:",
+   error
+  );
 
-`;
+ }
 
 
-button.textContent="TALEP OLUŞTURULDU";
+ /*
+  Yerel yedek:
+  Supabase başarılı olsa bile
+  cihazda da tutulur.
+ */
 
-button.disabled=true;
+ const requests=
+  getRequests();
 
+ requests.unshift(item);
 
-setTimeout(()=>{
+ write(
+  KEYS.requests,
+  requests
+ );
 
-showRequests();
 
-},1800);
+ if(button){
 
+  button.disabled=false;
 
-}catch(error){
+  button.textContent=
+   "TALEBİ OLUŞTUR";
 
-console.error("SUPABASE HATASI:",error);
+ }
 
-button.disabled=false;
-button.textContent="TALEBİ OLUŞTUR";
 
+ if(savedOnline){
 
-message.innerHTML=`
+  alert(
+   "Talebiniz başarıyla oluşturuldu.\n\n"+
+   "Talep No: "+
+   talep_no
+  );
 
-<div class="error">
+ }else{
 
-<strong>❌ Supabase bağlantısı / kayıt hatası</strong>
+  alert(
+   "Talebiniz cihazınıza kaydedildi.\n\n"+
+   "Talep No: "+
+   talep_no+
+   "\n\n"+
+   "Sunucu bağlantısı kurulamadığı için yerel yedek kullanıldı."
+  );
 
-<br><br>
+ }
 
-${escapeHTML(error.message || error)}
 
-<br><br>
-
-Supabase SQL Editor'deki
-<talepler> tablosunun ve izinlerinin
-doğru kurulduğundan emin olun.
-
-</div>
-
-`;
-
-}
+ showRequests();
 
 }
 
 
 /* =========================================================
-   TALEPLERİ SUPABASE'DEN GETİR
+   TALEPLER
    ========================================================= */
 
 async function showRequests(){
 
-setNav("navRequests");
+ setNav("navRequests");
 
-app(`
+ app(`
 
-<div class="back">
+ <div class="back">
 
-<button class="btn secondary smallBtn"
-onclick="showHome()">
+  <button
+   class="btn secondary smallBtn"
+   onclick="showHome()"
+  >
+   ← Ana sayfaya dön
+  </button>
 
-← Ana sayfaya dön
+ </div>
 
-</button>
+ <div class="sectionTitle">
 
-</div>
+  <div>
 
-<div class="sectionTitle">
+   <span class="badge">
+    ▣ TALEPLERİM
+   </span>
 
-<div>
+   <h1>
+    Oluşturduğun talepler.
+   </h1>
 
-<span class="badge">
-▣ TALEPLER
-</span>
+  </div>
 
-<h1>
-Oluşturulan talepler.
-</h1>
+ </div>
 
-</div>
+ <p class="muted small">
+  Taleplerin sistemden yükleniyor...
+ </p>
 
-</div>
+ <div
+  class="card"
+  id="requestsLoading"
+  style="text-align:center"
+ >
+  ⏳ Talepler yükleniyor...
+ </div>
 
-<div id="requestsContainer">
-
-<div class="loading">
-⏳ Talepler yükleniyor...
-</div>
-
-</div>
-
-`);
-
-try{
-
-
-const {data,error}=await db
-
-.from("talepler")
-
-.select(`
-id,
-talep_no,
-kategori,
-aciklama,
-il,
-ilce,
-mahalle,
-aciliyet,
-ad_soyad,
-telefon,
-durum,
-created_at
-`)
-
-.order("created_at",{ascending:false});
+ `);
 
 
-if(error){
-
-throw error;
-
-}
+ const requests=
+  await loadRequestsFromSupabase();
 
 
-const container=
-document.getElementById("requestsContainer");
+ const area=
+  document.getElementById(
+   "requestsLoading"
+  );
+
+ if(!area)return;
 
 
-if(!data || data.length===0){
+ if(!requests.length){
 
-container.innerHTML=`
+  area.outerHTML=`
 
-<div class="card empty">
+   <div class="card empty">
 
-<div style="font-size:35px">
-📋
-</div>
+    <div style="font-size:35px">
+     📋
+    </div>
 
-<h3>
-Henüz talep yok
-</h3>
+    <h3>
+     Henüz talep yok
+    </h3>
 
-<p>
-İlk hizmet talebini oluştur.
-</p>
+    <p>
+     İhtiyacını anlat,
+     ilk talebini oluştur.
+    </p>
 
-<button
-class="btn primary"
-onclick="showRequest()">
+    <button
+     class="btn primary"
+     onclick="showRequest()"
+    >
+     ＋ Talep oluştur
+    </button>
 
-＋ Talep oluştur
+   </div>
 
-</button>
+  `;
 
-</div>
+  return;
 
-`;
-
-return;
-
-}
-
-
-container.innerHTML=
-data.map(renderRequest).join("");
+ }
 
 
-}catch(error){
-
-console.error(error);
-
-document.getElementById("requestsContainer").innerHTML=`
-
-<div class="error">
-
-<strong>
-❌ Talepler yüklenemedi.
-</strong>
-
-<br><br>
-
-${escapeHTML(error.message || error)}
-
-</div>
-
-`;
-
-}
+ area.outerHTML=
+  requests
+  .map(renderRequest)
+  .join("");
 
 }
 
 
 /* =========================================================
-   TALEP KARTI
+   TALEP GÖSTER
    ========================================================= */
 
 function renderRequest(r){
 
-const serviceName=
-r.kategori || "Hizmet";
+ const serviceKey=
+  r.service ||
+  r.kategori;
 
-const emoji=
-Object.values(SERVICES)
-.find(x=>x.name===serviceName)?.emoji || "🛠️";
-
-
-return `
-
-<article class="request">
-
-<div class="requestTop">
-
-<div>
-
-<h3>
-${emoji}
-${escapeHTML(serviceName)}
-</h3>
-
-<div class="small muted">
-
-${formatDate(r.created_at)}
-
-</div>
-
-</div>
-
-<span class="status">
-
-${escapeHTML(r.durum || "beklemede")}
-
-</span>
-
-</div>
+ const s=
+  SERVICES[serviceKey] ||
+  {
+   name:serviceKey || "Hizmet",
+   emoji:"🛠️"
+  };
 
 
-<div class="description">
-
-“${escapeHTML(r.aciklama)}”
-
-</div>
-
-
-<div class="meta">
-
-<span>
-📍 ${escapeHTML(r.il || "İzmir")}
-</span>
-
-<span>
-🏙️ ${escapeHTML(r.ilce)}
-</span>
-
-${r.mahalle ? `
-
-<span>
-🏘️ ${escapeHTML(r.mahalle)}
-</span>
-
-` : ""}
-
-<span>
-⏱️ ${escapeHTML(r.aciliyet)}
-</span>
-
-</div>
+ const status=
+  r.status ||
+  r.durum ||
+  "Beklemede";
 
 
-<div class="small muted">
+ return `
 
-Talep No:
+ <article class="request">
 
-<strong>
-${escapeHTML(r.talep_no)}
-</strong>
+  <div class="requestTop">
 
-</div>
+   <div>
 
-</article>
+    <h3>
+     ${s.emoji}
+     ${escapeHTML(s.name)}
+    </h3>
 
-`;
+    <div class="small muted">
+     ${escapeHTML(
+      r.createdAt ||
+      r.created_at ||
+      ""
+     )}
+    </div>
+
+   </div>
+
+   <span class="status">
+    ${escapeHTML(status)}
+   </span>
+
+  </div>
+
+
+  <div class="description">
+
+   “${escapeHTML(
+    r.description ||
+    r.aciklama ||
+    ""
+   )}”
+
+  </div>
+
+
+  <div class="meta">
+
+   <span>
+    📍 ${escapeHTML(
+     r.ilce ||
+     r.district ||
+     ""
+    )}
+   </span>
+
+   ${
+    (r.mahalle || r.neighborhood)
+    ?
+    `<span>
+      🏘️ ${escapeHTML(
+       r.mahalle ||
+       r.neighborhood
+      )}
+     </span>`
+    :""
+   }
+
+   <span>
+    ⏱️ ${escapeHTML(
+     r.aciliyet ||
+     r.urgency ||
+     ""
+    )}
+   </span>
+
+  </div>
+
+
+  <div class="small muted">
+
+   Talep No:
+   <strong>
+    ${escapeHTML(
+     r.talep_no ||
+     r.id ||
+     ""
+    )}
+   </strong>
+
+  </div>
+
+ </article>
+
+ `;
 
 }
 
 
 /* =========================================================
-   HİZMET VER
+   HİZMET VER GİRİŞ
    ========================================================= */
 
 function showProviderEntry(){
 
-setNav("navProvider");
+ setNav("navProvider");
 
-app(`
-
-<div class="back">
-
-<button class="btn secondary smallBtn"
-onclick="showHome()">
-
-← Ana sayfaya dön
-
-</button>
-
-</div>
+ const provider=
+  getProvider();
 
 
-<div class="formCard">
+ if(provider){
 
-<span class="badge">
-🛠️ HİZMET VER
-</span>
+  if(providerLogged()){
 
-<h1>
-Hizmet sağlayıcı olarak katıl.
-</h1>
+   showProviderPanel();
 
-<p class="muted">
+   return;
 
-Pilot sürümde hizmet sağlayıcı
-bilgileri şimdilik cihaz üzerinde tutulur.
-Talep sistemi ise Supabase'e bağlıdır.
-
-</p>
+  }
 
 
-<label>
-Ad / İşletme *
-</label>
+  app(`
 
-<input
-id="providerName"
-placeholder="Adınız veya işletme adınız">
+   <div class="back">
 
+    <button
+     class="btn secondary smallBtn"
+     onclick="showHome()"
+    >
+     ← Ana sayfaya dön
+    </button>
 
-<label>
-Telefon *
-</label>
-
-<input
-id="providerPhone"
-type="tel"
-placeholder="05xxxxxxxxx">
+   </div>
 
 
-<label>
-Hizmet verdiğin ilçe *
-</label>
+   <div class="formCard">
 
-<select id="providerDistrict">
+    <span class="badge">
+     🛠️ HİZMET SAĞLAYICI
+    </span>
 
-${districtOptions()}
-
-</select>
-
-
-<label>
-Verdiğin hizmet *</label>
-
-<div class="checks">
-
-${Object.entries(SERVICES).map(([key,s])=>`
-
-<label class="check">
-
-<input
-type="checkbox"
-name="providerService"
-value="${key}">
-
-${s.emoji}
-${s.name}
-
-</label>
-
-`).join("")}
-
-</div>
+    <h1>
+     Tekrar hoş geldin.
+    </h1>
 
 
-<label>
-Açıklama
-</label>
+    <div class="profileHeader">
 
-<textarea
-id="providerDescription"
-maxlength="500"
-placeholder="Hizmetlerin hakkında kısa bilgi.">
-</textarea>
+     <div class="avatar">
+
+      ${escapeHTML(
+       (provider.name||"U")
+       .charAt(0)
+       .toUpperCase()
+      )}
+
+     </div>
+
+     <div>
+
+      <strong>
+       ${escapeHTML(
+        provider.name
+       )}
+      </strong>
+
+      <div class="small muted">
+       ${escapeHTML(
+        provider.mainServiceName ||
+        "Hizmet sağlayıcı"
+       )}
+      </div>
+
+     </div>
+
+    </div>
 
 
-<button
-class="btn primary"
-onclick="saveProvider()">
+    <br>
 
-HİZMET SAĞLAYICI OL
+    <button
+     class="btn primary"
+     onclick="providerLogin()"
+    >
+     HİZMET SAĞLAYICI PANELİNE GİR
+    </button>
 
-</button>
+    <br><br>
 
-</div>
+    <button
+     class="btn secondary"
+     onclick="showProviderRegister(true)"
+    >
+     KAYDI DÜZENLE
+    </button>
 
-`);
+    <br><br>
+
+    <button
+     class="btn danger"
+     onclick="providerLogout()"
+    >
+     PANELDEN ÇIKIŞ
+    </button>
+
+   </div>
+
+  `);
+
+  return;
+
+ }
+
+
+ showProviderRegister(false);
 
 }
 
 
 /* =========================================================
-   SAĞLAYICI KAYDET
+   HİZMET SAĞLAYICI KAYIT
+   ========================================================= */
+
+function showProviderRegister(editMode=false){
+
+ setNav("navProvider");
+
+ const p=
+  getProvider() ||
+  {};
+
+
+ app(`
+
+ <div class="back">
+
+  <button
+   class="btn secondary smallBtn"
+   onclick="showHome()"
+  >
+   ← Ana sayfaya dön
+  </button>
+
+ </div>
+
+
+ <div class="formCard">
+
+  <span class="badge">
+   🛠️ HİZMET SAĞLAYICI
+  </span>
+
+  <h1>
+   ${
+    editMode
+    ?
+    "Profilini güncelle."
+    :
+    "Hizmet vererek sisteme katıl."
+   }
+  </h1>
+
+
+  <p class="muted small">
+
+   Hizmet verdiğin alanları ve
+   bölgeni belirle.
+
+  </p>
+
+
+  <label>
+   Ad / İşletme *
+  </label>
+
+  <input
+   id="pName"
+   value="${escapeHTML(p.name||"")}"
+   placeholder="Adınız veya işletme adı"
+  >
+
+
+  <label>
+   Telefon *
+  </label>
+
+  <input
+   id="pPhone"
+   type="tel"
+   value="${escapeHTML(p.phone||"")}"
+   placeholder="05xxxxxxxxx"
+  >
+
+
+  <label>
+   Ana hizmet bölgesi *
+  </label>
+
+  <select id="pDistrict">
+
+   ${districtOptions(
+    p.district||""
+   )}
+
+  </select>
+
+
+  <label>
+   Verdiğin hizmetler *
+  </label>
+
+
+  <div class="checks">
+
+   ${
+    Object.entries(SERVICES)
+
+    .map(([key,s])=>`
+
+     <label class="check">
+
+      <input
+       type="checkbox"
+       name="pService"
+       value="${key}"
+       ${
+        (p.services||[])
+        .includes(key)
+        ?
+        "checked"
+        :
+        ""
+       }
+      >
+
+      ${s.emoji}
+      ${s.name}
+
+     </label>
+
+    `)
+
+    .join("")
+   }
+
+  </div>
+
+
+  <label>
+   Açıklama
+  </label>
+
+  <textarea
+   id="pDescription"
+   maxlength="500"
+   placeholder="Hizmetlerin hakkında kısa bilgi"
+  >${escapeHTML(
+   p.description||""
+  )}</textarea>
+
+
+  <div class="notice">
+
+   Hizmet sağlayıcı profilin
+   Supabase üyelik sistemi
+   tamamlanana kadar cihazda da
+   saklanır.
+
+  </div>
+
+
+  <button
+   class="btn primary"
+   onclick="saveProvider()"
+  >
+   ${
+    editMode
+    ?
+    "PROFİLİ GÜNCELLE"
+    :
+    "HİZMET SAĞLAYICI OL"
+   }
+  </button>
+
+ </div>
+
+ `);
+
+}
+
+
+/* =========================================================
+   HİZMET SAĞLAYICI KAYDET
    ========================================================= */
 
 function saveProvider(){
 
-const name=
-document.getElementById("providerName").value.trim();
+ const name=
+  document.getElementById(
+   "pName"
+  ).value.trim();
 
-const phone=
-document.getElementById("providerPhone").value.trim();
+ const phone=
+  document.getElementById(
+   "pPhone"
+  ).value.trim();
 
-const district=
-document.getElementById("providerDistrict").value;
+ const district=
+  document.getElementById(
+   "pDistrict"
+  ).value;
 
-const description=
-document.getElementById("providerDescription").value.trim();
-
-const services=
-[...document.querySelectorAll(
-'input[name="providerService"]:checked'
-)].map(x=>x.value);
+ const description=
+  document.getElementById(
+   "pDescription"
+  ).value.trim();
 
 
-if(!name){
+ const services=
+  [
+   ...document.querySelectorAll(
+    'input[name="pService"]:checked'
+   )
+  ]
+  .map(x=>x.value);
 
-alert("Ad / işletme adı gerekli.");
-return;
+
+ if(!name){
+
+  alert(
+   "Ad / işletme adı gerekli."
+  );
+
+  return;
+
+ }
+
+
+ if(!phone){
+
+  alert(
+   "Telefon numarası gerekli."
+  );
+
+  return;
+
+ }
+
+
+ if(!district){
+
+  alert(
+   "Ana hizmet bölgesi gerekli."
+  );
+
+  return;
+
+ }
+
+
+ if(!services.length){
+
+  alert(
+   "En az bir hizmet seçmelisin."
+  );
+
+  return;
+
+ }
+
+
+ const old=
+  getProvider();
+
+
+ const main=
+  SERVICES[services[0]];
+
+
+ const provider={
+
+  id:
+   old?.id ||
+   uid("SP"),
+
+  name,
+
+  phone,
+
+  district,
+
+  services,
+
+  description,
+
+  mainServiceName:
+   main
+   ?
+   main.name
+   :
+   "Hizmet",
+
+  active:true,
+
+  createdAt:
+   old?.createdAt ||
+   new Date().toISOString(),
+
+  updatedAt:
+   new Date().toISOString()
+
+ };
+
+
+ write(
+  KEYS.provider,
+  provider
+ );
+
+
+ write(
+  KEYS.providerLogged,
+  true
+ );
+
+
+ alert(
+  "Hizmet sağlayıcı profilin kaydedildi."
+ );
+
+
+ showProviderPanel();
 
 }
 
-if(!phone){
 
-alert("Telefon numarası gerekli.");
-return;
+/* =========================================================
+   GİRİŞ
+   ========================================================= */
+
+function providerLogin(){
+
+ if(!getProvider()){
+
+  showProviderRegister(false);
+
+  return;
+
+ }
+
+ write(
+  KEYS.providerLogged,
+  true
+ );
+
+ showProviderPanel();
 
 }
 
-if(!district){
 
-alert("Hizmet verdiğin ilçeyi seç.");
-return;
+/* =========================================================
+   ÇIKIŞ
+   ========================================================= */
+
+function providerLogout(){
+
+ write(
+  KEYS.providerLogged,
+  false
+ );
+
+ showProviderEntry();
 
 }
 
-if(!services.length){
 
-alert("En az bir hizmet seç.");
-return;
+/* =========================================================
+   HİZMET SAĞLAYICI PANELİ
+   ========================================================= */
+
+async function showProviderPanel(){
+
+ setNav("navProvider");
+
+ const p=
+  getProvider();
+
+
+ if(!p){
+
+  showProviderRegister(false);
+
+  return;
+
+ }
+
+
+ if(!providerLogged()){
+
+  showProviderEntry();
+
+  return;
+
+ }
+
+
+ const requests=
+  await loadRequestsFromSupabase();
+
+
+ const suitable=
+  requests.filter(r=>{
+
+   const service=
+    r.service ||
+    r.kategori;
+
+   const district=
+    r.district ||
+    r.ilce;
+
+
+   return (
+
+    p.active &&
+
+    (p.services||[])
+    .includes(service) &&
+
+    district===p.district
+
+   );
+
+  });
+
+
+ app(`
+
+ <div class="back">
+
+  <button
+   class="btn secondary smallBtn"
+   onclick="showHome()"
+  >
+   ← Ana sayfaya dön
+  </button>
+
+ </div>
+
+
+ <div class="profileHeader">
+
+  <div class="avatar">
+
+   ${escapeHTML(
+    (p.name||"U")
+    .charAt(0)
+    .toUpperCase()
+   )}
+
+  </div>
+
+
+  <div style="flex:1">
+
+   <strong>
+    ${escapeHTML(p.name)}
+   </strong>
+
+   <div class="small muted">
+
+    <span class="activeDot"></span>
+
+    ${
+     p.active
+     ?
+     "Aktif"
+     :
+     "Pasif"
+    }
+
+    •
+
+    ${escapeHTML(p.district)}
+
+   </div>
+
+  </div>
+
+ </div>
+
+
+ <div class="grid section">
+
+  <div class="card">
+
+   <div style="font-size:24px">
+    📋
+   </div>
+
+   <strong>
+    ${suitable.length}
+   </strong>
+
+   <div class="small muted">
+    Uygun İş
+   </div>
+
+  </div>
+
+
+  <div class="card">
+
+   <div style="font-size:24px">
+    🛠️
+   </div>
+
+   <strong>
+    ${p.services.length}
+   </strong>
+
+   <div class="small muted">
+    Kategori
+   </div>
+
+  </div>
+
+
+  <div class="card">
+
+   <div style="font-size:24px">
+    ✓
+   </div>
+
+   <strong>
+    ${
+     p.active
+     ?
+     "Aktif"
+     :
+     "Pasif"
+    }
+   </strong>
+
+   <div class="small muted">
+    Durum
+   </div>
+
+  </div>
+
+
+  <div class="card">
+
+   <div style="font-size:24px">
+    📍
+   </div>
+
+   <strong>
+    ${escapeHTML(p.district)}
+   </strong>
+
+   <div class="small muted">
+    Bölge
+   </div>
+
+  </div>
+
+ </div>
+
+
+ <div class="section">
+
+  <div class="sectionTitle">
+
+   <h2>
+    Profilin
+   </h2>
+
+   <button
+    class="btn secondary smallBtn"
+    onclick="showProviderRegister(true)"
+   >
+    Düzenle
+   </button>
+
+  </div>
+
+
+  <div class="card">
+
+   <div class="small muted">
+    Ad / İşletme
+   </div>
+
+   <strong>
+    ${escapeHTML(p.name)}
+   </strong>
+
+   <br><br>
+
+   <div class="small muted">
+    Telefon
+   </div>
+
+   <strong>
+    ${escapeHTML(p.phone)}
+   </strong>
+
+   <br><br>
+
+   <div class="small muted">
+    Ana hizmet bölgesi
+   </div>
+
+   <strong>
+    ${escapeHTML(p.district)}
+   </strong>
+
+   <br><br>
+
+   <div class="small muted">
+    Hizmetler
+   </div>
+
+   <strong>
+    ${
+     p.services
+     .map(x=>
+      SERVICES[x]?.name||x
+     )
+     .join(", ")
+    }
+   </strong>
+
+   ${
+    p.description
+    ?
+    `
+    <br><br>
+
+    <div class="small muted">
+     ${escapeHTML(
+      p.description
+     )}
+    </div>
+    `
+    :
+    ""
+   }
+
+  </div>
+
+ </div>
+
+
+ <div class="section">
+
+  <h2>
+   ⚙️ Hizmet Durumu
+  </h2>
+
+  <div class="${
+   p.active
+   ?
+   "success"
+   :
+   "warning"
+  }">
+
+   ${
+    p.active
+    ?
+    "Aktifsin. Bölgen ve hizmet kategorilerinle eşleşen talepleri görebilirsin."
+    :
+    "Şu anda pasifsin."
+   }
+
+  </div>
+
+  <br>
+
+  <button
+   class="btn ${
+    p.active
+    ?
+    "danger"
+    :
+    "primary"
+   }"
+   onclick="toggleProviderStatus()"
+  >
+
+   ${
+    p.active
+    ?
+    "🔴 PASİF YAP"
+    :
+    "🟢 AKTİF YAP"
+   }
+
+  </button>
+
+ </div>
+
+
+ <div class="section">
+
+  <div class="sectionTitle">
+
+   <h2>
+    📋 Sana Uygun Talepler
+   </h2>
+
+   <span class="small muted">
+    ${suitable.length} kayıt
+   </span>
+
+  </div>
+
+
+  ${
+   p.active
+
+   ?
+
+   (
+
+    suitable.length
+
+    ?
+
+    suitable
+    .map(renderProviderRequest)
+    .join("")
+
+    :
+
+    `
+    <div class="card empty">
+
+     <div style="font-size:34px">
+      🔎
+     </div>
+
+     <h3>
+      Şimdilik uygun talep yok.
+     </h3>
+
+     <p>
+      Bölgen ve kategorilerinle
+      eşleşen yeni talepler
+      burada görünecek.
+     </p>
+
+    </div>
+    `
+
+   )
+
+   :
+
+   `
+   <div class="card empty">
+    Hizmet durumunu aktif yaptığında
+    uygun talepler burada görünecek.
+   </div>
+   `
+
+  }
+
+ </div>
+
+
+ <div class="section">
+
+  <button
+   class="btn danger"
+   onclick="providerLogout()"
+  >
+   HİZMET SAĞLAYICI PANELİNDEN ÇIK
+  </button>
+
+ </div>
+
+ `);
 
 }
 
 
-localStorage.setItem(
-"isimi_coz_provider",
-JSON.stringify({
+/* =========================================================
+   HİZMET SAĞLAYICI TALEP
+   ========================================================= */
 
-name,
-phone,
-district,
-services,
-description,
-active:true
+function renderProviderRequest(r){
 
-})
-);
+ const serviceKey=
+  r.service ||
+  r.kategori;
+
+ const s=
+  SERVICES[serviceKey] ||
+  {
+   name:serviceKey||"Hizmet",
+   emoji:"🛠️"
+  };
 
 
-alert(
-"Hizmet sağlayıcı profilin kaydedildi."
-);
+ return `
 
-showHome();
+ <article class="request">
+
+  <div class="requestTop">
+
+   <div>
+
+    <h3>
+     ${s.emoji}
+     ${escapeHTML(s.name)}
+    </h3>
+
+   </div>
+
+   <span class="status">
+    ${escapeHTML(
+     r.aciliyet ||
+     r.urgency ||
+     "Beklemede"
+    )}
+   </span>
+
+  </div>
+
+
+  <div class="description">
+
+   ${escapeHTML(
+    r.aciklama ||
+    r.description ||
+    ""
+   )}
+
+  </div>
+
+
+  <div class="meta">
+
+   <span>
+    📍 ${escapeHTML(
+     r.ilce ||
+     r.district ||
+     ""
+    )}
+   </span>
+
+   ${
+    (r.mahalle || r.neighborhood)
+    ?
+    `<span>
+      🏘️ ${escapeHTML(
+       r.mahalle ||
+       r.neighborhood
+      )}
+     </span>`
+    :
+    ""
+   }
+
+
+   <span>
+    👤 ${escapeHTML(
+     r.ad_soyad ||
+     r.name ||
+     ""
+    )}
+   </span>
+
+  </div>
+
+
+  <div class="small muted">
+
+   Talep No:
+
+   <strong>
+    ${escapeHTML(
+     r.talep_no ||
+     r.id ||
+     ""
+    )}
+   </strong>
+
+  </div>
+
+
+  <br>
+
+
+  <a
+   class="btn primary"
+   style="display:block;text-align:center"
+   href="tel:${escapeHTML(
+    r.telefon ||
+    r.phone ||
+    ""
+   )}"
+  >
+   📞 MÜŞTERİYLE İLETİŞİME GEÇ
+  </a>
+
+ </article>
+
+ `;
+
+}
+
+
+/* =========================================================
+   SAĞLAYICI DURUMU
+   ========================================================= */
+
+function toggleProviderStatus(){
+
+ const p=
+  getProvider();
+
+ if(!p)return;
+
+ p.active=
+  !p.active;
+
+ p.updatedAt=
+  new Date().toISOString();
+
+ write(
+  KEYS.provider,
+  p
+ );
+
+ showProviderPanel();
 
 }
 
@@ -1559,7 +2933,21 @@ showHome();
    BAŞLANGIÇ
    ========================================================= */
 
-showHome();
+async function startApp(){
+
+ setConnection(
+  false,
+  "Supabase bağlanıyor..."
+ );
+
+ showHome();
+
+ await testSupabase();
+
+}
+
+
+startApp();
 
 </script>
 
