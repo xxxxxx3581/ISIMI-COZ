@@ -219,10 +219,98 @@ function providerMatchesRequest(p,r){
 /* ---------------- HOME ---------------- */
 
 function showHome(){
+
  setNav("navHome");
- app(`<section class="hero"><span class="badge">📍 İZMİR PİLOT BÖLGESİ</span><h1>İhtiyacın varsa,<br>çözümü var.</h1><p class="muted">Ev, iş yeri, araç ve günlük yaşam hizmetlerini tek yerden bul. İhtiyacını anlat, talebini oluştur.</p><div class="actions"><button class="btn primary" onclick="showRequest()">📢 İşimi Çözdür</button><button class="btn secondary" onclick="showProviderEntry()">🛠️ Hizmet Ver</button></div></section>
-<div class="section"><div class="sectionTitle"><h2>Hizmet kategorileri</h2><span class="small muted">İzmir</span></div><div class="grid">${Object.entries(SERVICES).map(([k,s])=>`<button class="card service" onclick="showRequest('${k}')"><div class="emoji">${s.emoji}</div><strong>${s.name}</strong><span>${s.desc}</span></button>`).join("")}</div></div>
-<div class="section card"><h2>💡 Nasıl çalışıyor?</h2><p class="muted small">İhtiyacını oluştur. Hizmet kategorisini ve bölgeni seç. Talebin sisteme kaydedilsin. Uygun hizmet sağlayıcıları talebini görebilsin.</p></div>`);
+
+ const serviceCards = Object.entries(SERVICES)
+  .map(([key,s]) => `
+   <button
+    type="button"
+    class="card service"
+    onclick="showRequest('${escapeHTML(key)}')"
+   >
+    <div class="emoji">${escapeHTML(s.emoji)}</div>
+    <strong>${escapeHTML(s.name)}</strong>
+    <span>${escapeHTML(s.desc)}</span>
+   </button>
+  `)
+  .join("");
+
+ app(`
+
+ <section class="hero">
+
+  <span class="badge">
+   📍 İZMİR PİLOT BÖLGESİ
+  </span>
+
+  <h1>
+   İhtiyacın varsa,<br>
+   çözümü var.
+  </h1>
+
+  <p class="muted">
+   Ev, iş yeri, araç ve günlük yaşam
+   hizmetlerini tek yerden bul.
+   İhtiyacını anlat, talebini oluştur.
+  </p>
+
+  <div class="actions">
+
+   <button
+    type="button"
+    class="btn primary"
+    onclick="showRequest()"
+   >
+    📢 İşimi Çözdür
+   </button>
+
+   <button
+    type="button"
+    class="btn secondary"
+    onclick="showProviderEntry()"
+   >
+    🛠️ Hizmet Ver
+   </button>
+
+  </div>
+
+ </section>
+
+ <div class="section">
+
+  <div class="sectionTitle">
+
+   <div>
+    <h2>Hizmet kategorileri</h2>
+    <div class="small muted">İhtiyacını seç ve talep oluştur.</div>
+   </div>
+
+   <span class="small muted">İzmir</span>
+
+  </div>
+
+  <div class="grid">
+   ${serviceCards}
+  </div>
+
+ </div>
+
+ <div class="section card">
+
+  <h2>💡 Nasıl çalışıyor?</h2>
+
+  <p class="muted small">
+   İhtiyacını oluştur. Hizmet kategorisini ve bölgeni seç.
+   Talebin Supabase'e kaydedilsin. Uygun hizmet sağlayıcıları
+   kendi bölgeleri ve hizmet kategorileriyle eşleşen talepleri
+   görebilsin.
+  </p>
+
+ </div>
+
+ `);
+
 }
 
 /* ---------------- REQUEST ---------------- */
