@@ -69,6 +69,8 @@ function write(k,v){localStorage.setItem(k,JSON.stringify(v))}
 function getRequests(){return read(KEYS.requests,[])}
 function getProvider(){return read(KEYS.provider,null)}
 function providerLogged(){return read(KEYS.providerLogged,false)}
+function uid(prefix){return prefix+"-"+Date.now().toString(36).toUpperCase()+"-"+Math.random().toString(36).slice(2,7).toUpperCase();}
+
 function escapeHTML(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
 function app(h){document.getElementById("app").innerHTML=h;window.scrollTo(0,0)}
 function setNav(a){["navHome","navRequest","navRequests","navProvider"].forEach(id=>document.getElementById(id)?.classList.remove("active"));if(a)document.getElementById(a)?.classList.add("active")}
@@ -277,10 +279,55 @@ function renderRequest(r){
 
 async function showProviderEntry(){
  setNav("navProvider");
- const local=getProvider();
- if(local&&providerLogged()){showProviderPanel(local);return}
- app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div><div class="formCard"><span class="badge">🛠️ HİZMET SAĞLAYICI</span><h1>Hizmet Ver</h1><p class="muted small">Supabase'deki kayıtlı hizmet sağlayıcıları ve sana uygun talepleri yükleyelim.</p><button class="btn primary" onclick="loadProviderDirectory()">KAYITLI SAĞLAYICILARI GÖSTER</button><div id="providerDirectory"></div></div>`);
- await loadProviderDirectory();
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div>
+ <div class="formCard">
+  <span class="badge">🛠️ HİZMET SAĞLAYICI</span>
+  <h1>Hizmet ver.</h1>
+  <p class="muted small">Hizmet sağlayıcı kaydını oluştur. Kaydettiğinde bilgiler Supabase'deki <strong>providers</strong> tablosuna gönderilecek.</p>
+  <label>Ad / İşletme *</label><input id="pName" placeholder="Örn. Ferhat Klima Servisi">
+  <label>Telefon *</label><input id="pPhone" type="tel" inputmode="tel" placeholder="05xxxxxxxxx">
+  <div class="row">
+   <div><label>İl</label><input id="pCity" value="İzmir" readonly></div>
+   <div><label>İlçe *</label><select id="pDistrict">${districtOptions()}</select></div>
+  </div>
+  <label>Hizmet kategorisi *</label>
+  <select id="pCategory">${serviceOptions()}</select>
+  <label>Mahalle</label><input id="pNeighborhood" placeholder="Mahalle adı">
+  <label>Açıklama</label><textarea id="pDescription" maxlength="500" placeholder="Hizmetlerin hakkında kısa bilgi"></textarea>
+  <div class="notice">Kayıt oluşturulduktan sonra sağlayıcın Supabase'e kaydedilecek ve uygun taleplerle eşleştirilecek.</div>
+  <button class="btn primary" id="saveProviderBtn" onclick="registerProvider()">HİZMET SAĞLAYICI KAYDI OLUŞTUR</button>
+  <br><br>
+  <button class="btn secondary" onclick="loadProviderDirectory()">KAYITLI SAĞLAYICILARI GÖR</button>
+  <div id="providerDirectory"></div>
+ </div>`);
+}
+
+async function registerProvider(){
+ const name=document.getElementById("pName").value.trim();
+ const phone=document.getElementById("pPhone").value.trim();
+ const city=document.getElementById("pCity").value.trim()||"İzmir";
+ const district=document.getElementById("pDistrict").value;
+ const category=document.getElementById("pCategory").value;
+ const neighborhood=document.getElementById("pNeighborhood").value.trim();
+ const description=document.getElementById("pDescription").value.trim();
+ if(!name){alert("Ad / işletme adı gerekli.");return}
+ if(!phone){alert("Telefon gerekli.");return}
+ if(!district){alert("İlçe seç.");return}
+ if(!category){alert("Hizmet kategorisi seç.");return}
+ const btn=document.getElementById("saveProviderBtn");btn.disabled=true;btn.textContent="KAYDEDİLİYOR...";
+ const payload={name,işletme:name,telefon:phone,kategori:category,il:city,ilçe:district,mahalle:neighborhood,açıklama:description,aktif:true};
+ try{
+  const rows=await supabaseRequest("POST","providers",payload);
+  const row=Array.isArray(rows)?rows[0]:rows;
+  const provider={id:row?.id||crypto.randomUUID?.()||uid("SP"),name,phone,city,district,neighborhood,description,services:[category],active:true};
+  write(KEYS.provider,provider);write(KEYS.providerLogged,true);
+  setConnection(true,"Supabase bağlı ✓");
+  alert("Hizmet sağlayıcı kaydı başarıyla oluşturuldu.");
+  showProviderPanel(provider);
+ }catch(e){
+  console.error(e);
+  alert("Kayıt oluşturulamadı.\n\nSupabase hatası:\n"+e.message);
+ }finally{btn.disabled=false;btn.textContent="HİZMET SAĞLAYICI KAYDI OLUŞTUR";}
 }
 
 async function loadProviderDirectory(){
