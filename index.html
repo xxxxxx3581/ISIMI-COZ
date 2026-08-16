@@ -277,7 +277,180 @@ function renderRequest(r){
 
 /* ---------------- PROVIDER ---------------- */
 
-async function showProviderEntry(){
+async 
+/* =========================================================
+   SUPABASE PROVIDERS LİSTESİ
+   ========================================================= */
+
+async function loadProvidersFromSupabase(){
+
+ try{
+
+  const data = await supabaseRequest(
+   "GET",
+   "providers?select=*&order=created_at.desc&limit=100"
+  );
+
+  if(Array.isArray(data)){
+   return data;
+  }
+
+ }catch(error){
+
+  console.error("Providers yükleme hatası:", error);
+
+ }
+
+ return [];
+
+}
+
+
+function renderProviderCard(p){
+
+ const services = Array.isArray(p.services)
+  ? p.services
+  : [];
+
+ const serviceNames = services.map(x =>
+  SERVICES[x]?.name || x
+ );
+
+ return `
+  <article class="request">
+
+   <div class="requestTop">
+
+    <div>
+     <h3>🛠️ ${escapeHTML(p.name || "Hizmet Sağlayıcı")}</h3>
+
+     <div class="small muted">
+      ${escapeHTML(p.city || "İzmir")} •
+      ${escapeHTML(p.district || "")}
+     </div>
+    </div>
+
+    <span class="status" style="${
+      p.active
+      ? "background:rgba(25,195,125,.12);color:#8bf1c4"
+      : ""
+    }">
+     ${p.active ? "Aktif" : "Pasif"}
+    </span>
+
+   </div>
+
+   <div class="meta">
+
+    <span>📍 ${escapeHTML(p.city || "İzmir")}</span>
+
+    <span>🏘️ ${escapeHTML(p.district || "")}</span>
+
+    <span>🛠️ ${
+      escapeHTML(serviceNames.join(", ") || "Hizmet belirtilmemiş")
+    }</span>
+
+   </div>
+
+   ${
+    p.description
+    ?
+    `<div class="description">${escapeHTML(p.description)}</div>`
+    :
+    ""
+   }
+
+   ${
+    p.phone
+    ?
+    `<a
+       class="btn primary"
+       style="display:block;text-align:center"
+       href="tel:${escapeHTML(p.phone)}"
+     >
+       📞 İLETİŞİME GEÇ
+     </a>`
+    :
+    ""
+   }
+
+  </article>
+ `;
+}
+
+
+async function showProviders(){
+
+ setNav("navProvider");
+
+ app(`
+
+  <div class="back">
+
+   <button
+    class="btn secondary smallBtn"
+    onclick="showProviderEntry()"
+   >
+    ← Hizmet Ver'e dön
+   </button>
+
+  </div>
+
+  <div class="sectionTitle">
+
+   <div>
+    <span class="badge">🛠️ HİZMET SAĞLAYICILAR</span>
+
+    <h1>
+     Kayıtlı hizmet sağlayıcılar.
+    </h1>
+
+   </div>
+
+  </div>
+
+  <p class="muted small">
+   Supabase'de kayıtlı hizmet sağlayıcılar burada görünür.
+  </p>
+
+  <div
+   class="card"
+   id="providersArea"
+   style="text-align:center"
+  >
+   ⏳ Sağlayıcılar yükleniyor...
+  </div>
+
+ `);
+
+ const area = document.getElementById("providersArea");
+
+ if(!area) return;
+
+ const providers = await loadProvidersFromSupabase();
+
+ if(!providers.length){
+
+  area.innerHTML = `
+   <div class="empty">
+    <div style="font-size:35px">🛠️</div>
+    <h3>Henüz sağlayıcı bulunamadı.</h3>
+    <p>Supabase'deki <strong>providers</strong> tablosunda kayıt yok.</p>
+   </div>
+  `;
+
+  return;
+
+ }
+
+ area.outerHTML = providers
+  .map(renderProviderCard)
+  .join("");
+
+}
+
+
+function showProviderEntry(){
  setNav("navProvider");
  app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div>
  <div class="formCard">
