@@ -1023,7 +1023,6 @@ async function submitOffer(requestId,providerId){
   request_id:requestId,
   provider_id:providerId,
   price:price,
-  message:message,
   status:"pending"
  };
 
@@ -1035,7 +1034,7 @@ async function submitOffer(requestId,providerId){
 
   document.getElementById("offerModal")?.remove();
 
-  alert("Teklifiniz başarıyla gönderildi. ✓");
+  alert("Teklifiniz başarıyla gönderildi. ✓\n\nFiyat: " + price.toLocaleString("tr-TR") + " TL");
 
  }catch(error){
 
@@ -1059,7 +1058,7 @@ async function loadOffersForRequest(requestId){
 
   const rows=await supabaseRequest(
    "GET",
-   "offers?request_id=eq."+encodeURIComponent(requestId)+"&select=*&order=created_at.desc"
+   "offers?request_id=eq."+encodeURIComponent(requestId)+"&select=*"
   );
 
   return Array.isArray(rows)?rows:[];
