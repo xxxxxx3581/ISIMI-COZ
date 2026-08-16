@@ -218,6 +218,34 @@ function providerMatchesRequest(p,r){
 
 /* ---------------- HOME ---------------- */
 
+
+async function showRequestMatchesAfterSave(requestId){
+
+ try{
+
+  const rows = await supabaseRequest(
+   "GET",
+   "requests?id=eq." + encodeURIComponent(requestId) + "&select=*"
+  );
+
+  const request = Array.isArray(rows) ? rows[0] : null;
+
+  if(!request) return;
+
+  const holder = document.getElementById("requestMatches");
+
+  if(holder){
+   await showMatchesForRequest(request);
+  }
+
+ }catch(error){
+
+  console.error("Kayıt sonrası eşleştirme hatası:", error);
+
+ }
+
+}
+
 function showHome(){
 
  setNav("navHome");
@@ -276,6 +304,8 @@ function showHome(){
   </div>
 
  </section>
+
+ <div class="section" id="requestMatches"></div>
 
  <div class="section">
 
@@ -466,6 +496,202 @@ function renderProviderCard(p){
  `;
 }
 
+
+
+/* =========================================================
+   TALEP ↔ HİZMET SAĞLAYICI EŞLEŞTİRME
+   ========================================================= */
+
+function normalizeMatchText(value){
+ return String(value ?? "")
+  .trim()
+  .toLocaleLowerCase("tr-TR")
+  .normalize("NFD")
+  .replace(/[\u0300-\u036f]/g,"");
+}
+
+function providerServices(provider){
+ const raw = provider?.services;
+
+ if(Array.isArray(raw)) return raw;
+
+ if(typeof raw === "string"){
+  try{
+   const parsed = JSON.parse(raw);
+   if(Array.isArray(parsed)) return parsed;
+  }catch(e){}
+
+  return raw
+   .split(",")
+   .map(x => x.trim())
+   .filter(Boolean);
+ }
+
+ return [];
+}
+
+function serviceMatches(provider, request){
+ const wanted = normalizeMatchText(request?.category);
+ if(!wanted) return true;
+
+ const list = providerServices(provider);
+
+ return list.some(item => {
+
+  const value = normalizeMatchText(item);
+
+  if(value === wanted) return true;
+
+  const service = SERVICES[item];
+
+  if(service && normalizeMatchText(service.name) === wanted) return true;
+
+  return Object.entries(SERVICES).some(([key,s]) =>
+   normalizeMatchText(key) === value &&
+   normalizeMatchText(s.name) === wanted
+  );
+ });
+}
+
+function locationMatches(provider, request){
+
+ const requestCity = normalizeMatchText(request?.city);
+ const requestDistrict = normalizeMatchText(request?.district);
+
+ const providerCity = normalizeMatchText(provider?.city);
+ const providerDistrict = normalizeMatchText(provider?.district);
+
+ if(requestCity && providerCity && requestCity !== providerCity){
+  return false;
+ }
+
+ if(requestDistrict && providerDistrict &&
+    requestDistrict !== providerDistrict){
+  return false;
+ }
+
+ return true;
+}
+
+async function findMatchingProviders(request){
+
+ try{
+
+  const providers = await loadProvidersFromSupabase();
+
+  return providers.filter(provider => {
+
+   if(provider.active === false) return false;
+
+   return serviceMatches(provider, request) &&
+          locationMatches(provider, request);
+
+  });
+
+ }catch(error){
+
+  console.error("Talep eşleştirme hatası:", error);
+  return [];
+
+ }
+}
+
+function renderMatchedProviderCard(provider){
+
+ const services = providerServices(provider);
+
+ const names = services.map(item => {
+
+  const service = SERVICES[item];
+
+  return service ? service.name : item;
+
+ });
+
+ return `
+  <article class="request">
+
+   <div class="requestTop">
+
+    <div>
+     <h3>🛠️ ${escapeHTML(provider.name || "Hizmet Sağlayıcı")}</h3>
+
+     <div class="small muted">
+      ${escapeHTML(provider.city || "")}
+      ${provider.district ? " • " + escapeHTML(provider.district) : ""}
+     </div>
+    </div>
+
+    <span class="status">
+     UYGUN
+    </span>
+
+   </div>
+
+   <div class="meta">
+    <span>🛠️ ${escapeHTML(names.join(", ") || "Hizmet")}</span>
+   </div>
+
+   ${
+    provider.description
+    ? `<div class="description">${escapeHTML(provider.description)}</div>`
+    : ""
+   }
+
+   ${
+    provider.phone
+    ? `<a
+        class="btn primary"
+        style="display:block;text-align:center"
+        href="tel:${escapeHTML(provider.phone)}"
+       >
+        📞 SAĞLAYICIYI ARA
+       </a>`
+    : ""
+   }
+
+  </article>
+ `;
+}
+
+async function showMatchesForRequest(request){
+
+ const matches = await findMatchingProviders(request);
+
+ const existing = document.getElementById("requestMatches");
+
+ if(!existing) return matches;
+
+ if(!matches.length){
+
+  existing.innerHTML = `
+   <div class="card">
+    <h3>🔎 Henüz uygun sağlayıcı bulunamadı.</h3>
+    <p class="muted small">
+     Bu talep için aynı hizmet ve bölgede aktif bir sağlayıcı
+     henüz bulunmuyor.
+    </p>
+   </div>
+  `;
+
+  return matches;
+ }
+
+ existing.innerHTML = `
+  <div class="sectionTitle">
+   <div>
+    <h2>🎯 Sana uygun sağlayıcılar</h2>
+    <div class="small muted">
+     Hizmet ve konuma göre eşleşen sağlayıcılar.
+    </div>
+   </div>
+  </div>
+
+  ${matches.map(renderMatchedProviderCard).join("")}
+ `;
+
+ return matches;
+}
 
 async function showProviders(){
 
