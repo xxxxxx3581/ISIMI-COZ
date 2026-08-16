@@ -1043,6 +1043,9 @@ async function openOfferForm(requestId,providerId,requestNo,serviceName){
    <label>Teklif fiyatı (TL) *</label>
    <input id="offerPrice" type="number" min="0" step="1" inputmode="decimal" placeholder="Örn. 1500">
 
+   <label>Müsait olduğunuz zaman *</label>
+   <input id="offerAvailableTime" type="text" maxlength="200" placeholder="Örn. Bugün 18:00 / Yarın 10:00 / Bugün müsaitim">
+
    <label>Mesajınız</label>
    <textarea id="offerMessage" maxlength="1000" placeholder="İşin nasıl yapılacağını, tahmini süreyi veya önemli bilgileri yazabilirsiniz."></textarea>
 
@@ -1066,11 +1069,18 @@ async function openOfferForm(requestId,providerId,requestNo,serviceName){
 async function submitOffer(requestId,providerId,requestNo){
 
  const priceRaw=document.getElementById("offerPrice")?.value.trim();
+ const availableTime=document.getElementById("offerAvailableTime")?.value.trim();
+ const note=document.getElementById("offerMessage")?.value.trim() || null;
  const button=document.getElementById("sendOfferButton");
  const price=Number(priceRaw);
 
  if(!Number.isFinite(price)||price<0){
   alert("Lütfen geçerli bir teklif fiyatı gir.");
+  return;
+ }
+
+ if(!availableTime){
+  alert("Lütfen müsait olduğunuz zamanı yazın.");
   return;
  }
 
@@ -1099,10 +1109,22 @@ async function submitOffer(requestId,providerId,requestNo){
  button.disabled=true;
  button.textContent="TEKLİF GÖNDERİLİYOR...";
 
+ /*
+  * Supabase offers tablosunun gerçek şemasına göre:
+  * request_id       uuid      NOT NULL
+  * provider_id      uuid      NOT NULL
+  * price            numeric   NOT NULL
+  * available_time   text      NOT NULL
+  * note             text      NULL
+  * status           text      NOT NULL
+  * created_at       timestamptz (veritabanı default'u varsa otomatik)
+  */
  const offer={
   request_id:finalRequestId,
   provider_id:providerId,
   price:price,
+  available_time:availableTime,
+  note:note,
   status:"pending"
  };
 
@@ -1115,7 +1137,8 @@ async function submitOffer(requestId,providerId,requestNo){
 
   alert(
    "Teklifiniz başarıyla gönderildi. ✓\n\n"+
-   "Fiyat: "+price.toLocaleString("tr-TR")+" TL"
+   "Fiyat: "+price.toLocaleString("tr-TR")+" TL\n"+
+   "Müsaitlik: "+availableTime
   );
 
  }catch(error){
@@ -1177,8 +1200,14 @@ function renderOfferCard(offer){
    </div>
 
    ${
-    offer.message
-    ? `<p class="small">${escapeHTML(offer.message)}</p>`
+    offer.available_time
+    ? `<div class="small">🕐 Müsaitlik: ${escapeHTML(offer.available_time)}</div>`
+    : ""
+   }
+
+   ${
+    offer.note
+    ? `<p class="small">${escapeHTML(offer.note)}</p>`
     : ""
    }
 
