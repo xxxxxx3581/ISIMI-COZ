@@ -8,15 +8,33 @@
 
 <style>
 *{box-sizing:border-box}
+
 html,body{
- margin:0;padding:0;
- background:#07111f;color:#eef4fb;
+ margin:0;
+ padding:0;
+ min-height:100%;
+ background:#07111f;
+ color:#eef4fb;
  font-family:Arial,Helvetica,sans-serif
 }
-body{min-height:100vh}
-button,input,select,textarea{font:inherit}
-button{cursor:pointer}
-a{text-decoration:none;color:inherit}
+
+body{
+ min-height:100vh;
+ padding-bottom:80px
+}
+
+button,input,select,textarea{
+ font:inherit
+}
+
+button{
+ cursor:pointer
+}
+
+a{
+ text-decoration:none;
+ color:inherit
+}
 
 :root{
  --bg:#07111f;
@@ -35,8 +53,7 @@ a{text-decoration:none;color:inherit}
 .app{
  max-width:760px;
  margin:auto;
- min-height:100vh;
- padding-bottom:90px
+ min-height:100vh
 }
 
 .top{
@@ -48,17 +65,28 @@ a{text-decoration:none;color:inherit}
  z-index:20
 }
 
-.brand{display:flex;align-items:center;gap:10px}
+.brand{
+ display:flex;
+ align-items:center;
+ gap:10px
+}
 
 .logo{
- width:40px;height:40px;border-radius:13px;
+ width:40px;
+ height:40px;
+ border-radius:13px;
  background:linear-gradient(135deg,var(--primary),#36a3ff);
- display:grid;place-items:center;
- font-size:21px;font-weight:900;
+ display:grid;
+ place-items:center;
+ font-size:21px;
+ font-weight:900;
  color:#03120d
 }
 
-.brand strong{font-size:18px}
+.brand strong{
+ font-size:18px
+}
+
 .brand small{
  display:block;
  color:var(--muted);
@@ -66,7 +94,9 @@ a{text-decoration:none;color:inherit}
  margin-top:2px
 }
 
-main{padding:16px}
+main{
+ padding:16px
+}
 
 .hero{
  background:linear-gradient(145deg,#10243a,#0b1727);
@@ -95,11 +125,27 @@ h1{
  margin:16px 0 10px
 }
 
-h2{font-size:22px;margin:0 0 8px}
-h3{font-size:16px;margin:0 0 6px}
-p{line-height:1.55}
-.muted{color:var(--muted)}
-.small{font-size:12px}
+h2{
+ font-size:22px;
+ margin:0 0 8px
+}
+
+h3{
+ font-size:16px;
+ margin:0 0 6px
+}
+
+p{
+ line-height:1.55
+}
+
+.muted{
+ color:var(--muted)
+}
+
+.small{
+ font-size:12px
+}
 
 .grid{
  display:grid;
@@ -121,14 +167,24 @@ p{line-height:1.55}
  transition:.15s transform,.15s border-color
 }
 
-.service:hover{border-color:#315270}
-.service:active{transform:scale(.98)}
-.service .emoji{font-size:28px}
+.service:hover{
+ border-color:#315270
+}
+
+.service:active{
+ transform:scale(.98)
+}
+
+.service .emoji{
+ font-size:28px
+}
+
 .service strong{
  display:block;
  margin-top:9px;
  font-size:16px
 }
+
 .service span{
  display:block;
  color:var(--muted);
@@ -165,7 +221,7 @@ p{line-height:1.55}
 
 .btn.blue{
  background:#256cae;
- color:white
+ color:#fff
 }
 
 .btn.danger{
@@ -179,7 +235,14 @@ p{line-height:1.55}
  font-size:13px
 }
 
-.section{margin-top:18px}
+.btn:disabled{
+ opacity:.6;
+ cursor:not-allowed
+}
+
+.section{
+ margin-top:18px
+}
 
 .sectionTitle{
  display:flex;
@@ -213,7 +276,9 @@ input,select,textarea{
  outline:none
 }
 
-input:focus,select:focus,textarea:focus{
+input:focus,
+select:focus,
+textarea:focus{
  border-color:var(--primary)
 }
 
@@ -245,7 +310,9 @@ textarea{
  font-size:13px
 }
 
-.check input{width:auto}
+.check input{
+ width:auto
+}
 
 .notice{
  background:#0b2030;
@@ -272,8 +339,7 @@ textarea{
  border:1px solid #65501a;
  color:#f5d77c;
  padding:12px;
- border-radius:13px;
- font-size:13px
+ border-radius:13px
 }
 
 .error{
@@ -307,7 +373,8 @@ textarea{
  color:#ffd76b;
  font-size:11px;
  font-weight:800;
- height:max-content
+ height:max-content;
+ white-space:nowrap
 }
 
 .meta{
@@ -423,46 +490,100 @@ textarea{
  margin-bottom:3px
 }
 
-.navBtn.active{color:var(--primary)}
+.navBtn.active{
+ color:var(--primary)
+}
 
-.back{margin-bottom:12px}
-.hidden{display:none!important}
+.back{
+ margin-bottom:12px
+}
+
+.hidden{
+ display:none!important
+}
+
+.contactBox{
+ background:#0b2030;
+ border:1px solid #1e4c66;
+ border-radius:14px;
+ padding:12px;
+ margin-top:12px
+}
+
+.phoneNumber{
+ color:#6df0b5;
+ font-size:18px;
+ font-weight:800
+}
 
 @media(max-width:430px){
- main{padding:12px}
- .hero{padding:20px 16px}
- h1{font-size:27px}
- .grid{gap:8px}
+
+ main{
+  padding:12px
+ }
+
+ .hero{
+  padding:20px 16px
+ }
+
+ h1{
+  font-size:27px
+ }
+
+ .grid{
+  gap:8px
+ }
+
  .service{
   padding:13px;
   min-height:122px
  }
- .row{grid-template-columns:1fr}
+
+ .row{
+  grid-template-columns:1fr
+ }
 }
 
 @media(max-width:360px){
- .bottomInner{grid-template-columns:repeat(4,1fr)}
- .navBtn{font-size:9px}
+
+ .navBtn{
+  font-size:9px
+ }
 }
 </style>
 </head>
 
 <body>
 
-<div id="connectionStatus" class="connection offline">
+<div id="connectionStatus"
+     class="connection offline">
  Supabase bağlanıyor...
 </div>
 
 <div class="app">
 
 <header class="top">
+
  <div class="brand">
-  <div class="logo">✓</div>
-  <div>
-   <strong>İŞİMİ ÇÖZ</strong>
-   <small>İzmir Pilot Bölgesi</small>
+
+  <div class="logo">
+   ✓
   </div>
+
+  <div>
+
+   <strong>
+    İŞİMİ ÇÖZ
+   </strong>
+
+   <small>
+    İzmir Pilot Bölgesi
+   </small>
+
+  </div>
+
  </div>
+
 </header>
 
 <main id="app"></main>
@@ -470,31 +591,59 @@ textarea{
 </div>
 
 <nav class="bottom">
+
  <div class="bottomInner">
-  <button class="navBtn" id="navHome" onclick="showHome()">
-   <b>⌂</b>ANA
+
+  <button
+   class="navBtn"
+   id="navHome"
+   onclick="showHome()">
+
+   <b>⌂</b>
+   ANA
+
   </button>
 
-  <button class="navBtn" id="navRequest" onclick="showRequest()">
-   <b>＋</b>TALEP
+  <button
+   class="navBtn"
+   id="navRequest"
+   onclick="showRequest()">
+
+   <b>＋</b>
+   TALEP
+
   </button>
 
-  <button class="navBtn" id="navRequests" onclick="showRequests()">
-   <b>▣</b>TALEPLER
+  <button
+   class="navBtn"
+   id="navRequests"
+   onclick="showRequests()">
+
+   <b>▣</b>
+   TALEPLER
+
   </button>
 
-  <button class="navBtn" id="navProvider" onclick="showProviderEntry()">
-   <b>🛠️</b>HİZMET VER
+  <button
+   class="navBtn"
+   id="navProvider"
+   onclick="showProviderEntry()">
+
+   <b>🛠️</b>
+   HİZMET VER
+
   </button>
+
  </div>
+
 </nav>
+
 
 <script>
 
 /* =========================================================
    İŞİMİ ÇÖZ
    TEK DOSYA SÜRÜM
-   GitHub -> index.html
    ========================================================= */
 
 
@@ -510,10 +659,10 @@ const SUPABASE_KEY =
 
 
 /* =========================================================
-   SERVİSLER
+   HİZMETLER
    ========================================================= */
 
-const SERVICES = {
+const SERVICES={
 
  klima:{
   name:"Klima",
@@ -570,7 +719,7 @@ const SERVICES = {
    İLÇELER
    ========================================================= */
 
-const DISTRICTS = [
+const DISTRICTS=[
 
 "Aliağa",
 "Balçova",
@@ -589,8 +738,6 @@ const DISTRICTS = [
 "Karabağlar",
 "Karaburun",
 "Karşıyaka",
-"Bayraklı",
-"Bornova",
 "Konak",
 "Menemen",
 "Menderes",
@@ -612,28 +759,31 @@ const DISTRICTS = [
    LOCAL STORAGE
    ========================================================= */
 
-const KEYS = {
+const KEYS={
 
- requests:"isimi_coz_requests_v4",
+ requests:"isimi_coz_requests_v5",
 
- provider:"isimi_coz_provider_v4",
+ provider:"isimi_coz_provider_v5",
 
- providerLogged:"isimi_coz_provider_logged_v4"
+ providerLogged:"isimi_coz_provider_logged_v5"
 
 };
 
 
 /* =========================================================
-   LOCAL STORAGE FONKSİYONLARI
+   LOCAL STORAGE
    ========================================================= */
 
 function read(key,fallback){
 
  try{
 
-  const raw=localStorage.getItem(key);
+  const raw=
+   localStorage.getItem(key);
 
-  return raw ? JSON.parse(raw) : fallback;
+  return raw
+   ? JSON.parse(raw)
+   : fallback;
 
  }catch(e){
 
@@ -646,31 +796,51 @@ function read(key,fallback){
 
 function write(key,value){
 
- localStorage.setItem(
-  key,
-  JSON.stringify(value)
- );
+ try{
+
+  localStorage.setItem(
+   key,
+   JSON.stringify(value)
+  );
+
+ }catch(e){
+
+  console.warn(
+   "LocalStorage yazma hatası",
+   e
+  );
+
+ }
 
 }
 
 
 function getRequests(){
 
- return read(KEYS.requests,[]);
+ return read(
+  KEYS.requests,
+  []
+ );
 
 }
 
 
 function getProvider(){
 
- return read(KEYS.provider,null);
+ return read(
+  KEYS.provider,
+  null
+ );
 
 }
 
 
 function providerLogged(){
 
- return read(KEYS.providerLogged,false);
+ return read(
+  KEYS.providerLogged,
+  false
+ );
 
 }
 
@@ -692,6 +862,17 @@ function escapeHTML(value){
 }
 
 
+function normalize(value){
+
+ return String(value ?? "")
+  .trim()
+  .toLocaleLowerCase("tr-TR")
+  .normalize("NFD")
+  .replace(/[\u0300-\u036f]/g,"");
+
+}
+
+
 function uid(prefix){
 
  return prefix+"-"+
@@ -699,9 +880,9 @@ function uid(prefix){
  Date.now().toString(36).toUpperCase()+"-"+
 
  Math.random()
- .toString(36)
- .slice(2,7)
- .toUpperCase();
+  .toString(36)
+  .slice(2,7)
+  .toUpperCase();
 
 }
 
@@ -715,17 +896,31 @@ function setNav(active){
   "navProvider"
  ].forEach(id=>{
 
-  const el=document.getElementById(id);
+  const el=
+   document.getElementById(id);
 
-  if(el) el.classList.remove("active");
+  if(el){
+
+   el.classList.remove(
+    "active"
+   );
+
+  }
 
  });
 
  if(active){
 
-  const el=document.getElementById(active);
+  const el=
+   document.getElementById(active);
 
-  if(el) el.classList.add("active");
+  if(el){
+
+   el.classList.add(
+    "active"
+   );
+
+  }
 
  }
 
@@ -734,39 +929,71 @@ function setNav(active){
 
 function app(html){
 
- document.getElementById("app").innerHTML=html;
+ const root=
+  document.getElementById("app");
 
- window.scrollTo(0,0);
+ if(root){
+
+  root.innerHTML=html;
+
+ }
+
+ window.scrollTo(
+  0,
+  0
+ );
 
 }
 
 
 /* =========================================================
-   SUPABASE DURUM
+   BAĞLANTI DURUMU
    ========================================================= */
 
-function setConnection(online,text){
+function setConnection(
+ online,
+ text
+){
 
- const el=document.getElementById("connectionStatus");
+ const el=
+  document.getElementById(
+   "connectionStatus"
+  );
 
  if(!el)return;
 
  el.className=
   "connection "+
-  (online?"online":"offline");
+  (
+   online
+   ?
+   "online"
+   :
+   "offline"
+  );
 
  el.textContent=
   text ||
-  (online?"Supabase bağlı":"Yerel mod");
+  (
+   online
+   ?
+   "Supabase bağlı ✓"
+   :
+   "Yerel mod"
+  );
 
 }
 
 
 /* =========================================================
-   SUPABASE REST İSTEK
+   SUPABASE REST
    ========================================================= */
 
-async function supabaseRequest(method,path,body=null){
+async function supabaseRequest(
+ method,
+ path,
+ body=null
+){
 
  const options={
 
@@ -774,17 +1001,22 @@ async function supabaseRequest(method,path,body=null){
 
   headers:{
    "apikey":SUPABASE_KEY,
-   "Authorization":"Bearer "+SUPABASE_KEY,
-   "Content-Type":"application/json",
-   "Accept":"application/json",
-   "Prefer":"return=representation"
+   "Authorization":
+    "Bearer "+SUPABASE_KEY,
+   "Content-Type":
+    "application/json",
+   "Accept":
+    "application/json",
+   "Prefer":
+    "return=representation"
   }
 
  };
 
  if(body!==null){
 
-  options.body=JSON.stringify(body);
+  options.body=
+   JSON.stringify(body);
 
  }
 
@@ -796,14 +1028,24 @@ async function supabaseRequest(method,path,body=null){
    options
   );
 
- const text=await response.text();
+ const text=
+  await response.text();
 
  let data=null;
 
  try{
-  data=text ? JSON.parse(text) : null;
+
+  data=
+   text
+   ?
+   JSON.parse(text)
+   :
+   null;
+
  }catch(e){
+
   data=text;
+
  }
 
  if(!response.ok){
@@ -832,7 +1074,7 @@ async function testSupabase(){
 
   await supabaseRequest(
    "GET",
-   "talepler?select=talep_no&limit=1"
+   "talepler?select=*&limit=1"
   );
 
   setConnection(
@@ -862,56 +1104,90 @@ async function testSupabase(){
 
 
 /* =========================================================
-   KATEGORİ OPTION
+   SELECT OPTIONS
    ========================================================= */
 
-function serviceOptions(selected=""){
+function serviceOptions(
+ selected=""
+){
 
- return `<option value="">Kategori seç</option>`+
+ return (
 
- Object.entries(SERVICES)
+  `<option value="">
+    Kategori seç
+   </option>`
+  +
 
- .map(([key,s])=>`
+  Object.entries(
+   SERVICES
+  )
 
-  <option
-   value="${key}"
-   ${key===selected?"selected":""}
-  >
-   ${s.emoji} ${s.name}
-  </option>
+  .map(
+   ([key,s])=>`
 
- `)
+    <option
+     value="${key}"
+     ${
+      key===selected
+      ?
+      "selected"
+      :
+      ""
+     }
+    >
+     ${s.emoji} ${s.name}
+    </option>
 
- .join("");
+   `
+  )
+
+  .join("")
+
+ );
 
 }
 
 
-/* =========================================================
-   İLÇE OPTION
-   ========================================================= */
-
-function districtOptions(selected=""){
+function districtOptions(
+ selected=""
+){
 
  const unique=
   [...new Set(DISTRICTS)];
 
- return `<option value="">İlçe seç</option>`+
+ return (
 
- unique
+  `<option value="">
+    İlçe seç
+   </option>`
 
- .map(d=>`
+  +
 
-  <option
-   value="${escapeHTML(d)}"
-   ${d===selected?"selected":""}
-  >
-   ${escapeHTML(d)}
-  </option>
+  unique
 
- `)
+  .map(
+   d=>`
 
- .join("");
+    <option
+     value="${escapeHTML(d)}"
+     ${
+      normalize(d)===
+      normalize(selected)
+      ?
+      "selected"
+      :
+      ""
+     }
+    >
+     ${escapeHTML(d)}
+    </option>
+
+   `
+  )
+
+  .join("")
+
+ );
 
 }
 
@@ -929,12 +1205,14 @@ function makeRequestNumber(){
   date.getFullYear();
 
  const m=
-  String(date.getMonth()+1)
-  .padStart(2,"0");
+  String(
+   date.getMonth()+1
+  ).padStart(2,"0");
 
  const d=
-  String(date.getDate())
-  .padStart(2,"0");
+  String(
+   date.getDate()
+  ).padStart(2,"0");
 
  const random=
   Math.floor(
@@ -942,46 +1220,179 @@ function makeRequestNumber(){
    Math.random()*9000
   );
 
- return `IC-${y}${m}${d}-${random}`;
+ return (
+  `IC-${y}${m}${d}-${random}`
+ );
 
 }
 
 
 /* =========================================================
-   SUPABASE'A TALEP KAYDET
+   KATEGORİYİ ÇÖZ
    ========================================================= */
 
-async function saveRequestToSupabase(item){
+function resolveServiceKey(r){
 
- const payload={
+ let raw=
+  r?.kategori ??
+  r?.category ??
+  r?.service ??
+  "";
 
-  talep_no:item.talep_no,
+ raw=
+  String(raw).trim();
 
-  kategori:item.kategori,
+ if(
+  SERVICES[raw]
+ ){
 
-  aciklama:item.aciklama,
+  return raw;
 
-  il:item.il,
+ }
 
-  ilce:item.ilce,
+ const normalized=
+  normalize(raw);
 
-  mahalle:item.mahalle,
+ for(
+  const [key,s]
+  of Object.entries(SERVICES)
+ ){
 
-  aciliyet:item.aciliyet,
+  if(
+   normalize(key)===
+   normalized
+  ){
 
-  ad_soyad:item.ad_soyad,
+   return key;
 
-  telefon:item.telefon,
+  }
 
-  durum:item.durum
+  if(
+   normalize(s.name)===
+   normalized
+  ){
+
+   return key;
+
+  }
+
+ }
+
+ return raw;
+
+}
+
+
+/* =========================================================
+   TALEP MAPPING
+   ========================================================= */
+
+function mapSupabaseRequest(r){
+
+ const serviceKey=
+  resolveServiceKey(r);
+
+ return {
+
+  id:
+   r.talep_no ??
+   r.id ??
+   uid("LOCAL"),
+
+  talep_no:
+   r.talep_no ??
+   r.id ??
+   "",
+
+  service:
+   serviceKey,
+
+  kategori:
+   r.kategori ??
+   r.category ??
+   serviceKey,
+
+  description:
+   r.aciklama ??
+   r.description ??
+   "",
+
+  aciklama:
+   r.aciklama ??
+   r.description ??
+   "",
+
+  il:
+   r.il ??
+   "İzmir",
+
+  district:
+   r.ilce ??
+   r.district ??
+   "",
+
+  ilce:
+   r.ilce ??
+   r.district ??
+   "",
+
+  neighborhood:
+   r.mahalle ??
+   r.neighborhood ??
+   "",
+
+  mahalle:
+   r.mahalle ??
+   r.neighborhood ??
+   "",
+
+  urgency:
+   r.aciliyet ??
+   r.urgency ??
+   "",
+
+  aciliyet:
+   r.aciliyet ??
+   r.urgency ??
+   "",
+
+  name:
+   r.ad_soyad ??
+   r.name ??
+   "",
+
+  ad_soyad:
+   r.ad_soyad ??
+   r.name ??
+   "",
+
+  phone:
+   r.telefon ??
+   r.phone ??
+   "",
+
+  telefon:
+   r.telefon ??
+   r.phone ??
+   "",
+
+  status:
+   r.durum ??
+   r.status ??
+   "Beklemede",
+
+  durum:
+   r.durum ??
+   r.status ??
+   "Beklemede",
+
+  createdAt:
+   r.created_at ??
+   r.createdAt ??
+   r.tarih ??
+   ""
 
  };
-
- return await supabaseRequest(
-  "POST",
-  "talepler",
-  payload
- );
 
 }
 
@@ -1000,10 +1411,20 @@ async function loadRequestsFromSupabase(){
     "talepler?select=*&limit=100"
    );
 
-  if(Array.isArray(data)){
+  if(
+   Array.isArray(data)
+  ){
 
    const mapped=
-    data.map(mapSupabaseRequest);
+    data.map(
+     mapSupabaseRequest
+    );
+
+   /*
+    En önemli nokta:
+    Supabase'teki gerçek kayıtları
+    yerel listeye aktar.
+   */
 
    write(
     KEYS.requests,
@@ -1034,57 +1455,6 @@ async function loadRequestsFromSupabase(){
 
 
 /* =========================================================
-   SUPABASE KAYDINI UYGULAMA FORMATINA ÇEVİR
-   ========================================================= */
-
-function mapSupabaseRequest(r){
-
- return {
-
-  id:r.talep_no,
-
-  talep_no:r.talep_no,
-
-  service:r.kategori,
-
-  kategori:r.kategori,
-
-  description:r.aciklama,
-
-  aciklama:r.aciklama,
-
-  il:r.il || "İzmir",
-
-  district:r.ilce,
-
-  ilce:r.ilce,
-
-  neighborhood:r.mahalle,
-
-  mahalle:r.mahalle,
-
-  urgency:r.aciliyet,
-
-  aciliyet:r.aciliyet,
-
-  name:r.ad_soyad,
-
-  ad_soyad:r.ad_soyad,
-
-  phone:r.telefon,
-
-  telefon:r.telefon,
-
-  status:r.durum || "Beklemede",
-
-  durum:r.durum || "Beklemede"
-
- };
-
-}
-
-
-/* =========================================================
    ANA SAYFA
    ========================================================= */
 
@@ -1094,109 +1464,117 @@ function showHome(){
 
  app(`
 
- <section class="hero">
+  <section class="hero">
 
-  <span class="badge">
-   📍 İZMİR PİLOT BÖLGESİ
-  </span>
-
-  <h1>
-   İhtiyacın varsa,<br>
-   çözümü var.
-  </h1>
-
-  <p class="muted">
-   Ev, iş yeri, araç ve günlük yaşam
-   hizmetlerini tek yerden bul.
-   İhtiyacını anlat, talebini oluştur.
-  </p>
-
-  <div class="actions">
-
-   <button
-    class="btn primary"
-    onclick="showRequest()"
-   >
-    📢 İşimi Çözdür
-   </button>
-
-   <button
-    class="btn secondary"
-    onclick="showProviderEntry()"
-   >
-    🛠️ Hizmet Ver
-   </button>
-
-  </div>
-
- </section>
-
-
- <div class="section">
-
-  <div class="sectionTitle">
-
-   <h2>Hizmet kategorileri</h2>
-
-   <span class="small muted">
-    İzmir
+   <span class="badge">
+    📍 İZMİR PİLOT BÖLGESİ
    </span>
 
+   <h1>
+    İhtiyacın varsa,<br>
+    çözümü var.
+   </h1>
+
+   <p class="muted">
+    Ev, iş yeri, araç ve günlük yaşam
+    hizmetlerini tek yerden bul.
+    İhtiyacını anlat, talebini oluştur.
+   </p>
+
+   <div class="actions">
+
+    <button
+     class="btn primary"
+     onclick="showRequest()"
+    >
+     📢 İşimi Çözdür
+    </button>
+
+    <button
+     class="btn secondary"
+     onclick="showProviderEntry()"
+    >
+     🛠️ Hizmet Ver
+    </button>
+
+   </div>
+
+  </section>
+
+
+  <div class="section">
+
+   <div class="sectionTitle">
+
+    <h2>
+     Hizmet kategorileri
+    </h2>
+
+    <span class="small muted">
+     İzmir
+    </span>
+
+   </div>
+
+   <div class="grid">
+
+    ${
+     Object.entries(
+      SERVICES
+     )
+
+     .map(
+      ([key,s])=>`
+
+       <button
+        class="card service"
+        onclick="
+         showRequest('${key}')
+        "
+       >
+
+        <div class="emoji">
+         ${s.emoji}
+        </div>
+
+        <strong>
+         ${s.name}
+        </strong>
+
+        <span>
+         ${s.desc}
+        </span>
+
+       </button>
+
+      `
+     )
+
+     .join("")
+    }
+
+   </div>
+
   </div>
 
-  <div class="grid">
 
-   ${
-    Object.entries(SERVICES)
+  <div class="section card">
 
-    .map(([key,s])=>`
+   <h2>
+    💡 Nasıl çalışıyor?
+   </h2>
 
-     <button
-      class="card service"
-      onclick="showRequest('${key}')"
-     >
+   <p class="muted small">
 
-      <div class="emoji">
-       ${s.emoji}
-      </div>
+    İhtiyacını oluştur.
+    Hizmet kategorisini ve bölgeni seç.
+    Talebin sisteme kaydedilsin.
+    Uygun hizmet sağlayıcıları
+    talebini görebilsin.
 
-      <strong>
-       ${s.name}
-      </strong>
-
-      <span>
-       ${s.desc}
-      </span>
-
-     </button>
-
-    `)
-
-    .join("")
-   }
+   </p>
 
   </div>
-
- </div>
-
-
- <div class="section card">
-
-  <h2>
-   💡 Nasıl çalışıyor?
-  </h2>
-
-  <p class="muted small">
-
-   İhtiyacını oluştur.
-   Hizmet kategorisini ve bölgeni seç.
-   Talebin sisteme kaydedilsin.
-   Uygun hizmet sağlayıcıları
-   talebini görebilsin.
-
-  </p>
-
- </div>
 
  `);
 
@@ -1207,183 +1585,190 @@ function showHome(){
    TALEP FORMU
    ========================================================= */
 
-function showRequest(preselected=""){
+function showRequest(
+ preselected=""
+){
 
  setNav("navRequest");
 
  app(`
 
- <div class="back">
+  <div class="back">
 
-  <button
-   class="btn secondary smallBtn"
-   onclick="showHome()"
-  >
-   ← Ana sayfaya dön
-  </button>
-
- </div>
-
-
- <div class="formCard">
-
-  <span class="badge">
-   📋 YENİ HİZMET TALEBİ
-  </span>
-
-  <h1>
-   İhtiyacını anlat.
-  </h1>
-
-  <p class="muted small">
-
-   Sorununu açıkça anlat.
-   Böylece doğru hizmet sağlayıcısına
-   ulaşmak kolaylaşır.
-
-  </p>
-
-
-  <label>
-   Hizmet kategorisi *
-  </label>
-
-  <select id="reqService">
-
-   ${serviceOptions(preselected)}
-
-  </select>
-
-
-  <label>
-   Sorunun / ihtiyacın *
-  </label>
-
-  <textarea
-   id="reqDescription"
-   maxlength="1000"
-   placeholder="Örneğin: Klima çalışıyor fakat yeterince soğutmuyor."
-  ></textarea>
-
-  <div
-   class="small muted"
-   id="charCount"
-  >
-   0/1000
-  </div>
-
-
-  <div class="row">
-
-   <div>
-
-    <label>
-     İl *
-    </label>
-
-    <select id="reqCity">
-
-     <option value="İzmir" selected>
-      İzmir
-     </option>
-
-    </select>
-
-   </div>
-
-
-   <div>
-
-    <label>
-     İlçe *
-    </label>
-
-    <select id="reqDistrict">
-
-     ${districtOptions()}
-
-    </select>
-
-   </div>
-
-  </div>
-
-
-  <label>
-   Mahalle
-  </label>
-
-  <input
-   id="reqNeighborhood"
-   placeholder="Mahalle adı"
-  >
-
-
-  <label>
-   Ne zaman gerekli?
-  </label>
-
-  <select id="reqUrgency">
-
-   <option value="Acil">
-    🔴 Acil
-   </option>
-
-   <option
-    value="Bugün"
-    selected
+   <button
+    class="btn secondary smallBtn"
+    onclick="showHome()"
    >
-    🟡 Bugün
-   </option>
-
-   <option value="Uygun zamanda">
-    🟢 Uygun zamanda
-   </option>
-
-  </select>
-
-
-  <label>
-   Adınız *
-  </label>
-
-  <input
-   id="reqName"
-   placeholder="Adınız Soyadınız"
-   autocomplete="name"
-  >
-
-
-  <label>
-   Telefon *
-  </label>
-
-  <input
-   id="reqPhone"
-   type="tel"
-   inputmode="tel"
-   placeholder="05xxxxxxxxx"
-   autocomplete="tel"
-  >
-
-
-  <div class="notice">
-
-   🔒 Bilgileriniz hizmet talebinin
-   oluşturulması amacıyla kullanılır.
+    ← Ana sayfaya dön
+   </button>
 
   </div>
 
 
-  <button
-   class="btn primary"
-   id="createRequestButton"
-   onclick="createRequest()"
-  >
-   TALEBİ OLUŞTUR
-  </button>
+  <div class="formCard">
 
- </div>
+   <span class="badge">
+    📋 YENİ HİZMET TALEBİ
+   </span>
+
+   <h1>
+    İhtiyacını anlat.
+   </h1>
+
+   <p class="muted small">
+
+    Sorununu açıkça anlat.
+    Böylece doğru hizmet sağlayıcısına
+    ulaşmak kolaylaşır.
+
+   </p>
+
+
+   <label>
+    Hizmet kategorisi *
+   </label>
+
+   <select id="reqService">
+
+    ${serviceOptions(
+     preselected
+    )}
+
+   </select>
+
+
+   <label>
+    Sorunun / ihtiyacın *
+   </label>
+
+   <textarea
+    id="reqDescription"
+    maxlength="1000"
+    placeholder="Örneğin: Klima çalışıyor fakat yeterince soğutmuyor."
+   ></textarea>
+
+   <div
+    class="small muted"
+    id="charCount"
+   >
+    0/1000
+   </div>
+
+
+   <div class="row">
+
+    <div>
+
+     <label>
+      İl *
+     </label>
+
+     <select id="reqCity">
+
+      <option
+       value="İzmir"
+       selected
+      >
+       İzmir
+      </option>
+
+     </select>
+
+    </div>
+
+
+    <div>
+
+     <label>
+      İlçe *
+     </label>
+
+     <select id="reqDistrict">
+
+      ${districtOptions()}
+
+     </select>
+
+    </div>
+
+   </div>
+
+
+   <label>
+    Mahalle
+   </label>
+
+   <input
+    id="reqNeighborhood"
+    placeholder="Mahalle adı"
+   >
+
+
+   <label>
+    Ne zaman gerekli?
+   </label>
+
+   <select id="reqUrgency">
+
+    <option value="Acil">
+     🔴 Acil
+    </option>
+
+    <option
+     value="Bugün"
+     selected
+    >
+     🟡 Bugün
+    </option>
+
+    <option value="Uygun zamanda">
+     🟢 Uygun zamanda
+    </option>
+
+   </select>
+
+
+   <label>
+    Adınız *
+   </label>
+
+   <input
+    id="reqName"
+    placeholder="Adınız Soyadınız"
+    autocomplete="name"
+   >
+
+
+   <label>
+    Telefon *
+   </label>
+
+   <input
+    id="reqPhone"
+    type="tel"
+    inputmode="tel"
+    placeholder="05xxxxxxxxx"
+    autocomplete="tel"
+   >
+
+
+   <div class="notice">
+
+    🔒 Bilgileriniz hizmet talebinin
+    oluşturulması amacıyla kullanılır.
+
+   </div>
+
+
+   <button
+    class="btn primary"
+    id="createRequestButton"
+    onclick="createRequest()"
+   >
+    TALEBİ OLUŞTUR
+   </button>
+
+  </div>
 
  `);
 
@@ -1399,11 +1784,18 @@ function showRequest(preselected=""){
    "input",
    ()=>{
 
-    document.getElementById(
-     "charCount"
-    ).textContent=
-     ta.value.length+
-     "/1000";
+    const counter=
+     document.getElementById(
+      "charCount"
+     );
+
+    if(counter){
+
+     counter.textContent=
+      ta.value.length+
+      "/1000";
+
+    }
 
    }
   );
@@ -1414,7 +1806,56 @@ function showRequest(preselected=""){
 
 
 /* =========================================================
-   TALEP OLUŞTUR
+   TELEFON NORMALİZE
+   ========================================================= */
+
+function normalizePhone(
+ phone
+){
+
+ let value=
+  String(phone ?? "")
+  .trim();
+
+ value=
+  value.replace(
+   /[^0-9+]/g,
+   ""
+  );
+
+ if(
+  value.startsWith("0")
+ ){
+
+  return value;
+
+ }
+
+ if(
+  value.startsWith("90")
+ ){
+
+  return "0"+
+   value.slice(2);
+
+ }
+
+ if(
+  value.startsWith("+90")
+ ){
+
+  return "0"+
+   value.slice(3);
+
+ }
+
+ return value;
+
+}
+
+
+/* =========================================================
+   TALEP KAYDET
    ========================================================= */
 
 async function createRequest(){
@@ -1422,42 +1863,47 @@ async function createRequest(){
  const service=
   document.getElementById(
    "reqService"
-  ).value;
+  )?.value;
 
  const description=
   document.getElementById(
    "reqDescription"
-  ).value.trim();
+  )?.value
+  .trim();
 
  const city=
   document.getElementById(
    "reqCity"
-  ).value;
+  )?.value;
 
  const district=
   document.getElementById(
    "reqDistrict"
-  ).value;
+  )?.value;
 
  const neighborhood=
   document.getElementById(
    "reqNeighborhood"
-  ).value.trim();
+  )?.value
+  .trim();
 
  const urgency=
   document.getElementById(
    "reqUrgency"
-  ).value;
+  )?.value;
 
  const name=
   document.getElementById(
    "reqName"
-  ).value.trim();
+  )?.value
+  .trim();
 
  const phone=
-  document.getElementById(
-   "reqPhone"
-  ).value.trim();
+  normalizePhone(
+   document.getElementById(
+    "reqPhone"
+   )?.value
+  );
 
 
  if(!service){
@@ -1471,7 +1917,10 @@ async function createRequest(){
  }
 
 
- if(description.length<5){
+ if(
+  !description ||
+  description.length<5
+ ){
 
   alert(
    "Lütfen ihtiyacınızı biraz daha açık anlat."
@@ -1504,10 +1953,13 @@ async function createRequest(){
  }
 
 
- if(!phone){
+ if(
+  !phone ||
+  phone.length<10
+ ){
 
   alert(
-   "Lütfen telefon numaranızı yaz."
+   "Lütfen geçerli bir telefon numarası yaz."
   );
 
   return;
@@ -1534,6 +1986,11 @@ async function createRequest(){
   makeRequestNumber();
 
 
+ const serviceName=
+  SERVICES[service]?.name ||
+  service;
+
+
  const item={
 
   id:talep_no,
@@ -1542,7 +1999,7 @@ async function createRequest(){
 
   service,
 
-  kategori:service,
+  kategori:serviceName,
 
   description,
 
@@ -1585,8 +2042,32 @@ async function createRequest(){
 
  try{
 
-  await saveRequestToSupabase(
-   item
+  await supabaseRequest(
+   "POST",
+   "talepler",
+   {
+
+    talep_no:item.talep_no,
+
+    kategori:item.kategori,
+
+    aciklama:item.aciklama,
+
+    il:item.il,
+
+    ilce:item.ilce,
+
+    mahalle:item.mahalle,
+
+    aciliyet:item.aciliyet,
+
+    ad_soyad:item.ad_soyad,
+
+    telefon:item.telefon,
+
+    durum:item.durum
+
+   }
   );
 
   savedOnline=true;
@@ -1607,15 +2088,28 @@ async function createRequest(){
 
 
  /*
-  Yerel yedek:
-  Supabase başarılı olsa bile
-  cihazda da tutulur.
+  Yerel yedekte aynı talebi
+  ikinci kez oluşturma.
  */
 
  const requests=
   getRequests();
 
- requests.unshift(item);
+ const already=
+  requests.some(
+   r=>
+    String(
+     r.talep_no ??
+     r.id
+    )===
+    String(talep_no)
+  );
+
+ if(!already){
+
+  requests.unshift(item);
+
+ }
 
  write(
   KEYS.requests,
@@ -1648,7 +2142,7 @@ async function createRequest(){
    "Talep No: "+
    talep_no+
    "\n\n"+
-   "Sunucu bağlantısı kurulamadığı için yerel yedek kullanıldı."
+   "Sunucuya bağlanılamadı. Yerel yedek kullanıldı."
   );
 
  }
@@ -1660,7 +2154,7 @@ async function createRequest(){
 
 
 /* =========================================================
-   TALEPLER
+   TALEPLERİM
    ========================================================= */
 
 async function showRequests(){
@@ -1669,44 +2163,42 @@ async function showRequests(){
 
  app(`
 
- <div class="back">
+  <div class="back">
 
-  <button
-   class="btn secondary smallBtn"
-   onclick="showHome()"
-  >
-   ← Ana sayfaya dön
-  </button>
-
- </div>
-
- <div class="sectionTitle">
-
-  <div>
-
-   <span class="badge">
-    ▣ TALEPLERİM
-   </span>
-
-   <h1>
-    Oluşturduğun talepler.
-   </h1>
+   <button
+    class="btn secondary smallBtn"
+    onclick="showHome()"
+   >
+    ← Ana sayfaya dön
+   </button>
 
   </div>
 
- </div>
 
- <p class="muted small">
-  Taleplerin sistemden yükleniyor...
- </p>
+  <div class="sectionTitle">
 
- <div
-  class="card"
-  id="requestsLoading"
-  style="text-align:center"
- >
-  ⏳ Talepler yükleniyor...
- </div>
+   <div>
+
+    <span class="badge">
+     ▣ TALEPLERİM
+    </span>
+
+    <h1>
+     Oluşturduğun talepler.
+    </h1>
+
+   </div>
+
+  </div>
+
+
+  <div
+   class="card"
+   id="requestsLoading"
+   style="text-align:center"
+  >
+   ⏳ Talepler yükleniyor...
+  </div>
 
  `);
 
@@ -1760,26 +2252,27 @@ async function showRequests(){
 
  area.outerHTML=
   requests
-  .map(renderRequest)
-  .join("");
+   .map(renderRequest)
+   .join("");
 
 }
 
 
 /* =========================================================
-   TALEP GÖSTER
+   TALEP RENDER
    ========================================================= */
 
 function renderRequest(r){
 
  const serviceKey=
-  r.service ||
-  r.kategori;
+  resolveServiceKey(r);
 
  const s=
   SERVICES[serviceKey] ||
   {
-   name:serviceKey || "Hizmet",
+   name:
+    r.kategori ||
+    "Hizmet",
    emoji:"🛠️"
   };
 
@@ -1792,92 +2285,96 @@ function renderRequest(r){
 
  return `
 
- <article class="request">
+  <article class="request">
 
-  <div class="requestTop">
+   <div class="requestTop">
 
-   <div>
+    <div>
 
-    <h3>
-     ${s.emoji}
-     ${escapeHTML(s.name)}
-    </h3>
+     <h3>
+      ${s.emoji}
+      ${escapeHTML(s.name)}
+     </h3>
 
-    <div class="small muted">
-     ${escapeHTML(
-      r.createdAt ||
-      r.created_at ||
-      ""
-     )}
+     <div class="small muted">
+      ${escapeHTML(
+       r.createdAt ||
+       r.created_at ||
+       ""
+      )}
+     </div>
+
     </div>
+
+    <span class="status">
+     ${escapeHTML(status)}
+    </span>
 
    </div>
 
-   <span class="status">
-    ${escapeHTML(status)}
-   </span>
 
-  </div>
+   <div class="description">
 
-
-  <div class="description">
-
-   “${escapeHTML(
-    r.description ||
-    r.aciklama ||
-    ""
-   )}”
-
-  </div>
-
-
-  <div class="meta">
-
-   <span>
-    📍 ${escapeHTML(
-     r.ilce ||
-     r.district ||
+    “${escapeHTML(
+     r.description ||
+     r.aciklama ||
      ""
-    )}
-   </span>
+    )}”
 
-   ${
-    (r.mahalle || r.neighborhood)
-    ?
-    `<span>
-      🏘️ ${escapeHTML(
-       r.mahalle ||
-       r.neighborhood
-      )}
-     </span>`
-    :""
-   }
+   </div>
 
-   <span>
-    ⏱️ ${escapeHTML(
-     r.aciliyet ||
-     r.urgency ||
+
+   <div class="meta">
+
+    <span>
+     📍 ${escapeHTML(
+      r.ilce ||
+      r.district ||
+      ""
+     )}
+    </span>
+
+    ${
+     r.mahalle ||
+     r.neighborhood
+     ?
+     `
+      <span>
+       🏘️ ${escapeHTML(
+        r.mahalle ||
+        r.neighborhood
+       )}
+      </span>
+     `
+     :
      ""
-    )}
-   </span>
+    }
 
-  </div>
+    <span>
+     ⏱️ ${escapeHTML(
+      r.aciliyet ||
+      r.urgency ||
+      ""
+     )}
+    </span>
+
+   </div>
 
 
-  <div class="small muted">
+   <div class="small muted">
 
-   Talep No:
-   <strong>
-    ${escapeHTML(
-     r.talep_no ||
-     r.id ||
-     ""
-    )}
-   </strong>
+    Talep No:
+    <strong>
+     ${escapeHTML(
+      r.talep_no ||
+      r.id ||
+      ""
+     )}
+    </strong>
 
-  </div>
+   </div>
 
- </article>
+  </article>
 
  `;
 
@@ -1885,7 +2382,7 @@ function renderRequest(r){
 
 
 /* =========================================================
-   HİZMET VER GİRİŞ
+   SAĞLAYICI GİRİŞ
    ========================================================= */
 
 function showProviderEntry(){
@@ -1898,7 +2395,9 @@ function showProviderEntry(){
 
  if(provider){
 
-  if(providerLogged()){
+  if(
+   providerLogged()
+  ){
 
    showProviderPanel();
 
@@ -1935,13 +2434,14 @@ function showProviderEntry(){
     <div class="profileHeader">
 
      <div class="avatar">
-
       ${escapeHTML(
-       (provider.name||"U")
+       (
+        provider.name ||
+        "U"
+       )
        .charAt(0)
        .toUpperCase()
       )}
-
      </div>
 
      <div>
@@ -1977,7 +2477,9 @@ function showProviderEntry(){
 
     <button
      class="btn secondary"
-     onclick="showProviderRegister(true)"
+     onclick="
+      showProviderRegister(true)
+     "
     >
      KAYDI DÜZENLE
     </button>
@@ -2006,10 +2508,12 @@ function showProviderEntry(){
 
 
 /* =========================================================
-   HİZMET SAĞLAYICI KAYIT
+   SAĞLAYICI KAYIT
    ========================================================= */
 
-function showProviderRegister(editMode=false){
+function showProviderRegister(
+ editMode=false
+){
 
  setNav("navProvider");
 
@@ -2020,157 +2524,165 @@ function showProviderRegister(editMode=false){
 
  app(`
 
- <div class="back">
+  <div class="back">
 
-  <button
-   class="btn secondary smallBtn"
-   onclick="showHome()"
-  >
-   ← Ana sayfaya dön
-  </button>
-
- </div>
-
-
- <div class="formCard">
-
-  <span class="badge">
-   🛠️ HİZMET SAĞLAYICI
-  </span>
-
-  <h1>
-   ${
-    editMode
-    ?
-    "Profilini güncelle."
-    :
-    "Hizmet vererek sisteme katıl."
-   }
-  </h1>
-
-
-  <p class="muted small">
-
-   Hizmet verdiğin alanları ve
-   bölgeni belirle.
-
-  </p>
-
-
-  <label>
-   Ad / İşletme *
-  </label>
-
-  <input
-   id="pName"
-   value="${escapeHTML(p.name||"")}"
-   placeholder="Adınız veya işletme adı"
-  >
-
-
-  <label>
-   Telefon *
-  </label>
-
-  <input
-   id="pPhone"
-   type="tel"
-   value="${escapeHTML(p.phone||"")}"
-   placeholder="05xxxxxxxxx"
-  >
-
-
-  <label>
-   Ana hizmet bölgesi *
-  </label>
-
-  <select id="pDistrict">
-
-   ${districtOptions(
-    p.district||""
-   )}
-
-  </select>
-
-
-  <label>
-   Verdiğin hizmetler *
-  </label>
-
-
-  <div class="checks">
-
-   ${
-    Object.entries(SERVICES)
-
-    .map(([key,s])=>`
-
-     <label class="check">
-
-      <input
-       type="checkbox"
-       name="pService"
-       value="${key}"
-       ${
-        (p.services||[])
-        .includes(key)
-        ?
-        "checked"
-        :
-        ""
-       }
-      >
-
-      ${s.emoji}
-      ${s.name}
-
-     </label>
-
-    `)
-
-    .join("")
-   }
+   <button
+    class="btn secondary smallBtn"
+    onclick="showHome()"
+   >
+    ← Ana sayfaya dön
+   </button>
 
   </div>
 
 
-  <label>
-   Açıklama
-  </label>
+  <div class="formCard">
 
-  <textarea
-   id="pDescription"
-   maxlength="500"
-   placeholder="Hizmetlerin hakkında kısa bilgi"
-  >${escapeHTML(
-   p.description||""
-  )}</textarea>
+   <span class="badge">
+    🛠️ HİZMET SAĞLAYICI
+   </span>
+
+   <h1>
+    ${
+     editMode
+     ?
+     "Profilini güncelle."
+     :
+     "Hizmet vererek sisteme katıl."
+    }
+   </h1>
 
 
-  <div class="notice">
+   <p class="muted small">
+    Hizmet verdiğin alanları ve
+    bölgeni belirle.
+   </p>
 
-   Hizmet sağlayıcı profilin
-   Supabase üyelik sistemi
-   tamamlanana kadar cihazda da
-   saklanır.
+
+   <label>
+    Ad / İşletme *
+   </label>
+
+   <input
+    id="pName"
+    value="${escapeHTML(
+     p.name || ""
+    )}"
+    placeholder="Adınız veya işletme adı"
+   >
+
+
+   <label>
+    Telefon *
+   </label>
+
+   <input
+    id="pPhone"
+    type="tel"
+    value="${escapeHTML(
+     p.phone || ""
+    )}"
+    placeholder="05xxxxxxxxx"
+   >
+
+
+   <label>
+    Ana hizmet bölgesi *
+   </label>
+
+   <select id="pDistrict">
+
+    ${districtOptions(
+     p.district || ""
+    )}
+
+   </select>
+
+
+   <label>
+    Verdiğin hizmetler *
+   </label>
+
+
+   <div class="checks">
+
+    ${
+     Object.entries(
+      SERVICES
+     )
+
+     .map(
+      ([key,s])=>`
+
+       <label class="check">
+
+        <input
+         type="checkbox"
+         name="pService"
+         value="${key}"
+         ${
+          (
+           p.services ||
+           []
+          )
+          .includes(key)
+          ?
+          "checked"
+          :
+          ""
+         }
+        >
+
+        ${s.emoji}
+        ${s.name}
+
+       </label>
+
+      `
+     )
+
+     .join("")
+    }
+
+   </div>
+
+
+   <label>
+    Açıklama
+   </label>
+
+   <textarea
+    id="pDescription"
+    maxlength="500"
+    placeholder="Hizmetlerin hakkında kısa bilgi"
+   >${escapeHTML(
+    p.description || ""
+   )}</textarea>
+
+
+   <div class="notice">
+
+    Hizmet sağlayıcı profilin
+    cihazda güvenli şekilde
+    saklanır.
+
+   </div>
+
+
+   <button
+    class="btn primary"
+    onclick="saveProvider()"
+   >
+    ${
+     editMode
+     ?
+     "PROFİLİ GÜNCELLE"
+     :
+     "HİZMET SAĞLAYICI OL"
+    }
+   </button>
 
   </div>
-
-
-  <button
-   class="btn primary"
-   onclick="saveProvider()"
-  >
-   ${
-    editMode
-    ?
-    "PROFİLİ GÜNCELLE"
-    :
-    "HİZMET SAĞLAYICI OL"
-   }
-  </button>
-
- </div>
 
  `);
 
@@ -2178,7 +2690,7 @@ function showProviderRegister(editMode=false){
 
 
 /* =========================================================
-   HİZMET SAĞLAYICI KAYDET
+   SAĞLAYICI KAYDET
    ========================================================= */
 
 function saveProvider(){
@@ -2186,22 +2698,24 @@ function saveProvider(){
  const name=
   document.getElementById(
    "pName"
-  ).value.trim();
+  )?.value.trim();
 
  const phone=
-  document.getElementById(
-   "pPhone"
-  ).value.trim();
+  normalizePhone(
+   document.getElementById(
+    "pPhone"
+   )?.value
+  );
 
  const district=
   document.getElementById(
    "pDistrict"
-  ).value;
+  )?.value;
 
  const description=
   document.getElementById(
    "pDescription"
-  ).value.trim();
+  )?.value.trim();
 
 
  const services=
@@ -2210,7 +2724,9 @@ function saveProvider(){
     'input[name="pService"]:checked'
    )
   ]
-  .map(x=>x.value);
+  .map(
+   x=>x.value
+  );
 
 
  if(!name){
@@ -2224,10 +2740,13 @@ function saveProvider(){
  }
 
 
- if(!phone){
+ if(
+  !phone ||
+  phone.length<10
+ ){
 
   alert(
-   "Telefon numarası gerekli."
+   "Geçerli telefon numarası gerekli."
   );
 
   return;
@@ -2262,7 +2781,9 @@ function saveProvider(){
 
 
  const main=
-  SERVICES[services[0]];
+  SERVICES[
+   services[0]
+  ];
 
 
  const provider={
@@ -2288,7 +2809,9 @@ function saveProvider(){
    :
    "Hizmet",
 
-  active:true,
+  active:
+   old?.active ??
+   true,
 
   createdAt:
    old?.createdAt ||
@@ -2323,7 +2846,7 @@ function saveProvider(){
 
 
 /* =========================================================
-   GİRİŞ
+   GİRİŞ / ÇIKIŞ
    ========================================================= */
 
 function providerLogin(){
@@ -2346,10 +2869,6 @@ function providerLogin(){
 }
 
 
-/* =========================================================
-   ÇIKIŞ
-   ========================================================= */
-
 function providerLogout(){
 
  write(
@@ -2363,7 +2882,114 @@ function providerLogout(){
 
 
 /* =========================================================
-   HİZMET SAĞLAYICI PANELİ
+   SAĞLAYICI TALEP EŞLEŞTİRME
+   ========================================================= */
+
+function requestMatchesProvider(
+ request,
+ provider
+){
+
+ if(
+  !provider ||
+  !provider.active
+ ){
+
+  return false;
+
+ }
+
+
+ const requestService=
+  resolveServiceKey(
+   request
+  );
+
+
+ const providerServices=
+  provider.services ||
+  [];
+
+
+ const serviceMatch=
+  providerServices.some(
+   service=>{
+
+    const providerKey=
+     resolveServiceKey({
+      service
+     });
+
+    return (
+     normalize(providerKey)===
+     normalize(requestService)
+    );
+
+   }
+  );
+
+
+ if(!serviceMatch){
+
+  return false;
+
+ }
+
+
+ const requestDistrict=
+  request.ilce ||
+  request.district ||
+  "";
+
+
+ const providerDistrict=
+  provider.district ||
+  "";
+
+
+ const districtMatch=
+  normalize(
+   requestDistrict
+  )===
+  normalize(
+   providerDistrict
+  );
+
+
+ return districtMatch;
+
+}
+
+
+/* =========================================================
+   TELEFON ARAMA
+   ========================================================= */
+
+function callCustomer(
+ phone
+){
+
+ const normalized=
+  normalizePhone(phone);
+
+ if(!normalized){
+
+  alert(
+   "Bu talep için telefon numarası bulunamadı."
+  );
+
+  return;
+
+ }
+
+ window.location.href=
+  "tel:"+normalized;
+
+}
+
+
+/* =========================================================
+   SAĞLAYICI PANELİ
    ========================================================= */
 
 async function showProviderPanel(){
@@ -2383,7 +3009,9 @@ async function showProviderPanel(){
  }
 
 
- if(!providerLogged()){
+ if(
+  !providerLogged()
+ ){
 
   showProviderEntry();
 
@@ -2397,378 +3025,393 @@ async function showProviderPanel(){
 
 
  const suitable=
-  requests.filter(r=>{
-
-   const service=
-    r.service ||
-    r.kategori;
-
-   const district=
-    r.district ||
-    r.ilce;
-
-
-   return (
-
-    p.active &&
-
-    (p.services||[])
-    .includes(service) &&
-
-    district===p.district
-
-   );
-
-  });
+  requests.filter(
+   r=>
+    requestMatchesProvider(
+     r,
+     p
+    )
+  );
 
 
  app(`
 
- <div class="back">
-
-  <button
-   class="btn secondary smallBtn"
-   onclick="showHome()"
-  >
-   ← Ana sayfaya dön
-  </button>
-
- </div>
-
-
- <div class="profileHeader">
-
-  <div class="avatar">
-
-   ${escapeHTML(
-    (p.name||"U")
-    .charAt(0)
-    .toUpperCase()
-   )}
-
-  </div>
-
-
-  <div style="flex:1">
-
-   <strong>
-    ${escapeHTML(p.name)}
-   </strong>
-
-   <div class="small muted">
-
-    <span class="activeDot"></span>
-
-    ${
-     p.active
-     ?
-     "Aktif"
-     :
-     "Pasif"
-    }
-
-    •
-
-    ${escapeHTML(p.district)}
-
-   </div>
-
-  </div>
-
- </div>
-
-
- <div class="grid section">
-
-  <div class="card">
-
-   <div style="font-size:24px">
-    📋
-   </div>
-
-   <strong>
-    ${suitable.length}
-   </strong>
-
-   <div class="small muted">
-    Uygun İş
-   </div>
-
-  </div>
-
-
-  <div class="card">
-
-   <div style="font-size:24px">
-    🛠️
-   </div>
-
-   <strong>
-    ${p.services.length}
-   </strong>
-
-   <div class="small muted">
-    Kategori
-   </div>
-
-  </div>
-
-
-  <div class="card">
-
-   <div style="font-size:24px">
-    ✓
-   </div>
-
-   <strong>
-    ${
-     p.active
-     ?
-     "Aktif"
-     :
-     "Pasif"
-    }
-   </strong>
-
-   <div class="small muted">
-    Durum
-   </div>
-
-  </div>
-
-
-  <div class="card">
-
-   <div style="font-size:24px">
-    📍
-   </div>
-
-   <strong>
-    ${escapeHTML(p.district)}
-   </strong>
-
-   <div class="small muted">
-    Bölge
-   </div>
-
-  </div>
-
- </div>
-
-
- <div class="section">
-
-  <div class="sectionTitle">
-
-   <h2>
-    Profilin
-   </h2>
+  <div class="back">
 
    <button
     class="btn secondary smallBtn"
-    onclick="showProviderRegister(true)"
+    onclick="showHome()"
    >
-    Düzenle
+    ← Ana sayfaya dön
    </button>
 
   </div>
 
 
-  <div class="card">
+  <div class="profileHeader">
 
-   <div class="small muted">
-    Ad / İşletme
-   </div>
+   <div class="avatar">
 
-   <strong>
-    ${escapeHTML(p.name)}
-   </strong>
-
-   <br><br>
-
-   <div class="small muted">
-    Telefon
-   </div>
-
-   <strong>
-    ${escapeHTML(p.phone)}
-   </strong>
-
-   <br><br>
-
-   <div class="small muted">
-    Ana hizmet bölgesi
-   </div>
-
-   <strong>
-    ${escapeHTML(p.district)}
-   </strong>
-
-   <br><br>
-
-   <div class="small muted">
-    Hizmetler
-   </div>
-
-   <strong>
-    ${
-     p.services
-     .map(x=>
-      SERVICES[x]?.name||x
+    ${escapeHTML(
+     (
+      p.name ||
+      "U"
      )
-     .join(", ")
-    }
-   </strong>
+     .charAt(0)
+     .toUpperCase()
+    )}
 
-   ${
-    p.description
-    ?
-    `
+   </div>
+
+
+   <div style="flex:1">
+
+    <strong>
+     ${escapeHTML(
+      p.name
+     )}
+    </strong>
+
+    <div class="small muted">
+
+     <span class="activeDot"></span>
+
+     ${
+      p.active
+      ?
+      "Aktif"
+      :
+      "Pasif"
+     }
+
+     •
+
+     ${escapeHTML(
+      p.district
+     )}
+
+    </div>
+
+   </div>
+
+  </div>
+
+
+  <div class="grid section">
+
+   <div class="card">
+
+    <div style="font-size:24px">
+     📋
+    </div>
+
+    <strong>
+     ${suitable.length}
+    </strong>
+
+    <div class="small muted">
+     Uygun İş
+    </div>
+
+   </div>
+
+
+   <div class="card">
+
+    <div style="font-size:24px">
+     🛠️
+    </div>
+
+    <strong>
+     ${
+      (
+       p.services ||
+       []
+      ).length
+     }
+    </strong>
+
+    <div class="small muted">
+     Kategori
+    </div>
+
+   </div>
+
+
+   <div class="card">
+
+    <div style="font-size:24px">
+     ✓
+    </div>
+
+    <strong>
+     ${
+      p.active
+      ?
+      "Aktif"
+      :
+      "Pasif"
+     }
+    </strong>
+
+    <div class="small muted">
+     Durum
+    </div>
+
+   </div>
+
+
+   <div class="card">
+
+    <div style="font-size:24px">
+     📍
+    </div>
+
+    <strong>
+     ${escapeHTML(
+      p.district
+     )}
+    </strong>
+
+    <div class="small muted">
+     Bölge
+    </div>
+
+   </div>
+
+  </div>
+
+
+  <div class="section">
+
+   <div class="sectionTitle">
+
+    <h2>
+     Profilin
+    </h2>
+
+    <button
+     class="btn secondary smallBtn"
+     onclick="
+      showProviderRegister(true)
+     "
+    >
+     Düzenle
+    </button>
+
+   </div>
+
+
+   <div class="card">
+
+    <div class="small muted">
+     Ad / İşletme
+    </div>
+
+    <strong>
+     ${escapeHTML(
+      p.name
+     )}
+    </strong>
+
     <br><br>
 
     <div class="small muted">
-     ${escapeHTML(
-      p.description
-     )}
+     Telefon
     </div>
-    `
-    :
-    ""
-   }
+
+    <strong>
+     ${escapeHTML(
+      p.phone
+     )}
+    </strong>
+
+    <br><br>
+
+    <div class="small muted">
+     Ana hizmet bölgesi
+    </div>
+
+    <strong>
+     ${escapeHTML(
+      p.district
+     )}
+    </strong>
+
+    <br><br>
+
+    <div class="small muted">
+     Hizmetler
+    </div>
+
+    <strong>
+
+     ${
+      (
+       p.services ||
+       []
+      )
+      .map(
+       x=>
+        SERVICES[x]?.name ||
+        x
+      )
+      .join(", ")
+     }
+
+    </strong>
+
+    ${
+     p.description
+     ?
+     `
+      <br><br>
+
+      <div class="small muted">
+       ${escapeHTML(
+        p.description
+       )}
+      </div>
+     `
+     :
+     ""
+    }
+
+   </div>
 
   </div>
 
- </div>
 
-
- <div class="section">
-
-  <h2>
-   ⚙️ Hizmet Durumu
-  </h2>
-
-  <div class="${
-   p.active
-   ?
-   "success"
-   :
-   "warning"
-  }">
-
-   ${
-    p.active
-    ?
-    "Aktifsin. Bölgen ve hizmet kategorilerinle eşleşen talepleri görebilirsin."
-    :
-    "Şu anda pasifsin."
-   }
-
-  </div>
-
-  <br>
-
-  <button
-   class="btn ${
-    p.active
-    ?
-    "danger"
-    :
-    "primary"
-   }"
-   onclick="toggleProviderStatus()"
-  >
-
-   ${
-    p.active
-    ?
-    "🔴 PASİF YAP"
-    :
-    "🟢 AKTİF YAP"
-   }
-
-  </button>
-
- </div>
-
-
- <div class="section">
-
-  <div class="sectionTitle">
+  <div class="section">
 
    <h2>
-    📋 Sana Uygun Talepler
+    ⚙️ Hizmet Durumu
    </h2>
 
-   <span class="small muted">
-    ${suitable.length} kayıt
-   </span>
+
+   <div class="${
+    p.active
+    ?
+    "success"
+    :
+    "warning"
+   }">
+
+    ${
+     p.active
+     ?
+     "Aktifsin. Bölgen ve hizmet kategorilerinle eşleşen talepleri görebilirsin."
+     :
+     "Şu anda pasifsin. Talepleri görmek için aktif ol."
+    }
+
+   </div>
+
+   <br>
+
+   <button
+    class="btn ${
+     p.active
+     ?
+     "danger"
+     :
+     "primary"
+    }"
+    onclick="toggleProviderStatus()"
+   >
+
+    ${
+     p.active
+     ?
+     "🔴 PASİF YAP"
+     :
+     "🟢 AKTİF YAP"
+    }
+
+   </button>
 
   </div>
 
 
-  ${
-   p.active
+  <div class="section">
 
-   ?
+   <div class="sectionTitle">
 
-   (
+    <h2>
+     📋 Sana Uygun Talepler
+    </h2>
 
-    suitable.length
+    <span class="small muted">
+     ${suitable.length} kayıt
+    </span>
+
+   </div>
+
+
+   ${
+    p.active
 
     ?
 
-    suitable
-    .map(renderProviderRequest)
-    .join("")
+    (
+     suitable.length
+
+     ?
+
+     suitable
+      .map(
+       renderProviderRequest
+      )
+      .join("")
+
+     :
+
+     `
+      <div class="card empty">
+
+       <div style="font-size:34px">
+        🔎
+       </div>
+
+       <h3>
+        Şimdilik uygun talep yok.
+       </h3>
+
+       <p>
+        Bölgen ve kategorilerinle
+        eşleşen yeni talepler
+        burada görünecek.
+       </p>
+
+      </div>
+     `
+    )
 
     :
 
     `
-    <div class="card empty">
+     <div class="card empty">
 
-     <div style="font-size:34px">
-      🔎
+      Hizmet durumunu aktif yaptığında
+      uygun talepler burada görünecek.
+
      </div>
-
-     <h3>
-      Şimdilik uygun talep yok.
-     </h3>
-
-     <p>
-      Bölgen ve kategorilerinle
-      eşleşen yeni talepler
-      burada görünecek.
-     </p>
-
-    </div>
     `
+   }
 
-   )
-
-   :
-
-   `
-   <div class="card empty">
-    Hizmet durumunu aktif yaptığında
-    uygun talepler burada görünecek.
-   </div>
-   `
-
-  }
-
- </div>
+  </div>
 
 
- <div class="section">
+  <div class="section">
 
-  <button
-   class="btn danger"
-   onclick="providerLogout()"
-  >
-   HİZMET SAĞLAYICI PANELİNDEN ÇIK
-  </button>
+   <button
+    class="btn danger"
+    onclick="providerLogout()"
+   >
+    HİZMET SAĞLAYICI PANELİNDEN ÇIK
+   </button>
 
- </div>
+  </div>
 
  `);
 
@@ -2776,126 +3419,196 @@ async function showProviderPanel(){
 
 
 /* =========================================================
-   HİZMET SAĞLAYICI TALEP
+   SAĞLAYICI TALEP KARTI
    ========================================================= */
 
 function renderProviderRequest(r){
 
  const serviceKey=
-  r.service ||
-  r.kategori;
+  resolveServiceKey(r);
 
  const s=
   SERVICES[serviceKey] ||
   {
-   name:serviceKey||"Hizmet",
+   name:
+    r.kategori ||
+    "Hizmet",
    emoji:"🛠️"
   };
 
 
+ const phone=
+  normalizePhone(
+   r.telefon ||
+   r.phone ||
+   ""
+  );
+
+
  return `
 
- <article class="request">
+  <article class="request">
 
-  <div class="requestTop">
+   <div class="requestTop">
 
-   <div>
+    <div>
 
-    <h3>
-     ${s.emoji}
-     ${escapeHTML(s.name)}
-    </h3>
+     <h3>
+      ${s.emoji}
+      ${escapeHTML(
+       s.name
+      )}
+     </h3>
+
+     <div class="small muted">
+      ${escapeHTML(
+       r.talep_no ||
+       r.id ||
+       ""
+      )}
+     </div>
+
+    </div>
+
+    <span class="status">
+     ${escapeHTML(
+      r.aciliyet ||
+      r.urgency ||
+      "Beklemede"
+     )}
+    </span>
 
    </div>
 
-   <span class="status">
+
+   <div class="description">
+
     ${escapeHTML(
-     r.aciliyet ||
-     r.urgency ||
-     "Beklemede"
-    )}
-   </span>
-
-  </div>
-
-
-  <div class="description">
-
-   ${escapeHTML(
-    r.aciklama ||
-    r.description ||
-    ""
-   )}
-
-  </div>
-
-
-  <div class="meta">
-
-   <span>
-    📍 ${escapeHTML(
-     r.ilce ||
-     r.district ||
+     r.aciklama ||
+     r.description ||
      ""
     )}
-   </span>
+
+   </div>
+
+
+   <div class="meta">
+
+    <span>
+     📍 ${escapeHTML(
+      r.il ||
+      "İzmir"
+     )}
+    </span>
+
+    <span>
+     🏘️ ${escapeHTML(
+      r.ilce ||
+      r.district ||
+      ""
+     )}
+    </span>
+
+    ${
+     r.mahalle ||
+     r.neighborhood
+     ?
+     `
+      <span>
+       🏠 ${escapeHTML(
+        r.mahalle ||
+        r.neighborhood
+       )}
+      </span>
+     `
+     :
+     ""
+    }
+
+   </div>
+
+
+   <div class="contactBox">
+
+    <div class="small muted">
+     Müşteri
+    </div>
+
+    <strong>
+     ${escapeHTML(
+      r.ad_soyad ||
+      r.name ||
+      ""
+     )}
+    </strong>
+
+    <br><br>
+
+    <div class="small muted">
+     Telefon
+    </div>
+
+    <div class="phoneNumber">
+
+     ${escapeHTML(
+      phone ||
+      "Telefon bulunamadı"
+     )}
+
+    </div>
+
+   </div>
+
+
+   <div class="small muted"
+        style="margin-top:12px">
+
+    Talep No:
+    <strong>
+     ${escapeHTML(
+      r.talep_no ||
+      r.id ||
+      ""
+     )}
+    </strong>
+
+   </div>
+
+
+   <br>
+
 
    ${
-    (r.mahalle || r.neighborhood)
+    phone
+
     ?
-    `<span>
-      🏘️ ${escapeHTML(
-       r.mahalle ||
-       r.neighborhood
-      )}
-     </span>`
+
+    `
+     <button
+      class="btn primary"
+      onclick="
+       callCustomer('${escapeHTML(
+        phone
+       )}')
+      "
+     >
+      📞 MÜŞTERİYLE İLETİŞİME GEÇ
+     </button>
+    `
+
     :
-    ""
+
+    `
+     <button
+      class="btn secondary"
+      disabled
+     >
+      📞 TELEFON NUMARASI YOK
+     </button>
+    `
    }
 
-
-   <span>
-    👤 ${escapeHTML(
-     r.ad_soyad ||
-     r.name ||
-     ""
-    )}
-   </span>
-
-  </div>
-
-
-  <div class="small muted">
-
-   Talep No:
-
-   <strong>
-    ${escapeHTML(
-     r.talep_no ||
-     r.id ||
-     ""
-    )}
-   </strong>
-
-  </div>
-
-
-  <br>
-
-
-  <a
-   class="btn primary"
-   style="display:block;text-align:center"
-   href="tel:${escapeHTML(
-    r.telefon ||
-    r.phone ||
-    ""
-   )}"
-  >
-   📞 MÜŞTERİYLE İLETİŞİME GEÇ
-  </a>
-
- </article>
+  </article>
 
  `;
 
@@ -2930,7 +3643,7 @@ function toggleProviderStatus(){
 
 
 /* =========================================================
-   BAŞLANGIÇ
+   BAŞLAT
    ========================================================= */
 
 async function startApp(){
