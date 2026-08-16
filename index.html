@@ -386,8 +386,26 @@ async function showRequests(){
  setNav("navRequests");
  app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div><span class="badge">▣ TALEPLERİM</span><h1>Oluşturduğun talepler.</h1><p class="muted small">Taleplerin sistemden yükleniyor...</p><div class="card" id="requestsLoading" style="text-align:center">⏳ Talepler yükleniyor...</div>`);
  const requests=await loadRequestsFromSupabase(),area=document.getElementById("requestsLoading");if(!area)return;
- area.outerHTML=requests.length?requests.map(renderRequest).join(""):`<div class="card empty">📋<h3>Henüz talep yok</h3><p>İhtiyacını anlat, ilk talebini oluştur.</p><button class="btn primary" onclick="showRequest()">＋ Talep oluştur</button></div>`;
+ area.outerHTML=requests.length?requests.map(r=>renderRequestWithOffers(r)).join(""):`<div class="card empty">📋<h3>Henüz talep yok</h3><p>İhtiyacını anlat, ilk talebini oluştur.</p><button class="btn primary" onclick="showRequest()">＋ Talep oluştur</button></div>`;
+
+ if(requests.length){
+  for(const r of requests){
+   const rid=r.id||r.request_id||"";
+   if(rid) await showOffersForRequest(rid,"offers-"+CSS.escape(String(rid)));
+  }
+ }
 }
+function renderRequestWithOffers(r){
+ const base=renderRequest(r);
+ const rid=r.id||r.request_id||"";
+ if(!rid)return base;
+ return base.replace("</article>",`
+  <div id="offers-${escapeHTML(String(rid))}" style="margin-top:12px">
+   <div class="small muted">💰 Teklifler yükleniyor...</div>
+  </div>
+ </article>`);
+}
+
 function renderRequest(r){
  const k=serviceKeyFromValue(r.service||r.kategori),s=SERVICES[k]||{name:r.kategori||"Hizmet",emoji:"🛠️"};
  return `<article class="request"><div class="requestTop"><div><h3>${s.emoji} ${escapeHTML(s.name)}</h3><div class="small muted">${escapeHTML(r.createdAt||"")}</div></div><span class="status">${escapeHTML(r.status||r.durum||"Beklemede")}</span></div><div class="description">“${escapeHTML(r.description||r.aciklama||"")}”</div><div class="meta"><span>📍 ${escapeHTML(r.ilce||"")}</span>${r.mahalle?`<span>🏘️ ${escapeHTML(r.mahalle)}</span>`:""}<span>⏱️ ${escapeHTML(r.aciliyet||"")}</span></div><div class="small muted">Talep No: <strong>${escapeHTML(r.talep_no||"")}</strong></div></article>`;
@@ -885,13 +903,226 @@ async function showProviderPanel(p){
  document.getElementById("matchCount").textContent=suitable.length;
  const box=document.getElementById("matchedRequests");
  if(!suitable.length){box.innerHTML=`<div class="empty">🔎<h3>Şimdilik uygun talep yok.</h3><p>Sağlayıcının kategorisi ve ilçesi ile eşleşen talepler burada görünecek.</p></div>`}
- else box.outerHTML=suitable.map(r=>renderProviderRequest(r)).join("");
+ else box.outerHTML=suitable.map(r=>renderProviderRequest(r,p)).join("");
 }
 
-function renderProviderRequest(r){
+function renderProviderRequest(r,p){
  const k=serviceKeyFromValue(r.service||r.kategori),s=SERVICES[k]||{name:r.kategori||"Hizmet",emoji:"🛠️"};
  const phone=r.telefon||r.phone||"";
- return `<article class="request"><div class="requestTop"><div><h3>${s.emoji} ${escapeHTML(s.name)}</h3><div class="small muted">Talep No: ${escapeHTML(r.talep_no||"")}</div></div><span class="status">${escapeHTML(r.aciliyet||"Beklemede")}</span></div><div class="description">${escapeHTML(r.aciklama||r.description||"")}</div><div class="meta"><span>📍 ${escapeHTML(r.ilce||r.district||"")}</span>${r.mahalle?`<span>🏘️ ${escapeHTML(r.mahalle)}</span>`:""}<span>👤 ${escapeHTML(r.ad_soyad||r.name||"")}</span></div>${phone?`<a class="btn primary" style="display:block;text-align:center" href="tel:${escapeHTML(phone)}">📞 MÜŞTERİYLE İLETİŞİME GEÇ</a>`:`<div class="warning">Bu talepte telefon numarası bulunmuyor.</div>`}</article>`;
+ const requestId=r.id||r.request_id||"";
+ const requestNo=r.talep_no||r.request_no||"";
+
+ return `<article class="request">
+  <div class="requestTop">
+   <div>
+    <h3>${s.emoji} ${escapeHTML(s.name)}</h3>
+    <div class="small muted">Talep No: ${escapeHTML(requestNo)}</div>
+   </div>
+   <span class="status">${escapeHTML(r.aciliyet||"Beklemede")}</span>
+  </div>
+
+  <div class="description">${escapeHTML(r.aciklama||r.description||"")}</div>
+
+  <div class="meta">
+   <span>📍 ${escapeHTML(r.ilce||r.district||"")}</span>
+   ${r.mahalle?`<span>🏘️ ${escapeHTML(r.mahalle)}</span>`:""}
+   <span>👤 ${escapeHTML(r.ad_soyad||r.name||"")}</span>
+  </div>
+
+  <div class="actions">
+   <button
+    class="btn primary"
+    onclick='openOfferForm(${JSON.stringify(String(requestId))},${JSON.stringify(String(p.id||""))},${JSON.stringify(String(requestNo))},${JSON.stringify(String(s.name))})'
+   >
+    💰 TEKLİF VER
+   </button>
+
+   ${
+    phone
+    ? `<a class="btn secondary" href="tel:${escapeHTML(phone)}">📞 MÜŞTERİYLE İLETİŞİME GEÇ</a>`
+    : ""
+   }
+  </div>
+ </article>`;
+}
+
+
+/* =========================================================
+   TEKLİF SİSTEMİ
+   ========================================================= */
+
+async function openOfferForm(requestId,providerId,requestNo,serviceName){
+
+ const old=document.getElementById("offerModal");
+ if(old)old.remove();
+
+ const modal=document.createElement("div");
+ modal.id="offerModal";
+ modal.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px";
+
+ modal.innerHTML=`
+  <div class="formCard" style="width:min(520px,100%);max-height:90vh;overflow:auto">
+   <div class="sectionTitle">
+    <div>
+     <span class="badge">💰 TEKLİF OLUŞTUR</span>
+     <h2>${escapeHTML(serviceName)} • ${escapeHTML(requestNo)}</h2>
+    </div>
+    <button class="btn secondary smallBtn" type="button" onclick="document.getElementById('offerModal')?.remove()">✕</button>
+   </div>
+
+   <label>Teklif fiyatı (TL) *</label>
+   <input id="offerPrice" type="number" min="0" step="1" inputmode="decimal" placeholder="Örn. 1500">
+
+   <label>Mesajınız</label>
+   <textarea id="offerMessage" maxlength="1000" placeholder="İşin nasıl yapılacağını, tahmini süreyi veya önemli bilgileri yazabilirsiniz."></textarea>
+
+   <div class="notice">
+    💡 Teklifiniz müşteriye gönderilecek. Müşteri kabul edene kadar teklif beklemede kalır.
+   </div>
+
+   <button
+    class="btn primary"
+    id="sendOfferButton"
+    onclick='submitOffer(${JSON.stringify(requestId)},${JSON.stringify(providerId)})'
+   >
+    TEKLİFİ GÖNDER
+   </button>
+  </div>
+ `;
+
+ document.body.appendChild(modal);
+}
+
+async function submitOffer(requestId,providerId){
+
+ const priceRaw=document.getElementById("offerPrice")?.value.trim();
+ const message=document.getElementById("offerMessage")?.value.trim()||"";
+ const button=document.getElementById("sendOfferButton");
+
+ const price=Number(priceRaw);
+
+ if(!requestId){
+  alert("Talep kimliği bulunamadı. Bu kayıt için teklif oluşturulamıyor.");
+  return;
+ }
+
+ if(!Number.isFinite(price)||price<0){
+  alert("Lütfen geçerli bir teklif fiyatı gir.");
+  return;
+ }
+
+ if(!providerId){
+  alert("Hizmet sağlayıcı kimliği bulunamadı.");
+  return;
+ }
+
+ button.disabled=true;
+ button.textContent="TEKLİF GÖNDERİLİYOR...";
+
+ const offer={
+  request_id:requestId,
+  provider_id:providerId,
+  price:price,
+  message:message,
+  status:"pending"
+ };
+
+ try{
+
+  await supabaseRequest("POST","offers",offer);
+
+  setConnection(true,"Supabase bağlı ✓");
+
+  document.getElementById("offerModal")?.remove();
+
+  alert("Teklifiniz başarıyla gönderildi. ✓");
+
+ }catch(error){
+
+  console.error("Teklif gönderme hatası:",error);
+
+  button.disabled=false;
+  button.textContent="TEKLİFİ GÖNDER";
+
+  alert(
+   "Teklif gönderilemedi.\n\n"+
+   (error.message||"Supabase offers tablosu izin/kolon hatası.")
+  );
+ }
+}
+
+async function loadOffersForRequest(requestId){
+
+ if(!requestId)return [];
+
+ try{
+
+  const rows=await supabaseRequest(
+   "GET",
+   "offers?request_id=eq."+encodeURIComponent(requestId)+"&select=*&order=created_at.desc"
+  );
+
+  return Array.isArray(rows)?rows:[];
+
+ }catch(error){
+
+  console.warn("Teklifler alınamadı:",error);
+  return [];
+
+ }
+}
+
+function renderOfferCard(offer){
+
+ const price=Number(offer.price);
+
+ return `
+  <article class="card" style="margin-top:10px">
+
+   <div class="requestTop">
+
+    <div>
+     <strong>💰 Hizmet sağlayıcı teklifi</strong>
+     <div class="small muted">
+      ${escapeHTML(offer.status||"pending")}
+     </div>
+    </div>
+
+    <strong>
+     ${Number.isFinite(price)?price.toLocaleString("tr-TR")+" TL":"Fiyat belirtilmemiş"}
+    </strong>
+
+   </div>
+
+   ${
+    offer.message
+    ? `<p class="small">${escapeHTML(offer.message)}</p>`
+    : ""
+   }
+
+  </article>
+ `;
+}
+
+async function showOffersForRequest(requestId,holderId){
+
+ const holder=document.getElementById(holderId);
+
+ if(!holder)return;
+
+ const offers=await loadOffersForRequest(requestId);
+
+ if(!offers.length){
+  holder.innerHTML=`<div class="small muted">Henüz teklif gelmedi.</div>`;
+  return;
+ }
+
+ holder.innerHTML=`
+  <div class="small muted" style="margin-bottom:8px">
+   💰 ${offers.length} teklif
+  </div>
+  ${offers.map(renderOfferCard).join("")}
+ `;
 }
 
 /* ---------------- OPTIONAL LOCAL PROVIDER ---------------- */
