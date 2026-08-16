@@ -113,9 +113,41 @@ async function loadRequestsFromSupabase(){
  }catch(e){console.warn("Talepler alınamadı:",e)}
  return getRequests();
 }
+
+function isUUID(value){
+ return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value||"").trim());
+}
+function firstUUID(...values){
+ for(const value of values){
+  if(isUUID(value)) return String(value).trim();
+ }
+ return "";
+}
+async function resolveRequestUUID(request){
+ const direct=firstUUID(request?.request_id,request?.uuid,request?.id);
+ if(direct)return direct;
+
+ const requestNo=String(request?.talep_no||request?.request_no||request?.talepNo||"").trim();
+ if(!requestNo)return "";
+
+ try{
+  const rows=await supabaseRequest(
+   "GET",
+   "talepler?talep_no=eq."+encodeURIComponent(requestNo)+"&select=*"
+  );
+  if(Array.isArray(rows)&&rows.length){
+   const row=rows[0];
+   return firstUUID(row?.request_id,row?.uuid,row?.id);
+  }
+ }catch(error){
+  console.warn("Talep UUID çözümlenemedi:",error);
+ }
+ return "";
+}
+
 function mapRequest(r){
  const kategori=pick(r,["kategori","category","service"],"");
- const realId=pick(r,["id","request_id","uuid"],"");
+ const realId=firstUUID(r?.request_id,r?.uuid,r?.id) || pick(r,["id","request_id","uuid"],"");
  const requestNo=pick(r,["talep_no","request_no","talepNo"],realId);
 
  return {
@@ -403,7 +435,18 @@ async function createRequest(){
  const b=document.getElementById("createRequestButton");b.disabled=true;b.textContent="TALEP KAYDEDİLİYOR...";
  const talep_no=makeRequestNumber();
  const item={talep_no,kategori:service,aciklama:description,il:city,ilce:district,mahalle:neighborhood,aciliyet:urgency,ad_soyad:name,telefon:phone,durum:"Beklemede"};
- try{await supabaseRequest("POST","talepler",item);setConnection(true,"Supabase bağlı ✓");write(KEYS.requests,[{...mapRequest(item),createdAt:new Date().toISOString()},...getRequests()]);alert("Talebiniz başarıyla oluşturuldu.\n\nTalep No: "+talep_no)}catch(e){console.error(e);write(KEYS.requests,[{...mapRequest(item),createdAt:new Date().toISOString()},...getRequests()]);alert("Sunucu kaydı başarısız oldu; cihazdaki yedek kaydedildi.\n\n"+e.message)}
+ try{
+ const inserted=await supabaseRequest("POST","talepler",item);
+ const row=Array.isArray(inserted)?inserted[0]:inserted;
+ const saved=row&&typeof row==="object"?{...item,...row}:item;
+ setConnection(true,"Supabase bağlı ✓");
+ write(KEYS.requests,[{...mapRequest(saved),createdAt:saved.created_at||new Date().toISOString()},...getRequests()]);
+ alert("Talebiniz başarıyla oluşturuldu.\n\nTalep No: "+talep_no);
+}catch(e){
+ console.error(e);
+ write(KEYS.requests,[{...mapRequest(item),createdAt:new Date().toISOString()},...getRequests()]);
+ alert("Sunucu kaydı başarısız oldu; cihazdaki yedek kaydedildi.\n\n"+e.message);
+}
  b.disabled=false;b.textContent="TALEBİ OLUŞTUR";showRequests();
 }
 
@@ -936,7 +979,7 @@ async function showProviderPanel(p){
 function renderProviderRequest(r,p){
  const k=serviceKeyFromValue(r.service||r.kategori),s=SERVICES[k]||{name:r.kategori||"Hizmet",emoji:"🛠️"};
  const phone=r.telefon||r.phone||"";
- const requestId=r.request_id||r.uuid||r.id||"";
+ const requestId=firstUUID(r.request_id,r.uuid,r.id);
  const requestNo=r.talep_no||r.request_no||"";
 
  return `<article class="request">
@@ -1010,7 +1053,7 @@ async function openOfferForm(requestId,providerId,requestNo,serviceName){
    <button
     class="btn primary"
     id="sendOfferButton"
-    onclick='submitOffer(${JSON.stringify(requestId)},${JSON.stringify(providerId)})'
+    onclick='submitOffer(${JSON.stringify(requestId)},${JSON.stringify(providerId)},${JSON.stringify(requestNo)})'
    >
     TEKLİFİ GÖNDER
    </button>
@@ -1020,32 +1063,36 @@ async function openOfferForm(requestId,providerId,requestNo,serviceName){
  document.body.appendChild(modal);
 }
 
-async function submitOffer(requestId,providerId){
+async function submitOffer(requestId,providerId,requestNo){
 
  const priceRaw=document.getElementById("offerPrice")?.value.trim();
- const message=document.getElementById("offerMessage")?.value.trim()||"";
  const button=document.getElementById("sendOfferButton");
-
  const price=Number(priceRaw);
-
- if(!requestId){
-  alert("Talep kimliği bulunamadı. Bu kayıt için teklif oluşturulamıyor.");
-  return;
- }
-
- const uuidPattern=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
- if(!uuidPattern.test(String(requestId))){
-  alert("Talep kimliği geçersiz. Teklif için Supabase UUID gerekli.");
-  return;
- }
 
  if(!Number.isFinite(price)||price<0){
   alert("Lütfen geçerli bir teklif fiyatı gir.");
   return;
  }
 
- if(!providerId){
-  alert("Hizmet sağlayıcı kimliği bulunamadı.");
+ if(!providerId||!isUUID(providerId)){
+  alert("Hizmet sağlayıcının geçerli Supabase UUID kimliği bulunamadı.");
+  return;
+ }
+
+ let finalRequestId=firstUUID(requestId);
+
+ if(!finalRequestId){
+  finalRequestId=await resolveRequestUUID({
+   id:requestId,
+   talep_no:requestNo
+  });
+ }
+
+ if(!finalRequestId){
+  alert(
+   "Talep kimliği geçersiz. Teklif için Supabase UUID gerekli.\n\n"+
+   "Talep No: "+String(requestNo||"belirtilmemiş")
+  );
   return;
  }
 
@@ -1053,7 +1100,7 @@ async function submitOffer(requestId,providerId){
  button.textContent="TEKLİF GÖNDERİLİYOR...";
 
  const offer={
-  request_id:requestId,
+  request_id:finalRequestId,
   provider_id:providerId,
   price:price,
   status:"pending"
@@ -1064,10 +1111,12 @@ async function submitOffer(requestId,providerId){
   await supabaseRequest("POST","offers",offer);
 
   setConnection(true,"Supabase bağlı ✓");
-
   document.getElementById("offerModal")?.remove();
 
-  alert("Teklifiniz başarıyla gönderildi. ✓\n\nFiyat: " + price.toLocaleString("tr-TR") + " TL");
+  alert(
+   "Teklifiniz başarıyla gönderildi. ✓\n\n"+
+   "Fiyat: "+price.toLocaleString("tr-TR")+" TL"
+  );
 
  }catch(error){
 
@@ -1082,6 +1131,7 @@ async function submitOffer(requestId,providerId){
   );
  }
 }
+
 
 async function loadOffersForRequest(requestId){
 
