@@ -88,6 +88,11 @@ let CURRENT_PROVIDERS=[];
 function esc(v){
  return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
 }
+/* JSON verisini tek tırnaklı bir HTML onclick özniteliğine güvenle gömer
+   (isim/açıklama gibi alanlarda apostrof geçse bile özniteliği kırmaz). */
+function jsonAttr(obj){
+ return JSON.stringify(obj).replaceAll("'","&#039;");
+}
 function app(html){document.getElementById("app").innerHTML=html;window.scrollTo(0,0)}
 function nav(id){["navHome","navRequest","navRequests","navProvider"].forEach(x=>document.getElementById(x)?.classList.remove("active"));document.getElementById(id)?.classList.add("active")}
 function connection(ok,text){const e=document.getElementById("connectionStatus");e.className="connection "+(ok?"online":"offline");e.textContent=text||(ok?"Supabase bağlı ✓":"Yerel mod")}
@@ -211,16 +216,20 @@ async function loadProvidersByIds(ids){
  try{const rows=await sb("GET","providers?select=id,name,district,phone&id=in.("+clean.join(",")+")");return Array.isArray(rows)?rows:[]}
  catch(e){console.warn("Sağlayıcı bilgisi okunamadı:",e);return []}
 }
+function offerStatusBadge(status){
+ if(status==="accepted")return `<span class="status status-accepted">Kabul Edildi</span>`;
+ if(status==="rejected")return `<span class="status status-cancelled">Reddedildi</span>`;
+ return `<span class="status status-pending">Bekliyor</span>`;
+}
 function detailOfferCard(o,provider,requestStatus){
  const price=Number(o.price);
  const isAccepted=o.status==="accepted";
  const isRejected=o.status==="rejected";
  const requestClosed=requestStatus==="accepted"||requestStatus==="completed"||requestStatus==="cancelled";
- const statusBadge=isAccepted?`<span class="status status-accepted">Kabul Edildi</span>`:isRejected?`<span class="status status-cancelled">Reddedildi</span>`:`<span class="status status-pending">Bekliyor</span>`;
  /* Gizlilik: teklif kabul edilmeden sağlayıcının telefonu gösterilmez. */
  const phoneLine=isAccepted&&provider?.phone?`<a class="btn primary" style="display:block;text-align:center;margin-top:8px" href="tel:${esc(provider.phone)}">📞 SAĞLAYICIYI ARA</a>`:"";
- const acceptBtn=(!isAccepted&&!isRejected&&!requestClosed)?`<button class="btn primary section" onclick='acceptOffer(${JSON.stringify(o)},"${esc(o.request_id)}")'>✅ TEKLİFİ KABUL ET</button>`:"";
- return `<article class="card" style="margin-top:10px"><div class="requestTop"><div><strong>${provider?esc(provider.name):"Sağlayıcı"}</strong><div class="small muted">${provider?.district?esc(provider.district):""}</div></div>${statusBadge}</div><div class="meta"><span>💰 ${Number.isFinite(price)?price.toLocaleString("tr-TR")+" TL":"-"}</span>${o.available_time?`<span>🕐 ${esc(o.available_time)}</span>`:""}</div>${o.note?`<div class="description">${esc(o.note)}</div>`:""}${acceptBtn}${phoneLine}</article>`;
+ const acceptBtn=(!isAccepted&&!isRejected&&!requestClosed)?`<button class="btn primary section" onclick='acceptOffer(${jsonAttr(o)},"${esc(o.request_id)}")'>✅ TEKLİFİ KABUL ET</button>`:"";
+ return `<article class="card" style="margin-top:10px"><div class="requestTop"><div><strong>${provider?esc(provider.name):"Sağlayıcı"}</strong><div class="small muted">${provider?.district?esc(provider.district):""}</div></div>${offerStatusBadge(o.status)}</div><div class="meta"><span>💰 ${Number.isFinite(price)?price.toLocaleString("tr-TR")+" TL":"-"}</span>${o.available_time?`<span>🕐 ${esc(o.available_time)}</span>`:""}</div>${o.note?`<div class="description">${esc(o.note)}</div>`:""}${acceptBtn}${phoneLine}</article>`;
 }
 async function acceptOffer(offer,requestId){
  if(!confirm("Bu teklifi kabul etmek istediğine emin misin? Diğer bekleyen teklifler otomatik olarak reddedilecek."))return;
@@ -330,7 +339,7 @@ function viewProviderRequests(providerId){
 }
 async function showProviderPanel(provider){
  nav("navProvider");
- app(`<div class="back"><button class="btn secondary smallBtn" onclick="showProviders()">← Sağlayıcı listesine dön</button></div><div class="card"><h2>🛠️ ${esc(provider.name)}</h2><p class="muted">${esc(provider.district||"")}</p></div><section class="section"><h2>📋 Uygun Talepler</h2><div id="matchArea" class="card" style="text-align:center">⏳ Eşleşmeler aranıyor...</div></section>`);
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick="showProviders()">← Sağlayıcı listesine dön</button></div><div class="card"><h2>🛠️ ${esc(provider.name)}</h2><p class="muted">${esc(provider.district||"")}</p><button class="btn secondary section" onclick='showProviderOffers(${jsonAttr(provider)})'>📑 TEKLİFLERİM</button></div><section class="section"><h2>📋 Uygun Talepler</h2><div id="matchArea" class="card" style="text-align:center">⏳ Eşleşmeler aranıyor...</div></section>`);
  try{
   const requests=await sb("GET","requests?select=*&order=created_at.desc&limit=100");
   const suitable=requests.filter(r=>providerMatches(provider,r));
@@ -338,6 +347,35 @@ async function showProviderPanel(provider){
   if(!suitable.length){box.innerHTML=`<div class="empty">🔎 Bu sağlayıcıya uygun talep yok.</div>`;return}
   box.outerHTML=suitable.map(r=>providerRequestCard(r,provider)).join("");
  }catch(e){document.getElementById("matchArea").innerHTML=`<div class="error">Talepler yüklenemedi:<br>${esc(e.message)}</div>`}
+}
+async function loadOffersByProvider(providerId){
+ if(!isUUID(providerId))return [];
+ try{const rows=await sb("GET","offers?provider_id=eq."+encodeURIComponent(providerId)+"&select=*&order=created_at.desc");return Array.isArray(rows)?rows:[]}
+ catch(e){console.warn("Teklifler okunamadı:",e);return []}
+}
+async function loadRequestsByIds(ids){
+ const clean=[...new Set(ids.filter(isUUID))];
+ if(!clean.length)return [];
+ try{const rows=await sb("GET","requests?select=*&id=in.("+clean.join(",")+")");return Array.isArray(rows)?rows:[]}
+ catch(e){console.warn("Talep bilgisi okunamadı:",e);return []}
+}
+function providerOfferCard(o,request){
+ const price=Number(o.price);
+ const k=request?requestService(request):"";
+ const s=SERVICES[k]||{name:request?.category_id||"Hizmet",emoji:"🛠️"};
+ return `<article class="request"><div class="requestTop"><div><h3>${s.emoji} ${esc(s.name)}</h3><div class="small muted">${o.created_at?new Date(o.created_at).toLocaleString("tr-TR"):""}</div></div>${offerStatusBadge(o.status)}</div>${request?`<div class="description">${esc(request.description||"")}</div><div class="meta"><span>📍 ${esc(request.district||"")}</span></div>`:`<div class="small muted">Talep bilgisi bulunamadı (silinmiş olabilir).</div>`}<div class="meta"><span>💰 ${Number.isFinite(price)?price.toLocaleString("tr-TR")+" TL":"-"}</span>${o.available_time?`<span>🕐 ${esc(o.available_time)}</span>`:""}</div>${o.note?`<div class="description">${esc(o.note)}</div>`:""}</article>`;
+}
+async function showProviderOffers(provider){
+ nav("navProvider");
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick='showProviderPanel(${jsonAttr(provider)})'>← Sağlayıcı paneline dön</button></div><span class="badge">📑 TEKLİFLERİM</span><h1>${esc(provider.name)} — verdiğim teklifler.</h1><div id="providerOffersArea" class="card" style="text-align:center">⏳ Teklifler yükleniyor...</div>`);
+ try{
+  const offers=await loadOffersByProvider(provider.id);
+  const area=document.getElementById("providerOffersArea");
+  if(!offers.length){area.innerHTML=`<div class="empty">📑 Henüz teklif vermediniz.<br><span class="small muted">Uygun bir talebe teklif verdiğinizde burada görünecek.</span></div>`;return}
+  const requests=await loadRequestsByIds(offers.map(o=>o.request_id));
+  const requestById=Object.fromEntries(requests.map(r=>[String(r.id),r]));
+  area.outerHTML=offers.map(o=>providerOfferCard(o,requestById[String(o.request_id)])).join("");
+ }catch(e){document.getElementById("providerOffersArea").innerHTML=`<div class="error">Teklifler yüklenemedi:<br>${esc(e.message)}</div>`}
 }
 function providerRequestCard(r,p){
  const k=requestService(r),s=SERVICES[k]||{name:r.category_id||"Hizmet",emoji:"🛠️"};
