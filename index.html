@@ -87,6 +87,15 @@ const DISTRICTS=["Aliağa","Balçova","Bayındır","Bayraklı","Bergama","Beyda�
    paneline listeden tekrar geri dönebilir. */
 let CURRENT_PROVIDERS=[];
 
+/* ---- Basit tarayıcı bazlı "sahiplik" kontrolü ----
+   Gerçek bir giriş sistemi olmadığı için, bu sadece kazara/rastgele
+   başkasının talebini/profilini değiştirmeyi önlemek içindir.
+   Gerçek güvenlik için Supabase Auth (giriş sistemi) gerekir. */
+function lsGetArray(key){try{return JSON.parse(localStorage.getItem(key)||"[]")}catch(e){return []}}
+function lsAddToArray(key,val){try{const arr=lsGetArray(key);if(!arr.includes(val)){arr.push(val);localStorage.setItem(key,JSON.stringify(arr));}}catch(e){console.warn("Tarayıcı hafızasına yazılamadı:",e)}}
+function isMyRequest(id){return lsGetArray("iscoz_my_requests").includes(id)}
+function isMyProvider(id){return lsGetArray("iscoz_my_providers").includes(id)}
+
 function esc(v){
  return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
 }
@@ -184,6 +193,7 @@ async function createRequest(){
   const rows=await sb("POST","requests",payload);
   const row=Array.isArray(rows)?rows[0]:rows;
   if(!row?.id)throw new Error("Talep kaydedildi ancak UUID alınamadı.");
+  lsAddToArray("iscoz_my_requests",row.id);
   connection(true);
   alert("Talep başarıyla oluşturuldu. ✓");
   showRequestDetail(row.id);
@@ -243,14 +253,19 @@ function offerStatusBadge(status){
  if(status==="rejected")return `<span class="status status-cancelled">Reddedildi</span>`;
  return `<span class="status status-pending">Bekliyor</span>`;
 }
-function detailOfferCard(o,provider,requestStatus){
+function detailOfferCard(o,provider,requestStatus,isOwner){
  const price=Number(o.price);
  const isAccepted=o.status==="accepted";
  const isRejected=o.status==="rejected";
  const requestClosed=requestStatus==="accepted"||requestStatus==="completed"||requestStatus==="cancelled";
  /* Gizlilik: teklif kabul edilmeden sağlayıcının telefonu gösterilmez. */
  const phoneLine=isAccepted&&provider?.phone?`<a class="btn primary" style="display:block;text-align:center;margin-top:8px" href="tel:${esc(provider.phone)}">📞 SAĞLAYICIYI ARA</a>`:"";
- const acceptBtn=(!isAccepted&&!isRejected&&!requestClosed)?`<button class="btn primary section" onclick='acceptOffer(${jsonAttr(o)},"${esc(o.request_id)}",this)'>✅ TEKLİFİ KABUL ET</button>`:"";
+ let acceptBtn="";
+ if(!isAccepted&&!isRejected&&!requestClosed){
+  acceptBtn=isOwner
+   ?`<button class="btn primary section" onclick='acceptOffer(${jsonAttr(o)},"${esc(o.request_id)}",this)'>✅ TEKLİFİ KABUL ET</button>`
+   :`<div class="small muted section">🔒 Bu teklifi yalnızca talebi oluşturan kişi kabul edebilir.</div>`;
+ }
  return `<article class="card" style="margin-top:10px"><div class="requestTop"><div><strong>${provider?esc(provider.name):"Sağlayıcı"}</strong><div class="small muted">${provider?.district?esc(provider.district):""}</div></div>${offerStatusBadge(o.status)}</div><div class="meta"><span>💰 ${Number.isFinite(price)?price.toLocaleString("tr-TR")+" TL":"-"}</span>${o.available_time?`<span>🕐 ${esc(o.available_time)}</span>`:""}</div>${o.note?`<div class="description">${esc(o.note)}</div>`:""}${acceptBtn}${phoneLine}</article>`;
 }
 async function acceptOffer(offer,requestId,btnEl){
@@ -286,10 +301,13 @@ async function showRequestDetail(requestId){
   const providerById=Object.fromEntries(providers.map(p=>[String(p.id),p]));
   const k=requestService(r),s=SERVICES[k]||{name:r.category_id||"Hizmet",emoji:"🛠️"};
   const st=requestStatusLabel(r.status,offers.length);
+  const isOwner=isMyRequest(r.id);
   const offersHtml=offers.length
-   ?offers.map(o=>detailOfferCard(o,providerById[String(o.provider_id)],r.status)).join("")
+   ?offers.map(o=>detailOfferCard(o,providerById[String(o.provider_id)],r.status,isOwner)).join("")
    :`<div class="small muted section">Henüz teklif gelmedi. Sağlayıcılar talebinizi inceliyor.</div>`;
+  const ownerNotice=isOwner?"":`<div class="notice">👀 Bu talebi bu tarayıcıdan oluşturmadınız — sadece görüntüleyebilirsiniz, teklif kabul edemezsiniz.</div>`;
   area.outerHTML=`<div class="formCard"><span class="badge">${s.emoji} ${esc(s.name)}</span><h1>Talep Detayı</h1>
+  ${ownerNotice}
   <div class="meta"><span class="status status-${st.cls}">${esc(st.label)}</span><span>📍 ${esc(r.district||"")}</span>${r.neighborhood?`<span>🏘️ ${esc(r.neighborhood)}</span>`:""}<span>⏱️ ${esc(r.urgency||"")}</span></div>
   <div class="description">${esc(r.description||"")}</div>
   <div class="small muted section">Talep ID: <strong>${esc(r.id)}</strong> • Oluşturulma: ${r.created_at?new Date(r.created_at).toLocaleString("tr-TR"):""}</div>
@@ -343,6 +361,7 @@ async function registerProvider(){
   const rows=await sb("POST","providers",payload);
   const p=Array.isArray(rows)?rows[0]:rows;
   if(!p?.id)throw new Error("Sağlayıcı kaydedildi ancak ID alınamadı.");
+  lsAddToArray("iscoz_my_providers",p.id);
   connection(true);alert("Hizmet sağlayıcı başarıyla kaydedildi. ✓");showProviderPanel(p);
  }catch(e){console.error(e);alert("Sağlayıcı kaydedilemedi.\n\n"+friendlyErrorMessage(e))}
  finally{b.disabled=false;b.textContent="HİZMET SAĞLAYICI KAYDI OLUŞTUR";}
@@ -363,12 +382,15 @@ function viewProviderRequests(providerId){
 }
 async function showProviderPanel(provider){
  nav("navProvider");
- app(`<div class="back"><button class="btn secondary smallBtn" onclick="showProviders()">← Sağlayıcı listesine dön</button></div><div class="card"><h2>🛠️ ${esc(provider.name)}</h2><p class="muted">${esc(provider.district||"")}</p><div class="row section"><button class="btn secondary" onclick='showProviderOffers(${jsonAttr(provider)})'>📑 TEKLİFLERİM</button><button class="btn secondary" onclick='showProviderProfile(${jsonAttr(provider)})'>⚙️ PROFİLİMİ DÜZENLE</button></div></div><section class="section"><h2>📋 Uygun Talepler</h2><div id="matchArea" class="card" style="text-align:center">⏳ Eşleşmeler aranıyor...</div></section>`);
+ const canEdit=isMyProvider(provider.id);
+ const editBtn=canEdit?`<button class="btn secondary" onclick='showProviderProfile(${jsonAttr(provider)})'>⚙️ PROFİLİMİ DÜZENLE</button>`:"";
+ const ownerNotice=canEdit?"":`<div class="notice small">👀 Bu profili bu tarayıcıdan oluşturmadınız — sadece görüntüleyebilirsiniz.</div>`;
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick="showProviders()">← Sağlayıcı listesine dön</button></div><div class="card"><h2>🛠️ ${esc(provider.name)}</h2><p class="muted">${esc(provider.district||"")}</p>${ownerNotice}<div class="row section"><button class="btn secondary" onclick='showProviderOffers(${jsonAttr(provider)})'>📑 TEKLİFLERİM</button>${editBtn}</div></div><section class="section"><h2>📋 Uygun Talepler</h2><div id="matchArea" class="card" style="text-align:center">⏳ Eşleşmeler aranıyor...</div></section>`);
  try{
   const requests=await sb("GET","requests?select=*&order=created_at.desc&limit=100");
   const suitable=requests.filter(r=>providerMatches(provider,r));
   const box=document.getElementById("matchArea");
-  if(!suitable.length){box.innerHTML=`<div class="empty">🔎 Şu anda kategori ve ilçenize uygun bir talep yok.<br><span class="small muted">Yeni bir talep geldiğinde burada görünecek. Kategori veya ilçenizi genişletmek isterseniz "⚙️ Profilimi Düzenle" bölümünden güncelleyebilirsiniz.</span></div>`;return}
+  if(!suitable.length){box.innerHTML=`<div class="empty">🔎 Şu anda kategori ve ilçenize uygun bir talep yok.<br><span class="small muted">Yeni bir talep geldiğinde burada görünecek.${canEdit?` Kategori veya ilçenizi genişletmek isterseniz "⚙️ Profilimi Düzenle" bölümünden güncelleyebilirsiniz.`:""}</span></div>`;return}
   box.outerHTML=suitable.map(r=>providerRequestCard(r,provider)).join("");
  }catch(e){document.getElementById("matchArea").innerHTML=`<div class="error">Talepler yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
 }
@@ -389,6 +411,7 @@ function showProviderProfile(provider){
  <button class="btn primary section" id="pfSaveBtn" onclick='saveProviderProfile(${jsonAttr(provider)})'>DEĞİŞİKLİKLERİ KAYDET</button></div>`);
 }
 async function saveProviderProfile(provider){
+ if(!isMyProvider(provider.id)){alert("Bu profili yalnızca kendi tarayıcınızdan (kayıt olduğunuz cihaz/tarayıcıdan) düzenleyebilirsiniz.");return}
  const checked=[...document.querySelectorAll("#pfCategories input[type=checkbox]:checked")].map(x=>x.value);
  const district=document.getElementById("pfDistrict").value;
  const description=document.getElementById("pfDescription").value.trim();
