@@ -28,6 +28,7 @@ label{display:block;font-size:13px;font-weight:700;margin:14px 0 7px}input,selec
 input:focus,select:focus,textarea:focus{border-color:var(--primary)}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .notice,.success,.warning,.error{padding:12px;border-radius:13px;font-size:13px;line-height:1.5;margin:12px 0}.notice{background:#0b2030;border:1px solid #1e4c66;color:#b9ddf2}.success{background:#0b2b20;border:1px solid #185d43;color:#8bf1c4}.warning{background:#30260e;border:1px solid #65501a;color:#f5d77c}.error{background:#35181b;border:1px solid #70272d;color:#ffb6b8}
 .request{margin-bottom:11px}.requestTop{display:flex;justify-content:space-between;gap:10px}.status{padding:5px 9px;border-radius:99px;background:rgba(245,185,66,.12);color:#ffd76b;font-size:11px;font-weight:800;height:max-content}
+.status-pending{background:rgba(245,185,66,.12);color:#ffd76b}.status-offered{background:rgba(54,163,255,.14);color:#8fd0ff}.status-accepted{background:rgba(25,195,125,.14);color:#6df0b5}.status-completed{background:rgba(25,195,125,.14);color:#6df0b5}.status-cancelled{background:rgba(239,83,80,.14);color:#ffb6b8}
 .meta{display:flex;flex-wrap:wrap;gap:8px;color:var(--muted);font-size:12px;margin:10px 0}.meta span{background:#091827;padding:6px 8px;border-radius:8px}.description{background:#091827;border-radius:12px;padding:11px;font-size:13px;line-height:1.5;margin:10px 0}
 .empty{text-align:center;padding:28px 15px;color:var(--muted)}.connection{position:fixed;top:10px;right:10px;z-index:100;padding:6px 9px;border-radius:99px;font-size:10px;font-weight:bold}.online{background:#0b2b20;color:#8bf1c4}.offline{background:#30260e;color:#f5d77c}
 .bottom{position:fixed;bottom:0;left:0;right:0;background:rgba(7,17,31,.98);border-top:1px solid var(--line);z-index:30}.bottomInner{max-width:760px;margin:auto;display:grid;grid-template-columns:repeat(4,1fr)}.navBtn{border:0;background:transparent;color:#8fa3b9;padding:11px 4px 10px;font-size:10px}.navBtn b{display:block;font-size:19px;margin-bottom:3px}.navBtn.active{color:var(--primary)}
@@ -158,15 +159,26 @@ async function createRequest(){
   const row=Array.isArray(rows)?rows[0]:rows;
   if(!row?.id)throw new Error("Talep kaydedildi ancak UUID alınamadı.");
   connection(true);
-  alert("Talep başarıyla oluşturuldu. ✓\n\nTalep kimliği:\n"+row.id);
-  showRequests();
+  alert("Talep başarıyla oluşturuldu. ✓");
+  showRequestDetail(row.id);
  }catch(e){console.error(e);alert("Talep oluşturulamadı:\n\n"+e.message)}
  finally{btn.disabled=false;btn.textContent="TALEBİ OLUŞTUR";}
 }
 function requestService(r){return serviceKey(r.category_id)}
-function requestCard(r,offersHtml=""){
+/* Talep durumunu kullanıcıya anlaşılır Türkçe etiketle gösterir.
+   Veritabanındaki status alanına yeni bir değer yazmadan, sadece
+   "teklif geldi" durumunu offers sayısından türetir. */
+function requestStatusLabel(status,offerCount){
+ if(status==="accepted")return{label:"Teklif Kabul Edildi",cls:"accepted"};
+ if(status==="completed")return{label:"Tamamlandı",cls:"completed"};
+ if(status==="cancelled")return{label:"İptal",cls:"cancelled"};
+ if(offerCount>0)return{label:"Teklif Geldi",cls:"offered"};
+ return{label:"Beklemede",cls:"pending"};
+}
+function requestCard(r,offersHtml="",offerCount=0){
  const k=requestService(r),s=SERVICES[k]||{name:r.category_id||"Hizmet",emoji:"🛠️"};
- return `<article class="request"><div class="requestTop"><div><h3>${s.emoji} ${esc(s.name)}</h3><div class="small muted">${r.created_at?new Date(r.created_at).toLocaleString("tr-TR"):""}</div></div><span class="status">${esc(r.status||"pending")}</span></div><div class="description">${esc(r.description||"")}</div><div class="meta"><span>📍 ${esc(r.district||"")}</span>${r.neighborhood?`<span>🏘️ ${esc(r.neighborhood)}</span>`:""}<span>⏱️ ${esc(r.urgency||"")}</span></div><div class="small muted">ID: <strong>${esc(r.id)}</strong></div>${offersHtml}</article>`;
+ const st=requestStatusLabel(r.status,offerCount);
+ return `<article class="request"><div class="requestTop"><div><h3>${s.emoji} ${esc(s.name)}</h3><div class="small muted">${r.created_at?new Date(r.created_at).toLocaleString("tr-TR"):""}</div></div><span class="status status-${st.cls}">${esc(st.label)}</span></div><div class="description">${esc(r.description||"")}</div><div class="meta"><span>📍 ${esc(r.district||"")}</span>${r.neighborhood?`<span>🏘️ ${esc(r.neighborhood)}</span>`:""}<span>⏱️ ${esc(r.urgency||"")}</span></div><div class="small muted">ID: <strong>${esc(r.id)}</strong></div><button class="btn secondary smallBtn section" onclick="showRequestDetail('${esc(r.id)}')">📄 Detayları Gör</button>${offersHtml}</article>`;
 }
 async function showRequests(){
  nav("navRequests");
@@ -178,10 +190,78 @@ async function showRequests(){
   const html=[];
   for(const r of rows){
    const offers=await loadOffers(r.id);
-   html.push(requestCard(r,offers.length?`<div class="section"><strong>💰 ${offers.length} teklif</strong>${offers.map(renderOffer).join("")}</div>`:`<div class="small muted section">Henüz teklif gelmedi.</div>`));
+   html.push(requestCard(r,offers.length?`<div class="section"><strong>💰 ${offers.length} teklif</strong>${offers.map(renderOffer).join("")}</div>`:`<div class="small muted section">Henüz teklif gelmedi.</div>`,offers.length));
   }
   area.outerHTML=html.join("");
  }catch(e){document.getElementById("requestsArea").innerHTML=`<div class="error">Talepler yüklenemedi:<br>${esc(e.message)}</div>`}
+}
+
+/* ---------------- REQUEST DETAIL (kullanıcı talep ekranı) ---------------- */
+/* Bir teklif satırını benzersiz şekilde hedeflemek için filtre üretir.
+   offers tablosunda id sütunu varsa onu kullanır; yoksa request_id +
+   provider_id + created_at üçlüsü ile hedefler (şema bilinmiyor,
+   böylece hem güvenli hem geriye dönük uyumlu olur). */
+function offerFilter(o){
+ if(o.id!==undefined&&o.id!==null&&o.id!=="")return "id=eq."+encodeURIComponent(o.id);
+ return "request_id=eq."+encodeURIComponent(o.request_id)+"&provider_id=eq."+encodeURIComponent(o.provider_id)+"&created_at=eq."+encodeURIComponent(o.created_at);
+}
+async function loadProvidersByIds(ids){
+ const clean=[...new Set(ids.filter(isUUID))];
+ if(!clean.length)return [];
+ try{const rows=await sb("GET","providers?select=id,name,district,phone&id=in.("+clean.join(",")+")");return Array.isArray(rows)?rows:[]}
+ catch(e){console.warn("Sağlayıcı bilgisi okunamadı:",e);return []}
+}
+function detailOfferCard(o,provider,requestStatus){
+ const price=Number(o.price);
+ const isAccepted=o.status==="accepted";
+ const isRejected=o.status==="rejected";
+ const requestClosed=requestStatus==="accepted"||requestStatus==="completed"||requestStatus==="cancelled";
+ const statusBadge=isAccepted?`<span class="status status-accepted">Kabul Edildi</span>`:isRejected?`<span class="status status-cancelled">Reddedildi</span>`:`<span class="status status-pending">Bekliyor</span>`;
+ /* Gizlilik: teklif kabul edilmeden sağlayıcının telefonu gösterilmez. */
+ const phoneLine=isAccepted&&provider?.phone?`<a class="btn primary" style="display:block;text-align:center;margin-top:8px" href="tel:${esc(provider.phone)}">📞 SAĞLAYICIYI ARA</a>`:"";
+ const acceptBtn=(!isAccepted&&!isRejected&&!requestClosed)?`<button class="btn primary section" onclick='acceptOffer(${JSON.stringify(o)},"${esc(o.request_id)}")'>✅ TEKLİFİ KABUL ET</button>`:"";
+ return `<article class="card" style="margin-top:10px"><div class="requestTop"><div><strong>${provider?esc(provider.name):"Sağlayıcı"}</strong><div class="small muted">${provider?.district?esc(provider.district):""}</div></div>${statusBadge}</div><div class="meta"><span>💰 ${Number.isFinite(price)?price.toLocaleString("tr-TR")+" TL":"-"}</span>${o.available_time?`<span>🕐 ${esc(o.available_time)}</span>`:""}</div>${o.note?`<div class="description">${esc(o.note)}</div>`:""}${acceptBtn}${phoneLine}</article>`;
+}
+async function acceptOffer(offer,requestId){
+ if(!confirm("Bu teklifi kabul etmek istediğine emin misin? Diğer bekleyen teklifler otomatik olarak reddedilecek."))return;
+ try{
+  await sb("PATCH","offers?"+offerFilter(offer),{status:"accepted"});
+  if(offer.id!==undefined&&offer.id!==null&&offer.id!==""){
+   try{await sb("PATCH","offers?request_id=eq."+encodeURIComponent(requestId)+"&id=neq."+encodeURIComponent(offer.id)+"&status=eq.pending",{status:"rejected"})}
+   catch(e){console.warn("Diğer teklifler reddedilemedi:",e)}
+  }
+  await sb("PATCH","requests?id=eq."+encodeURIComponent(requestId),{status:"accepted"});
+  connection(true);
+  alert("Teklif kabul edildi ✓");
+  showRequestDetail(requestId);
+ }catch(e){
+  console.error(e);
+  alert("Teklif kabul edilemedi:\n\n"+e.message+"\n\nNot: Bu işlem Supabase'de offers ve requests tabloları için UPDATE izni (RLS policy) gerektirir. Eğer bu hata devam ederse Supabase tarafında güncelleme politikası eklenmesi gerekebilir.");
+ }
+}
+async function showRequestDetail(requestId){
+ nav("navRequests");
+ if(!isUUID(requestId)){app(`<div class="error">Geçersiz talep kimliği.</div>`);return}
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick="showRequests()">← Taleplere dön</button></div><div id="detailArea" class="card" style="text-align:center">⏳ Talep yükleniyor...</div>`);
+ try{
+  const rows=await sb("GET","requests?id=eq."+encodeURIComponent(requestId)+"&select=*&limit=1");
+  const r=Array.isArray(rows)?rows[0]:null;
+  const area=document.getElementById("detailArea");
+  if(!r){area.innerHTML=`<div class="empty">🔎 Talep bulunamadı. Silinmiş olabilir.</div>`;return}
+  const offers=await loadOffers(requestId);
+  const providers=await loadProvidersByIds(offers.map(o=>o.provider_id));
+  const providerById=Object.fromEntries(providers.map(p=>[String(p.id),p]));
+  const k=requestService(r),s=SERVICES[k]||{name:r.category_id||"Hizmet",emoji:"🛠️"};
+  const st=requestStatusLabel(r.status,offers.length);
+  const offersHtml=offers.length
+   ?offers.map(o=>detailOfferCard(o,providerById[String(o.provider_id)],r.status)).join("")
+   :`<div class="small muted section">Henüz teklif gelmedi. Sağlayıcılar talebinizi inceliyor.</div>`;
+  area.outerHTML=`<div class="formCard"><span class="badge">${s.emoji} ${esc(s.name)}</span><h1>Talep Detayı</h1>
+  <div class="meta"><span class="status status-${st.cls}">${esc(st.label)}</span><span>📍 ${esc(r.district||"")}</span>${r.neighborhood?`<span>🏘️ ${esc(r.neighborhood)}</span>`:""}<span>⏱️ ${esc(r.urgency||"")}</span></div>
+  <div class="description">${esc(r.description||"")}</div>
+  <div class="small muted section">Talep ID: <strong>${esc(r.id)}</strong> • Oluşturulma: ${r.created_at?new Date(r.created_at).toLocaleString("tr-TR"):""}</div>
+  <div class="section"><h2>💰 Gelen Teklifler (${offers.length})</h2>${offersHtml}</div></div>`;
+ }catch(e){document.getElementById("detailArea").innerHTML=`<div class="error">Talep yüklenemedi:<br>${esc(e.message)}</div>`}
 }
 
 /* ---------------- PROVIDERS ---------------- */
