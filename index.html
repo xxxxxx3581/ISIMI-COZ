@@ -26,13 +26,15 @@ h1{font-size:30px;line-height:1.08;margin:16px 0 10px}h2{font-size:22px;margin:0
 .section{margin-top:18px}.sectionTitle{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
 label{display:block;font-size:13px;font-weight:700;margin:14px 0 7px}input,select,textarea{width:100%;background:#081523;color:var(--text);border:1px solid #29415d;border-radius:12px;padding:13px;outline:none}textarea{min-height:110px;resize:vertical}
 input:focus,select:focus,textarea:focus{border-color:var(--primary)}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.notice,.success,.warning,.error{padding:12px;border-radius:13px;font-size:13px;line-height:1.5;margin:12px 0}.notice{background:#0b2030;border:1px solid #1e4c66;color:#b9ddf2}.success{background:#0b2b20;border:1px solid #185d43;color:#8bf1c4}.warning{background:#30260e;border:1px solid #65501a;color:#f5d77c}.error{background:#35181b;border:1px solid #70272d;color:#ffb6b8}
+.notice,.success,.warning,.error{padding:12px;border-radius:13px;font-size:13px;line-height:1.5;margin:12px 0;white-space:pre-line}.notice{background:#0b2030;border:1px solid #1e4c66;color:#b9ddf2}.success{background:#0b2b20;border:1px solid #185d43;color:#8bf1c4}.warning{background:#30260e;border:1px solid #65501a;color:#f5d77c}.error{background:#35181b;border:1px solid #70272d;color:#ffb6b8}
 .request{margin-bottom:11px}.requestTop{display:flex;justify-content:space-between;gap:10px}.status{padding:5px 9px;border-radius:99px;background:rgba(245,185,66,.12);color:#ffd76b;font-size:11px;font-weight:800;height:max-content}
 .status-pending{background:rgba(245,185,66,.12);color:#ffd76b}.status-offered{background:rgba(54,163,255,.14);color:#8fd0ff}.status-accepted{background:rgba(25,195,125,.14);color:#6df0b5}.status-completed{background:rgba(25,195,125,.14);color:#6df0b5}.status-cancelled{background:rgba(239,83,80,.14);color:#ffb6b8}
 .meta{display:flex;flex-wrap:wrap;gap:8px;color:var(--muted);font-size:12px;margin:10px 0}.meta span{background:#091827;padding:6px 8px;border-radius:8px}.description{background:#091827;border-radius:12px;padding:11px;font-size:13px;line-height:1.5;margin:10px 0}
 .empty{text-align:center;padding:28px 15px;color:var(--muted)}.connection{position:fixed;top:10px;right:10px;z-index:100;padding:6px 9px;border-radius:99px;font-size:10px;font-weight:bold}.online{background:#0b2b20;color:#8bf1c4}.offline{background:#30260e;color:#f5d77c}
 .bottom{position:fixed;bottom:0;left:0;right:0;background:rgba(7,17,31,.98);border-top:1px solid var(--line);z-index:30}.bottomInner{max-width:760px;margin:auto;display:grid;grid-template-columns:repeat(4,1fr)}.navBtn{border:0;background:transparent;color:#8fa3b9;padding:11px 4px 10px;font-size:10px}.navBtn b{display:block;font-size:19px;margin-bottom:3px}.navBtn.active{color:var(--primary)}
-@media(max-width:430px){main{padding:12px}.hero{padding:20px 16px}h1{font-size:27px}.row{grid-template-columns:1fr}}
+input[type=checkbox]{width:18px;height:18px;flex-shrink:0}
+.btn{min-height:46px}
+@media(max-width:430px){main{padding:12px}.hero{padding:20px 16px}h1{font-size:27px}.row{grid-template-columns:1fr}.actions{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -122,6 +124,25 @@ async function testDB(){
  try{await sb("GET","requests?select=id&limit=1");connection(true);return true}
  catch(e){console.error(e);connection(false,"Supabase bağlantı hatası");return false}
 }
+/* Teknik Supabase/ağ hatalarını kullanıcının anlayacağı Türkçe mesaja çevirir.
+   Teknik detay yine de altta küçük yazıyla gösterilir (destek için faydalı). */
+function friendlyErrorMessage(e){
+ const raw=String(e?.message||e||"");
+ const low=raw.toLocaleLowerCase("tr-TR");
+ let friendly="İşlem tamamlanamadı. Lütfen tekrar deneyin.";
+ if(low.includes("failed to fetch")||low.includes("networkerror")||low.includes("load failed")){
+  friendly="İnternet bağlantısı kurulamadı. Lütfen bağlantınızı kontrol edip tekrar deneyin.";
+ }else if(low.includes("permission denied")){
+  friendly="Bu işlem için yetkiniz yok. Sistem yöneticisiyle iletişime geçin.";
+ }else if(low.includes("duplicate key")||low.includes("already exists")){
+  friendly="Bu kayıt zaten mevcut.";
+ }else if(low.includes("violates") && low.includes("not-null")){
+  friendly="Zorunlu bir alan boş bırakılmış. Lütfen tüm zorunlu alanları doldurun.";
+ }else if(low.includes("timeout")){
+  friendly="Sunucudan yanıt alınamadı (zaman aşımı). Lütfen tekrar deneyin.";
+ }
+ return friendly+(raw?`\n\nTeknik detay: ${raw}`:"");
+}
 
 /* ---------------- HOME ---------------- */
 function showHome(){
@@ -166,7 +187,7 @@ async function createRequest(){
   connection(true);
   alert("Talep başarıyla oluşturuldu. ✓");
   showRequestDetail(row.id);
- }catch(e){console.error(e);alert("Talep oluşturulamadı:\n\n"+e.message)}
+ }catch(e){console.error(e);alert("Talep oluşturulamadı.\n\n"+friendlyErrorMessage(e))}
  finally{btn.disabled=false;btn.textContent="TALEBİ OLUŞTUR";}
 }
 function requestService(r){return serviceKey(r.category_id)}
@@ -191,14 +212,15 @@ async function showRequests(){
  try{
   const rows=await sb("GET","requests?select=*&order=created_at.desc&limit=100");
   const area=document.getElementById("requestsArea");
-  if(!rows.length){area.innerHTML=`<div class="empty">📋<h3>Henüz talep yok.</h3><button class="btn primary" onclick="showRequest()">＋ Talep oluştur</button></div>`;return}
-  const html=[];
-  for(const r of rows){
-   const offers=await loadOffers(r.id);
-   html.push(requestCard(r,offers.length?`<div class="section"><strong>💰 ${offers.length} teklif</strong>${offers.map(renderOffer).join("")}</div>`:`<div class="small muted section">Henüz teklif gelmedi.</div>`,offers.length));
-  }
+  if(!rows.length){area.innerHTML=`<div class="empty">📋<h3>Henüz talep yok.</h3><p class="small muted">İlk talebi sen oluştur, uygun hizmet sağlayıcılar teklif versin.</p><button class="btn primary" onclick="showRequest()">＋ Talep oluştur</button></div>`;return}
+  const offersLists=await Promise.all(rows.map(r=>loadOffers(r.id)));
+  const html=rows.map((r,i)=>{
+   const count=offersLists[i].length;
+   const summary=count?`<div class="small section" style="color:#8fd0ff">💰 ${count} teklif geldi — detaylar için aşağıya dokun.</div>`:`<div class="small muted section">Henüz teklif gelmedi.</div>`;
+   return requestCard(r,summary,count);
+  });
   area.outerHTML=html.join("");
- }catch(e){document.getElementById("requestsArea").innerHTML=`<div class="error">Talepler yüklenemedi:<br>${esc(e.message)}</div>`}
+ }catch(e){document.getElementById("requestsArea").innerHTML=`<div class="error">Talepler yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
 }
 
 /* ---------------- REQUEST DETAIL (kullanıcı talep ekranı) ---------------- */
@@ -228,11 +250,12 @@ function detailOfferCard(o,provider,requestStatus){
  const requestClosed=requestStatus==="accepted"||requestStatus==="completed"||requestStatus==="cancelled";
  /* Gizlilik: teklif kabul edilmeden sağlayıcının telefonu gösterilmez. */
  const phoneLine=isAccepted&&provider?.phone?`<a class="btn primary" style="display:block;text-align:center;margin-top:8px" href="tel:${esc(provider.phone)}">📞 SAĞLAYICIYI ARA</a>`:"";
- const acceptBtn=(!isAccepted&&!isRejected&&!requestClosed)?`<button class="btn primary section" onclick='acceptOffer(${jsonAttr(o)},"${esc(o.request_id)}")'>✅ TEKLİFİ KABUL ET</button>`:"";
+ const acceptBtn=(!isAccepted&&!isRejected&&!requestClosed)?`<button class="btn primary section" onclick='acceptOffer(${jsonAttr(o)},"${esc(o.request_id)}",this)'>✅ TEKLİFİ KABUL ET</button>`:"";
  return `<article class="card" style="margin-top:10px"><div class="requestTop"><div><strong>${provider?esc(provider.name):"Sağlayıcı"}</strong><div class="small muted">${provider?.district?esc(provider.district):""}</div></div>${offerStatusBadge(o.status)}</div><div class="meta"><span>💰 ${Number.isFinite(price)?price.toLocaleString("tr-TR")+" TL":"-"}</span>${o.available_time?`<span>🕐 ${esc(o.available_time)}</span>`:""}</div>${o.note?`<div class="description">${esc(o.note)}</div>`:""}${acceptBtn}${phoneLine}</article>`;
 }
-async function acceptOffer(offer,requestId){
+async function acceptOffer(offer,requestId,btnEl){
  if(!confirm("Bu teklifi kabul etmek istediğine emin misin? Diğer bekleyen teklifler otomatik olarak reddedilecek."))return;
+ if(btnEl){btnEl.disabled=true;btnEl.textContent="İŞLENİYOR...";}
  try{
   await sb("PATCH","offers?"+offerFilter(offer),{status:"accepted"});
   if(offer.id!==undefined&&offer.id!==null&&offer.id!==""){
@@ -245,7 +268,8 @@ async function acceptOffer(offer,requestId){
   showRequestDetail(requestId);
  }catch(e){
   console.error(e);
-  alert("Teklif kabul edilemedi:\n\n"+e.message+"\n\nNot: Bu işlem Supabase'de offers ve requests tabloları için UPDATE izni (RLS policy) gerektirir. Eğer bu hata devam ederse Supabase tarafında güncelleme politikası eklenmesi gerekebilir.");
+  alert("Teklif kabul edilemedi.\n\n"+friendlyErrorMessage(e));
+  if(btnEl){btnEl.disabled=false;btnEl.textContent="✅ TEKLİFİ KABUL ET";}
  }
 }
 async function showRequestDetail(requestId){
@@ -270,7 +294,7 @@ async function showRequestDetail(requestId){
   <div class="description">${esc(r.description||"")}</div>
   <div class="small muted section">Talep ID: <strong>${esc(r.id)}</strong> • Oluşturulma: ${r.created_at?new Date(r.created_at).toLocaleString("tr-TR"):""}</div>
   <div class="section"><h2>💰 Gelen Teklifler (${offers.length})</h2>${offersHtml}</div></div>`;
- }catch(e){document.getElementById("detailArea").innerHTML=`<div class="error">Talep yüklenemedi:<br>${esc(e.message)}</div>`}
+ }catch(e){document.getElementById("detailArea").innerHTML=`<div class="error">Talep yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
 }
 
 /* ---------------- PROVIDERS ---------------- */
@@ -320,7 +344,7 @@ async function registerProvider(){
   const p=Array.isArray(rows)?rows[0]:rows;
   if(!p?.id)throw new Error("Sağlayıcı kaydedildi ancak ID alınamadı.");
   connection(true);alert("Hizmet sağlayıcı başarıyla kaydedildi. ✓");showProviderPanel(p);
- }catch(e){console.error(e);alert("Sağlayıcı kaydedilemedi:\n\n"+e.message)}
+ }catch(e){console.error(e);alert("Sağlayıcı kaydedilemedi.\n\n"+friendlyErrorMessage(e))}
  finally{b.disabled=false;b.textContent="HİZMET SAĞLAYICI KAYDI OLUŞTUR";}
 }
 async function showProviders(){
@@ -329,8 +353,8 @@ async function showProviders(){
  try{
   const rows=await loadProviders();
   CURRENT_PROVIDERS=rows;
-  document.getElementById("providersArea").outerHTML=rows.length?rows.map(providerCard).join(""):`<div class="card empty">Henüz sağlayıcı kaydı yok.</div>`;
- }catch(e){document.getElementById("providersArea").innerHTML=`<div class="error">Sağlayıcılar yüklenemedi:<br>${esc(e.message)}</div>`}
+  document.getElementById("providersArea").outerHTML=rows.length?rows.map(providerCard).join(""):`<div class="card empty">Henüz sağlayıcı kaydı yok.<br><span class="small muted">İlk hizmet sağlayıcı sen ol!</span></div>`;
+ }catch(e){document.getElementById("providersArea").innerHTML=`<div class="error">Sağlayıcılar yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
 }
 function viewProviderRequests(providerId){
  const p=CURRENT_PROVIDERS.find(x=>String(x.id)===String(providerId));
@@ -344,9 +368,9 @@ async function showProviderPanel(provider){
   const requests=await sb("GET","requests?select=*&order=created_at.desc&limit=100");
   const suitable=requests.filter(r=>providerMatches(provider,r));
   const box=document.getElementById("matchArea");
-  if(!suitable.length){box.innerHTML=`<div class="empty">🔎 Bu sağlayıcıya uygun talep yok.</div>`;return}
+  if(!suitable.length){box.innerHTML=`<div class="empty">🔎 Şu anda kategori ve ilçenize uygun bir talep yok.<br><span class="small muted">Yeni bir talep geldiğinde burada görünecek. Kategori veya ilçenizi genişletmek isterseniz "⚙️ Profilimi Düzenle" bölümünden güncelleyebilirsiniz.</span></div>`;return}
   box.outerHTML=suitable.map(r=>providerRequestCard(r,provider)).join("");
- }catch(e){document.getElementById("matchArea").innerHTML=`<div class="error">Talepler yüklenemedi:<br>${esc(e.message)}</div>`}
+ }catch(e){document.getElementById("matchArea").innerHTML=`<div class="error">Talepler yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
 }
 /* ---------------- SAĞLAYICI PROFİLİ ---------------- */
 function providerServiceCheckboxes(selectedKeys){
@@ -379,7 +403,7 @@ async function saveProviderProfile(provider){
   showProviderPanel(updated);
  }catch(e){
   console.error(e);
-  alert("Profil güncellenemedi:\n\n"+e.message+"\n\nNot: Bu işlem Supabase'de providers tablosu için UPDATE izni (RLS policy) gerektirir.");
+  alert("Profil güncellenemedi.\n\n"+friendlyErrorMessage(e));
  }
  finally{btn.disabled=false;btn.textContent="DEĞİŞİKLİKLERİ KAYDET";}
 }
@@ -410,7 +434,7 @@ async function showProviderOffers(provider){
   const requests=await loadRequestsByIds(offers.map(o=>o.request_id));
   const requestById=Object.fromEntries(requests.map(r=>[String(r.id),r]));
   area.outerHTML=offers.map(o=>providerOfferCard(o,requestById[String(o.request_id)])).join("");
- }catch(e){document.getElementById("providerOffersArea").innerHTML=`<div class="error">Teklifler yüklenemedi:<br>${esc(e.message)}</div>`}
+ }catch(e){document.getElementById("providerOffersArea").innerHTML=`<div class="error">Teklifler yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
 }
 function providerRequestCard(r,p){
  const k=requestService(r),s=SERVICES[k]||{name:r.category_id||"Hizmet",emoji:"🛠️"};
@@ -422,10 +446,6 @@ async function loadOffers(requestId){
  if(!isUUID(requestId))return [];
  try{const rows=await sb("GET","offers?request_id=eq."+encodeURIComponent(requestId)+"&select=*&order=created_at.desc");return Array.isArray(rows)?rows:[]}
  catch(e){console.warn("Teklif okunamadı:",e);return []}
-}
-function renderOffer(o){
- const price=Number(o.price);
- return `<article class="card" style="margin-top:10px"><div class="requestTop"><strong>💰 Teklif</strong><strong>${Number.isFinite(price)?price.toLocaleString("tr-TR")+" TL":"-"}</strong></div><div class="small muted">Durum: ${esc(o.status||"pending")}</div>${o.available_time?`<div class="small">🕐 ${esc(o.available_time)}</div>`:""}${o.note?`<div class="description">${esc(o.note)}</div>`:""}</article>`;
 }
 function openOffer(requestId,providerId,serviceName){
  if(!isUUID(requestId)){alert("Talep kimliği geçersiz. Gerçek Supabase UUID bulunamadı.");return}
@@ -447,7 +467,7 @@ async function sendOffer(requestId,providerId){
  try{
   await sb("POST","offers",{request_id:requestId,provider_id:providerId,price,available_time,note,status:"pending"});
   connection(true);document.getElementById("offerModal")?.remove();alert("Teklif başarıyla gönderildi. ✓");showRequests();
- }catch(e){console.error(e);alert("Teklif gönderilemedi:\n\n"+e.message);b.disabled=false;b.textContent="TEKLİFİ GÖNDER"}
+ }catch(e){console.error(e);alert("Teklif gönderilemedi.\n\n"+friendlyErrorMessage(e));b.disabled=false;b.textContent="TEKLİFİ GÖNDER"}
 }
 
 /* ---------------- START ---------------- */
