@@ -5,497 +5,4336 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#07111f">
 <title>İşimi Çöz — İzmir</title>
+
 <style>
 *{box-sizing:border-box}
-html,body{margin:0;padding:0;background:#07111f;color:#eef4fb;font-family:Arial,Helvetica,sans-serif}
+html,body{
+ margin:0;padding:0;background:#07111f;color:#eef4fb;
+ font-family:Arial,Helvetica,sans-serif
+}
 body{min-height:100vh}
 button,input,select,textarea{font:inherit}
 button{cursor:pointer}
 a{text-decoration:none;color:inherit}
-:root{--bg:#07111f;--card:#0d1a2b;--line:#20344d;--text:#eef4fb;--muted:#9eb0c5;--primary:#19c37d;--warning:#f5b942;--danger:#ef5350}
-.app{max-width:760px;margin:auto;min-height:100vh;padding-bottom:90px}
-.top{padding:16px;border-bottom:1px solid var(--line);background:rgba(7,17,31,.98);position:sticky;top:0;z-index:20}
-.brand{display:flex;align-items:center;gap:10px}.logo{width:40px;height:40px;border-radius:13px;background:linear-gradient(135deg,var(--primary),#36a3ff);display:grid;place-items:center;font-size:21px;font-weight:900;color:#03120d}
-.brand strong{font-size:18px}.brand small{display:block;color:var(--muted);font-size:11px;margin-top:2px}
-main{padding:16px}.hero{background:linear-gradient(145deg,#10243a,#0b1727);border:1px solid var(--line);border-radius:24px;padding:24px 20px;margin-bottom:16px}
-.badge{display:inline-flex;padding:7px 10px;border-radius:99px;background:rgba(25,195,125,.12);border:1px solid rgba(25,195,125,.28);color:#6df0b5;font-size:12px;font-weight:700}
-h1{font-size:30px;line-height:1.08;margin:16px 0 10px}h2{font-size:22px;margin:0 0 8px}h3{font-size:16px;margin:0 0 6px}p{line-height:1.5}.muted{color:var(--muted)}.small{font-size:12px}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.card,.formCard,.request{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px}
-.service{min-height:125px;text-align:left;color:var(--text)}.service .emoji{font-size:28px}.service strong{display:block;margin-top:9px}.service span{display:block;color:var(--muted);font-size:12px;margin-top:5px;line-height:1.4}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}.btn{width:100%;border:0;border-radius:14px;padding:14px 15px;font-weight:800}.primary{background:var(--primary);color:#03130d}.secondary{background:#14263b;color:var(--text);border:1px solid var(--line)}.smallBtn{padding:10px 12px;font-size:13px}
-.section{margin-top:18px}.sectionTitle{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-label{display:block;font-size:13px;font-weight:700;margin:14px 0 7px}input,select,textarea{width:100%;background:#081523;color:var(--text);border:1px solid #29415d;border-radius:12px;padding:13px;outline:none}textarea{min-height:110px;resize:vertical}
-input:focus,select:focus,textarea:focus{border-color:var(--primary)}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.notice,.success,.warning,.error{padding:12px;border-radius:13px;font-size:13px;line-height:1.5;margin:12px 0;white-space:pre-line}.notice{background:#0b2030;border:1px solid #1e4c66;color:#b9ddf2}.success{background:#0b2b20;border:1px solid #185d43;color:#8bf1c4}.warning{background:#30260e;border:1px solid #65501a;color:#f5d77c}.error{background:#35181b;border:1px solid #70272d;color:#ffb6b8}
-.request{margin-bottom:11px}.requestTop{display:flex;justify-content:space-between;gap:10px}.status{padding:5px 9px;border-radius:99px;background:rgba(245,185,66,.12);color:#ffd76b;font-size:11px;font-weight:800;height:max-content}
-.status-pending{background:rgba(245,185,66,.12);color:#ffd76b}.status-offered{background:rgba(54,163,255,.14);color:#8fd0ff}.status-accepted{background:rgba(25,195,125,.14);color:#6df0b5}.status-completed{background:rgba(25,195,125,.14);color:#6df0b5}.status-cancelled{background:rgba(239,83,80,.14);color:#ffb6b8}
-.meta{display:flex;flex-wrap:wrap;gap:8px;color:var(--muted);font-size:12px;margin:10px 0}.meta span{background:#091827;padding:6px 8px;border-radius:8px}.description{background:#091827;border-radius:12px;padding:11px;font-size:13px;line-height:1.5;margin:10px 0}
-.empty{text-align:center;padding:28px 15px;color:var(--muted)}.connection{position:fixed;top:10px;right:10px;z-index:100;padding:6px 9px;border-radius:99px;font-size:10px;font-weight:bold}.online{background:#0b2b20;color:#8bf1c4}.offline{background:#30260e;color:#f5d77c}
-.bottom{position:fixed;bottom:0;left:0;right:0;background:rgba(7,17,31,.98);border-top:1px solid var(--line);z-index:30}.bottomInner{max-width:760px;margin:auto;display:grid;grid-template-columns:repeat(4,1fr)}.navBtn{border:0;background:transparent;color:#8fa3b9;padding:11px 4px 10px;font-size:10px}.navBtn b{display:block;font-size:19px;margin-bottom:3px}.navBtn.active{color:var(--primary)}
-input[type=checkbox]{width:18px;height:18px;flex-shrink:0}
-.btn{min-height:46px}
-@media(max-width:430px){main{padding:12px}.hero{padding:20px 16px}h1{font-size:27px}.row{grid-template-columns:1fr}.actions{grid-template-columns:1fr}}
+
+:root{
+ --bg:#07111f;
+ --card:#0d1a2b;
+ --line:#20344d;
+ --text:#eef4fb;
+ --muted:#9eb0c5;
+ --primary:#19c37d;
+ --warning:#f5b942;
+ --danger:#ef5350
+}
+
+.app{
+ max-width:760px;
+ margin:auto;
+ min-height:100vh;
+ padding-bottom:90px
+}
+
+.top{
+ padding:16px;
+ border-bottom:1px solid var(--line);
+ background:rgba(7,17,31,.98);
+ position:sticky;
+ top:0;
+ z-index:20
+}
+
+.brand{
+ display:flex;
+ align-items:center;
+ gap:10px
+}
+
+.logo{
+ width:40px;
+ height:40px;
+ border-radius:13px;
+ background:linear-gradient(135deg,var(--primary),#36a3ff);
+ display:grid;
+ place-items:center;
+ font-size:21px;
+ font-weight:900;
+ color:#03120d
+}
+
+.brand strong{font-size:18px}
+.brand small{
+ display:block;
+ color:var(--muted);
+ font-size:11px;
+ margin-top:2px
+}
+
+main{padding:16px}
+
+.hero{
+ background:linear-gradient(145deg,#10243a,#0b1727);
+ border:1px solid var(--line);
+ border-radius:24px;
+ padding:24px 20px;
+ margin-bottom:16px
+}
+
+.badge{
+ display:inline-flex;
+ padding:7px 10px;
+ border-radius:99px;
+ background:rgba(25,195,125,.12);
+ border:1px solid rgba(25,195,125,.28);
+ color:#6df0b5;
+ font-size:12px;
+ font-weight:700
+}
+
+h1{font-size:30px;line-height:1.08;margin:16px 0 10px}
+h2{font-size:22px;margin:0 0 8px}
+h3{font-size:16px;margin:0 0 6px}
+p{line-height:1.5}
+.muted{color:var(--muted)}
+.small{font-size:12px}
+
+.grid{
+ display:grid;
+ grid-template-columns:repeat(2,1fr);
+ gap:10px
+}
+
+.card,.formCard,.request{
+ background:var(--card);
+ border:1px solid var(--line);
+ border-radius:18px;
+ padding:16px
+}
+
+.service{
+ min-height:125px;
+ text-align:left;
+ color:var(--text)
+}
+
+.service .emoji{font-size:28px}
+.service strong{
+ display:block;
+ margin-top:9px
+}
+.service span{
+ display:block;
+ color:var(--muted);
+ font-size:12px;
+ margin-top:5px;
+ line-height:1.4
+}
+
+.actions{
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:10px;
+ margin:16px 0
+}
+
+.btn{
+ width:100%;
+ border:0;
+ border-radius:14px;
+ padding:14px 15px;
+ font-weight:800;
+ min-height:46px
+}
+
+.primary{
+ background:var(--primary);
+ color:#03130d
+}
+
+.secondary{
+ background:#14263b;
+ color:var(--text);
+ border:1px solid var(--line)
+}
+
+.smallBtn{
+ padding:10px 12px;
+ font-size:13px
+}
+
+.section{margin-top:18px}
+
+.sectionTitle{
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ margin-bottom:10px
+}
+
+label{
+ display:block;
+ font-size:13px;
+ font-weight:700;
+ margin:14px 0 7px
+}
+
+input,select,textarea{
+ width:100%;
+ background:#081523;
+ color:var(--text);
+ border:1px solid #29415d;
+ border-radius:12px;
+ padding:13px;
+ outline:none
+}
+
+textarea{
+ min-height:110px;
+ resize:vertical
+}
+
+input:focus,select:focus,textarea:focus{
+ border-color:var(--primary)
+}
+
+.row{
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:10px
+}
+
+.notice,.success,.warning,.error{
+ padding:12px;
+ border-radius:13px;
+ font-size:13px;
+ line-height:1.5;
+ margin:12px 0;
+ white-space:pre-line
+}
+
+.notice{
+ background:#0b2030;
+ border:1px solid #1e4c66;
+ color:#b9ddf2
+}
+
+.success{
+ background:#0b2b20;
+ border:1px solid #185d43;
+ color:#8bf1c4
+}
+
+.warning{
+ background:#30260e;
+ border:1px solid #65501a;
+ color:#f5d77c
+}
+
+.error{
+ background:#35181b;
+ border:1px solid #70272d;
+ color:#ffb6b8
+}
+
+.request{
+ margin-bottom:11px
+}
+
+.requestTop{
+ display:flex;
+ justify-content:space-between;
+ gap:10px
+}
+
+.status{
+ padding:5px 9px;
+ border-radius:99px;
+ background:rgba(245,185,66,.12);
+ color:#ffd76b;
+ font-size:11px;
+ font-weight:800;
+ height:max-content
+}
+
+.status-pending{
+ background:rgba(245,185,66,.12);
+ color:#ffd76b
+}
+
+.status-offered{
+ background:rgba(54,163,255,.14);
+ color:#8fd0ff
+}
+
+.status-accepted{
+ background:rgba(25,195,125,.14);
+ color:#6df0b5
+}
+
+.status-completed{
+ background:rgba(25,195,125,.14);
+ color:#6df0b5
+}
+
+.status-cancelled{
+ background:rgba(239,83,80,.14);
+ color:#ffb6b8
+}
+
+.meta{
+ display:flex;
+ flex-wrap:wrap;
+ gap:8px;
+ color:var(--muted);
+ font-size:12px;
+ margin:10px 0
+}
+
+.meta span{
+ background:#091827;
+ padding:6px 8px;
+ border-radius:8px
+}
+
+.description{
+ background:#091827;
+ border-radius:12px;
+ padding:11px;
+ font-size:13px;
+ line-height:1.5;
+ margin:10px 0
+}
+
+.empty{
+ text-align:center;
+ padding:28px 15px;
+ color:var(--muted)
+}
+
+.connection{
+ position:fixed;
+ top:10px;
+ right:10px;
+ z-index:100;
+ padding:6px 9px;
+ border-radius:99px;
+ font-size:10px;
+ font-weight:bold
+}
+
+.online{
+ background:#0b2b20;
+ color:#8bf1c4
+}
+
+.offline{
+ background:#30260e;
+ color:#f5d77c
+}
+
+.bottom{
+ position:fixed;
+ bottom:0;
+ left:0;
+ right:0;
+ background:rgba(7,17,31,.98);
+ border-top:1px solid var(--line);
+ z-index:30
+}
+
+.bottomInner{
+ max-width:760px;
+ margin:auto;
+ display:grid;
+ grid-template-columns:repeat(4,1fr)
+}
+
+.navBtn{
+ border:0;
+ background:transparent;
+ color:#8fa3b9;
+ padding:11px 4px 10px;
+ font-size:10px
+}
+
+.navBtn b{
+ display:block;
+ font-size:19px;
+ margin-bottom:3px
+}
+
+.navBtn.active{color:var(--primary)}
+
+.authBox{
+ max-width:520px;
+ margin:20px auto
+}
+
+.authTabs{
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:8px;
+ margin-bottom:16px
+}
+
+.authTab{
+ border:1px solid var(--line);
+ background:#14263b;
+ color:var(--muted);
+ border-radius:12px;
+ padding:12px;
+ font-weight:800
+}
+
+.authTab.active{
+ background:var(--primary);
+ color:#03130d;
+ border-color:var(--primary)
+}
+
+.userBadge{
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ gap:10px;
+ padding:10px 12px;
+ border-radius:13px;
+ background:#091827;
+ border:1px solid var(--line);
+ margin-top:12px
+}
+
+.accountCard{
+ background:linear-gradient(145deg,#10243a,#0b1727);
+ border:1px solid var(--line);
+ border-radius:20px;
+ padding:18px
+}
+
+.modal{
+ position:fixed;
+ inset:0;
+ background:rgba(0,0,0,.78);
+ z-index:9999;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ padding:18px
+}
+
+.modalInner{
+ width:min(520px,100%);
+ max-height:92vh;
+ overflow:auto
+}
+
+.hidden{display:none!important}
+
+@media(max-width:430px){
+ main{padding:12px}
+ .hero{padding:20px 16px}
+ h1{font-size:27px}
+ .row{grid-template-columns:1fr}
+ .actions{grid-template-columns:1fr}
+}
 </style>
 </head>
+
 <body>
-<div id="connectionStatus" class="connection offline">Supabase bağlanıyor...</div>
+
+<div id="connectionStatus" class="connection offline">
+ Supabase bağlanıyor...
+</div>
+
 <div class="app">
-<header class="top"><div class="brand"><div class="logo">✓</div><div><strong>İŞİMİ ÇÖZ</strong><small>İzmir Pilot Bölgesi</small></div></div></header>
-<main id="app"></main></div>
-<nav class="bottom"><div class="bottomInner">
-<button class="navBtn" id="navHome" onclick="showHome()"><b>⌂</b>ANA</button>
-<button class="navBtn" id="navRequest" onclick="showRequest()"><b>＋</b>TALEP</button>
-<button class="navBtn" id="navRequests" onclick="showRequests()"><b>▣</b>TALEPLER</button>
-<button class="navBtn" id="navProvider" onclick="showProviderEntry()"><b>🛠️</b>HİZMET VER</button>
-</div></nav>
+
+<header class="top">
+ <div class="brand">
+  <div class="logo">✓</div>
+  <div>
+   <strong>İŞİMİ ÇÖZ</strong>
+   <small>İzmir Pilot Bölgesi</small>
+  </div>
+ </div>
+
+ <div id="userArea"></div>
+</header>
+
+<main id="app"></main>
+
+</div>
+
+<nav class="bottom">
+ <div class="bottomInner">
+  <button class="navBtn" id="navHome" onclick="showHome()">
+   <b>⌂</b>ANA
+  </button>
+
+  <button class="navBtn" id="navRequest" onclick="showRequest()">
+   <b>＋</b>TALEP
+  </button>
+
+  <button class="navBtn" id="navRequests" onclick="showRequests()">
+   <b>▣</b>TALEPLER
+  </button>
+
+  <button class="navBtn" id="navProvider" onclick="showProviderEntry()">
+   <b>🛠️</b>HİZMET VER
+  </button>
+ </div>
+</nav>
 
 <script>
-/* =========================================================
-   İŞİMİ ÇÖZ — TEMİZ SUPABASE SÜRÜMÜ
-   Gerçek requests tablosu:
-   id(uuid), customer_id(uuid), category_id(text),
-   description(text), district(text), neighborhood(text),
-   urgency(text), photo_url(text), status(text), created_at(timestamptz)
 
-   providers:
-   id, name, phone, district, description, active,
-   created_at, city, services, updated_at
+/* ============================================================
+   İŞİMİ ÇÖZ
+   SUPABASE AUTH + MEVCUT REQUESTS / PROVIDERS / OFFERS
+   ============================================================ */
 
-   offers:
-   request_id(uuid), provider_id(uuid), price(numeric),
-   available_time(text), note(text), status(text), created_at
-========================================================= */
+const SUPABASE_URL =
+ "https://zvffspbowdzvrrzefhkr.supabase.co";
 
-const SUPABASE_URL="https://zvffspbowdzvrrzefhkr.supabase.co";
-const SUPABASE_KEY="sb_publishable_L_qb9Q4fHktE51PEqEhTAg_O4R0eDiW";
+const SUPABASE_KEY =
+ "sb_publishable_L_qb9Q4fHktE51PEqEhTAg_O4R0eDiW";
+
+/*
+ IMPORTANT:
+ Bu anahtar frontend'de kullanılabilen publishable/anon anahtardır.
+ Service-role key ASLA buraya konulmamalıdır.
+*/
 
 const SERVICES={
- klima:{name:"Klima",emoji:"❄️",desc:"Bakım, montaj, arıza ve temizlik"},
- elektrik:{name:"Elektrik",emoji:"⚡",desc:"Arıza, priz, tesisat ve aydınlatma"},
- tesisat:{name:"Tesisat",emoji:"🔧",desc:"Su, gider, musluk ve kaçak sorunları"},
- beyaz:{name:"Beyaz Eşya",emoji:"🧊",desc:"Çamaşır, bulaşık, buzdolabı ve fırın"},
- temizlik:{name:"Temizlik",emoji:"🧹",desc:"Ev, ofis ve detaylı temizlik"},
- nakliye:{name:"Nakliye",emoji:"🚚",desc:"Ev, ofis ve parça eşya taşıma"},
- cilingir:{name:"Çilingir",emoji:"🔐",desc:"Kilit, anahtar ve acil giriş"},
- oto:{name:"Oto",emoji:"🚗",desc:"Arıza, bakım, lastik ve yol yardımı"}
+ klima:{
+  name:"Klima",
+  emoji:"❄️",
+  desc:"Bakım, montaj, arıza ve temizlik"
+ },
+ elektrik:{
+  name:"Elektrik",
+  emoji:"⚡",
+  desc:"Arıza, priz, tesisat ve aydınlatma"
+ },
+ tesisat:{
+  name:"Tesisat",
+  emoji:"🔧",
+  desc:"Su, gider, musluk ve kaçak sorunları"
+ },
+ beyaz:{
+  name:"Beyaz Eşya",
+  emoji:"🧊",
+  desc:"Çamaşır, bulaşık, buzdolabı ve fırın"
+ },
+ temizlik:{
+  name:"Temizlik",
+  emoji:"🧹",
+  desc:"Ev, ofis ve detaylı temizlik"
+ },
+ nakliye:{
+  name:"Nakliye",
+  emoji:"🚚",
+  desc:"Ev, ofis ve parça eşya taşıma"
+ },
+ cilingir:{
+  name:"Çilingir",
+  emoji:"🔐",
+  desc:"Kilit, anahtar ve acil giriş"
+ },
+ oto:{
+  name:"Oto",
+  emoji:"🚗",
+  desc:"Arıza, bakım, lastik ve yol yardımı"
+ }
 };
 
-const DISTRICTS=["Aliağa","Balçova","Bayındır","Bayraklı","Bergama","Beydağ","Bornova","Buca","Çeşme","Çiğli","Dikili","Foça","Gaziemir","Güzelbahçe","Karabağlar","Karaburun","Karşıyaka","Konak","Menemen","Menderes","Narlıdere","Ödemiş","Seferihisar","Selçuk","Tire","Torbalı","Urla","Kiraz","Kemalpaşa","Kınık"];
+const DISTRICTS=[
+ "Aliağa","Balçova","Bayındır","Bayraklı","Bergama",
+ "Beydağ","Bornova","Buca","Çeşme","Çiğli","Dikili",
+ "Foça","Gaziemir","Güzelbahçe","Karabağlar","Karaburun",
+ "Karşıyaka","Kemalpaşa","Kınık","Kiraz","Konak",
+ "Menemen","Menderes","Narlıdere","Ödemiş","Seferihisar",
+ "Selçuk","Tire","Torbalı","Urla"
+];
 
-/* Sağlayıcı listesi ekranda yüklendiğinde burada tutulur.
-   Böylece kayıtlı bir sağlayıcı, kendi "uygun talepler / teklif ver"
-   paneline listeden tekrar geri dönebilir. */
+let CURRENT_USER=null;
+let CURRENT_SESSION=null;
 let CURRENT_PROVIDERS=[];
+let CURRENT_PROVIDER=null;
 
-/* ---- Basit tarayıcı bazlı "sahiplik" kontrolü ----
-   Gerçek bir giriş sistemi olmadığı için, bu sadece kazara/rastgele
-   başkasının talebini/profilini değiştirmeyi önlemek içindir.
-   Gerçek güvenlik için Supabase Auth (giriş sistemi) gerekir. */
-function lsGetArray(key){try{return JSON.parse(localStorage.getItem(key)||"[]")}catch(e){return []}}
-function lsAddToArray(key,val){try{const arr=lsGetArray(key);if(!arr.includes(val)){arr.push(val);localStorage.setItem(key,JSON.stringify(arr));}}catch(e){console.warn("Tarayıcı hafızasına yazılamadı:",e)}}
-function isMyRequest(id){return lsGetArray("iscoz_my_requests").includes(id)}
-function isMyProvider(id){return lsGetArray("iscoz_my_providers").includes(id)}
+
+/* ============================================================
+   TEMEL YARDIMCILAR
+   ============================================================ */
 
 function esc(v){
- return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
+ return String(v??"")
+  .replaceAll("&","&amp;")
+  .replaceAll("<","&lt;")
+  .replaceAll(">","&gt;")
+  .replaceAll('"',"&quot;")
+  .replaceAll("'","&#039;");
 }
-/* JSON verisini tek tırnaklı bir HTML onclick özniteliğine güvenle gömer
-   (isim/açıklama gibi alanlarda apostrof geçse bile özniteliği kırmaz). */
+
 function jsonAttr(obj){
  return JSON.stringify(obj).replaceAll("'","&#039;");
 }
-function app(html){document.getElementById("app").innerHTML=html;window.scrollTo(0,0)}
-function nav(id){["navHome","navRequest","navRequests","navProvider"].forEach(x=>document.getElementById(x)?.classList.remove("active"));document.getElementById(id)?.classList.add("active")}
-function connection(ok,text){const e=document.getElementById("connectionStatus");e.className="connection "+(ok?"online":"offline");e.textContent=text||(ok?"Supabase bağlı ✓":"Yerel mod")}
-function norm(v){return String(v??"").trim().toLocaleLowerCase("tr-TR").normalize("NFD").replace(/[\u0300-\u036f]/g,"")}
-function isUUID(v){return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(v||"").trim())}
-function uuid(v){return isUUID(v)?String(v).trim():""}
+
+function app(html){
+ document.getElementById("app").innerHTML=html;
+ window.scrollTo(0,0);
+}
+
+function nav(id){
+ [
+  "navHome",
+  "navRequest",
+  "navRequests",
+  "navProvider"
+ ].forEach(x=>{
+  document.getElementById(x)?.classList.remove("active");
+ });
+
+ document.getElementById(id)?.classList.add("active");
+}
+
+function connection(ok,text){
+ const e=document.getElementById("connectionStatus");
+
+ e.className="connection "+(ok?"online":"offline");
+
+ e.textContent=
+  text||
+  (ok?"Supabase bağlı ✓":"Supabase bağlantısı yok");
+}
+
+function norm(v){
+ return String(v??"")
+  .trim()
+  .toLocaleLowerCase("tr-TR")
+  .normalize("NFD")
+  .replace(/[\u0300-\u036f]/g,"");
+}
+
+function isUUID(v){
+ return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+  .test(String(v||"").trim());
+}
+
 function serviceKey(v){
  const n=norm(v);
- for(const [k,s] of Object.entries(SERVICES))if(n===norm(k)||n===norm(s.name))return k;
+
+ for(const [k,s] of Object.entries(SERVICES)){
+  if(n===norm(k)||n===norm(s.name)) return k;
+ }
+
  return String(v??"").trim();
 }
+
 function serviceOptions(sel=""){
- return `<option value="">Kategori seç</option>`+Object.entries(SERVICES).map(([k,s])=>`<option value="${k}" ${k===sel?"selected":""}>${s.emoji} ${s.name}</option>`).join("");
+ return `
+ <option value="">Kategori seç</option>
+ ${
+  Object.entries(SERVICES).map(([k,s])=>
+   `<option value="${esc(k)}" ${k===sel?"selected":""}>
+    ${s.emoji} ${esc(s.name)}
+   </option>`
+  ).join("")
+ }
+ `;
 }
+
 function districtOptions(sel=""){
- return `<option value="">İlçe seç</option>`+DISTRICTS.map(d=>`<option value="${esc(d)}" ${d===sel?"selected":""}>${esc(d)}</option>`).join("");
+ return `
+ <option value="">İlçe seç</option>
+ ${
+  DISTRICTS.map(d=>
+   `<option value="${esc(d)}" ${d===sel?"selected":""}>
+    ${esc(d)}
+   </option>`
+  ).join("")
+ }
+ `;
 }
+
+
+/* ============================================================
+   SUPABASE REST
+   ============================================================ */
+
 async function sb(method,path,body=null){
- const o={method,headers:{apikey:SUPABASE_KEY,Authorization:"Bearer "+SUPABASE_KEY,Accept:"application/json"}};
- if(body!==null){o.headers["Content-Type"]="application/json";o.headers.Prefer="return=representation";o.body=JSON.stringify(body)}
- const r=await fetch(SUPABASE_URL+"/rest/v1/"+path,o);
- const t=await r.text();let d=null;try{d=t?JSON.parse(t):null}catch(_){d=t}
- if(!r.ok)throw new Error(d?.message||d?.details||d?.hint||("Supabase HTTP "+r.status));
- return d;
-}
-async function testDB(){
- try{await sb("GET","requests?select=id&limit=1");connection(true);return true}
- catch(e){console.error(e);connection(false,"Supabase bağlantı hatası");return false}
-}
-/* Teknik Supabase/ağ hatalarını kullanıcının anlayacağı Türkçe mesaja çevirir.
-   Teknik detay yine de altta küçük yazıyla gösterilir (destek için faydalı). */
-function friendlyErrorMessage(e){
- const raw=String(e?.message||e||"");
- const low=raw.toLocaleLowerCase("tr-TR");
- let friendly="İşlem tamamlanamadı. Lütfen tekrar deneyin.";
- if(low.includes("failed to fetch")||low.includes("networkerror")||low.includes("load failed")){
-  friendly="İnternet bağlantısı kurulamadı. Lütfen bağlantınızı kontrol edip tekrar deneyin.";
- }else if(low.includes("permission denied")){
-  friendly="Bu işlem için yetkiniz yok. Sistem yöneticisiyle iletişime geçin.";
- }else if(low.includes("duplicate key")||low.includes("already exists")){
-  friendly="Bu kayıt zaten mevcut.";
- }else if(low.includes("violates") && low.includes("not-null")){
-  friendly="Zorunlu bir alan boş bırakılmış. Lütfen tüm zorunlu alanları doldurun.";
- }else if(low.includes("timeout")){
-  friendly="Sunucudan yanıt alınamadı (zaman aşımı). Lütfen tekrar deneyin.";
+
+ const headers={
+  apikey:SUPABASE_KEY,
+  Authorization:"Bearer "+SUPABASE_KEY,
+  Accept:"application/json"
+ };
+
+ const options={
+  method,
+  headers
+ };
+
+ if(body!==null){
+  headers["Content-Type"]="application/json";
+  headers["Prefer"]="return=representation";
+  options.body=JSON.stringify(body);
  }
- return friendly+(raw?`\n\nTeknik detay: ${raw}`:"");
-}
 
-/* ---------------- HOME ---------------- */
-function showHome(){
- nav("navHome");
- const cards=Object.entries(SERVICES).map(([k,s])=>`
- <button class="card service" type="button" onclick="showRequest('${k}')">
-  <div class="emoji">${s.emoji}</div><strong>${esc(s.name)}</strong><span>${esc(s.desc)}</span>
- </button>`).join("");
- app(`<section class="hero"><span class="badge">📍 İZMİR PİLOT BÖLGESİ</span><h1>İhtiyacın varsa,<br>çözümü var.</h1><p class="muted">Ev, iş yeri, araç ve günlük yaşam hizmetlerini tek yerden bul.</p><div class="actions"><button class="btn primary" onclick="showRequest()">📢 İşimi Çözdür</button><button class="btn secondary" onclick="showProviderEntry()">🛠️ Hizmet Ver</button></div></section>
- <section><div class="sectionTitle"><div><h2>Hizmet kategorileri</h2><div class="small muted">İhtiyacını seç ve talep oluştur.</div></div></div><div class="grid">${cards}</div></section>
- <section class="card section"><h2>💡 Nasıl çalışıyor?</h2><p class="muted small">İhtiyacını oluştur. Talebin Supabase'e kaydedilsin. Uygun hizmet sağlayıcıları talebini görsün ve teklif verebilsin.</p></section>`);
-}
+ const response=
+  await fetch(
+   SUPABASE_URL+"/rest/v1/"+path,
+   options
+  );
 
-/* ---------------- REQUESTS ---------------- */
-function showRequest(pre=""){
- nav("navRequest");
- app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div>
- <div class="formCard"><span class="badge">📋 YENİ HİZMET TALEBİ</span><h1>İhtiyacını anlat.</h1>
- <label>Hizmet kategorisi *</label><select id="category">${serviceOptions(pre)}</select>
- <label>Sorunun / ihtiyacın *</label><textarea id="description" maxlength="1000" placeholder="Örneğin: Klima çalışıyor fakat yeterince soğutmuyor."></textarea>
- <div class="row"><div><label>İl</label><input value="İzmir" readonly></div><div><label>İlçe *</label><select id="district">${districtOptions()}</select></div></div>
- <label>Mahalle</label><input id="neighborhood" placeholder="Mahalle adı">
- <label>Ne zaman gerekli?</label><select id="urgency"><option>Bugün</option><option>Acil</option><option>Uygun zamanda</option></select>
- <div class="notice">🔒 Talep kaydında müşteri adı ve telefonunun kullanılmadığı mevcut Supabase şemasına uyum sağlanmıştır. İletişim bilgileri bu sürümde tarayıcıda tutulmaz.</div>
- <button class="btn primary" id="createBtn" onclick="createRequest()">TALEBİ OLUŞTUR</button></div>`);
-}
-async function createRequest(){
- const category=document.getElementById("category").value;
- const description=document.getElementById("description").value.trim();
- const district=document.getElementById("district").value;
- const neighborhood=document.getElementById("neighborhood").value.trim();
- const urgency=document.getElementById("urgency").value;
- if(!category)return alert("Lütfen hizmet kategorisini seç.");
- if(description.length<5)return alert("Lütfen ihtiyacınızı daha açık anlat.");
- if(!district)return alert("Lütfen ilçe seç.");
- const btn=document.getElementById("createBtn");btn.disabled=true;btn.textContent="KAYDEDİLİYOR...";
+ const text=await response.text();
+
+ let data=null;
+
  try{
-  const payload={category_id:category,description,district,neighborhood:neighborhood||null,urgency,status:"pending"};
-  const rows=await sb("POST","requests",payload);
-  const row=Array.isArray(rows)?rows[0]:rows;
-  if(!row?.id)throw new Error("Talep kaydedildi ancak UUID alınamadı.");
-  lsAddToArray("iscoz_my_requests",row.id);
-  connection(true);
-  alert("Talep başarıyla oluşturuldu. ✓");
-  showRequestDetail(row.id);
- }catch(e){console.error(e);alert("Talep oluşturulamadı.\n\n"+friendlyErrorMessage(e))}
- finally{btn.disabled=false;btn.textContent="TALEBİ OLUŞTUR";}
-}
-function requestService(r){return serviceKey(r.category_id)}
-/* Talep durumunu kullanıcıya anlaşılır Türkçe etiketle gösterir.
-   Veritabanındaki status alanına yeni bir değer yazmadan, sadece
-   "teklif geldi" durumunu offers sayısından türetir. */
-function requestStatusLabel(status,offerCount){
- if(status==="accepted")return{label:"Teklif Kabul Edildi",cls:"accepted"};
- if(status==="completed")return{label:"Tamamlandı",cls:"completed"};
- if(status==="cancelled")return{label:"İptal",cls:"cancelled"};
- if(offerCount>0)return{label:"Teklif Geldi",cls:"offered"};
- return{label:"Beklemede",cls:"pending"};
-}
-function requestCard(r,offersHtml="",offerCount=0){
- const k=requestService(r),s=SERVICES[k]||{name:r.category_id||"Hizmet",emoji:"🛠️"};
- const st=requestStatusLabel(r.status,offerCount);
- return `<article class="request"><div class="requestTop"><div><h3>${s.emoji} ${esc(s.name)}</h3><div class="small muted">${r.created_at?new Date(r.created_at).toLocaleString("tr-TR"):""}</div></div><span class="status status-${st.cls}">${esc(st.label)}</span></div><div class="description">${esc(r.description||"")}</div><div class="meta"><span>📍 ${esc(r.district||"")}</span>${r.neighborhood?`<span>🏘️ ${esc(r.neighborhood)}</span>`:""}<span>⏱️ ${esc(r.urgency||"")}</span></div><div class="small muted">ID: <strong>${esc(r.id)}</strong></div><button class="btn secondary smallBtn section" onclick="showRequestDetail('${esc(r.id)}')">📄 Detayları Gör</button>${offersHtml}</article>`;
-}
-async function showRequests(){
- nav("navRequests");
- app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div><span class="badge">▣ TALEPLER</span><h1>Oluşturulan talepler.</h1><div id="requestsArea" class="card" style="text-align:center">⏳ Yükleniyor...</div>`);
- try{
-  const rows=await sb("GET","requests?select=*&order=created_at.desc&limit=100");
-  const area=document.getElementById("requestsArea");
-  if(!rows.length){area.innerHTML=`<div class="empty">📋<h3>Henüz talep yok.</h3><p class="small muted">İlk talebi sen oluştur, uygun hizmet sağlayıcılar teklif versin.</p><button class="btn primary" onclick="showRequest()">＋ Talep oluştur</button></div>`;return}
-  const offersLists=await Promise.all(rows.map(r=>loadOffers(r.id)));
-  const html=rows.map((r,i)=>{
-   const count=offersLists[i].length;
-   const summary=count?`<div class="small section" style="color:#8fd0ff">💰 ${count} teklif geldi — detaylar için aşağıya dokun.</div>`:`<div class="small muted section">Henüz teklif gelmedi.</div>`;
-   return requestCard(r,summary,count);
-  });
-  area.outerHTML=html.join("");
- }catch(e){document.getElementById("requestsArea").innerHTML=`<div class="error">Talepler yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
-}
-
-/* ---------------- REQUEST DETAIL (kullanıcı talep ekranı) ---------------- */
-/* Bir teklif satırını benzersiz şekilde hedeflemek için filtre üretir.
-   offers tablosunda id sütunu varsa onu kullanır; yoksa request_id +
-   provider_id + created_at üçlüsü ile hedefler (şema bilinmiyor,
-   böylece hem güvenli hem geriye dönük uyumlu olur). */
-function offerFilter(o){
- if(o.id!==undefined&&o.id!==null&&o.id!=="")return "id=eq."+encodeURIComponent(o.id);
- return "request_id=eq."+encodeURIComponent(o.request_id)+"&provider_id=eq."+encodeURIComponent(o.provider_id)+"&created_at=eq."+encodeURIComponent(o.created_at);
-}
-async function loadProvidersByIds(ids){
- const clean=[...new Set(ids.filter(isUUID))];
- if(!clean.length)return [];
- try{const rows=await sb("GET","providers?select=id,name,district,phone&id=in.("+clean.join(",")+")");return Array.isArray(rows)?rows:[]}
- catch(e){console.warn("Sağlayıcı bilgisi okunamadı:",e);return []}
-}
-function offerStatusBadge(status){
- if(status==="accepted")return `<span class="status status-accepted">Kabul Edildi</span>`;
- if(status==="rejected")return `<span class="status status-cancelled">Reddedildi</span>`;
- return `<span class="status status-pending">Bekliyor</span>`;
-}
-function detailOfferCard(o,provider,requestStatus,isOwner){
- const price=Number(o.price);
- const isAccepted=o.status==="accepted";
- const isRejected=o.status==="rejected";
- const requestClosed=requestStatus==="accepted"||requestStatus==="completed"||requestStatus==="cancelled";
- /* Gizlilik: teklif kabul edilmeden sağlayıcının telefonu gösterilmez. */
- const phoneLine=isAccepted&&provider?.phone?`<a class="btn primary" style="display:block;text-align:center;margin-top:8px" href="tel:${esc(provider.phone)}">📞 SAĞLAYICIYI ARA</a>`:"";
- let acceptBtn="";
- if(!isAccepted&&!isRejected&&!requestClosed){
-  acceptBtn=isOwner
-   ?`<button class="btn primary section" onclick='acceptOffer(${jsonAttr(o)},"${esc(o.request_id)}",this)'>✅ TEKLİFİ KABUL ET</button>`
-   :`<div class="small muted section">🔒 Bu teklifi yalnızca talebi oluşturan kişi kabul edebilir.</div>`;
+  data=text?JSON.parse(text):null;
+ }catch(_){
+  data=text;
  }
- return `<article class="card" style="margin-top:10px"><div class="requestTop"><div><strong>${provider?esc(provider.name):"Sağlayıcı"}</strong><div class="small muted">${provider?.district?esc(provider.district):""}</div></div>${offerStatusBadge(o.status)}</div><div class="meta"><span>💰 ${Number.isFinite(price)?price.toLocaleString("tr-TR")+" TL":"-"}</span>${o.available_time?`<span>🕐 ${esc(o.available_time)}</span>`:""}</div>${o.note?`<div class="description">${esc(o.note)}</div>`:""}${acceptBtn}${phoneLine}</article>`;
+
+ if(!response.ok){
+  throw new Error(
+   data?.message||
+   data?.details||
+   data?.hint||
+   ("Supabase HTTP "+response.status)
+  );
+ }
+
+ return data;
 }
-async function acceptOffer(offer,requestId,btnEl){
- if(!confirm("Bu teklifi kabul etmek istediğine emin misin? Diğer bekleyen teklifler otomatik olarak reddedilecek."))return;
- if(btnEl){btnEl.disabled=true;btnEl.textContent="İŞLENİYOR...";}
+
+
+/* ============================================================
+   SUPABASE AUTH REST
+   ============================================================ */
+
+function authHeaders(accessToken=null){
+
+ const h={
+  apikey:SUPABASE_KEY,
+  "Content-Type":"application/json"
+ };
+
+ if(accessToken){
+  h.Authorization="Bearer "+accessToken;
+ }
+
+ return h;
+}
+
+async function authRequest(path,method="GET",body=null,token=null){
+
+ const options={
+  method,
+  headers:authHeaders(token)
+ };
+
+ if(body!==null){
+  options.body=JSON.stringify(body);
+ }
+
+ const response=
+  await fetch(
+   SUPABASE_URL+"/auth/v1/"+path,
+   options
+  );
+
+ const text=await response.text();
+
+ let data=null;
+
  try{
-  await sb("PATCH","offers?"+offerFilter(offer),{status:"accepted"});
-  if(offer.id!==undefined&&offer.id!==null&&offer.id!==""){
-   try{await sb("PATCH","offers?request_id=eq."+encodeURIComponent(requestId)+"&id=neq."+encodeURIComponent(offer.id)+"&status=eq.pending",{status:"rejected"})}
-   catch(e){console.warn("Diğer teklifler reddedilemedi:",e)}
+  data=text?JSON.parse(text):null;
+ }catch(_){
+  data=text;
+ }
+
+ if(!response.ok){
+  throw new Error(
+   data?.msg||
+   data?.message||
+   data?.error_description||
+   data?.error||
+   ("Auth HTTP "+response.status)
+  );
+ }
+
+ return data;
+}
+
+
+/* ============================================================
+   SESSION
+   ============================================================ */
+
+function saveSession(session){
+
+ if(!session){
+  localStorage.removeItem("isimicoz_session");
+  CURRENT_SESSION=null;
+  CURRENT_USER=null;
+  updateUserArea();
+  return;
+ }
+
+ CURRENT_SESSION=session;
+ CURRENT_USER=session.user||null;
+
+ localStorage.setItem(
+  "isimicoz_session",
+  JSON.stringify(session)
+ );
+
+ updateUserArea();
+}
+
+function getSavedSession(){
+
+ try{
+  const raw=localStorage.getItem("isimicoz_session");
+
+  if(!raw)return null;
+
+  const session=JSON.parse(raw);
+
+  if(
+   !session?.access_token||
+   !session?.user?.id
+  ){
+   return null;
   }
-  await sb("PATCH","requests?id=eq."+encodeURIComponent(requestId),{status:"accepted"});
-  connection(true);
-  alert("Teklif kabul edildi ✓");
-  showRequestDetail(requestId);
- }catch(e){
-  console.error(e);
-  alert("Teklif kabul edilemedi.\n\n"+friendlyErrorMessage(e));
-  if(btnEl){btnEl.disabled=false;btnEl.textContent="✅ TEKLİFİ KABUL ET";}
+
+  return session;
+
+ }catch(_){
+  return null;
  }
 }
-async function showRequestDetail(requestId){
- nav("navRequests");
- if(!isUUID(requestId)){app(`<div class="error">Geçersiz talep kimliği.</div>`);return}
- app(`<div class="back"><button class="btn secondary smallBtn" onclick="showRequests()">← Taleplere dön</button></div><div id="detailArea" class="card" style="text-align:center">⏳ Talep yükleniyor...</div>`);
+
+async function restoreSession(){
+
+ const saved=getSavedSession();
+
+ if(!saved){
+  CURRENT_SESSION=null;
+  CURRENT_USER=null;
+  updateUserArea();
+  return null;
+ }
+
  try{
-  const rows=await sb("GET","requests?id=eq."+encodeURIComponent(requestId)+"&select=*&limit=1");
-  const r=Array.isArray(rows)?rows[0]:null;
-  const area=document.getElementById("detailArea");
-  if(!r){area.innerHTML=`<div class="empty">🔎 Talep bulunamadı. Silinmiş olabilir.</div>`;return}
-  const offers=await loadOffers(requestId);
-  const providers=await loadProvidersByIds(offers.map(o=>o.provider_id));
-  const providerById=Object.fromEntries(providers.map(p=>[String(p.id),p]));
-  const k=requestService(r),s=SERVICES[k]||{name:r.category_id||"Hizmet",emoji:"🛠️"};
-  const st=requestStatusLabel(r.status,offers.length);
-  const isOwner=isMyRequest(r.id);
-  const offersHtml=offers.length
-   ?offers.map(o=>detailOfferCard(o,providerById[String(o.provider_id)],r.status,isOwner)).join("")
-   :`<div class="small muted section">Henüz teklif gelmedi. Sağlayıcılar talebinizi inceliyor.</div>`;
-  const ownerNotice=isOwner?"":`<div class="notice">👀 Bu talebi bu tarayıcıdan oluşturmadınız — sadece görüntüleyebilirsiniz, teklif kabul edemezsiniz.</div>`;
-  area.outerHTML=`<div class="formCard"><span class="badge">${s.emoji} ${esc(s.name)}</span><h1>Talep Detayı</h1>
-  ${ownerNotice}
-  <div class="meta"><span class="status status-${st.cls}">${esc(st.label)}</span><span>📍 ${esc(r.district||"")}</span>${r.neighborhood?`<span>🏘️ ${esc(r.neighborhood)}</span>`:""}<span>⏱️ ${esc(r.urgency||"")}</span></div>
-  <div class="description">${esc(r.description||"")}</div>
-  <div class="small muted section">Talep ID: <strong>${esc(r.id)}</strong> • Oluşturulma: ${r.created_at?new Date(r.created_at).toLocaleString("tr-TR"):""}</div>
-  <div class="section"><h2>💰 Gelen Teklifler (${offers.length})</h2>${offersHtml}</div></div>`;
- }catch(e){document.getElementById("detailArea").innerHTML=`<div class="error">Talep yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
+
+  const data=
+   await authRequest(
+    "user",
+    "GET",
+    null,
+    saved.access_token
+   );
+
+  const session={
+   ...saved,
+   user:data
+  };
+
+  saveSession(session);
+
+  return session;
+
+ }catch(e){
+
+  console.warn("Oturum yenilenemedi:",e);
+
+  localStorage.removeItem("isimicoz_session");
+
+  CURRENT_SESSION=null;
+  CURRENT_USER=null;
+
+  updateUserArea();
+
+  return null;
+ }
 }
 
-/* ---------------- PROVIDERS ---------------- */
+
+/* ============================================================
+   PROFILE
+   ============================================================ */
+
+async function getProfile(){
+
+ if(!CURRENT_USER?.id)return null;
+
+ try{
+
+  const rows=
+   await sb(
+    "GET",
+    "profiles?id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=*&limit=1"
+   );
+
+  return Array.isArray(rows)?rows[0]||null:null;
+
+ }catch(e){
+
+  console.warn("Profil okunamadı:",e);
+
+  return null;
+ }
+}
+
+async function ensureProfile(){
+
+ if(!CURRENT_USER?.id)return null;
+
+ const existing=await getProfile();
+
+ if(existing)return existing;
+
+ try{
+
+  const metadata=
+   CURRENT_USER.user_metadata||{};
+
+  const payload={
+   id:CURRENT_USER.id,
+   full_name:
+    metadata.full_name||
+    metadata.name||
+    "",
+   phone:
+    metadata.phone||
+    "",
+   role:
+    ["customer","provider","admin"]
+     .includes(metadata.role)
+     ?metadata.role
+     :"customer"
+  };
+
+  const rows=
+   await sb(
+    "POST",
+    "profiles",
+    payload
+   );
+
+  return Array.isArray(rows)?rows[0]:rows;
+
+ }catch(e){
+
+  console.warn(
+   "Profil oluşturulamadı:",
+   e
+  );
+
+  return null;
+ }
+}
+
+
+/* ============================================================
+   AUTH UI
+   ============================================================ */
+
+function updateUserArea(){
+
+ const area=document.getElementById("userArea");
+
+ if(!area)return;
+
+ if(!CURRENT_USER){
+
+  area.innerHTML=`
+   <button
+    class="btn secondary smallBtn"
+    style="margin-top:10px"
+    onclick="showAuth('login')">
+    🔐 GİRİŞ / KAYIT
+   </button>
+  `;
+
+  return;
+ }
+
+ const name=
+  CURRENT_USER.user_metadata?.full_name||
+  CURRENT_USER.user_metadata?.name||
+  CURRENT_USER.email||
+  "Kullanıcı";
+
+ area.innerHTML=`
+  <div class="userBadge">
+   <div>
+    <strong>👤 ${esc(name)}</strong>
+    <div class="small muted">
+     ${esc(CURRENT_USER.email||"")}
+    </div>
+   </div>
+
+   <button
+    class="btn secondary smallBtn"
+    style="width:auto"
+    onclick="showAccount()">
+    Hesabım
+   </button>
+  </div>
+ `;
+}
+
+function showAuth(mode="login"){
+
+ nav(null);
+
+ app(`
+  <div class="authBox">
+
+   <button
+    class="btn secondary smallBtn"
+    onclick="showHome()">
+    ← Ana sayfaya dön
+   </button>
+
+   <div class="formCard section">
+
+    <span class="badge">🔐 GÜVENLİ GİRİŞ</span>
+
+    <h1 id="authTitle">
+     ${mode==="register"?"Hesap oluştur":"Giriş yap"}
+    </h1>
+
+    <div class="authTabs">
+
+     <button
+      id="loginTab"
+      class="authTab ${mode==="login"?"active":""}"
+      onclick="showAuth('login')">
+      Giriş Yap
+     </button>
+
+     <button
+      id="registerTab"
+      class="authTab ${mode==="register"?"active":""}"
+      onclick="showAuth('register')">
+      Kayıt Ol
+     </button>
+
+    </div>
+
+    <div id="authForm"></div>
+
+   </div>
+
+  </div>
+ `);
+
+ renderAuthForm(mode);
+}
+
+function renderAuthForm(mode){
+
+ const form=document.getElementById("authForm");
+
+ if(!form)return;
+
+ if(mode==="register"){
+
+  form.innerHTML=`
+
+   <label>Ad Soyad *</label>
+   <input
+    id="authName"
+    maxlength="100"
+    autocomplete="name"
+    placeholder="Adınız ve soyadınız">
+
+   <label>Telefon</label>
+   <input
+    id="authPhone"
+    type="tel"
+    maxlength="30"
+    autocomplete="tel"
+    placeholder="05xxxxxxxxx">
+
+   <label>Hesap türü *</label>
+   <select id="authRole">
+    <option value="customer">
+     👤 Müşteri — Hizmet alacağım
+    </option>
+    <option value="provider">
+     🛠️ Hizmet sağlayıcı — Hizmet vereceğim
+    </option>
+   </select>
+
+   <label>E-posta *</label>
+   <input
+    id="authEmail"
+    type="email"
+    maxlength="200"
+    autocomplete="email"
+    placeholder="ornek@email.com">
+
+   <label>Şifre *</label>
+   <input
+    id="authPassword"
+    type="password"
+    minlength="6"
+    maxlength="72"
+    autocomplete="new-password"
+    placeholder="En az 6 karakter">
+
+   <label>Şifre tekrar *</label>
+   <input
+    id="authPassword2"
+    type="password"
+    minlength="6"
+    maxlength="72"
+    autocomplete="new-password"
+    placeholder="Şifrenizi tekrar yazın">
+
+   <div class="notice">
+    🔒 Hesabınız Supabase Auth tarafından yönetilir.
+    Şifreniz bu uygulamanın veritabanına açık metin olarak kaydedilmez.
+   </div>
+
+   <button
+    class="btn primary"
+    id="authSubmit"
+    onclick="registerUser()">
+    HESAP OLUŞTUR
+   </button>
+  `;
+
+ }else{
+
+  form.innerHTML=`
+
+   <label>E-posta</label>
+   <input
+    id="authEmail"
+    type="email"
+    maxlength="200"
+    autocomplete="email"
+    placeholder="ornek@email.com">
+
+   <label>Şifre</label>
+   <input
+    id="authPassword"
+    type="password"
+    maxlength="72"
+    autocomplete="current-password"
+    placeholder="Şifreniz">
+
+   <button
+    class="btn primary"
+    id="authSubmit"
+    onclick="loginUser()">
+    GİRİŞ YAP
+   </button>
+
+   <button
+    class="btn secondary section"
+    onclick="showForgotPassword()">
+    🔑 Şifremi unuttum
+   </button>
+
+   <div id="authMessage"></div>
+  `;
+ }
+}
+
+async function registerUser(){
+
+ const name=
+  document.getElementById("authName")?.value.trim();
+
+ const phone=
+  document.getElementById("authPhone")?.value.trim();
+
+ const role=
+  document.getElementById("authRole")?.value;
+
+ const email=
+  document.getElementById("authEmail")?.value.trim();
+
+ const password=
+  document.getElementById("authPassword")?.value;
+
+ const password2=
+  document.getElementById("authPassword2")?.value;
+
+ if(!name)
+  return alert("Ad soyad zorunludur.");
+
+ if(!email)
+  return alert("E-posta adresi zorunludur.");
+
+ if(!password||password.length<6)
+  return alert("Şifre en az 6 karakter olmalıdır.");
+
+ if(password!==password2)
+  return alert("Şifreler aynı değil.");
+
+ const btn=document.getElementById("authSubmit");
+
+ btn.disabled=true;
+ btn.textContent="HESAP OLUŞTURULUYOR...";
+
+ try{
+
+  const data=
+   await authRequest(
+    "signup",
+    "POST",
+    {
+     email,
+     password,
+     data:{
+      full_name:name,
+      name,
+      phone,
+      role
+     }
+    }
+   );
+
+  /*
+   Confirm email açıksa Supabase kullanıcı oluşturur,
+   fakat hemen oturum açmayabilir.
+  */
+
+  if(data?.session){
+
+   saveSession(data.session);
+
+   await ensureProfile();
+
+   alert("Hesabınız oluşturuldu. ✓");
+
+   if(role==="provider"){
+    showProviderEntry();
+   }else{
+    showHome();
+   }
+
+  }else{
+
+   alert(
+    "Hesabınız oluşturuldu. ✓\n\n"+
+    "E-posta doğrulaması açıksa, e-posta adresinize gelen "+
+    "doğrulama bağlantısını onayladıktan sonra giriş yapabilirsiniz."
+   );
+
+   showAuth("login");
+  }
+
+ }catch(e){
+
+  console.error(e);
+
+  alert(
+   "Hesap oluşturulamadı.\n\n"+
+   friendlyErrorMessage(e)
+  );
+
+ }finally{
+
+  btn.disabled=false;
+  btn.textContent="HESAP OLUŞTUR";
+ }
+}
+
+async function loginUser(){
+
+ const email=
+  document.getElementById("authEmail")?.value.trim();
+
+ const password=
+  document.getElementById("authPassword")?.value;
+
+ if(!email)
+  return alert("E-posta adresini yaz.");
+
+ if(!password)
+  return alert("Şifreni yaz.");
+
+ const btn=document.getElementById("authSubmit");
+
+ btn.disabled=true;
+ btn.textContent="GİRİŞ YAPILIYOR...";
+
+ try{
+
+  const data=
+   await authRequest(
+    "token?grant_type=password",
+    "POST",
+    {
+     email,
+     password
+    }
+   );
+
+  if(!data?.access_token)
+   throw new Error("Oturum anahtarı alınamadı.");
+
+  saveSession(data);
+
+  await ensureProfile();
+
+  connection(true,"Supabase bağlı ✓");
+
+  alert("Giriş başarılı. ✓");
+
+  showHome();
+
+ }catch(e){
+
+  console.error(e);
+
+  alert(
+   "Giriş yapılamadı.\n\n"+
+   friendlyErrorMessage(e)
+  );
+
+ }finally{
+
+  btn.disabled=false;
+  btn.textContent="GİRİŞ YAP";
+ }
+}
+
+function showForgotPassword(){
+
+ app(`
+  <div class="authBox">
+
+   <button
+    class="btn secondary smallBtn"
+    onclick="showAuth('login')">
+    ← Girişe dön
+   </button>
+
+   <div class="formCard section">
+
+    <span class="badge">🔑 ŞİFRE YENİLEME</span>
+
+    <h1>Şifremi unuttum</h1>
+
+    <p class="muted">
+     Hesabınızın e-posta adresini girin.
+     Şifre yenileme bağlantısı gönderilecektir.
+    </p>
+
+    <label>E-posta</label>
+
+    <input
+     id="resetEmail"
+     type="email"
+     autocomplete="email"
+     placeholder="ornek@email.com">
+
+    <button
+     class="btn primary section"
+     id="resetBtn"
+     onclick="sendResetEmail()">
+     ŞİFRE YENİLEME BAĞLANTISI GÖNDER
+    </button>
+
+   </div>
+
+  </div>
+ `);
+}
+
+async function sendResetEmail(){
+
+ const email=
+  document.getElementById("resetEmail")?.value.trim();
+
+ if(!email)
+  return alert("E-posta adresini yaz.");
+
+ const btn=document.getElementById("resetBtn");
+
+ btn.disabled=true;
+ btn.textContent="GÖNDERİLİYOR...";
+
+ try{
+
+  await authRequest(
+   "recover",
+   "POST",
+   {
+    email
+   }
+  );
+
+  alert(
+   "Şifre yenileme isteği gönderildi. ✓\n\n"+
+   "E-posta gelen kutunu ve spam klasörünü kontrol et."
+  );
+
+  showAuth("login");
+
+ }catch(e){
+
+  console.error(e);
+
+  alert(
+   "Şifre yenileme isteği gönderilemedi.\n\n"+
+   friendlyErrorMessage(e)
+  );
+
+ }finally{
+
+  btn.disabled=false;
+  btn.textContent="ŞİFRE YENİLEME BAĞLANTISI GÖNDER";
+ }
+}
+
+async function logoutUser(){
+
+ try{
+
+  if(CURRENT_SESSION?.access_token){
+
+   await authRequest(
+    "logout",
+    "POST",
+    null,
+    CURRENT_SESSION.access_token
+   );
+  }
+
+ }catch(e){
+
+  console.warn(
+   "Sunucu oturum kapatma uyarısı:",
+   e
+  );
+
+ }finally{
+
+  saveSession(null);
+
+  alert("Oturum kapatıldı.");
+
+  showHome();
+ }
+}
+
+
+/* ============================================================
+   HESABIM
+   ============================================================ */
+
+async function showAccount(){
+
+ if(!CURRENT_USER){
+  showAuth("login");
+  return;
+ }
+
+ const profile=await ensureProfile();
+
+ const name=
+  profile?.full_name||
+  CURRENT_USER.user_metadata?.full_name||
+  CURRENT_USER.email||
+  "Kullanıcı";
+
+ const role=
+  profile?.role||
+  CURRENT_USER.user_metadata?.role||
+  "customer";
+
+ const roleText={
+  customer:"Müşteri",
+  provider:"Hizmet Sağlayıcı",
+  admin:"Yönetici"
+ }[role]||"Kullanıcı";
+
+ app(`
+  <div class="back">
+   <button
+    class="btn secondary smallBtn"
+    onclick="showHome()">
+    ← Ana sayfaya dön
+   </button>
+  </div>
+
+  <div class="accountCard">
+
+   <span class="badge">👤 HESABIM</span>
+
+   <h1>${esc(name)}</h1>
+
+   <div class="meta">
+    <span>🎫 ${esc(roleText)}</span>
+    <span>📧 ${esc(CURRENT_USER.email||"")}</span>
+   </div>
+
+   ${
+    profile?.phone
+    ?`<div class="meta">
+       <span>📞 ${esc(profile.phone)}</span>
+      </div>`
+    :""
+   }
+
+   <button
+    class="btn secondary section"
+    onclick="showMyRequests()">
+    📋 TALEPLERİM
+   </button>
+
+   ${
+    role==="provider"
+    ?`
+     <button
+      class="btn secondary section"
+      onclick="showMyProviderPanel()">
+      🛠️ SAĞLAYICI PANELİM
+     </button>
+    `
+    :""
+   }
+
+   <button
+    class="btn secondary section"
+    onclick="showEditProfile()">
+    ⚙️ PROFİLİ DÜZENLE
+   </button>
+
+   <button
+    class="btn section"
+    style="background:#35181b;color:#ffb6b8"
+    onclick="logoutUser()">
+    🚪 ÇIKIŞ YAP
+   </button>
+
+  </div>
+ `);
+}
+
+async function showEditProfile(){
+
+ const profile=await ensureProfile();
+
+ app(`
+  <div class="back">
+   <button
+    class="btn secondary smallBtn"
+    onclick="showAccount()">
+    ← Hesabıma dön
+   </button>
+  </div>
+
+  <div class="formCard">
+
+   <span class="badge">⚙️ PROFİL</span>
+
+   <h1>Profilimi düzenle</h1>
+
+   <label>Ad Soyad *</label>
+   <input
+    id="editName"
+    maxlength="100"
+    value="${esc(profile?.full_name||"")}">
+
+   <label>Telefon</label>
+   <input
+    id="editPhone"
+    type="tel"
+    maxlength="30"
+    value="${esc(profile?.phone||"")}">
+
+   <button
+    class="btn primary section"
+    id="profileSaveBtn"
+    onclick="saveProfile()">
+    DEĞİŞİKLİKLERİ KAYDET
+   </button>
+
+  </div>
+ `);
+}
+
+async function saveProfile(){
+
+ const name=
+  document.getElementById("editName")?.value.trim();
+
+ const phone=
+  document.getElementById("editPhone")?.value.trim();
+
+ if(!name)
+  return alert("Ad soyad zorunludur.");
+
+ const btn=document.getElementById("profileSaveBtn");
+
+ btn.disabled=true;
+ btn.textContent="KAYDEDİLİYOR...";
+
+ try{
+
+  await sb(
+   "PATCH",
+   "profiles?id=eq."+encodeURIComponent(CURRENT_USER.id),
+   {
+    full_name:name,
+    phone,
+    updated_at:new Date().toISOString()
+   }
+  );
+
+  if(CURRENT_USER.user_metadata){
+
+   CURRENT_USER.user_metadata.full_name=name;
+   CURRENT_USER.user_metadata.name=name;
+   CURRENT_USER.user_metadata.phone=phone;
+  }
+
+  updateUserArea();
+
+  alert("Profil güncellendi. ✓");
+
+  showAccount();
+
+ }catch(e){
+
+  console.error(e);
+
+  alert(
+   "Profil güncellenemedi.\n\n"+
+   friendlyErrorMessage(e)
+  );
+
+ }finally{
+
+  btn.disabled=false;
+  btn.textContent="DEĞİŞİKLİKLERİ KAYDET";
+ }
+}
+
+
+/* ============================================================
+   HOME
+   ============================================================ */
+
+function showHome(){
+
+ nav("navHome");
+
+ const cards=
+  Object.entries(SERVICES).map(([k,s])=>`
+   <button
+    class="card service"
+    type="button"
+    onclick="showRequest('${esc(k)}')">
+
+    <div class="emoji">${s.emoji}</div>
+
+    <strong>${esc(s.name)}</strong>
+
+    <span>${esc(s.desc)}</span>
+
+   </button>
+  `).join("");
+
+ app(`
+  <section class="hero">
+
+   <span class="badge">
+    📍 İZMİR PİLOT BÖLGESİ
+   </span>
+
+   <h1>
+    İhtiyacın varsa,<br>
+    çözümü var.
+   </h1>
+
+   <p class="muted">
+    Ev, iş yeri, araç ve günlük yaşam hizmetlerini
+    tek yerden bul.
+   </p>
+
+   <div class="actions">
+
+    <button
+     class="btn primary"
+     onclick="showRequest()">
+     📢 İşimi Çözdür
+    </button>
+
+    <button
+     class="btn secondary"
+     onclick="showProviderEntry()">
+     🛠️ Hizmet Ver
+    </button>
+
+   </div>
+
+   ${
+    CURRENT_USER
+    ?`
+     <div class="success">
+      👋 Hoş geldin.
+      Hesabınla giriş yaptın.
+     </div>
+    `
+    :`
+     <div class="notice">
+      🔐 Teklifleri takip etmek ve hesabını korumak için
+      ücretsiz hesap oluşturabilirsin.
+     </div>
+    `
+   }
+
+  </section>
+
+  <section>
+
+   <div class="sectionTitle">
+    <div>
+     <h2>Hizmet kategorileri</h2>
+     <div class="small muted">
+      İhtiyacını seç ve talep oluştur.
+     </div>
+    </div>
+   </div>
+
+   <div class="grid">
+    ${cards}
+   </div>
+
+  </section>
+
+  <section class="card section">
+
+   <h2>💡 Nasıl çalışıyor?</h2>
+
+   <p class="muted small">
+    İhtiyacını oluştur. Uygun hizmet sağlayıcıları
+    talebini görsün. Fiyat tekliflerini al.
+    Sana uygun teklifi kabul et.
+   </p>
+
+  </section>
+ `);
+}
+
+
+/* ============================================================
+   REQUEST
+   ============================================================ */
+
+function showRequest(pre=""){
+
+ nav("navRequest");
+
+ if(!CURRENT_USER){
+
+  app(`
+   <div class="formCard">
+
+    <span class="badge">🔐 HESAP GEREKLİ</span>
+
+    <h1>Talep oluşturmak için giriş yap</h1>
+
+    <p class="muted">
+     Taleplerini güvenli şekilde hesabına bağlamak
+     için önce giriş yapman gerekiyor.
+    </p>
+
+    <button
+     class="btn primary"
+     onclick="showAuth('login')">
+     GİRİŞ YAP / KAYIT OL
+    </button>
+
+    <button
+     class="btn secondary section"
+     onclick="showHome()">
+     ← Ana sayfaya dön
+    </button>
+
+   </div>
+  `);
+
+  return;
+ }
+
+ app(`
+  <div class="back">
+   <button
+    class="btn secondary smallBtn"
+    onclick="showHome()">
+    ← Ana sayfaya dön
+   </button>
+  </div>
+
+  <div class="formCard">
+
+   <span class="badge">
+    📋 YENİ HİZMET TALEBİ
+   </span>
+
+   <h1>İhtiyacını anlat.</h1>
+
+   <label>Hizmet kategorisi *</label>
+
+   <select id="category">
+    ${serviceOptions(pre)}
+   </select>
+
+   <label>Sorunun / ihtiyacın *</label>
+
+   <textarea
+    id="description"
+    maxlength="1000"
+    placeholder="Örneğin: Klima çalışıyor fakat yeterince soğutmuyor.">
+   </textarea>
+
+   <div class="row">
+
+    <div>
+     <label>İl</label>
+     <input value="İzmir" readonly>
+    </div>
+
+    <div>
+     <label>İlçe *</label>
+     <select id="district">
+      ${districtOptions()}
+     </select>
+    </div>
+
+   </div>
+
+   <label>Mahalle</label>
+
+   <input
+    id="neighborhood"
+    maxlength="150"
+    placeholder="Mahalle adı">
+
+   <label>Ne zaman gerekli?</label>
+
+   <select id="urgency">
+    <option>Bugün</option>
+    <option>Acil</option>
+    <option>Uygun zamanda</option>
+   </select>
+
+   <div class="notice">
+    🔒 Bu talep giriş yaptığın hesabın kullanıcı kimliğiyle
+    ilişkilendirilecektir.
+   </div>
+
+   <button
+    class="btn primary"
+    id="createBtn"
+    onclick="createRequest()">
+    TALEBİ OLUŞTUR
+   </button>
+
+  </div>
+ `);
+}
+
+async function createRequest(){
+
+ if(!CURRENT_USER){
+  alert("Talep oluşturmak için giriş yapmalısın.");
+  showAuth("login");
+  return;
+ }
+
+ const category=
+  document.getElementById("category").value;
+
+ const description=
+  document.getElementById("description").value.trim();
+
+ const district=
+  document.getElementById("district").value;
+
+ const neighborhood=
+  document.getElementById("neighborhood").value.trim();
+
+ const urgency=
+  document.getElementById("urgency").value;
+
+ if(!category)
+  return alert("Lütfen hizmet kategorisini seç.");
+
+ if(description.length<5)
+  return alert("Lütfen ihtiyacını daha açık anlat.");
+
+ if(!district)
+  return alert("Lütfen ilçe seç.");
+
+ const btn=document.getElementById("createBtn");
+
+ btn.disabled=true;
+ btn.textContent="KAYDEDİLİYOR...";
+
+ try{
+
+  const payload={
+   customer_id:CURRENT_USER.id,
+   category_id:category,
+   description,
+   district,
+   neighborhood:neighborhood||null,
+   urgency,
+   status:"pending"
+  };
+
+  const rows=
+   await sb(
+    "POST",
+    "requests",
+    payload
+   );
+
+  const row=
+   Array.isArray(rows)?rows[0]:rows;
+
+  if(!row?.id)
+   throw new Error(
+    "Talep kaydedildi ancak UUID alınamadı."
+   );
+
+  connection(true);
+
+  alert("Talep başarıyla oluşturuldu. ✓");
+
+  showRequestDetail(row.id);
+
+ }catch(e){
+
+  console.error(e);
+
+  alert(
+   "Talep oluşturulamadı.\n\n"+
+   friendlyErrorMessage(e)
+  );
+
+ }finally{
+
+  btn.disabled=false;
+  btn.textContent="TALEBİ OLUŞTUR";
+ }
+}
+
+function requestService(r){
+ return serviceKey(r.category_id);
+}
+
+function requestStatusLabel(status,offerCount){
+
+ if(status==="accepted")
+  return{
+   label:"Teklif Kabul Edildi",
+   cls:"accepted"
+  };
+
+ if(status==="completed")
+  return{
+   label:"Tamamlandı",
+   cls:"completed"
+  };
+
+ if(status==="cancelled")
+  return{
+   label:"İptal",
+   cls:"cancelled"
+  };
+
+ if(offerCount>0)
+  return{
+   label:"Teklif Geldi",
+   cls:"offered"
+  };
+
+ return{
+  label:"Beklemede",
+  cls:"pending"
+ };
+}
+
+function requestCard(r,offersHtml="",offerCount=0){
+
+ const k=requestService(r);
+
+ const s=
+  SERVICES[k]||
+  {
+   name:r.category_id||"Hizmet",
+   emoji:"🛠️"
+  };
+
+ const st=
+  requestStatusLabel(
+   r.status,
+   offerCount
+  );
+
+ return `
+  <article class="request">
+
+   <div class="requestTop">
+
+    <div>
+     <h3>
+      ${s.emoji} ${esc(s.name)}
+     </h3>
+
+     <div class="small muted">
+      ${
+       r.created_at
+       ?new Date(r.created_at).toLocaleString("tr-TR")
+       :""
+      }
+     </div>
+    </div>
+
+    <span class="status status-${st.cls}">
+     ${esc(st.label)}
+    </span>
+
+   </div>
+
+   <div class="description">
+    ${esc(r.description||"")}
+   </div>
+
+   <div class="meta">
+
+    <span>
+     📍 ${esc(r.district||"")}
+    </span>
+
+    ${
+     r.neighborhood
+     ?`<span>🏘️ ${esc(r.neighborhood)}</span>`
+     :""
+    }
+
+    <span>
+     ⏱️ ${esc(r.urgency||"")}
+    </span>
+
+   </div>
+
+   <button
+    class="btn secondary smallBtn section"
+    onclick="showRequestDetail('${esc(r.id)}')">
+    📄 Detayları Gör
+   </button>
+
+   ${offersHtml}
+
+  </article>
+ `;
+}
+
+
+/* ============================================================
+   REQUESTS
+   ============================================================ */
+
+async function showRequests(){
+
+ nav("navRequests");
+
+ if(!CURRENT_USER){
+
+  app(`
+   <div class="formCard">
+
+    <span class="badge">🔐 GİRİŞ GEREKLİ</span>
+
+    <h1>Taleplerini görmek için giriş yap</h1>
+
+    <button
+     class="btn primary"
+     onclick="showAuth('login')">
+     GİRİŞ YAP / KAYIT OL
+    </button>
+
+   </div>
+  `);
+
+  return;
+ }
+
+ await showMyRequests();
+}
+
+async function showMyRequests(){
+
+ nav("navRequests");
+
+ app(`
+  <div class="back">
+   <button
+    class="btn secondary smallBtn"
+    onclick="showHome()">
+    ← Ana sayfaya dön
+   </button>
+  </div>
+
+  <span class="badge">▣ TALEPLERİM</span>
+
+  <h1>Taleplerim.</h1>
+
+  <div
+   id="requestsArea"
+   class="card"
+   style="text-align:center">
+   ⏳ Yükleniyor...
+  </div>
+ `);
+
+ try{
+
+  /*
+   Auth kullanıcı yalnızca kendi customer_id'sine ait
+   kayıtları uygulama seviyesinde görür.
+   RLS'yi sonraki aşamada ayrıca enforce edeceğiz.
+  */
+
+  const rows=
+   await sb(
+    "GET",
+    "requests?customer_id=eq."+
+    encodeURIComponent(CURRENT_USER.id)+
+    "&select=*&order=created_at.desc&limit=100"
+   );
+
+  const area=
+   document.getElementById("requestsArea");
+
+  if(!area)return;
+
+  if(!rows.length){
+
+   area.innerHTML=`
+    <div class="empty">
+     📋
+     <h3>Henüz talep yok.</h3>
+
+     <p class="small muted">
+      İlk talebini oluştur.
+     </p>
+
+     <button
+      class="btn primary"
+      onclick="showRequest()">
+      ＋ Talep oluştur
+     </button>
+
+    </div>
+   `;
+
+   return;
+  }
+
+  const offersLists=
+   await Promise.all(
+    rows.map(r=>loadOffers(r.id))
+   );
+
+  const html=
+   rows.map((r,i)=>{
+
+    const count=
+     offersLists[i].length;
+
+    const summary=
+     count
+     ?`
+      <div
+       class="small section"
+       style="color:#8fd0ff">
+       💰 ${count} teklif geldi.
+      </div>
+     `
+     :`
+      <div class="small muted section">
+       Henüz teklif gelmedi.
+      </div>
+     `;
+
+    return requestCard(
+     r,
+     summary,
+     count
+    );
+
+   });
+
+  area.outerHTML=
+   html.join("");
+
+ }catch(e){
+
+  const area=
+   document.getElementById("requestsArea");
+
+  if(area){
+
+   area.innerHTML=`
+    <div class="error">
+     Talepler yüklenemedi:<br>
+     ${esc(friendlyErrorMessage(e))}
+    </div>
+   `;
+  }
+ }
+}
+
+
+/* ============================================================
+   REQUEST DETAIL
+   ============================================================ */
+
+function offerFilter(o){
+
+ if(
+  o.id!==undefined&&
+  o.id!==null&&
+  o.id!==""
+ ){
+  return "id=eq."+encodeURIComponent(o.id);
+ }
+
+ return (
+  "request_id=eq."+
+  encodeURIComponent(o.request_id)+
+  "&provider_id=eq."+
+  encodeURIComponent(o.provider_id)+
+  "&created_at=eq."+
+  encodeURIComponent(o.created_at)
+ );
+}
+
+async function loadProvidersByIds(ids){
+
+ const clean=[
+  ...new Set(
+   ids.filter(isUUID)
+  )
+ ];
+
+ if(!clean.length)return [];
+
+ try{
+
+  const rows=
+   await sb(
+    "GET",
+    "providers?select=id,name,district,phone&id=in.("+
+    clean.join(",")+
+    ")"
+   );
+
+  return Array.isArray(rows)?rows:[];
+
+ }catch(e){
+
+  console.warn(
+   "Sağlayıcı bilgisi okunamadı:",
+   e
+  );
+
+  return [];
+ }
+}
+
+function offerStatusBadge(status){
+
+ if(status==="accepted")
+  return `
+   <span class="status status-accepted">
+    Kabul Edildi
+   </span>
+  `;
+
+ if(status==="rejected")
+  return `
+   <span class="status status-cancelled">
+    Reddedildi
+   </span>
+  `;
+
+ return `
+  <span class="status status-pending">
+   Bekliyor
+  </span>
+ `;
+}
+
+function detailOfferCard(
+ o,
+ provider,
+ requestStatus
+){
+
+ const price=Number(o.price);
+
+ const isAccepted=
+  o.status==="accepted";
+
+ const isRejected=
+  o.status==="rejected";
+
+ const requestClosed=
+  requestStatus==="accepted"||
+  requestStatus==="completed"||
+  requestStatus==="cancelled";
+
+ const phoneLine=
+  isAccepted&&provider?.phone
+  ?`
+   <a
+    class="btn primary"
+    style="display:block;text-align:center;margin-top:8px"
+    href="tel:${esc(provider.phone)}">
+    📞 SAĞLAYICIYI ARA
+   </a>
+  `
+  :"";
+
+ const acceptBtn=
+  (
+   !isAccepted&&
+   !isRejected&&
+   !requestClosed
+  )
+  ?`
+   <button
+    class="btn primary section"
+    onclick='acceptOffer(
+     ${jsonAttr(o)},
+     "${esc(o.request_id)}",
+     this
+    )'>
+    ✅ TEKLİFİ KABUL ET
+   </button>
+  `
+  :"";
+
+ return `
+  <article
+   class="card"
+   style="margin-top:10px">
+
+   <div class="requestTop">
+
+    <div>
+
+     <strong>
+      ${provider
+       ?esc(provider.name)
+       :"Sağlayıcı"}
+     </strong>
+
+     <div class="small muted">
+      ${
+       provider?.district
+       ?esc(provider.district)
+       :""
+      }
+     </div>
+
+    </div>
+
+    ${offerStatusBadge(o.status)}
+
+   </div>
+
+   <div class="meta">
+
+    <span>
+     💰 ${
+      Number.isFinite(price)
+      ?price.toLocaleString("tr-TR")+" TL"
+      :"-"
+     }
+    </span>
+
+    ${
+     o.available_time
+     ?`<span>🕐 ${esc(o.available_time)}</span>`
+     :""
+    }
+
+   </div>
+
+   ${
+    o.note
+    ?`<div class="description">
+       ${esc(o.note)}
+      </div>`
+    :""
+   }
+
+   ${acceptBtn}
+
+   ${phoneLine}
+
+  </article>
+ `;
+}
+
+async function acceptOffer(
+ offer,
+ requestId,
+ btnEl
+){
+
+ if(!CURRENT_USER){
+  alert("Bu işlem için giriş yapmalısın.");
+  return;
+ }
+
+ if(!confirm(
+  "Bu teklifi kabul etmek istediğine emin misin? "+
+  "Diğer bekleyen teklifler otomatik olarak reddedilecek."
+ ))return;
+
+ if(btnEl){
+  btnEl.disabled=true;
+  btnEl.textContent="İŞLENİYOR...";
+ }
+
+ try{
+
+  await sb(
+   "PATCH",
+   "offers?"+offerFilter(offer),
+   {
+    status:"accepted"
+   }
+  );
+
+  /*
+   Aynı talebin diğer pending tekliflerini reddet.
+  */
+
+  if(
+   offer.id!==undefined&&
+   offer.id!==null&&
+   offer.id!==""
+  ){
+
+   try{
+
+    await sb(
+     "PATCH",
+     "offers?request_id=eq."+
+     encodeURIComponent(requestId)+
+     "&id=neq."+
+     encodeURIComponent(offer.id)+
+     "&status=eq.pending",
+     {
+      status:"rejected"
+     }
+    );
+
+   }catch(e){
+
+    console.warn(
+     "Diğer teklifler reddedilemedi:",
+     e
+    );
+   }
+  }
+
+  await sb(
+   "PATCH",
+   "requests?id=eq."+
+   encodeURIComponent(requestId),
+   {
+    status:"accepted"
+   }
+  );
+
+  connection(true);
+
+  alert("Teklif kabul edildi ✓");
+
+  showRequestDetail(requestId);
+
+ }catch(e){
+
+  console.error(e);
+
+  alert(
+   "Teklif kabul edilemedi.\n\n"+
+   friendlyErrorMessage(e)
+  );
+
+  if(btnEl){
+   btnEl.disabled=false;
+   btnEl.textContent="✅ TEKLİFİ KABUL ET";
+  }
+ }
+}
+
+async function showRequestDetail(requestId){
+
+ nav("navRequests");
+
+ if(!isUUID(requestId)){
+
+  app(`
+   <div class="error">
+    Geçersiz talep kimliği.
+   </div>
+  `);
+
+  return;
+ }
+
+ app(`
+  <div class="back">
+
+   <button
+    class="btn secondary smallBtn"
+    onclick="showRequests()">
+    ← Taleplere dön
+   </button>
+
+  </div>
+
+  <div
+   id="detailArea"
+   class="card"
+   style="text-align:center">
+   ⏳ Talep yükleniyor...
+  </div>
+ `);
+
+ try{
+
+  const rows=
+   await sb(
+    "GET",
+    "requests?id=eq."+
+    encodeURIComponent(requestId)+
+    "&select=*&limit=1"
+   );
+
+  const r=
+   Array.isArray(rows)?rows[0]:null;
+
+  const area=
+   document.getElementById("detailArea");
+
+  if(!r){
+
+   area.innerHTML=`
+    <div class="empty">
+     🔎 Talep bulunamadı.
+    </div>
+   `;
+
+   return;
+  }
+
+  /*
+   Uygulama seviyesinde müşterinin yalnızca kendi
+   talebini açmasına izin veriyoruz.
+  */
+
+  if(
+   CURRENT_USER&&
+   r.customer_id&&
+   String(r.customer_id)!==
+   String(CURRENT_USER.id)
+  ){
+
+   area.innerHTML=`
+    <div class="error">
+     Bu talebe erişim yetkin yok.
+    </div>
+   `;
+
+   return;
+  }
+
+  const offers=
+   await loadOffers(requestId);
+
+  const providers=
+   await loadProvidersByIds(
+    offers.map(o=>o.provider_id)
+   );
+
+  const providerById=
+   Object.fromEntries(
+    providers.map(p=>[
+     String(p.id),
+     p
+    ])
+   );
+
+  const k=
+   requestService(r);
+
+  const s=
+   SERVICES[k]||
+   {
+    name:r.category_id||"Hizmet",
+    emoji:"🛠️"
+   };
+
+  const st=
+   requestStatusLabel(
+    r.status,
+    offers.length
+   );
+
+  const offersHtml=
+   offers.length
+   ?offers.map(o=>
+      detailOfferCard(
+       o,
+       providerById[
+        String(o.provider_id)
+       ],
+       r.status
+      )
+     ).join("")
+   :`
+    <div class="small muted section">
+     Henüz teklif gelmedi.
+     Sağlayıcılar talebinizi inceliyor.
+    </div>
+   `;
+
+  area.outerHTML=`
+   <div class="formCard">
+
+    <span class="badge">
+     ${s.emoji} ${esc(s.name)}
+    </span>
+
+    <h1>Talep Detayı</h1>
+
+    <div class="meta">
+
+     <span
+      class="status status-${st.cls}">
+      ${esc(st.label)}
+     </span>
+
+     <span>
+      📍 ${esc(r.district||"")}
+     </span>
+
+     ${
+      r.neighborhood
+      ?`<span>
+          🏘️ ${esc(r.neighborhood)}
+        </span>`
+      :""
+     }
+
+     <span>
+      ⏱️ ${esc(r.urgency||"")}
+     </span>
+
+    </div>
+
+    <div class="description">
+     ${esc(r.description||"")}
+    </div>
+
+    <div class="small muted section">
+     Talep ID:
+     <strong>${esc(r.id)}</strong>
+     •
+     ${
+      r.created_at
+      ?new Date(r.created_at)
+       .toLocaleString("tr-TR")
+      :""
+     }
+    </div>
+
+    <div class="section">
+
+     <h2>
+      💰 Gelen Teklifler
+      (${offers.length})
+     </h2>
+
+     ${offersHtml}
+
+    </div>
+
+   </div>
+  `;
+
+ }catch(e){
+
+  const area=
+   document.getElementById("detailArea");
+
+  if(area){
+
+   area.innerHTML=`
+    <div class="error">
+     Talep yüklenemedi:<br>
+     ${esc(friendlyErrorMessage(e))}
+    </div>
+   `;
+  }
+ }
+}
+
+
+/* ============================================================
+   PROVIDERS
+   ============================================================ */
+
 function parseServices(v){
+
  if(Array.isArray(v))return v;
- if(typeof v==="string"){try{const x=JSON.parse(v);if(Array.isArray(x))return x}catch(_){}return v.split(",").map(x=>x.trim()).filter(Boolean)}
+
+ if(typeof v==="string"){
+
+  try{
+
+   const x=JSON.parse(v);
+
+   if(Array.isArray(x))
+    return x;
+
+  }catch(_){}
+
+  return v
+   .split(",")
+   .map(x=>x.trim())
+   .filter(Boolean);
+ }
+
  return [];
 }
-function providerNameService(p){return parseServices(p.services).map(x=>SERVICES[serviceKey(x)]?.name||x)}
+
+function providerNameService(p){
+
+ return parseServices(p.services)
+  .map(
+   x=>
+    SERVICES[
+     serviceKey(x)
+    ]?.name||x
+  );
+}
+
 function providerMatches(p,r){
- if(p.active===false)return false;
- const ps=parseServices(p.services).map(serviceKey);
- const wanted=serviceKey(r.category_id);
- const serviceOK=!ps.length||ps.includes(wanted);
- const districtOK=!p.district||norm(p.district)===norm(r.district);
+
+ if(p.active===false)
+  return false;
+
+ const ps=
+  parseServices(p.services)
+   .map(serviceKey);
+
+ const wanted=
+  serviceKey(r.category_id);
+
+ const serviceOK=
+  !ps.length||
+  ps.includes(wanted);
+
+ const districtOK=
+  !p.district||
+  norm(p.district)===norm(r.district);
+
  return serviceOK&&districtOK;
 }
+
 async function loadProviders(){
- const rows=await sb("GET","providers?select=*&order=created_at.desc&limit=200");
+
+ const rows=
+  await sb(
+   "GET",
+   "providers?select=*&order=created_at.desc&limit=200"
+  );
+
  return Array.isArray(rows)?rows:[];
 }
+
 function providerCard(p){
- const names=providerNameService(p).join(", ")||"Hizmet belirtilmemiş";
- return `<article class="request"><div class="requestTop"><div><h3>🛠️ ${esc(p.name||"Hizmet Sağlayıcı")}</h3><div class="small muted">İzmir • ${esc(p.district||"")}</div></div><span class="status">${p.active===false?"Pasif":"Aktif"}</span></div><div class="meta"><span>🔧 ${esc(names)}</span></div>${p.description?`<div class="description">${esc(p.description)}</div>`:""}<button class="btn primary" style="margin-top:10px" onclick="viewProviderRequests('${esc(p.id)}')">📋 UYGUN TALEPLERİ GÖR / TEKLİF VER</button>${p.phone?`<a class="btn secondary" style="display:block;text-align:center;margin-top:8px" href="tel:${esc(p.phone)}">📞 İLETİŞİME GEÇ</a>`:""}</article>`;
+
+ const names=
+  providerNameService(p).join(", ")||
+  "Hizmet belirtilmemiş";
+
+ return `
+  <article class="request">
+
+   <div class="requestTop">
+
+    <div>
+
+     <h3>
+      🛠️ ${esc(p.name||"Hizmet Sağlayıcı")}
+     </h3>
+
+     <div class="small muted">
+      İzmir • ${esc(p.district||"")}
+     </div>
+
+    </div>
+
+    <span class="status">
+     ${p.active===false?"Pasif":"Aktif"}
+    </span>
+
+   </div>
+
+   <div class="meta">
+    <span>
+     🔧 ${esc(names)}
+    </span>
+   </div>
+
+   ${
+    p.description
+    ?`<div class="description">
+       ${esc(p.description)}
+      </div>`
+    :""
+   }
+
+   <button
+    class="btn primary"
+    style="margin-top:10px"
+    onclick="viewProviderRequests('${esc(p.id)}')">
+    📋 UYGUN TALEPLERİ GÖR / TEKLİF VER
+   </button>
+
+   ${
+    p.phone
+    ?`
+     <a
+      class="btn secondary"
+      style="display:block;text-align:center;margin-top:8px"
+      href="tel:${esc(p.phone)}">
+      📞 İLETİŞİME GEÇ
+     </a>
+    `
+    :""
+   }
+
+  </article>
+ `;
 }
+
 function showProviderEntry(){
+
  nav("navProvider");
- app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div>
- <div class="formCard"><span class="badge">🛠️ HİZMET SAĞLAYICI</span><h1>Hizmet ver.</h1>
- <label>Ad / İşletme *</label><input id="pName" placeholder="Örn. Ferhat Klima Servisi">
- <label>Telefon *</label><input id="pPhone" type="tel" placeholder="05xxxxxxxxx">
- <div class="row"><div><label>İl</label><input id="pCity" value="İzmir" readonly></div><div><label>İlçe *</label><select id="pDistrict">${districtOptions()}</select></div></div>
- <label>Hizmet kategorisi *</label><select id="pCategory">${serviceOptions()}</select>
- <label>Açıklama</label><textarea id="pDescription" maxlength="500" placeholder="Hizmetlerin hakkında kısa bilgi"></textarea>
- <div class="notice">Sağlayıcı kaydı doğrudan Supabase'deki providers tablosuna gönderilir.</div>
- <button class="btn primary" id="saveProvider" onclick="registerProvider()">HİZMET SAĞLAYICI KAYDI OLUŞTUR</button>
- <button class="btn secondary section" onclick="showProviders()">KAYITLI SAĞLAYICILARI GÖR</button></div>`);
+
+ if(!CURRENT_USER){
+
+  app(`
+   <div class="formCard">
+
+    <span class="badge">
+     🔐 HESAP GEREKLİ
+    </span>
+
+    <h1>Hizmet vermek için giriş yap</h1>
+
+    <p class="muted">
+     Hizmet sağlayıcı hesabı oluşturup
+     taleplere teklif verebilirsin.
+    </p>
+
+    <button
+     class="btn primary"
+     onclick="showAuth('register')">
+     HESAP OLUŞTUR
+    </button>
+
+    <button
+     class="btn secondary section"
+     onclick="showAuth('login')">
+     ZATEN HESABIM VAR
+    </button>
+
+   </div>
+  `);
+
+  return;
+ }
+
+ showProviderRegistration();
 }
+
+function showProviderRegistration(){
+
+ app(`
+  <div class="back">
+
+   <button
+    class="btn secondary smallBtn"
+    onclick="showHome()">
+    ← Ana sayfaya dön
+   </button>
+
+  </div>
+
+  <div class="formCard">
+
+   <span class="badge">
+    🛠️ HİZMET SAĞLAYICI
+   </span>
+
+   <h1>Hizmet ver.</h1>
+
+   <label>Ad / İşletme *</label>
+
+   <input
+    id="pName"
+    maxlength="150"
+    value="${esc(
+     CURRENT_USER?.user_metadata?.full_name||""
+    )}"
+    placeholder="Örn. Ferhat Klima Servisi">
+
+   <label>Telefon *</label>
+
+   <input
+    id="pPhone"
+    type="tel"
+    maxlength="30"
+    value="${esc(
+     CURRENT_USER?.user_metadata?.phone||""
+    )}"
+    placeholder="05xxxxxxxxx">
+
+   <div class="row">
+
+    <div>
+     <label>İl</label>
+     <input value="İzmir" readonly>
+    </div>
+
+    <div>
+     <label>İlçe *</label>
+     <select id="pDistrict">
+      ${districtOptions()}
+     </select>
+    </div>
+
+   </div>
+
+   <label>Hizmet kategorisi *</label>
+
+   <select id="pCategory">
+    ${serviceOptions()}
+   </select>
+
+   <label>Açıklama</label>
+
+   <textarea
+    id="pDescription"
+    maxlength="500"
+    placeholder="Hizmetlerin hakkında kısa bilgi">
+   </textarea>
+
+   <div class="notice">
+    Hesabınla oluşturulan sağlayıcı kaydı
+    Supabase'deki providers tablosuna bağlanacaktır.
+   </div>
+
+   <button
+    class="btn primary"
+    id="saveProvider"
+    onclick="registerProvider()">
+    HİZMET SAĞLAYICI KAYDI OLUŞTUR
+   </button>
+
+   <button
+    class="btn secondary section"
+    onclick="showProviders()">
+    KAYITLI SAĞLAYICILARI GÖR
+   </button>
+
+  </div>
+ `);
+}
+
 async function registerProvider(){
- const name=document.getElementById("pName").value.trim(),phone=document.getElementById("pPhone").value.trim(),district=document.getElementById("pDistrict").value,category=document.getElementById("pCategory").value,description=document.getElementById("pDescription").value.trim();
- if(!name||!phone||!district||!category)return alert("Ad, telefon, ilçe ve hizmet kategorisi zorunludur.");
- const b=document.getElementById("saveProvider");b.disabled=true;b.textContent="KAYDEDİLİYOR...";
+
+ if(!CURRENT_USER){
+
+  alert("Önce giriş yapmalısın.");
+
+  showAuth("login");
+
+  return;
+ }
+
+ const name=
+  document.getElementById("pName").value.trim();
+
+ const phone=
+  document.getElementById("pPhone").value.trim();
+
+ const district=
+  document.getElementById("pDistrict").value;
+
+ const category=
+  document.getElementById("pCategory").value;
+
+ const description=
+  document.getElementById("pDescription").value.trim();
+
+ if(!name||!phone||!district||!category){
+
+  alert(
+   "Ad, telefon, ilçe ve hizmet kategorisi zorunludur."
+  );
+
+  return;
+ }
+
+ const b=
+  document.getElementById("saveProvider");
+
+ b.disabled=true;
+ b.textContent="KAYDEDİLİYOR...";
+
  try{
-  const now=new Date().toISOString();
-  const payload={name,phone,district,description,active:true,created_at:now,city:"İzmir",services:[category],updated_at:now};
-  const rows=await sb("POST","providers",payload);
-  const p=Array.isArray(rows)?rows[0]:rows;
-  if(!p?.id)throw new Error("Sağlayıcı kaydedildi ancak ID alınamadı.");
-  lsAddToArray("iscoz_my_providers",p.id);
-  connection(true);alert("Hizmet sağlayıcı başarıyla kaydedildi. ✓");showProviderPanel(p);
- }catch(e){console.error(e);alert("Sağlayıcı kaydedilemedi.\n\n"+friendlyErrorMessage(e))}
- finally{b.disabled=false;b.textContent="HİZMET SAĞLAYICI KAYDI OLUŞTUR";}
+
+  const now=
+   new Date().toISOString();
+
+  const payload={
+   user_id:CURRENT_USER.id,
+   name,
+   phone,
+   district,
+   description,
+   active:true,
+   created_at:now,
+   city:"İzmir",
+   services:[category],
+   updated_at:now
+  };
+
+  const rows=
+   await sb(
+    "POST",
+    "providers",
+    payload
+   );
+
+  const p=
+   Array.isArray(rows)
+   ?rows[0]
+   :rows;
+
+  if(!p?.id)
+   throw new Error(
+    "Sağlayıcı kaydedildi ancak ID alınamadı."
+   );
+
+  /*
+   Profile rolünü provider yap.
+  */
+
+  try{
+
+   await sb(
+    "PATCH",
+    "profiles?id=eq."+
+    encodeURIComponent(CURRENT_USER.id),
+    {
+     role:"provider",
+     full_name:name,
+     phone,
+     updated_at:new Date().toISOString()
+    }
+   );
+
+  }catch(e){
+
+   console.warn(
+    "Provider profile rolü güncellenemedi:",
+    e
+   );
+  }
+
+  CURRENT_PROVIDER=p;
+
+  connection(true);
+
+  alert(
+   "Hizmet sağlayıcı başarıyla kaydedildi. ✓"
+  );
+
+  showProviderPanel(p);
+
+ }catch(e){
+
+  console.error(e);
+
+  alert(
+   "Sağlayıcı kaydedilemedi.\n\n"+
+   friendlyErrorMessage(e)
+  );
+
+ }finally{
+
+  b.disabled=false;
+  b.textContent=
+   "HİZMET SAĞLAYICI KAYDI OLUŞTUR";
+ }
 }
+
 async function showProviders(){
+
  nav("navProvider");
- app(`<div class="back"><button class="btn secondary smallBtn" onclick="showProviderEntry()">← Geri</button></div><span class="badge">🛠️ HİZMET SAĞLAYICILAR</span><h1>Kayıtlı sağlayıcılar.</h1><div id="providersArea" class="card" style="text-align:center">⏳ Yükleniyor...</div>`);
+
+ app(`
+  <div class="back">
+
+   <button
+    class="btn secondary smallBtn"
+    onclick="showProviderEntry()">
+    ← Geri
+   </button>
+
+  </div>
+
+  <span class="badge">
+   🛠️ HİZMET SAĞLAYICILAR
+  </span>
+
+  <h1>Kayıtlı sağlayıcılar.</h1>
+
+  <div
+   id="providersArea"
+   class="card"
+   style="text-align:center">
+   ⏳ Yükleniyor...
+  </div>
+ `);
+
  try{
-  const rows=await loadProviders();
+
+  const rows=
+   await loadProviders();
+
   CURRENT_PROVIDERS=rows;
-  document.getElementById("providersArea").outerHTML=rows.length?rows.map(providerCard).join(""):`<div class="card empty">Henüz sağlayıcı kaydı yok.<br><span class="small muted">İlk hizmet sağlayıcı sen ol!</span></div>`;
- }catch(e){document.getElementById("providersArea").innerHTML=`<div class="error">Sağlayıcılar yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
+
+  const area=
+   document.getElementById("providersArea");
+
+  if(!area)return;
+
+  area.outerHTML=
+   rows.length
+   ?rows.map(providerCard).join("")
+   :`
+    <div class="card empty">
+     Henüz sağlayıcı kaydı yok.
+    </div>
+   `;
+
+ }catch(e){
+
+  const area=
+   document.getElementById("providersArea");
+
+  if(area){
+
+   area.innerHTML=`
+    <div class="error">
+     Sağlayıcılar yüklenemedi:<br>
+     ${esc(friendlyErrorMessage(e))}
+    </div>
+   `;
+  }
+ }
 }
+
 function viewProviderRequests(providerId){
- const p=CURRENT_PROVIDERS.find(x=>String(x.id)===String(providerId));
- if(!p){alert("Sağlayıcı bulunamadı. Lütfen listeyi yenileyin.");return}
+
+ const p=
+  CURRENT_PROVIDERS.find(
+   x=>String(x.id)===String(providerId)
+  );
+
+ if(!p){
+
+  alert(
+   "Sağlayıcı bulunamadı. Listeyi yenileyin."
+  );
+
+  return;
+ }
+
+ CURRENT_PROVIDER=p;
+
  showProviderPanel(p);
 }
-async function showProviderPanel(provider){
- nav("navProvider");
- const canEdit=isMyProvider(provider.id);
- const editBtn=canEdit?`<button class="btn secondary" onclick='showProviderProfile(${jsonAttr(provider)})'>⚙️ PROFİLİMİ DÜZENLE</button>`:"";
- const ownerNotice=canEdit?"":`<div class="notice small">👀 Bu profili bu tarayıcıdan oluşturmadınız — sadece görüntüleyebilirsiniz.</div>`;
- app(`<div class="back"><button class="btn secondary smallBtn" onclick="showProviders()">← Sağlayıcı listesine dön</button></div><div class="card"><h2>🛠️ ${esc(provider.name)}</h2><p class="muted">${esc(provider.district||"")}</p>${ownerNotice}<div class="row section"><button class="btn secondary" onclick='showProviderOffers(${jsonAttr(provider)})'>📑 TEKLİFLERİM</button>${editBtn}</div></div><section class="section"><h2>📋 Uygun Talepler</h2><div id="matchArea" class="card" style="text-align:center">⏳ Eşleşmeler aranıyor...</div></section>`);
- try{
-  const requests=await sb("GET","requests?select=*&order=created_at.desc&limit=100");
-  const suitable=requests.filter(r=>providerMatches(provider,r));
-  const box=document.getElementById("matchArea");
-  if(!suitable.length){box.innerHTML=`<div class="empty">🔎 Şu anda kategori ve ilçenize uygun bir talep yok.<br><span class="small muted">Yeni bir talep geldiğinde burada görünecek.${canEdit?` Kategori veya ilçenizi genişletmek isterseniz "⚙️ Profilimi Düzenle" bölümünden güncelleyebilirsiniz.`:""}</span></div>`;return}
-  box.outerHTML=suitable.map(r=>providerRequestCard(r,provider)).join("");
- }catch(e){document.getElementById("matchArea").innerHTML=`<div class="error">Talepler yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
-}
-/* ---------------- SAĞLAYICI PROFİLİ ---------------- */
-function providerServiceCheckboxes(selectedKeys){
- return Object.entries(SERVICES).map(([k,s])=>`<label style="display:flex;align-items:center;gap:8px;font-weight:400;margin:8px 0"><input type="checkbox" value="${k}" ${selectedKeys.includes(k)?"checked":""} style="width:auto"> ${s.emoji} ${esc(s.name)}</label>`).join("");
-}
-function showProviderProfile(provider){
- nav("navProvider");
- const selectedKeys=parseServices(provider.services).map(serviceKey);
- app(`<div class="back"><button class="btn secondary smallBtn" onclick='showProviderPanel(${jsonAttr(provider)})'>← Panele dön</button></div>
- <div class="formCard"><span class="badge">⚙️ PROFİLİM</span><h1>${esc(provider.name)}</h1>
- <div class="notice">📞 ${esc(provider.phone||"-")} • İzmir</div>
- <label>Hizmet kategorileri *</label>
- <div id="pfCategories">${providerServiceCheckboxes(selectedKeys)}</div>
- <label>İlçe / Bölge *</label><select id="pfDistrict">${districtOptions(provider.district||"")}</select>
- <label>Açıklama</label><textarea id="pfDescription" maxlength="500">${esc(provider.description||"")}</textarea>
- <button class="btn primary section" id="pfSaveBtn" onclick='saveProviderProfile(${jsonAttr(provider)})'>DEĞİŞİKLİKLERİ KAYDET</button></div>`);
-}
-async function saveProviderProfile(provider){
- if(!isMyProvider(provider.id)){alert("Bu profili yalnızca kendi tarayıcınızdan (kayıt olduğunuz cihaz/tarayıcıdan) düzenleyebilirsiniz.");return}
- const checked=[...document.querySelectorAll("#pfCategories input[type=checkbox]:checked")].map(x=>x.value);
- const district=document.getElementById("pfDistrict").value;
- const description=document.getElementById("pfDescription").value.trim();
- if(!checked.length)return alert("En az bir hizmet kategorisi seçmelisin.");
- if(!district)return alert("Lütfen ilçe seç.");
- const btn=document.getElementById("pfSaveBtn");btn.disabled=true;btn.textContent="KAYDEDİLİYOR...";
- try{
-  await sb("PATCH","providers?id=eq."+encodeURIComponent(provider.id),{services:checked,district,description,updated_at:new Date().toISOString()});
-  connection(true);
-  const updated={...provider,services:checked,district,description};
-  alert("Profil güncellendi ✓");
-  showProviderPanel(updated);
- }catch(e){
-  console.error(e);
-  alert("Profil güncellenemedi.\n\n"+friendlyErrorMessage(e));
+
+
+/* ============================================================
+   SAĞLAYICI PANELİ
+   ============================================================ */
+
+async function showMyProviderPanel(){
+
+ if(!CURRENT_USER){
+
+  showAuth("login");
+
+  return;
  }
- finally{btn.disabled=false;btn.textContent="DEĞİŞİKLİKLERİ KAYDET";}
-}
-async function loadOffersByProvider(providerId){
- if(!isUUID(providerId))return [];
- try{const rows=await sb("GET","offers?provider_id=eq."+encodeURIComponent(providerId)+"&select=*&order=created_at.desc");return Array.isArray(rows)?rows:[]}
- catch(e){console.warn("Teklifler okunamadı:",e);return []}
-}
-async function loadRequestsByIds(ids){
- const clean=[...new Set(ids.filter(isUUID))];
- if(!clean.length)return [];
- try{const rows=await sb("GET","requests?select=*&id=in.("+clean.join(",")+")");return Array.isArray(rows)?rows:[]}
- catch(e){console.warn("Talep bilgisi okunamadı:",e);return []}
-}
-function providerOfferCard(o,request){
- const price=Number(o.price);
- const k=request?requestService(request):"";
- const s=SERVICES[k]||{name:request?.category_id||"Hizmet",emoji:"🛠️"};
- return `<article class="request"><div class="requestTop"><div><h3>${s.emoji} ${esc(s.name)}</h3><div class="small muted">${o.created_at?new Date(o.created_at).toLocaleString("tr-TR"):""}</div></div>${offerStatusBadge(o.status)}</div>${request?`<div class="description">${esc(request.description||"")}</div><div class="meta"><span>📍 ${esc(request.district||"")}</span></div>`:`<div class="small muted">Talep bilgisi bulunamadı (silinmiş olabilir).</div>`}<div class="meta"><span>💰 ${Number.isFinite(price)?price.toLocaleString("tr-TR")+" TL":"-"}</span>${o.available_time?`<span>🕐 ${esc(o.available_time)}</span>`:""}</div>${o.note?`<div class="description">${esc(o.note)}</div>`:""}</article>`;
-}
-async function showProviderOffers(provider){
- nav("navProvider");
- app(`<div class="back"><button class="btn secondary smallBtn" onclick='showProviderPanel(${jsonAttr(provider)})'>← Sağlayıcı paneline dön</button></div><span class="badge">📑 TEKLİFLERİM</span><h1>${esc(provider.name)} — verdiğim teklifler.</h1><div id="providerOffersArea" class="card" style="text-align:center">⏳ Teklifler yükleniyor...</div>`);
+
  try{
-  const offers=await loadOffersByProvider(provider.id);
-  const area=document.getElementById("providerOffersArea");
-  if(!offers.length){area.innerHTML=`<div class="empty">📑 Henüz teklif vermediniz.<br><span class="small muted">Uygun bir talebe teklif verdiğinizde burada görünecek.</span></div>`;return}
-  const requests=await loadRequestsByIds(offers.map(o=>o.request_id));
-  const requestById=Object.fromEntries(requests.map(r=>[String(r.id),r]));
-  area.outerHTML=offers.map(o=>providerOfferCard(o,requestById[String(o.request_id)])).join("");
- }catch(e){document.getElementById("providerOffersArea").innerHTML=`<div class="error">Teklifler yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
-}
-function providerRequestCard(r,p){
- const k=requestService(r),s=SERVICES[k]||{name:r.category_id||"Hizmet",emoji:"🛠️"};
- return `<article class="request"><div class="requestTop"><div><h3>${s.emoji} ${esc(s.name)}</h3><div class="small muted">Talep UUID: ${esc(r.id)}</div></div><span class="status">${esc(r.urgency||r.status||"pending")}</span></div><div class="description">${esc(r.description||"")}</div><div class="meta"><span>📍 ${esc(r.district||"")}</span>${r.neighborhood?`<span>🏘️ ${esc(r.neighborhood)}</span>`:""}</div><button class="btn primary" onclick="openOffer('${esc(r.id)}','${esc(p.id)}','${esc(s.name)}')">💰 TEKLİF VER</button></article>`;
+
+  const rows=
+   await sb(
+    "GET",
+    "providers?user_id=eq."+
+    encodeURIComponent(CURRENT_USER.id)+
+    "&select=*&limit=1"
+   );
+
+  const provider=
+   Array.isArray(rows)
+   ?rows[0]||null
+   :null;
+
+  if(!provider){
+
+   showProviderRegistration();
+
+   return;
+  }
+
+  CURRENT_PROVIDER=provider;
+
+  showProviderPanel(provider);
+
+ }catch(e){
+
+  console.error(e);
+
+  alert(
+   "Sağlayıcı profilin okunamadı.\n\n"+
+   friendlyErrorMessage(e)
+  );
+ }
 }
 
-/* ---------------- OFFERS ---------------- */
-async function loadOffers(requestId){
- if(!isUUID(requestId))return [];
- try{const rows=await sb("GET","offers?request_id=eq."+encodeURIComponent(requestId)+"&select=*&order=created_at.desc");return Array.isArray(rows)?rows:[]}
- catch(e){console.warn("Teklif okunamadı:",e);return []}
+async function showProviderPanel(provider){
+
+ nav("navProvider");
+
+ CURRENT_PROVIDER=provider;
+
+ app(`
+  <div class="back">
+
+   <button
+    class="btn secondary smallBtn"
+    onclick="showAccount()">
+    ← Hesabıma dön
+   </button>
+
+  </div>
+
+  <div class="card">
+
+   <h2>
+    🛠️ ${esc(provider.name)}
+   </h2>
+
+   <p class="muted">
+    ${esc(provider.district||"")}
+   </p>
+
+   <div class="row section">
+
+    <button
+     class="btn secondary"
+     onclick='showProviderOffers(${jsonAttr(provider)})'>
+     📑 TEKLİFLERİM
+    </button>
+
+    <button
+     class="btn secondary"
+     onclick='showProviderProfile(${jsonAttr(provider)})'>
+     ⚙️ PROFİLİMİ DÜZENLE
+    </button>
+
+   </div>
+
+  </div>
+
+  <section class="section">
+
+   <h2>📋 Uygun Talepler</h2>
+
+   <div
+    id="matchArea"
+    class="card"
+    style="text-align:center">
+    ⏳ Eşleşmeler aranıyor...
+   </div>
+
+  </section>
+ `);
+
+ try{
+
+  const requests=
+   await sb(
+    "GET",
+    "requests?select=*&order=created_at.desc&limit=100"
+   );
+
+  const suitable=
+   requests.filter(
+    r=>providerMatches(provider,r)
+   );
+
+  const box=
+   document.getElementById("matchArea");
+
+  if(!box)return;
+
+  if(!suitable.length){
+
+   box.innerHTML=`
+    <div class="empty">
+
+     🔎 Şu anda kategori ve ilçenize
+     uygun bir talep yok.
+
+     <br><br>
+
+     <span class="small muted">
+      Yeni talepler burada görünecek.
+     </span>
+
+    </div>
+   `;
+
+   return;
+  }
+
+  box.outerHTML=
+   suitable
+    .map(
+     r=>providerRequestCard(
+      r,
+      provider
+     )
+    )
+    .join("");
+
+ }catch(e){
+
+  const box=
+   document.getElementById("matchArea");
+
+  if(box){
+
+   box.innerHTML=`
+    <div class="error">
+     Talepler yüklenemedi:<br>
+     ${esc(friendlyErrorMessage(e))}
+    </div>
+   `;
+  }
+ }
 }
-function openOffer(requestId,providerId,serviceName){
- if(!isUUID(requestId)){alert("Talep kimliği geçersiz. Gerçek Supabase UUID bulunamadı.");return}
- if(!isUUID(providerId)){alert("Hizmet sağlayıcının gerçek UUID kimliği bulunamadı.");return}
- const m=document.createElement("div");m.id="offerModal";m.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px";
- m.innerHTML=`<div class="formCard" style="width:min(520px,100%);max-height:90vh;overflow:auto"><div class="sectionTitle"><div><span class="badge">💰 TEKLİF OLUŞTUR</span><h2>${esc(serviceName)}</h2></div><button class="btn secondary smallBtn" onclick="this.closest('#offerModal').remove()">✕</button></div>
- <label>Teklif fiyatı (TL) *</label><input id="offerPrice" type="number" min="1" step="1" placeholder="Örn. 1500">
- <label>Müsait olduğunuz zaman *</label><input id="offerTime" maxlength="200" placeholder="Örn. Bugün 18:00">
- <label>Mesajınız</label><textarea id="offerNote" maxlength="1000" placeholder="İşin nasıl yapılacağını veya önemli bilgileri yazabilirsiniz."></textarea>
- <button class="btn primary" id="offerBtn" onclick="sendOffer('${requestId}','${providerId}')">TEKLİFİ GÖNDER</button></div>`;
+
+
+/* ============================================================
+   SAĞLAYICI PROFİLİ
+   ============================================================ */
+
+function providerServiceCheckboxes(
+ selectedKeys
+){
+
+ return Object.entries(SERVICES)
+  .map(([k,s])=>
+   `
+    <label
+     style="
+      display:flex;
+      align-items:center;
+      gap:8px;
+      font-weight:400;
+      margin:8px 0
+     ">
+
+     <input
+      type="checkbox"
+      value="${esc(k)}"
+      ${selectedKeys.includes(k)?"checked":""}
+      style="width:auto">
+
+     ${s.emoji}
+     ${esc(s.name)}
+
+    </label>
+   `
+  ).join("");
+}
+
+function showProviderProfile(provider){
+
+ nav("navProvider");
+
+ const selectedKeys=
+  parseServices(provider.services)
+   .map(serviceKey);
+
+ app(`
+  <div class="back">
+
+   <button
+    class="btn secondary smallBtn"
+    onclick='showProviderPanel(${jsonAttr(provider)})'>
+    ← Panele dön
+   </button>
+
+  </div>
+
+  <div class="formCard">
+
+   <span class="badge">
+    ⚙️ PROFİLİM
+   </span>
+
+   <h1>
+    ${esc(provider.name)}
+   </h1>
+
+   <div class="notice">
+    📞 ${esc(provider.phone||"-")}
+    • İzmir
+   </div>
+
+   <label>
+    Hizmet kategorileri *
+   </label>
+
+   <div id="pfCategories">
+    ${providerServiceCheckboxes(selectedKeys)}
+   </div>
+
+   <label>
+    İlçe / Bölge *
+   </label>
+
+   <select id="pfDistrict">
+    ${districtOptions(provider.district||"")}
+   </select>
+
+   <label>Açıklama</label>
+
+   <textarea
+    id="pfDescription"
+    maxlength="500">${esc(provider.description||"")}</textarea>
+
+   <button
+    class="btn primary section"
+    id="pfSaveBtn"
+    onclick='saveProviderProfile(${jsonAttr(provider)})'>
+    DEĞİŞİKLİKLERİ KAYDET
+   </button>
+
+  </div>
+ `);
+}
+
+async function saveProviderProfile(provider){
+
+ const checked=
+  [
+   ...document.querySelectorAll(
+    "#pfCategories input[type=checkbox]:checked"
+   )
+  ].map(x=>x.value);
+
+ const district=
+  document.getElementById("pfDistrict").value;
+
+ const description=
+  document.getElementById("pfDescription")
+   .value.trim();
+
+ if(!checked.length)
+  return alert(
+   "En az bir hizmet kategorisi seçmelisin."
+  );
+
+ if(!district)
+  return alert("Lütfen ilçe seç.");
+
+ const btn=
+  document.getElementById("pfSaveBtn");
+
+ btn.disabled=true;
+ btn.textContent="KAYDEDİLİYOR...";
+
+ try{
+
+  await sb(
+   "PATCH",
+   "providers?id=eq."+
+   encodeURIComponent(provider.id),
+   {
+    services:checked,
+    district,
+    description,
+    updated_at:new Date().toISOString()
+   }
+  );
+
+  connection(true);
+
+  const updated={
+   ...provider,
+   services:checked,
+   district,
+   description
+  };
+
+  CURRENT_PROVIDER=updated;
+
+  alert("Profil güncellendi ✓");
+
+  showProviderPanel(updated);
+
+ }catch(e){
+
+  console.error(e);
+
+  alert(
+   "Profil güncellenemedi.\n\n"+
+   friendlyErrorMessage(e)
+  );
+
+ }finally{
+
+  btn.disabled=false;
+  btn.textContent="DEĞİŞİKLİKLERİ KAYDET";
+ }
+}
+
+
+/* ============================================================
+   PROVIDER OFFERS
+   ============================================================ */
+
+async function loadOffersByProvider(
+ providerId
+){
+
+ if(!isUUID(providerId))
+  return [];
+
+ try{
+
+  const rows=
+   await sb(
+    "GET",
+    "offers?provider_id=eq."+
+    encodeURIComponent(providerId)+
+    "&select=*&order=created_at.desc"
+   );
+
+  return Array.isArray(rows)?rows:[];
+
+ }catch(e){
+
+  console.warn(
+   "Teklifler okunamadı:",
+   e
+  );
+
+  return [];
+ }
+}
+
+async function loadRequestsByIds(ids){
+
+ const clean=[
+  ...new Set(
+   ids.filter(isUUID)
+  )
+ ];
+
+ if(!clean.length)return [];
+
+ try{
+
+  const rows=
+   await sb(
+    "GET",
+    "requests?select=*&id=in.("+
+    clean.join(",")+
+    ")"
+   );
+
+  return Array.isArray(rows)?rows:[];
+
+ }catch(e){
+
+  console.warn(
+   "Talep bilgisi okunamadı:",
+   e
+  );
+
+  return [];
+ }
+}
+
+function providerOfferCard(
+ o,
+ request
+){
+
+ const price=Number(o.price);
+
+ const k=
+  request
+  ?requestService(request)
+  :"";
+
+ const s=
+  SERVICES[k]||
+  {
+   name:request?.category_id||"Hizmet",
+   emoji:"🛠️"
+  };
+
+ return `
+  <article class="request">
+
+   <div class="requestTop">
+
+    <div>
+
+     <h3>
+      ${s.emoji} ${esc(s.name)}
+     </h3>
+
+     <div class="small muted">
+      ${
+       o.created_at
+       ?new Date(o.created_at)
+        .toLocaleString("tr-TR")
+       :""
+      }
+     </div>
+
+    </div>
+
+    ${offerStatusBadge(o.status)}
+
+   </div>
+
+   ${
+    request
+    ?`
+     <div class="description">
+      ${esc(request.description||"")}
+     </div>
+
+     <div class="meta">
+      <span>
+       📍 ${esc(request.district||"")}
+      </span>
+     </div>
+    `
+    :`
+     <div class="small muted">
+      Talep bilgisi bulunamadı.
+     </div>
+    `
+   }
+
+   <div class="meta">
+
+    <span>
+     💰 ${
+      Number.isFinite(price)
+      ?price.toLocaleString("tr-TR")+" TL"
+      :"-"
+     }
+    </span>
+
+    ${
+     o.available_time
+     ?`<span>
+         🕐 ${esc(o.available_time)}
+       </span>`
+     :""
+    }
+
+   </div>
+
+   ${
+    o.note
+    ?`<div class="description">
+       ${esc(o.note)}
+      </div>`
+    :""
+   }
+
+  </article>
+ `;
+}
+
+async function showProviderOffers(
+ provider
+){
+
+ nav("navProvider");
+
+ app(`
+  <div class="back">
+
+   <button
+    class="btn secondary smallBtn"
+    onclick='showProviderPanel(${jsonAttr(provider)})'>
+    ← Sağlayıcı paneline dön
+   </button>
+
+  </div>
+
+  <span class="badge">
+   📑 TEKLİFLERİM
+  </span>
+
+  <h1>
+   ${esc(provider.name)}
+   — verdiğim teklifler.
+  </h1>
+
+  <div
+   id="providerOffersArea"
+   class="card"
+   style="text-align:center">
+   ⏳ Teklifler yükleniyor...
+  </div>
+ `);
+
+ try{
+
+  const offers=
+   await loadOffersByProvider(
+    provider.id
+   );
+
+  const area=
+   document.getElementById(
+    "providerOffersArea"
+   );
+
+  if(!area)return;
+
+  if(!offers.length){
+
+   area.innerHTML=`
+    <div class="empty">
+
+     📑 Henüz teklif vermediniz.
+
+     <br>
+
+     <span class="small muted">
+      Uygun bir talebe teklif verdiğinizde
+      burada görünecek.
+     </span>
+
+    </div>
+   `;
+
+   return;
+  }
+
+  const requests=
+   await loadRequestsByIds(
+    offers.map(o=>o.request_id)
+   );
+
+  const requestById=
+   Object.fromEntries(
+    requests.map(r=>[
+     String(r.id),
+     r
+    ])
+   );
+
+  area.outerHTML=
+   offers
+    .map(o=>
+     providerOfferCard(
+      o,
+      requestById[
+       String(o.request_id)
+      ]
+     )
+    )
+    .join("");
+
+ }catch(e){
+
+  const area=
+   document.getElementById(
+    "providerOffersArea"
+   );
+
+  if(area){
+
+   area.innerHTML=`
+    <div class="error">
+     Teklifler yüklenemedi:<br>
+     ${esc(friendlyErrorMessage(e))}
+    </div>
+   `;
+  }
+ }
+}
+
+function providerRequestCard(r,p){
+
+ const k=
+  requestService(r);
+
+ const s=
+  SERVICES[k]||
+  {
+   name:r.category_id||"Hizmet",
+   emoji:"🛠️"
+  };
+
+ return `
+  <article class="request">
+
+   <div class="requestTop">
+
+    <div>
+
+     <h3>
+      ${s.emoji} ${esc(s.name)}
+     </h3>
+
+     <div class="small muted">
+      Talep UUID: ${esc(r.id)}
+     </div>
+
+    </div>
+
+    <span class="status">
+     ${esc(r.urgency||r.status||"pending")}
+    </span>
+
+   </div>
+
+   <div class="description">
+    ${esc(r.description||"")}
+   </div>
+
+   <div class="meta">
+
+    <span>
+     📍 ${esc(r.district||"")}
+    </span>
+
+    ${
+     r.neighborhood
+     ?`<span>
+         🏘️ ${esc(r.neighborhood)}
+       </span>`
+     :""
+    }
+
+   </div>
+
+   <button
+    class="btn primary"
+    onclick="openOffer(
+     '${esc(r.id)}',
+     '${esc(p.id)}',
+     '${esc(s.name)}'
+    )">
+    💰 TEKLİF VER
+   </button>
+
+  </article>
+ `;
+}
+
+
+/* ============================================================
+   OFFERS
+   ============================================================ */
+
+async function loadOffers(requestId){
+
+ if(!isUUID(requestId))
+  return [];
+
+ try{
+
+  const rows=
+   await sb(
+    "GET",
+    "offers?request_id=eq."+
+    encodeURIComponent(requestId)+
+    "&select=*&order=created_at.desc"
+   );
+
+  return Array.isArray(rows)?rows:[];
+
+ }catch(e){
+
+  console.warn(
+   "Teklif okunamadı:",
+   e
+  );
+
+  return [];
+ }
+}
+
+function openOffer(
+ requestId,
+ providerId,
+ serviceName
+){
+
+ if(!isUUID(requestId)){
+
+  alert(
+   "Talep kimliği geçersiz."
+  );
+
+  return;
+ }
+
+ if(!isUUID(providerId)){
+
+  alert(
+   "Hizmet sağlayıcının gerçek UUID kimliği bulunamadı."
+  );
+
+  return;
+ }
+
+ const m=
+  document.createElement("div");
+
+ m.id="offerModal";
+
+ m.className="modal";
+
+ m.innerHTML=`
+
+  <div class="formCard modalInner">
+
+   <div class="sectionTitle">
+
+    <div>
+
+     <span class="badge">
+      💰 TEKLİF OLUŞTUR
+     </span>
+
+     <h2>
+      ${esc(serviceName)}
+     </h2>
+
+    </div>
+
+    <button
+     class="btn secondary smallBtn"
+     style="width:auto"
+     onclick="this.closest('#offerModal').remove()">
+     ✕
+    </button>
+
+   </div>
+
+   <label>
+    Teklif fiyatı (TL) *
+   </label>
+
+   <input
+    id="offerPrice"
+    type="number"
+    min="1"
+    step="1"
+    placeholder="Örn. 1500">
+
+   <label>
+    Müsait olduğunuz zaman *
+   </label>
+
+   <input
+    id="offerTime"
+    maxlength="200"
+    placeholder="Örn. Bugün 18:00">
+
+   <label>Mesajınız</label>
+
+   <textarea
+    id="offerNote"
+    maxlength="1000"
+    placeholder="İşin nasıl yapılacağını veya önemli bilgileri yazabilirsiniz.">
+   </textarea>
+
+   <button
+    class="btn primary"
+    id="offerBtn"
+    onclick="sendOffer(
+     '${esc(requestId)}',
+     '${esc(providerId)}'
+    )">
+    TEKLİFİ GÖNDER
+   </button>
+
+  </div>
+ `;
+
  document.body.appendChild(m);
 }
-async function sendOffer(requestId,providerId){
- const priceRaw=document.getElementById("offerPrice").value.trim(),price=Number(priceRaw),available_time=document.getElementById("offerTime").value.trim(),note=document.getElementById("offerNote").value.trim()||null,b=document.getElementById("offerBtn");
- if(!priceRaw||!Number.isFinite(price)||price<=0)return alert("Lütfen geçerli bir teklif fiyatı gir (0'dan büyük).");
- if(!available_time)return alert("Müsait olduğunuz zamanı yazın.");
- if(!isUUID(requestId)||!isUUID(providerId))return alert("Teklif için geçerli UUID gerekli.");
- b.disabled=true;b.textContent="GÖNDERİLİYOR...";
+
+async function sendOffer(
+ requestId,
+ providerId
+){
+
+ if(!CURRENT_USER){
+
+  alert(
+   "Teklif verebilmek için giriş yapmalısın."
+  );
+
+  return;
+ }
+
+ const priceRaw=
+  document.getElementById(
+   "offerPrice"
+  ).value.trim();
+
+ const price=Number(priceRaw);
+
+ const available_time=
+  document.getElementById(
+   "offerTime"
+  ).value.trim();
+
+ const note=
+  document.getElementById(
+   "offerNote"
+  ).value.trim()||
+  null;
+
+ const b=
+  document.getElementById("offerBtn");
+
+ if(
+  !priceRaw||
+  !Number.isFinite(price)||
+  price<=0
+ ){
+
+  alert(
+   "Lütfen geçerli bir teklif fiyatı gir."
+  );
+
+  return;
+ }
+
+ if(!available_time){
+
+  alert(
+   "Müsait olduğunuz zamanı yazın."
+  );
+
+  return;
+ }
+
+ if(
+  !isUUID(requestId)||
+  !isUUID(providerId)
+ ){
+
+  alert(
+   "Teklif için geçerli UUID gerekli."
+  );
+
+  return;
+ }
+
+ b.disabled=true;
+ b.textContent="GÖNDERİLİYOR...";
+
  try{
-  await sb("POST","offers",{request_id:requestId,provider_id:providerId,price,available_time,note,status:"pending"});
-  connection(true);document.getElementById("offerModal")?.remove();alert("Teklif başarıyla gönderildi. ✓");showRequests();
- }catch(e){console.error(e);alert("Teklif gönderilemedi.\n\n"+friendlyErrorMessage(e));b.disabled=false;b.textContent="TEKLİFİ GÖNDER"}
+
+  /*
+   Sağlayıcının gerçekten bu Auth hesabına ait olduğunu
+   uygulama seviyesinde kontrol et.
+  */
+
+  const providerRows=
+   await sb(
+    "GET",
+    "providers?id=eq."+
+    encodeURIComponent(providerId)+
+    "&select=id,user_id&limit=1"
+   );
+
+  const provider=
+   Array.isArray(providerRows)
+   ?providerRows[0]
+   :null;
+
+  if(!provider){
+
+   throw new Error(
+    "Sağlayıcı bulunamadı."
+   );
+  }
+
+  if(
+   provider.user_id&&
+   String(provider.user_id)!==
+   String(CURRENT_USER.id)
+  ){
+
+   throw new Error(
+    "Bu sağlayıcı hesabıyla teklif verme yetkiniz yok."
+   );
+  }
+
+  await sb(
+   "POST",
+   "offers",
+   {
+    request_id:requestId,
+    provider_id:providerId,
+    price,
+    available_time,
+    note,
+    status:"pending"
+   }
+  );
+
+  connection(true);
+
+  document
+   .getElementById("offerModal")
+   ?.remove();
+
+  alert(
+   "Teklif başarıyla gönderildi. ✓"
+  );
+
+  showProviderPanel(
+   CURRENT_PROVIDER
+  );
+
+ }catch(e){
+
+  console.error(e);
+
+  alert(
+   "Teklif gönderilemedi.\n\n"+
+   friendlyErrorMessage(e)
+  );
+
+  b.disabled=false;
+  b.textContent="TEKLİFİ GÖNDER";
+ }
 }
 
-/* ---------------- START ---------------- */
-async function startApp(){connection(false,"Supabase bağlanıyor...");showHome();await testDB()}
+
+/* ============================================================
+   HATA MESAJLARI
+   ============================================================ */
+
+function friendlyErrorMessage(e){
+
+ const raw=
+  String(e?.message||e||"");
+
+ const low=
+  raw.toLocaleLowerCase("tr-TR");
+
+ let friendly=
+  "İşlem tamamlanamadı. Lütfen tekrar deneyin.";
+
+ if(
+  low.includes("failed to fetch")||
+  low.includes("networkerror")||
+  low.includes("load failed")
+ ){
+
+  friendly=
+   "İnternet bağlantısı kurulamadı. "+
+   "Bağlantınızı kontrol edip tekrar deneyin.";
+
+ }else if(
+  low.includes("invalid login credentials")
+ ){
+
+  friendly=
+   "E-posta veya şifre hatalı.";
+
+ }else if(
+  low.includes("email not confirmed")
+ ){
+
+  friendly=
+   "E-posta adresiniz henüz doğrulanmamış.";
+
+ }else if(
+  low.includes("user already registered")
+ ){
+
+  friendly=
+   "Bu e-posta adresiyle zaten bir hesap bulunuyor.";
+
+ }else if(
+  low.includes("password should be at least")
+ ){
+
+  friendly=
+   "Şifre çok kısa.";
+
+ }else if(
+  low.includes("permission denied")
+ ){
+
+  friendly=
+   "Bu işlem için yetkiniz yok.";
+
+ }else if(
+  low.includes("duplicate key")
+ ){
+
+  friendly=
+   "Bu kayıt zaten mevcut.";
+
+ }else if(
+  low.includes("not-null")
+ ){
+
+  friendly=
+   "Zorunlu bir alan boş bırakılmış.";
+
+ }else if(
+  low.includes("timeout")
+ ){
+
+  friendly=
+   "Sunucudan yanıt alınamadı.";
+ }
+
+ return friendly+
+  (
+   raw
+   ?`\n\nTeknik detay: ${raw}`
+   :""
+  );
+}
+
+
+/* ============================================================
+   DB TEST
+   ============================================================ */
+
+async function testDB(){
+
+ try{
+
+  await sb(
+   "GET",
+   "requests?select=id&limit=1"
+  );
+
+  connection(true);
+
+  return true;
+
+ }catch(e){
+
+  console.error(e);
+
+  connection(
+   false,
+   "Supabase bağlantı hatası"
+  );
+
+  return false;
+ }
+}
+
+
+/* ============================================================
+   START
+   ============================================================ */
+
+async function startApp(){
+
+ connection(
+  false,
+  "Supabase bağlanıyor..."
+ );
+
+ /*
+  Önce mevcut oturumu geri yükle.
+ */
+
+ await restoreSession();
+
+ updateUserArea();
+
+ showHome();
+
+ /*
+  Sonra DB bağlantısını test et.
+ */
+
+ await testDB();
+}
+
 startApp();
+
 </script>
+
 </body>
 </html>
