@@ -102,6 +102,13 @@ function isRequestOwner(r){
  return isMyRequest(r.id);
 }
 function isMyProvider(id){return lsGetArray("iscoz_my_providers").includes(id)}
+/* Sahiplik önceliği: gerçek hesap (owner_id) varsa ona bakılır;
+   yoksa (giriş yapılmadan oluşturulmuş eski sağlayıcılar için)
+   tarayıcı hafızasındaki listeye geri düşülür. */
+function isProviderOwner(p){
+ if(CURRENT_USER&&p.owner_id)return p.owner_id===CURRENT_USER.id;
+ return isMyProvider(p.id);
+}
 
 function esc(v){
  return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
@@ -443,7 +450,7 @@ function showProviderEntry(){
  <div class="row"><div><label>İl</label><input id="pCity" value="İzmir" readonly></div><div><label>İlçe *</label><select id="pDistrict">${districtOptions()}</select></div></div>
  <label>Hizmet kategorisi *</label><select id="pCategory">${serviceOptions()}</select>
  <label>Açıklama</label><textarea id="pDescription" maxlength="500" placeholder="Hizmetlerin hakkında kısa bilgi"></textarea>
- <div class="notice">Sağlayıcı kaydı doğrudan Supabase'deki providers tablosuna gönderilir.</div>
+ <div class="notice">Sağlayıcı kaydı doğrudan Supabase'deki providers tablosuna gönderilir.${CURRENT_USER?"":" Giriş yapmadan da kayıt olabilirsin, ancak giriş yaparsan profilin hesabına bağlanır ve farklı cihazdan da yönetebilirsin."}</div>
  <button class="btn primary" id="saveProvider" onclick="registerProvider()">HİZMET SAĞLAYICI KAYDI OLUŞTUR</button>
  <button class="btn secondary section" onclick="showProviders()">KAYITLI SAĞLAYICILARI GÖR</button></div>`);
 }
@@ -453,7 +460,7 @@ async function registerProvider(){
  const b=document.getElementById("saveProvider");b.disabled=true;b.textContent="KAYDEDİLİYOR...";
  try{
   const now=new Date().toISOString();
-  const payload={name,phone,district,description,active:true,created_at:now,city:"İzmir",services:[category],updated_at:now};
+  const payload={name,phone,district,description,active:true,created_at:now,city:"İzmir",services:[category],updated_at:now,owner_id:CURRENT_USER?CURRENT_USER.id:null};
   const rows=await sb("POST","providers",payload);
   const p=Array.isArray(rows)?rows[0]:rows;
   if(!p?.id)throw new Error("Sağlayıcı kaydedildi ancak ID alınamadı.");
@@ -478,7 +485,7 @@ function viewProviderRequests(providerId){
 }
 async function showProviderPanel(provider){
  nav("navProvider");
- const canEdit=isMyProvider(provider.id);
+ const canEdit=isProviderOwner(provider);
  const editBtn=canEdit?`<button class="btn secondary" onclick='showProviderProfile(${jsonAttr(provider)})'>⚙️ PROFİLİMİ DÜZENLE</button>`:"";
  const ownerNotice=canEdit?"":`<div class="notice small">👀 Bu profili bu tarayıcıdan oluşturmadınız — sadece görüntüleyebilirsiniz.</div>`;
  app(`<div class="back"><button class="btn secondary smallBtn" onclick="showProviders()">← Sağlayıcı listesine dön</button></div><div class="card"><h2>🛠️ ${esc(provider.name)}</h2><p class="muted">${esc(provider.district||"")}</p>${ownerNotice}<div class="row section"><button class="btn secondary" onclick='showProviderOffers(${jsonAttr(provider)})'>📑 TEKLİFLERİM</button>${editBtn}</div></div><section class="section"><h2>📋 Uygun Talepler</h2><div id="matchArea" class="card" style="text-align:center">⏳ Eşleşmeler aranıyor...</div></section>`);
@@ -507,7 +514,7 @@ function showProviderProfile(provider){
  <button class="btn primary section" id="pfSaveBtn" onclick='saveProviderProfile(${jsonAttr(provider)})'>DEĞİŞİKLİKLERİ KAYDET</button></div>`);
 }
 async function saveProviderProfile(provider){
- if(!isMyProvider(provider.id)){alert("Bu profili yalnızca kendi tarayıcınızdan (kayıt olduğunuz cihaz/tarayıcıdan) düzenleyebilirsiniz.");return}
+ if(!isProviderOwner(provider)){alert("Bu profili yalnızca kendi hesabınızdan (veya kayıt ettiğiniz tarayıcıdan) düzenleyebilirsiniz.");return}
  const checked=[...document.querySelectorAll("#pfCategories input[type=checkbox]:checked")].map(x=>x.value);
  const district=document.getElementById("pfDistrict").value;
  const description=document.getElementById("pfDescription").value.trim();
