@@ -452,15 +452,15 @@ function openOffer(requestId,providerId,serviceName){
  if(!isUUID(providerId)){alert("Hizmet sağlayıcının gerçek UUID kimliği bulunamadı.");return}
  const m=document.createElement("div");m.id="offerModal";m.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:9999;display:flex;align-items:center;justify-content:center;padding:18px";
  m.innerHTML=`<div class="formCard" style="width:min(520px,100%);max-height:90vh;overflow:auto"><div class="sectionTitle"><div><span class="badge">💰 TEKLİF OLUŞTUR</span><h2>${esc(serviceName)}</h2></div><button class="btn secondary smallBtn" onclick="this.closest('#offerModal').remove()">✕</button></div>
- <label>Teklif fiyatı (TL) *</label><input id="offerPrice" type="number" min="0" step="1" placeholder="Örn. 1500">
+ <label>Teklif fiyatı (TL) *</label><input id="offerPrice" type="number" min="1" step="1" placeholder="Örn. 1500">
  <label>Müsait olduğunuz zaman *</label><input id="offerTime" maxlength="200" placeholder="Örn. Bugün 18:00">
  <label>Mesajınız</label><textarea id="offerNote" maxlength="1000" placeholder="İşin nasıl yapılacağını veya önemli bilgileri yazabilirsiniz."></textarea>
  <button class="btn primary" id="offerBtn" onclick="sendOffer('${requestId}','${providerId}')">TEKLİFİ GÖNDER</button></div>`;
  document.body.appendChild(m);
 }
 async function sendOffer(requestId,providerId){
- const price=Number(document.getElementById("offerPrice").value),available_time=document.getElementById("offerTime").value.trim(),note=document.getElementById("offerNote").value.trim()||null,b=document.getElementById("offerBtn");
- if(!Number.isFinite(price)||price<0)return alert("Geçerli bir fiyat gir.");
+ const priceRaw=document.getElementById("offerPrice").value.trim(),price=Number(priceRaw),available_time=document.getElementById("offerTime").value.trim(),note=document.getElementById("offerNote").value.trim()||null,b=document.getElementById("offerBtn");
+ if(!priceRaw||!Number.isFinite(price)||price<=0)return alert("Lütfen geçerli bir teklif fiyatı gir (0'dan büyük).");
  if(!available_time)return alert("Müsait olduğunuz zamanı yazın.");
  if(!isUUID(requestId)||!isUUID(providerId))return alert("Teklif için geçerli UUID gerekli.");
  b.disabled=true;b.textContent="GÖNDERİLİYOR...";
