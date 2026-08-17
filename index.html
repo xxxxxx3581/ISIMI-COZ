@@ -339,7 +339,7 @@ function viewProviderRequests(providerId){
 }
 async function showProviderPanel(provider){
  nav("navProvider");
- app(`<div class="back"><button class="btn secondary smallBtn" onclick="showProviders()">← Sağlayıcı listesine dön</button></div><div class="card"><h2>🛠️ ${esc(provider.name)}</h2><p class="muted">${esc(provider.district||"")}</p><button class="btn secondary section" onclick='showProviderOffers(${jsonAttr(provider)})'>📑 TEKLİFLERİM</button></div><section class="section"><h2>📋 Uygun Talepler</h2><div id="matchArea" class="card" style="text-align:center">⏳ Eşleşmeler aranıyor...</div></section>`);
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick="showProviders()">← Sağlayıcı listesine dön</button></div><div class="card"><h2>🛠️ ${esc(provider.name)}</h2><p class="muted">${esc(provider.district||"")}</p><div class="row section"><button class="btn secondary" onclick='showProviderOffers(${jsonAttr(provider)})'>📑 TEKLİFLERİM</button><button class="btn secondary" onclick='showProviderProfile(${jsonAttr(provider)})'>⚙️ PROFİLİMİ DÜZENLE</button></div></div><section class="section"><h2>📋 Uygun Talepler</h2><div id="matchArea" class="card" style="text-align:center">⏳ Eşleşmeler aranıyor...</div></section>`);
  try{
   const requests=await sb("GET","requests?select=*&order=created_at.desc&limit=100");
   const suitable=requests.filter(r=>providerMatches(provider,r));
@@ -347,6 +347,41 @@ async function showProviderPanel(provider){
   if(!suitable.length){box.innerHTML=`<div class="empty">🔎 Bu sağlayıcıya uygun talep yok.</div>`;return}
   box.outerHTML=suitable.map(r=>providerRequestCard(r,provider)).join("");
  }catch(e){document.getElementById("matchArea").innerHTML=`<div class="error">Talepler yüklenemedi:<br>${esc(e.message)}</div>`}
+}
+/* ---------------- SAĞLAYICI PROFİLİ ---------------- */
+function providerServiceCheckboxes(selectedKeys){
+ return Object.entries(SERVICES).map(([k,s])=>`<label style="display:flex;align-items:center;gap:8px;font-weight:400;margin:8px 0"><input type="checkbox" value="${k}" ${selectedKeys.includes(k)?"checked":""} style="width:auto"> ${s.emoji} ${esc(s.name)}</label>`).join("");
+}
+function showProviderProfile(provider){
+ nav("navProvider");
+ const selectedKeys=parseServices(provider.services).map(serviceKey);
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick='showProviderPanel(${jsonAttr(provider)})'>← Panele dön</button></div>
+ <div class="formCard"><span class="badge">⚙️ PROFİLİM</span><h1>${esc(provider.name)}</h1>
+ <div class="notice">📞 ${esc(provider.phone||"-")} • İzmir</div>
+ <label>Hizmet kategorileri *</label>
+ <div id="pfCategories">${providerServiceCheckboxes(selectedKeys)}</div>
+ <label>İlçe / Bölge *</label><select id="pfDistrict">${districtOptions(provider.district||"")}</select>
+ <label>Açıklama</label><textarea id="pfDescription" maxlength="500">${esc(provider.description||"")}</textarea>
+ <button class="btn primary section" id="pfSaveBtn" onclick='saveProviderProfile(${jsonAttr(provider)})'>DEĞİŞİKLİKLERİ KAYDET</button></div>`);
+}
+async function saveProviderProfile(provider){
+ const checked=[...document.querySelectorAll("#pfCategories input[type=checkbox]:checked")].map(x=>x.value);
+ const district=document.getElementById("pfDistrict").value;
+ const description=document.getElementById("pfDescription").value.trim();
+ if(!checked.length)return alert("En az bir hizmet kategorisi seçmelisin.");
+ if(!district)return alert("Lütfen ilçe seç.");
+ const btn=document.getElementById("pfSaveBtn");btn.disabled=true;btn.textContent="KAYDEDİLİYOR...";
+ try{
+  await sb("PATCH","providers?id=eq."+encodeURIComponent(provider.id),{services:checked,district,description,updated_at:new Date().toISOString()});
+  connection(true);
+  const updated={...provider,services:checked,district,description};
+  alert("Profil güncellendi ✓");
+  showProviderPanel(updated);
+ }catch(e){
+  console.error(e);
+  alert("Profil güncellenemedi:\n\n"+e.message+"\n\nNot: Bu işlem Supabase'de providers tablosu için UPDATE izni (RLS policy) gerektirir.");
+ }
+ finally{btn.disabled=false;btn.textContent="DEĞİŞİKLİKLERİ KAYDET";}
 }
 async function loadOffersByProvider(providerId){
  if(!isUUID(providerId))return [];
