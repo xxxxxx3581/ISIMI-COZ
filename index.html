@@ -440,6 +440,56 @@ async function acceptOffer(offer,requestId,btnEl){
   if(btnEl){btnEl.disabled=false;btnEl.textContent="✅ TEKLİFİ KABUL ET";}
  }
 }
+/* ---------------- DEĞERLENDİRME (PUANLAMA) ---------------- */
+async function loadReviewForRequest(requestId){
+ if(!isUUID(requestId))return null;
+ try{const rows=await sb("GET","reviews?request_id=eq."+encodeURIComponent(requestId)+"&select=*&limit=1");return Array.isArray(rows)&&rows.length?rows[0]:null}
+ catch(e){console.warn("Değerlendirme okunamadı:",e);return null}
+}
+async function loadProviderRatings(ids){
+ const clean=[...new Set(ids.filter(isUUID))];
+ if(!clean.length)return {};
+ try{
+  const rows=await sb("GET","reviews?provider_id=in.("+clean.join(",")+")&select=provider_id,rating");
+  const map={};
+  (rows||[]).forEach(row=>{const k=String(row.provider_id);if(!map[k])map[k]={sum:0,count:0};map[k].sum+=Number(row.rating)||0;map[k].count++;});
+  const out={};
+  Object.entries(map).forEach(([k,v])=>{out[k]={avg:v.sum/v.count,count:v.count}});
+  return out;
+ }catch(e){console.warn("Değerlendirmeler okunamadı:",e);return {}}
+}
+function starsDisplay(n){
+ const full=Math.round(n);
+ return "★".repeat(full)+"☆".repeat(5-full);
+}
+function ratingBadgeHtml(info){
+ if(!info||!info.count)return `<span class="small muted">Henüz değerlendirme yok</span>`;
+ return `<span style="color:#ffb020">${starsDisplay(info.avg)}</span> <span class="small muted">${info.avg.toFixed(1)} (${info.count} değerlendirme)</span>`;
+}
+function starPickerHtml(){
+ return [1,2,3,4,5].map(i=>`<span onclick="setStarRating(${i})" id="star${i}" style="cursor:pointer;font-size:32px">☆</span>`).join("");
+}
+function setStarRating(n){
+ document.getElementById("reviewRating").value=n;
+ for(let i=1;i<=5;i++){const el=document.getElementById("star"+i);if(el)el.textContent=i<=n?"★":"☆"}
+}
+async function submitReview(requestId,providerId){
+ const rating=Number(document.getElementById("reviewRating").value);
+ const comment=document.getElementById("reviewComment").value.trim()||null;
+ if(!rating||rating<1||rating>5)return alert("Lütfen yıldıza dokunarak bir puan seç.");
+ const btn=document.getElementById("reviewBtn");btn.disabled=true;btn.textContent="GÖNDERİLİYOR...";
+ try{
+  await sb("POST","reviews",{request_id:requestId,provider_id:providerId,customer_id:CURRENT_USER?CURRENT_USER.id:null,rating,comment});
+  connection(true);
+  alert("Değerlendirmen için teşekkürler ✓");
+  showRequestDetail(requestId);
+ }catch(e){
+  console.error(e);
+  alert("Değerlendirme gönderilemedi.\n\n"+friendlyErrorMessage(e));
+  btn.disabled=false;btn.textContent="DEĞERLENDİRMEYİ GÖNDER";
+ }
+}
+
 async function showRequestDetail(requestId){
  nav("navRequests");
  if(!isUUID(requestId)){app(`<div class="error">Geçersiz talep kimliği.</div>`);return}
@@ -456,6 +506,14 @@ async function showRequestDetail(requestId){
   const k=requestService(r),s=SERVICES[k]||{name:r.category_id||"Hizmet",emoji:"🛠️"};
   const st=requestStatusLabel(r.status,offers.length);
   const isOwner=isRequestOwner(r);
+  const acceptedOffer=offers.find(o=>o.status==="accepted");
+  let reviewHtml="";
+  if(isOwner&&r.status==="accepted"&&acceptedOffer){
+   const existing=await loadReviewForRequest(requestId);
+   reviewHtml=existing
+    ?`<div class="section card"><h2>⭐ Değerlendirmen</h2><div style="color:#ffb020;font-size:22px">${starsDisplay(existing.rating)}</div>${existing.comment?`<div class="description">${esc(existing.comment)}</div>`:""}</div>`
+    :`<div class="section formCard"><span class="badge">⭐ DEĞERLENDİRME</span><h2>Sağlayıcıyı değerlendir</h2><div style="letter-spacing:6px">${starPickerHtml()}</div><input type="hidden" id="reviewRating" value="0"><textarea id="reviewComment" maxlength="500" placeholder="Yorumun (isteğe bağlı)"></textarea><button class="btn primary section" id="reviewBtn" onclick="submitReview('${esc(requestId)}','${esc(acceptedOffer.provider_id)}')">DEĞERLENDİRMEYİ GÖNDER</button></div>`;
+  }
   const offersHtml=offers.length
    ?offers.map(o=>detailOfferCard(o,providerById[String(o.provider_id)],r.status,isOwner)).join("")
    :`<div class="small muted section">Henüz teklif gelmedi. Sağlayıcılar talebinizi inceliyor.</div>`;
@@ -466,7 +524,7 @@ async function showRequestDetail(requestId){
   <div class="description">${esc(r.description||"")}</div>
   ${r.photo_url?`<img src="${esc(r.photo_url)}" alt="Talep fotoğrafı" style="width:100%;max-height:320px;object-fit:cover;border-radius:10px;margin-top:8px">`:""}
   <div class="small muted section">Talep ID: <strong>${esc(r.id)}</strong> • Oluşturulma: ${r.created_at?new Date(r.created_at).toLocaleString("tr-TR"):""}</div>
-  <div class="section"><h2>💰 Gelen Teklifler (${offers.length})</h2>${offersHtml}</div></div>`;
+  <div class="section"><h2>💰 Gelen Teklifler (${offers.length})</h2>${offersHtml}</div>${reviewHtml}</div>`;
  }catch(e){document.getElementById("detailArea").innerHTML=`<div class="error">Talep yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
 }
 
@@ -489,10 +547,10 @@ async function loadProviders(){
  const rows=await sb("GET","providers?select=*&order=created_at.desc&limit=200");
  return Array.isArray(rows)?rows:[];
 }
-function providerCard(p){
+function providerCard(p,ratingInfo){
  const names=providerNameService(p).join(", ")||"Hizmet belirtilmemiş";
  const logo=p.logo_url?`<img src="${esc(p.logo_url)}" alt="Logo" style="width:56px;height:56px;object-fit:cover;border-radius:10px;flex-shrink:0">`:"";
- return `<article class="request"><div class="requestTop"><div style="display:flex;gap:10px;align-items:center">${logo}<div><h3>🛠️ ${esc(p.name||"Hizmet Sağlayıcı")}</h3><div class="small muted">İzmir • ${esc(p.district||"")}</div></div></div><span class="status">${p.active===false?"Pasif":"Aktif"}</span></div><div class="meta"><span>🔧 ${esc(names)}</span></div>${p.description?`<div class="description">${esc(p.description)}</div>`:""}<button class="btn primary" style="margin-top:10px" onclick="viewProviderRequests('${esc(p.id)}')">📋 UYGUN TALEPLERİ GÖR / TEKLİF VER</button>${p.phone?`<a class="btn secondary" style="display:block;text-align:center;margin-top:8px" href="tel:${esc(p.phone)}">📞 İLETİŞİME GEÇ</a>`:""}</article>`;
+ return `<article class="request"><div class="requestTop"><div style="display:flex;gap:10px;align-items:center">${logo}<div><h3>🛠️ ${esc(p.name||"Hizmet Sağlayıcı")}</h3><div class="small muted">İzmir • ${esc(p.district||"")}</div></div></div><span class="status">${p.active===false?"Pasif":"Aktif"}</span></div><div class="small section">${ratingBadgeHtml(ratingInfo)}</div><div class="meta"><span>🔧 ${esc(names)}</span></div>${p.description?`<div class="description">${esc(p.description)}</div>`:""}<button class="btn primary" style="margin-top:10px" onclick="viewProviderRequests('${esc(p.id)}')">📋 UYGUN TALEPLERİ GÖR / TEKLİF VER</button>${p.phone?`<a class="btn secondary" style="display:block;text-align:center;margin-top:8px" href="tel:${esc(p.phone)}">📞 İLETİŞİME GEÇ</a>`:""}</article>`;
 }
 function showProviderEntry(){
  nav("navProvider");
@@ -544,7 +602,8 @@ async function showProviders(){
  try{
   const rows=await loadProviders();
   CURRENT_PROVIDERS=rows;
-  document.getElementById("providersArea").outerHTML=rows.length?rows.map(providerCard).join(""):`<div class="card empty">Henüz sağlayıcı kaydı yok.<br><span class="small muted">İlk hizmet sağlayıcı sen ol!</span></div>`;
+  const ratings=await loadProviderRatings(rows.map(p=>p.id));
+  document.getElementById("providersArea").outerHTML=rows.length?rows.map(p=>providerCard(p,ratings[String(p.id)])).join(""):`<div class="card empty">Henüz sağlayıcı kaydı yok.<br><span class="small muted">İlk hizmet sağlayıcı sen ol!</span></div>`;
  }catch(e){document.getElementById("providersArea").innerHTML=`<div class="error">Sağlayıcılar yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
 }
 function viewProviderRequests(providerId){
@@ -557,7 +616,8 @@ async function showProviderPanel(provider){
  const canEdit=isProviderOwner(provider);
  const editBtn=canEdit?`<button class="btn secondary" onclick='showProviderProfile(${jsonAttr(provider)})'>⚙️ PROFİLİMİ DÜZENLE</button>`:"";
  const ownerNotice=canEdit?"":`<div class="notice small">👀 Bu profili bu tarayıcıdan oluşturmadınız — sadece görüntüleyebilirsiniz.</div>`;
- app(`<div class="back"><button class="btn secondary smallBtn" onclick="showProviders()">← Sağlayıcı listesine dön</button></div><div class="card">${provider.logo_url?`<img src="${esc(provider.logo_url)}" alt="Logo" style="width:100%;max-height:200px;object-fit:cover;border-radius:10px;margin-bottom:10px">`:""}<h2>🛠️ ${esc(provider.name)}</h2><p class="muted">${esc(provider.district||"")}</p>${ownerNotice}<div class="row section"><button class="btn secondary" onclick='showProviderOffers(${jsonAttr(provider)})'>📑 TEKLİFLERİM</button>${editBtn}</div></div><section class="section"><h2>📋 Uygun Talepler</h2><div id="matchArea" class="card" style="text-align:center">⏳ Eşleşmeler aranıyor...</div></section>`);
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick="showProviders()">← Sağlayıcı listesine dön</button></div><div class="card">${provider.logo_url?`<img src="${esc(provider.logo_url)}" alt="Logo" style="width:100%;max-height:200px;object-fit:cover;border-radius:10px;margin-bottom:10px">`:""}<h2>🛠️ ${esc(provider.name)}</h2><p class="muted">${esc(provider.district||"")}</p><div class="small" id="providerRatingArea">⏳</div>${ownerNotice}<div class="row section"><button class="btn secondary" onclick='showProviderOffers(${jsonAttr(provider)})'>📑 TEKLİFLERİM</button>${editBtn}</div></div><section class="section"><h2>📋 Uygun Talepler</h2><div id="matchArea" class="card" style="text-align:center">⏳ Eşleşmeler aranıyor...</div></section>`);
+ loadProviderRatings([provider.id]).then(m=>{const el=document.getElementById("providerRatingArea");if(el)el.innerHTML=ratingBadgeHtml(m[String(provider.id)]);});
  try{
   const requests=await sb("GET","requests?select=*&order=created_at.desc&limit=100");
   const suitable=requests.filter(r=>providerMatches(provider,r));
