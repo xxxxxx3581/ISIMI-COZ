@@ -758,6 +758,7 @@ function providerServiceCheckboxes(selectedKeys){
 function showProviderProfile(provider){
  nav("navProvider");
  const selectedKeys=parseServices(provider.services).map(serviceKey);
+ const isActive=provider.active!==false;
  app(`<div class="back"><button class="btn secondary smallBtn" onclick='showProviderPanel(${jsonAttr(provider)})'>← Panele dön</button></div>
  <div class="formCard"><span class="badge">⚙️ PROFİLİM</span><h1>${esc(provider.name)}</h1>
  <div class="notice">📞 ${esc(provider.phone||"-")} • İzmir</div>
@@ -765,6 +766,8 @@ function showProviderProfile(provider){
  <div id="pfCategories">${providerServiceCheckboxes(selectedKeys)}</div>
  <label>İlçe / Bölge *</label><select id="pfDistrict">${districtOptions(provider.district||"")}</select>
  <label>Açıklama</label><textarea id="pfDescription" maxlength="500">${esc(provider.description||"")}</textarea>
+ <label style="display:flex;align-items:center;gap:8px;margin-top:12px"><input type="checkbox" id="pfActive" ${isActive?"checked":""} style="width:20px;height:20px"> Şu anda hizmet veriyorum (aktif)</label>
+ <div class="small muted">Pasif yaparsan yeni talep eşleşmelerinde görünmezsin — teklif alamazsın. Örneğin izinliyken kullanabilirsin.</div>
  <button class="btn primary section" id="pfSaveBtn" onclick='saveProviderProfile(${jsonAttr(provider)})'>DEĞİŞİKLİKLERİ KAYDET</button></div>`);
 }
 async function saveProviderProfile(provider){
@@ -772,13 +775,14 @@ async function saveProviderProfile(provider){
  const checked=[...document.querySelectorAll("#pfCategories input[type=checkbox]:checked")].map(x=>x.value);
  const district=document.getElementById("pfDistrict").value;
  const description=document.getElementById("pfDescription").value.trim();
+ const active=document.getElementById("pfActive").checked;
  if(!checked.length)return alert("En az bir hizmet kategorisi seçmelisin.");
  if(!district)return alert("Lütfen ilçe seç.");
  const btn=document.getElementById("pfSaveBtn");btn.disabled=true;btn.textContent="KAYDEDİLİYOR...";
  try{
-  await sb("PATCH","providers?id=eq."+encodeURIComponent(provider.id),{services:checked,district,description,updated_at:new Date().toISOString()});
+  await sb("PATCH","providers?id=eq."+encodeURIComponent(provider.id),{services:checked,district,description,active,updated_at:new Date().toISOString()});
   connection(true);
-  const updated={...provider,services:checked,district,description};
+  const updated={...provider,services:checked,district,description,active};
   alert("Profil güncellendi ✓");
   showProviderPanel(updated);
  }catch(e){
