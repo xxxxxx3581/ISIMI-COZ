@@ -86,6 +86,7 @@ const DISTRICTS=["Aliağa","Balçova","Bayındır","Bayraklı","Bergama","Beyda�
    Böylece kayıtlı bir sağlayıcı, kendi "uygun talepler / teklif ver"
    paneline listeden tekrar geri dönebilir. */
 let CURRENT_PROVIDERS=[];
+let CURRENT_PROVIDER_RATINGS={};
 
 /* ---- Basit tarayıcı bazlı "sahiplik" kontrolü ----
    Gerçek bir giriş sistemi olmadığı için, bu sadece kazara/rastgele
@@ -621,14 +622,37 @@ async function registerProvider(){
  }catch(e){console.error(e);alert("Sağlayıcı kaydedilemedi.\n\n"+friendlyErrorMessage(e))}
  finally{b.disabled=false;b.textContent="HİZMET SAĞLAYICI KAYDI OLUŞTUR";}
 }
+function serviceFilterOptions(){
+ return `<option value="">Tüm hizmetler</option>`+Object.entries(SERVICES).map(([k,s])=>`<option value="${k}">${s.emoji} ${s.name}</option>`).join("");
+}
+function renderProviderList(){
+ const nameQ=norm(document.getElementById("pfSearch")?.value||"");
+ const district=document.getElementById("pfDistrict2")?.value||"";
+ const service=document.getElementById("pfService")?.value||"";
+ const filtered=CURRENT_PROVIDERS.filter(p=>{
+  if(district&&norm(p.district)!==norm(district))return false;
+  if(service){const keys=parseServices(p.services).map(serviceKey);if(!keys.includes(service))return false}
+  if(nameQ&&!norm(p.name).includes(nameQ))return false;
+  return true;
+ });
+ const area=document.getElementById("providersArea");
+ if(!area)return;
+ area.innerHTML=filtered.length?filtered.map(p=>providerCard(p,CURRENT_PROVIDER_RATINGS[String(p.id)])).join(""):`<div class="card empty">Bu kriterlere uyan sağlayıcı bulunamadı.<br><span class="small muted">Filtreleri değiştirip tekrar dene.</span></div>`;
+}
 async function showProviders(){
  nav("navProvider");
- app(`<div class="back"><button class="btn secondary smallBtn" onclick="showProviderEntry()">← Geri</button></div><span class="badge">🛠️ HİZMET SAĞLAYICILAR</span><h1>Kayıtlı sağlayıcılar.</h1><div id="providersArea" class="card" style="text-align:center">⏳ Yükleniyor...</div>`);
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick="showProviderEntry()">← Geri</button></div><span class="badge">🛠️ HİZMET SAĞLAYICILAR</span><h1>Kayıtlı sağlayıcılar.</h1>
+ <div class="card section">
+  <label>Ara (isim)</label><input id="pfSearch" type="text" placeholder="Sağlayıcı adı..." oninput="renderProviderList()">
+  <div class="row section"><div><label>İlçe</label><select id="pfDistrict2" onchange="renderProviderList()"><option value="">Tüm ilçeler</option>${DISTRICTS.map(d=>`<option value="${esc(d)}">${esc(d)}</option>`).join("")}</select></div><div><label>Hizmet</label><select id="pfService" onchange="renderProviderList()">${serviceFilterOptions()}</select></div></div>
+ </div>
+ <div id="providersArea" class="card" style="text-align:center">⏳ Yükleniyor...</div>`);
  try{
   const rows=await loadProviders();
   CURRENT_PROVIDERS=rows;
-  const ratings=await loadProviderRatings(rows.map(p=>p.id));
-  document.getElementById("providersArea").outerHTML=rows.length?rows.map(p=>providerCard(p,ratings[String(p.id)])).join(""):`<div class="card empty">Henüz sağlayıcı kaydı yok.<br><span class="small muted">İlk hizmet sağlayıcı sen ol!</span></div>`;
+  CURRENT_PROVIDER_RATINGS=await loadProviderRatings(rows.map(p=>p.id));
+  if(!rows.length){document.getElementById("providersArea").outerHTML=`<div class="card empty">Henüz sağlayıcı kaydı yok.<br><span class="small muted">İlk hizmet sağlayıcı sen ol!</span></div>`;return}
+  renderProviderList();
  }catch(e){document.getElementById("providersArea").innerHTML=`<div class="error">Sağlayıcılar yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
 }
 function viewProviderRequests(providerId){
