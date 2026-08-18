@@ -490,6 +490,24 @@ async function submitReview(requestId,providerId){
  }
 }
 
+async function markRequestCompleted(requestId){
+ if(!confirm("Bu işi tamamlandı olarak işaretlemek istediğine emin misin?"))return;
+ try{
+  await sb("PATCH","requests?id=eq."+encodeURIComponent(requestId),{status:"completed"});
+  connection(true);
+  alert("Talep tamamlandı olarak işaretlendi ✓");
+  showRequestDetail(requestId);
+ }catch(e){console.error(e);alert("İşlem yapılamadı.\n\n"+friendlyErrorMessage(e))}
+}
+async function cancelRequest(requestId){
+ if(!confirm("Bu talebi iptal etmek istediğine emin misin? Bu işlem geri alınamaz."))return;
+ try{
+  await sb("PATCH","requests?id=eq."+encodeURIComponent(requestId),{status:"cancelled"});
+  connection(true);
+  alert("Talep iptal edildi.");
+  showRequestDetail(requestId);
+ }catch(e){console.error(e);alert("İşlem yapılamadı.\n\n"+friendlyErrorMessage(e))}
+}
 async function showRequestDetail(requestId){
  nav("navRequests");
  if(!isUUID(requestId)){app(`<div class="error">Geçersiz talep kimliği.</div>`);return}
@@ -508,11 +526,16 @@ async function showRequestDetail(requestId){
   const isOwner=isRequestOwner(r);
   const acceptedOffer=offers.find(o=>o.status==="accepted");
   let reviewHtml="";
-  if(isOwner&&r.status==="accepted"&&acceptedOffer){
+  if(isOwner&&(r.status==="accepted"||r.status==="completed")&&acceptedOffer){
    const existing=await loadReviewForRequest(requestId);
    reviewHtml=existing
     ?`<div class="section card"><h2>⭐ Değerlendirmen</h2><div style="color:#ffb020;font-size:22px">${starsDisplay(existing.rating)}</div>${existing.comment?`<div class="description">${esc(existing.comment)}</div>`:""}</div>`
     :`<div class="section formCard"><span class="badge">⭐ DEĞERLENDİRME</span><h2>Sağlayıcıyı değerlendir</h2><div style="letter-spacing:6px">${starPickerHtml()}</div><input type="hidden" id="reviewRating" value="0"><textarea id="reviewComment" maxlength="500" placeholder="Yorumun (isteğe bağlı)"></textarea><button class="btn primary section" id="reviewBtn" onclick="submitReview('${esc(requestId)}','${esc(acceptedOffer.provider_id)}')">DEĞERLENDİRMEYİ GÖNDER</button></div>`;
+  }
+  let actionButtonsHtml="";
+  if(isOwner&&r.status!=="completed"&&r.status!=="cancelled"){
+   const completeBtn=r.status==="accepted"?`<button class="btn primary" onclick="markRequestCompleted('${esc(requestId)}')">✅ İŞİ TAMAMLANDI OLARAK İŞARETLE</button>`:"";
+   actionButtonsHtml=`<div class="section row">${completeBtn}<button class="btn secondary" onclick="cancelRequest('${esc(requestId)}')">🚫 TALEBİ İPTAL ET</button></div>`;
   }
   const offersHtml=offers.length
    ?offers.map(o=>detailOfferCard(o,providerById[String(o.provider_id)],r.status,isOwner)).join("")
@@ -524,6 +547,7 @@ async function showRequestDetail(requestId){
   <div class="description">${esc(r.description||"")}</div>
   ${r.photo_url?`<img src="${esc(r.photo_url)}" alt="Talep fotoğrafı" style="width:100%;max-height:320px;object-fit:cover;border-radius:10px;margin-top:8px">`:""}
   <div class="small muted section">Talep ID: <strong>${esc(r.id)}</strong> • Oluşturulma: ${r.created_at?new Date(r.created_at).toLocaleString("tr-TR"):""}</div>
+  ${actionButtonsHtml}
   <div class="section"><h2>💰 Gelen Teklifler (${offers.length})</h2>${offersHtml}</div>${reviewHtml}</div>`;
  }catch(e){document.getElementById("detailArea").innerHTML=`<div class="error">Talep yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
 }
