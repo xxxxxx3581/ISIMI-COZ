@@ -526,10 +526,15 @@ async function submitReview(requestId,providerId){
  }
 }
 
+async function closePendingOffers(requestId){
+ try{await sb("PATCH","offers?request_id=eq."+encodeURIComponent(requestId)+"&status=eq.pending",{status:"rejected"})}
+ catch(e){console.warn("Bekleyen teklifler kapatılamadı:",e)}
+}
 async function markRequestCompleted(requestId){
  if(!confirm("Bu işi tamamlandı olarak işaretlemek istediğine emin misin?"))return;
  try{
   await sb("PATCH","requests?id=eq."+encodeURIComponent(requestId),{status:"completed"});
+  await closePendingOffers(requestId);
   connection(true);
   alert("Talep tamamlandı olarak işaretlendi ✓");
   showRequestDetail(requestId);
@@ -539,6 +544,7 @@ async function cancelRequest(requestId){
  if(!confirm("Bu talebi iptal etmek istediğine emin misin? Bu işlem geri alınamaz."))return;
  try{
   await sb("PATCH","requests?id=eq."+encodeURIComponent(requestId),{status:"cancelled"});
+  await closePendingOffers(requestId);
   connection(true);
   alert("Talep iptal edildi.");
   showRequestDetail(requestId);
@@ -553,7 +559,11 @@ async function showRequestDetail(requestId){
   const r=Array.isArray(rows)?rows[0]:null;
   const area=document.getElementById("detailArea");
   if(!r){area.innerHTML=`<div class="empty">🔎 Talep bulunamadı. Silinmiş olabilir.</div>`;return}
-  const offers=await loadOffers(requestId);
+  let offers=await loadOffers(requestId);
+  if((r.status==="cancelled"||r.status==="completed")&&offers.some(o=>o.status==="pending")&&isRequestOwner(r)){
+   await closePendingOffers(requestId);
+   offers=await loadOffers(requestId);
+  }
   markOffersSeen(requestId,offers.length);
   const providers=await loadProvidersByIds(offers.map(o=>o.provider_id));
   const providerById=Object.fromEntries(providers.map(p=>[String(p.id),p]));
