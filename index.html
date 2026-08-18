@@ -712,10 +712,12 @@ async function showProviderOffers(provider){
   const offers=await loadOffersByProvider(provider.id);
   const area=document.getElementById("providerOffersArea");
   if(!offers.length){area.innerHTML=`<div class="empty">📑 Henüz teklif vermediniz.<br><span class="small muted">Uygun bir talebe teklif verdiğinizde burada görünecek.</span></div>`;return}
-  const requests=await loadRequestsByIds(offers.map(o=>o.request_id));
-  const requestById=Object.fromEntries(requests.map(r=>[String(r.id),r]));
-  area.outerHTML=offers.map(o=>providerOfferCard(o,requestById[String(o.request_id)])).join("");
+  const visibleOffers=offers.filter(o=>o.status!=="rejected");
   offers.forEach(markOfferSeen);
+  if(!visibleOffers.length){area.innerHTML=`<div class="empty">📑 Aktif teklifiniz yok.<br><span class="small muted">Reddedilen teklifler burada gösterilmez.</span></div>`;return}
+  const requests=await loadRequestsByIds(visibleOffers.map(o=>o.request_id));
+  const requestById=Object.fromEntries(requests.map(r=>[String(r.id),r]));
+  area.outerHTML=visibleOffers.map(o=>providerOfferCard(o,requestById[String(o.request_id)])).join("");
  }catch(e){document.getElementById("providerOffersArea").innerHTML=`<div class="error">Teklifler yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
 }
 function providerRequestCard(r,p){
