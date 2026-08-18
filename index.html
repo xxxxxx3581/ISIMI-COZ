@@ -87,6 +87,7 @@ const DISTRICTS=["Aliağa","Balçova","Bayındır","Bayraklı","Bergama","Beyda�
    paneline listeden tekrar geri dönebilir. */
 let CURRENT_PROVIDERS=[];
 let CURRENT_PROVIDER_RATINGS={};
+let CURRENT_PROVIDER_COMPLETED={};
 
 /* ---- Basit tarayıcı bazlı "sahiplik" kontrolü ----
    Gerçek bir giriş sistemi olmadığı için, bu sadece kazara/rastgele
@@ -244,8 +245,9 @@ async function showAccount(){
   html+=`</section>`;
   if(myProviders.length){
    const ratings=await loadProviderRatings(myProviders.map(p=>p.id));
+   const completed=await loadProviderCompletedCounts(myProviders.map(p=>p.id));
    CURRENT_PROVIDERS=[...CURRENT_PROVIDERS,...myProviders.filter(p=>!CURRENT_PROVIDERS.some(x=>String(x.id)===String(p.id)))];
-   html+=`<section class="section"><h2>🛠️ Sağlayıcı Profilim</h2>`+myProviders.map(p=>providerCard(p,ratings[String(p.id)])).join("")+`</section>`;
+   html+=`<section class="section"><h2>🛠️ Sağlayıcı Profilim</h2>`+myProviders.map(p=>providerCard(p,ratings[String(p.id)],completed[String(p.id)])).join("")+`</section>`;
   }
   document.getElementById("accountArea").outerHTML=html;
  }catch(e){document.getElementById("accountArea").innerHTML=`<div class="error">Hesap bilgileri yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
@@ -482,6 +484,28 @@ async function loadReviewForRequest(requestId){
  try{const rows=await sb("GET","reviews?request_id=eq."+encodeURIComponent(requestId)+"&select=*&limit=1");return Array.isArray(rows)&&rows.length?rows[0]:null}
  catch(e){console.warn("Değerlendirme okunamadı:",e);return null}
 }
+async function loadProviderCompletedCounts(ids){
+ const clean=[...new Set(ids.filter(isUUID))];
+ if(!clean.length)return {};
+ try{
+  const offRows=await sb("GET","offers?provider_id=in.("+clean.join(",")+")&status=eq.accepted&select=provider_id,request_id");
+  const reqIds=[...new Set((offRows||[]).map(o=>o.request_id).filter(isUUID))];
+  if(!reqIds.length)return {};
+  const reqRows=await sb("GET","requests?id=in.("+reqIds.join(",")+")&select=id,status");
+  const completedIds=new Set((reqRows||[]).filter(r=>r.status==="completed").map(r=>String(r.id)));
+  const out={};
+  (offRows||[]).forEach(o=>{
+   if(!completedIds.has(String(o.request_id)))return;
+   const k=String(o.provider_id);
+   out[k]=(out[k]||0)+1;
+  });
+  return out;
+ }catch(e){console.warn("Tamamlanan iş sayısı okunamadı:",e);return {}}
+}
+function trustBadgeHtml(completedCount,ratingInfo){
+ const qualifies=completedCount>=3&&ratingInfo&&ratingInfo.avg>=4;
+ return qualifies?`<span class="status" style="background:#1f6f43;color:#daffe9">🏆 Güvenilir Sağlayıcı</span>`:"";
+}
 async function loadProviderRatings(ids){
  const clean=[...new Set(ids.filter(isUUID))];
  if(!clean.length)return {};
@@ -618,10 +642,12 @@ async function loadProviders(){
  const rows=await sb("GET","providers?select=*&order=created_at.desc&limit=200");
  return Array.isArray(rows)?rows:[];
 }
-function providerCard(p,ratingInfo){
+function providerCard(p,ratingInfo,completedCount){
  const names=providerNameService(p).join(", ")||"Hizmet belirtilmemiş";
  const logo=p.logo_url?`<img src="${esc(p.logo_url)}" alt="Logo" style="width:56px;height:56px;object-fit:cover;border-radius:10px;flex-shrink:0">`:"";
- return `<article class="request"><div class="requestTop"><div style="display:flex;gap:10px;align-items:center">${logo}<div><h3>🛠️ ${esc(p.name||"Hizmet Sağlayıcı")}</h3><div class="small muted">İzmir • ${esc(p.district||"")}</div></div></div><span class="status">${p.active===false?"Pasif":"Aktif"}</span></div><div class="small section">${ratingBadgeHtml(ratingInfo)}</div><div class="meta"><span>🔧 ${esc(names)}</span></div>${p.description?`<div class="description">${esc(p.description)}</div>`:""}<button class="btn primary" style="margin-top:10px" onclick="viewProviderRequests('${esc(p.id)}')">📋 UYGUN TALEPLERİ GÖR / TEKLİF VER</button>${p.phone?`<a class="btn secondary" style="display:block;text-align:center;margin-top:8px" href="tel:${esc(p.phone)}">📞 İLETİŞİME GEÇ</a>`:""}</article>`;
+ const cc=completedCount||0;
+ const completedHtml=cc>0?`<span class="small muted">✅ ${cc} iş tamamladı</span>`:"";
+ return `<article class="request"><div class="requestTop"><div style="display:flex;gap:10px;align-items:center">${logo}<div><h3>🛠️ ${esc(p.name||"Hizmet Sağlayıcı")}</h3><div class="small muted">İzmir • ${esc(p.district||"")}</div></div></div><span class="status">${p.active===false?"Pasif":"Aktif"}</span></div><div class="small section">${trustBadgeHtml(cc,ratingInfo)}</div><div class="small section">${ratingBadgeHtml(ratingInfo)}${completedHtml?" • "+completedHtml:""}</div><div class="meta"><span>🔧 ${esc(names)}</span></div>${p.description?`<div class="description">${esc(p.description)}</div>`:""}<button class="btn primary" style="margin-top:10px" onclick="viewProviderRequests('${esc(p.id)}')">📋 UYGUN TALEPLERİ GÖR / TEKLİF VER</button>${p.phone?`<a class="btn secondary" style="display:block;text-align:center;margin-top:8px" href="tel:${esc(p.phone)}">📞 İLETİŞİME GEÇ</a>`:""}</article>`;
 }
 function showProviderEntry(){
  nav("navProvider");
@@ -682,7 +708,7 @@ function renderProviderList(){
  });
  const area=document.getElementById("providersArea");
  if(!area)return;
- area.innerHTML=filtered.length?filtered.map(p=>providerCard(p,CURRENT_PROVIDER_RATINGS[String(p.id)])).join(""):`<div class="card empty">Bu kriterlere uyan sağlayıcı bulunamadı.<br><span class="small muted">Filtreleri değiştirip tekrar dene.</span></div>`;
+ area.innerHTML=filtered.length?filtered.map(p=>providerCard(p,CURRENT_PROVIDER_RATINGS[String(p.id)],CURRENT_PROVIDER_COMPLETED[String(p.id)])).join(""):`<div class="card empty">Bu kriterlere uyan sağlayıcı bulunamadı.<br><span class="small muted">Filtreleri değiştirip tekrar dene.</span></div>`;
 }
 async function showProviders(){
  nav("navProvider");
@@ -696,6 +722,7 @@ async function showProviders(){
   const rows=await loadProviders();
   CURRENT_PROVIDERS=rows;
   CURRENT_PROVIDER_RATINGS=await loadProviderRatings(rows.map(p=>p.id));
+  CURRENT_PROVIDER_COMPLETED=await loadProviderCompletedCounts(rows.map(p=>p.id));
   if(!rows.length){document.getElementById("providersArea").outerHTML=`<div class="card empty">Henüz sağlayıcı kaydı yok.<br><span class="small muted">İlk hizmet sağlayıcı sen ol!</span></div>`;return}
   renderProviderList();
  }catch(e){document.getElementById("providersArea").innerHTML=`<div class="error">Sağlayıcılar yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
@@ -711,7 +738,11 @@ async function showProviderPanel(provider){
  const editBtn=canEdit?`<button class="btn secondary" onclick='showProviderProfile(${jsonAttr(provider)})'>⚙️ PROFİLİMİ DÜZENLE</button>`:"";
  const ownerNotice=canEdit?"":`<div class="notice small">👀 Bu profili bu tarayıcıdan oluşturmadınız — sadece görüntüleyebilirsiniz.</div>`;
  app(`<div class="back"><button class="btn secondary smallBtn" onclick="showProviders()">← Sağlayıcı listesine dön</button></div><div class="card">${provider.logo_url?`<img src="${esc(provider.logo_url)}" alt="Logo" style="width:100%;max-height:200px;object-fit:cover;border-radius:10px;margin-bottom:10px">`:""}<h2>🛠️ ${esc(provider.name)}</h2><p class="muted">${esc(provider.district||"")}</p><div class="small" id="providerRatingArea">⏳</div>${ownerNotice}<div class="row section"><button class="btn secondary" onclick='showProviderOffers(${jsonAttr(provider)})'>📑 TEKLİFLERİM</button>${editBtn}</div></div><section class="section"><h2>📋 Uygun Talepler</h2><div id="matchArea" class="card" style="text-align:center">⏳ Eşleşmeler aranıyor...</div></section>`);
- loadProviderRatings([provider.id]).then(m=>{const el=document.getElementById("providerRatingArea");if(el)el.innerHTML=ratingBadgeHtml(m[String(provider.id)]);});
+ loadProviderRatings([provider.id]).then(async m=>{
+  const completed=await loadProviderCompletedCounts([provider.id]);
+  const el=document.getElementById("providerRatingArea");
+  if(el)el.innerHTML=`${trustBadgeHtml(completed[String(provider.id)]||0,m[String(provider.id)])} ${ratingBadgeHtml(m[String(provider.id)])}${completed[String(provider.id)]?` • <span class="small muted">✅ ${completed[String(provider.id)]} iş tamamladı</span>`:""}`;
+ });
  try{
   const requests=await sb("GET","requests?select=*&order=created_at.desc&limit=100");
   const suitable=requests.filter(r=>providerMatches(provider,r));
