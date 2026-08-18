@@ -297,8 +297,31 @@ function showRequest(pre=""){
  <div class="row"><div><label>İl</label><input value="İzmir" readonly></div><div><label>İlçe *</label><select id="district">${districtOptions()}</select></div></div>
  <label>Mahalle</label><input id="neighborhood" placeholder="Mahalle adı">
  <label>Ne zaman gerekli?</label><select id="urgency"><option>Bugün</option><option>Acil</option><option>Uygun zamanda</option></select>
+ <label>Fotoğraf ekle (isteğe bağlı)</label><input id="photoFile" type="file" accept="image/*">
+ <div id="photoPreview" class="small muted"></div>
  <div class="notice">🔒 Talep kaydında müşteri adı ve telefonunun kullanılmadığı mevcut Supabase şemasına uyum sağlanmıştır. İletişim bilgileri bu sürümde tarayıcıda tutulmaz.</div>
  <button class="btn primary" id="createBtn" onclick="createRequest()">TALEBİ OLUŞTUR</button></div>`);
+ document.getElementById("photoFile").addEventListener("change",function(){
+  const f=this.files[0],box=document.getElementById("photoPreview");
+  if(!f){box.innerHTML="";return}
+  if(!f.type.startsWith("image/")){box.innerHTML="⚠️ Lütfen bir resim dosyası seç.";this.value="";return}
+  if(f.size>5*1024*1024){box.innerHTML="⚠️ Fotoğraf 5MB'dan küçük olmalı.";this.value="";return}
+  box.innerHTML=`✓ ${esc(f.name)} seçildi`;
+ });
+}
+/* Fotoğrafı Supabase Storage'a yükler, herkese açık URL döner. */
+async function uploadRequestPhoto(file){
+ const extMatch=(file.name||"").match(/\.([a-zA-Z0-9]+)$/);
+ const ext=(extMatch?extMatch[1]:"jpg").toLowerCase().replace(/[^a-z0-9]/g,"")||"jpg";
+ const rand=(crypto?.randomUUID)?crypto.randomUUID():(Date.now()+"-"+Math.random().toString(36).slice(2));
+ const path=rand+"."+ext;
+ const token=ACCESS_TOKEN||SUPABASE_KEY;
+ const r=await fetch(SUPABASE_URL+"/storage/v1/object/request-photos/"+path,{method:"POST",headers:{apikey:SUPABASE_KEY,Authorization:"Bearer "+token,"Content-Type":file.type||"application/octet-stream"},body:file});
+ if(!r.ok){
+  const t=await r.text();let d=null;try{d=JSON.parse(t)}catch(_){d=t}
+  throw new Error(d?.message||d?.error||("Fotoğraf yüklenemedi: HTTP "+r.status));
+ }
+ return SUPABASE_URL+"/storage/v1/object/public/request-photos/"+path;
 }
 async function createRequest(){
  const category=document.getElementById("category").value;
@@ -311,7 +334,14 @@ async function createRequest(){
  if(!district)return alert("Lütfen ilçe seç.");
  const btn=document.getElementById("createBtn");btn.disabled=true;btn.textContent="KAYDEDİLİYOR...";
  try{
-  const payload={category_id:category,description,district,neighborhood:neighborhood||null,urgency,status:"pending",customer_id:CURRENT_USER?CURRENT_USER.id:null};
+  const file=document.getElementById("photoFile")?.files?.[0]||null;
+  let photo_url=null;
+  if(file){
+   btn.textContent="FOTOĞRAF YÜKLENİYOR...";
+   photo_url=await uploadRequestPhoto(file);
+   btn.textContent="KAYDEDİLİYOR...";
+  }
+  const payload={category_id:category,description,district,neighborhood:neighborhood||null,urgency,status:"pending",customer_id:CURRENT_USER?CURRENT_USER.id:null,photo_url};
   const rows=await sb("POST","requests",payload);
   const row=Array.isArray(rows)?rows[0]:rows;
   if(!row?.id)throw new Error("Talep kaydedildi ancak UUID alınamadı.");
@@ -336,7 +366,7 @@ function requestStatusLabel(status,offerCount){
 function requestCard(r,offersHtml="",offerCount=0){
  const k=requestService(r),s=SERVICES[k]||{name:r.category_id||"Hizmet",emoji:"🛠️"};
  const st=requestStatusLabel(r.status,offerCount);
- return `<article class="request"><div class="requestTop"><div><h3>${s.emoji} ${esc(s.name)}</h3><div class="small muted">${r.created_at?new Date(r.created_at).toLocaleString("tr-TR"):""}</div></div><span class="status status-${st.cls}">${esc(st.label)}</span></div><div class="description">${esc(r.description||"")}</div><div class="meta"><span>📍 ${esc(r.district||"")}</span>${r.neighborhood?`<span>🏘️ ${esc(r.neighborhood)}</span>`:""}<span>⏱️ ${esc(r.urgency||"")}</span></div><div class="small muted">ID: <strong>${esc(r.id)}</strong></div><button class="btn secondary smallBtn section" onclick="showRequestDetail('${esc(r.id)}')">📄 Detayları Gör</button>${offersHtml}</article>`;
+ return `<article class="request"><div class="requestTop"><div><h3>${s.emoji} ${esc(s.name)}</h3><div class="small muted">${r.created_at?new Date(r.created_at).toLocaleString("tr-TR"):""}</div></div><span class="status status-${st.cls}">${esc(st.label)}</span></div><div class="description">${esc(r.description||"")}</div>${r.photo_url?`<img src="${esc(r.photo_url)}" alt="Talep fotoğrafı" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-top:8px">`:""}<div class="meta"><span>📍 ${esc(r.district||"")}</span>${r.neighborhood?`<span>🏘️ ${esc(r.neighborhood)}</span>`:""}<span>⏱️ ${esc(r.urgency||"")}</span></div><div class="small muted">ID: <strong>${esc(r.id)}</strong></div><button class="btn secondary smallBtn section" onclick="showRequestDetail('${esc(r.id)}')">📄 Detayları Gör</button>${offersHtml}</article>`;
 }
 async function showRequests(){
  nav("navRequests");
@@ -434,6 +464,7 @@ async function showRequestDetail(requestId){
   ${ownerNotice}
   <div class="meta"><span class="status status-${st.cls}">${esc(st.label)}</span><span>📍 ${esc(r.district||"")}</span>${r.neighborhood?`<span>🏘️ ${esc(r.neighborhood)}</span>`:""}<span>⏱️ ${esc(r.urgency||"")}</span></div>
   <div class="description">${esc(r.description||"")}</div>
+  ${r.photo_url?`<img src="${esc(r.photo_url)}" alt="Talep fotoğrafı" style="width:100%;max-height:320px;object-fit:cover;border-radius:10px;margin-top:8px">`:""}
   <div class="small muted section">Talep ID: <strong>${esc(r.id)}</strong> • Oluşturulma: ${r.created_at?new Date(r.created_at).toLocaleString("tr-TR"):""}</div>
   <div class="section"><h2>💰 Gelen Teklifler (${offers.length})</h2>${offersHtml}</div></div>`;
  }catch(e){document.getElementById("detailArea").innerHTML=`<div class="error">Talep yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
@@ -587,7 +618,7 @@ async function showProviderOffers(provider){
 }
 function providerRequestCard(r,p){
  const k=requestService(r),s=SERVICES[k]||{name:r.category_id||"Hizmet",emoji:"🛠️"};
- return `<article class="request"><div class="requestTop"><div><h3>${s.emoji} ${esc(s.name)}</h3><div class="small muted">Talep UUID: ${esc(r.id)}</div></div><span class="status">${esc(r.urgency||r.status||"pending")}</span></div><div class="description">${esc(r.description||"")}</div><div class="meta"><span>📍 ${esc(r.district||"")}</span>${r.neighborhood?`<span>🏘️ ${esc(r.neighborhood)}</span>`:""}</div><button class="btn primary" onclick="openOffer('${esc(r.id)}','${esc(p.id)}','${esc(s.name)}')">💰 TEKLİF VER</button></article>`;
+ return `<article class="request"><div class="requestTop"><div><h3>${s.emoji} ${esc(s.name)}</h3><div class="small muted">Talep UUID: ${esc(r.id)}</div></div><span class="status">${esc(r.urgency||r.status||"pending")}</span></div><div class="description">${esc(r.description||"")}</div>${r.photo_url?`<img src="${esc(r.photo_url)}" alt="Talep fotoğrafı" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-top:8px">`:""}<div class="meta"><span>📍 ${esc(r.district||"")}</span>${r.neighborhood?`<span>🏘️ ${esc(r.neighborhood)}</span>`:""}</div><button class="btn primary" onclick="openOffer('${esc(r.id)}','${esc(p.id)}','${esc(s.name)}')">💰 TEKLİF VER</button></article>`;
 }
 
 /* ---------------- OFFERS ---------------- */
