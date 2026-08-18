@@ -406,21 +406,48 @@ function requestCard(r,offersHtml="",offerCount=0){
  const st=requestStatusLabel(r.status,offerCount);
  return `<article class="request"><div class="requestTop"><div><h3>${s.emoji} ${esc(s.name)}</h3><div class="small muted">${r.created_at?new Date(r.created_at).toLocaleString("tr-TR"):""}</div></div><span class="status status-${st.cls}">${esc(st.label)}</span></div><div class="description">${esc(r.description||"")}</div>${r.photo_url?`<img src="${esc(r.photo_url)}" alt="Talep fotoğrafı" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-top:8px">`:""}<div class="meta"><span>📍 ${esc(r.district||"")}</span>${r.neighborhood?`<span>🏘️ ${esc(r.neighborhood)}</span>`:""}<span>⏱️ ${esc(r.urgency||"")}</span></div><div class="small muted">ID: <strong>${esc(r.id)}</strong></div><button class="btn secondary smallBtn section" onclick="showRequestDetail('${esc(r.id)}')">📄 Detayları Gör</button>${offersHtml}</article>`;
 }
+let CURRENT_REQUESTS_ALL=[];
+let CURRENT_REQUESTS_OFFER_COUNTS={};
+let REQUESTS_VIEW="open";
+function isRequestOpenStatus(status){return status!=="completed"&&status!=="cancelled"}
+function renderRequestsList(){
+ const area=document.getElementById("requestsArea");
+ if(!area)return;
+ const filtered=CURRENT_REQUESTS_ALL.filter(r=>REQUESTS_VIEW==="open"?isRequestOpenStatus(r.status):!isRequestOpenStatus(r.status));
+ if(!filtered.length){
+  area.innerHTML=REQUESTS_VIEW==="open"
+   ?`<div class="empty">📋<h3>Açık talep yok.</h3><p class="small muted">İlk talebi sen oluştur, uygun hizmet sağlayıcılar teklif versin.</p><button class="btn primary" onclick="showRequest()">＋ Talep oluştur</button></div>`
+   :`<div class="empty">📁<h3>Henüz tamamlanmış veya iptal edilmiş talep yok.</h3></div>`;
+  return;
+ }
+ area.innerHTML=filtered.map(r=>{
+  const count=CURRENT_REQUESTS_OFFER_COUNTS[String(r.id)]||0;
+  const isNew=hasNewOffers(r.id,count);
+  const summary=count?`<div class="small section" style="color:#8fd0ff">${isNew?'<strong style="color:#ff6b6b">🔴 Yeni teklif! </strong>':""}💰 ${count} teklif geldi — detaylar için aşağıya dokun.</div>`:`<div class="small muted section">Henüz teklif gelmedi.</div>`;
+  return requestCard(r,summary,count);
+ }).join("");
+}
+function setRequestsView(v){
+ REQUESTS_VIEW=v;
+ const openTab=document.getElementById("tabOpenReq"),archiveTab=document.getElementById("tabArchiveReq");
+ if(openTab)openTab.className="btn "+(v==="open"?"primary":"secondary")+" smallBtn";
+ if(archiveTab)archiveTab.className="btn "+(v==="archive"?"primary":"secondary")+" smallBtn";
+ renderRequestsList();
+}
 async function showRequests(){
  nav("navRequests");
- app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div><span class="badge">▣ TALEPLER</span><h1>Oluşturulan talepler.</h1><div id="requestsArea" class="card" style="text-align:center">⏳ Yükleniyor...</div>`);
+ REQUESTS_VIEW="open";
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div><span class="badge">▣ TALEPLER</span><h1>Oluşturulan talepler.</h1>
+ <div class="row section"><button class="btn primary smallBtn" id="tabOpenReq" onclick="setRequestsView('open')">📋 Açık Talepler</button><button class="btn secondary smallBtn" id="tabArchiveReq" onclick="setRequestsView('archive')">✅ Tamamlanan / İptal</button></div>
+ <div id="requestsArea" class="card" style="text-align:center">⏳ Yükleniyor...</div>`);
  try{
   const rows=await sb("GET","requests?select=*&order=created_at.desc&limit=100");
+  CURRENT_REQUESTS_ALL=rows;
   const area=document.getElementById("requestsArea");
   if(!rows.length){area.innerHTML=`<div class="empty">📋<h3>Henüz talep yok.</h3><p class="small muted">İlk talebi sen oluştur, uygun hizmet sağlayıcılar teklif versin.</p><button class="btn primary" onclick="showRequest()">＋ Talep oluştur</button></div>`;return}
   const offersLists=await Promise.all(rows.map(r=>loadOffers(r.id)));
-  const html=rows.map((r,i)=>{
-   const count=offersLists[i].length;
-   const isNew=hasNewOffers(r.id,count);
-   const summary=count?`<div class="small section" style="color:#8fd0ff">${isNew?'<strong style="color:#ff6b6b">🔴 Yeni teklif! </strong>':""}💰 ${count} teklif geldi — detaylar için aşağıya dokun.</div>`:`<div class="small muted section">Henüz teklif gelmedi.</div>`;
-   return requestCard(r,summary,count);
-  });
-  area.outerHTML=html.join("");
+  CURRENT_REQUESTS_OFFER_COUNTS=Object.fromEntries(rows.map((r,i)=>[String(r.id),offersLists[i].length]));
+  renderRequestsList();
  }catch(e){document.getElementById("requestsArea").innerHTML=`<div class="error">Talepler yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
 }
 
