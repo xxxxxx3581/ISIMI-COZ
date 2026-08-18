@@ -110,6 +110,25 @@ function isProviderOwner(p){
  return isMyProvider(p.id);
 }
 
+/* ---- Site içi bildirim rozetleri ----
+   Sunucuya yeni bir tablo eklemeden, tarayıcıda "en son görülen" durumu
+   saklayarak yeni teklif / durum değişikliği rozetleri gösterir. */
+function lsGetObj(key){try{return JSON.parse(localStorage.getItem(key)||"{}")}catch(e){return {}}}
+function lsSetObjKey(key,id,val){try{const o=lsGetObj(key);o[id]=val;localStorage.setItem(key,JSON.stringify(o));}catch(e){console.warn("Tarayıcı hafızasına yazılamadı:",e)}}
+function hasNewOffers(requestId,offerCount){
+ if(!offerCount)return false;
+ const seen=lsGetObj("iscoz_seen_offer_counts");
+ return (seen[requestId]||0)<offerCount;
+}
+function markOffersSeen(requestId,offerCount){lsSetObjKey("iscoz_seen_offer_counts",requestId,offerCount);}
+function offerSeenKey(o){return o.id!==undefined&&o.id!==null&&o.id!==""?String(o.id):o.request_id+"_"+o.provider_id;}
+function hasOfferUpdate(o){
+ if(o.status==="pending")return false;
+ const seen=lsGetObj("iscoz_seen_offer_status");
+ return seen[offerSeenKey(o)]!==o.status;
+}
+function markOfferSeen(o){lsSetObjKey("iscoz_seen_offer_status",offerSeenKey(o),o.status);}
+
 function esc(v){
  return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;");
 }
@@ -329,7 +348,8 @@ async function showRequests(){
   const offersLists=await Promise.all(rows.map(r=>loadOffers(r.id)));
   const html=rows.map((r,i)=>{
    const count=offersLists[i].length;
-   const summary=count?`<div class="small section" style="color:#8fd0ff">💰 ${count} teklif geldi — detaylar için aşağıya dokun.</div>`:`<div class="small muted section">Henüz teklif gelmedi.</div>`;
+   const isNew=hasNewOffers(r.id,count);
+   const summary=count?`<div class="small section" style="color:#8fd0ff">${isNew?'<strong style="color:#ff6b6b">🔴 Yeni teklif! </strong>':""}💰 ${count} teklif geldi — detaylar için aşağıya dokun.</div>`:`<div class="small muted section">Henüz teklif gelmedi.</div>`;
    return requestCard(r,summary,count);
   });
   area.outerHTML=html.join("");
@@ -400,6 +420,7 @@ async function showRequestDetail(requestId){
   const area=document.getElementById("detailArea");
   if(!r){area.innerHTML=`<div class="empty">🔎 Talep bulunamadı. Silinmiş olabilir.</div>`;return}
   const offers=await loadOffers(requestId);
+  markOffersSeen(requestId,offers.length);
   const providers=await loadProvidersByIds(offers.map(o=>o.provider_id));
   const providerById=Object.fromEntries(providers.map(p=>[String(p.id),p]));
   const k=requestService(r),s=SERVICES[k]||{name:r.category_id||"Hizmet",emoji:"🛠️"};
@@ -548,7 +569,8 @@ function providerOfferCard(o,request){
  const price=Number(o.price);
  const k=request?requestService(request):"";
  const s=SERVICES[k]||{name:request?.category_id||"Hizmet",emoji:"🛠️"};
- return `<article class="request"><div class="requestTop"><div><h3>${s.emoji} ${esc(s.name)}</h3><div class="small muted">${o.created_at?new Date(o.created_at).toLocaleString("tr-TR"):""}</div></div>${offerStatusBadge(o.status)}</div>${request?`<div class="description">${esc(request.description||"")}</div><div class="meta"><span>📍 ${esc(request.district||"")}</span></div>`:`<div class="small muted">Talep bilgisi bulunamadı (silinmiş olabilir).</div>`}<div class="meta"><span>💰 ${Number.isFinite(price)?price.toLocaleString("tr-TR")+" TL":"-"}</span>${o.available_time?`<span>🕐 ${esc(o.available_time)}</span>`:""}</div>${o.note?`<div class="description">${esc(o.note)}</div>`:""}</article>`;
+ const updateBadge=hasOfferUpdate(o)?`<div class="small section" style="color:#ff6b6b"><strong>🆕 ${o.status==="accepted"?"Teklifin kabul edildi!":"Durum güncellendi"}</strong></div>`:"";
+ return `<article class="request"><div class="requestTop"><div><h3>${s.emoji} ${esc(s.name)}</h3><div class="small muted">${o.created_at?new Date(o.created_at).toLocaleString("tr-TR"):""}</div></div>${offerStatusBadge(o.status)}</div>${updateBadge}${request?`<div class="description">${esc(request.description||"")}</div><div class="meta"><span>📍 ${esc(request.district||"")}</span></div>`:`<div class="small muted">Talep bilgisi bulunamadı (silinmiş olabilir).</div>`}<div class="meta"><span>💰 ${Number.isFinite(price)?price.toLocaleString("tr-TR")+" TL":"-"}</span>${o.available_time?`<span>🕐 ${esc(o.available_time)}</span>`:""}</div>${o.note?`<div class="description">${esc(o.note)}</div>`:""}</article>`;
 }
 async function showProviderOffers(provider){
  nav("navProvider");
@@ -560,6 +582,7 @@ async function showProviderOffers(provider){
   const requests=await loadRequestsByIds(offers.map(o=>o.request_id));
   const requestById=Object.fromEntries(requests.map(r=>[String(r.id),r]));
   area.outerHTML=offers.map(o=>providerOfferCard(o,requestById[String(o.request_id)])).join("");
+  offers.forEach(markOfferSeen);
  }catch(e){document.getElementById("providerOffersArea").innerHTML=`<div class="error">Teklifler yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
 }
 function providerRequestCard(r,p){
