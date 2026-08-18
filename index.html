@@ -491,7 +491,8 @@ async function loadProviders(){
 }
 function providerCard(p){
  const names=providerNameService(p).join(", ")||"Hizmet belirtilmemiş";
- return `<article class="request"><div class="requestTop"><div><h3>🛠️ ${esc(p.name||"Hizmet Sağlayıcı")}</h3><div class="small muted">İzmir • ${esc(p.district||"")}</div></div><span class="status">${p.active===false?"Pasif":"Aktif"}</span></div><div class="meta"><span>🔧 ${esc(names)}</span></div>${p.description?`<div class="description">${esc(p.description)}</div>`:""}<button class="btn primary" style="margin-top:10px" onclick="viewProviderRequests('${esc(p.id)}')">📋 UYGUN TALEPLERİ GÖR / TEKLİF VER</button>${p.phone?`<a class="btn secondary" style="display:block;text-align:center;margin-top:8px" href="tel:${esc(p.phone)}">📞 İLETİŞİME GEÇ</a>`:""}</article>`;
+ const logo=p.logo_url?`<img src="${esc(p.logo_url)}" alt="Logo" style="width:56px;height:56px;object-fit:cover;border-radius:10px;flex-shrink:0">`:"";
+ return `<article class="request"><div class="requestTop"><div style="display:flex;gap:10px;align-items:center">${logo}<div><h3>🛠️ ${esc(p.name||"Hizmet Sağlayıcı")}</h3><div class="small muted">İzmir • ${esc(p.district||"")}</div></div></div><span class="status">${p.active===false?"Pasif":"Aktif"}</span></div><div class="meta"><span>🔧 ${esc(names)}</span></div>${p.description?`<div class="description">${esc(p.description)}</div>`:""}<button class="btn primary" style="margin-top:10px" onclick="viewProviderRequests('${esc(p.id)}')">📋 UYGUN TALEPLERİ GÖR / TEKLİF VER</button>${p.phone?`<a class="btn secondary" style="display:block;text-align:center;margin-top:8px" href="tel:${esc(p.phone)}">📞 İLETİŞİME GEÇ</a>`:""}</article>`;
 }
 function showProviderEntry(){
  nav("navProvider");
@@ -502,17 +503,33 @@ function showProviderEntry(){
  <div class="row"><div><label>İl</label><input id="pCity" value="İzmir" readonly></div><div><label>İlçe *</label><select id="pDistrict">${districtOptions()}</select></div></div>
  <label>Hizmet kategorisi *</label><select id="pCategory">${serviceOptions()}</select>
  <label>Açıklama</label><textarea id="pDescription" maxlength="500" placeholder="Hizmetlerin hakkında kısa bilgi"></textarea>
+ <label>Fotoğraf / Logo (isteğe bağlı)</label><input id="pLogo" type="file" accept="image/*">
+ <div id="pLogoPreview" class="small muted"></div>
  <div class="notice">Sağlayıcı kaydı doğrudan Supabase'deki providers tablosuna gönderilir.${CURRENT_USER?"":" Giriş yapmadan da kayıt olabilirsin, ancak giriş yaparsan profilin hesabına bağlanır ve farklı cihazdan da yönetebilirsin."}</div>
  <button class="btn primary" id="saveProvider" onclick="registerProvider()">HİZMET SAĞLAYICI KAYDI OLUŞTUR</button>
  <button class="btn secondary section" onclick="showProviders()">KAYITLI SAĞLAYICILARI GÖR</button></div>`);
+ document.getElementById("pLogo").addEventListener("change",function(){
+  const f=this.files[0],box=document.getElementById("pLogoPreview");
+  if(!f){box.innerHTML="";return}
+  if(!f.type.startsWith("image/")){box.innerHTML="⚠️ Lütfen bir resim dosyası seç.";this.value="";return}
+  if(f.size>5*1024*1024){box.innerHTML="⚠️ Fotoğraf 5MB'dan küçük olmalı.";this.value="";return}
+  box.innerHTML=`✓ ${esc(f.name)} seçildi`;
+ });
 }
 async function registerProvider(){
  const name=document.getElementById("pName").value.trim(),phone=document.getElementById("pPhone").value.trim(),district=document.getElementById("pDistrict").value,category=document.getElementById("pCategory").value,description=document.getElementById("pDescription").value.trim();
  if(!name||!phone||!district||!category)return alert("Ad, telefon, ilçe ve hizmet kategorisi zorunludur.");
  const b=document.getElementById("saveProvider");b.disabled=true;b.textContent="KAYDEDİLİYOR...";
  try{
+  const file=document.getElementById("pLogo")?.files?.[0]||null;
+  let logo_url=null;
+  if(file){
+   b.textContent="FOTOĞRAF YÜKLENİYOR...";
+   logo_url=await uploadRequestPhoto(file);
+   b.textContent="KAYDEDİLİYOR...";
+  }
   const now=new Date().toISOString();
-  const payload={name,phone,district,description,active:true,created_at:now,city:"İzmir",services:[category],updated_at:now,owner_id:CURRENT_USER?CURRENT_USER.id:null};
+  const payload={name,phone,district,description,active:true,created_at:now,city:"İzmir",services:[category],updated_at:now,owner_id:CURRENT_USER?CURRENT_USER.id:null,logo_url};
   const rows=await sb("POST","providers",payload);
   const p=Array.isArray(rows)?rows[0]:rows;
   if(!p?.id)throw new Error("Sağlayıcı kaydedildi ancak ID alınamadı.");
@@ -540,7 +557,7 @@ async function showProviderPanel(provider){
  const canEdit=isProviderOwner(provider);
  const editBtn=canEdit?`<button class="btn secondary" onclick='showProviderProfile(${jsonAttr(provider)})'>⚙️ PROFİLİMİ DÜZENLE</button>`:"";
  const ownerNotice=canEdit?"":`<div class="notice small">👀 Bu profili bu tarayıcıdan oluşturmadınız — sadece görüntüleyebilirsiniz.</div>`;
- app(`<div class="back"><button class="btn secondary smallBtn" onclick="showProviders()">← Sağlayıcı listesine dön</button></div><div class="card"><h2>🛠️ ${esc(provider.name)}</h2><p class="muted">${esc(provider.district||"")}</p>${ownerNotice}<div class="row section"><button class="btn secondary" onclick='showProviderOffers(${jsonAttr(provider)})'>📑 TEKLİFLERİM</button>${editBtn}</div></div><section class="section"><h2>📋 Uygun Talepler</h2><div id="matchArea" class="card" style="text-align:center">⏳ Eşleşmeler aranıyor...</div></section>`);
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick="showProviders()">← Sağlayıcı listesine dön</button></div><div class="card">${provider.logo_url?`<img src="${esc(provider.logo_url)}" alt="Logo" style="width:100%;max-height:200px;object-fit:cover;border-radius:10px;margin-bottom:10px">`:""}<h2>🛠️ ${esc(provider.name)}</h2><p class="muted">${esc(provider.district||"")}</p>${ownerNotice}<div class="row section"><button class="btn secondary" onclick='showProviderOffers(${jsonAttr(provider)})'>📑 TEKLİFLERİM</button>${editBtn}</div></div><section class="section"><h2>📋 Uygun Talepler</h2><div id="matchArea" class="card" style="text-align:center">⏳ Eşleşmeler aranıyor...</div></section>`);
  try{
   const requests=await sb("GET","requests?select=*&order=created_at.desc&limit=100");
   const suitable=requests.filter(r=>providerMatches(provider,r));
