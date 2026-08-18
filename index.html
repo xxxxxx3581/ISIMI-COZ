@@ -212,8 +212,43 @@ function renderAuthArea(){
  const el=document.getElementById("authArea");
  if(!el)return;
  el.innerHTML=CURRENT_USER
-  ?`<button class="btn secondary smallBtn" onclick="authSignOut()">👤 ${esc(CURRENT_USER.email.split("@")[0])} · Çıkış</button>`
+  ?`<div style="display:flex;gap:6px"><button class="btn secondary smallBtn" onclick="showAccount()">👤 ${esc(CURRENT_USER.email.split("@")[0])}</button><button class="btn secondary smallBtn" onclick="authSignOut()">Çıkış</button></div>`
   :`<button class="btn primary smallBtn" onclick="showAuth()">Giriş Yap</button>`;
+}
+async function loadOfferCountsForRequests(requestIds){
+ const clean=[...new Set(requestIds.filter(isUUID))];
+ if(!clean.length)return {};
+ try{
+  const rows=await sb("GET","offers?request_id=in.("+clean.join(",")+")&select=request_id");
+  const map={};
+  (rows||[]).forEach(o=>{const k=String(o.request_id);map[k]=(map[k]||0)+1});
+  return map;
+ }catch(e){console.warn("Teklif sayıları okunamadı:",e);return {}}
+}
+async function showAccount(){
+ if(!CURRENT_USER){showAuth();return}
+ nav("");
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div><span class="badge">👤 HESABIM</span><h1>${esc(CURRENT_USER.email)}</h1><div id="accountArea" class="card" style="text-align:center">⏳ Yükleniyor...</div>`);
+ try{
+  const [myRequests,myProviders]=await Promise.all([
+   sb("GET","requests?customer_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=*&order=created_at.desc&limit=50"),
+   sb("GET","providers?owner_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=*")
+  ]);
+  const counts=await loadOfferCountsForRequests(myRequests.map(r=>r.id));
+  let html=`<section class="section"><h2>📋 Taleplerim (${myRequests.length})</h2>`;
+  html+=myRequests.length?myRequests.map(r=>{
+   const st=requestStatusLabel(r.status,counts[String(r.id)]||0);
+   const k=requestService(r),s=SERVICES[k]||{name:r.category_id||"Hizmet",emoji:"🛠️"};
+   return `<article class="request"><div class="requestTop"><div><h3>${s.emoji} ${esc(s.name)}</h3><div class="small muted">${r.created_at?new Date(r.created_at).toLocaleString("tr-TR"):""}</div></div><span class="status status-${st.cls}">${esc(st.label)}</span></div><button class="btn secondary smallBtn section" onclick="showRequestDetail('${esc(r.id)}')">📄 Detayları Gör</button></article>`;
+  }).join(""):`<div class="card empty small muted">Henüz talep oluşturmadın.</div>`;
+  html+=`</section>`;
+  if(myProviders.length){
+   const ratings=await loadProviderRatings(myProviders.map(p=>p.id));
+   CURRENT_PROVIDERS=[...CURRENT_PROVIDERS,...myProviders.filter(p=>!CURRENT_PROVIDERS.some(x=>String(x.id)===String(p.id)))];
+   html+=`<section class="section"><h2>🛠️ Sağlayıcı Profilim</h2>`+myProviders.map(p=>providerCard(p,ratings[String(p.id)])).join("")+`</section>`;
+  }
+  document.getElementById("accountArea").outerHTML=html;
+ }catch(e){document.getElementById("accountArea").innerHTML=`<div class="error">Hesap bilgileri yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
 }
 function showAuth(mode="login"){
  nav("");
