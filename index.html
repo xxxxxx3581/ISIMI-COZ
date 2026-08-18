@@ -561,6 +561,7 @@ function parseServices(v){
 function providerNameService(p){return parseServices(p.services).map(x=>SERVICES[serviceKey(x)]?.name||x)}
 function providerMatches(p,r){
  if(p.active===false)return false;
+ if(r.status==="accepted"||r.status==="completed"||r.status==="cancelled")return false;
  const ps=parseServices(p.services).map(serviceKey);
  const wanted=serviceKey(r.category_id);
  const serviceOK=!ps.length||ps.includes(wanted);
