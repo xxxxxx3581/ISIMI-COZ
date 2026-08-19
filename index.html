@@ -48,7 +48,7 @@ input[type=checkbox]{width:18px;height:18px;flex-shrink:0}
 <main id="app"></main>
 <button class="fab" onclick="showRequest()" aria-label="Hızlı Talep Oluştur" title="Hızlı Talep Oluştur">＋</button>
 <footer style="text-align:center;padding:6px 16px 100px;color:#7f93ab;font-size:11px;max-width:760px;margin:auto">
-<a href="javascript:void(0)" onclick="showTerms()" style="color:#8fd0ff;text-decoration:none">Kullanım Koşulları</a> · <a href="javascript:void(0)" onclick="showPrivacy()" style="color:#8fd0ff;text-decoration:none">Gizlilik Politikası</a> · <a href="javascript:void(0)" onclick="showContact()" style="color:#8fd0ff;text-decoration:none">Bize Ulaş</a>
+<a href="javascript:void(0)" onclick="showTerms()" style="color:#8fd0ff;text-decoration:none">Kullanım Koşulları</a> · <a href="javascript:void(0)" onclick="showPrivacy()" style="color:#8fd0ff;text-decoration:none">Gizlilik Politikası</a> · <a href="javascript:void(0)" onclick="showContact()" style="color:#8fd0ff;text-decoration:none">Bize Ulaş</a> · <a href="javascript:void(0)" onclick="showStats()" style="color:#8fd0ff;text-decoration:none">İstatistikler</a>
 </footer></div>
 <nav class="bottom"><div class="bottomInner">
 <button class="navBtn" id="navHome" onclick="showHome()"><b>⌂</b>ANA</button>
@@ -496,6 +496,28 @@ function showPrivacy(){
  <p style="margin-top:16px">⚠️ Bu metin bir pilot uygulama için hazırlanmış genel bir taslaktır, hukuki bağlayıcılığı için bir hukuk danışmanına onaylatmanız önerilir.</p>
  </div></div>`);
 }
+async function showStats(){
+ nav("");
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div><span class="badge">📊 İSTATİSTİKLER</span><h1>Platform genel durumu.</h1><div id="statsArea" class="card" style="text-align:center">⏳ Yükleniyor...</div>`);
+ const area=document.getElementById("statsArea");
+ try{
+  const [requests,providers,reviews]=await Promise.all([
+   sb("GET","requests?select=id,status"),
+   sb("GET","providers?select=id,active"),
+   sb("GET","reviews?select=rating")
+  ]);
+  const totalRequests=requests.length;
+  const completed=requests.filter(r=>r.status==="completed").length;
+  const activeProviders=providers.filter(p=>p.active!==false).length;
+  const avgRating=reviews.length?(reviews.reduce((s,r)=>s+Number(r.rating||0),0)/reviews.length):0;
+  area.outerHTML=`<div class="grid">
+   <div class="card service"><div class="emoji">📋</div><strong>${totalRequests}</strong><span>Toplam talep</span></div>
+   <div class="card service"><div class="emoji">✅</div><strong>${completed}</strong><span>Tamamlanan iş</span></div>
+   <div class="card service"><div class="emoji">🛠️</div><strong>${activeProviders}</strong><span>Aktif sağlayıcı</span></div>
+   <div class="card service"><div class="emoji">⭐</div><strong>${avgRating?avgRating.toFixed(1):"-"}</strong><span>Ortalama puan (${reviews.length} değerlendirme)</span></div>
+  </div>`;
+ }catch(e){area.innerHTML=`<div class="error">İstatistikler yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
+}
 function showContact(){
  nav("");
  app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div>
@@ -505,16 +527,38 @@ function showContact(){
  <a class="btn secondary section" style="display:block;text-align:center" href="mailto:ferhaterkan3547@gmail.com">✉️ E-posta Gönder</a>
  </div>`);
 }
+async function loadPopularCategories(){
+ try{
+  const rows=await sb("GET","requests?select=category_id&limit=500");
+  const counts={};
+  (rows||[]).forEach(r=>{const k=serviceKey(r.category_id);counts[k]=(counts[k]||0)+1});
+  return counts;
+ }catch(e){console.warn("Popüler kategoriler okunamadı:",e);return {}}
+}
+function shareApp(){
+ const url=location.href.split("#")[0];
+ const text="İşimi Çöz ile İzmir'de hizmet talebi oluşturup teklif almak çok kolay! Denemek için: ";
+ if(navigator.share){
+  navigator.share({title:"İşimi Çöz",text,url}).catch(()=>{});
+ }else{
+  window.open("https://wa.me/?text="+encodeURIComponent(text+url),"_blank");
+ }
+}
 function showHome(){
  nav("navHome");
- const cards=Object.entries(SERVICES).map(([k,s])=>`
- <button class="card service" type="button" onclick="showRequest('${k}')">
-  <div class="emoji">${s.emoji}</div><strong>${esc(s.name)}</strong><span>${esc(s.desc)}</span>
- </button>`).join("");
  const greeting=CURRENT_USER?`<div class="notice section">👋 Tekrar hoş geldin! Hızlı erişim: <a href="javascript:void(0)" onclick="showAccount()" style="color:#8fd0ff">Hesabım</a> · <a href="javascript:void(0)" onclick="showNotifications()" style="color:#8fd0ff">Bildirimler</a></div>`:"";
- app(`<section class="hero"><span class="badge">📍 İZMİR PİLOT BÖLGESİ</span><h1>İhtiyacın varsa,<br>çözümü var.</h1><p class="muted">Ev, iş yeri, araç ve günlük yaşam hizmetlerini tek yerden bul.</p><div class="actions"><button class="btn primary" onclick="showRequest()">📢 İşimi Çözdür</button><button class="btn secondary" onclick="showProviderEntry()">🛠️ Hizmet Ver</button></div>${greeting}</section>
- <section><div class="sectionTitle"><div><h2>Hizmet kategorileri</h2><div class="small muted">İhtiyacını seç, tek dokunuşla talep oluştur.</div></div></div><div class="grid">${cards}</div></section>
+ app(`<section class="hero"><span class="badge">📍 İZMİR PİLOT BÖLGESİ</span><h1>İhtiyacın varsa,<br>çözümü var.</h1><p class="muted">Ev, iş yeri, araç ve günlük yaşam hizmetlerini tek yerden bul. Sağ alttaki <strong>➕</strong> butonuna dokunarak her an hızlıca talep oluşturabilirsin.</p><div class="actions"><button class="btn secondary" onclick="shareApp()">📲 Arkadaşına Öner</button></div>${greeting}</section>
+ <section><div class="sectionTitle"><div><h2>Hizmet kategorileri</h2><div class="small muted">İhtiyacını seç, tek dokunuşla talep oluştur.</div></div></div><div id="categoryGrid" class="grid">${Object.entries(SERVICES).map(([k,s])=>`<button class="card service" type="button" onclick="showRequest('${k}')"><div class="emoji">${s.emoji}</div><strong>${esc(s.name)}</strong><span>${esc(s.desc)}</span></button>`).join("")}</div></section>
  <section class="card section"><h2>💡 Nasıl çalışıyor?</h2><p class="muted small">1️⃣ İhtiyacını anlat, talebini oluştur. 2️⃣ Uygun hizmet sağlayıcıları görsün, teklif versin. 3️⃣ En uygun teklifi kabul et, iş bitince değerlendir.</p></section>`);
+ loadPopularCategories().then(counts=>{
+  const entries=Object.entries(SERVICES);
+  const topKey=Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0];
+  if(!topKey||!counts[topKey])return;
+  entries.sort(([ka],[kb])=>(counts[kb]||0)-(counts[ka]||0));
+  const grid=document.getElementById("categoryGrid");
+  if(!grid)return;
+  grid.innerHTML=entries.map(([k,s])=>`<button class="card service" type="button" style="position:relative" onclick="showRequest('${k}')">${k===topKey?'<span class="status" style="position:absolute;top:8px;right:8px;background:#ff6b6b;color:#fff">🔥 Popüler</span>':""}<div class="emoji">${s.emoji}</div><strong>${esc(s.name)}</strong><span>${esc(s.desc)}</span></button>`).join("");
+ });
 }
 
 /* ---------------- REQUESTS ---------------- */
@@ -600,6 +644,7 @@ async function createRequest(){
  if(!category)return alert("Lütfen hizmet kategorisini seç.");
  if(description.length<5)return alert("Lütfen ihtiyacınızı daha açık anlat.");
  if(!district)return alert("Lütfen ilçe seç.");
+ if(containsPhoneNumber(description))return alert("Açıklama içinde telefon numarası paylaşımı fark edildi. Güvenliğin için ilk iletişim platform üzerinden sürdürülmeli — teklif kabul edilince iletişim bilgisi otomatik açılır.");
  const btn=document.getElementById("createBtn");btn.disabled=true;btn.textContent="KAYDEDİLİYOR...";
  try{
   const file=document.getElementById("photoFile")?.files?.[0]||null;
@@ -707,7 +752,8 @@ function detailOfferCard(o,provider,requestStatus,isOwner){
  const isRejected=o.status==="rejected";
  const requestClosed=requestStatus==="accepted"||requestStatus==="completed"||requestStatus==="cancelled";
  /* Gizlilik: teklif kabul edilmeden sağlayıcının telefonu gösterilmez. */
- const phoneLine=isAccepted&&provider?.phone?`<a class="btn primary" style="display:block;text-align:center;margin-top:8px" href="tel:${esc(provider.phone)}">📞 SAĞLAYICIYI ARA</a>`:"";
+ const wa=isAccepted?whatsappLink(provider?.phone):null;
+ const phoneLine=isAccepted&&provider?.phone?`<div class="row section" style="gap:8px"><a class="btn secondary" style="flex:1;text-align:center" href="tel:${esc(provider.phone)}">📞 ARA</a>${wa?`<a class="btn primary" style="flex:1;text-align:center;background:#25D366" href="${esc(wa)}" target="_blank" rel="noopener">💬 WHATSAPP</a>`:""}</div>`:"";
  let acceptBtn="";
  if(!isAccepted&&!isRejected&&!requestClosed){
   acceptBtn=isOwner
@@ -940,8 +986,9 @@ function providerCard(p,ratingInfo,completedCount){
  const isFav=CURRENT_FAVORITE_IDS.has(String(p.id));
  const favBtn=CURRENT_USER?`<button class="btn secondary smallBtn" style="min-width:46px" onclick="toggleFavorite('${esc(p.id)}',this)" aria-label="Favori">${isFav?"❤️":"🤍"}</button>`:"";
  const wa=whatsappLink(p.phone);
- const contactRow=p.phone?`<div class="row section" style="gap:8px"><a class="btn secondary" style="flex:1;text-align:center" href="tel:${esc(p.phone)}">📞 ARA</a>${wa?`<a class="btn primary" style="flex:1;text-align:center;background:#25D366" href="${esc(wa)}" target="_blank" rel="noopener">💬 WHATSAPP</a>`:""}</div>`:"";
- return `<article class="request"><div class="requestTop"><div style="display:flex;gap:10px;align-items:center">${logo}<div><h3>🛠️ ${esc(p.name||"Hizmet Sağlayıcı")}</h3><div class="small muted">İzmir • ${esc(p.district||"")}</div></div></div><div style="display:flex;gap:8px;align-items:center">${favBtn}<span class="status">${p.active===false?"Pasif":"Aktif"}</span></div></div><div class="small section">${trustBadgeHtml(cc,ratingInfo)}</div><div class="small section">${ratingBadgeHtml(ratingInfo)}${completedHtml?" • "+completedHtml:""}</div><div class="meta"><span>🔧 ${esc(names)}</span></div>${p.description?`<div class="description">${esc(p.description)}</div>`:""}<button class="btn primary" style="margin-top:10px" onclick="viewProviderRequests('${esc(p.id)}')">📋 UYGUN TALEPLERİ GÖR / TEKLİF VER</button>${contactRow}</article>`;
+ const taxHtml=p.tax_id?`<div class="small muted">📋 İşletme No: ${esc(p.tax_id)}</div>`:"";
+ const contactRow=`<div class="small muted section">🔒 İletişim bilgisi, teklif kabul edildikten sonra açılır.</div>`;
+ return `<article class="request"><div class="requestTop"><div style="display:flex;gap:10px;align-items:center">${logo}<div><h3>🛠️ ${esc(p.name||"Hizmet Sağlayıcı")}</h3><div class="small muted">İzmir • ${esc(p.district||"")}</div></div></div><div style="display:flex;gap:8px;align-items:center">${favBtn}<span class="status">${p.active===false?"Pasif":"Aktif"}</span></div></div><div class="small section">${trustBadgeHtml(cc,ratingInfo)}</div><div class="small section">${ratingBadgeHtml(ratingInfo)}${completedHtml?" • "+completedHtml:""}</div><div class="meta"><span>🔧 ${esc(names)}</span></div>${p.description?`<div class="description">${esc(p.description)}</div>`:""}${taxHtml}<button class="btn primary" style="margin-top:10px" onclick="viewProviderRequests('${esc(p.id)}')">📋 UYGUN TALEPLERİ GÖR / TEKLİF VER</button>${contactRow}</article>`;
 }
 function showProviderEntry(){
  nav("navProvider");
@@ -952,6 +999,7 @@ function showProviderEntry(){
  <div class="row"><div><label>İl</label><input id="pCity" value="İzmir" readonly></div><div><label>İlçe *</label><select id="pDistrict">${districtOptions()}</select></div></div>
  <label>Hizmet kategorisi *</label><select id="pCategory">${serviceOptions()}</select>
  <label>Açıklama</label><textarea id="pDescription" maxlength="500" placeholder="Hizmetlerin hakkında kısa bilgi"></textarea>
+ <label>Vergi No / İşletme No (isteğe bağlı)</label><input id="pTaxId" type="text" placeholder="Şeffaflık için paylaşmak istersen">
  <label>Fotoğraf / Logo (isteğe bağlı)</label><input id="pLogo" type="file" accept="image/*">
  <div id="pLogoPreview" class="small muted"></div>
  <div class="notice">Sağlayıcı kaydı doğrudan Supabase'deki providers tablosuna gönderilir.${CURRENT_USER?"":" Giriş yapmadan da kayıt olabilirsin, ancak giriş yaparsan profilin hesabına bağlanır ve farklı cihazdan da yönetebilirsin."}</div>
@@ -965,8 +1013,14 @@ function showProviderEntry(){
   box.innerHTML=`✓ ${esc(f.name)} seçildi`;
  });
 }
+function containsPhoneNumber(text){
+ if(!text)return false;
+ const matches=text.match(/(?:\d[\s\-.()]{0,2}){9,}/g);
+ if(!matches)return false;
+ return matches.some(m=>(m.match(/\d/g)||[]).length>=9);
+}
 async function registerProvider(){
- const name=document.getElementById("pName").value.trim(),phone=document.getElementById("pPhone").value.trim(),district=document.getElementById("pDistrict").value,category=document.getElementById("pCategory").value,description=document.getElementById("pDescription").value.trim();
+ const name=document.getElementById("pName").value.trim(),phone=document.getElementById("pPhone").value.trim(),district=document.getElementById("pDistrict").value,category=document.getElementById("pCategory").value,description=document.getElementById("pDescription").value.trim(),tax_id=document.getElementById("pTaxId").value.trim();
  if(!name||!phone||!district||!category)return alert("Ad, telefon, ilçe ve hizmet kategorisi zorunludur.");
  const b=document.getElementById("saveProvider");b.disabled=true;b.textContent="KAYDEDİLİYOR...";
  try{
@@ -978,7 +1032,7 @@ async function registerProvider(){
    b.textContent="KAYDEDİLİYOR...";
   }
   const now=new Date().toISOString();
-  const payload={name,phone,district,description,active:true,created_at:now,city:"İzmir",services:[category],updated_at:now,owner_id:CURRENT_USER?CURRENT_USER.id:null,logo_url};
+  const payload={name,phone,district,description,active:true,created_at:now,city:"İzmir",services:[category],updated_at:now,owner_id:CURRENT_USER?CURRENT_USER.id:null,logo_url,tax_id:tax_id||null};
   const rows=await sb("POST","providers",payload);
   const p=Array.isArray(rows)?rows[0]:rows;
   if(!p?.id)throw new Error("Sağlayıcı kaydedildi ancak ID alınamadı.");
@@ -1155,6 +1209,7 @@ async function sendOffer(requestId,providerId){
  if(!priceRaw||!Number.isFinite(price)||price<=0)return alert("Lütfen geçerli bir teklif fiyatı gir (0'dan büyük).");
  if(!available_time)return alert("Müsait olduğunuz zamanı yazın.");
  if(!isUUID(requestId)||!isUUID(providerId))return alert("Teklif için geçerli UUID gerekli.");
+ if(containsPhoneNumber(note))return alert("Mesaj içinde telefon numarası paylaşımı fark edildi. Güvenliğin için ilk iletişim platform üzerinden sürdürülmeli — teklif kabul edilince iletişim bilgisi otomatik açılır.");
  b.disabled=true;b.textContent="GÖNDERİLİYOR...";
  try{
   await sb("POST","offers",{request_id:requestId,provider_id:providerId,price,available_time,note,status:"pending"});
