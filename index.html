@@ -43,7 +43,10 @@ input[type=checkbox]{width:18px;height:18px;flex-shrink:0}
 <div id="connectionStatus" class="connection offline">Supabase bağlanıyor...</div>
 <div class="app">
 <header class="top"><div class="brand" style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:10px"><div class="logo">✓</div><div><strong>İŞİMİ ÇÖZ</strong><small>İzmir Pilot Bölgesi</small></div></div><div style="display:flex;gap:6px;align-items:center"><button class="btn secondary smallBtn" onclick="showNotifications()" aria-label="Bildirimler">🔔</button><div id="authArea"></div></div></div></header>
-<main id="app"></main></div>
+<main id="app"></main>
+<footer style="text-align:center;padding:6px 16px 100px;color:#7f93ab;font-size:11px;max-width:760px;margin:auto">
+<a href="javascript:void(0)" onclick="showTerms()" style="color:#8fd0ff;text-decoration:none">Kullanım Koşulları</a> · <a href="javascript:void(0)" onclick="showPrivacy()" style="color:#8fd0ff;text-decoration:none">Gizlilik Politikası</a> · <a href="javascript:void(0)" onclick="showContact()" style="color:#8fd0ff;text-decoration:none">Bize Ulaş</a>
+</footer></div>
 <nav class="bottom"><div class="bottomInner">
 <button class="navBtn" id="navHome" onclick="showHome()"><b>⌂</b>ANA</button>
 <button class="navBtn" id="navRequest" onclick="showRequest()"><b>＋</b>TALEP</button>
@@ -464,6 +467,41 @@ function friendlyErrorMessage(e){
 }
 
 /* ---------------- HOME ---------------- */
+/* ---------------- LEGAL / DESTEK ---------------- */
+function showTerms(){
+ nav("");
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div>
+ <div class="card"><span class="badge">📄 KULLANIM KOŞULLARI</span><h1>Kullanım Koşulları</h1>
+ <div class="small muted section">
+ <p><strong>1. Platformun Amacı</strong><br>İşimi Çöz, İzmir pilot bölgesinde hizmet talep eden müşterilerle hizmet sağlayıcıları buluşturan bir aracı platformdur. Taraflar arasındaki hizmet ilişkisinden ve iş kalitesinden platform sorumlu değildir.</p>
+ <p><strong>2. Kullanıcı Yükümlülükleri</strong><br>Kullanıcılar, girdikleri bilgilerin doğru olduğunu kabul eder. Yanıltıcı talep/teklif oluşturmak, sahte değerlendirme yapmak yasaktır.</p>
+ <p><strong>3. Sorumluluk Reddi</strong><br>Platform, sağlayıcıların iş kalitesini, fiyatlandırmasını veya güvenilirliğini garanti etmez. Anlaşmazlıklarda taraflar kendi aralarında çözüm bulmakla yükümlüdür.</p>
+ <p><strong>4. Hesap ve İçerik</strong><br>Kullanıcı, kendi hesabından yapılan işlemlerden sorumludur. Uygunsuz içerik (fotoğraf, açıklama, yorum) fark edilirse kaldırılabilir.</p>
+ <p><strong>5. Değişiklikler</strong><br>Bu koşullar, hizmetin gelişimine bağlı olarak güncellenebilir.</p>
+ <p style="margin-top:16px">⚠️ Bu metin bir pilot uygulama için hazırlanmış genel bir taslaktır, hukuki bağlayıcılığı için bir hukuk danışmanına onaylatmanız önerilir.</p>
+ </div></div>`);
+}
+function showPrivacy(){
+ nav("");
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div>
+ <div class="card"><span class="badge">🔒 GİZLİLİK POLİTİKASI</span><h1>Gizlilik Politikası (KVKK)</h1>
+ <div class="small muted section">
+ <p><strong>1. Toplanan Veriler</strong><br>E-posta, telefon, ilçe/mahalle, talep ve teklif içerikleri, isteğe bağlı fotoğraflar ve değerlendirmeler saklanır.</p>
+ <p><strong>2. Kullanım Amacı</strong><br>Veriler yalnızca talep–teklif eşleştirmesi, hizmet sağlayıcı iletişimi ve platformun işleyişi için kullanılır; üçüncü taraflarla pazarlama amacıyla paylaşılmaz.</p>
+ <p><strong>3. Saklama</strong><br>Veriler Supabase (bulut veritabanı) üzerinde, yetkisiz erişime karşı satır bazlı güvenlik (RLS) politikalarıyla korunur.</p>
+ <p><strong>4. Haklarınız</strong><br>6698 sayılı KVKK kapsamında, verilerinizin silinmesini veya düzeltilmesini "Bize Ulaş" üzerinden talep edebilirsiniz.</p>
+ <p style="margin-top:16px">⚠️ Bu metin bir pilot uygulama için hazırlanmış genel bir taslaktır, hukuki bağlayıcılığı için bir hukuk danışmanına onaylatmanız önerilir.</p>
+ </div></div>`);
+}
+function showContact(){
+ nav("");
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div>
+ <div class="card"><span class="badge">📩 BİZE ULAŞ</span><h1>Bir sorun mu var?</h1>
+ <p class="small muted section">Talep, teklif, hesap veya gizlilik ile ilgili her türlü soru ve şikayetin için bize ulaşabilirsin.</p>
+ <a class="btn primary section" style="display:block;text-align:center" href="https://wa.me/905000000000" target="_blank" rel="noopener">💬 WhatsApp'tan Yaz</a>
+ <a class="btn secondary section" style="display:block;text-align:center" href="mailto:destek@isimicoz.com">✉️ E-posta Gönder</a>
+ </div>`);
+}
 function showHome(){
  nav("navHome");
  const cards=Object.entries(SERVICES).map(([k,s])=>`
@@ -507,13 +545,39 @@ function showRequest(pre=""){
  }
 }
 /* Fotoğrafı Supabase Storage'a yükler, herkese açık URL döner. */
+function compressImage(file,maxDim=1280,quality=0.82){
+ return new Promise(resolve=>{
+  if(!file||!file.type||!file.type.startsWith("image/")){resolve(file);return}
+  const url=URL.createObjectURL(file);
+  const img=new Image();
+  img.onload=()=>{
+   let{width,height}=img;
+   if(width>maxDim||height>maxDim){
+    const scale=maxDim/Math.max(width,height);
+    width=Math.round(width*scale);height=Math.round(height*scale);
+   }
+   const canvas=document.createElement("canvas");
+   canvas.width=width;canvas.height=height;
+   const ctx=canvas.getContext("2d");
+   ctx.drawImage(img,0,0,width,height);
+   canvas.toBlob(blob=>{
+    URL.revokeObjectURL(url);
+    if(!blob){resolve(file);return}
+    resolve(new File([blob],(file.name||"photo").replace(/\.[^.]+$/,"")+".jpg",{type:"image/jpeg"}));
+   },"image/jpeg",quality);
+  };
+  img.onerror=()=>{URL.revokeObjectURL(url);resolve(file)};
+  img.src=url;
+ });
+}
 async function uploadRequestPhoto(file){
- const extMatch=(file.name||"").match(/\.([a-zA-Z0-9]+)$/);
+ const compressed=await compressImage(file);
+ const extMatch=(compressed.name||"").match(/\.([a-zA-Z0-9]+)$/);
  const ext=(extMatch?extMatch[1]:"jpg").toLowerCase().replace(/[^a-z0-9]/g,"")||"jpg";
  const rand=(crypto?.randomUUID)?crypto.randomUUID():(Date.now()+"-"+Math.random().toString(36).slice(2));
  const path=rand+"."+ext;
  const token=ACCESS_TOKEN||SUPABASE_KEY;
- const r=await fetch(SUPABASE_URL+"/storage/v1/object/request-photos/"+path,{method:"POST",headers:{apikey:SUPABASE_KEY,Authorization:"Bearer "+token,"Content-Type":file.type||"application/octet-stream"},body:file});
+ const r=await fetch(SUPABASE_URL+"/storage/v1/object/request-photos/"+path,{method:"POST",headers:{apikey:SUPABASE_KEY,Authorization:"Bearer "+token,"Content-Type":compressed.type||"application/octet-stream"},body:compressed});
  if(!r.ok){
   const t=await r.text();let d=null;try{d=JSON.parse(t)}catch(_){d=t}
   throw new Error(d?.message||d?.error||("Fotoğraf yüklenemedi: HTTP "+r.status));
@@ -964,12 +1028,18 @@ async function showProviderPanel(provider){
  const canEdit=isProviderOwner(provider);
  const editBtn=canEdit?`<button class="btn secondary" onclick='showProviderProfile(${jsonAttr(provider)})'>⚙️ PROFİLİMİ DÜZENLE</button>`:"";
  const ownerNotice=canEdit?"":`<div class="notice small">👀 Bu profili bu tarayıcıdan oluşturmadınız — sadece görüntüleyebilirsiniz.</div>`;
- app(`<div class="back"><button class="btn secondary smallBtn" onclick="showProviders()">← Sağlayıcı listesine dön</button></div><div class="card">${provider.logo_url?`<img src="${esc(provider.logo_url)}" alt="Logo" style="width:100%;max-height:200px;object-fit:cover;border-radius:10px;margin-bottom:10px">`:""}<h2>🛠️ ${esc(provider.name)}</h2><p class="muted">${esc(provider.district||"")}</p><div class="small" id="providerRatingArea">⏳</div>${ownerNotice}<div class="row section"><button class="btn secondary" onclick='showProviderOffers(${jsonAttr(provider)})'>📑 TEKLİFLERİM</button>${editBtn}</div></div><section class="section"><h2>📋 Uygun Talepler</h2><div id="matchArea" class="card" style="text-align:center">⏳ Eşleşmeler aranıyor...</div></section>`);
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick="showProviders()">← Sağlayıcı listesine dön</button></div><div class="card">${provider.logo_url?`<img src="${esc(provider.logo_url)}" alt="Logo" style="width:100%;max-height:200px;object-fit:cover;border-radius:10px;margin-bottom:10px">`:""}<h2>🛠️ ${esc(provider.name)}</h2><p class="muted">${esc(provider.district||"")}</p><div class="small" id="providerRatingArea">⏳</div>${ownerNotice}<div class="row section"><button class="btn secondary" onclick='showProviderOffers(${jsonAttr(provider)})'>📑 TEKLİFLERİM</button>${editBtn}</div></div><section class="section"><h2>⭐ Değerlendirmeler</h2><div id="providerReviewsArea" class="card" style="text-align:center">⏳ Yükleniyor...</div></section><section class="section"><h2>📋 Uygun Talepler</h2><div id="matchArea" class="card" style="text-align:center">⏳ Eşleşmeler aranıyor...</div></section>`);
  loadProviderRatings([provider.id]).then(async m=>{
   const completed=await loadProviderCompletedCounts([provider.id]);
   const el=document.getElementById("providerRatingArea");
   if(el)el.innerHTML=`${trustBadgeHtml(completed[String(provider.id)]||0,m[String(provider.id)])} ${ratingBadgeHtml(m[String(provider.id)])}${completed[String(provider.id)]?` • <span class="small muted">✅ ${completed[String(provider.id)]} iş tamamladı</span>`:""}`;
  });
+ sb("GET","reviews?provider_id=eq."+encodeURIComponent(provider.id)+"&select=*&order=created_at.desc&limit=20").then(reviews=>{
+  const box=document.getElementById("providerReviewsArea");
+  if(!box)return;
+  if(!reviews||!reviews.length){box.innerHTML=`<div class="small muted">Henüz değerlendirme yok.</div>`;return}
+  box.outerHTML=reviews.map(rv=>`<article class="request"><div style="color:#ffb020;font-size:18px">${starsDisplay(rv.rating)}</div>${rv.comment?`<div class="description">${esc(rv.comment)}</div>`:`<div class="small muted">Yorum eklenmemiş.</div>`}<div class="small muted">${rv.created_at?new Date(rv.created_at).toLocaleDateString("tr-TR"):""}</div></article>`).join("");
+ }).catch(e=>{const box=document.getElementById("providerReviewsArea");if(box)box.innerHTML=`<div class="small muted">Değerlendirmeler yüklenemedi.</div>`;console.warn(e)});
  try{
   const requests=await sb("GET","requests?select=*&order=created_at.desc&limit=100");
   const suitable=requests.filter(r=>providerMatches(provider,r));
