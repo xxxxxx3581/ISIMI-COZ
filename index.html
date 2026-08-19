@@ -40,7 +40,7 @@ input[type=checkbox]{width:18px;height:18px;flex-shrink:0}
 <body>
 <div id="connectionStatus" class="connection offline">Supabase bağlanıyor...</div>
 <div class="app">
-<header class="top"><div class="brand" style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:10px"><div class="logo">✓</div><div><strong>İŞİMİ ÇÖZ</strong><small>İzmir Pilot Bölgesi</small></div></div><div id="authArea"></div></div></header>
+<header class="top"><div class="brand" style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:10px"><div class="logo">✓</div><div><strong>İŞİMİ ÇÖZ</strong><small>İzmir Pilot Bölgesi</small></div></div><div style="display:flex;gap:6px;align-items:center"><button class="btn secondary smallBtn" onclick="showNotifications()" aria-label="Bildirimler">🔔</button><div id="authArea"></div></div></div></header>
 <main id="app"></main></div>
 <nav class="bottom"><div class="bottomInner">
 <button class="navBtn" id="navHome" onclick="showHome()"><b>⌂</b>ANA</button>
@@ -262,6 +262,47 @@ async function saveCustomerProfile(){
   alert("Hesap bilgilerin kaydedildi ✓");
   showAccount();
  }catch(e){console.error(e);alert("Kaydedilemedi.\n\n"+friendlyErrorMessage(e));btn.disabled=false;btn.textContent="KAYDET"}
+}
+async function showNotifications(){
+ nav("");
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div><span class="badge">🔔 BİLDİRİMLER</span><h1>Bildirimlerim.</h1><div id="notifArea" class="card" style="text-align:center">⏳ Yükleniyor...</div>`);
+ const area=document.getElementById("notifArea");
+ try{
+  let myRequests=[],myProviders=[];
+  if(CURRENT_USER){
+   [myRequests,myProviders]=await Promise.all([
+    sb("GET","requests?customer_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=*&order=created_at.desc&limit=100"),
+    sb("GET","providers?owner_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=*")
+   ]);
+  }else{
+   const reqIds=lsGetArray("iscoz_my_requests").filter(isUUID);
+   const provIds=lsGetArray("iscoz_my_providers").filter(isUUID);
+   if(reqIds.length)myRequests=await sb("GET","requests?id=in.("+reqIds.join(",")+")&select=*");
+   if(provIds.length)myProviders=await sb("GET","providers?id=in.("+provIds.join(",")+")&select=*");
+  }
+  const items=[];
+  if(myRequests.length){
+   const offersLists=await Promise.all(myRequests.map(r=>loadOffers(r.id)));
+   myRequests.forEach((r,i)=>{
+    const count=offersLists[i].length;
+    if(hasNewOffers(r.id,count)){
+     const k=requestService(r),s=SERVICES[k]||{name:r.category_id||"Hizmet",emoji:"🛠️"};
+     items.push({time:r.created_at,html:`<article class="request"><div class="requestTop"><div><h3>🔴 Yeni teklif!</h3><div class="small muted">${s.emoji} ${esc(s.name)} talebine ${count} teklif var</div></div></div><button class="btn secondary smallBtn section" onclick="showRequestDetail('${esc(r.id)}')">📄 Görüntüle</button></article>`});
+    }
+   });
+  }
+  for(const p of myProviders){
+   let offers=[];
+   try{offers=await loadOffersByProvider(p.id)}catch(e){continue}
+   offers.forEach(o=>{
+    if(hasOfferUpdate(o)){
+     items.push({time:o.updated_at||o.created_at,html:`<article class="request"><div class="requestTop"><div><h3>🆕 ${o.status==="accepted"?"Teklifin kabul edildi!":"Teklifin durumu güncellendi"}</h3><div class="small muted">${esc(p.name)} sağlayıcısı üzerinden</div></div></div><button class="btn secondary smallBtn section" onclick='showProviderOffers(${jsonAttr(p)})'>📑 Tekliflerimi Gör</button></article>`});
+    }
+   });
+  }
+  items.sort((a,b)=>new Date(b.time||0)-new Date(a.time||0));
+  area.outerHTML=items.length?items.map(x=>x.html).join(""):`<div class="empty">🔔<h3>Yeni bildirimin yok.</h3><p class="small muted">Yeni teklif geldiğinde veya bir teklifinin durumu değiştiğinde burada görünecek.</p></div>`;
+ }catch(e){area.innerHTML=`<div class="error">Bildirimler yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
 }
 async function showAccount(){
  if(!CURRENT_USER){showAuth();return}
