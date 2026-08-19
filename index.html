@@ -511,7 +511,7 @@ function showHome(){
   <div class="emoji">${s.emoji}</div><strong>${esc(s.name)}</strong><span>${esc(s.desc)}</span>
  </button>`).join("");
  const greeting=CURRENT_USER?`<div class="notice section">👋 Tekrar hoş geldin! Hızlı erişim: <a href="javascript:void(0)" onclick="showAccount()" style="color:#8fd0ff">Hesabım</a> · <a href="javascript:void(0)" onclick="showNotifications()" style="color:#8fd0ff">Bildirimler</a></div>`:"";
- app(`<section class="hero"><span class="badge">📍 İZMİR PİLOT BÖLGESİ</span><h1>İhtiyacın varsa,<br>çözümü var.</h1><p class="muted">Ev, iş yeri, araç ve günlük yaşam hizmetlerini tek yerden bul.</p><div class="actions"><button class="btn primary" onclick="showRequest()">📢 İşimi Çözdür</button><button class="btn secondary" onclick="showProviderEntry()">🛠️ Hizmet Ver</button></div>${greeting}</section>
+ app(`<section class="hero"><span class="badge">📍 İZMİR PİLOT BÖLGESİ</span><h1>İhtiyacın varsa,<br>çözümü var.</h1><p class="muted">Ev, iş yeri, araç ve günlük yaşam hizmetlerini tek yerden bul.</p><div class="actions"><button class="btn primary" onclick="showRequest()">📢 İşimi Çözdür</button></div>${greeting}</section>
  <section><div class="sectionTitle"><div><h2>Hizmet kategorileri</h2><div class="small muted">İhtiyacını seç, tek dokunuşla talep oluştur.</div></div></div><div class="grid">${cards}</div></section>
  <section class="card section"><h2>💡 Nasıl çalışıyor?</h2><p class="muted small">1️⃣ İhtiyacını anlat, talebini oluştur. 2️⃣ Uygun hizmet sağlayıcıları görsün, teklif versin. 3️⃣ En uygun teklifi kabul et, iş bitince değerlendir.</p></section>`);
 }
