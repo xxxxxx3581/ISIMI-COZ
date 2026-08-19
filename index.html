@@ -12,6 +12,7 @@ body{min-height:100vh}
 button,input,select,textarea{font:inherit}
 @keyframes fadeInUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 #app.fadeIn{animation:fadeInUp .25s ease-out}
+.fab{position:fixed;right:16px;bottom:78px;width:56px;height:56px;border-radius:50%;background:#2f6fed;color:#fff;font-size:28px;border:none;box-shadow:0 6px 16px rgba(0,0,0,.35);z-index:500;display:flex;align-items:center;justify-content:center;cursor:pointer}
 button{cursor:pointer}
 a{text-decoration:none;color:inherit}
 :root{--bg:#07111f;--card:#0d1a2b;--line:#20344d;--text:#eef4fb;--muted:#9eb0c5;--primary:#19c37d;--warning:#f5b942;--danger:#ef5350}
@@ -44,6 +45,7 @@ input[type=checkbox]{width:18px;height:18px;flex-shrink:0}
 <div class="app">
 <header class="top"><div class="brand" style="display:flex;justify-content:space-between;align-items:center"><div style="display:flex;align-items:center;gap:10px"><div class="logo">✓</div><div><strong>İŞİMİ ÇÖZ</strong><small>İzmir Pilot Bölgesi</small></div></div><div style="display:flex;gap:6px;align-items:center"><button class="btn secondary smallBtn" onclick="showNotifications()" aria-label="Bildirimler">🔔</button><div id="authArea"></div></div></div></header>
 <main id="app"></main>
+<button class="fab" onclick="showRequest()" aria-label="Hızlı Talep Oluştur" title="Hızlı Talep Oluştur">＋</button>
 <footer style="text-align:center;padding:6px 16px 100px;color:#7f93ab;font-size:11px;max-width:760px;margin:auto">
 <a href="javascript:void(0)" onclick="showTerms()" style="color:#8fd0ff;text-decoration:none">Kullanım Koşulları</a> · <a href="javascript:void(0)" onclick="showPrivacy()" style="color:#8fd0ff;text-decoration:none">Gizlilik Politikası</a> · <a href="javascript:void(0)" onclick="showContact()" style="color:#8fd0ff;text-decoration:none">Bize Ulaş</a>
 </footer></div>
@@ -384,7 +386,7 @@ async function showAccount(){
   html+=myRequests.length?myRequests.map(r=>{
    const st=requestStatusLabel(r.status,counts[String(r.id)]||0);
    const k=requestService(r),s=SERVICES[k]||{name:r.category_id||"Hizmet",emoji:"🛠️"};
-   return `<article class="request"><div class="requestTop"><div><h3>${s.emoji} ${esc(s.name)}</h3><div class="small muted">${r.created_at?new Date(r.created_at).toLocaleString("tr-TR"):""}</div></div><span class="status status-${st.cls}">${esc(st.label)}</span></div><button class="btn secondary smallBtn section" onclick="showRequestDetail('${esc(r.id)}')">📄 Detayları Gör</button></article>`;
+   return `<article class="request"><div class="requestTop"><div><h3>${s.emoji} ${esc(s.name)}</h3><div class="small muted">${r.created_at?new Date(r.created_at).toLocaleString("tr-TR"):""}</div></div><span class="status status-${st.cls}">${esc(st.label)}</span></div><div class="row section" style="gap:8px"><button class="btn secondary smallBtn" style="flex:1" onclick="showRequestDetail('${esc(r.id)}')">📄 Detay</button><button class="btn primary smallBtn" style="flex:1" onclick='quickRepeatRequest(${jsonAttr(r)})'>🔁 Tekrar Talep Et</button></div></article>`;
   }).join(""):`<div class="card empty small muted">Henüz talep oluşturmadın.</div>`;
   html+=`</section>`;
   if(myProviders.length){
@@ -515,14 +517,18 @@ function showHome(){
 }
 
 /* ---------------- REQUESTS ---------------- */
-function showRequest(pre=""){
+function quickRepeatRequest(r){
+ const k=requestService(r);
+ showRequest(k,{description:r.description||"",district:r.district||"",neighborhood:r.neighborhood||""});
+}
+function showRequest(pre="",prefillExtra=null){
  nav("navRequest");
  app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div>
  <div class="formCard"><span class="badge">📋 YENİ HİZMET TALEBİ</span><h1>İhtiyacını anlat.</h1>
  <label>Hizmet kategorisi *</label><select id="category">${serviceOptions(pre)}</select>
- <label>Sorunun / ihtiyacın *</label><textarea id="description" maxlength="1000" placeholder="Örneğin: Klima çalışıyor fakat yeterince soğutmuyor."></textarea>
- <div class="row"><div><label>İl</label><input value="İzmir" readonly></div><div><label>İlçe *</label><select id="district">${districtOptions()}</select></div></div>
- <label>Mahalle</label><input id="neighborhood" placeholder="Mahalle adı">
+ <label>Sorunun / ihtiyacın *</label><textarea id="description" maxlength="1000" placeholder="Örneğin: Klima çalışıyor fakat yeterince soğutmuyor.">${esc(prefillExtra?.description||"")}</textarea>
+ <div class="row"><div><label>İl</label><input value="İzmir" readonly></div><div><label>İlçe *</label><select id="district">${districtOptions(prefillExtra?.district||"")}</select></div></div>
+ <label>Mahalle</label><input id="neighborhood" placeholder="Mahalle adı" value="${esc(prefillExtra?.neighborhood||"")}">
  <label>Ne zaman gerekli?</label><select id="urgency"><option>Bugün</option><option>Acil</option><option>Uygun zamanda</option></select>
  <label>Fotoğraf ekle (isteğe bağlı)</label><input id="photoFile" type="file" accept="image/*">
  <div id="photoPreview" class="small muted"></div>
@@ -535,7 +541,7 @@ function showRequest(pre=""){
   if(f.size>5*1024*1024){box.innerHTML="⚠️ Fotoğraf 5MB'dan küçük olmalı.";this.value="";return}
   box.innerHTML=`✓ ${esc(f.name)} seçildi`;
  });
- if(CURRENT_USER){
+ if(CURRENT_USER&&!prefillExtra){
   loadCustomerProfile().then(profile=>{
    if(!profile)return;
    const distEl=document.getElementById("district"),neighEl=document.getElementById("neighborhood");
