@@ -268,11 +268,13 @@ async function showAccount(){
  nav("");
  app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div><span class="badge">👤 HESABIM</span><h1>${esc(CURRENT_USER.email)}</h1><div id="accountArea" class="card" style="text-align:center">⏳ Yükleniyor...</div>`);
  try{
-  const [myRequests,myProviders,profile]=await Promise.all([
+  const [myRequests,myProviders,profile,favIds]=await Promise.all([
    sb("GET","requests?customer_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=*&order=created_at.desc&limit=50"),
    sb("GET","providers?owner_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=*"),
-   loadCustomerProfile()
+   loadCustomerProfile(),
+   loadFavoriteIds()
   ]);
+  CURRENT_FAVORITE_IDS=favIds;
   const counts=await loadOfferCountsForRequests(myRequests.map(r=>r.id));
   const openCount=myRequests.filter(r=>isRequestOpenStatus(r.status)).length;
   const doneCount=myRequests.filter(r=>r.status==="completed").length;
@@ -294,6 +296,15 @@ async function showAccount(){
    const completed=await loadProviderCompletedCounts(myProviders.map(p=>p.id));
    CURRENT_PROVIDERS=[...CURRENT_PROVIDERS,...myProviders.filter(p=>!CURRENT_PROVIDERS.some(x=>String(x.id)===String(p.id)))];
    html+=`<section class="section"><h2>🛠️ Sağlayıcı Profilim</h2>`+myProviders.map(p=>providerCard(p,ratings[String(p.id)],completed[String(p.id)])).join("")+`</section>`;
+  }
+  if(favIds.size){
+   const favRows=await sb("GET","providers?id=in.("+[...favIds].join(",")+")&select=*");
+   if(favRows.length){
+    const favRatings=await loadProviderRatings(favRows.map(p=>p.id));
+    const favCompleted=await loadProviderCompletedCounts(favRows.map(p=>p.id));
+    CURRENT_PROVIDERS=[...CURRENT_PROVIDERS,...favRows.filter(p=>!CURRENT_PROVIDERS.some(x=>String(x.id)===String(p.id)))];
+    html+=`<section class="section"><h2>❤️ Favori Sağlayıcılarım (${favRows.length})</h2>`+favRows.map(p=>providerCard(p,favRatings[String(p.id)],favCompleted[String(p.id)])).join("")+`</section>`;
+   }
   }
   document.getElementById("accountArea").outerHTML=html;
  }catch(e){document.getElementById("accountArea").innerHTML=`<div class="error">Hesap bilgileri yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
@@ -715,12 +726,41 @@ async function loadProviders(){
  const rows=await sb("GET","providers?select=*&order=created_at.desc&limit=200");
  return Array.isArray(rows)?rows:[];
 }
+let CURRENT_FAVORITE_IDS=new Set();
+async function loadFavoriteIds(){
+ if(!CURRENT_USER)return new Set();
+ try{
+  const rows=await sb("GET","favorites?user_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=provider_id");
+  return new Set((rows||[]).map(f=>String(f.provider_id)));
+ }catch(e){console.warn("Favoriler okunamadı:",e);return new Set()}
+}
+async function toggleFavorite(providerId,btnEl){
+ if(!CURRENT_USER){alert("Favoriye eklemek için giriş yapmalısın.");showAuth();return}
+ const key=String(providerId);
+ const isFav=CURRENT_FAVORITE_IDS.has(key);
+ if(btnEl)btnEl.disabled=true;
+ try{
+  if(isFav){
+   await sb("DELETE","favorites?user_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&provider_id=eq."+encodeURIComponent(providerId));
+   CURRENT_FAVORITE_IDS.delete(key);
+  }else{
+   await sb("POST","favorites",{user_id:CURRENT_USER.id,provider_id:providerId});
+   CURRENT_FAVORITE_IDS.add(key);
+  }
+  connection(true);
+  if(document.getElementById("providersArea"))renderProviderList();
+  else if(typeof showAccount==="function"&&document.getElementById("accountArea"))showAccount();
+ }catch(e){console.error(e);alert("İşlem yapılamadı.\n\n"+friendlyErrorMessage(e))}
+ finally{if(btnEl)btnEl.disabled=false}
+}
 function providerCard(p,ratingInfo,completedCount){
  const names=providerNameService(p).join(", ")||"Hizmet belirtilmemiş";
  const logo=p.logo_url?`<img src="${esc(p.logo_url)}" alt="Logo" style="width:56px;height:56px;object-fit:cover;border-radius:10px;flex-shrink:0">`:"";
  const cc=completedCount||0;
  const completedHtml=cc>0?`<span class="small muted">✅ ${cc} iş tamamladı</span>`:"";
- return `<article class="request"><div class="requestTop"><div style="display:flex;gap:10px;align-items:center">${logo}<div><h3>🛠️ ${esc(p.name||"Hizmet Sağlayıcı")}</h3><div class="small muted">İzmir • ${esc(p.district||"")}</div></div></div><span class="status">${p.active===false?"Pasif":"Aktif"}</span></div><div class="small section">${trustBadgeHtml(cc,ratingInfo)}</div><div class="small section">${ratingBadgeHtml(ratingInfo)}${completedHtml?" • "+completedHtml:""}</div><div class="meta"><span>🔧 ${esc(names)}</span></div>${p.description?`<div class="description">${esc(p.description)}</div>`:""}<button class="btn primary" style="margin-top:10px" onclick="viewProviderRequests('${esc(p.id)}')">📋 UYGUN TALEPLERİ GÖR / TEKLİF VER</button>${p.phone?`<a class="btn secondary" style="display:block;text-align:center;margin-top:8px" href="tel:${esc(p.phone)}">📞 İLETİŞİME GEÇ</a>`:""}</article>`;
+ const isFav=CURRENT_FAVORITE_IDS.has(String(p.id));
+ const favBtn=CURRENT_USER?`<button class="btn secondary smallBtn" style="min-width:46px" onclick="toggleFavorite('${esc(p.id)}',this)" aria-label="Favori">${isFav?"❤️":"🤍"}</button>`:"";
+ return `<article class="request"><div class="requestTop"><div style="display:flex;gap:10px;align-items:center">${logo}<div><h3>🛠️ ${esc(p.name||"Hizmet Sağlayıcı")}</h3><div class="small muted">İzmir • ${esc(p.district||"")}</div></div></div><div style="display:flex;gap:8px;align-items:center">${favBtn}<span class="status">${p.active===false?"Pasif":"Aktif"}</span></div></div><div class="small section">${trustBadgeHtml(cc,ratingInfo)}</div><div class="small section">${ratingBadgeHtml(ratingInfo)}${completedHtml?" • "+completedHtml:""}</div><div class="meta"><span>🔧 ${esc(names)}</span></div>${p.description?`<div class="description">${esc(p.description)}</div>`:""}<button class="btn primary" style="margin-top:10px" onclick="viewProviderRequests('${esc(p.id)}')">📋 UYGUN TALEPLERİ GÖR / TEKLİF VER</button>${p.phone?`<a class="btn secondary" style="display:block;text-align:center;margin-top:8px" href="tel:${esc(p.phone)}">📞 İLETİŞİME GEÇ</a>`:""}</article>`;
 }
 function showProviderEntry(){
  nav("navProvider");
@@ -773,10 +813,12 @@ function renderProviderList(){
  const nameQ=norm(document.getElementById("pfSearch")?.value||"");
  const district=document.getElementById("pfDistrict2")?.value||"";
  const service=document.getElementById("pfService")?.value||"";
+ const favOnly=document.getElementById("pfFavOnly")?.checked||false;
  const filtered=CURRENT_PROVIDERS.filter(p=>{
   if(district&&norm(p.district)!==norm(district))return false;
   if(service){const keys=parseServices(p.services).map(serviceKey);if(!keys.includes(service))return false}
   if(nameQ&&!norm(p.name).includes(nameQ))return false;
+  if(favOnly&&!CURRENT_FAVORITE_IDS.has(String(p.id)))return false;
   return true;
  });
  const area=document.getElementById("providersArea");
@@ -789,6 +831,7 @@ async function showProviders(){
  <div class="card section">
   <label>Ara (isim)</label><input id="pfSearch" type="text" placeholder="Sağlayıcı adı..." oninput="renderProviderList()">
   <div class="row section"><div><label>İlçe</label><select id="pfDistrict2" onchange="renderProviderList()"><option value="">Tüm ilçeler</option>${DISTRICTS.map(d=>`<option value="${esc(d)}">${esc(d)}</option>`).join("")}</select></div><div><label>Hizmet</label><select id="pfService" onchange="renderProviderList()">${serviceFilterOptions()}</select></div></div>
+  ${CURRENT_USER?`<label class="section" style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="pfFavOnly" onchange="renderProviderList()" style="width:20px;height:20px"> Sadece favorilerim ❤️</label>`:""}
  </div>
  <div id="providersArea" class="card" style="text-align:center">⏳ Yükleniyor...</div>`);
  try{
@@ -796,6 +839,7 @@ async function showProviders(){
   CURRENT_PROVIDERS=rows;
   CURRENT_PROVIDER_RATINGS=await loadProviderRatings(rows.map(p=>p.id));
   CURRENT_PROVIDER_COMPLETED=await loadProviderCompletedCounts(rows.map(p=>p.id));
+  CURRENT_FAVORITE_IDS=await loadFavoriteIds();
   if(!rows.length){document.getElementById("providersArea").outerHTML=`<div class="card empty">Henüz sağlayıcı kaydı yok.<br><span class="small muted">İlk hizmet sağlayıcı sen ol!</span></div>`;return}
   renderProviderList();
  }catch(e){document.getElementById("providersArea").innerHTML=`<div class="error">Sağlayıcılar yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
