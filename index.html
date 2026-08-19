@@ -226,17 +226,63 @@ async function loadOfferCountsForRequests(requestIds){
   return map;
  }catch(e){console.warn("Teklif sayıları okunamadı:",e);return {}}
 }
+async function loadCustomerProfile(){
+ if(!CURRENT_USER)return null;
+ try{
+  const rows=await sb("GET","customer_profiles?user_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=*&limit=1");
+  return Array.isArray(rows)&&rows.length?rows[0]:null;
+ }catch(e){console.warn("Hesap bilgisi okunamadı:",e);return null}
+}
+function showAccountEdit(profile){
+ nav("");
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick="showAccount()">← Hesabıma dön</button></div>
+ <div class="formCard"><span class="badge">⚙️ HESAP BİLGİLERİM</span><h1>Bilgilerini güncelle</h1>
+ <label>Ad Soyad</label><input id="cpName" type="text" value="${esc(profile?.full_name||"")}" placeholder="Ad Soyad">
+ <label>Telefon</label><input id="cpPhone" type="tel" value="${esc(profile?.phone||"")}" placeholder="05xxxxxxxxx">
+ <label>İlçe</label><select id="cpDistrict">${districtOptions(profile?.district||"")}</select>
+ <label>Mahalle</label><input id="cpNeighborhood" type="text" value="${esc(profile?.neighborhood||"")}" placeholder="Mahalle">
+ <label>Adres notu (isteğe bağlı)</label><textarea id="cpAddress" maxlength="300" placeholder="Bina no, kat, tarif vb.">${esc(profile?.address_note||"")}</textarea>
+ <div class="notice small">Bu bilgiler sadece sende (hesabında) tutulur, yeni talep oluştururken hazır önerilir.</div>
+ <button class="btn primary section" id="cpSaveBtn" onclick="saveCustomerProfile()">KAYDET</button></div>`);
+}
+async function saveCustomerProfile(){
+ if(!CURRENT_USER)return;
+ const full_name=document.getElementById("cpName").value.trim();
+ const phone=document.getElementById("cpPhone").value.trim();
+ const district=document.getElementById("cpDistrict").value;
+ const neighborhood=document.getElementById("cpNeighborhood").value.trim();
+ const address_note=document.getElementById("cpAddress").value.trim();
+ const btn=document.getElementById("cpSaveBtn");btn.disabled=true;btn.textContent="KAYDEDİLİYOR...";
+ try{
+  const existing=await loadCustomerProfile();
+  const payload={user_id:CURRENT_USER.id,full_name,phone,district,neighborhood,address_note,updated_at:new Date().toISOString()};
+  if(existing)await sb("PATCH","customer_profiles?user_id=eq."+encodeURIComponent(CURRENT_USER.id),payload);
+  else await sb("POST","customer_profiles",payload);
+  connection(true);
+  alert("Hesap bilgilerin kaydedildi ✓");
+  showAccount();
+ }catch(e){console.error(e);alert("Kaydedilemedi.\n\n"+friendlyErrorMessage(e));btn.disabled=false;btn.textContent="KAYDET"}
+}
 async function showAccount(){
  if(!CURRENT_USER){showAuth();return}
  nav("");
  app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div><span class="badge">👤 HESABIM</span><h1>${esc(CURRENT_USER.email)}</h1><div id="accountArea" class="card" style="text-align:center">⏳ Yükleniyor...</div>`);
  try{
-  const [myRequests,myProviders]=await Promise.all([
+  const [myRequests,myProviders,profile]=await Promise.all([
    sb("GET","requests?customer_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=*&order=created_at.desc&limit=50"),
-   sb("GET","providers?owner_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=*")
+   sb("GET","providers?owner_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=*"),
+   loadCustomerProfile()
   ]);
   const counts=await loadOfferCountsForRequests(myRequests.map(r=>r.id));
-  let html=`<section class="section"><h2>📋 Taleplerim (${myRequests.length})</h2>`;
+  const openCount=myRequests.filter(r=>isRequestOpenStatus(r.status)).length;
+  const doneCount=myRequests.filter(r=>r.status==="completed").length;
+  let html=`<div class="card section"><h2>📇 Bilgilerim</h2>`;
+  html+=profile&&(profile.full_name||profile.phone||profile.district)
+   ?`<div class="small">${profile.full_name?`👤 ${esc(profile.full_name)}<br>`:""}${profile.phone?`📞 ${esc(profile.phone)}<br>`:""}${profile.district?`📍 ${esc(profile.district)}${profile.neighborhood?", "+esc(profile.neighborhood):""}<br>`:""}${profile.address_note?`🏠 ${esc(profile.address_note)}`:""}</div>`
+   :`<div class="small muted">Henüz ad, telefon veya adres bilgisi eklemedin.</div>`;
+  html+=`<button class="btn secondary smallBtn section" onclick='showAccountEdit(${jsonAttr(profile||{})})'>⚙️ HESABIMI DÜZENLE</button></div>`;
+  html+=`<div class="card section"><div class="small muted">📋 Toplam ${myRequests.length} talep • 🟢 ${openCount} açık • ✅ ${doneCount} tamamlandı</div></div>`;
+  html+=`<section class="section"><h2>📋 Taleplerim (${myRequests.length})</h2>`;
   html+=myRequests.length?myRequests.map(r=>{
    const st=requestStatusLabel(r.status,counts[String(r.id)]||0);
    const k=requestService(r),s=SERVICES[k]||{name:r.category_id||"Hizmet",emoji:"🛠️"};
