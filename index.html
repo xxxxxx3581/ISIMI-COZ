@@ -24,6 +24,18 @@ button{cursor:pointer}
 a{text-decoration:none;color:inherit}
 :root{--bg:#07111f;--card:#0d1a2b;--line:#20344d;--text:#eef4fb;--muted:#9eb0c5;--primary:#19c37d;--warning:#f5b942;--danger:#ef5350;--input-bg:#081523;--surface:#091827;--header-bg:rgba(7,17,31,.98)}
 [data-theme="light"]{--bg:#f3f6fb;--card:#ffffff;--line:#dbe3ee;--text:#101826;--muted:#5c6b80;--primary:#0e9d63;--warning:#a86a00;--danger:#c62828;--input-bg:#eef2f7;--surface:#eef2f7;--header-bg:rgba(243,246,251,.98)}
+[data-theme="light"] .badge{background:rgba(14,157,99,.12);border-color:rgba(14,157,99,.35);color:#0e6b45}
+[data-theme="light"] .status{background:rgba(168,106,0,.14);color:#7a4f00}
+[data-theme="light"] .status-pending{background:rgba(168,106,0,.14);color:#7a4f00}
+[data-theme="light"] .status-offered{background:rgba(21,101,192,.14);color:#0f4c85}
+[data-theme="light"] .status-accepted{background:rgba(14,157,99,.14);color:#0e6b45}
+[data-theme="light"] .status-completed{background:rgba(14,157,99,.14);color:#0e6b45}
+[data-theme="light"] .status-cancelled{background:rgba(198,40,40,.14);color:#8c1f1f}
+[data-theme="light"] .notice{background:#e3f0f8;border-color:#bcdcee;color:#0c4460}
+[data-theme="light"] .success{background:#e5f7ee;border-color:#a9e4c6;color:#0e6b45}
+[data-theme="light"] .warning{background:#fdf1dc;border-color:#f0d29a;color:#7a4f00}
+[data-theme="light"] .error{background:#fdeaea;border-color:#f3bcbe;color:#8c1f1f}
+[data-theme="light"] .navBtn{color:#5c6b80}
 .app{max-width:760px;margin:auto;min-height:100vh;padding-bottom:90px}
 .top{padding:16px;border-bottom:1px solid var(--line);background:var(--header-bg);position:sticky;top:0;z-index:20}
 .brand{display:flex;align-items:center;gap:10px}.logo{width:40px;height:40px;border-radius:13px;background:linear-gradient(135deg,var(--primary),#36a3ff);display:grid;place-items:center;font-size:21px;font-weight:900;color:#03120d}
@@ -93,7 +105,8 @@ const SERVICES={
  temizlik:{name:"Temizlik",emoji:"🧹",desc:"Ev, ofis ve detaylı temizlik"},
  nakliye:{name:"Nakliye",emoji:"🚚",desc:"Ev, ofis ve parça eşya taşıma"},
  cilingir:{name:"Çilingir",emoji:"🔐",desc:"Kilit, anahtar ve acil giriş"},
- oto:{name:"Oto",emoji:"🚗",desc:"Arıza, bakım, lastik ve yol yardımı"}
+ oto:{name:"Oto",emoji:"🚗",desc:"Arıza, bakım, lastik ve yol yardımı"},
+ elektronik:{name:"Telefon & Bilgisayar",emoji:"💻",desc:"Ekran, arıza, format ve bakım tamiri"}
 };
 
 const DISTRICTS=["Aliağa","Balçova","Bayındır","Bayraklı","Bergama","Beydağ","Bornova","Buca","Çeşme","Çiğli","Dikili","Foça","Gaziemir","Güzelbahçe","Karabağlar","Karaburun","Karşıyaka","Konak","Menemen","Menderes","Narlıdere","Ödemiş","Seferihisar","Selçuk","Tire","Torbalı","Urla","Kiraz","Kemalpaşa","Kınık"];
@@ -587,12 +600,38 @@ function quickRepeatRequest(r){
  const k=requestService(r);
  showRequest(k,{description:r.description||"",district:r.district||"",neighborhood:r.neighborhood||""});
 }
+function startVoiceInput(){
+ const Rec=window.SpeechRecognition||window.webkitSpeechRecognition;
+ const status=document.getElementById("voiceStatus"),btn=document.getElementById("voiceBtn"),ta=document.getElementById("description");
+ if(!Rec){if(status)status.textContent="⚠️ Bu tarayıcı sesli girişi desteklemiyor.";return}
+ const rec=new Rec();
+ rec.lang="tr-TR";
+ rec.interimResults=false;
+ rec.maxAlternatives=1;
+ btn.textContent="⏺️";
+ if(status)status.textContent="🎙️ Dinleniyor, konuşabilirsin...";
+ rec.start();
+ rec.onresult=(e)=>{
+  const text=e.results[0][0].transcript;
+  if(ta)ta.value=(ta.value?ta.value.trim()+" ":"")+text;
+  if(status)status.textContent="✓ Eklendi.";
+ };
+ rec.onerror=(e)=>{
+  if(status)status.textContent=e.error==="not-allowed"?"⚠️ Mikrofon izni verilmedi.":"⚠️ Sesli giriş başarısız oldu, tekrar dene.";
+ };
+ rec.onend=()=>{btn.textContent="🎤";};
+}
 function showRequest(pre="",prefillExtra=null){
  nav("navRequest");
  app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div>
  <div class="formCard"><span class="badge">📋 YENİ HİZMET TALEBİ</span><h1>İhtiyacını anlat.</h1>
  <label>Hizmet kategorisi *</label><select id="category">${serviceOptions(pre)}</select>
- <label>Sorunun / ihtiyacın *</label><textarea id="description" maxlength="1000" placeholder="Örneğin: Klima çalışıyor fakat yeterince soğutmuyor.">${esc(prefillExtra?.description||"")}</textarea>
+ <label>Sorunun / ihtiyacın *</label>
+ <div style="position:relative">
+ <textarea id="description" maxlength="1000" placeholder="Örneğin: Klima çalışıyor fakat yeterince soğutmuyor.">${esc(prefillExtra?.description||"")}</textarea>
+ <button type="button" id="voiceBtn" onclick="startVoiceInput()" title="Sesli anlat" style="position:absolute;right:8px;bottom:8px;width:38px;height:38px;border-radius:50%;background:var(--primary);color:#03130d;border:0;font-size:16px;cursor:pointer">🎤</button>
+ </div>
+ <div id="voiceStatus" class="small muted"></div>
  <div class="row"><div><label>İl</label><input value="İzmir" readonly></div><div><label>İlçe *</label><select id="district">${districtOptions(prefillExtra?.district||"")}</select></div></div>
  <label>Mahalle</label><input id="neighborhood" placeholder="Mahalle adı" value="${esc(prefillExtra?.neighborhood||"")}">
  <label>Ne zaman gerekli?</label><select id="urgency"><option>Bugün</option><option>Acil</option><option>Uygun zamanda</option></select>
