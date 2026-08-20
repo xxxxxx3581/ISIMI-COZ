@@ -812,7 +812,7 @@ function offerStatusBadge(status){
  if(status==="rejected")return `<span class="status status-cancelled">Reddedildi</span>`;
  return `<span class="status status-pending">Bekliyor</span>`;
 }
-function detailOfferCard(o,provider,requestStatus,isOwner){
+function detailOfferCard(o,provider,requestStatus,isOwner,ratingInfo,badges){
  const price=Number(o.price);
  const isAccepted=o.status==="accepted";
  const isRejected=o.status==="rejected";
@@ -826,7 +826,8 @@ function detailOfferCard(o,provider,requestStatus,isOwner){
    ?`<button class="btn primary section" onclick='acceptOffer(${jsonAttr(o)},"${esc(o.request_id)}",this)'>✅ TEKLİFİ KABUL ET</button>`
    :`<div class="small muted section">🔒 Bu teklifi yalnızca talebi oluşturan kişi kabul edebilir.</div>`;
  }
- return `<article class="card" style="margin-top:10px"><div class="requestTop"><div><strong>${provider?esc(provider.name):"Sağlayıcı"}</strong><div class="small muted">${provider?.district?esc(provider.district):""}</div></div>${offerStatusBadge(o.status)}</div><div class="meta"><span>💰 ${Number.isFinite(price)?price.toLocaleString("tr-TR")+" TL":"-"}</span>${o.available_time?`<span>🕐 ${esc(o.available_time)}</span>`:""}</div>${o.note?`<div class="description">${esc(o.note)}</div>`:""}${acceptBtn}${phoneLine}</article>`;
+ const badgeHtml=[badges?.lowestPrice?`<span class="status" style="background:#1f6f43;color:#daffe9">💰 En uygun fiyat</span>`:"",badges?.highestRated?`<span class="status" style="background:#7a4f00;color:#ffe3ad">⭐ En yüksek puanlı</span>`:""].filter(Boolean).join(" ");
+ return `<article class="card" style="margin-top:10px"><div class="requestTop"><div><strong>${provider?esc(provider.name):"Sağlayıcı"}</strong><div class="small muted">${provider?.district?esc(provider.district):""}${ratingInfo&&ratingInfo.count?` • ${ratingBadgeHtml(ratingInfo)}`:""}</div></div>${offerStatusBadge(o.status)}</div>${badgeHtml?`<div class="small section" style="display:flex;gap:6px;flex-wrap:wrap">${badgeHtml}</div>`:""}<div class="meta"><span>💰 ${Number.isFinite(price)?price.toLocaleString("tr-TR")+" TL":"-"}</span>${o.available_time?`<span>🕐 ${esc(o.available_time)}</span>`:""}</div>${o.note?`<div class="description">${esc(o.note)}</div>`:""}${acceptBtn}${phoneLine}</article>`;
 }
 async function acceptOffer(offer,requestId,btnEl){
  if(!confirm("Bu teklifi kabul etmek istediğine emin misin? Diğer bekleyen teklifler otomatik olarak reddedilecek."))return;
@@ -943,6 +944,33 @@ async function cancelRequest(requestId){
   showRequestDetail(requestId);
  }catch(e){console.error(e);alert("İşlem yapılamadı.\n\n"+friendlyErrorMessage(e))}
 }
+let OFFERS_SORT_MODE="price";
+let DETAIL_STATE=null;
+function renderOffersSection(){
+ if(!DETAIL_STATE)return;
+ const area=document.getElementById("offersListArea");
+ if(!area)return;
+ const{offers,providerById,ratingById,requestStatus,isOwner}=DETAIL_STATE;
+ const activeOffers=offers.filter(o=>o.status!=="rejected");
+ let lowestId=null,highestId=null;
+ if(activeOffers.length>1){
+  const priced=activeOffers.filter(o=>Number.isFinite(Number(o.price)));
+  if(priced.length>1){lowestId=priced.reduce((a,b)=>Number(b.price)<Number(a.price)?b:a).id;}
+  const rated=activeOffers.filter(o=>ratingById[String(o.provider_id)]?.count);
+  if(rated.length>1){highestId=rated.reduce((a,b)=>(ratingById[String(b.provider_id)].avg>ratingById[String(a.provider_id)].avg)?b:a).id;}
+ }
+ const sorted=[...offers].sort((a,b)=>{
+  if(OFFERS_SORT_MODE==="price"){const pa=Number(a.price),pb=Number(b.price);if(!Number.isFinite(pa))return 1;if(!Number.isFinite(pb))return -1;return pa-pb;}
+  if(OFFERS_SORT_MODE==="rating"){const ra=ratingById[String(a.provider_id)]?.avg||0,rb=ratingById[String(b.provider_id)]?.avg||0;return rb-ra;}
+  return new Date(b.created_at||0)-new Date(a.created_at||0);
+ });
+ area.innerHTML=sorted.map(o=>detailOfferCard(o,providerById[String(o.provider_id)],requestStatus,isOwner,ratingById[String(o.provider_id)],{lowestPrice:o.id===lowestId,highestRated:o.id===highestId})).join("");
+}
+function setOffersSort(mode){
+ OFFERS_SORT_MODE=mode;
+ ["sortPrice","sortRating","sortNew"].forEach(id=>{const el=document.getElementById(id);if(el)el.className="btn "+(id==="sort"+mode.charAt(0).toUpperCase()+mode.slice(1)?"primary":"secondary")+" smallBtn"});
+ renderOffersSection();
+}
 async function showRequestDetail(requestId){
  nav("navRequests");
  if(!isUUID(requestId)){app(`<div class="error">Geçersiz talep kimliği.</div>`);return}
@@ -960,6 +988,7 @@ async function showRequestDetail(requestId){
   markOffersSeen(requestId,offers.length);
   const providers=await loadProvidersByIds(offers.map(o=>o.provider_id));
   const providerById=Object.fromEntries(providers.map(p=>[String(p.id),p]));
+  const ratingById=await loadProviderRatings(providers.map(p=>p.id));
   const k=requestService(r),s=SERVICES[k]||{name:r.category_id||"Hizmet",emoji:"🛠️"};
   const st=requestStatusLabel(r.status,offers.length);
   const isOwner=isRequestOwner(r);
@@ -977,8 +1006,9 @@ async function showRequestDetail(requestId){
    actionButtonsHtml=`<div class="section row">${completeBtn}<button class="btn secondary" onclick="cancelRequest('${esc(requestId)}')">🚫 TALEBİ İPTAL ET</button></div>`;
   }
   const offersHtml=offers.length
-   ?offers.map(o=>detailOfferCard(o,providerById[String(o.provider_id)],r.status,isOwner)).join("")
+   ?`<div id="offersListArea"></div>`
    :`<div class="small muted section">Henüz teklif gelmedi. Sağlayıcılar talebinizi inceliyor.</div>`;
+  const sortBar=offers.length>1?`<div class="row section" style="gap:6px"><button class="btn primary smallBtn" id="sortPrice" onclick="setOffersSort('price')">💰 Fiyata Göre</button><button class="btn secondary smallBtn" id="sortRating" onclick="setOffersSort('rating')">⭐ Puana Göre</button><button class="btn secondary smallBtn" id="sortNew" onclick="setOffersSort('new')">🕐 Yeni</button></div>`:"";
   const ownerNotice=isOwner?"":`<div class="notice">👀 Bu talebi bu tarayıcıdan oluşturmadınız — sadece görüntüleyebilirsiniz, teklif kabul edemezsiniz.</div>`;
   area.outerHTML=`<div class="formCard"><span class="badge">${s.emoji} ${esc(s.name)}</span><h1>Talep Detayı</h1>
   ${ownerNotice}
@@ -987,7 +1017,10 @@ async function showRequestDetail(requestId){
   ${r.photo_url?`<img src="${esc(r.photo_url)}" alt="Talep fotoğrafı" style="width:100%;max-height:320px;object-fit:cover;border-radius:10px;margin-top:8px">`:""}
   <div class="small muted section">Talep ID: <strong>${esc(r.id)}</strong> • Oluşturulma: ${r.created_at?new Date(r.created_at).toLocaleString("tr-TR"):""}</div>
   ${actionButtonsHtml}
-  <div class="section"><h2>💰 Gelen Teklifler (${offers.length})</h2>${offersHtml}</div>${reviewHtml}</div>`;
+  <div class="section"><h2>💰 Gelen Teklifler (${offers.length})</h2>${sortBar}${offersHtml}</div>${reviewHtml}</div>`;
+  OFFERS_SORT_MODE="price";
+  DETAIL_STATE={offers,providerById,ratingById,requestStatus:r.status,isOwner};
+  renderOffersSection();
  }catch(e){document.getElementById("detailArea").innerHTML=`<div class="error">Talep yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
 }
 
