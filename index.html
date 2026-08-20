@@ -337,13 +337,13 @@ async function checkUnreadNotifications(){
   if(CURRENT_USER){
    [myRequests,myProviders]=await Promise.all([
     sb("GET","requests?customer_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=id"),
-    sb("GET","providers?owner_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=id,name")
+    sb("GET","providers?owner_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=id,name,services,district,active")
    ]);
   }else{
    const reqIds=lsGetArray("iscoz_my_requests").filter(isUUID);
    const provIds=lsGetArray("iscoz_my_providers").filter(isUUID);
    if(reqIds.length)myRequests=await sb("GET","requests?id=in.("+reqIds.join(",")+")&select=id");
-   if(provIds.length)myProviders=await sb("GET","providers?id=in.("+provIds.join(",")+")&select=id,name");
+   if(provIds.length)myProviders=await sb("GET","providers?id=in.("+provIds.join(",")+")&select=id,name,services,district,active");
   }
   let count=0;
   if(myRequests.length){
@@ -352,8 +352,19 @@ async function checkUnreadNotifications(){
   }
   for(const p of myProviders){
    let offers=[];
-   try{offers=await loadOffersByProvider(p.id)}catch(e){continue}
+   try{offers=await loadOffersByProvider(p.id)}catch(e){offers=[]}
    offers.forEach(o=>{if(hasOfferUpdate(o))count++});
+  }
+  if(myProviders.length){
+   try{
+    const openRequests=await sb("GET","requests?select=id,category_id,district,status,created_at&order=created_at.desc&limit=100");
+    myProviders.forEach(p=>{
+     const lastSeen=lastSeenRequestsTime(p.id);
+     if(!lastSeen)return;
+     const suitable=openRequests.filter(r=>providerMatches(p,r));
+     suitable.forEach(r=>{if(r.created_at&&new Date(r.created_at)>lastSeen)count++});
+    });
+   }catch(e){console.warn("Eşleşen talepler kontrol edilemedi:",e)}
   }
   if(count>0){
    playNotificationBeep();
@@ -391,12 +402,28 @@ async function showNotifications(){
   }
   for(const p of myProviders){
    let offers=[];
-   try{offers=await loadOffersByProvider(p.id)}catch(e){continue}
+   try{offers=await loadOffersByProvider(p.id)}catch(e){offers=[]}
    offers.forEach(o=>{
     if(hasOfferUpdate(o)){
      items.push({time:o.updated_at||o.created_at,html:`<article class="request"><div class="requestTop"><div><h3>🆕 ${o.status==="accepted"?"Teklifin kabul edildi!":"Teklifin durumu güncellendi"}</h3><div class="small muted">${esc(p.name)} sağlayıcısı üzerinden</div></div></div><button class="btn secondary smallBtn section" onclick='showProviderOffers(${jsonAttr(p)})'>📑 Tekliflerimi Gör</button></article>`});
     }
    });
+  }
+  if(myProviders.length){
+   try{
+    const openRequests=await sb("GET","requests?select=*&order=created_at.desc&limit=100");
+    myProviders.forEach(p=>{
+     const lastSeen=lastSeenRequestsTime(p.id);
+     if(!lastSeen)return;
+     const suitable=openRequests.filter(r=>providerMatches(p,r));
+     suitable.forEach(r=>{
+      if(r.created_at&&new Date(r.created_at)>lastSeen){
+       const k=requestService(r),s=SERVICES[k]||{name:r.category_id||"Hizmet",emoji:"🛠️"};
+       items.push({time:r.created_at,html:`<article class="request"><div class="requestTop"><div><h3>🆕 Yeni eşleşen talep!</h3><div class="small muted">${s.emoji} ${esc(s.name)} — ${esc(p.name)} için uygun</div></div></div><button class="btn secondary smallBtn section" onclick='showProviderPanel(${jsonAttr(p)})'>📋 Talebi Gör</button></article>`});
+      }
+     });
+    });
+   }catch(e){console.warn("Eşleşen talepler yüklenemedi:",e)}
   }
   items.sort((a,b)=>new Date(b.time||0)-new Date(a.time||0));
   area.outerHTML=items.length?items.map(x=>x.html).join(""):`<div class="empty">🔔<h3>Yeni bildirimin yok.</h3><p class="small muted">Yeni teklif geldiğinde veya bir teklifinin durumu değiştiğinde burada görünecek.</p></div>`;
@@ -1205,7 +1232,9 @@ async function showProviderPanel(provider){
   const suitable=requests.filter(r=>providerMatches(provider,r));
   const box=document.getElementById("matchArea");
   if(!suitable.length){box.innerHTML=`<div class="empty">🔎 Şu anda kategori ve ilçenize uygun bir talep yok.<br><span class="small muted">Yeni bir talep geldiğinde burada görünecek.${canEdit?` Kategori veya ilçenizi genişletmek isterseniz "⚙️ Profilimi Düzenle" bölümünden güncelleyebilirsiniz.`:""}</span></div>`;return}
-  box.outerHTML=suitable.map(r=>providerRequestCard(r,provider)).join("");
+  const lastSeen=lastSeenRequestsTime(provider.id);
+  box.outerHTML=suitable.map(r=>providerRequestCard(r,provider,lastSeen&&r.created_at?new Date(r.created_at)>lastSeen:false)).join("");
+  markRequestsSeenNow(provider.id);
  }catch(e){document.getElementById("matchArea").innerHTML=`<div class="error">Talepler yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
 }
 /* ---------------- SAĞLAYICI PROFİLİ ---------------- */
@@ -1281,9 +1310,15 @@ async function showProviderOffers(provider){
   area.outerHTML=visibleOffers.map(o=>providerOfferCard(o,requestById[String(o.request_id)])).join("");
  }catch(e){document.getElementById("providerOffersArea").innerHTML=`<div class="error">Teklifler yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
 }
-function providerRequestCard(r,p){
+function lastSeenRequestsTime(providerId){
+ const seen=lsGetObj("iscoz_seen_requests_ts");
+ return seen[providerId]?new Date(seen[providerId]):null;
+}
+function markRequestsSeenNow(providerId){lsSetObjKey("iscoz_seen_requests_ts",providerId,new Date().toISOString());}
+function providerRequestCard(r,p,isNew){
  const k=requestService(r),s=SERVICES[k]||{name:r.category_id||"Hizmet",emoji:"🛠️"};
- return `<article class="request"><div class="requestTop"><div><h3>${s.emoji} ${esc(s.name)}</h3><div class="small muted">Talep UUID: ${esc(r.id)}</div></div><span class="status">${esc(r.urgency||r.status||"pending")}</span></div><div class="description">${esc(r.description||"")}</div>${r.photo_url?`<img src="${esc(r.photo_url)}" alt="Talep fotoğrafı" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-top:8px">`:""}<div class="meta"><span>📍 ${esc(r.district||"")}</span>${r.neighborhood?`<span>🏘️ ${esc(r.neighborhood)}</span>`:""}</div><button class="btn primary" onclick="openOffer('${esc(r.id)}','${esc(p.id)}','${esc(s.name)}')">💰 TEKLİF VER</button></article>`;
+ const newBadge=isNew?`<div class="small section"><strong style="color:#ff6b6b">🆕 Yeni talep!</strong></div>`:"";
+ return `<article class="request"><div class="requestTop"><div><h3>${s.emoji} ${esc(s.name)}</h3><div class="small muted">Talep UUID: ${esc(r.id)}</div></div><span class="status">${esc(r.urgency||r.status||"pending")}</span></div>${newBadge}<div class="description">${esc(r.description||"")}</div>${r.photo_url?`<img src="${esc(r.photo_url)}" alt="Talep fotoğrafı" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-top:8px">`:""}<div class="meta"><span>📍 ${esc(r.district||"")}</span>${r.neighborhood?`<span>🏘️ ${esc(r.neighborhood)}</span>`:""}</div><button class="btn primary" onclick="openOffer('${esc(r.id)}','${esc(p.id)}','${esc(s.name)}')">💰 TEKLİF VER</button></article>`;
 }
 
 /* ---------------- OFFERS ---------------- */
