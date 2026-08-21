@@ -331,7 +331,9 @@ function showToast(msg){
  document.body.appendChild(el);
  setTimeout(()=>el.remove(),6000);
 }
-async function checkUnreadNotifications(){
+let SESSION_NOTIFIED=new Set();
+async function getUnreadNotificationKeys(){
+ const keys=[];
  try{
   let myRequests=[],myProviders=[];
   if(CURRENT_USER){
@@ -345,15 +347,14 @@ async function checkUnreadNotifications(){
    if(reqIds.length)myRequests=await sb("GET","requests?id=in.("+reqIds.join(",")+")&select=id");
    if(provIds.length)myProviders=await sb("GET","providers?id=in.("+provIds.join(",")+")&select=id,name,services,district,active");
   }
-  let count=0;
   if(myRequests.length){
    const offersLists=await Promise.all(myRequests.map(r=>loadOffers(r.id)));
-   myRequests.forEach((r,i)=>{if(hasNewOffers(r.id,offersLists[i].length))count++});
+   myRequests.forEach((r,i)=>{if(hasNewOffers(r.id,offersLists[i].length))keys.push("newoffers:"+r.id+":"+offersLists[i].length)});
   }
   for(const p of myProviders){
    let offers=[];
    try{offers=await loadOffersByProvider(p.id)}catch(e){offers=[]}
-   offers.forEach(o=>{if(hasOfferUpdate(o))count++});
+   offers.forEach(o=>{if(hasOfferUpdate(o))keys.push("offerupdate:"+offerSeenKey(o)+":"+o.status)});
   }
   if(myProviders.length){
    try{
@@ -362,15 +363,34 @@ async function checkUnreadNotifications(){
      const lastSeen=lastSeenRequestsTime(p.id);
      if(!lastSeen)return;
      const suitable=openRequests.filter(r=>providerMatches(p,r));
-     suitable.forEach(r=>{if(r.created_at&&new Date(r.created_at)>lastSeen)count++});
+     suitable.forEach(r=>{if(r.created_at&&new Date(r.created_at)>lastSeen)keys.push("matchreq:"+p.id+":"+r.id)});
     });
    }catch(e){console.warn("Eşleşen talepler kontrol edilemedi:",e)}
   }
-  if(count>0){
+ }catch(e){console.warn("Bildirim anahtarları alınamadı:",e)}
+ return keys;
+}
+async function checkUnreadNotifications(){
+ const keys=await getUnreadNotificationKeys();
+ keys.forEach(k=>SESSION_NOTIFIED.add(k));
+ if(keys.length>0){
+  playNotificationBeep();
+  showToast(`🔔 ${keys.length} yeni bildirimin var — görmek için dokun`);
+ }
+}
+let NOTIFICATION_POLL_TIMER=null;
+function startNotificationPolling(){
+ if(NOTIFICATION_POLL_TIMER)clearInterval(NOTIFICATION_POLL_TIMER);
+ NOTIFICATION_POLL_TIMER=setInterval(async()=>{
+  if(document.hidden)return;
+  const keys=await getUnreadNotificationKeys();
+  const fresh=keys.filter(k=>!SESSION_NOTIFIED.has(k));
+  if(fresh.length){
+   fresh.forEach(k=>SESSION_NOTIFIED.add(k));
    playNotificationBeep();
-   showToast(`🔔 ${count} yeni bildirimin var — görmek için dokun`);
+   showToast(`🔔 ${fresh.length} yeni bildirimin var — görmek için dokun`);
   }
- }catch(e){console.warn("Bildirim kontrolü başarısız:",e)}
+ },45000);
 }
 async function showNotifications(){
  nav("");
@@ -1361,7 +1381,7 @@ async function restoreSession(){
   if(!r.ok)throw new Error("Oturum geçersiz");
  }catch(e){console.warn("Kayıtlı oturum artık geçerli değil, çıkış yapılıyor:",e);saveSession(null);}
 }
-async function startApp(){connection(false,"Supabase bağlanıyor...");renderAuthArea();applyThemeIcon();await restoreSession();showHome();checkUnreadNotifications();await testDB()}
+async function startApp(){connection(false,"Supabase bağlanıyor...");renderAuthArea();applyThemeIcon();await restoreSession();showHome();checkUnreadNotifications();startNotificationPolling();await testDB()}
 startApp();
 if("serviceWorker" in navigator){
  window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(e=>console.warn("SW kayıt hatası:",e))});
