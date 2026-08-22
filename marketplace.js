@@ -317,3 +317,62 @@
   }
 
 })();
+/* =========================================================
+   SUPABASE MARKETPLACE DATA LAYER
+   ========================================================= */
+
+async function loadMarketplaceCategories() {
+  try {
+    if (!window.supabase) {
+      console.warn("Supabase client bulunamadı.");
+      return [];
+    }
+
+    const { data, error } = await window.supabase
+      .from("marketplace_categories")
+      .select("*")
+      .eq("is_active", true)
+      .order("category_type")
+      .order("name");
+
+    if (error) {
+      console.error("Marketplace kategorileri alınamadı:", error);
+      return [];
+    }
+
+    return data || [];
+
+  } catch (error) {
+    console.error("Marketplace kategori hatası:", error);
+    return [];
+  }
+}
+
+async function createMarketplaceJob(jobData) {
+  try {
+    if (!window.supabase) {
+      throw new Error("Supabase bağlantısı bulunamadı.");
+    }
+
+    const { data, error } = await window.supabase
+      .from("marketplace_jobs")
+      .insert([jobData])
+      .select()
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    return data;
+
+  } catch (error) {
+    console.error("Marketplace işi oluşturulamadı:", error);
+    throw error;
+  }
+}
+
+window.ISIMICOZ_MARKETPLACE_DATA = {
+  loadCategories: loadMarketplaceCategories,
+  createJob: createMarketplaceJob
+};
