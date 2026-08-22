@@ -1410,6 +1410,96 @@ startApp();
 if("serviceWorker" in navigator){
  window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(e=>console.warn("SW kayıt hatası:",e))});
 }
+   <link rel="stylesheet" href="marketplace.css">
+
+<section id="isimicoz-marketplace" class="marketplace">
+
+  <div class="marketplace-hero">
+
+    <h1>İŞİMİ ÇÖZ</h1>
+
+    <p>
+      Fiziksel, dijital ve profesyonel işlerinizi
+      doğru uzmanlarla buluşturan yeni nesil hizmet pazaryeri.
+    </p>
+
+    <div class="marketplace-ai-box">
+
+      <textarea
+        class="marketplace-ai-input"
+        data-marketplace-job-input
+        placeholder="Yapmak istediğiniz işi anlatın... Örneğin: İzmir'de işletmem için web sitesi yaptırmak ve SEO çalışması istiyorum."
+      ></textarea>
+
+      <div class="marketplace-ai-actions">
+
+        <button
+          type="button"
+          class="marketplace-btn marketplace-btn-primary"
+          data-marketplace-analyze
+        >
+          🤖 İşimi Analiz Et
+        </button>
+
+      </div>
+
+    </div>
+
+    <div
+      class="marketplace-status"
+      data-marketplace-status
+    ></div>
+
+  </div>
+
+  <div class="marketplace-section">
+
+    <h2 class="marketplace-section-title">
+      Ne yapmak istiyorsunuz?
+    </h2>
+
+    <div class="marketplace-role-grid">
+
+      <button
+        type="button"
+        class="marketplace-card marketplace-role-card"
+        data-marketplace-role="customer"
+      >
+        <h3>🟢 İş Yaptırmak İstiyorum</h3>
+
+        <p>
+          İhtiyacınızı anlatın, uygun uzmanları bulalım.
+        </p>
+      </button>
+
+      <button
+        type="button"
+        class="marketplace-card marketplace-role-card"
+        data-marketplace-role="provider"
+      >
+        <h3>🔵 Hizmet Vermek İstiyorum</h3>
+
+        <p>
+          Uzmanlığınızı ekleyin ve size uygun işler alın.
+        </p>
+      </button>
+
+    </div>
+
+  </div>
+
+  <div
+    data-marketplace-categories
+  ></div>
+
+  <div
+    class="marketplace-match"
+    data-marketplace-result
+  ></div>
+
+</section>
+
+<script src="marketplace.js"></script>
 </script>
 </body>
 </html>
