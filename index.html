@@ -96,24 +96,24 @@ const SUPABASE_URL="https://zvffspbowdzvrrzefhkr.supabase.co";
 const SUPABASE_KEY="sb_publishable_L_qb9Q4fHktE51PEqEhTAg_O4R0eDiW";
 
 const SERVICES={
- klima:{name:"Klima",emoji:"❄️",desc:"Bakım, montaj, arıza ve temizlik"},
- elektrik:{name:"Elektrik",emoji:"⚡",desc:"Arıza, priz, tesisat ve aydınlatma"},
- tesisat:{name:"Tesisat",emoji:"🔧",desc:"Su, gider, musluk ve kaçak sorunları"},
- beyaz:{name:"Beyaz Eşya",emoji:"🧊",desc:"Çamaşır, bulaşık, buzdolabı ve fırın"},
- temizlik:{name:"Temizlik",emoji:"🧹",desc:"Ev, ofis ve detaylı temizlik"},
- nakliye:{name:"Nakliye",emoji:"🚚",desc:"Ev, ofis ve parça eşya taşıma"},
- cilingir:{name:"Çilingir",emoji:"🔐",desc:"Kilit, anahtar ve acil giriş"},
- oto:{name:"Oto",emoji:"🚗",desc:"Arıza, bakım, lastik ve yol yardımı"},
- elektronik:{name:"Telefon & Bilgisayar",emoji:"💻",desc:"Ekran, arıza, format ve bakım tamiri"},
- kurye:{name:"Kurye",emoji:"🛵",desc:"Paket, evrak ve hızlı teslimat"},
- yazilim:{name:"Yazılım & Web",emoji:"💻",desc:"Web sitesi, uygulama, entegrasyon"},
- tasarim:{name:"Tasarım",emoji:"🎨",desc:"Logo, görsel, kurumsal kimlik"},
- pazarlama:{name:"Dijital Pazarlama",emoji:"📈",desc:"SEO, reklam, büyüme danışmanlığı"},
- sosyalmedya:{name:"Sosyal Medya Yönetimi",emoji:"📱",desc:"İçerik, paylaşım, hesap yönetimi"},
- video:{name:"Video & Medya",emoji:"🎥",desc:"Kurgu, prodüksiyon, içerik üretimi"},
- veri:{name:"Veri Analizi",emoji:"📊",desc:"Raporlama, veri işleme, dashboard"},
- egitim:{name:"Özel Ders",emoji:"📚",desc:"Birebir eğitim ve rehberlik"},
- aiotomasyon:{name:"AI Otomasyon",emoji:"🤖",desc:"Süreç otomasyonu ve AI entegrasyonu"}
+ klima:{name:"Klima",emoji:"❄️",desc:"Bakım, montaj, arıza ve temizlik",group:"fiziksel"},
+ elektrik:{name:"Elektrik",emoji:"⚡",desc:"Arıza, priz, tesisat ve aydınlatma",group:"fiziksel"},
+ tesisat:{name:"Tesisat",emoji:"🔧",desc:"Su, gider, musluk ve kaçak sorunları",group:"fiziksel"},
+ beyaz:{name:"Beyaz Eşya",emoji:"🧊",desc:"Çamaşır, bulaşık, buzdolabı ve fırın",group:"fiziksel"},
+ temizlik:{name:"Temizlik",emoji:"🧹",desc:"Ev, ofis ve detaylı temizlik",group:"fiziksel"},
+ nakliye:{name:"Nakliye",emoji:"🚚",desc:"Ev, ofis ve parça eşya taşıma",group:"fiziksel"},
+ cilingir:{name:"Çilingir",emoji:"🔐",desc:"Kilit, anahtar ve acil giriş",group:"fiziksel"},
+ oto:{name:"Oto",emoji:"🚗",desc:"Arıza, bakım, lastik ve yol yardımı",group:"fiziksel"},
+ elektronik:{name:"Telefon & Bilgisayar",emoji:"💻",desc:"Ekran, arıza, format ve bakım tamiri",group:"fiziksel"},
+ kurye:{name:"Kurye",emoji:"🛵",desc:"Paket, evrak ve hızlı teslimat",group:"fiziksel"},
+ yazilim:{name:"Yazılım & Web",emoji:"💻",desc:"Web sitesi, uygulama, entegrasyon",group:"dijital"},
+ tasarim:{name:"Tasarım",emoji:"🎨",desc:"Logo, görsel, kurumsal kimlik",group:"dijital"},
+ pazarlama:{name:"Dijital Pazarlama",emoji:"📈",desc:"SEO, reklam, büyüme danışmanlığı",group:"dijital"},
+ sosyalmedya:{name:"Sosyal Medya Yönetimi",emoji:"📱",desc:"İçerik, paylaşım, hesap yönetimi",group:"dijital"},
+ video:{name:"Video & Medya",emoji:"🎥",desc:"Kurgu, prodüksiyon, içerik üretimi",group:"dijital"},
+ veri:{name:"Veri Analizi",emoji:"📊",desc:"Raporlama, veri işleme, dashboard",group:"profesyonel"},
+ egitim:{name:"Özel Ders",emoji:"📚",desc:"Birebir eğitim ve rehberlik",group:"profesyonel"},
+ aiotomasyon:{name:"AI Otomasyon",emoji:"🤖",desc:"Süreç otomasyonu ve AI entegrasyonu",group:"dijital"}
 };
 
 const DISTRICTS=["Aliağa","Balçova","Bayındır","Bayraklı","Bergama","Beydağ","Bornova","Buca","Çeşme","Çiğli","Dikili","Foça","Gaziemir","Güzelbahçe","Karabağlar","Karaburun","Karşıyaka","Konak","Menemen","Menderes","Narlıdere","Ödemiş","Seferihisar","Selçuk","Tire","Torbalı","Urla","Kiraz","Kemalpaşa","Kınık"];
@@ -698,20 +698,46 @@ function shareApp(){
   window.open("https://wa.me/?text="+encodeURIComponent(text+url),"_blank");
  }
 }
+let CATEGORY_GROUP_FILTER="all";
+function renderCategoryGrid(topKey){
+ const grid=document.getElementById("categoryGrid");
+ if(!grid)return;
+ const entries=Object.entries(SERVICES).filter(([k,s])=>CATEGORY_GROUP_FILTER==="all"||s.group===CATEGORY_GROUP_FILTER);
+ entries.sort(([ka],[kb])=>ka===topKey?-1:kb===topKey?1:0);
+ grid.innerHTML=entries.length?entries.map(([k,s])=>`<button class="card service" type="button" style="position:relative" onclick="showRequest('${k}')">${k===topKey?'<span class="status" style="position:absolute;top:8px;right:8px;background:#ff6b6b;color:#fff">🔥 Popüler</span>':""}<div class="emoji">${s.emoji}</div><strong>${esc(s.name)}</strong><span>${esc(s.desc)}</span></button>`).join(""):`<div class="card empty small muted">Bu grupta henüz kategori yok.</div>`;
+}
+function setCategoryGroup(g){
+ CATEGORY_GROUP_FILTER=g;
+ ["all","fiziksel","dijital","profesyonel"].forEach(k=>{const el=document.getElementById("grp_"+k);if(el)el.className="btn "+(k===g?"primary":"secondary")+" smallBtn"});
+ renderCategoryGrid(CURRENT_POPULAR_KEY);
+}
+let CURRENT_POPULAR_KEY=null;
 function showHome(){
  nav("navHome");
+ CATEGORY_GROUP_FILTER="all";
  const greeting=CURRENT_USER?`<div class="notice section">👋 Tekrar hoş geldin! Hızlı erişim: <a href="javascript:void(0)" onclick="showAccount()" style="color:#8fd0ff">Hesabım</a> · <a href="javascript:void(0)" onclick="showNotifications()" style="color:#8fd0ff">Bildirimler</a></div>`:"";
- app(`<section class="hero"><span class="badge">📍 İZMİR PİLOT BÖLGESİ</span><h1>İhtiyacın varsa,<br>çözümü var.</h1><p class="muted">Ev, iş yeri, araç ve günlük yaşam hizmetlerini tek yerden bul.</p><div class="actions" style="grid-template-columns:1fr"><button class="btn secondary" onclick="shareApp()">📲 Arkadaşına Öner</button><button class="btn primary" style="box-shadow:0 4px 14px rgba(25,195,125,.35);font-size:15px" onclick="showRequest()">➕ Yeni Talep Oluştur</button><button class="btn primary" style="background:#e34848;color:#fff;font-size:15px" onclick="showRequest('',null,true)">🚨 Acil İşimi Çöz</button></div>${greeting}</section>
- <section><div class="sectionTitle"><div><h2>Hizmet kategorileri</h2><div class="small muted">İhtiyacını seç, tek dokunuşla talep oluştur.</div></div></div><div id="categoryGrid" class="grid">${Object.entries(SERVICES).map(([k,s])=>`<button class="card service" type="button" onclick="showRequest('${k}')"><div class="emoji">${s.emoji}</div><strong>${esc(s.name)}</strong><span>${esc(s.desc)}</span></button>`).join("")}</div></section>
+ app(`<section class="hero"><span class="badge">📍 İZMİR PİLOT BÖLGESİ</span><h1>İşinizi hallettirin,<br>ya da iş alın.</h1><p class="muted">Ev, iş yeri, dijital ve profesyonel hizmetleri tek yerden bul ya da uzmanlığınla iş al.</p>
+ <div class="row section" style="gap:8px">
+  <button class="btn primary" style="flex:1;box-shadow:0 4px 14px rgba(25,195,125,.35)" onclick="showRequest()">🟢 İŞİMİ ÇÖZ<br><span style="font-weight:400;font-size:11px">Yapmak istediğiniz işi anlatın</span></button>
+  <button class="btn secondary" style="flex:1;background:#1e5c8a;color:#fff" onclick="showProviderEntry()">🔵 HİZMET VER<br><span style="font-weight:400;font-size:11px">Uzmanlığınızı ekleyin, iş alın</span></button>
+ </div>
+ <div class="row section" style="gap:8px"><button class="btn secondary" onclick="shareApp()">📲 Arkadaşına Öner</button><button class="btn primary" style="background:#e34848;color:#fff" onclick="showRequest('',null,true)">🚨 Acil İşimi Çöz</button></div>
+ ${greeting}</section>
+ <section><div class="sectionTitle"><div><h2>Hizmet kategorileri</h2><div class="small muted">Alanına göre filtrele, ihtiyacını seç.</div></div></div>
+ <div class="row section" style="gap:6px;flex-wrap:wrap">
+  <button class="btn primary smallBtn" id="grp_all" onclick="setCategoryGroup('all')">Tümü</button>
+  <button class="btn secondary smallBtn" id="grp_fiziksel" onclick="setCategoryGroup('fiziksel')">🏠 Fiziksel</button>
+  <button class="btn secondary smallBtn" id="grp_dijital" onclick="setCategoryGroup('dijital')">💻 Dijital</button>
+  <button class="btn secondary smallBtn" id="grp_profesyonel" onclick="setCategoryGroup('profesyonel')">📈 Profesyonel</button>
+ </div>
+ <div id="categoryGrid" class="grid section"></div></section>
  <section class="card section"><h2>💡 Nasıl çalışıyor?</h2><p class="muted small">1️⃣ İhtiyacını anlat, talebini oluştur. 2️⃣ Uygun hizmet sağlayıcıları görsün, teklif versin. 3️⃣ En uygun teklifi kabul et, iş bitince değerlendir.</p></section>`);
+ renderCategoryGrid(null);
  loadPopularCategories().then(counts=>{
-  const entries=Object.entries(SERVICES);
   const topKey=Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0];
   if(!topKey||!counts[topKey])return;
-  entries.sort(([ka],[kb])=>(counts[kb]||0)-(counts[ka]||0));
-  const grid=document.getElementById("categoryGrid");
-  if(!grid)return;
-  grid.innerHTML=entries.map(([k,s])=>`<button class="card service" type="button" style="position:relative" onclick="showRequest('${k}')">${k===topKey?'<span class="status" style="position:absolute;top:8px;right:8px;background:#ff6b6b;color:#fff">🔥 Popüler</span>':""}<div class="emoji">${s.emoji}</div><strong>${esc(s.name)}</strong><span>${esc(s.desc)}</span></button>`).join("");
+  CURRENT_POPULAR_KEY=topKey;
+  renderCategoryGrid(topKey);
  });
 }
 
@@ -1229,6 +1255,26 @@ function availabilityBadgeHtml(p){
  if(p.availability==="now")return `<span class="status" style="background:#1f6f43;color:#daffe9">🟢 Şimdi müsait</span>`;
  return `<span class="status" style="background:#7a4f00;color:#ffe3ad">🟡 Bugün müsait</span>`;
 }
+/* Kural tabanlı "uyum puanı": puan + tamamlanan iş + müsaitlik + mesafeyi
+   tek bir 0-100 skora indirger. Gerçek bir AI değildir, basit ağırlıklı bir
+   hesaplamadır — kullanıcıya "en uygun" hissi vermek için kullanılır. */
+function computeMatchScore(p,ratingInfo,completedCount){
+ let score=0;
+ if(ratingInfo&&ratingInfo.count)score+=Math.min(40,ratingInfo.avg*8);
+ score+=Math.min(25,(completedCount||0)*5);
+ if(p.active===false)score+=0;
+ else if(p.availability==="now")score+=15;
+ else score+=8;
+ if(CUSTOMER_GEO&&Number.isFinite(Number(p.lat))&&Number.isFinite(Number(p.lng))){
+  const km=haversineKm(CUSTOMER_GEO.lat,CUSTOMER_GEO.lng,p.lat,p.lng);
+  score+=km===null?10:Math.max(0,20-km*2);
+ }else{score+=10;}
+ return Math.round(Math.min(100,score));
+}
+function matchScoreBadgeHtml(score){
+ const color=score>=70?{bg:"#1f6f43",text:"#daffe9"}:score>=40?{bg:"#7a4f00",text:"#ffe3ad"}:{bg:"#4a1414",text:"#ffd0d0"};
+ return `<span class="status" style="background:${color.bg};color:${color.text}">🎯 ${score} uyum puanı</span>`;
+}
 function providerCard(p,ratingInfo,completedCount){
  const names=providerNameService(p).join(", ")||"Hizmet belirtilmemiş";
  const logo=p.logo_url?`<img src="${esc(p.logo_url)}" alt="Logo" style="width:56px;height:56px;object-fit:cover;border-radius:10px;flex-shrink:0">`:"";
@@ -1240,7 +1286,8 @@ function providerCard(p,ratingInfo,completedCount){
  const taxHtml=p.tax_id?`<div class="small muted">📋 İşletme No: ${esc(p.tax_id)}</div>`:"";
  const contactRow=`<div class="small muted section">🔒 İletişim bilgisi, teklif kabul edildikten sonra açılır.</div>`;
  const distHtml=CUSTOMER_GEO?distanceBadgeHtml(CUSTOMER_GEO.lat,CUSTOMER_GEO.lng,p.lat,p.lng):"";
- return `<article class="request"><div class="requestTop"><div style="display:flex;gap:10px;align-items:center">${logo}<div><h3>🛠️ ${esc(p.name||"Hizmet Sağlayıcı")}</h3><div class="small muted">İzmir • ${esc(p.district||"")}${distHtml?" • "+distHtml:""}</div></div></div><div style="display:flex;gap:8px;align-items:center">${favBtn}${availabilityBadgeHtml(p)}</div></div><div class="small section">${trustBadgeHtml(cc,ratingInfo)}</div><div class="small section">${ratingBadgeHtml(ratingInfo)}${completedHtml?" • "+completedHtml:""}</div><div class="meta"><span>🔧 ${esc(names)}</span></div>${p.description?`<div class="description">${esc(p.description)}</div>`:""}${taxHtml}<button class="btn primary" style="margin-top:10px" onclick="viewProviderRequests('${esc(p.id)}')">📋 UYGUN TALEPLERİ GÖR / TEKLİF VER</button>${contactRow}</article>`;
+ const score=computeMatchScore(p,ratingInfo,cc);
+ return `<article class="request"><div class="requestTop"><div style="display:flex;gap:10px;align-items:center">${logo}<div><h3>🛠️ ${esc(p.name||"Hizmet Sağlayıcı")}</h3><div class="small muted">İzmir • ${esc(p.district||"")}${distHtml?" • "+distHtml:""}</div></div></div><div style="display:flex;gap:8px;align-items:center">${favBtn}${availabilityBadgeHtml(p)}</div></div><div class="small section">${matchScoreBadgeHtml(score)} ${trustBadgeHtml(cc,ratingInfo)}</div><div class="small section">${ratingBadgeHtml(ratingInfo)}${completedHtml?" • "+completedHtml:""}</div><div class="meta"><span>🔧 ${esc(names)}</span></div>${p.description?`<div class="description">${esc(p.description)}</div>`:""}${taxHtml}<button class="btn primary" style="margin-top:10px" onclick="viewProviderRequests('${esc(p.id)}')">📋 UYGUN TALEPLERİ GÖR / TEKLİF VER</button>${contactRow}</article>`;
 }
 function showProviderEntry(){
  nav("navProvider");
@@ -1330,6 +1377,8 @@ function renderProviderList(){
    const db=haversineKm(CUSTOMER_GEO.lat,CUSTOMER_GEO.lng,b.lat,b.lng);
    if(da===null)return 1;if(db===null)return -1;return da-db;
   });
+ }else{
+  filtered=[...filtered].sort((a,b)=>computeMatchScore(b,CURRENT_PROVIDER_RATINGS[String(b.id)],CURRENT_PROVIDER_COMPLETED[String(b.id)])-computeMatchScore(a,CURRENT_PROVIDER_RATINGS[String(a.id)],CURRENT_PROVIDER_COMPLETED[String(a.id)]));
  }
  const area=document.getElementById("providersArea");
  if(!area)return;
