@@ -652,24 +652,38 @@ function showPrivacy(){
 }
 async function showStats(){
  nav("");
- app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div><span class="badge">📊 İSTATİSTİKLER</span><h1>Platform genel durumu.</h1><div id="statsArea" class="card" style="text-align:center">⏳ Yükleniyor...</div>`);
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div><span class="badge">📊 PAZAR NABZI</span><h1>Platform genel durumu.</h1><div id="statsArea" class="card" style="text-align:center">⏳ Yükleniyor...</div>`);
  const area=document.getElementById("statsArea");
  try{
-  const [requests,providers,reviews]=await Promise.all([
-   sb("GET","requests?select=id,status"),
-   sb("GET","providers?select=id,active"),
-   sb("GET","reviews?select=rating")
+  const [requests,providers,reviews,acceptedOffers]=await Promise.all([
+   sb("GET","requests?select=id,status,category_id,district"),
+   sb("GET","providers?select=id,active,services"),
+   sb("GET","reviews?select=rating"),
+   sb("GET","offers?status=eq.accepted&select=price")
   ]);
   const totalRequests=requests.length;
   const completed=requests.filter(r=>r.status==="completed").length;
   const activeProviders=providers.filter(p=>p.active!==false).length;
   const avgRating=reviews.length?(reviews.reduce((s,r)=>s+Number(r.rating||0),0)/reviews.length):0;
+  const catCounts={};
+  requests.forEach(r=>{const k=requestService(r);if(k)catCounts[k]=(catCounts[k]||0)+1});
+  const topCats=Object.entries(catCounts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const distCounts={};
+  requests.forEach(r=>{if(r.district)distCounts[r.district]=(distCounts[r.district]||0)+1});
+  const topDist=Object.entries(distCounts).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const prices=acceptedOffers.map(o=>Number(o.price)).filter(Number.isFinite);
+  const avgPrice=prices.length?Math.round(prices.reduce((s,p)=>s+p,0)/prices.length):null;
+  const minPrice=prices.length?Math.min(...prices):null,maxPrice=prices.length?Math.max(...prices):null;
   area.outerHTML=`<div class="grid">
    <div class="card service"><div class="emoji">📋</div><strong>${totalRequests}</strong><span>Toplam talep</span></div>
    <div class="card service"><div class="emoji">✅</div><strong>${completed}</strong><span>Tamamlanan iş</span></div>
    <div class="card service"><div class="emoji">🛠️</div><strong>${activeProviders}</strong><span>Aktif sağlayıcı</span></div>
    <div class="card service"><div class="emoji">⭐</div><strong>${avgRating?avgRating.toFixed(1):"-"}</strong><span>Ortalama puan (${reviews.length} değerlendirme)</span></div>
-  </div>`;
+  </div>
+  ${prices.length?`<div class="card section"><h2>💰 Kabul Edilen Teklif Fiyat Aralığı</h2><div class="small muted">Şu ana kadar kabul edilen ${prices.length} teklife göre — gerçek platform verisi.</div><div class="meta section"><span>Ortalama: <strong>${avgPrice.toLocaleString("tr-TR")} TL</strong></span><span>En düşük: ${minPrice.toLocaleString("tr-TR")} TL</span><span>En yüksek: ${maxPrice.toLocaleString("tr-TR")} TL</span></div></div>`:""}
+  ${topCats.length?`<div class="card section"><h2>🔥 En Çok Talep Edilen Kategoriler</h2>${topCats.map(([k,c])=>{const s=SERVICES[k]||{name:k,emoji:"🛠️"};return `<div class="row" style="justify-content:space-between;padding:6px 0"><span>${s.emoji} ${esc(s.name)}</span><strong>${c} talep</strong></div>`}).join("")}</div>`:""}
+  ${topDist.length?`<div class="card section"><h2>📍 En Aktif İlçeler</h2>${topDist.map(([d,c])=>`<div class="row" style="justify-content:space-between;padding:6px 0"><span>${esc(d)}</span><strong>${c} talep</strong></div>`).join("")}</div>`:""}
+  <div class="notice section">📊 Bu sayfadaki tüm rakamlar gerçek, canlı platform verisidir — İzmir pilot bölgesi büyüdükçe bu tablo da büyüyecek.</div>`;
  }catch(e){area.innerHTML=`<div class="error">İstatistikler yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
 }
 function showContact(){
@@ -1180,6 +1194,45 @@ function setOffersSort(mode){
  Object.entries(map).forEach(([m,id])=>{const el=document.getElementById(id);if(el)el.className="btn "+(m===mode?"primary":"secondary")+" smallBtn"});
  renderOffersSection();
 }
+function progressStepperHtml(status,offersCount){
+ const steps=[
+  {key:"created",label:"Talep Oluşturuldu",emoji:"📋"},
+  {key:"offered",label:"Teklif Alındı",emoji:"💰"},
+  {key:"accepted",label:"Kabul Edildi",emoji:"✅"},
+  {key:"inprogress",label:"Hizmet Veriliyor",emoji:"🛠️"},
+  {key:"completed",label:"Tamamlandı",emoji:"🏁"}
+ ];
+ let currentIdx=0;
+ if(status==="cancelled")return `<div class="notice section" style="background:#4a1414;border-color:#8c2f2f;color:#ffd0d0">🚫 Bu talep iptal edildi.</div>`;
+ if(status==="completed")currentIdx=4;
+ else if(status==="accepted")currentIdx=3;
+ else if(offersCount>0)currentIdx=1;
+ else currentIdx=0;
+ return `<div class="section" style="display:flex;overflow-x:auto;gap:4px;padding-bottom:4px">${steps.map((st,i)=>{
+  const done=i<=currentIdx;
+  return `<div style="flex:1;min-width:70px;text-align:center;opacity:${done?"1":".4"}"><div style="font-size:20px">${st.emoji}</div><div class="small" style="font-size:10px;line-height:1.2;margin-top:2px">${st.label}</div>${i<steps.length-1?`<div style="height:3px;background:${i<currentIdx?"var(--primary)":"rgba(255,255,255,.15)"};margin-top:6px;border-radius:2px"></div>`:""}</div>`;
+ }).join("")}</div>`;
+}
+function agreementSummaryHtml(r,offer,provider,serviceLabel){
+ if(!offer)return "";
+ const price=Number(offer.price);
+ return `<div class="card section" style="border:1px solid var(--primary)">
+  <h2>📄 Dijital Anlaşma Özeti</h2>
+  <div class="small muted">Bu özet, teklif kabul edildiğinde otomatik oluşturulur — iki taraf için de kayıt niteliğindedir.</div>
+  <div class="meta section">
+   <span>🛠️ Hizmet: <strong>${esc(serviceLabel)}</strong></span>
+   <span>💰 Fiyat: <strong>${Number.isFinite(price)?price.toLocaleString("tr-TR")+" TL":"-"}</strong></span>
+  </div>
+  <div class="meta">
+   <span>👤 Sağlayıcı: <strong>${provider?esc(provider.name):"-"}</strong></span>
+   <span>📅 Kabul tarihi: ${offer.updated_at?new Date(offer.updated_at).toLocaleString("tr-TR"):(offer.created_at?new Date(offer.created_at).toLocaleString("tr-TR"):"-")}</span>
+  </div>
+  ${offer.available_time?`<div class="small muted">🕐 Planlanan zaman: ${esc(offer.available_time)}</div>`:""}
+  <div class="small muted">📍 Konum: ${esc(r.district||"")}${r.neighborhood?", "+esc(r.neighborhood):""}</div>
+  <div class="small muted">🆔 Talep ID: ${esc(r.id)}</div>
+  <div class="notice section">💳 Ödeme bu sürümde platform üzerinden alınmıyor — taraflar ödemeyi kendi aralarında (elden/havale) güvenli iletişim üzerinden anlaşarak yürütür. Platform şu an eşleştirme ve güven katmanı sağlar.</div>
+ </div>`;
+}
 async function showRequestDetail(requestId){
  nav("navRequests");
  if(!isUUID(requestId)){app(`<div class="error">Geçersiz talep kimliği.</div>`);return}
@@ -1219,13 +1272,17 @@ async function showRequestDetail(requestId){
    :`<div class="small muted section">Henüz teklif gelmedi. Sağlayıcılar talebinizi inceliyor.</div>`;
   const sortBar=offers.length>1?`<div class="row section" style="gap:6px;flex-wrap:wrap"><button class="btn primary smallBtn" id="sortPrice" onclick="setOffersSort('price')">💰 Fiyata Göre</button><button class="btn secondary smallBtn" id="sortRating" onclick="setOffersSort('rating')">⭐ Puana Göre</button>${r.lat&&r.lng?`<button class="btn secondary smallBtn" id="sortDistance" onclick="setOffersSort('distance')">📍 Mesafeye Göre</button>`:""}<button class="btn secondary smallBtn" id="sortNew" onclick="setOffersSort('new')">🕐 Yeni</button></div>`:"";
   const ownerNotice=isOwner?"":`<div class="notice">👀 Bu talebi bu tarayıcıdan oluşturmadınız — sadece görüntüleyebilirsiniz, teklif kabul edemezsiniz.</div>`;
+  const stepperHtml=progressStepperHtml(r.status,offers.length);
+  const agreementHtml=(r.status==="accepted"||r.status==="completed")&&acceptedOffer?agreementSummaryHtml(r,acceptedOffer,providerById[String(acceptedOffer.provider_id)],s.name):"";
   area.outerHTML=`<div class="formCard"><span class="badge">${s.emoji} ${esc(s.name)}</span><h1>Talep Detayı</h1>
   ${ownerNotice}
+  ${stepperHtml}
   <div class="meta"><span class="status status-${st.cls}">${esc(st.label)}</span><span>📍 ${esc(r.district||"")}</span>${r.neighborhood?`<span>🏘️ ${esc(r.neighborhood)}</span>`:""}<span>⏱️ ${esc(r.urgency||"")}</span></div>
   <div class="description">${esc(r.description||"")}</div>
   ${r.photo_url?`<img src="${esc(r.photo_url)}" alt="Talep fotoğrafı" style="width:100%;max-height:320px;object-fit:cover;border-radius:10px;margin-top:8px">`:""}
   <div class="small muted section">Talep ID: <strong>${esc(r.id)}</strong> • Oluşturulma: ${r.created_at?new Date(r.created_at).toLocaleString("tr-TR"):""}</div>
   ${actionButtonsHtml}
+  ${agreementHtml}
   <div class="section"><h2>💰 Gelen Teklifler (${offers.length})</h2>${sortBar}${offersHtml}</div>${reviewHtml}</div>`;
   OFFERS_SORT_MODE="price";
   DETAIL_STATE={offers,providerById,ratingById,requestStatus:r.status,isOwner,requestGeo:(r.lat&&r.lng)?{lat:r.lat,lng:r.lng}:null};
