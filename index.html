@@ -60,6 +60,7 @@ input[type=checkbox]{width:18px;height:18px;flex-shrink:0}
 .btn{min-height:46px}
 @media(max-width:430px){main{padding:12px}.hero{padding:20px 16px}h1{font-size:27px}.row{grid-template-columns:1fr}.actions{grid-template-columns:1fr}}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
 <body>
 <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("iscoz_theme")==="light"?"light":"dark")}catch(e){}</script>
@@ -602,6 +603,7 @@ async function doLogin(){
   await authSignIn(email,password);
   alert("Giriş başarılı ✓");
   showHome();
+  setupRequestRealtime();
  }catch(e){alert("Giriş yapılamadı.\n\n"+friendlyErrorMessage(e))}
  finally{if(btn){btn.disabled=false;btn.textContent="GİRİŞ YAP";}}
 }
@@ -761,6 +763,42 @@ function showHome(){
   renderCategoryGrid(topKey);
  });
  checkProviderHomeAlert();
+}
+/* ---------------- GERÇEK ZAMANLI TALEP TESLİMİ (Supabase Realtime) ---------------- */
+let REALTIME_CHANNEL=null;
+let OWNED_PROVIDERS_CACHE=[];
+async function setupRequestRealtime(){
+ try{
+  if(typeof supabase==="undefined"||!supabase.createClient)return;
+  let myProviders=[];
+  if(CURRENT_USER){
+   myProviders=await sb("GET","providers?owner_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=id,name,services,district,active,lat,lng");
+  }else{
+   const ids=lsGetArray("iscoz_my_providers").filter(isUUID);
+   if(ids.length)myProviders=await sb("GET","providers?id=in.("+ids.join(",")+")&select=id,name,services,district,active,lat,lng");
+  }
+  OWNED_PROVIDERS_CACHE=myProviders;
+  if(!myProviders.length)return;
+  if(REALTIME_CHANNEL)return;
+  const rtClient=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  REALTIME_CHANNEL=rtClient.channel("public:requests:inserts").on(
+   "postgres_changes",
+   {event:"INSERT",schema:"public",table:"requests"},
+   payload=>{
+    const newReq=payload.new;
+    if(!newReq)return;
+    const matchesAny=OWNED_PROVIDERS_CACHE.some(p=>providerMatches(p,newReq));
+    if(matchesAny)onRealtimeNewMatchingRequest();
+   }
+  ).subscribe();
+ }catch(e){console.warn("Gerçek zamanlı bağlantı kurulamadı (arka planda devam ediliyor):",e)}
+}
+function onRealtimeNewMatchingRequest(){
+ updateProviderNavDot();
+ const homeBox=document.getElementById("providerHomeAlert");
+ if(homeBox)checkProviderHomeAlert();
+ const entryBox=document.getElementById("providerEntryAlert");
+ if(entryBox)computeProviderAlertState().then(state=>{entryBox.innerHTML=alertBannerHtml(state)});
 }
 async function computeProviderAlertState(){
  let myProviders=[];
@@ -1613,6 +1651,7 @@ async function registerProvider(){
   const p=Array.isArray(rows)?rows[0]:rows;
   if(!p?.id)throw new Error("Sağlayıcı kaydedildi ancak ID alınamadı.");
   lsAddToArray("iscoz_my_providers",p.id);
+  setupRequestRealtime();
   connection(true);showFlashModal({title:"Kayıt Başarılı ✓",message:"Hizmet sağlayıcı profilin oluşturuldu.",color:"success"});showProviderPanel(p);
  }catch(e){console.error(e);alert("Sağlayıcı kaydedilemedi.\n\n"+friendlyErrorMessage(e))}
  finally{b.disabled=false;b.textContent="HİZMET SAĞLAYICI KAYDI OLUŞTUR";}
@@ -1940,7 +1979,7 @@ async function restoreSession(){
   if(!r.ok)throw new Error("Oturum geçersiz");
  }catch(e){console.warn("Kayıtlı oturum artık geçerli değil, çıkış yapılıyor:",e);saveSession(null);}
 }
-async function startApp(){connection(false,"Supabase bağlanıyor...");renderAuthArea();applyThemeIcon();await restoreSession();showHome();await testDB()}
+async function startApp(){connection(false,"Supabase bağlanıyor...");renderAuthArea();applyThemeIcon();await restoreSession();showHome();setupRequestRealtime();await testDB()}
 startApp();
 if("serviceWorker" in navigator){
  window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(e=>console.warn("SW kayıt hatası:",e))});
