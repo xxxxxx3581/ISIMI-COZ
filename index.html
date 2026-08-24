@@ -18,6 +18,8 @@ html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:
 body{min-height:100vh}
 button,input,select,textarea{font:inherit}
 @keyframes fadeInUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulseAttn{0%,100%{opacity:1}50%{opacity:.55}}
+.attnBadge{animation:pulseAttn 1.1s ease-in-out infinite}
 #app.fadeIn{animation:fadeInUp .25s ease-out}
 button{cursor:pointer}
 a{text-decoration:none;color:inherit}
@@ -1294,26 +1296,6 @@ function progressStepperHtml(status,offersCount){
   return `<div style="flex:1;min-width:70px;text-align:center;opacity:${done?"1":".4"}"><div style="font-size:20px">${st.emoji}</div><div class="small" style="font-size:10px;line-height:1.2;margin-top:2px">${st.label}</div>${i<steps.length-1?`<div style="height:3px;background:${i<currentIdx?"var(--primary)":"rgba(255,255,255,.15)"};margin-top:6px;border-radius:2px"></div>`:""}</div>`;
  }).join("")}</div>`;
 }
-function agreementSummaryHtml(r,offer,provider,serviceLabel){
- if(!offer)return "";
- const price=Number(offer.price);
- return `<div class="card section" style="border:1px solid var(--primary)">
-  <h2>📄 Dijital Anlaşma Özeti</h2>
-  <div class="small muted">Bu özet, teklif kabul edildiğinde otomatik oluşturulur — iki taraf için de kayıt niteliğindedir.</div>
-  <div class="meta section">
-   <span>🛠️ Hizmet: <strong>${esc(serviceLabel)}</strong></span>
-   <span>💰 Fiyat: <strong>${Number.isFinite(price)?price.toLocaleString("tr-TR")+" TL":"-"}</strong></span>
-  </div>
-  <div class="meta">
-   <span>👤 Sağlayıcı: <strong>${provider?esc(provider.name):"-"}</strong></span>
-   <span>📅 Kabul tarihi: ${offer.updated_at?new Date(offer.updated_at).toLocaleString("tr-TR"):(offer.created_at?new Date(offer.created_at).toLocaleString("tr-TR"):"-")}</span>
-  </div>
-  ${offer.available_time?`<div class="small muted">🕐 Planlanan zaman: ${esc(offer.available_time)}</div>`:""}
-  <div class="small muted">📍 Konum: ${esc(r.district||"")}${r.neighborhood?", "+esc(r.neighborhood):""}</div>
-  <div class="small muted">🆔 Talep ID: ${esc(r.id)}</div>
-  <div class="notice section">💳 Ödeme bu sürümde platform üzerinden alınmıyor — taraflar ödemeyi kendi aralarında (elden/havale) güvenli iletişim üzerinden anlaşarak yürütür. Platform şu an eşleştirme ve güven katmanı sağlar.</div>
- </div>`;
-}
 async function showRequestDetail(requestId){
  nav("navRequests");
  if(!isUUID(requestId)){app(`<div class="error">Geçersiz talep kimliği.</div>`);return}
@@ -1354,7 +1336,6 @@ async function showRequestDetail(requestId){
   const sortBar=offers.length>1?`<div class="row section" style="gap:6px;flex-wrap:wrap"><button class="btn primary smallBtn" id="sortPrice" onclick="setOffersSort('price')">💰 Fiyata Göre</button><button class="btn secondary smallBtn" id="sortRating" onclick="setOffersSort('rating')">⭐ Puana Göre</button>${r.lat&&r.lng?`<button class="btn secondary smallBtn" id="sortDistance" onclick="setOffersSort('distance')">📍 Mesafeye Göre</button>`:""}<button class="btn secondary smallBtn" id="sortNew" onclick="setOffersSort('new')">🕐 Yeni</button></div>`:"";
   const ownerNotice=isOwner?"":`<div class="notice">👀 Bu talebi bu tarayıcıdan oluşturmadınız — sadece görüntüleyebilirsiniz, teklif kabul edemezsiniz.</div>`;
   const stepperHtml=progressStepperHtml(r.status,offers.length);
-  const agreementHtml=(r.status==="accepted"||r.status==="completed")&&acceptedOffer?agreementSummaryHtml(r,acceptedOffer,providerById[String(acceptedOffer.provider_id)],s.name):"";
   area.outerHTML=`<div class="formCard"><span class="badge">${s.emoji} ${esc(s.name)}</span><h1>Talep Detayı</h1>
   ${ownerNotice}
   ${stepperHtml}
@@ -1363,7 +1344,6 @@ async function showRequestDetail(requestId){
   ${r.photo_url?`<img src="${esc(r.photo_url)}" alt="Talep fotoğrafı" style="width:100%;max-height:320px;object-fit:cover;border-radius:10px;margin-top:8px">`:""}
   <div class="small muted section">Talep ID: <strong>${esc(r.id)}</strong> • Oluşturulma: ${r.created_at?new Date(r.created_at).toLocaleString("tr-TR"):""}</div>
   ${actionButtonsHtml}
-  ${agreementHtml}
   <div class="section"><h2>💰 Gelen Teklifler (${offers.length})</h2>${sortBar}${offersHtml}</div>${reviewHtml}</div>`;
   OFFERS_SORT_MODE="price";
   DETAIL_STATE={offers,providerById,ratingById,requestStatus:r.status,isOwner,requestGeo:(r.lat&&r.lng)?{lat:r.lat,lng:r.lng}:null};
@@ -1662,7 +1642,17 @@ async function showProviderPanel(provider){
  const editBtn=canEdit?`<button class="btn secondary" onclick='showProviderProfile(${jsonAttr(provider)})'>⚙️ PROFİLİMİ DÜZENLE</button>`:"";
  const ownerNotice=canEdit?"":`<div class="notice small">👀 Bu profili bu tarayıcıdan oluşturmadınız — sadece görüntüleyebilirsiniz.</div>`;
  const quickAvail=canEdit?`<div class="small section">Müsaitlik: <div class="row" style="gap:6px;margin-top:6px"><button class="btn ${provider.active!==false&&provider.availability==="now"?"primary":"secondary"} smallBtn" style="flex:1" onclick='quickSetAvailability(${jsonAttr(provider)},"now")'>🟢 Şimdi</button><button class="btn ${provider.active!==false&&provider.availability!=="now"?"primary":"secondary"} smallBtn" style="flex:1" onclick='quickSetAvailability(${jsonAttr(provider)},"today")'>🟡 Bugün</button><button class="btn ${provider.active===false?"primary":"secondary"} smallBtn" style="flex:1" onclick='quickSetAvailability(${jsonAttr(provider)},"off")'>🔴 Kapalı</button></div></div>`:"";
- app(`<div class="back"><button class="btn secondary smallBtn" onclick="showProviders()">← Sağlayıcı listesine dön</button></div><div class="card">${provider.logo_url?`<img src="${esc(provider.logo_url)}" alt="Logo" style="width:100%;max-height:200px;object-fit:cover;border-radius:10px;margin-bottom:10px">`:""}<h2>🛠️ ${esc(provider.name)}</h2><p class="muted">${esc(provider.district||"")}</p><div class="small" id="providerRatingArea">⏳</div>${quickAvail}${ownerNotice}<div class="row section"><button class="btn secondary" onclick='showProviderOffers(${jsonAttr(provider)})'>📑 TEKLİFLERİM</button>${editBtn}</div></div><section class="section"><h2>⭐ Değerlendirmeler</h2><div id="providerReviewsArea" class="card" style="text-align:center">⏳ Yükleniyor...</div></section><section class="section" id="urgentSection" style="display:none"><h2>🚨 Acil Talepler</h2><div id="urgentMatchArea" class="card" style="text-align:center">⏳</div></section><section class="section"><h2>📋 Uygun Talepler</h2><div id="matchArea" class="card" style="text-align:center">⏳ Eşleşmeler aranıyor...</div></section>`);
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick="showProviders()">← Sağlayıcı listesine dön</button></div><div class="card">${provider.logo_url?`<img src="${esc(provider.logo_url)}" alt="Logo" style="width:100%;max-height:200px;object-fit:cover;border-radius:10px;margin-bottom:10px">`:""}<h2>🛠️ ${esc(provider.name)}</h2><p class="muted">${esc(provider.district||"")}</p><div class="small" id="providerRatingArea">⏳</div>${quickAvail}${ownerNotice}<div class="row section"><button class="btn secondary" onclick='showProviderOffers(${jsonAttr(provider)})'>📑 TEKLİFLERİM</button>${editBtn}</div></div>
+ <section class="section"><h2 id="matchSummaryHeader">🔔 Yeni Talepler</h2>
+ <div class="row section" style="gap:6px;flex-wrap:wrap">
+  <button class="btn primary smallBtn" id="distF_all" onclick="setProviderDistFilter('all')">📍 Tümü</button>
+  <button class="btn secondary smallBtn" id="distF_0-5" onclick="setProviderDistFilter('0-5')">0–5 km</button>
+  <button class="btn secondary smallBtn" id="distF_5-10" onclick="setProviderDistFilter('5-10')">5–10 km</button>
+  <button class="btn secondary smallBtn" id="distF_10-20" onclick="setProviderDistFilter('10-20')">10–20 km</button>
+ </div></section>
+ <section class="section"><h2>⭐ Değerlendirmeler</h2><div id="providerReviewsArea" class="card" style="text-align:center">⏳ Yükleniyor...</div></section>
+ <section class="section" id="urgentSection" style="display:none"><h2>🚨 Acil Talepler</h2><div id="urgentMatchArea" class="card" style="text-align:center">⏳</div></section>
+ <section class="section"><h2>📋 Bana Gelen İşler</h2><div id="matchArea" class="card" style="text-align:center">⏳ Eşleşmeler aranıyor...</div></section>`);
  loadProviderRatings([provider.id]).then(async m=>{
   const completed=await loadProviderCompletedCounts([provider.id]);
   const el=document.getElementById("providerRatingArea");
@@ -1677,21 +1667,51 @@ async function showProviderPanel(provider){
  try{
   const requests=await sb("GET","requests?select=*&order=created_at.desc&limit=100");
   const suitable=requests.filter(r=>providerMatches(provider,r));
-  const box=document.getElementById("matchArea");
-  const urgentBox=document.getElementById("urgentMatchArea"),urgentSection=document.getElementById("urgentSection");
-  if(!suitable.length){box.innerHTML=`<div class="empty">🔎 Şu anda kategori ve ilçenize uygun bir talep yok.<br><span class="small muted">Yeni bir talep geldiğinde burada görünecek.${canEdit?` Kategori veya ilçenizi genişletmek isterseniz "⚙️ Profilimi Düzenle" bölümünden güncelleyebilirsiniz.`:""}</span></div>`;return}
   const lastSeen=lastSeenRequestsTime(provider.id);
   const withDist=suitable.map(r=>({r,isNew:lastSeen&&r.created_at?new Date(r.created_at)>lastSeen:false,dist:haversineKm(provider.lat,provider.lng,r.lat,r.lng)}));
   withDist.sort((a,b)=>{if(a.dist===null)return 1;if(b.dist===null)return -1;return a.dist-b.dist});
-  const urgentOnes=withDist.filter(x=>x.r.is_urgent||x.r.urgency==="Acil");
-  const normalOnes=withDist;
-  if(urgentOnes.length&&urgentSection&&urgentBox){
-   urgentSection.style.display="";
-   urgentBox.outerHTML=urgentOnes.map(x=>providerRequestCard(x.r,provider,x.isNew)).join("");
-  }
-  box.outerHTML=normalOnes.map(x=>providerRequestCard(x.r,provider,x.isNew)).join("");
+  PROVIDER_MATCH_STATE={provider,withDist};
+  PROVIDER_DIST_FILTER="all";
+  renderProviderMatchLists();
   markRequestsSeenNow(provider.id);
  }catch(e){document.getElementById("matchArea").innerHTML=`<div class="error">Talepler yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
+}
+let PROVIDER_MATCH_STATE=null;
+let PROVIDER_DIST_FILTER="all";
+function inDistRange(dist,range){
+ if(range==="all")return true;
+ if(dist===null)return false;
+ if(range==="0-5")return dist<=5;
+ if(range==="5-10")return dist>5&&dist<=10;
+ if(range==="10-20")return dist>10&&dist<=20;
+ return true;
+}
+function setProviderDistFilter(range){
+ PROVIDER_DIST_FILTER=range;
+ ["all","0-5","5-10","10-20"].forEach(r=>{const el=document.getElementById("distF_"+r);if(el)el.className="btn "+(r===range?"primary":"secondary")+" smallBtn"});
+ renderProviderMatchLists();
+}
+function renderProviderMatchLists(){
+ if(!PROVIDER_MATCH_STATE)return;
+ const{provider,withDist}=PROVIDER_MATCH_STATE;
+ const filtered=withDist.filter(x=>inDistRange(x.dist,PROVIDER_DIST_FILTER));
+ const box=document.getElementById("matchArea");
+ const urgentBox=document.getElementById("urgentMatchArea"),urgentSection=document.getElementById("urgentSection");
+ const header=document.getElementById("matchSummaryHeader");
+ const urgentCount=filtered.filter(x=>x.r.is_urgent||x.r.urgency==="Acil").length;
+ const normalCount=filtered.length-urgentCount;
+ if(header)header.innerHTML=`🔔 Yeni Talepler (${filtered.length}) ${urgentCount?`<span class="status attnBadge" style="background:#4a1414;color:#ffd0d0">🔴 ${urgentCount} Acil</span>`:""} ${normalCount?`<span class="status" style="background:#1f6f43;color:#daffe9">🟢 ${normalCount} Normal</span>`:""}`;
+ if(!filtered.length){
+  if(box)box.innerHTML=`<div class="empty">🔎 Bu filtreye uygun bir talep yok.<br><span class="small muted">Yeni bir talep geldiğinde veya filtreyi genişlettiğinde burada görünecek.</span></div>`;
+  if(urgentSection)urgentSection.style.display="none";
+  return;
+ }
+ const urgentOnes=filtered.filter(x=>x.r.is_urgent||x.r.urgency==="Acil");
+ if(urgentOnes.length&&urgentSection&&urgentBox){
+  urgentSection.style.display="";
+  urgentBox.innerHTML=urgentOnes.map(x=>providerRequestCard(x.r,provider,x.isNew)).join("");
+ }else if(urgentSection){urgentSection.style.display="none";}
+ if(box)box.innerHTML=filtered.map(x=>providerRequestCard(x.r,provider,x.isNew)).join("");
 }
 async function quickSetAvailability(provider,value){
  try{
@@ -1824,11 +1844,12 @@ function lastSeenRequestsTime(providerId){
 function markRequestsSeenNow(providerId){lsSetObjKey("iscoz_seen_requests_ts",providerId,new Date().toISOString());}
 function providerRequestCard(r,p,isNew){
  const k=requestService(r),s=SERVICES[k]||{name:r.category_id||"Hizmet",emoji:"🛠️"};
- const newBadge=isNew?`<div class="small section"><strong style="color:#ff6b6b">🆕 Yeni talep!</strong></div>`:"";
  const isUrgent=r.is_urgent||r.urgency==="Acil";
- const urgentBadge=isUrgent?`<span class="status" style="background:#4a1414;color:#ffd0d0">🚨 ACİL</span>`:"";
+ const attnClass=(isNew||isUrgent)?" attnBadge":"";
+ const newBadge=isNew?`<div class="small section"><strong class="${attnClass.trim()}" style="color:#ff6b6b">🆕 YENİ MÜŞTERİ TALEBİ</strong></div>`:"";
+ const urgentBadge=isUrgent?`<span class="status${attnClass}" style="background:#4a1414;color:#ffd0d0">🚨 ACİL</span>`:"";
  const distHtml=distanceBadgeHtml(p.lat,p.lng,r.lat,r.lng);
- return `<article class="request">${isUrgent?`<div style="border-left:4px solid #e34848;margin:-1px -1px 8px -1px;padding-left:8px"></div>`:""}<div class="requestTop"><div><h3>${s.emoji} ${esc(s.name)}</h3><div class="small muted">Talep UUID: ${esc(r.id)}</div></div><div style="display:flex;gap:6px;align-items:center">${urgentBadge}<span class="status">${esc(r.urgency||r.status||"pending")}</span></div></div>${newBadge}<div class="description">${esc(r.description||"")}</div>${r.photo_url?`<img src="${esc(r.photo_url)}" alt="Talep fotoğrafı" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-top:8px">`:""}<div class="meta"><span>📍 ${esc(r.district||"")}</span>${r.neighborhood?`<span>🏘️ ${esc(r.neighborhood)}</span>`:""}${distHtml}</div><button class="btn primary" onclick="openOffer('${esc(r.id)}','${esc(p.id)}','${esc(s.name)}')">💰 TEKLİF VER</button></article>`;
+ return `<article class="request">${isUrgent?`<div style="border-left:4px solid #e34848;margin:-1px -1px 8px -1px;padding-left:8px"></div>`:""}<div class="requestTop"><div><h3>${s.emoji} ${esc(s.name)}</h3><div class="small muted">Talep UUID: ${esc(r.id)}</div></div><div style="display:flex;gap:6px;align-items:center">${urgentBadge}<span class="status">${esc(r.urgency||r.status||"pending")}</span></div></div>${newBadge}<div class="description">${esc(r.description||"")}</div>${r.photo_url?`<img src="${esc(r.photo_url)}" alt="Talep fotoğrafı" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-top:8px">`:""}<div class="meta"><span>📍 ${esc(r.district||"")}</span>${r.neighborhood?`<span>🏘️ ${esc(r.neighborhood)}</span>`:""}${distHtml}</div><div class="row section" style="gap:8px"><button class="btn secondary smallBtn" style="flex:1" onclick="showRequestDetail('${esc(r.id)}')">👁️ Talebi Gör</button><button class="btn primary smallBtn" style="flex:1" onclick="openOffer('${esc(r.id)}','${esc(p.id)}','${esc(s.name)}')">💰 Teklif Ver</button></div></article>`;
 }
 
 /* ---------------- OFFERS ---------------- */
