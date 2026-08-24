@@ -74,7 +74,7 @@ input[type=checkbox]{width:18px;height:18px;flex-shrink:0}
 <button class="navBtn" id="navHome" onclick="showHome()"><b>⌂</b>ANA</button>
 <button class="navBtn" id="navRequest" onclick="showRequest()"><b>＋</b>TALEP</button>
 <button class="navBtn" id="navRequests" onclick="showRequests()"><b>▣</b>TALEPLER</button>
-<button class="navBtn" id="navProvider" onclick="showProviderEntry()"><b>🛠️</b>HİZMET VER</button>
+<button class="navBtn" id="navProvider" onclick="showProviderEntry()" style="position:relative"><b>🛠️</b>HİZMET VER<span id="navProviderDot" class="attnBadge" style="display:none;position:absolute;top:4px;right:10px;width:10px;height:10px;border-radius:50%;background:#e34848"></span></button>
 </div></nav>
 
 <script>
@@ -762,32 +762,45 @@ function showHome(){
  });
  checkProviderHomeAlert();
 }
+async function computeProviderAlertState(){
+ let myProviders=[];
+ if(CURRENT_USER){
+  myProviders=await sb("GET","providers?owner_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=id,name,services,district,active,lat,lng");
+ }else{
+  const ids=lsGetArray("iscoz_my_providers").filter(isUUID);
+  if(ids.length)myProviders=await sb("GET","providers?id=in.("+ids.join(",")+")&select=id,name,services,district,active,lat,lng");
+ }
+ if(!myProviders.length)return null;
+ const requests=await sb("GET","requests?select=id,category_id,district,status,created_at,is_urgent,urgency&order=created_at.desc&limit=100");
+ let totalNew=0,totalUrgentNew=0,targetProvider=null;
+ myProviders.forEach(p=>{
+  const lastSeen=lastSeenRequestsTime(p.id);
+  if(!lastSeen)return;
+  const suitable=requests.filter(r=>providerMatches(p,r));
+  const unseen=suitable.filter(r=>r.created_at&&new Date(r.created_at)>lastSeen);
+  if(unseen.length&&!targetProvider)targetProvider=p;
+  totalNew+=unseen.length;
+  totalUrgentNew+=unseen.filter(r=>r.is_urgent||r.urgency==="Acil").length;
+ });
+ return{totalNew,totalUrgentNew,targetProvider};
+}
+async function updateProviderNavDot(){
+ const dot=document.getElementById("navProviderDot");
+ if(!dot)return null;
+ try{
+  const state=await computeProviderAlertState();
+  dot.style.display=state&&state.totalNew?"block":"none";
+  return state;
+ }catch(e){console.warn("Sağlayıcı uyarı durumu alınamadı:",e);return null}
+}
+function alertBannerHtml(state){
+ if(!state||!state.totalNew)return "";
+ return `<button type="button" onclick='showProviderPanel(${jsonAttr(state.targetProvider)})' class="attnBadge" style="width:100%;text-align:left;margin-top:12px;padding:14px 16px;border-radius:12px;border:1px solid #e34848;background:#4a1414;color:#ffd0d0;font-weight:700;font-size:14px;cursor:pointer">🔴 ${state.totalNew} Yeni Müşteri Talebi!${state.totalUrgentNew?` (${state.totalUrgentNew} Acil)`:""} — görmek için dokun</button>`;
+}
 async function checkProviderHomeAlert(){
  const box=document.getElementById("providerHomeAlert");
- if(!box)return;
- try{
-  let myProviders=[];
-  if(CURRENT_USER){
-   myProviders=await sb("GET","providers?owner_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=id,name,services,district,active,lat,lng");
-  }else{
-   const ids=lsGetArray("iscoz_my_providers").filter(isUUID);
-   if(ids.length)myProviders=await sb("GET","providers?id=in.("+ids.join(",")+")&select=id,name,services,district,active,lat,lng");
-  }
-  if(!myProviders.length)return;
-  const requests=await sb("GET","requests?select=id,category_id,district,status,created_at,is_urgent,urgency&order=created_at.desc&limit=100");
-  let totalNew=0,totalUrgentNew=0,targetProvider=null;
-  myProviders.forEach(p=>{
-   const lastSeen=lastSeenRequestsTime(p.id);
-   if(!lastSeen)return;
-   const suitable=requests.filter(r=>providerMatches(p,r));
-   const unseen=suitable.filter(r=>r.created_at&&new Date(r.created_at)>lastSeen);
-   if(unseen.length&&!targetProvider)targetProvider=p;
-   totalNew+=unseen.length;
-   totalUrgentNew+=unseen.filter(r=>r.is_urgent||r.urgency==="Acil").length;
-  });
-  if(!totalNew||!targetProvider)return;
-  box.innerHTML=`<button type="button" onclick='showProviderPanel(${jsonAttr(targetProvider)})' class="attnBadge" style="width:100%;text-align:left;margin-top:12px;padding:14px 16px;border-radius:12px;border:1px solid #e34848;background:#4a1414;color:#ffd0d0;font-weight:700;font-size:14px;cursor:pointer">🔴 ${totalNew} Yeni Müşteri Talebi!${totalUrgentNew?` (${totalUrgentNew} Acil)`:""} — görmek için dokun</button>`;
- }catch(e){console.warn("Sağlayıcı ana ekran uyarısı yüklenemedi:",e)}
+ const state=await updateProviderNavDot();
+ if(box)box.innerHTML=alertBannerHtml(state);
 }
 
 /* ---------------- REQUESTS ---------------- */
@@ -1537,6 +1550,7 @@ function providerCard(p,ratingInfo,completedCount){
 function showProviderEntry(){
  nav("navProvider");
  app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div>
+ <div id="providerEntryAlert"></div>
  <div class="formCard"><span class="badge">🛠️ HİZMET SAĞLAYICI</span><h1>Hizmet ver.</h1>
  <label>Ad / İşletme *</label><input id="pName" placeholder="Örn. Ferhat Klima Servisi">
  <label>Telefon *</label><input id="pPhone" type="tel" placeholder="05xxxxxxxxx">
@@ -1560,6 +1574,10 @@ function showProviderEntry(){
   box.innerHTML=`✓ ${esc(f.name)} seçildi`;
  });
  PROVIDER_REG_GEO=null;
+ computeProviderAlertState().then(state=>{
+  const box=document.getElementById("providerEntryAlert");
+  if(box)box.innerHTML=alertBannerHtml(state);
+ }).catch(e=>console.warn("Uyarı yüklenemedi:",e));
 }
 let PROVIDER_REG_GEO=null;
 async function captureProviderLocation(){
@@ -1703,6 +1721,7 @@ async function showProviderPanel(provider){
   PROVIDER_DIST_FILTER="all";
   renderProviderMatchLists();
   markRequestsSeenNow(provider.id);
+  updateProviderNavDot();
  }catch(e){document.getElementById("matchArea").innerHTML=`<div class="error">Talepler yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
 }
 let PROVIDER_MATCH_STATE=null;
