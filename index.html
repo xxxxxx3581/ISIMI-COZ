@@ -737,6 +737,7 @@ function showHome(){
  CATEGORY_GROUP_FILTER="all";
  const greeting=CURRENT_USER?`<div class="notice section">👋 Tekrar hoş geldin! Hızlı erişim: <a href="javascript:void(0)" onclick="showAccount()" style="color:#8fd0ff">Hesabım</a> · <a href="javascript:void(0)" onclick="showNotifications()" style="color:#8fd0ff">Bildirimler</a></div>`:"";
  app(`<section class="hero"><span class="badge">📍 İZMİR PİLOT BÖLGESİ</span><h1>İşinizi hallettirin,<br>ya da iş alın.</h1><p class="muted">Ev, iş yeri, dijital ve profesyonel hizmetleri tek yerden bul ya da uzmanlığınla iş al.</p>
+ <div id="providerHomeAlert"></div>
  <div class="row section" style="gap:8px">
   <button class="btn primary" style="flex:1;box-shadow:0 4px 14px rgba(25,195,125,.35)" onclick="showRequest()">🟢 İŞİMİ ÇÖZ<br><span style="font-weight:400;font-size:11px">Yapmak istediğiniz işi anlatın</span></button>
   <button class="btn secondary" style="flex:1;background:#1e5c8a;color:#fff" onclick="showProviderEntry()">🔵 HİZMET VER<br><span style="font-weight:400;font-size:11px">Uzmanlığınızı ekleyin, iş alın</span></button>
@@ -759,6 +760,34 @@ function showHome(){
   CURRENT_POPULAR_KEY=topKey;
   renderCategoryGrid(topKey);
  });
+ checkProviderHomeAlert();
+}
+async function checkProviderHomeAlert(){
+ const box=document.getElementById("providerHomeAlert");
+ if(!box)return;
+ try{
+  let myProviders=[];
+  if(CURRENT_USER){
+   myProviders=await sb("GET","providers?owner_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=id,name,services,district,active,lat,lng");
+  }else{
+   const ids=lsGetArray("iscoz_my_providers").filter(isUUID);
+   if(ids.length)myProviders=await sb("GET","providers?id=in.("+ids.join(",")+")&select=id,name,services,district,active,lat,lng");
+  }
+  if(!myProviders.length)return;
+  const requests=await sb("GET","requests?select=id,category_id,district,status,created_at,is_urgent,urgency&order=created_at.desc&limit=100");
+  let totalNew=0,totalUrgentNew=0,targetProvider=null;
+  myProviders.forEach(p=>{
+   const lastSeen=lastSeenRequestsTime(p.id);
+   if(!lastSeen)return;
+   const suitable=requests.filter(r=>providerMatches(p,r));
+   const unseen=suitable.filter(r=>r.created_at&&new Date(r.created_at)>lastSeen);
+   if(unseen.length&&!targetProvider)targetProvider=p;
+   totalNew+=unseen.length;
+   totalUrgentNew+=unseen.filter(r=>r.is_urgent||r.urgency==="Acil").length;
+  });
+  if(!totalNew||!targetProvider)return;
+  box.innerHTML=`<button type="button" onclick='showProviderPanel(${jsonAttr(targetProvider)})' class="attnBadge" style="width:100%;text-align:left;margin-top:12px;padding:14px 16px;border-radius:12px;border:1px solid #e34848;background:#4a1414;color:#ffd0d0;font-weight:700;font-size:14px;cursor:pointer">🔴 ${totalNew} Yeni Müşteri Talebi!${totalUrgentNew?` (${totalUrgentNew} Acil)`:""} — görmek için dokun</button>`;
+ }catch(e){console.warn("Sağlayıcı ana ekran uyarısı yüklenemedi:",e)}
 }
 
 /* ---------------- REQUESTS ---------------- */
