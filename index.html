@@ -214,7 +214,7 @@ function haversineKm(lat1,lng1,lat2,lng2){
 }
 function formatDistance(km){
  if(km===null||km===undefined||!Number.isFinite(km))return null;
- return km<1?Math.round(km*1000)+" m":km.toFixed(1)+" km";
+ return km<1?Math.round(km*1000)+" m":km.toFixed(1).replace(".",",")+" km";
 }
 function distanceBadgeHtml(lat1,lng1,lat2,lng2){
  const km=haversineKm(lat1,lng1,lat2,lng2);
@@ -776,6 +776,7 @@ function showHome(){
  <span class="badge">📍 İZMİR PİLOT BÖLGESİ</span>
  <h1>İŞİMİ ÇÖZ</h1>
  <p class="muted">Bugün size nasıl yardımcı olalım?</p>
+ <div id="homeStatusStrip"></div>
  <div id="nearbyRequestsCard"></div>
  <div class="section" style="position:relative">
   <input id="homeSearchInput" type="text" placeholder="🔎 Ne yaptırmak istiyorsunuz? (Elektrik, temizlik, nakliye...)" style="width:100%;padding:16px;border-radius:14px;font-size:15px" onkeydown="if(event.key==='Enter')goToSearchRequest()">
@@ -804,6 +805,44 @@ function showHome(){
  });
  updateProviderNavDot();
  renderHomeNearbyRequests();
+ renderHomeStatusStrip();
+}
+async function renderHomeStatusStrip(){
+ const box=document.getElementById("homeStatusStrip");
+ if(!box)return;
+ try{
+  const requests=await sb("GET","requests?status=eq.pending&select=id,is_urgent,urgency,created_at");
+  const acilCount=requests.filter(r=>r.is_urgent||r.urgency==="Acil").length;
+  const newTodayCount=requests.filter(r=>!(r.is_urgent||r.urgency==="Acil")&&isToday(r.created_at)).length;
+  let ongoingCount=0;
+  if(CURRENT_USER){
+   const mine=await sb("GET","requests?customer_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&status=eq.accepted&select=id");
+   ongoingCount=mine.length;
+  }else{
+   const ids=lsGetArray("iscoz_my_requests").filter(isUUID);
+   if(ids.length){const mine=await sb("GET","requests?id=in.("+ids.join(",")+")&status=eq.accepted&select=id");ongoingCount=mine.length;}
+  }
+  let nearbyChip;
+  if(CUSTOMER_GEO){
+   const providers=await sb("GET","providers?active=eq.true&select=id,lat,lng");
+   const nearCount=providers.filter(p=>{const d=haversineKm(CUSTOMER_GEO.lat,CUSTOMER_GEO.lng,p.lat,p.lng);return d!==null&&d<=10}).length;
+   nearbyChip=`<button type="button" class="btn secondary smallBtn" onclick="showProviders()">📍 Yakınında ${nearCount} sağlayıcı</button>`;
+  }else{
+   nearbyChip=`<button type="button" class="btn secondary smallBtn" onclick="enableHomeLocationForStrip()">📍 Yakındaki sağlayıcıları gör</button>`;
+  }
+  const chips=[];
+  if(acilCount)chips.push(`<button type="button" class="btn secondary smallBtn" style="border-color:#e34848;color:#ffd0d0" onclick="showRequests()">🔴 ${acilCount} acil talep</button>`);
+  if(newTodayCount)chips.push(`<button type="button" class="btn secondary smallBtn" onclick="showRequests()">🟢 ${newTodayCount} yeni hizmet</button>`);
+  chips.push(nearbyChip);
+  if(ongoingCount)chips.push(`<button type="button" class="btn secondary smallBtn" onclick="showRequests()">📋 Devam eden ${ongoingCount} iş</button>`);
+  box.innerHTML=chips.length?`<div class="row section" style="gap:6px;flex-wrap:wrap;justify-content:center">${chips.join("")}</div>`:"";
+ }catch(e){console.warn("Durum şeridi yüklenemedi:",e)}
+}
+async function enableHomeLocationForStrip(){
+ const geo=await getGeolocation();
+ if(!geo){alert("Konum alınamadı. Tarayıcı izni gerekebilir.");return}
+ CUSTOMER_GEO=geo;
+ renderHomeStatusStrip();
 }
 function toggleCategoryBrowser(){
  const box=document.getElementById("categoryBrowserBox"),btn=document.getElementById("categoryToggleBtn");
@@ -860,6 +899,32 @@ function compactAlertLine(e){
   <span class="small" style="color:#8fd0ff;white-space:nowrap">Görüntüle →</span>
  </div>`;
 }
+/* Gizlilik notu: radar üzerindeki noktaların AÇISI talep ID'sinden türetilen
+   sahte/rastgele bir değerdir — gerçek yönü göstermez. Sadece MESAFE halkası
+   gerçektir. Böylece müşterinin tam konumu asla ifşa edilmez. */
+function seededAngle(id){
+ let hash=0;const s=String(id);
+ for(let i=0;i<s.length;i++){hash=(hash*31+s.charCodeAt(i))>>>0;}
+ return (hash%360)*Math.PI/180;
+}
+function radarSvgHtml(entries,maxKm){
+ const size=220,center=size/2,maxR=88;
+ const ringKms=[Math.max(1,Math.round(maxKm/3)),Math.max(2,Math.round(maxKm*2/3)),Math.max(3,Math.round(maxKm))];
+ const ringsSvg=ringKms.map((km,i)=>{
+  const r=maxR*((i+1)/ringKms.length);
+  return `<circle cx="${center}" cy="${center}" r="${r}" fill="none" stroke="rgba(255,255,255,.18)" stroke-width="1"/><text x="${center+3}" y="${(center-r+11).toFixed(1)}" font-size="9" fill="rgba(255,255,255,.45)">${km} km</text>`;
+ }).join("");
+ const dots=entries.map(e=>{
+  const km=e.dist===null?maxKm*0.85:Math.min(e.dist,maxKm);
+  const r=maxR*(km/maxKm);
+  const ang=seededAngle(e.r.id);
+  const x=(center+r*Math.cos(ang)).toFixed(1),y=(center+r*Math.sin(ang)).toFixed(1);
+  const isUrgent=e.r.is_urgent||e.r.urgency==="Acil";
+  return `<circle cx="${x}" cy="${y}" r="6" fill="${isUrgent?"#e34848":"#19c37d"}" opacity="0.9"/>`;
+ }).join("");
+ return `<svg viewBox="0 0 ${size} ${size}" style="width:100%;max-width:220px;display:block;margin:8px auto" xmlns="http://www.w3.org/2000/svg">${ringsSvg}<circle cx="${center}" cy="${center}" r="4" fill="#8fd0ff"/>${dots}</svg>
+ <div class="small muted" style="text-align:center">📍 Konumlar yaklaşıktır, gizlilik için gerçek yön gösterilmez.</div>`;
+}
 async function renderHomeNearbyRequests(){
  const box=document.getElementById("nearbyRequestsCard");
  if(!box)return;
@@ -892,8 +957,12 @@ async function renderHomeNearbyRequests(){
   if(!entries.length){box.innerHTML="";return}
   const top=entries.slice(0,3);
   const urgentCount=entries.filter(e=>e.r.is_urgent||e.r.urgency==="Acil").length;
+  const withKnownDist=entries.filter(e=>e.dist!==null);
+  const maxKm=withKnownDist.length?Math.max(3,Math.ceil(Math.max(...withKnownDist.map(e=>e.dist)))):10;
+  const radarHtml=withKnownDist.length>=2?`<div class="small muted" style="text-align:center;margin-top:4px">🟣 İŞ RADARI</div>${radarSvgHtml(entries,maxKm)}`:"";
   box.innerHTML=`<div class="card section" style="border:1px solid #e34848;text-align:left">
    <h2 class="attnBadge" style="margin-bottom:2px">🔔 ${entries.length} YENİ TALEP${urgentCount?` (${urgentCount} Acil)`:""}</h2>
+   ${radarHtml}
    ${top.map(compactAlertLine).join("")}
    ${entries.length>top.length?`<button class="btn secondary smallBtn section" onclick='showProviderPanel(${jsonAttr(top[0].p)})'>Tümünü Gör (${entries.length})</button>`:""}
   </div>`;
