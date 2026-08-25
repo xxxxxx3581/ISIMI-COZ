@@ -1,3 +1,5 @@
+İŞİMİ-ÇÖZ — Claude Proje Talimatları
+Bu dosyayı projenin README'sine, Claude Code'un proje talimatlarına (CLAUDE.md) veya Claude.ai proje ayarlarındaki "Custom Instructions" alanına ekle. Amaç: her sohbette aynı kuralları tekrar yazmak yerine, Claude'un bunları otomatik olarak uygulaması.
 1. Sabit Proje Kuralları
 İŞİMİ-ÇÖZ GELİŞTİRME KURALLARI
 
@@ -77,3 +79,7 @@ GitHub'ı kod/repo işlemleri için, Supabase'i database/edge function
 işlemleri için, Render'ı deployment/log kontrolü için kullan. Ekran
 görüntüsü istemeden önce, bağlı araçlardan doğrudan kontrol edebiliyorsan
 onu kullan.
+3. Büyük Resim: "Kod yazma" değil "ürün geliştirme"
+Küçük görevler yerine ürün seviyesinde tarif ver, mimariyi ve görev kırılımını Claude'a bırak:
+"Şu butonu ekle." yerine "İŞİMİ-ÇÖZ'de hizmet sağlayıcıların iş bulmasını çok daha kolay hale getirecek bir sistem tasarla."
+Bu şekilde Claude önce ürün fikrini/mimariyi çıkarır, sonra bunu net görevlere böler — sen tek tek adım vermek zorunda kalmazsın.
