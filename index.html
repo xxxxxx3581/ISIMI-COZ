@@ -120,6 +120,15 @@ const SERVICES={
  cam:{name:"Cam & Pencere",emoji:"🪟",desc:"Cam değişimi, kırık pencere, PVC",group:"fiziksel"},
  isitma:{name:"Isıtma & Kombi",emoji:"🔥",desc:"Kombi arıza, bakım, ısıtma sistemi",group:"fiziksel"}
 };
+const WORKSPACES={
+ ev:{emoji:"🏠",label:"Evim"},
+ arac:{emoji:"🚗",label:"Arabam"},
+ is:{emoji:"💼",label:"İşyerim"}
+};
+/* Bazı kategoriler için tipik bakım aralığı (gün). Tanımlı olmayanlar
+   (elektrik, çilingir, temizlik vb. tek seferlik/düzensiz işler)
+   hatırlatma sisteminde uydurma bir sıklık göstermemek için hariç tutulur. */
+const MAINTENANCE_INTERVAL_DAYS={klima:180,isitma:365,oto:180};
 
 const DISTRICTS=["Aliağa","Balçova","Bayındır","Bayraklı","Bergama","Beydağ","Bornova","Buca","Çeşme","Çiğli","Dikili","Foça","Gaziemir","Güzelbahçe","Karabağlar","Karaburun","Karşıyaka","Konak","Menemen","Menderes","Narlıdere","Ödemiş","Seferihisar","Selçuk","Tire","Torbalı","Urla","Kiraz","Kemalpaşa","Kınık"];
 
@@ -541,6 +550,7 @@ async function showAccount(){
    ?`<div class="small">${profile.full_name?`👤 ${esc(profile.full_name)}<br>`:""}${profile.phone?`📞 ${esc(profile.phone)}<br>`:""}${profile.district?`📍 ${esc(profile.district)}${profile.neighborhood?", "+esc(profile.neighborhood):""}<br>`:""}${profile.address_note?`🏠 ${esc(profile.address_note)}`:""}</div>`
    :`<div class="small muted">Henüz ad, telefon veya adres bilgisi eklemedin.</div>`;
   html+=`<button class="btn secondary smallBtn section" onclick='showAccountEdit(${jsonAttr(profile||{})})'>⚙️ HESABIMI DÜZENLE</button></div>`;
+  html+=`<button class="btn secondary smallBtn section" onclick="showServiceMemory()">🧠 Hizmet Geçmişim (Hafıza)</button>`;
   html+=`<div class="card section"><h2>📍 Adres Defterim</h2><div id="addressBookArea" class="small muted">⏳ Yükleniyor...</div></div>`;
   html+=`<div class="card section"><div class="small muted">📋 Toplam ${myRequests.length} talep • 🟢 ${openCount} açık • ✅ ${doneCount} tamamlandı</div></div>`;
   html+=`<section class="section"><h2>📋 Taleplerim (${myRequests.length})</h2>`;
@@ -856,6 +866,14 @@ async function renderHomeStatusStrip(){
   if(newTodayCount)chips.push(`<button type="button" class="btn secondary smallBtn" onclick="showRequests()">🟢 ${newTodayCount} yeni hizmet</button>`);
   chips.push(nearbyChip);
   if(ongoingCount)chips.push(`<button type="button" class="btn secondary smallBtn" onclick="showRequests()">📋 Devam eden ${ongoingCount} iş</button>`);
+  try{
+   const completedRows=await loadCompletedRequestsForMemory();
+   if(completedRows.length){
+    const memory=computeServiceMemory(completedRows);
+    const dueCount=memory.filter(m=>m.due).length;
+    if(dueCount)chips.push(`<button type="button" class="btn secondary smallBtn" style="border-color:#7a4f00;color:#ffe3ad" onclick="showServiceMemory()">🔔 ${dueCount} bakım zamanı yaklaştı</button>`);
+   }
+  }catch(e){console.warn("Hafıza hatırlatması hesaplanamadı:",e)}
   box.innerHTML=chips.length?`<div class="row section" style="gap:6px;flex-wrap:wrap;justify-content:center">${chips.join("")}</div>`:"";
  }catch(e){console.warn("Durum şeridi yüklenemedi:",e)}
 }
@@ -1134,8 +1152,10 @@ function showRequest(pre="",prefillExtra=null,urgent=false){
  <div class="formCard"><span class="badge">${urgent?"🚨 ACİL":"📋"} ${urgent?"ACİL TALEP":"YENİ HİZMET TALEBİ"}</span><h1>${urgent?"Ne oldu? Hemen anlat.":"İhtiyacını anlat."}</h1>
  ${urgentBanner}
  ${emergencyPicker}
- <label>Hizmet kategorisi *</label><select id="category" onchange="updatePackageRow()">${serviceOptions(pre)}</select>
+ <label>Hizmet kategorisi *</label><select id="category" onchange="updatePackageRow();autoSuggestWorkspace()">${serviceOptions(pre)}</select>
  <div id="packageRow"></div>
+ <label>Bu talep hangi alanla ilgili? (isteğe bağlı)</label>
+ <div class="row" style="gap:6px;flex-wrap:wrap" id="workspacePicker">${Object.entries(WORKSPACES).map(([k,w])=>`<button type="button" id="ws_${k}" class="btn secondary smallBtn" onclick="setWorkspace('${k}')">${w.emoji} ${esc(w.label)}</button>`).join("")}</div>
  <label>Sorunun / ihtiyacın *</label>
  <div style="position:relative">
  <textarea id="description" maxlength="1000" placeholder="Örneğin: Klima çalışıyor fakat yeterince soğutmuyor.">${esc(prefillExtra?.description||"")}</textarea>
@@ -1165,7 +1185,9 @@ function showRequest(pre="",prefillExtra=null,urgent=false){
   box.innerHTML=`✓ ${esc(f.name)} seçildi`;
  });
  REQUEST_GEO=null;
+ SELECTED_WORKSPACE=null;
  updatePackageRow();
+ autoSuggestWorkspace();
  if(CURRENT_USER&&!prefillExtra){
   loadCustomerProfile().then(profile=>{
    if(!profile)return;
@@ -1180,11 +1202,26 @@ function showRequest(pre="",prefillExtra=null,urgent=false){
   });
  }
 }
+let SELECTED_WORKSPACE=null;
+function setWorkspace(k){
+ SELECTED_WORKSPACE=SELECTED_WORKSPACE===k?null:k;
+ Object.keys(WORKSPACES).forEach(key=>{
+  const btn=document.getElementById("ws_"+key);
+  if(btn)btn.className="btn "+(key===SELECTED_WORKSPACE?"primary":"secondary")+" smallBtn";
+ });
+}
+function autoSuggestWorkspace(){
+ const cat=document.getElementById("category")?.value;
+ if(cat==="oto"&&!SELECTED_WORKSPACE)setWorkspace("arac");
+}
 function useSavedAddress(a){
  const distEl=document.getElementById("district"),neighEl=document.getElementById("neighborhood");
  if(distEl&&a.district)distEl.value=a.district;
  if(neighEl)neighEl.value=a.neighborhood||"";
  if(a.lat&&a.lng){REQUEST_GEO={lat:a.lat,lng:a.lng};CUSTOMER_GEO=REQUEST_GEO;const st=document.getElementById("reqLocStatus");if(st)st.textContent="✓ "+a.label+" konumu kullanılıyor."}
+ const l=norm(a.label);
+ if(l.includes("ev"))setWorkspace("ev");
+ else if(l.includes("is")||l.includes("ofis")||l.includes("iş"))setWorkspace("is");
 }
 let REQUEST_GEO=null;
 async function captureRequestLocation(){
@@ -1256,7 +1293,7 @@ async function createRequest(urgent){
    photo_url=await uploadRequestPhoto(file);
    btn.textContent="KAYDEDİLİYOR...";
   }
-  const payload={category_id:category,description,district,neighborhood:neighborhood||null,urgency,status:"pending",customer_id:CURRENT_USER?CURRENT_USER.id:null,photo_url,is_urgent:!!urgent||urgency==="Acil",lat:REQUEST_GEO?.lat??null,lng:REQUEST_GEO?.lng??null};
+  const payload={category_id:category,description,district,neighborhood:neighborhood||null,urgency,status:"pending",customer_id:CURRENT_USER?CURRENT_USER.id:null,photo_url,is_urgent:!!urgent||urgency==="Acil",lat:REQUEST_GEO?.lat??null,lng:REQUEST_GEO?.lng??null,workspace:SELECTED_WORKSPACE||null};
   const rows=await sb("POST","requests",payload);
   const row=Array.isArray(rows)?rows[0]:rows;
   if(!row?.id)throw new Error("Talep kaydedildi ancak UUID alınamadı.");
@@ -1300,10 +1337,57 @@ function requestStatusLabel(status,offerCount){
  if(offerCount>0)return{label:"Teklif Geldi",cls:"offered"};
  return{label:"Beklemede",cls:"pending"};
 }
+/* ---------------- İŞİMİ ÇÖZ HAFIZASI ---------------- */
+async function loadCompletedRequestsForMemory(){
+ let rows=[];
+ if(CURRENT_USER){
+  rows=await sb("GET","requests?customer_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&status=eq.completed&select=category_id,workspace,updated_at,created_at");
+ }else{
+  const ids=lsGetArray("iscoz_my_requests").filter(isUUID);
+  if(ids.length)rows=await sb("GET","requests?id=in.("+ids.join(",")+")&status=eq.completed&select=category_id,workspace,updated_at,created_at");
+ }
+ return rows;
+}
+function computeServiceMemory(rows){
+ const byCat={};
+ rows.forEach(r=>{
+  const k=serviceKey(r.category_id);
+  if(!SERVICES[k])return;
+  const date=r.updated_at||r.created_at;
+  if(!date)return;
+  if(!byCat[k]||new Date(date)>new Date(byCat[k].date))byCat[k]={date,workspace:r.workspace};
+ });
+ return Object.entries(byCat).map(([k,v])=>{
+  const interval=MAINTENANCE_INTERVAL_DAYS[k];
+  const daysSince=Math.floor((Date.now()-new Date(v.date).getTime())/86400000);
+  const due=interval?daysSince>=interval:false;
+  const dueSoon=interval?(daysSince>=interval*0.85&&daysSince<interval):false;
+  return{key:k,...v,daysSince,interval,due,dueSoon};
+ }).sort((a,b)=>new Date(b.date)-new Date(a.date));
+}
+async function showServiceMemory(){
+ nav("");
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick="showAccount()">← Hesabıma dön</button></div><span class="badge">🧠 HAFIZA</span><h1>Hizmet geçmişiniz.</h1><p class="muted small">Tamamlanan işlerinizden otomatik oluşturulur — kategori bazında en son ne zaman hizmet aldığınızı gösterir.</p><div id="memoryArea" class="card" style="text-align:center">⏳ Yükleniyor...</div>`);
+ const area=document.getElementById("memoryArea");
+ try{
+  const rows=await loadCompletedRequestsForMemory();
+  if(!rows.length){area.innerHTML=`<div class="empty">🧠 Henüz tamamlanmış bir işiniz yok.<br><span class="small muted">İlk işiniz tamamlandığında burada görünecek.</span></div>`;return}
+  const memory=computeServiceMemory(rows);
+  area.outerHTML=memory.map(m=>{
+   const s=SERVICES[m.key];
+   const dateStr=new Date(m.date).toLocaleDateString("tr-TR");
+   const reminderHtml=m.due
+    ?`<div class="notice small" style="background:#4a1414;border-color:#8c2f2f;color:#ffd0d0;margin-top:6px">🔔 ${esc(s.name)} bakımınızın zamanı geldi (~${m.interval} gün geçti).</div>`
+    :m.dueSoon?`<div class="notice small" style="background:#4a2f00;border-color:#7a4f00;color:#ffe3ad;margin-top:6px">🔔 ${esc(s.name)} bakım zamanınız yaklaşıyor.</div>`:"";
+   return `<article class="request"><div class="requestTop"><div><h3>${s.emoji} ${esc(s.name)}</h3>${m.workspace&&WORKSPACES[m.workspace]?`<div class="small muted">${WORKSPACES[m.workspace].emoji} ${esc(WORKSPACES[m.workspace].label)}</div>`:""}</div></div><div class="small muted">Son işlem: <strong>${dateStr}</strong> (${m.daysSince} gün önce)</div>${reminderHtml}<button class="btn secondary smallBtn section" onclick="showRequest('${m.key}')">🔁 Tekrar Talep Et</button></article>`;
+  }).join("");
+ }catch(e){area.innerHTML=`<div class="error">Hafıza yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
+}
 function requestCard(r,offersHtml="",offerCount=0){
  const k=requestService(r),s=SERVICES[k]||{name:r.category_id||"Hizmet",emoji:"🛠️"};
  const st=requestStatusLabel(r.status,offerCount);
- return `<article class="request"><div class="requestTop"><div><h3>${s.emoji} ${esc(s.name)}</h3><div class="small muted">${r.created_at?new Date(r.created_at).toLocaleString("tr-TR"):""}</div></div><span class="status status-${st.cls}">${esc(st.label)}</span></div><div class="description">${esc(r.description||"")}</div>${r.photo_url?`<img src="${esc(r.photo_url)}" alt="Talep fotoğrafı" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-top:8px">`:""}<div class="meta"><span>📍 ${esc(r.district||"")}</span>${r.neighborhood?`<span>🏘️ ${esc(r.neighborhood)}</span>`:""}<span>⏱️ ${esc(r.urgency||"")}</span></div><div class="small muted">ID: <strong>${esc(r.id)}</strong></div><button class="btn secondary smallBtn section" onclick="showRequestDetail('${esc(r.id)}')">📄 Detayları Gör</button>${offersHtml}</article>`;
+ const wsBadge=r.workspace&&WORKSPACES[r.workspace]?`<span class="status">${WORKSPACES[r.workspace].emoji} ${esc(WORKSPACES[r.workspace].label)}</span>`:"";
+ return `<article class="request"><div class="requestTop"><div><h3>${s.emoji} ${esc(s.name)}</h3><div class="small muted">${r.created_at?new Date(r.created_at).toLocaleString("tr-TR"):""}</div></div><div style="display:flex;gap:6px;align-items:center">${wsBadge}<span class="status status-${st.cls}">${esc(st.label)}</span></div></div><div class="description">${esc(r.description||"")}</div>${r.photo_url?`<img src="${esc(r.photo_url)}" alt="Talep fotoğrafı" style="width:100%;max-height:220px;object-fit:cover;border-radius:10px;margin-top:8px">`:""}<div class="meta"><span>📍 ${esc(r.district||"")}</span>${r.neighborhood?`<span>🏘️ ${esc(r.neighborhood)}</span>`:""}<span>⏱️ ${esc(r.urgency||"")}</span></div><div class="small muted">ID: <strong>${esc(r.id)}</strong></div><button class="btn secondary smallBtn section" onclick="showRequestDetail('${esc(r.id)}')">📄 Detayları Gör</button>${offersHtml}</article>`;
 }
 let CURRENT_REQUESTS_ALL=[];
 let CURRENT_REQUESTS_OFFER_COUNTS={};
@@ -1492,7 +1576,7 @@ async function closePendingOffers(requestId){
 async function markRequestCompleted(requestId){
  if(!confirm("Bu işi tamamlandı olarak işaretlemek istediğine emin misin?"))return;
  try{
-  await sb("PATCH","requests?id=eq."+encodeURIComponent(requestId),{status:"completed"});
+  await sb("PATCH","requests?id=eq."+encodeURIComponent(requestId),{status:"completed",updated_at:new Date().toISOString()});
   await closePendingOffers(requestId);
   connection(true);
   showFlashModal({title:"İş Tamamlandı ✓",message:"Talep başarıyla tamamlandı olarak işaretlendi.",color:"success"});
