@@ -784,6 +784,7 @@ function showHome(){
  <div class="section"><button class="btn primary" style="width:100%;box-shadow:0 4px 14px rgba(25,195,125,.35);font-size:16px;padding:16px" onclick="goToSearchRequest()">🟢 TALEP OLUŞTUR</button></div>
  <div class="section"><button class="btn secondary" style="width:100%;font-size:15px;padding:14px" onclick="showRequests()">🔔 TALEPLERİM</button></div>
  <div class="section small"><a href="javascript:void(0)" onclick="showRequest('',null,true)" style="color:#ff8080">🚨 Acil bir durum mu var?</a> · <a href="javascript:void(0)" onclick="showProviderEntry()" style="color:#8fd0ff">🔵 Hizmet Ver</a></div>
+ <div id="personalizedSuggestBox"></div>
  </section>
  <section class="section"><button type="button" class="btn secondary" style="width:100%" onclick="toggleCategoryBrowser()" id="categoryToggleBtn">🗂️ Kategorilere Göz At</button>
  <div id="categoryBrowserBox" style="display:none">
@@ -806,6 +807,26 @@ function showHome(){
  updateProviderNavDot();
  renderHomeNearbyRequests();
  renderHomeStatusStrip();
+ renderPersonalizedSuggestions();
+}
+async function renderPersonalizedSuggestions(){
+ const box=document.getElementById("personalizedSuggestBox");
+ if(!box)return;
+ try{
+  let myRequests=[];
+  if(CURRENT_USER){
+   myRequests=await sb("GET","requests?customer_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=category_id&order=created_at.desc&limit=50");
+  }else{
+   const ids=lsGetArray("iscoz_my_requests").filter(isUUID);
+   if(ids.length)myRequests=await sb("GET","requests?id=in.("+ids.join(",")+")&select=category_id&order=created_at.desc&limit=50");
+  }
+  if(myRequests.length<2){box.innerHTML="";return}
+  const counts={};
+  myRequests.forEach(r=>{const k=serviceKey(r.category_id);if(SERVICES[k])counts[k]=(counts[k]||0)+1});
+  const top=Object.entries(counts).sort((a,b)=>b[1]-a[1]).slice(0,3);
+  if(!top.length){box.innerHTML="";return}
+  box.innerHTML=`<div class="small muted" style="margin-top:14px">Tekrar ihtiyacınız olabilir:</div><div class="row" style="gap:6px;flex-wrap:wrap;justify-content:center;margin-top:6px">${top.map(([k])=>`<button type="button" class="btn secondary smallBtn" onclick="showRequest('${k}')">${SERVICES[k].emoji} ${esc(SERVICES[k].name)}</button>`).join("")}</div>`;
+ }catch(e){console.warn("Kişiselleştirilmiş öneriler yüklenemedi:",e)}
 }
 async function renderHomeStatusStrip(){
  const box=document.getElementById("homeStatusStrip");
@@ -961,7 +982,7 @@ async function renderHomeNearbyRequests(){
   const maxKm=withKnownDist.length?Math.max(3,Math.ceil(Math.max(...withKnownDist.map(e=>e.dist)))):10;
   const radarHtml=withKnownDist.length>=2?`<div class="small muted" style="text-align:center;margin-top:4px">🟣 İŞ RADARI</div>${radarSvgHtml(entries,maxKm)}`:"";
   box.innerHTML=`<div class="card section" style="border:1px solid #e34848;text-align:left">
-   <h2 class="attnBadge" style="margin-bottom:2px">🔔 ${entries.length} YENİ TALEP${urgentCount?` (${urgentCount} Acil)`:""}</h2>
+   <h2 class="${urgentCount?"attnBadge":""}" style="margin-bottom:2px">🔔 ${entries.length} YENİ TALEP${urgentCount?` (${urgentCount} Acil)`:""}</h2>
    ${radarHtml}
    ${top.map(compactAlertLine).join("")}
    ${entries.length>top.length?`<button class="btn secondary smallBtn section" onclick='showProviderPanel(${jsonAttr(top[0].p)})'>Tümünü Gör (${entries.length})</button>`:""}
@@ -1544,6 +1565,23 @@ function progressStepperHtml(status,offersCount){
   return `<div style="flex:1;min-width:70px;text-align:center;opacity:${done?"1":".4"}"><div style="font-size:20px">${st.emoji}</div><div class="small" style="font-size:10px;line-height:1.2;margin-top:2px">${st.label}</div>${i<steps.length-1?`<div style="height:3px;background:${i<currentIdx?"var(--primary)":"rgba(255,255,255,.15)"};margin-top:6px;border-radius:2px"></div>`:""}</div>`;
  }).join("")}</div>`;
 }
+function jobSummaryHtml(r,offer,provider,serviceLabel){
+ if(!offer)return "";
+ const price=Number(offer.price);
+ return `<div class="card section" style="border:1px solid #1f6f43">
+  <h2>🧾 İş Özeti</h2>
+  <div class="meta section">
+   <span>🛠️ Hizmet: <strong>${esc(serviceLabel)}</strong></span>
+   <span>💰 Tutar: <strong>${Number.isFinite(price)?price.toLocaleString("tr-TR")+" TL":"-"}</strong></span>
+  </div>
+  <div class="meta"><span>👤 Sağlayıcı: <strong>${provider?esc(provider.name):"-"}</strong></span><span>📅 Tarih: ${r.updated_at?new Date(r.updated_at).toLocaleDateString("tr-TR"):(r.created_at?new Date(r.created_at).toLocaleDateString("tr-TR"):"-")}</span></div>
+  <button type="button" class="btn secondary smallBtn section" onclick='reportPreviousJobIssue(${jsonAttr(r)})'>⚠️ Bu işle ilgili sorun mu oluştu?</button>
+ </div>`;
+}
+function reportPreviousJobIssue(r){
+ const k=requestService(r);
+ showRequest(k,{description:`⚠️ Önceki iş ile ilgili sorun bildirimi (orijinal talep ID: ${r.id}): `,district:r.district,neighborhood:r.neighborhood});
+}
 async function showRequestDetail(requestId){
  nav("navRequests");
  if(!isUUID(requestId)){app(`<div class="error">Geçersiz talep kimliği.</div>`);return}
@@ -1584,6 +1622,7 @@ async function showRequestDetail(requestId){
   const sortBar=offers.length>1?`<div class="row section" style="gap:6px;flex-wrap:wrap"><button class="btn primary smallBtn" id="sortPrice" onclick="setOffersSort('price')">💰 Fiyata Göre</button><button class="btn secondary smallBtn" id="sortRating" onclick="setOffersSort('rating')">⭐ Puana Göre</button>${r.lat&&r.lng?`<button class="btn secondary smallBtn" id="sortDistance" onclick="setOffersSort('distance')">📍 Mesafeye Göre</button>`:""}<button class="btn secondary smallBtn" id="sortNew" onclick="setOffersSort('new')">🕐 Yeni</button></div>`:"";
   const ownerNotice=isOwner?"":`<div class="notice">👀 Bu talebi bu tarayıcıdan oluşturmadınız — sadece görüntüleyebilirsiniz, teklif kabul edemezsiniz.</div>`;
   const stepperHtml=progressStepperHtml(r.status,offers.length);
+  const completedSummaryHtml=(r.status==="completed"&&acceptedOffer)?jobSummaryHtml(r,acceptedOffer,providerById[String(acceptedOffer.provider_id)],s.name):"";
   area.outerHTML=`<div class="formCard"><span class="badge">${s.emoji} ${esc(s.name)}</span><h1>Talep Detayı</h1>
   ${ownerNotice}
   ${stepperHtml}
@@ -1592,6 +1631,7 @@ async function showRequestDetail(requestId){
   ${r.photo_url?`<img src="${esc(r.photo_url)}" alt="Talep fotoğrafı" style="width:100%;max-height:320px;object-fit:cover;border-radius:10px;margin-top:8px">`:""}
   <div class="small muted section">Talep ID: <strong>${esc(r.id)}</strong> • Oluşturulma: ${r.created_at?new Date(r.created_at).toLocaleString("tr-TR"):""}</div>
   ${actionButtonsHtml}
+  ${completedSummaryHtml}
   <div class="section"><h2>💰 Gelen Teklifler (${offers.length})</h2>${sortBar}${offersHtml}</div>${reviewHtml}</div>`;
   OFFERS_SORT_MODE="price";
   DETAIL_STATE={offers,providerById,ratingById,requestStatus:r.status,isOwner,requestGeo:(r.lat&&r.lng)?{lat:r.lat,lng:r.lng}:null};
@@ -1901,7 +1941,7 @@ async function showProviderPanel(provider){
  const editBtn=canEdit?`<button class="btn secondary" onclick='showProviderProfile(${jsonAttr(provider)})'>⚙️ PROFİLİMİ DÜZENLE</button>`:"";
  const ownerNotice=canEdit?"":`<div class="notice small">👀 Bu profili bu tarayıcıdan oluşturmadınız — sadece görüntüleyebilirsiniz.</div>`;
  const quickAvail=canEdit?`<div class="small section">Müsaitlik: <div class="row" style="gap:6px;margin-top:6px"><button class="btn ${provider.active!==false&&provider.availability==="now"?"primary":"secondary"} smallBtn" style="flex:1" onclick='quickSetAvailability(${jsonAttr(provider)},"now")'>🟢 Şimdi</button><button class="btn ${provider.active!==false&&provider.availability!=="now"?"primary":"secondary"} smallBtn" style="flex:1" onclick='quickSetAvailability(${jsonAttr(provider)},"today")'>🟡 Bugün</button><button class="btn ${provider.active===false?"primary":"secondary"} smallBtn" style="flex:1" onclick='quickSetAvailability(${jsonAttr(provider)},"off")'>🔴 Kapalı</button></div></div>`:"";
- app(`<div class="back"><button class="btn secondary smallBtn" onclick="showProviders()">← Sağlayıcı listesine dön</button></div><div class="card">${provider.logo_url?`<img src="${esc(provider.logo_url)}" alt="Logo" style="width:100%;max-height:200px;object-fit:cover;border-radius:10px;margin-bottom:10px">`:""}<h2>🛠️ ${esc(provider.name)}</h2><p class="muted">${esc(provider.district||"")}</p><div class="small" id="providerRatingArea">⏳</div>${quickAvail}${ownerNotice}<div class="row section"><button class="btn secondary" onclick='showProviderOffers(${jsonAttr(provider)})'>📑 TEKLİFLERİM</button>${editBtn}</div></div>
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick="showProviders()">← Sağlayıcı listesine dön</button></div><div class="card">${provider.logo_url?`<img src="${esc(provider.logo_url)}" alt="Logo" style="width:100%;max-height:200px;object-fit:cover;border-radius:10px;margin-bottom:10px">`:""}<h2>🛠️ ${esc(provider.name)}</h2><p class="muted">${esc(provider.district||"")}</p><div class="small" id="providerRatingArea">⏳</div>${quickAvail}${ownerNotice}<div class="row section"><button class="btn secondary" onclick='showProviderOffers(${jsonAttr(provider)})'>📑 TEKLİFLERİM</button><button class="btn secondary" onclick='showTodayJobs(${jsonAttr(provider)})'>🛣️ BUGÜNKÜ İŞLERİM</button>${editBtn}</div></div>
  <section class="section"><h2 id="matchSummaryHeader">🔔 Yeni Talepler</h2>
  <div class="row section" style="gap:6px;flex-wrap:wrap">
   <button class="btn primary smallBtn" id="distF_all" onclick="setProviderDistFilter('all')">📍 Tümü</button>
@@ -2063,7 +2103,7 @@ async function loadRequestsByIds(ids){
  try{const rows=await sb("GET","requests?select=*&id=in.("+clean.join(",")+")");return Array.isArray(rows)?rows:[]}
  catch(e){console.warn("Talep bilgisi okunamadı:",e);return []}
 }
-function providerOfferCard(o,request){
+function providerOfferCard(o,request,nearbyOpp){
  const price=Number(o.price);
  const k=request?requestService(request):"";
  const s=SERVICES[k]||{name:request?.category_id||"Hizmet",emoji:"🛠️"};
@@ -2073,7 +2113,8 @@ function providerOfferCard(o,request){
     ?`<div class="notice small section" style="background:#0d2a42;border-color:#1e5c8a;color:#bfe3ff">🚗 Yolda olarak işaretlendi — müşteri görebilir.</div>`
     :`<button class="btn secondary smallBtn section" onclick="markOnTheWay('${esc(o.id)}',this)">🚗 Yola Çıktım</button>`)
   :"";
- return `<article class="request"><div class="requestTop"><div><h3>${s.emoji} ${esc(s.name)}</h3><div class="small muted">${o.created_at?new Date(o.created_at).toLocaleString("tr-TR"):""}</div></div>${offerStatusBadge(o.status)}</div>${updateBadge}${request?`<div class="description">${esc(request.description||"")}</div><div class="meta"><span>📍 ${esc(request.district||"")}</span></div>`:`<div class="small muted">Talep bilgisi bulunamadı (silinmiş olabilir).</div>`}<div class="meta"><span>💰 ${Number.isFinite(price)?price.toLocaleString("tr-TR")+" TL":"-"}</span>${o.available_time?`<span>🕐 ${esc(o.available_time)}</span>`:""}</div>${o.note?`<div class="description">${esc(o.note)}</div>`:""}${onWayBtn}</article>`;
+ const nearbyHtml=nearbyOpp?`<div class="notice small section" style="background:#0f3d2c;border-color:#1f6f43;color:#daffe9">📍 İşinizin ${formatDistance(nearbyOpp.dist)} yakınında başka bir talep var. <a href="javascript:void(0)" onclick="showRequestDetail('${esc(nearbyOpp.request.id)}')" style="color:#8fd0ff;font-weight:700">Bu işi de al →</a></div>`:"";
+ return `<article class="request"><div class="requestTop"><div><h3>${s.emoji} ${esc(s.name)}</h3><div class="small muted">${o.created_at?new Date(o.created_at).toLocaleString("tr-TR"):""}</div></div>${offerStatusBadge(o.status)}</div>${updateBadge}${request?`<div class="description">${esc(request.description||"")}</div><div class="meta"><span>📍 ${esc(request.district||"")}</span></div>`:`<div class="small muted">Talep bilgisi bulunamadı (silinmiş olabilir).</div>`}<div class="meta"><span>💰 ${Number.isFinite(price)?price.toLocaleString("tr-TR")+" TL":"-"}</span>${o.available_time?`<span>🕐 ${esc(o.available_time)}</span>`:""}</div>${o.note?`<div class="description">${esc(o.note)}</div>`:""}${onWayBtn}${nearbyHtml}</article>`;
 }
 async function markOnTheWay(offerId,btnEl){
  if(btnEl){btnEl.disabled=true;btnEl.textContent="Kaydediliyor...";}
@@ -2083,6 +2124,42 @@ async function markOnTheWay(offerId,btnEl){
   showToast("🚗 Yolda olarak işaretlendin","success");
   if(btnEl)btnEl.outerHTML=`<div class="notice small section" style="background:#0d2a42;border-color:#1e5c8a;color:#bfe3ff">🚗 Yolda olarak işaretlendi — müşteri görebilir.</div>`;
  }catch(e){console.error(e);alert("İşaretlenemedi.\n\n"+friendlyErrorMessage(e));if(btnEl){btnEl.disabled=false;btnEl.textContent="🚗 Yola Çıktım";}}
+}
+async function findNearbyOpportunity(provider,request){
+ if(!request?.lat||!request?.lng)return null;
+ try{
+  const openRequests=await sb("GET","requests?status=eq.pending&select=id,category_id,lat,lng,is_urgent,urgency,district,description&order=created_at.desc&limit=100");
+  let best=null,bestD=Infinity;
+  openRequests.forEach(r=>{
+   if(String(r.id)===String(request.id))return;
+   if(!providerMatches(provider,r))return;
+   const d=haversineKm(request.lat,request.lng,r.lat,r.lng);
+   if(d!==null&&d<=5&&d<bestD){bestD=d;best=r;}
+  });
+  return best?{request:best,dist:bestD}:null;
+ }catch(e){console.warn("Yakın fırsat aranamadı:",e);return null}
+}
+async function showTodayJobs(provider){
+ nav("navProvider");
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick='showProviderPanel(${jsonAttr(provider)})'>← Sağlayıcı paneline dön</button></div><span class="badge">🛣️ BUGÜNKÜ İŞLERİM</span><h1>Devam eden işleriniz.</h1><div id="todayJobsArea" class="card" style="text-align:center">⏳ Yükleniyor...</div>`);
+ const area=document.getElementById("todayJobsArea");
+ try{
+  const offers=await loadOffersByProvider(provider.id);
+  const accepted=offers.filter(o=>o.status==="accepted");
+  if(!accepted.length){area.innerHTML=`<div class="empty">🛣️ Şu anda devam eden bir işiniz yok.<br><span class="small muted">Bir teklifiniz kabul edildiğinde burada görünecek.</span></div>`;return}
+  const requests=await loadRequestsByIds(accepted.map(o=>o.request_id));
+  const requestById=Object.fromEntries(requests.map(r=>[String(r.id),r]));
+  const inProgress=accepted.filter(o=>{const r=requestById[String(o.request_id)];return r&&r.status==="accepted"});
+  if(!inProgress.length){area.innerHTML=`<div class="empty">🛣️ Şu anda devam eden bir işiniz yok.<br><span class="small muted">Tamamlanan işler "Teklifelerim" bölümünde görünmeye devam eder.</span></div>`;return}
+  const withDist=inProgress.map(o=>{const r=requestById[String(o.request_id)];return{o,r,dist:haversineKm(provider.lat,provider.lng,r.lat,r.lng)}});
+  withDist.sort((a,b)=>{if(a.dist===null)return 1;if(b.dist===null)return -1;return a.dist-b.dist});
+  area.outerHTML=withDist.map((x,i)=>{
+   const k=requestService(x.r),s=SERVICES[k]||{name:x.r.category_id||"Hizmet",emoji:"🛠️"};
+   const distTxt=formatDistance(x.dist);
+   const onWay=x.o.on_the_way?`<span class="status" style="background:#0d2a42;color:#bfe3ff">🚗 Yolda</span>`:`<button class="btn secondary smallBtn" onclick="markOnTheWay('${esc(x.o.id)}',this)">🚗 Yola Çıktım</button>`;
+   return `<article class="request"><div class="requestTop"><div><h3>${i+1}. ${s.emoji} ${esc(s.name)}</h3><div class="small muted">${distTxt?distTxt+" • ":""}${esc(x.r.district||"")}</div></div></div><div class="description">${esc(x.r.description||"")}</div><div class="row section" style="gap:6px"><button class="btn secondary smallBtn" style="flex:1" onclick="showRequestDetail('${esc(x.r.id)}')">👁️ Talebi Gör</button>${onWay}</div></article>`;
+  }).join("");
+ }catch(e){area.innerHTML=`<div class="error">İşler yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
 }
 async function showProviderOffers(provider){
  nav("navProvider");
@@ -2096,7 +2173,13 @@ async function showProviderOffers(provider){
   if(!visibleOffers.length){area.innerHTML=`<div class="empty">📑 Aktif teklifiniz yok.<br><span class="small muted">Reddedilen teklifler burada gösterilmez.</span></div>`;return}
   const requests=await loadRequestsByIds(visibleOffers.map(o=>o.request_id));
   const requestById=Object.fromEntries(requests.map(r=>[String(r.id),r]));
-  area.outerHTML=visibleOffers.map(o=>providerOfferCard(o,requestById[String(o.request_id)])).join("");
+  const cardsHtml=await Promise.all(visibleOffers.map(async o=>{
+   const r=requestById[String(o.request_id)];
+   const isActiveInProgress=o.status==="accepted"&&r&&r.status==="accepted";
+   const nearbyOpp=isActiveInProgress?await findNearbyOpportunity(provider,r):null;
+   return providerOfferCard(o,r,nearbyOpp);
+  }));
+  area.outerHTML=cardsHtml.join("");
  }catch(e){document.getElementById("providerOffersArea").innerHTML=`<div class="error">Teklifler yüklenemedi:<br>${esc(friendlyErrorMessage(e))}</div>`}
 }
 function lastSeenRequestsTime(providerId){
@@ -2107,9 +2190,13 @@ function markRequestsSeenNow(providerId){lsSetObjKey("iscoz_seen_requests_ts",pr
 function providerRequestCard(r,p,isNew,compact){
  const k=requestService(r),s=SERVICES[k]||{name:r.category_id||"Hizmet",emoji:"🛠️"};
  const isUrgent=r.is_urgent||r.urgency==="Acil";
- const attnClass=(isNew||isUrgent)?" attnBadge":"";
- const newBadge=isNew?`<div class="small section"><strong class="${attnClass.trim()}" style="color:#ff6b6b">🆕 YENİ MÜŞTERİ TALEBİ</strong></div>`:"";
- const urgentBadge=isUrgent?`<span class="status${attnClass}" style="background:#4a1414;color:#ffd0d0">🚨 ACİL</span>`:"";
+ /* Öncelik seviyeli bildirim: sadece ACİL yanıp söner. Yeni-ama-normal talep
+    turuncu ve sabit; her şeyi kırmızı/yanıp sönen yapmıyoruz. */
+ const newBadge=isNew?(isUrgent
+   ?`<div class="small section"><strong class="attnBadge" style="color:#ff6b6b">🆕 YENİ MÜŞTERİ TALEBİ</strong></div>`
+   :`<div class="small section"><strong style="color:#ffb020">🟠 Yeni talep</strong></div>`)
+  :"";
+ const urgentBadge=isUrgent?`<span class="status attnBadge" style="background:#4a1414;color:#ffd0d0">🚨 ACİL</span>`:"";
  const distHtml=distanceBadgeHtml(p.lat,p.lng,r.lat,r.lng);
  const timeAgo=r.created_at?timeAgoLabel(r.created_at):"";
  const cardId="preq_"+r.id;
