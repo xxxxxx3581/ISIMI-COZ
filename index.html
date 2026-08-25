@@ -734,28 +734,67 @@ function setCategoryGroup(g){
  renderCategoryGrid(CURRENT_POPULAR_KEY);
 }
 let CURRENT_POPULAR_KEY=null;
+const CATEGORY_KEYWORDS={
+ klima:["klima","soğutma","kombi","ısıtma"],
+ elektrik:["elektrik","priz","sigorta","kablo","aydınlatma"],
+ tesisat:["tesisat","su kaçağı","boru","musluk","gider","sıhhi tesisat"],
+ beyaz:["beyaz eşya","buzdolabı","çamaşır makinesi","bulaşık makinesi","fırın"],
+ temizlik:["temizlik","ev temizliği","ofis temizliği"],
+ nakliye:["nakliye","taşıma","ev taşıma","eşya taşıma"],
+ cilingir:["çilingir","kilit","anahtar","kapı açma"],
+ oto:["oto","araba","araç","lastik","akü"],
+ elektronik:["telefon","bilgisayar","tv","televizyon","tablet","elektronik tamir"],
+ kurye:["kurye","paket","evrak","teslimat"],
+ yazilim:["web sitesi","yazılım","uygulama","site","yazilim","program"],
+ tasarim:["logo","tasarım","kurumsal kimlik","grafik"],
+ pazarlama:["seo","reklam","dijital pazarlama","google ads"],
+ sosyalmedya:["instagram","sosyal medya","içerik yönetimi"],
+ video:["video","kurgu","prodüksiyon","montaj video"],
+ veri:["veri","excel","rapor","analiz","dashboard"],
+ egitim:["özel ders","ders","eğitim","rehberlik"],
+ aiotomasyon:["otomasyon","yapay zeka","ai entegrasyon"],
+ cam:["cam","pencere","pvc"],
+ isitma:["kombi","ısıtma","doğalgaz","petek"]
+};
+function guessCategoryFromText(text){
+ const t=norm(text);
+ if(!t)return null;
+ for(const[key,words] of Object.entries(CATEGORY_KEYWORDS)){
+  if(words.some(w=>t.includes(norm(w))))return key;
+ }
+ return null;
+}
+function goToSearchRequest(){
+ const val=document.getElementById("homeSearchInput")?.value.trim()||"";
+ const guessed=guessCategoryFromText(val);
+ showRequest(guessed||"",val?{description:val}:null);
+}
 function showHome(){
  nav("navHome");
  CATEGORY_GROUP_FILTER="all";
- const greeting=CURRENT_USER?`<div class="notice section">👋 Tekrar hoş geldin! Hızlı erişim: <a href="javascript:void(0)" onclick="showAccount()" style="color:#8fd0ff">Hesabım</a> · <a href="javascript:void(0)" onclick="showNotifications()" style="color:#8fd0ff">Bildirimler</a></div>`:"";
- app(`<section class="hero"><span class="badge">📍 İZMİR PİLOT BÖLGESİ</span><h1>İşinizi hallettirin,<br>ya da iş alın.</h1><p class="muted">Ev, iş yeri, dijital ve profesyonel hizmetleri tek yerden bul ya da uzmanlığınla iş al.</p>
- <div id="providerHomeAlert"></div>
- <div class="row section" style="gap:8px">
-  <button class="btn primary" style="flex:1;box-shadow:0 4px 14px rgba(25,195,125,.35)" onclick="showRequest()">🟢 İŞİMİ ÇÖZ<br><span style="font-weight:400;font-size:11px">Yapmak istediğiniz işi anlatın</span></button>
-  <button class="btn secondary" style="flex:1;background:#1e5c8a;color:#fff" onclick="showProviderEntry()">🔵 HİZMET VER<br><span style="font-weight:400;font-size:11px">Uzmanlığınızı ekleyin, iş alın</span></button>
- </div>
- <div class="row section" style="gap:8px"><button class="btn secondary" onclick="shareApp()">📲 Arkadaşına Öner</button><button class="btn primary" style="background:#e34848;color:#fff" onclick="showRequest('',null,true)">🚨 Acil İşimi Çöz</button></div>
- ${greeting}</section>
+ app(`<section class="hero" style="text-align:center">
+ <span class="badge">📍 İZMİR PİLOT BÖLGESİ</span>
+ <h1>İŞİMİ ÇÖZ</h1>
+ <p class="muted">Bugün size nasıl yardımcı olalım?</p>
  <div id="nearbyRequestsCard"></div>
- <section><div class="sectionTitle"><div><h2>Hizmet kategorileri</h2><div class="small muted">Alanına göre filtrele, ihtiyacını seç.</div></div></div>
+ <div class="section" style="position:relative">
+  <input id="homeSearchInput" type="text" placeholder="🔎 Ne yaptırmak istiyorsunuz? (Elektrik, temizlik, nakliye...)" style="width:100%;padding:16px;border-radius:14px;font-size:15px" onkeydown="if(event.key==='Enter')goToSearchRequest()">
+ </div>
+ <div class="section"><button class="btn primary" style="width:100%;box-shadow:0 4px 14px rgba(25,195,125,.35);font-size:16px;padding:16px" onclick="goToSearchRequest()">🟢 TALEP OLUŞTUR</button></div>
+ <div class="section"><button class="btn secondary" style="width:100%;font-size:15px;padding:14px" onclick="showRequests()">🔔 TALEPLERİM</button></div>
+ <div class="section small"><a href="javascript:void(0)" onclick="showRequest('',null,true)" style="color:#ff8080">🚨 Acil bir durum mu var?</a> · <a href="javascript:void(0)" onclick="showProviderEntry()" style="color:#8fd0ff">🔵 Hizmet Ver</a></div>
+ </section>
+ <section class="section"><button type="button" class="btn secondary" style="width:100%" onclick="toggleCategoryBrowser()" id="categoryToggleBtn">🗂️ Kategorilere Göz At</button>
+ <div id="categoryBrowserBox" style="display:none">
  <div class="row section" style="gap:6px;flex-wrap:wrap">
   <button class="btn primary smallBtn" id="grp_all" onclick="setCategoryGroup('all')">Tümü</button>
   <button class="btn secondary smallBtn" id="grp_fiziksel" onclick="setCategoryGroup('fiziksel')">🏠 Fiziksel</button>
   <button class="btn secondary smallBtn" id="grp_dijital" onclick="setCategoryGroup('dijital')">💻 Dijital</button>
   <button class="btn secondary smallBtn" id="grp_profesyonel" onclick="setCategoryGroup('profesyonel')">📈 Profesyonel</button>
  </div>
- <div id="categoryGrid" class="grid section"></div></section>
- <section class="card section"><h2>💡 Nasıl çalışıyor?</h2><p class="muted small">1️⃣ İhtiyacını anlat, talebini oluştur. 2️⃣ Uygun hizmet sağlayıcıları görsün, teklif versin. 3️⃣ En uygun teklifi kabul et, iş bitince değerlendir.</p></section>`);
+ <div id="categoryGrid" class="grid section"></div>
+ </div></section>
+ ${CURRENT_USER?"":`<section class="card section small muted" style="text-align:center">👋 Hesabın yok mu? <a href="javascript:void(0)" onclick="showAuth('signup')" style="color:#8fd0ff">Kayıt ol</a>, geçmiş taleplerini ve favorilerini kaydet.</section>`}`);
  renderCategoryGrid(null);
  loadPopularCategories().then(counts=>{
   const topKey=Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0];
@@ -763,8 +802,14 @@ function showHome(){
   CURRENT_POPULAR_KEY=topKey;
   renderCategoryGrid(topKey);
  });
- checkProviderHomeAlert();
+ updateProviderNavDot();
  renderHomeNearbyRequests();
+}
+function toggleCategoryBrowser(){
+ const box=document.getElementById("categoryBrowserBox"),btn=document.getElementById("categoryToggleBtn");
+ const open=box.style.display==="none";
+ box.style.display=open?"":"none";
+ btn.textContent=open?"🗂️ Kategorileri Gizle":"🗂️ Kategorilere Göz At";
 }
 /* ---------------- GERÇEK ZAMANLI TALEP TESLİMİ (Supabase Realtime) ---------------- */
 let REALTIME_CHANNEL=null;
@@ -806,6 +851,15 @@ function onRealtimeNewMatchingRequest(){
  const listBox=document.getElementById("providersListAlert");
  if(listBox)computeProviderAlertState().then(state=>{listBox.innerHTML=alertBannerHtml(state)});
 }
+function compactAlertLine(e){
+ const isUrgent=e.r.is_urgent||e.r.urgency==="Acil";
+ const k=requestService(e.r),s=SERVICES[k]||{name:e.r.category_id||"Hizmet",emoji:"🛠️"};
+ const distTxt=formatDistance(e.dist);
+ return `<div class="row" style="justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.08);cursor:pointer" onclick="showRequestDetail('${esc(e.r.id)}')">
+  <div><span class="status" style="background:${isUrgent?"#4a1414":"#1f6f43"};color:${isUrgent?"#ffd0d0":"#daffe9"}">${isUrgent?"🚨 Acil":"🟢 Yeni"}</span> ${distTxt?distTxt+" • ":""}${s.emoji} ${esc(s.name)}</div>
+  <span class="small" style="color:#8fd0ff;white-space:nowrap">Görüntüle →</span>
+ </div>`;
+}
 async function renderHomeNearbyRequests(){
  const box=document.getElementById("nearbyRequestsCard");
  if(!box)return;
@@ -836,8 +890,13 @@ async function renderHomeNearbyRequests(){
    if(a.dist===null)return 1;if(b.dist===null)return -1;return a.dist-b.dist;
   });
   if(!entries.length){box.innerHTML="";return}
-  const top=entries.slice(0,5);
-  box.innerHTML=`<div class="card section"><h2>📋 Yakınınızdaki Talepler (${entries.length})</h2>${top.map(e=>providerRequestCard(e.r,e.p,false,true)).join("")}${entries.length>top.length?`<div class="small muted section">+${entries.length-top.length} talep daha — tümü için sağlayıcı panelinize gidin.</div>`:""}</div>`;
+  const top=entries.slice(0,3);
+  const urgentCount=entries.filter(e=>e.r.is_urgent||e.r.urgency==="Acil").length;
+  box.innerHTML=`<div class="card section" style="border:1px solid #e34848;text-align:left">
+   <h2 class="attnBadge" style="margin-bottom:2px">🔔 ${entries.length} YENİ TALEP${urgentCount?` (${urgentCount} Acil)`:""}</h2>
+   ${top.map(compactAlertLine).join("")}
+   ${entries.length>top.length?`<button class="btn secondary smallBtn section" onclick='showProviderPanel(${jsonAttr(top[0].p)})'>Tümünü Gör (${entries.length})</button>`:""}
+  </div>`;
  }catch(e){console.warn("Yakın talepler yüklenemedi:",e)}
 }
 async function computeProviderAlertState(){
