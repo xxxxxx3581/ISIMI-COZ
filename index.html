@@ -803,6 +803,8 @@ function onRealtimeNewMatchingRequest(){
  if(entryBox)computeProviderAlertState().then(state=>{entryBox.innerHTML=alertBannerHtml(state)});
  const nearbyBox=document.getElementById("nearbyRequestsCard");
  if(nearbyBox)renderHomeNearbyRequests();
+ const listBox=document.getElementById("providersListAlert");
+ if(listBox)computeProviderAlertState().then(state=>{listBox.innerHTML=alertBannerHtml(state)});
 }
 async function renderHomeNearbyRequests(){
  const box=document.getElementById("nearbyRequestsCard");
@@ -1737,6 +1739,7 @@ async function useMyLocationForList(){
 async function showProviders(){
  nav("navProvider");
  app(`<div class="back"><button class="btn secondary smallBtn" onclick="showProviderEntry()">← Geri</button></div><span class="badge">🛠️ HİZMET SAĞLAYICILAR</span><h1>Kayıtlı sağlayıcılar.</h1>
+ <div id="providersListAlert"></div>
  <div class="card section">
   <label>Ara (isim)</label><input id="pfSearch" type="text" placeholder="Sağlayıcı adı..." oninput="renderProviderList()">
   <div class="row section"><div><label>İlçe</label><select id="pfDistrict2" onchange="renderProviderList()"><option value="">Tüm ilçeler</option>${DISTRICTS.map(d=>`<option value="${esc(d)}">${esc(d)}</option>`).join("")}</select></div><div><label>Hizmet</label><select id="pfService" onchange="renderProviderList()">${serviceFilterOptions()}</select></div></div>
@@ -1745,6 +1748,10 @@ async function showProviders(){
   <button type="button" class="btn secondary section" id="pfLocBtn" onclick="useMyLocationForList()">📍 Bana Yakın Sırala</button>
  </div>
  <div id="providersArea" class="card" style="text-align:center">⏳ Yükleniyor...</div>`);
+ computeProviderAlertState().then(state=>{
+  const box=document.getElementById("providersListAlert");
+  if(box)box.innerHTML=alertBannerHtml(state);
+ }).catch(e=>console.warn("Uyarı yüklenemedi:",e));
  try{
   const rows=await loadProviders();
   CURRENT_PROVIDERS=rows;
