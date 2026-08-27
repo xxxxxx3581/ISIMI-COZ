@@ -146,19 +146,19 @@ let CURRENT_PROVIDER_COMPLETED={};
 function lsGetArray(key){try{return JSON.parse(localStorage.getItem(key)||"[]")}catch(e){return []}}
 function lsAddToArray(key,val){try{const arr=lsGetArray(key);if(!arr.includes(val)){arr.push(val);localStorage.setItem(key,JSON.stringify(arr));}}catch(e){console.warn("Tarayıcı hafızasına yazılamadı:",e)}}
 function isMyRequest(id){return lsGetArray("iscoz_my_requests").includes(id)}
-/* Sahiplik önceliği: gerçek hesap (customer_id) varsa ona bakılır;
-   yoksa (giriş yapılmadan oluşturulmuş eski talepler için) tarayıcı
-   hafızasındaki listeye geri düşülür — geriye dönük uyumluluk için. */
+/* Sahiplik önceliği: gerçek hesap (user_id, auth.uid() ile eşleşir) varsa
+   ona bakılır; yoksa (giriş yapılmadan oluşturulmuş eski talepler için)
+   tarayıcı hafızasındaki listeye geri düşülür — geriye dönük uyumluluk için. */
 function isRequestOwner(r){
- if(CURRENT_USER&&r.customer_id)return r.customer_id===CURRENT_USER.id;
+ if(CURRENT_USER&&r.user_id)return r.user_id===CURRENT_USER.id;
  return isMyRequest(r.id);
 }
 function isMyProvider(id){return lsGetArray("iscoz_my_providers").includes(id)}
-/* Sahiplik önceliği: gerçek hesap (owner_id) varsa ona bakılır;
-   yoksa (giriş yapılmadan oluşturulmuş eski sağlayıcılar için)
+/* Sahiplik önceliği: gerçek hesap (user_id, auth.uid() ile eşleşir) varsa
+   ona bakılır; yoksa (giriş yapılmadan oluşturulmuş eski sağlayıcılar için)
    tarayıcı hafızasındaki listeye geri düşülür. */
 function isProviderOwner(p){
- if(CURRENT_USER&&p.owner_id)return p.owner_id===CURRENT_USER.id;
+ if(CURRENT_USER&&p.user_id)return p.user_id===CURRENT_USER.id;
  return isMyProvider(p.id);
 }
 
@@ -419,8 +419,8 @@ async function getUnreadNotificationKeys(){
   let myRequests=[],myProviders=[];
   if(CURRENT_USER){
    [myRequests,myProviders]=await Promise.all([
-    sb("GET","requests?customer_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=id"),
-    sb("GET","providers?owner_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=id,name,services,district,active")
+    sb("GET","requests?user_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=id"),
+    sb("GET","providers?user_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=id,name,services,district,active")
    ]);
   }else{
    const reqIds=lsGetArray("iscoz_my_requests").filter(isUUID);
@@ -481,8 +481,8 @@ async function showNotifications(){
   let myRequests=[],myProviders=[];
   if(CURRENT_USER){
    [myRequests,myProviders]=await Promise.all([
-    sb("GET","requests?customer_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=*&order=created_at.desc&limit=100"),
-    sb("GET","providers?owner_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=*")
+    sb("GET","requests?user_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=*&order=created_at.desc&limit=100"),
+    sb("GET","providers?user_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=*")
    ]);
   }else{
    const reqIds=lsGetArray("iscoz_my_requests").filter(isUUID);
@@ -536,8 +536,8 @@ async function showAccount(){
  app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div><span class="badge">👤 HESABIM</span><h1>${esc(CURRENT_USER.email)}</h1><div id="accountArea" class="card" style="text-align:center">⏳ Yükleniyor...</div>`);
  try{
   const [myRequests,myProviders,profile,favIds]=await Promise.all([
-   sb("GET","requests?customer_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=*&order=created_at.desc&limit=50"),
-   sb("GET","providers?owner_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=*"),
+   sb("GET","requests?user_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=*&order=created_at.desc&limit=50"),
+   sb("GET","providers?user_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=*"),
    loadCustomerProfile(),
    loadFavoriteIds()
   ]);
@@ -825,7 +825,7 @@ async function renderPersonalizedSuggestions(){
  try{
   let myRequests=[];
   if(CURRENT_USER){
-   myRequests=await sb("GET","requests?customer_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=category_id&order=created_at.desc&limit=50");
+   myRequests=await sb("GET","requests?user_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=category_id&order=created_at.desc&limit=50");
   }else{
    const ids=lsGetArray("iscoz_my_requests").filter(isUUID);
    if(ids.length)myRequests=await sb("GET","requests?id=in.("+ids.join(",")+")&select=category_id&order=created_at.desc&limit=50");
@@ -847,7 +847,7 @@ async function renderHomeStatusStrip(){
   const newTodayCount=requests.filter(r=>!(r.is_urgent||r.urgency==="Acil")&&isToday(r.created_at)).length;
   let ongoingCount=0;
   if(CURRENT_USER){
-   const mine=await sb("GET","requests?customer_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&status=eq.accepted&select=id");
+   const mine=await sb("GET","requests?user_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&status=eq.accepted&select=id");
    ongoingCount=mine.length;
   }else{
    const ids=lsGetArray("iscoz_my_requests").filter(isUUID);
@@ -897,7 +897,7 @@ async function setupRequestRealtime(){
   if(typeof supabase==="undefined"||!supabase.createClient)return;
   let myProviders=[];
   if(CURRENT_USER){
-   myProviders=await sb("GET","providers?owner_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=id,name,services,district,active,lat,lng");
+   myProviders=await sb("GET","providers?user_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=id,name,services,district,active,lat,lng");
   }else{
    const ids=lsGetArray("iscoz_my_providers").filter(isUUID);
    if(ids.length)myProviders=await sb("GET","providers?id=in.("+ids.join(",")+")&select=id,name,services,district,active,lat,lng");
@@ -971,7 +971,7 @@ async function renderHomeNearbyRequests(){
   let myProviders=OWNED_PROVIDERS_CACHE;
   if(!myProviders.length){
    if(CURRENT_USER){
-    myProviders=await sb("GET","providers?owner_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=id,name,services,district,active,lat,lng");
+    myProviders=await sb("GET","providers?user_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=id,name,services,district,active,lat,lng");
    }else{
     const ids=lsGetArray("iscoz_my_providers").filter(isUUID);
     if(ids.length)myProviders=await sb("GET","providers?id=in.("+ids.join(",")+")&select=id,name,services,district,active,lat,lng");
@@ -1010,7 +1010,7 @@ async function renderHomeNearbyRequests(){
 async function computeProviderAlertState(){
  let myProviders=[];
  if(CURRENT_USER){
-  myProviders=await sb("GET","providers?owner_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=id,name,services,district,active,lat,lng");
+  myProviders=await sb("GET","providers?user_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&select=id,name,services,district,active,lat,lng");
  }else{
   const ids=lsGetArray("iscoz_my_providers").filter(isUUID);
   if(ids.length)myProviders=await sb("GET","providers?id=in.("+ids.join(",")+")&select=id,name,services,district,active,lat,lng");
@@ -1293,7 +1293,7 @@ async function createRequest(urgent){
    photo_url=await uploadRequestPhoto(file);
    btn.textContent="KAYDEDİLİYOR...";
   }
-  const payload={category_id:category,description,district,neighborhood:neighborhood||null,urgency,status:"pending",customer_id:CURRENT_USER?CURRENT_USER.id:null,photo_url,is_urgent:!!urgent||urgency==="Acil",lat:REQUEST_GEO?.lat??null,lng:REQUEST_GEO?.lng??null,workspace:SELECTED_WORKSPACE||null};
+  const payload={category_id:category,description,district,neighborhood:neighborhood||null,urgency,status:"pending",user_id:CURRENT_USER?CURRENT_USER.id:null,photo_url,is_urgent:!!urgent||urgency==="Acil",lat:REQUEST_GEO?.lat??null,lng:REQUEST_GEO?.lng??null,workspace:SELECTED_WORKSPACE||null};
   const rows=await sb("POST","requests",payload);
   const row=Array.isArray(rows)?rows[0]:rows;
   if(!row?.id)throw new Error("Talep kaydedildi ancak UUID alınamadı.");
@@ -1303,7 +1303,7 @@ async function createRequest(urgent){
   if(crossSell.length){
    try{
     for(const k of crossSell){
-     const csRows=await sb("POST","requests",{category_id:k,description:`(Ek ihtiyaç) ${SERVICES[k]?.name||k} — asıl talep: ${row.id}`,district,neighborhood:neighborhood||null,urgency:"Uygun zamanda",status:"pending",customer_id:CURRENT_USER?CURRENT_USER.id:null,photo_url:null,is_urgent:false,lat:REQUEST_GEO?.lat??null,lng:REQUEST_GEO?.lng??null});
+     const csRows=await sb("POST","requests",{category_id:k,description:`(Ek ihtiyaç) ${SERVICES[k]?.name||k} — asıl talep: ${row.id}`,district,neighborhood:neighborhood||null,urgency:"Uygun zamanda",status:"pending",user_id:CURRENT_USER?CURRENT_USER.id:null,photo_url:null,is_urgent:false,lat:REQUEST_GEO?.lat??null,lng:REQUEST_GEO?.lng??null});
      const csRow=Array.isArray(csRows)?csRows[0]:csRows;
      if(csRow?.id)lsAddToArray("iscoz_my_requests",csRow.id);
     }
@@ -1341,7 +1341,7 @@ function requestStatusLabel(status,offerCount){
 async function loadCompletedRequestsForMemory(){
  let rows=[];
  if(CURRENT_USER){
-  rows=await sb("GET","requests?customer_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&status=eq.completed&select=category_id,workspace,updated_at,created_at");
+  rows=await sb("GET","requests?user_id=eq."+encodeURIComponent(CURRENT_USER.id)+"&status=eq.completed&select=category_id,workspace,updated_at,created_at");
  }else{
   const ids=lsGetArray("iscoz_my_requests").filter(isUUID);
   if(ids.length)rows=await sb("GET","requests?id=in.("+ids.join(",")+")&status=eq.completed&select=category_id,workspace,updated_at,created_at");
@@ -1704,7 +1704,7 @@ async function showRequestDetail(requestId){
    ?`<div id="offersListArea"></div>`
    :`<div class="small muted section">Henüz teklif gelmedi. Sağlayıcılar talebinizi inceliyor.</div>`;
   const sortBar=offers.length>1?`<div class="row section" style="gap:6px;flex-wrap:wrap"><button class="btn primary smallBtn" id="sortPrice" onclick="setOffersSort('price')">💰 Fiyata Göre</button><button class="btn secondary smallBtn" id="sortRating" onclick="setOffersSort('rating')">⭐ Puana Göre</button>${r.lat&&r.lng?`<button class="btn secondary smallBtn" id="sortDistance" onclick="setOffersSort('distance')">📍 Mesafeye Göre</button>`:""}<button class="btn secondary smallBtn" id="sortNew" onclick="setOffersSort('new')">🕐 Yeni</button></div>`:"";
-  const ownerNotice=isOwner?"":`<div class="notice">👀 Bu talebi bu tarayıcıdan oluşturmadınız — sadece görüntüleyebilirsiniz, teklif kabul edemezsiniz.</div>`;
+ const ownerNotice=isOwner?"":`<div class="notice">👀 Bu talebi bu tarayıcıdan oluşturmadınız — sadece görüntüleyebilirsiniz, teklif kabul edemezsiniz.</div>`;
   const stepperHtml=progressStepperHtml(r.status,offers.length);
   const completedSummaryHtml=(r.status==="completed"&&acceptedOffer)?jobSummaryHtml(r,acceptedOffer,providerById[String(acceptedOffer.provider_id)],s.name):"";
   area.outerHTML=`<div class="formCard"><span class="badge">${s.emoji} ${esc(s.name)}</span><h1>Talep Detayı</h1>
@@ -1938,7 +1938,7 @@ async function registerProvider(){
    b.textContent="KAYDEDİLİYOR...";
   }
   const now=new Date().toISOString();
-  const payload={name,phone,district,description,active:true,availability:"today",created_at:now,city:"İzmir",services:[category],updated_at:now,owner_id:CURRENT_USER?CURRENT_USER.id:null,logo_url,tax_id:tax_id||null,lat:PROVIDER_REG_GEO?.lat??null,lng:PROVIDER_REG_GEO?.lng??null};
+  const payload={name,phone,district,description,active:true,availability:"today",created_at:now,city:"İzmir",services:[category],updated_at:now,user_id:CURRENT_USER?CURRENT_USER.id:null,logo_url,tax_id:tax_id||null,lat:PROVIDER_REG_GEO?.lat??null,lng:PROVIDER_REG_GEO?.lng??null};
   const rows=await sb("POST","providers",payload);
   const p=Array.isArray(rows)?rows[0]:rows;
   if(!p?.id)throw new Error("Sağlayıcı kaydedildi ancak ID alınamadı.");
@@ -2345,7 +2345,7 @@ async function sendOffer(requestId,providerId){
  if(containsPhoneNumber(note))return alert("Mesaj içinde telefon numarası paylaşımı fark edildi. Güvenliğin için ilk iletişim platform üzerinden sürdürülmeli — teklif kabul edilince iletişim bilgisi otomatik açılır.");
  b.disabled=true;b.textContent="GÖNDERİLİYOR...";
  try{
-  await sb("POST","offers",{request_id:requestId,provider_id:providerId,price,available_time,note,status:"pending"});
+  await sb("POST","offers",{request_id:requestId,provider_id:providerId,provider_user_id:CURRENT_USER?CURRENT_USER.id:null,price,available_time,note,status:"pending"});
   connection(true);document.getElementById("offerModal")?.remove();alert("Teklif başarıyla gönderildi. ✓");showRequests();
  }catch(e){console.error(e);alert("Teklif gönderilemedi.\n\n"+friendlyErrorMessage(e));b.disabled=false;b.textContent="TEKLİFİ GÖNDER"}
 }
@@ -2357,8 +2357,15 @@ async function restoreSession(){
  CURRENT_USER=s.user;ACCESS_TOKEN=s.access_token;renderAuthArea();
  try{
   const r=await fetch(SUPABASE_URL+"/auth/v1/user",{headers:{apikey:SUPABASE_KEY,Authorization:"Bearer "+s.access_token}});
-  if(!r.ok)throw new Error("Oturum geçersiz");
- }catch(e){console.warn("Kayıtlı oturum artık geçerli değil, çıkış yapılıyor:",e);saveSession(null);}
+  if(r.status===401||r.status===403){
+   console.warn("Oturum süresi dolmuş veya geçersiz, çıkış yapılıyor.");
+   saveSession(null);
+  }else if(!r.ok){
+   console.warn("Oturum doğrulanamadı (sunucu hatası), oturum korunuyor:",r.status);
+  }
+ }catch(e){
+  console.warn("Doğrulama isteği başarısız (ağ sorunu olabilir), oturum korunuyor:",e);
+ }
 }
 async function startApp(){connection(false,"Supabase bağlanıyor...");renderAuthArea();applyThemeIcon();await restoreSession();showHome();setupRequestRealtime();await testDB()}
 startApp();
