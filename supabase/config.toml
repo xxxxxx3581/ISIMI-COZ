@@ -1,0 +1,13 @@
+# Supabase local/project config — function names must match live endpoints
+
+[functions.ai-tools]
+verify_jwt = false
+
+[functions.ai-customer]
+verify_jwt = false
+
+[functions.ai-matching]
+verify_jwt = false
+
+[functions.ai-orchestrator]
+verify_jwt = false
