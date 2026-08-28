@@ -1299,6 +1299,18 @@ async function createRequest(urgent){
   if(!row?.id)throw new Error("Talep kaydedildi ancak UUID alınamadı.");
   lsAddToArray("iscoz_my_requests",row.id);
   connection(true);
+  // AI-OS: talep başarıyla oluştu → orchestrator'ı arka planda tetikle (hata talebi bozmaz)
+  try{
+   fetch(SUPABASE_URL+"/functions/v1/ai-orchestrator",{
+    method:"POST",
+    headers:{
+     "Content-Type":"application/json",
+     "apikey":SUPABASE_KEY,
+     "Authorization":"Bearer "+(ACCESS_TOKEN||SUPABASE_KEY)
+    },
+    body:JSON.stringify({request_id:row.id})
+   }).catch(e=>console.warn("AI orchestrator tetiklenemedi:",e));
+  }catch(e){console.warn("AI orchestrator çağrısı atlandı:",e)}
   const crossSell=[...document.querySelectorAll(".crossSellChk:checked")].map(x=>x.value).filter(k=>k!==category);
   if(crossSell.length){
    try{
