@@ -466,20 +466,16 @@ async function updateCaseStep(key){
   step.completed_at=nextCompletedAt;
   return result(false);
  }
- if(!step.id){
-  await loadCaseSteps();
- }
- const target=H.caseSteps.find(x=>x.step_key===key);
- if(!target||!target.id){
-  console.warn('İşlem adımı kimliği bulunamadı.');
-  return result(true);
- }
+ const target=H.caseSteps.find(x=>x.step_key===key)||step;
  target.status=nextStatus;
  target.completed_at=nextCompletedAt;
  try{
+  const filter=target.id
+   ? 'id=eq.'+encodeURIComponent(target.id)
+   : 'case_id=eq.'+encodeURIComponent(H.dbId)+'&step_key=eq.'+encodeURIComponent(key);
   const updated=await supabaseAuthRequest(
    'PATCH',
-   'hallet_case_steps?id=eq.'+encodeURIComponent(target.id)+'&select=id,step_key,status,completed_at,updated_at',
+   'hallet_case_steps?'+filter+'&select=id,case_id,step_key,status,completed_at,updated_at',
    {status:nextStatus,completed_at:nextCompletedAt,updated_at:new Date().toISOString()}
   );
   if(!Array.isArray(updated)||!updated.length)throw new Error('İşlem adımı veritabanında güncellenemedi.');
