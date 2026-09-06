@@ -514,12 +514,46 @@ function open(){ensureStyle();const r=root();r.classList.add('hv');r.style.displ
 function close(){const r=root();r.classList.remove('hv');r.style.display='none';r.innerHTML='';document.body.style.overflow=document.body.dataset.halletOverflow||''}
 function render(x){const r=open();r.innerHTML='<div class="ha"><div class="hw">'+x+'</div></div>';r.scrollTop=0}
 function top(back){return '<div class="ht"><strong>İşini Hallet</strong><button class="topb" data-a="'+(back||'close')+'">'+(back?'← Geri':'Kapat')+'</button></div>'}
-function gate(){H.step=0;H.answers={};H.caseId=null;H.createdAt=null;render(top('close')+'<div class="hc"><div class="hk">Dijital işlem asistanı</div><h1>Ne yapmak istiyorsun?</h1><p class="hm">İşlemini seç. Gerekli adımları birlikte tamamlayalım.</p><div class="hg"><button class="hb hp" data-a="islem">📋 Bir işlem yapmak istiyorum</button><button class="hb" data-a="evrak">📄 Evrak hazırlamak istiyorum</button><button class="hb" data-a="kurum">🏛️ Bir kuruma başvuracağım</button><button class="hb" data-a="isimi">🛠️ Hizmet / usta bulmam gerekiyor</button></div></div>')}
+function gate(){H.step=0;H.answers={};H.caseId=null;H.createdAt=null;H.dbId=null;render(top('close')+'<div class="hc"><div class="hk">Dijital işlem asistanı</div><h1>Ne yapmak istiyorsun?</h1><p class="hm">İşlemini seç. Gerekli adımları birlikte tamamlayalım.</p><div class="hg"><button class="hb hp" data-a="islem">📋 Bir işlem yapmak istiyorum</button><button class="hb" data-a="cases">📁 İşlem Dosyalarım</button><button class="hb" data-a="evrak">📄 Evrak hazırlamak istiyorum</button><button class="hb" data-a="kurum">🏛️ Bir kuruma başvuracağım</button><button class="hb" data-a="isimi">🛠️ Hizmet / usta bulmam gerekiyor</button></div></div>')}
+async function cases(){
+ const session=getAuthSession();
+ if(!session?.access_token||!session?.user?.id){openAuthModal('login');return;}
+ render(top('gate')+'<div class="hc"><div class="hk">İşlem Dosyalarım</div><h1>Kayıtlı dosyalar</h1><p class="hm">Hesabına kaydettiğin İşini Hallet dosyaları burada görünür.</p><div id="halletCasesBox" class="hl"><div class="li">⏳ Dosyalar yükleniyor...</div></div></div>');
+ try{
+   const rows=await supabaseAuthRequest('GET','hallet_cases?select=id,case_type,status,title,summary,district,city,metadata,created_at,updated_at&order=updated_at.desc&limit=100');
+   const list=Array.isArray(rows)?rows:[];
+   const box=document.getElementById('halletCasesBox');
+   if(!box)return;
+   if(!list.length){box.innerHTML='<div class="li"><strong>Henüz kayıtlı dosyan yok.</strong><br><span class="hm">İlk işlem dosyanı oluşturup kaydettiğinde burada görünecek.</span></div><button class="hb hp" data-a="islem">İlk dosyayı oluştur →</button>';return;}
+   box.innerHTML=list.map(r=>{
+     const m=r.metadata||{}; const no=m.case_no||'Dosya'; const city=r.city||''; const district=r.district||'';
+     const when=r.updated_at?new Date(r.updated_at).toLocaleDateString('tr-TR'):'';
+     const statusMap={draft:'Taslak',in_progress:'Devam ediyor',waiting_user:'Kullanıcı bekleniyor',completed:'Tamamlandı',cancelled:'İptal edildi'};
+     return '<button class="hb" data-a="caseopen" data-id="'+esc(r.id)+'"><strong>📄 '+esc(r.title||'İşlem Dosyası')+'</strong><br><span class="hm">'+esc(no)+' • '+esc(statusMap[r.status]||r.status||'Taslak')+' • '+esc([city,district].filter(Boolean).join(' / '))+' • '+esc(when)+'</span></button>';
+   }).join('');
+ }catch(e){
+   console.error('Hallet dosyalar yükleme hatası:',e);
+   const box=document.getElementById('halletCasesBox');
+   if(box)box.innerHTML='<div class="err"><strong>Dosyalar yüklenemedi.</strong><br>'+esc(e.message||'Bilinmeyen hata')+'</div><button class="hb" data-a="gate">← İşlemlere dön</button>';
+ }
+}
+async function openCase(id){
+ const session=getAuthSession();
+ if(!session?.access_token||!session?.user?.id){openAuthModal('login');return;}
+ try{
+   const rows=await supabaseAuthRequest('GET','hallet_cases?select=id,case_type,status,title,summary,district,city,metadata,created_at,updated_at&id=eq.'+encodeURIComponent(id)+'&limit=1');
+   const row=Array.isArray(rows)?rows[0]:null;
+   if(!row){alert('İşlem dosyası bulunamadı.');return;}
+   const m=row.metadata||{};
+   H.dbId=row.id; H.caseId=m.case_no||null; H.createdAt=row.created_at||null; H.answers=(m.answers&&typeof m.answers==='object')?m.answers:{};
+   result(true);
+ }catch(e){console.error('Hallet dosya açma hatası:',e);alert('Dosya açılamadı.\n\n'+(e.message||'Bilinmeyen hata'));}
+}
 function islem(){render(top('gate')+'<div class="hc"><div class="hk">İşlem seçimi</div><h2>Hangi işlemi yapmak istiyorsun?</h2><div class="hg"><button class="hb hp" data-a="tasinmaz">🏠 Taşınmaz işlemleri</button><button class="hb" data-a="evrak">📄 Evrak hazırlama</button><button class="hb" data-a="kurum">🏛️ Kurum başvurusu</button></div></div>')}
 function tasinmaz(){render(top('islem')+'<div class="hc"><div class="hk">Taşınmaz işlemleri</div><h2>Hangi taşınmaz işlemi?</h2><div class="hg"><button class="hb hp" data-a="konut">🏠 Konut satışı</button></div></div>')}
 function konut(){render(top('tasinmaz')+'<div class="hc"><div class="hk">Konut satışı</div><h2>Satış dosyasını oluşturalım</h2><p class="hm">11 kısa soruyla satış dosyasının ön kontrolünü yapacağız.</p><div class="hl"><div class="li">✓ Tapu ve mülkiyet</div><div class="li">✓ Alıcı ve satış bilgileri</div><div class="li">✓ Edinim tarihi ve vergi kontrolü</div></div><button class="hb hp" data-a="start">Satış dosyasını başlat →</button></div>')}
 function question(){const q=QUESTIONS[H.step];if(!q)return result();let html='<div class="pr"><span style="width:'+Math.max(7,Math.round(H.step/QUESTIONS.length*100))+'%"></span></div>'+top(H.step?'qback':'konut')+'<div class="hc"><div class="hk">Soru '+(H.step+1)+' / '+QUESTIONS.length+'</div><h2>'+esc(q.title)+'</h2>';if(q.type==='date')html+='<label>Tarih</label><input class="hi" id="qinput" type="date" value="'+esc(H.answers[q.key]||'')+'"><button class="hb hp" style="margin-top:14px" data-a="save" data-k="'+q.key+'">Devam et →</button>';else if(q.type==='number')html+='<label>Satış bedeli (TL)</label><input class="hi" id="qinput" type="number" min="0" step="1" inputmode="decimal" placeholder="'+esc(q.placeholder)+'" value="'+esc(H.answers[q.key]||'')+'"><button class="hb hp" style="margin-top:14px" data-a="save" data-k="'+q.key+'">Devam et →</button>';else html+='<div class="hg">'+q.options.map(o=>'<button class="hb" data-a="answer" data-k="'+q.key+'" data-v="'+o[0]+'">'+esc(o[1])+'</button>').join('')+'</div>';html+='</div>';render(html)}
-function result(){
+function result(fromSaved=false){
  const a=H.answers;
  H.caseId=H.caseId||'IH-'+new Date().toISOString().replace(/\D/g,'').slice(0,14)+'-'+Math.random().toString(36).slice(2,7).toUpperCase();
  const warnings=[];
@@ -554,11 +588,11 @@ function result(){
  '<h2>Değer artış kazancı ön kontrolü</h2><div class="hl"><div class="li"><strong>Durum:</strong> '+esc(fivePassed?'5 yıllık süre dolmuş görünüyor.':'5 yıllık süre dolmamış / kontrol gerekli.')+'</div>'+(grossGain!==null&&!fivePassed?'<div class="li"><strong>Satış − alış farkı:</strong> '+money(grossGain)+'<br><span class="hm">Bu tutar nihai vergi matrahı değildir. 2026 için GİB kuralları kapsamında endeksleme, giderler ve 150.000 TL istisna gibi unsurlar ayrıca değerlendirilmelidir.</span></div>':'<div class="li"><span class="hm">Nihai değer artış kazancı hesabı için alış bedeli, edinim/satış tarihleri, endeksleme ve indirilebilir giderler ayrıca değerlendirilmelidir.</span></div>')+'</div>'+
  '<h2>Sonraki adımlar</h2><div class="hl"><div class="li">1. Güncel tapu kaydı ve taraf bilgilerini doğrula.</div><div class="li">2. Gerekli belgeleri hazırla ve temsil/takyidat durumunu kontrol et.</div><div class="li">3. Tapu başvurusunu Web Tapu veya yetkili tapu kanalı üzerinden başlat.</div><div class="li">4. Harç ve döner sermaye ödemelerini resmi bildirim üzerinden kontrol et.</div><div class="li">5. İşlem tamamlandığında belgeleri dosyana ekle.</div></div>'+
  (warnings.length?'<h2>Uyarılar</h2><div class="hl">'+warnings.map(w=>'<div class="li"><span class="warn">⚠</span> '+esc(w)+'</div>').join('')+'</div>':'<div class="li"><span class="ok">✓</span> Bu cevaplarla kritik bir uyarı tespit edilmedi.</div>')+
- '<div class="li" style="margin-top:14px"><strong>Resmî kaynak notu:</strong><br><span class="hm">'+esc(officialNote)+'</span></div><div class="hg"><button class="hb hp" data-a="savecase">DOSYAYI KAYDET</button><button class="hb" data-a="new">Yeni işlem başlat</button><button class="hb hs" data-a="close">Kapat</button></div></div>')
+ '<div class="li" style="margin-top:14px"><strong>Resmî kaynak notu:</strong><br><span class="hm">'+esc(officialNote)+'</span></div><div class="hg">'+(fromSaved?'<button class="hb hp" data-a="cases">← DOSYALARIMA DÖN</button>':'<button class="hb hp" data-a="savecase">DOSYAYI KAYDET</button>')+'<button class="hb" data-a="new">Yeni işlem başlat</button><button class="hb hs" data-a="close">Kapat</button></div></div>')
 }
 function msg(t,m,back){render(top(back||'gate')+'<div class="hc"><div class="hk">İşini Hallet</div><h2>'+esc(t)+'</h2><p class="hm">'+esc(m)+'</p><button class="hb hp" data-a="gate">İşlemlere dön</button></div>')}
 function goIsimi(){close();if(typeof window.showHome==='function')window.showHome()}
-function dispatch(a,e){if(a==='close')return close();if(a==='gate')return gate();if(a==='islem')return islem();if(a==='tasinmaz')return tasinmaz();if(a==='konut')return konut();if(a==='start'){H.step=0;return question()}if(a==='qback'){H.step=Math.max(0,H.step-1);return question()}if(a==='answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return question()}if(a==='savecase')return saveCase();if(a==='save'){const i=document.getElementById('qinput');if(!i||!String(i.value).trim()){const c=document.querySelector('#hallet-root .hc');if(c&&!c.querySelector('.err'))c.insertAdjacentHTML('beforeend','<div class="err">Lütfen bir değer girerek devam et.</div>');return}H.answers[e.dataset.k]=i.value.trim();H.step++;return question()}if(a==='new'){H.step=0;H.answers={};H.caseId=null;return gate()}if(a==='isimi')return goIsimi();if(a==='evrak')return msg('Evrak hazırlama','Bu modül sonraki aşamada açılacak. Mevcut aktif akış taşınmaz konut satışıdır.');if(a==='kurum')return msg('Kurum başvurusu','Bu modül sonraki aşamada açılacak. Mevcut aktif akış taşınmaz konut satışıdır.')}
+function dispatch(a,e){if(a==='close')return close();if(a==='gate')return gate();if(a==='cases')return cases();if(a==='caseopen')return openCase(e.dataset.id);if(a==='islem')return islem();if(a==='tasinmaz')return tasinmaz();if(a==='konut')return konut();if(a==='start'){H.step=0;return question()}if(a==='qback'){H.step=Math.max(0,H.step-1);return question()}if(a==='answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return question()}if(a==='savecase')return saveCase();if(a==='save'){const i=document.getElementById('qinput');if(!i||!String(i.value).trim()){const c=document.querySelector('#hallet-root .hc');if(c&&!c.querySelector('.err'))c.insertAdjacentHTML('beforeend','<div class="err">Lütfen bir değer girerek devam et.</div>');return}H.answers[e.dataset.k]=i.value.trim();H.step++;return question()}if(a==='new'){H.step=0;H.answers={};H.caseId=null;return gate()}if(a==='isimi')return goIsimi();if(a==='evrak')return msg('Evrak hazırlama','Bu modül sonraki aşamada açılacak. Mevcut aktif akış taşınmaz konut satışıdır.');if(a==='kurum')return msg('Kurum başvurusu','Bu modül sonraki aşamada açılacak. Mevcut aktif akış taşınmaz konut satışıdır.')}
 document.addEventListener('click',function(e){const el=e.target.closest&&e.target.closest('#hallet-root [data-a]');if(!el)return;e.preventDefault();e.stopPropagation();dispatch(el.dataset.a,el)},true);
 window.Hallet={showGate:gate,showIslemMenu:islem,showTasinmazMenu:tasinmaz,showKonutSatis:konut,showQuestion:question,showResult:result,close:close};
 })();
