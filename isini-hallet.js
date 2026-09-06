@@ -107,10 +107,6 @@
     }
   ];
 
-  /* =========================================================
-     TEMEL YARDIMCILAR
-     ========================================================= */
-
   function esc(value) {
     return String(value ?? "")
       .replace(/&/g, "&amp;")
@@ -157,9 +153,7 @@
 
     const item = q.options.find(x => x[0] === value);
 
-    return item
-      ? item[1]
-      : (value || "Belirtilmedi");
+    return item ? item[1] : (value || "Belirtilmedi");
   }
 
   function createCaseId() {
@@ -171,7 +165,7 @@
   }
 
   /* =========================================================
-     İZOLE HALLET KÖKÜ
+     HALLET KÖKÜ
      ========================================================= */
 
   function getRoot() {
@@ -183,11 +177,6 @@
       document.body.appendChild(el);
     }
 
-    /*
-     * Hallet kökünün body'nin doğrudan çocuğu olmasını sağlıyoruz.
-     * Böylece #app/main gibi eski ekranların CSS katmanlarından
-     * mümkün olduğunca ayrılır.
-     */
     if (el.parentElement !== document.body) {
       document.body.appendChild(el);
     }
@@ -206,10 +195,6 @@
 
     document.body.classList.add("hallet-open");
 
-    /*
-     * Eski uygulamanın body scroll'unu devre dışı bırakıyoruz.
-     * Hallet kendi içinde scroll olacak.
-     */
     document.body.style.overflow = "hidden";
 
     return el;
@@ -220,6 +205,7 @@
 
     if (el) {
       el.style.display = "none";
+      el.innerHTML = "";
     }
 
     document.body.classList.remove("hallet-open");
@@ -227,23 +213,19 @@
   }
 
   /* =========================================================
-     TAMAMEN İZOLE CSS
+     İZOLE CSS
      ========================================================= */
 
   function styles() {
-    if (document.getElementById("hallet-file-style-v2")) {
+    if (document.getElementById("hallet-file-style-v3")) {
       return;
     }
 
     const s = document.createElement("style");
 
-    s.id = "hallet-file-style-v2";
+    s.id = "hallet-file-style-v3";
 
     s.textContent = `
-      /* =====================================================
-         ANA HALLET KATMANI
-         ===================================================== */
-
       #hallet-root {
         position: fixed !important;
         inset: 0 !important;
@@ -252,9 +234,7 @@
 
         z-index: 2147483647 !important;
 
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
+        display: none !important;
 
         margin: 0 !important;
         padding: 0 !important;
@@ -266,6 +246,7 @@
         overflow-y: auto !important;
 
         box-sizing: border-box !important;
+        isolation: isolate !important;
 
         font-family:
           -apple-system,
@@ -274,20 +255,13 @@
           Roboto,
           Arial,
           sans-serif !important;
-
-        isolation: isolate !important;
       }
 
-      #hallet-root,
       #hallet-root *,
       #hallet-root *::before,
       #hallet-root *::after {
         box-sizing: border-box !important;
       }
-
-      /* =====================================================
-         İZOLE UYGULAMA
-         ===================================================== */
 
       #hallet-root .hf-app {
         all: initial !important;
@@ -312,10 +286,9 @@
           sans-serif !important;
       }
 
-      #hallet-root .hf-app *,
-      #hallet-root .hf-app *::before,
-      #hallet-root .hf-app *::after {
+      #hallet-root .hf-app * {
         box-sizing: border-box !important;
+
         font-family:
           -apple-system,
           BlinkMacSystemFont,
@@ -325,21 +298,11 @@
           sans-serif !important;
       }
 
-      /* =====================================================
-         GENEL
-         ===================================================== */
-
       #hallet-root h1,
       #hallet-root h2,
       #hallet-root h3,
       #hallet-root p {
         display: block !important;
-      }
-
-      #hallet-root h1,
-      #hallet-root h2,
-      #hallet-root h3,
-      #hallet-root p {
         margin-top: 0 !important;
       }
 
@@ -359,10 +322,6 @@
         letter-spacing: normal !important;
       }
 
-      /* =====================================================
-         ANA KONTEYNER
-         ===================================================== */
-
       #hallet-root .hf-wrap {
         position: relative !important;
 
@@ -372,16 +331,11 @@
         margin: 0 auto !important;
         padding: 0 0 30px !important;
 
-        display: block !important;
-
         z-index: 1 !important;
       }
 
-      /* =====================================================
-         KART
-         ===================================================== */
-
-      #hallet-root .hf-card {
+      #hallet-root .hf-card,
+      #hallet-root .hf-question-card {
         position: relative !important;
 
         display: block !important;
@@ -397,55 +351,38 @@
         border: 1px solid #dfe7e4 !important;
         border-radius: 16px !important;
 
-        box-shadow: 0 6px 22px rgba(0, 0, 0, 0.06) !important;
+        box-shadow: 0 6px 22px rgba(0,0,0,.06) !important;
 
         overflow: visible !important;
 
-        z-index: 2 !important;
+        z-index: 10 !important;
       }
 
-      /* =====================================================
-         BAŞLIK
-         ===================================================== */
-
       #hallet-root .hf-card h1,
-      #hallet-root .hf-card h2 {
+      #hallet-root .hf-card h2,
+      #hallet-root .hf-card h3,
+      #hallet-root .hf-question-card h2 {
         position: relative !important;
 
         display: block !important;
 
-        margin: 0 0 12px !important;
+        margin: 0 0 14px !important;
         padding: 0 !important;
 
+        background: #ffffff !important;
         color: #17201e !important;
 
-        font-size: 25px !important;
+        font-size: 24px !important;
         font-weight: 800 !important;
-        line-height: 1.25 !important;
+        line-height: 1.3 !important;
 
         text-align: left !important;
 
-        background: transparent !important;
+        opacity: 1 !important;
+        visibility: visible !important;
 
-        z-index: 5 !important;
+        z-index: 20 !important;
       }
-
-      #hallet-root .hf-card h3 {
-        display: block !important;
-
-        margin: 0 0 10px !important;
-        padding: 0 !important;
-
-        color: #17201e !important;
-
-        font-size: 17px !important;
-        font-weight: 800 !important;
-        line-height: 1.35 !important;
-      }
-
-      /* =====================================================
-         ANA BAŞLIK
-         ===================================================== */
 
       #hallet-root .hf-main-title {
         margin: 8px 0 10px !important;
@@ -469,10 +406,6 @@
 
         text-align: center !important;
       }
-
-      /* =====================================================
-         ÜST BAŞLIK / SONUÇ
-         ===================================================== */
 
       #hallet-root .hf-head {
         position: relative !important;
@@ -533,10 +466,6 @@
         line-height: 1.6 !important;
       }
 
-      /* =====================================================
-         İSTATİSTİK
-         ===================================================== */
-
       #hallet-root .hf-grid {
         display: grid !important;
 
@@ -551,8 +480,6 @@
 
       #hallet-root .hf-stat {
         display: block !important;
-
-        min-width: 0 !important;
 
         padding: 10px !important;
 
@@ -579,33 +506,6 @@
 
         font-size: 13px !important;
         font-weight: 700 !important;
-      }
-
-      /* =====================================================
-         SORU EKRANI
-         ===================================================== */
-
-      #hallet-root .hf-question-card {
-        position: relative !important;
-
-        display: block !important;
-
-        width: 100% !important;
-
-        margin: 0 !important;
-        padding: 22px !important;
-
-        background: #ffffff !important;
-        color: #17201e !important;
-
-        border: 1px solid #dfe7e4 !important;
-        border-radius: 18px !important;
-
-        box-shadow: 0 6px 22px rgba(0,0,0,.06) !important;
-
-        z-index: 10 !important;
-
-        overflow: visible !important;
       }
 
       #hallet-root .hf-step {
@@ -636,17 +536,15 @@
         padding: 0 !important;
 
         color: #17201e !important;
-
         background: #ffffff !important;
 
         font-size: 24px !important;
         font-weight: 800 !important;
-
         line-height: 1.3 !important;
 
         text-align: left !important;
 
-        z-index: 20 !important;
+        z-index: 100 !important;
 
         opacity: 1 !important;
         visibility: visible !important;
@@ -662,17 +560,14 @@
         margin: 0 !important;
         padding: 0 !important;
 
-        z-index: 30 !important;
+        z-index: 200 !important;
       }
-
-      /* =====================================================
-         SEÇENEK BUTONLARI
-         ===================================================== */
 
       #hallet-root .hf-choice {
         position: relative !important;
 
         display: block !important;
+
         clear: both !important;
 
         width: 100% !important;
@@ -702,7 +597,7 @@
 
         overflow: visible !important;
 
-        z-index: 40 !important;
+        z-index: 300 !important;
 
         opacity: 1 !important;
         visibility: visible !important;
@@ -713,18 +608,10 @@
         border-color: #0E5C53 !important;
       }
 
-      #hallet-root .hf-choice:active {
-        transform: translateY(1px) !important;
-      }
-
       #hallet-root .hf-choice:focus {
         outline: 3px solid rgba(14,92,83,.18) !important;
         outline-offset: 1px !important;
       }
-
-      /* =====================================================
-         INPUT
-         ===================================================== */
 
       #hallet-root .hf-input {
         display: block !important;
@@ -742,7 +629,6 @@
         border-radius: 12px !important;
 
         font-size: 16px !important;
-        line-height: 1.3 !important;
 
         outline: none !important;
       }
@@ -753,10 +639,6 @@
         box-shadow:
           0 0 0 3px rgba(14,92,83,.12) !important;
       }
-
-      /* =====================================================
-         İLERLEME ÇUBUĞU
-         ===================================================== */
 
       #hallet-root .hf-progress {
         position: relative !important;
@@ -790,10 +672,6 @@
         border-radius: 999px !important;
       }
 
-      /* =====================================================
-         GERİ
-         ===================================================== */
-
       #hallet-root .hf-back {
         position: relative !important;
 
@@ -812,12 +690,8 @@
 
         cursor: pointer !important;
 
-        z-index: 50 !important;
+        z-index: 500 !important;
       }
-
-      /* =====================================================
-         SONUÇ İÇERİĞİ
-         ===================================================== */
 
       #hallet-root .hf-item {
         display: flex !important;
@@ -869,11 +743,6 @@
         color: #245a78 !important;
       }
 
-      #hallet-root .hf-danger {
-        background: #fde9e7 !important;
-        color: #9b3028 !important;
-      }
-
       #hallet-root .hf-text {
         min-width: 0 !important;
         flex: 1 1 auto !important;
@@ -901,10 +770,6 @@
         line-height: 1.5 !important;
       }
 
-      /* =====================================================
-         UYARI / AÇIKLAMA
-         ===================================================== */
-
       #hallet-root .hf-disclaimer {
         display: block !important;
 
@@ -921,14 +786,6 @@
         font-size: 12px !important;
         line-height: 1.55 !important;
       }
-
-      #hallet-root .hf-disclaimer b {
-        font-weight: 800 !important;
-      }
-
-      /* =====================================================
-         AKSİYON BUTONLARI
-         ===================================================== */
 
       #hallet-root .hf-actions {
         display: flex !important;
@@ -966,21 +823,13 @@
         color: #17413c !important;
       }
 
-      /* =====================================================
-         MOBİL
-         ===================================================== */
-
       @media (max-width: 560px) {
 
         #hallet-root .hf-app {
           padding: 14px 12px 35px !important;
         }
 
-        #hallet-root .hf-card {
-          padding: 17px !important;
-          border-radius: 14px !important;
-        }
-
+        #hallet-root .hf-card,
         #hallet-root .hf-question-card {
           padding: 18px !important;
           border-radius: 15px !important;
@@ -988,17 +837,12 @@
 
         #hallet-root .hf-question-title {
           font-size: 21px !important;
-          line-height: 1.32 !important;
-          margin-bottom: 18px !important;
         }
 
         #hallet-root .hf-choice {
           min-height: 54px !important;
-
           margin: 7px 0 !important;
           padding: 14px !important;
-
-          font-size: 15px !important;
         }
 
         #hallet-root .hf-grid {
@@ -1026,19 +870,11 @@
     document.head.appendChild(s);
   }
 
-  /* =========================================================
-     RENDER
-     ========================================================= */
-
   function render(html) {
     styles();
 
     const el = openRoot();
 
-    /*
-     * Burada çok önemli bir nokta:
-     * Eski root'un içeriğini tamamen temizliyoruz.
-     */
     el.innerHTML = `
       <div class="hf-app">
         ${html}
@@ -1047,7 +883,7 @@
   }
 
   /* =========================================================
-     ANA GİRİŞ
+     ANA HALLET MENÜSÜ
      ========================================================= */
 
   function showGate() {
@@ -1056,16 +892,14 @@
 
         <div class="hf-card">
 
-          <div
-            style="
-              margin:0 0 6px;
-              color:#0E5C53;
-              font-size:12px;
-              font-weight:800;
-              letter-spacing:.12em;
-              text-align:center;
-            "
-          >
+          <div style="
+            margin:0 0 6px;
+            color:#0E5C53;
+            font-size:12px;
+            font-weight:800;
+            letter-spacing:.12em;
+            text-align:center;
+          ">
             İŞİNİ HALLET
           </div>
 
@@ -1115,10 +949,6 @@
     `);
   }
 
-  /* =========================================================
-     İŞLEM MENÜSÜ
-     ========================================================= */
-
   function showIslemMenu() {
     render(`
       <div class="hf-wrap">
@@ -1159,10 +989,6 @@
       </div>
     `);
   }
-
-  /* =========================================================
-     TAŞINMAZ MENÜSÜ
-     ========================================================= */
 
   function showTasinmazMenu() {
     render(`
@@ -1205,10 +1031,6 @@
     `);
   }
 
-  /* =========================================================
-     KONUT SATIŞI
-     ========================================================= */
-
   function showKonutSatis() {
     state.step = 0;
     state.answers = {};
@@ -1217,10 +1039,6 @@
 
     showQuestion();
   }
-
-  /* =========================================================
-     SORU EKRANI
-     ========================================================= */
 
   function showQuestion() {
     const q = questions[state.step];
@@ -1334,9 +1152,6 @@
       </div>
     `);
 
-    /*
-     * Input varsa otomatik odak.
-     */
     if (q.type === "date" || q.type === "number") {
       setTimeout(() => {
         const inputEl = document.getElementById("hf-input");
@@ -1347,10 +1162,6 @@
       }, 50);
     }
   }
-
-  /* =========================================================
-     CEVAP
-     ========================================================= */
 
   function choose(value) {
     const q = questions[state.step];
@@ -1365,10 +1176,6 @@
 
     showQuestion();
   }
-
-  /* =========================================================
-     INPUT CEVABI
-     ========================================================= */
 
   function submitInput() {
     const q = questions[state.step];
@@ -1405,10 +1212,6 @@
     showQuestion();
   }
 
-  /* =========================================================
-     GERİ
-     ========================================================= */
-
   function back() {
     if (state.step <= 0) {
       showTasinmazMenu();
@@ -1419,10 +1222,6 @@
 
     showQuestion();
   }
-
-  /* =========================================================
-     5 YIL KONTROLÜ
-     ========================================================= */
 
   function withinFiveYears(value) {
     if (!value) {
@@ -1437,16 +1236,10 @@
 
     const limit = new Date(acquired);
 
-    limit.setFullYear(
-      limit.getFullYear() + 5
-    );
+    limit.setFullYear(limit.getFullYear() + 5);
 
     return new Date() < limit;
   }
-
-  /* =========================================================
-     VERGİ DEĞERLENDİRMESİ
-     ========================================================= */
 
   function taxAssessment() {
     const a = state.answers;
@@ -1499,10 +1292,6 @@
     };
   }
 
-  /* =========================================================
-     SONUÇ SATIRI
-     ========================================================= */
-
   function item(icon, cls, title, text) {
     return `
       <div class="hf-item">
@@ -1519,10 +1308,6 @@
       </div>
     `;
   }
-
-  /* =========================================================
-     İŞLEM DOSYASI
-     ========================================================= */
 
   function showResult() {
     const a = state.answers;
@@ -1975,10 +1760,6 @@
     `);
   }
 
-  /* =========================================================
-     MESAJ
-     ========================================================= */
-
   function showMessage(message) {
     render(`
       <div class="hf-wrap">
@@ -2029,16 +1810,11 @@
   }
 
   /* =========================================================
-     İŞİMİ ÇÖZ'E GERİ DÖNÜŞ
+     İŞİMİ ÇÖZ'E DÖN
      ========================================================= */
 
   function goIsimiCoz() {
     closeRoot();
-
-    /*
-     * Önce mevcut uygulamanın ana ekran fonksiyonlarını
-     * kullanıyoruz.
-     */
 
     if (typeof window.showHome === "function") {
       window.showHome();
@@ -2049,15 +1825,6 @@
       window.renderCategories();
       return;
     }
-
-    /*
-     * Hiçbiri yoksa kullanıcıya bilgi göster.
-     */
-    openRoot();
-
-    showMessage(
-      "İşimi Çöz modülü mevcut uygulamanın ana ekranından açılabilir."
-    );
   }
 
   /* =========================================================
