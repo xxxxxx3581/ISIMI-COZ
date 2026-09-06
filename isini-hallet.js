@@ -107,6 +107,10 @@
     }
   ];
 
+  /* =========================================================
+     TEMEL YARDIMCILAR
+     ========================================================= */
+
   function esc(value) {
     return String(value ?? "")
       .replace(/&/g, "&amp;")
@@ -118,7 +122,10 @@
 
   function money(value) {
     const n = Number(value);
-    if (!Number.isFinite(n)) return "Belirtilmedi";
+
+    if (!Number.isFinite(n)) {
+      return "Belirtilmedi";
+    }
 
     return new Intl.NumberFormat("tr-TR", {
       style: "currency",
@@ -128,7 +135,9 @@
   }
 
   function dateText(value) {
-    if (!value) return "Belirtilmedi";
+    if (!value) {
+      return "Belirtilmedi";
+    }
 
     const d = new Date(`${value}T12:00:00`);
 
@@ -148,7 +157,9 @@
 
     const item = q.options.find(x => x[0] === value);
 
-    return item ? item[1] : (value || "Belirtilmedi");
+    return item
+      ? item[1]
+      : (value || "Belirtilmedi");
   }
 
   function createCaseId() {
@@ -159,240 +170,855 @@
     return `IH-KS-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`;
   }
 
-  function root() {
-    return (
-      document.getElementById("hallet-root") ||
-      document.getElementById("app") ||
-      document.querySelector("main") ||
-      document.body
-    );
+  /* =========================================================
+     İZOLE HALLET KÖKÜ
+     ========================================================= */
+
+  function getRoot() {
+    let el = document.getElementById("hallet-root");
+
+    if (!el) {
+      el = document.createElement("div");
+      el.id = "hallet-root";
+      document.body.appendChild(el);
+    }
+
+    /*
+     * Hallet kökünün body'nin doğrudan çocuğu olmasını sağlıyoruz.
+     * Böylece #app/main gibi eski ekranların CSS katmanlarından
+     * mümkün olduğunca ayrılır.
+     */
+    if (el.parentElement !== document.body) {
+      document.body.appendChild(el);
+    }
+
+    el.setAttribute("aria-live", "polite");
+
+    return el;
   }
 
+  function openRoot() {
+    const el = getRoot();
+
+    el.style.display = "block";
+    el.style.visibility = "visible";
+    el.style.opacity = "1";
+
+    document.body.classList.add("hallet-open");
+
+    /*
+     * Eski uygulamanın body scroll'unu devre dışı bırakıyoruz.
+     * Hallet kendi içinde scroll olacak.
+     */
+    document.body.style.overflow = "hidden";
+
+    return el;
+  }
+
+  function closeRoot() {
+    const el = document.getElementById("hallet-root");
+
+    if (el) {
+      el.style.display = "none";
+    }
+
+    document.body.classList.remove("hallet-open");
+    document.body.style.overflow = "";
+  }
+
+  /* =========================================================
+     TAMAMEN İZOLE CSS
+     ========================================================= */
+
   function styles() {
-    if (document.getElementById("hallet-file-style")) return;
+    if (document.getElementById("hallet-file-style-v2")) {
+      return;
+    }
 
     const s = document.createElement("style");
 
-    s.id = "hallet-file-style";
+    s.id = "hallet-file-style-v2";
 
     s.textContent = `
-      .hf-wrap {
-        max-width: 760px;
-        margin: 0 auto;
-        padding-bottom: 30px;
+      /* =====================================================
+         ANA HALLET KATMANI
+         ===================================================== */
+
+      #hallet-root {
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+
+        z-index: 2147483647 !important;
+
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+
+        margin: 0 !important;
+        padding: 0 !important;
+
+        background: #f4f7f6 !important;
+        color: #17201e !important;
+
+        overflow-x: hidden !important;
+        overflow-y: auto !important;
+
+        box-sizing: border-box !important;
+
+        font-family:
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          Arial,
+          sans-serif !important;
+
+        isolation: isolate !important;
       }
 
-      .hf-card {
-        background: #fff;
-        border: 1px solid #e4eae8;
-        border-radius: 16px;
-        padding: 18px;
-        margin-bottom: 12px;
-        box-shadow: 0 4px 18px rgba(0,0,0,.04);
+      #hallet-root,
+      #hallet-root *,
+      #hallet-root *::before,
+      #hallet-root *::after {
+        box-sizing: border-box !important;
       }
 
-      .hf-head {
-        background: linear-gradient(135deg,#0E5C53,#174f49);
-        color: white;
-        border-radius: 18px;
-        padding: 22px;
-        margin-bottom: 12px;
+      /* =====================================================
+         İZOLE UYGULAMA
+         ===================================================== */
+
+      #hallet-root .hf-app {
+        all: initial !important;
+
+        display: block !important;
+
+        width: 100% !important;
+        min-height: 100% !important;
+
+        margin: 0 !important;
+        padding: 24px 16px 48px !important;
+
+        background: #f4f7f6 !important;
+        color: #17201e !important;
+
+        font-family:
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          Arial,
+          sans-serif !important;
       }
 
-      .hf-kicker {
-        font-size: 11px;
-        font-weight: 800;
-        letter-spacing: .14em;
-        opacity: .75;
+      #hallet-root .hf-app *,
+      #hallet-root .hf-app *::before,
+      #hallet-root .hf-app *::after {
+        box-sizing: border-box !important;
+        font-family:
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          Arial,
+          sans-serif !important;
       }
 
-      .hf-title {
-        margin: 6px 0;
-        font-size: 26px;
-        font-weight: 800;
+      /* =====================================================
+         GENEL
+         ===================================================== */
+
+      #hallet-root h1,
+      #hallet-root h2,
+      #hallet-root h3,
+      #hallet-root p {
+        display: block !important;
       }
 
-      .hf-meta {
-        font-size: 12px;
-        line-height: 1.6;
-        opacity: .9;
+      #hallet-root h1,
+      #hallet-root h2,
+      #hallet-root h3,
+      #hallet-root p {
+        margin-top: 0 !important;
       }
 
-      .hf-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
-        margin-top: 15px;
+      #hallet-root button {
+        appearance: none !important;
+        -webkit-appearance: none !important;
+
+        font-family:
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          Roboto,
+          Arial,
+          sans-serif !important;
+
+        text-transform: none !important;
+        letter-spacing: normal !important;
       }
 
-      .hf-stat {
-        background: rgba(255,255,255,.1);
-        border: 1px solid rgba(255,255,255,.15);
-        border-radius: 11px;
-        padding: 10px;
+      /* =====================================================
+         ANA KONTEYNER
+         ===================================================== */
+
+      #hallet-root .hf-wrap {
+        position: relative !important;
+
+        width: 100% !important;
+        max-width: 760px !important;
+
+        margin: 0 auto !important;
+        padding: 0 0 30px !important;
+
+        display: block !important;
+
+        z-index: 1 !important;
       }
 
-      .hf-stat-label {
-        font-size: 10px;
-        opacity: .7;
+      /* =====================================================
+         KART
+         ===================================================== */
+
+      #hallet-root .hf-card {
+        position: relative !important;
+
+        display: block !important;
+
+        width: 100% !important;
+
+        margin: 0 0 14px !important;
+        padding: 20px !important;
+
+        background: #ffffff !important;
+        color: #17201e !important;
+
+        border: 1px solid #dfe7e4 !important;
+        border-radius: 16px !important;
+
+        box-shadow: 0 6px 22px rgba(0, 0, 0, 0.06) !important;
+
+        overflow: visible !important;
+
+        z-index: 2 !important;
       }
 
-      .hf-stat-value {
-        font-size: 13px;
-        font-weight: 700;
-        margin-top: 3px;
+      /* =====================================================
+         BAŞLIK
+         ===================================================== */
+
+      #hallet-root .hf-card h1,
+      #hallet-root .hf-card h2 {
+        position: relative !important;
+
+        display: block !important;
+
+        margin: 0 0 12px !important;
+        padding: 0 !important;
+
+        color: #17201e !important;
+
+        font-size: 25px !important;
+        font-weight: 800 !important;
+        line-height: 1.25 !important;
+
+        text-align: left !important;
+
+        background: transparent !important;
+
+        z-index: 5 !important;
       }
 
-      .hf-card h3 {
-        margin: 0 0 10px;
-        font-size: 17px;
+      #hallet-root .hf-card h3 {
+        display: block !important;
+
+        margin: 0 0 10px !important;
+        padding: 0 !important;
+
+        color: #17201e !important;
+
+        font-size: 17px !important;
+        font-weight: 800 !important;
+        line-height: 1.35 !important;
       }
 
-      .hf-item {
-        display: flex;
-        gap: 10px;
-        padding: 11px 0;
-        border-bottom: 1px solid #edf0ef;
+      /* =====================================================
+         ANA BAŞLIK
+         ===================================================== */
+
+      #hallet-root .hf-main-title {
+        margin: 8px 0 10px !important;
+
+        color: #17201e !important;
+
+        font-size: 29px !important;
+        font-weight: 850 !important;
+        line-height: 1.2 !important;
+
+        text-align: center !important;
       }
 
-      .hf-item:last-child {
-        border-bottom: 0;
+      #hallet-root .hf-main-subtitle {
+        margin: 0 0 22px !important;
+
+        color: #65716e !important;
+
+        font-size: 14px !important;
+        line-height: 1.55 !important;
+
+        text-align: center !important;
       }
 
-      .hf-icon {
-        width: 27px;
-        height: 27px;
-        min-width: 27px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 800;
-        font-size: 13px;
+      /* =====================================================
+         ÜST BAŞLIK / SONUÇ
+         ===================================================== */
+
+      #hallet-root .hf-head {
+        position: relative !important;
+
+        display: block !important;
+
+        width: 100% !important;
+
+        margin: 0 0 14px !important;
+        padding: 22px !important;
+
+        background: linear-gradient(
+          135deg,
+          #0E5C53,
+          #174f49
+        ) !important;
+
+        color: #ffffff !important;
+
+        border-radius: 18px !important;
+
+        overflow: hidden !important;
+
+        z-index: 2 !important;
       }
 
-      .hf-ok {
-        background: #e7f4ed;
-        color: #176947;
+      #hallet-root .hf-kicker {
+        display: block !important;
+
+        margin: 0 !important;
+
+        color: #ffffff !important;
+
+        font-size: 11px !important;
+        font-weight: 800 !important;
+
+        letter-spacing: .14em !important;
       }
 
-      .hf-warn {
-        background: #fff1d7;
-        color: #875d12;
+      #hallet-root .hf-title {
+        display: block !important;
+
+        margin: 6px 0 !important;
+
+        color: #ffffff !important;
+
+        font-size: 26px !important;
+        font-weight: 800 !important;
+        line-height: 1.25 !important;
       }
 
-      .hf-info {
-        background: #e9f1f7;
-        color: #245a78;
+      #hallet-root .hf-meta {
+        display: block !important;
+
+        color: rgba(255,255,255,.92) !important;
+
+        font-size: 12px !important;
+        line-height: 1.6 !important;
       }
 
-      .hf-danger {
-        background: #fde9e7;
-        color: #9b3028;
+      /* =====================================================
+         İSTATİSTİK
+         ===================================================== */
+
+      #hallet-root .hf-grid {
+        display: grid !important;
+
+        grid-template-columns: 1fr 1fr !important;
+
+        gap: 8px !important;
+
+        width: 100% !important;
+
+        margin: 15px 0 0 !important;
       }
 
-      .hf-text strong {
-        display: block;
-        font-size: 14px;
-        margin-bottom: 3px;
+      #hallet-root .hf-stat {
+        display: block !important;
+
+        min-width: 0 !important;
+
+        padding: 10px !important;
+
+        background: rgba(255,255,255,.1) !important;
+
+        border: 1px solid rgba(255,255,255,.15) !important;
+        border-radius: 11px !important;
       }
 
-      .hf-text span {
-        display: block;
-        font-size: 13px;
-        color: #606c69;
-        line-height: 1.5;
+      #hallet-root .hf-stat-label {
+        display: block !important;
+
+        color: rgba(255,255,255,.72) !important;
+
+        font-size: 10px !important;
       }
 
-      .hf-disclaimer {
-        background: #f5f7f6;
-        border-radius: 11px;
-        padding: 12px;
-        margin-top: 10px;
-        font-size: 12px;
-        color: #65716e;
-        line-height: 1.55;
+      #hallet-root .hf-stat-value {
+        display: block !important;
+
+        margin-top: 3px !important;
+
+        color: #ffffff !important;
+
+        font-size: 13px !important;
+        font-weight: 700 !important;
       }
 
-      .hf-actions {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 8px;
-        margin-top: 15px;
+      /* =====================================================
+         SORU EKRANI
+         ===================================================== */
+
+      #hallet-root .hf-question-card {
+        position: relative !important;
+
+        display: block !important;
+
+        width: 100% !important;
+
+        margin: 0 !important;
+        padding: 22px !important;
+
+        background: #ffffff !important;
+        color: #17201e !important;
+
+        border: 1px solid #dfe7e4 !important;
+        border-radius: 18px !important;
+
+        box-shadow: 0 6px 22px rgba(0,0,0,.06) !important;
+
+        z-index: 10 !important;
+
+        overflow: visible !important;
       }
 
-      .hf-btn {
-        border: 0;
-        border-radius: 11px;
-        padding: 12px 15px;
-        font-weight: 700;
-        cursor: pointer;
+      #hallet-root .hf-step {
+        position: relative !important;
+
+        display: block !important;
+
+        margin: 0 0 8px !important;
+
+        color: #687572 !important;
+
+        font-size: 13px !important;
+        font-weight: 600 !important;
+
+        line-height: 1.4 !important;
+
+        z-index: 20 !important;
       }
 
-      .hf-primary {
-        background: #0E5C53;
-        color: white;
+      #hallet-root .hf-question-title {
+        position: relative !important;
+
+        display: block !important;
+
+        width: 100% !important;
+
+        margin: 0 0 20px !important;
+        padding: 0 !important;
+
+        color: #17201e !important;
+
+        background: #ffffff !important;
+
+        font-size: 24px !important;
+        font-weight: 800 !important;
+
+        line-height: 1.3 !important;
+
+        text-align: left !important;
+
+        z-index: 20 !important;
+
+        opacity: 1 !important;
+        visibility: visible !important;
       }
 
-      .hf-secondary {
-        background: #edf2f0;
-        color: #17413c;
+      #hallet-root .hf-options {
+        position: relative !important;
+
+        display: block !important;
+
+        width: 100% !important;
+
+        margin: 0 !important;
+        padding: 0 !important;
+
+        z-index: 30 !important;
       }
 
-      .hf-back {
-        border: 0;
-        background: transparent;
-        color: #5b6966;
-        cursor: pointer;
-        padding: 4px 0;
+      /* =====================================================
+         SEÇENEK BUTONLARI
+         ===================================================== */
+
+      #hallet-root .hf-choice {
+        position: relative !important;
+
+        display: block !important;
+        clear: both !important;
+
+        width: 100% !important;
+        min-height: 56px !important;
+
+        margin: 8px 0 !important;
+        padding: 15px 16px !important;
+
+        border: 1px solid #d8e2df !important;
+        border-radius: 13px !important;
+
+        background: #ffffff !important;
+        color: #173f3a !important;
+
+        font-size: 15px !important;
+        font-weight: 700 !important;
+
+        line-height: 1.35 !important;
+
+        text-align: left !important;
+
+        cursor: pointer !important;
+
+        box-shadow: none !important;
+
+        white-space: normal !important;
+
+        overflow: visible !important;
+
+        z-index: 40 !important;
+
+        opacity: 1 !important;
+        visibility: visible !important;
       }
 
-      .hf-choice {
-        width: 100%;
-        text-align: left;
-        border: 1px solid #dfe7e4;
-        background: white;
-        border-radius: 12px;
-        padding: 14px;
-        margin: 7px 0;
-        font-weight: 650;
-        cursor: pointer;
+      #hallet-root .hf-choice:hover {
+        background: #f4f9f7 !important;
+        border-color: #0E5C53 !important;
       }
 
-      .hf-choice:hover {
-        border-color: #0E5C53;
+      #hallet-root .hf-choice:active {
+        transform: translateY(1px) !important;
       }
 
-      .hf-input {
-        width: 100%;
-        box-sizing: border-box;
-        padding: 14px;
-        border: 1px solid #dfe7e4;
-        border-radius: 12px;
-        font-size: 16px;
-        margin: 10px 0;
+      #hallet-root .hf-choice:focus {
+        outline: 3px solid rgba(14,92,83,.18) !important;
+        outline-offset: 1px !important;
       }
 
-      .hf-progress {
-        height: 7px;
-        background: #e9eeec;
-        border-radius: 10px;
-        overflow: hidden;
-        margin: 8px 0 20px;
+      /* =====================================================
+         INPUT
+         ===================================================== */
+
+      #hallet-root .hf-input {
+        display: block !important;
+
+        width: 100% !important;
+        min-height: 54px !important;
+
+        margin: 10px 0 12px !important;
+        padding: 14px !important;
+
+        background: #ffffff !important;
+        color: #17201e !important;
+
+        border: 1px solid #d8e2df !important;
+        border-radius: 12px !important;
+
+        font-size: 16px !important;
+        line-height: 1.3 !important;
+
+        outline: none !important;
       }
 
-      .hf-progress div {
-        height: 100%;
-        background: #0E5C53;
+      #hallet-root .hf-input:focus {
+        border-color: #0E5C53 !important;
+
+        box-shadow:
+          0 0 0 3px rgba(14,92,83,.12) !important;
       }
 
-      @media(max-width:560px) {
-        .hf-grid {
-          grid-template-columns: 1fr;
+      /* =====================================================
+         İLERLEME ÇUBUĞU
+         ===================================================== */
+
+      #hallet-root .hf-progress {
+        position: relative !important;
+
+        display: block !important;
+
+        width: 100% !important;
+        height: 8px !important;
+
+        margin: 8px 0 22px !important;
+
+        background: #e8eeeb !important;
+
+        border-radius: 999px !important;
+
+        overflow: hidden !important;
+
+        z-index: 15 !important;
+      }
+
+      #hallet-root .hf-progress div {
+        display: block !important;
+
+        height: 100% !important;
+
+        margin: 0 !important;
+        padding: 0 !important;
+
+        background: #0E5C53 !important;
+
+        border-radius: 999px !important;
+      }
+
+      /* =====================================================
+         GERİ
+         ===================================================== */
+
+      #hallet-root .hf-back {
+        position: relative !important;
+
+        display: inline-block !important;
+
+        margin: 0 0 12px !important;
+        padding: 7px 0 !important;
+
+        border: 0 !important;
+
+        background: transparent !important;
+        color: #5b6966 !important;
+
+        font-size: 14px !important;
+        font-weight: 700 !important;
+
+        cursor: pointer !important;
+
+        z-index: 50 !important;
+      }
+
+      /* =====================================================
+         SONUÇ İÇERİĞİ
+         ===================================================== */
+
+      #hallet-root .hf-item {
+        display: flex !important;
+
+        align-items: flex-start !important;
+
+        gap: 10px !important;
+
+        width: 100% !important;
+
+        padding: 11px 0 !important;
+
+        border-bottom: 1px solid #edf0ef !important;
+      }
+
+      #hallet-root .hf-item:last-child {
+        border-bottom: 0 !important;
+      }
+
+      #hallet-root .hf-icon {
+        display: flex !important;
+
+        align-items: center !important;
+        justify-content: center !important;
+
+        flex: 0 0 27px !important;
+
+        width: 27px !important;
+        height: 27px !important;
+
+        border-radius: 50% !important;
+
+        font-size: 13px !important;
+        font-weight: 800 !important;
+      }
+
+      #hallet-root .hf-ok {
+        background: #e7f4ed !important;
+        color: #176947 !important;
+      }
+
+      #hallet-root .hf-warn {
+        background: #fff1d7 !important;
+        color: #875d12 !important;
+      }
+
+      #hallet-root .hf-info {
+        background: #e9f1f7 !important;
+        color: #245a78 !important;
+      }
+
+      #hallet-root .hf-danger {
+        background: #fde9e7 !important;
+        color: #9b3028 !important;
+      }
+
+      #hallet-root .hf-text {
+        min-width: 0 !important;
+        flex: 1 1 auto !important;
+      }
+
+      #hallet-root .hf-text strong {
+        display: block !important;
+
+        margin: 0 0 3px !important;
+
+        color: #17201e !important;
+
+        font-size: 14px !important;
+        font-weight: 800 !important;
+      }
+
+      #hallet-root .hf-text span {
+        display: block !important;
+
+        margin: 0 !important;
+
+        color: #606c69 !important;
+
+        font-size: 13px !important;
+        line-height: 1.5 !important;
+      }
+
+      /* =====================================================
+         UYARI / AÇIKLAMA
+         ===================================================== */
+
+      #hallet-root .hf-disclaimer {
+        display: block !important;
+
+        width: 100% !important;
+
+        margin: 10px 0 0 !important;
+        padding: 12px !important;
+
+        background: #f5f7f6 !important;
+        color: #65716e !important;
+
+        border-radius: 11px !important;
+
+        font-size: 12px !important;
+        line-height: 1.55 !important;
+      }
+
+      #hallet-root .hf-disclaimer b {
+        font-weight: 800 !important;
+      }
+
+      /* =====================================================
+         AKSİYON BUTONLARI
+         ===================================================== */
+
+      #hallet-root .hf-actions {
+        display: flex !important;
+
+        flex-wrap: wrap !important;
+
+        gap: 8px !important;
+
+        width: 100% !important;
+
+        margin: 15px 0 0 !important;
+      }
+
+      #hallet-root .hf-btn {
+        display: inline-block !important;
+
+        border: 0 !important;
+        border-radius: 11px !important;
+
+        padding: 12px 15px !important;
+
+        font-size: 14px !important;
+        font-weight: 700 !important;
+
+        cursor: pointer !important;
+      }
+
+      #hallet-root .hf-primary {
+        background: #0E5C53 !important;
+        color: #ffffff !important;
+      }
+
+      #hallet-root .hf-secondary {
+        background: #edf2f0 !important;
+        color: #17413c !important;
+      }
+
+      /* =====================================================
+         MOBİL
+         ===================================================== */
+
+      @media (max-width: 560px) {
+
+        #hallet-root .hf-app {
+          padding: 14px 12px 35px !important;
         }
 
-        .hf-title {
-          font-size: 22px;
+        #hallet-root .hf-card {
+          padding: 17px !important;
+          border-radius: 14px !important;
+        }
+
+        #hallet-root .hf-question-card {
+          padding: 18px !important;
+          border-radius: 15px !important;
+        }
+
+        #hallet-root .hf-question-title {
+          font-size: 21px !important;
+          line-height: 1.32 !important;
+          margin-bottom: 18px !important;
+        }
+
+        #hallet-root .hf-choice {
+          min-height: 54px !important;
+
+          margin: 7px 0 !important;
+          padding: 14px !important;
+
+          font-size: 15px !important;
+        }
+
+        #hallet-root .hf-grid {
+          grid-template-columns: 1fr !important;
+        }
+
+        #hallet-root .hf-title {
+          font-size: 22px !important;
+        }
+
+        #hallet-root .hf-main-title {
+          font-size: 25px !important;
+        }
+
+        #hallet-root .hf-actions {
+          flex-direction: column !important;
+        }
+
+        #hallet-root .hf-btn {
+          width: 100% !important;
         }
       }
     `;
@@ -400,84 +1026,188 @@
     document.head.appendChild(s);
   }
 
+  /* =========================================================
+     RENDER
+     ========================================================= */
+
   function render(html) {
     styles();
-    root().innerHTML = html;
+
+    const el = openRoot();
+
+    /*
+     * Burada çok önemli bir nokta:
+     * Eski root'un içeriğini tamamen temizliyoruz.
+     */
+    el.innerHTML = `
+      <div class="hf-app">
+        ${html}
+      </div>
+    `;
   }
+
+  /* =========================================================
+     ANA GİRİŞ
+     ========================================================= */
 
   function showGate() {
     render(`
       <div class="hf-wrap">
-        <div class="hf-card" style="text-align:center;">
-          <div style="font-size:12px;font-weight:800;letter-spacing:.12em;color:#0E5C53;">
+
+        <div class="hf-card">
+
+          <div
+            style="
+              margin:0 0 6px;
+              color:#0E5C53;
+              font-size:12px;
+              font-weight:800;
+              letter-spacing:.12em;
+              text-align:center;
+            "
+          >
             İŞİNİ HALLET
           </div>
 
-          <h1>Ne yapmak istiyorsun?</h1>
+          <div class="hf-main-title">
+            Ne yapmak istiyorsun?
+          </div>
 
-          <p style="color:#65716f;">
+          <div class="hf-main-subtitle">
             İşlemini seç, gerekli adımları birlikte çıkaralım.
-          </p>
+          </div>
 
-          <button class="hf-choice" onclick="Hallet.showIslemMenu()">
-            📋 Bir işlem yapmak istiyorum
-          </button>
+          <div class="hf-options">
 
-          <button class="hf-choice" onclick="Hallet.showMessage('Evrak hazırlama modülü sonraki aşamada açılacak.')">
-            📄 Evrak hazırlamak istiyorum
-          </button>
+            <button
+              class="hf-choice"
+              onclick="Hallet.showIslemMenu()"
+            >
+              📋 Bir işlem yapmak istiyorum
+            </button>
 
-          <button class="hf-choice" onclick="Hallet.showMessage('Kurum başvuru modülü sonraki aşamada açılacak.')">
-            🏛️ Bir kuruma başvuracağım
-          </button>
+            <button
+              class="hf-choice"
+              onclick="Hallet.showMessage('Evrak hazırlama modülü sonraki aşamada açılacak.')"
+            >
+              📄 Evrak hazırlamak istiyorum
+            </button>
 
-          <button class="hf-choice" onclick="Hallet.goIsimiCoz()">
-            🛠️ Hizmet / usta bulmam gerekiyor
-          </button>
+            <button
+              class="hf-choice"
+              onclick="Hallet.showMessage('Kurum başvuru modülü sonraki aşamada açılacak.')"
+            >
+              🏛️ Bir kuruma başvuracağım
+            </button>
+
+            <button
+              class="hf-choice"
+              onclick="Hallet.goIsimiCoz()"
+            >
+              🛠️ Hizmet / usta bulmam gerekiyor
+            </button>
+
+          </div>
+
         </div>
+
       </div>
     `);
   }
+
+  /* =========================================================
+     İŞLEM MENÜSÜ
+     ========================================================= */
 
   function showIslemMenu() {
     render(`
       <div class="hf-wrap">
-        <button class="hf-back" onclick="Hallet.showGate()">← Geri</button>
+
+        <button
+          class="hf-back"
+          onclick="Hallet.showGate()"
+        >
+          ← Geri
+        </button>
 
         <div class="hf-card">
-          <h2>Hangi işlemi yapmak istiyorsun?</h2>
 
-          <button class="hf-choice" onclick="Hallet.showTasinmazMenu()">
-            🏠 Taşınmaz işlemleri
-          </button>
+          <h2>
+            Hangi işlemi yapmak istiyorsun?
+          </h2>
 
-          <button class="hf-choice" onclick="Hallet.showMessage('Diğer işlem türleri sonraki aşamada eklenecek.')">
-            📑 Diğer işlemler
-          </button>
+          <div class="hf-options">
+
+            <button
+              class="hf-choice"
+              onclick="Hallet.showTasinmazMenu()"
+            >
+              🏠 Taşınmaz işlemleri
+            </button>
+
+            <button
+              class="hf-choice"
+              onclick="Hallet.showMessage('Diğer işlem türleri sonraki aşamada eklenecek.')"
+            >
+              📑 Diğer işlemler
+            </button>
+
+          </div>
+
         </div>
+
       </div>
     `);
   }
+
+  /* =========================================================
+     TAŞINMAZ MENÜSÜ
+     ========================================================= */
 
   function showTasinmazMenu() {
     render(`
       <div class="hf-wrap">
-        <button class="hf-back" onclick="Hallet.showIslemMenu()">← Geri</button>
+
+        <button
+          class="hf-back"
+          onclick="Hallet.showIslemMenu()"
+        >
+          ← Geri
+        </button>
 
         <div class="hf-card">
-          <h2>Taşınmaz işlemi</h2>
 
-          <button class="hf-choice" onclick="Hallet.showKonutSatis()">
-            🏠 Konut / taşınmaz satışı
-          </button>
+          <h2>
+            Taşınmaz işlemi
+          </h2>
 
-          <button class="hf-choice" onclick="Hallet.showMessage('Taşınmaz satın alma akışı sonraki aşamada eklenecek.')">
-            🏡 Taşınmaz satın alma
-          </button>
+          <div class="hf-options">
+
+            <button
+              class="hf-choice"
+              onclick="Hallet.showKonutSatis()"
+            >
+              🏠 Konut / taşınmaz satışı
+            </button>
+
+            <button
+              class="hf-choice"
+              onclick="Hallet.showMessage('Taşınmaz satın alma akışı sonraki aşamada eklenecek.')"
+            >
+              🏡 Taşınmaz satın alma
+            </button>
+
+          </div>
+
         </div>
+
       </div>
     `);
   }
+
+  /* =========================================================
+     KONUT SATIŞI
+     ========================================================= */
 
   function showKonutSatis() {
     state.step = 0;
@@ -487,6 +1217,10 @@
 
     showQuestion();
   }
+
+  /* =========================================================
+     SORU EKRANI
+     ========================================================= */
 
   function showQuestion() {
     const q = questions[state.step];
@@ -503,58 +1237,85 @@
     let input = "";
 
     if (q.type === "choice") {
-      input = q.options.map(([value, label]) => `
-        <button
-          class="hf-choice"
-          onclick="Hallet.choose('${esc(value)}')">
-          ${esc(label)}
-        </button>
-      `).join("");
+      input = `
+        <div class="hf-options">
+          ${q.options.map(([value, label]) => `
+            <button
+              type="button"
+              class="hf-choice"
+              onclick="Hallet.choose('${esc(value)}')"
+            >
+              ${esc(label)}
+            </button>
+          `).join("")}
+        </div>
+      `;
     }
 
     if (q.type === "date") {
       input = `
-        <input
-          id="hf-input"
-          class="hf-input"
-          type="date"
-          value="${esc(state.answers[q.key] || "")}"
-        >
+        <div class="hf-options">
 
-        <button class="hf-choice" onclick="Hallet.submitInput()">
-          Devam et →
-        </button>
+          <input
+            id="hf-input"
+            class="hf-input"
+            type="date"
+            value="${esc(state.answers[q.key] || "")}"
+          >
+
+          <button
+            type="button"
+            class="hf-choice"
+            onclick="Hallet.submitInput()"
+          >
+            Devam et →
+          </button>
+
+        </div>
       `;
     }
 
     if (q.type === "number") {
       input = `
-        <input
-          id="hf-input"
-          class="hf-input"
-          type="number"
-          min="0"
-          step="1"
-          placeholder="${esc(q.placeholder)}"
-          value="${esc(state.answers[q.key] || "")}"
-        >
+        <div class="hf-options">
 
-        <button class="hf-choice" onclick="Hallet.submitInput()">
-          Devam et →
-        </button>
+          <input
+            id="hf-input"
+            class="hf-input"
+            type="number"
+            min="0"
+            step="1"
+            inputmode="decimal"
+            placeholder="${esc(q.placeholder)}"
+            value="${esc(state.answers[q.key] || "")}"
+          >
+
+          <button
+            type="button"
+            class="hf-choice"
+            onclick="Hallet.submitInput()"
+          >
+            Devam et →
+          </button>
+
+        </div>
       `;
     }
 
     render(`
       <div class="hf-wrap">
 
-        <button class="hf-back" onclick="Hallet.back()">
+        <button
+          type="button"
+          class="hf-back"
+          onclick="Hallet.back()"
+        >
           ← Geri
         </button>
 
-        <div class="hf-card">
+        <div class="hf-question-card">
 
-          <div style="font-size:13px;color:#687572;">
+          <div class="hf-step">
             Adım ${state.step + 1} / ${questions.length}
           </div>
 
@@ -562,7 +1323,9 @@
             <div style="width:${percent}%"></div>
           </div>
 
-          <h2>${esc(q.title)}</h2>
+          <h2 class="hf-question-title">
+            ${esc(q.title)}
+          </h2>
 
           ${input}
 
@@ -570,10 +1333,31 @@
 
       </div>
     `);
+
+    /*
+     * Input varsa otomatik odak.
+     */
+    if (q.type === "date" || q.type === "number") {
+      setTimeout(() => {
+        const inputEl = document.getElementById("hf-input");
+
+        if (inputEl) {
+          inputEl.focus();
+        }
+      }, 50);
+    }
   }
+
+  /* =========================================================
+     CEVAP
+     ========================================================= */
 
   function choose(value) {
     const q = questions[state.step];
+
+    if (!q) {
+      return;
+    }
 
     state.answers[q.key] = value;
 
@@ -582,18 +1366,33 @@
     showQuestion();
   }
 
+  /* =========================================================
+     INPUT CEVABI
+     ========================================================= */
+
   function submitInput() {
     const q = questions[state.step];
+
+    if (!q) {
+      return;
+    }
+
     const input = document.getElementById("hf-input");
 
     if (!input || !input.value) {
-      input?.focus();
+      if (input) {
+        input.focus();
+      }
+
       return;
     }
 
     if (
       q.type === "number" &&
-      (!Number.isFinite(Number(input.value)) || Number(input.value) < 0)
+      (
+        !Number.isFinite(Number(input.value)) ||
+        Number(input.value) < 0
+      )
     ) {
       input.focus();
       return;
@@ -606,6 +1405,10 @@
     showQuestion();
   }
 
+  /* =========================================================
+     GERİ
+     ========================================================= */
+
   function back() {
     if (state.step <= 0) {
       showTasinmazMenu();
@@ -617,8 +1420,14 @@
     showQuestion();
   }
 
+  /* =========================================================
+     5 YIL KONTROLÜ
+     ========================================================= */
+
   function withinFiveYears(value) {
-    if (!value) return null;
+    if (!value) {
+      return null;
+    }
 
     const acquired = new Date(`${value}T12:00:00`);
 
@@ -628,10 +1437,16 @@
 
     const limit = new Date(acquired);
 
-    limit.setFullYear(limit.getFullYear() + 5);
+    limit.setFullYear(
+      limit.getFullYear() + 5
+    );
 
     return new Date() < limit;
   }
+
+  /* =========================================================
+     VERGİ DEĞERLENDİRMESİ
+     ========================================================= */
 
   function taxAssessment() {
     const a = state.answers;
@@ -648,7 +1463,9 @@
       };
     }
 
-    const fiveYears = withinFiveYears(a.acquisition_date);
+    const fiveYears = withinFiveYears(
+      a.acquisition_date
+    );
 
     if (
       a.acquisition_type === "purchase" &&
@@ -682,20 +1499,30 @@
     };
   }
 
+  /* =========================================================
+     SONUÇ SATIRI
+     ========================================================= */
+
   function item(icon, cls, title, text) {
     return `
       <div class="hf-item">
+
         <div class="hf-icon ${cls}">
-          ${icon}
+          ${esc(icon)}
         </div>
 
         <div class="hf-text">
           <strong>${esc(title)}</strong>
           <span>${esc(text)}</span>
         </div>
+
       </div>
     `;
   }
+
+  /* =========================================================
+     İŞLEM DOSYASI
+     ========================================================= */
 
   function showResult() {
     const a = state.answers;
@@ -795,7 +1622,10 @@
     completed.push([
       "✓",
       "Edinim şekli",
-      answerLabel("acquisition_type", a.acquisition_type)
+      answerLabel(
+        "acquisition_type",
+        a.acquisition_type
+      )
     ]);
 
     if (a.buyer_ready === "yes") {
@@ -882,34 +1712,69 @@
           <div class="hf-meta">
             Ön kontrol tamamlandı<br>
             Dosya No: ${esc(state.caseId)}<br>
-            Oluşturulma: ${esc(dateText(new Date(state.createdAt).toISOString().slice(0,10)))}
+            Oluşturulma:
+            ${esc(
+              state.createdAt
+                ? new Intl.DateTimeFormat("tr-TR", {
+                    dateStyle: "short",
+                    timeStyle: "short"
+                  }).format(state.createdAt)
+                : "Belirtilmedi"
+            )}
           </div>
 
           <div class="hf-grid">
 
             <div class="hf-stat">
-              <div class="hf-stat-label">SATICI</div>
+              <div class="hf-stat-label">
+                SATICI
+              </div>
+
               <div class="hf-stat-value">
-                ${esc(answerLabel("seller_type", a.seller_type))}
+                ${esc(
+                  answerLabel(
+                    "seller_type",
+                    a.seller_type
+                  )
+                )}
               </div>
             </div>
 
             <div class="hf-stat">
-              <div class="hf-stat-label">TAŞINMAZ</div>
+              <div class="hf-stat-label">
+                TAŞINMAZ
+              </div>
+
               <div class="hf-stat-value">
-                ${esc(answerLabel("property_location", a.property_location))}
+                ${esc(
+                  answerLabel(
+                    "property_location",
+                    a.property_location
+                  )
+                )}
               </div>
             </div>
 
             <div class="hf-stat">
-              <div class="hf-stat-label">EDİNİM</div>
+              <div class="hf-stat-label">
+                EDİNİM
+              </div>
+
               <div class="hf-stat-value">
-                ${esc(answerLabel("acquisition_type", a.acquisition_type))}
+                ${esc(
+                  answerLabel(
+                    "acquisition_type",
+                    a.acquisition_type
+                  )
+                )}
               </div>
             </div>
 
             <div class="hf-stat">
-              <div class="hf-stat-label">SATIŞ BEDELİ</div>
+              <div class="hf-stat-label">
+                SATIŞ BEDELİ
+              </div>
+
               <div class="hf-stat-value">
                 ${esc(money(a.sale_price))}
               </div>
@@ -920,24 +1785,46 @@
         </div>
 
         <div class="hf-card">
-          <h3>✓ Tamamlananlar</h3>
+
+          <h3>
+            ✓ Tamamlananlar
+          </h3>
 
           ${
             completed.length
               ? completed.map(x =>
-                  item(x[0], "hf-ok", x[1], x[2])
+                  item(
+                    x[0],
+                    "hf-ok",
+                    x[1],
+                    x[2]
+                  )
                 ).join("")
-              : item("i", "hf-info", "Henüz yok", "Kontroller tamamlanmadı.")
+              : item(
+                  "i",
+                  "hf-info",
+                  "Henüz yok",
+                  "Kontroller tamamlanmadı."
+                )
           }
+
         </div>
 
         <div class="hf-card">
-          <h3>⚠ Kontrol Edilmesi Gerekenler</h3>
+
+          <h3>
+            ⚠ Kontrol Edilmesi Gerekenler
+          </h3>
 
           ${
             warnings.length
               ? warnings.map(x =>
-                  item(x[0], "hf-warn", x[1], x[2])
+                  item(
+                    x[0],
+                    "hf-warn",
+                    x[1],
+                    x[2]
+                  )
                 ).join("")
               : item(
                   "✓",
@@ -946,11 +1833,14 @@
                   "Yine de işlem öncesinde resmî kayıtlar doğrulanmalı."
                 )
           }
+
         </div>
 
         <div class="hf-card">
 
-          <h3>₺ Vergi Kontrolü</h3>
+          <h3>
+            ₺ Vergi Kontrolü
+          </h3>
 
           ${item(
             taxIcon,
@@ -971,18 +1861,21 @@
           }
 
           <div class="hf-disclaimer">
-            2026 yılında değer artış kazancı istisna tutarı 150.000 TL'dir.
-            Ancak vergi sonucu yalnızca satış bedeline bakılarak belirlenmez;
-            edinim tarihi, edinim bedeli, satış bedeli, giderler ve gerekli
-            endeksleme gibi unsurlar dikkate alınır.
-            Bu ekran kesin vergi hesabı yapmaz.
+            2026 yılında değer artış kazancı istisna tutarı
+            150.000 TL'dir. Ancak vergi sonucu yalnızca satış
+            bedeline bakılarak belirlenmez; edinim tarihi, edinim
+            bedeli, satış bedeli, giderler ve gerekli endeksleme
+            gibi unsurlar dikkate alınır. Bu ekran kesin vergi
+            hesabı yapmaz.
           </div>
 
         </div>
 
         <div class="hf-card">
 
-          <h3>→ Sonraki Adımlar</h3>
+          <h3>
+            → Sonraki Adımlar
+          </h3>
 
           ${steps.map((text, i) =>
             item(
@@ -997,7 +1890,9 @@
 
         <div class="hf-card">
 
-          <h3>📌 Dosya Özeti</h3>
+          <h3>
+            📌 Dosya Özeti
+          </h3>
 
           ${item(
             "•",
@@ -1010,48 +1905,67 @@
             "•",
             "hf-info",
             "Edinim şekli",
-            answerLabel("acquisition_type", a.acquisition_type)
+            answerLabel(
+              "acquisition_type",
+              a.acquisition_type
+            )
           )}
 
           ${item(
             "•",
             "hf-info",
             "Alıcı durumu",
-            answerLabel("buyer_ready", a.buyer_ready)
+            answerLabel(
+              "buyer_ready",
+              a.buyer_ready
+            )
           )}
 
           ${item(
             "•",
             "hf-info",
             "Bina durumu",
-            answerLabel("building", a.building)
+            answerLabel(
+              "building",
+              a.building
+            )
           )}
 
         </div>
 
         <div class="hf-disclaimer">
-          <b>Önemli:</b> Bu İşlem Dosyası, verdiğin cevaplara göre hazırlanmış
-          bir ön değerlendirmedir. Kesin belge, harç, vergi ve işlem sonucu
-          güncel TKGM, GİB ve ilgili kurum kayıtları üzerinden doğrulanmalıdır.
+
+          <b>Önemli:</b>
+          Bu İşlem Dosyası, verdiğin cevaplara göre hazırlanmış
+          bir ön değerlendirmedir. Kesin belge, harç, vergi ve
+          işlem sonucu güncel TKGM, GİB ve ilgili kurum kayıtları
+          üzerinden doğrulanmalıdır.
+
         </div>
 
         <div class="hf-actions">
 
           <button
+            type="button"
             class="hf-btn hf-primary"
-            onclick="Hallet.showMessage('İşlem Dosyası kayıt altyapısı bir sonraki aşamada Supabase\\'e bağlanacak.')">
+            onclick="Hallet.showMessage('İşlem Dosyası kayıt altyapısı bir sonraki aşamada Supabase\\'e bağlanacak.')"
+          >
             💾 Dosyayı Kaydet
           </button>
 
           <button
+            type="button"
             class="hf-btn hf-secondary"
-            onclick="Hallet.showKonutSatis()">
+            onclick="Hallet.showKonutSatis()"
+          >
             ↺ Cevapları Düzenle
           </button>
 
           <button
+            type="button"
             class="hf-btn hf-secondary"
-            onclick="Hallet.showGate()">
+            onclick="Hallet.showGate()"
+          >
             Ana Menü
           </button>
 
@@ -1061,27 +1975,71 @@
     `);
   }
 
+  /* =========================================================
+     MESAJ
+     ========================================================= */
+
   function showMessage(message) {
     render(`
       <div class="hf-wrap">
-        <div class="hf-card" style="text-align:center;padding:35px 20px;">
 
-          <div style="font-size:40px;">✓</div>
+        <div
+          class="hf-card"
+          style="
+            text-align:center;
+            padding:35px 20px !important;
+          "
+        >
 
-          <h2>${esc(message)}</h2>
+          <div
+            style="
+              font-size:40px;
+              line-height:1;
+              margin-bottom:15px;
+            "
+          >
+            ✓
+          </div>
 
-          <button
-            class="hf-choice"
-            onclick="Hallet.showGate()">
-            Ana menüye dön
-          </button>
+          <h2
+            style="
+              text-align:center !important;
+              font-size:20px !important;
+            "
+          >
+            ${esc(message)}
+          </h2>
+
+          <div class="hf-options">
+
+            <button
+              type="button"
+              class="hf-choice"
+              onclick="Hallet.showGate()"
+            >
+              Ana menüye dön
+            </button>
+
+          </div>
 
         </div>
+
       </div>
     `);
   }
 
+  /* =========================================================
+     İŞİMİ ÇÖZ'E GERİ DÖNÜŞ
+     ========================================================= */
+
   function goIsimiCoz() {
+    closeRoot();
+
+    /*
+     * Önce mevcut uygulamanın ana ekran fonksiyonlarını
+     * kullanıyoruz.
+     */
+
     if (typeof window.showHome === "function") {
       window.showHome();
       return;
@@ -1092,10 +2050,19 @@
       return;
     }
 
+    /*
+     * Hiçbiri yoksa kullanıcıya bilgi göster.
+     */
+    openRoot();
+
     showMessage(
       "İşimi Çöz modülü mevcut uygulamanın ana ekranından açılabilir."
     );
   }
+
+  /* =========================================================
+     DIŞ API
+     ========================================================= */
 
   window.Hallet = {
     showGate,
