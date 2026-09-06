@@ -460,7 +460,8 @@ async function updateCaseStep(key){
  const nextStatus=step.status==='completed'?'pending':'completed';
  step.status=nextStatus; step.completed_at=nextStatus==='completed'?new Date().toISOString():null;
  try{
-  await supabaseAuthRequest('PATCH','hallet_case_steps?id=eq.'+encodeURIComponent(step.id),{status:step.status,completed_at:step.completed_at,updated_at:new Date().toISOString()});
+  const updated=await supabaseAuthRequest('PATCH','hallet_case_steps?case_id=eq.'+encodeURIComponent(H.dbId)+'&step_key=eq.'+encodeURIComponent(step.step_key)+'&select=id,step_key,status,completed_at',{status:step.status,completed_at:step.completed_at,updated_at:new Date().toISOString()});
+  if(!Array.isArray(updated)||!updated.length)throw new Error('İşlem adımı veritabanında güncellenemedi.');
  }catch(e){console.warn('Adım kaydı başarısız; ekran durumu korunuyor.',e);}
  result(fromSaved);
 }
