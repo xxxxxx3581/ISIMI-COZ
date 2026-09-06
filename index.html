@@ -453,6 +453,8 @@ function buildCasePayload(){
    customer_id:getAuthSession()?.user?.id||null,
    district:a.district||null,
    city:a.city||'İzmir',
+   created_at:H.createdAt||new Date().toISOString(),
+   updated_at:new Date().toISOString(),
    metadata:{
      case_no:H.caseId,
      module:'tasinmaz',
