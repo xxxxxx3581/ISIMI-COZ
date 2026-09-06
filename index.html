@@ -424,7 +424,7 @@ updateAuthArea();
    ========================================================= */
 (function(){
 'use strict';
-const H={step:0,answers:{},caseId:null,createdAt:null};
+const H={step:0,answers:{},caseId:null,createdAt:null,dbId:null};
 function buildCasePayload(){
  const a=H.answers;
  const sale=Number(a.sale_price)||0;
@@ -445,10 +445,23 @@ function buildCasePayload(){
  let fivePassed=false;
  if(a.acquisition_date){const d=new Date(a.acquisition_date+'T00:00:00');if(!Number.isNaN(d.getTime())){const x=new Date(d);x.setFullYear(x.getFullYear()+5);fivePassed=new Date()>=x;if(!fivePassed&&a.acquisition_type==='purchase')warnings.push('5 yıllık süre dolmadan satışta değer artış kazancı yönünden vergi değerlendirmesi gerekebilir.');}}
  return {
-   case_no:H.caseId, user_id:getAuthSession()?.user?.id||null, module:'tasinmaz', transaction_type:'konut_satisi', status:'draft',
-   answers:a,
-   calculations:{sale_price:sale,acquisition_price:purchase,gross_difference:grossGain,seller_tapu_harci:sellerFee,buyer_tapu_harci:buyerFee,total_tapu_harci:totalFee,five_years_passed:fivePassed},
-   warnings, source_note:'Bu dosya ön kontrol aracıdır; resmi başvuru sırasında TKGM’nin güncel koşulları esas alınmalıdır.'
+   case_type:'tasinmaz_konut_satisi',
+   status:'draft',
+   title:'Konut satışı',
+   summary:'İşini Hallet ön kontrol dosyası — konut satışı',
+   user_id:getAuthSession()?.user?.id||null,
+   customer_id:getAuthSession()?.user?.id||null,
+   district:a.district||null,
+   city:a.city||'İzmir',
+   metadata:{
+     case_no:H.caseId,
+     module:'tasinmaz',
+     transaction_type:'konut_satisi',
+     answers:a,
+     calculations:{sale_price:sale,acquisition_price:purchase,gross_difference:grossGain,seller_tapu_harci:sellerFee,buyer_tapu_harci:buyerFee,total_tapu_harci:totalFee,five_years_passed:fivePassed},
+     warnings,
+     source_note:'Bu dosya ön kontrol aracıdır; resmi başvuru sırasında TKGM’nin güncel koşulları esas alınmalıdır.'
+   }
  };
 }
 async function saveCase(){
@@ -459,8 +472,15 @@ async function saveCase(){
  if(btn){btn.disabled=true;btn.textContent='KAYDEDİLİYOR...';}
  try{
    const payload=buildCasePayload();
-   const rows=await supabaseAuthRequest('POST','hallet_cases?on_conflict=case_no',payload);
-   H.createdAt=rows?.[0]?.created_at||H.createdAt||new Date().toISOString();
+   let rows;
+   if(H.dbId){
+     rows=await supabaseAuthRequest('PATCH','hallet_cases?id=eq.'+encodeURIComponent(H.dbId),payload);
+   }else{
+     rows=await supabaseAuthRequest('POST','hallet_cases',payload);
+   }
+   const row=Array.isArray(rows)?rows[0]:rows;
+   H.dbId=row?.id||H.dbId;
+   H.createdAt=row?.created_at||H.createdAt||new Date().toISOString();
    if(btn){btn.textContent='✓ DOSYA KAYDEDİLDİ';btn.disabled=true;btn.classList.add('saved');}
    alert('İşlem dosyan Supabase hesabına kaydedildi. ✓\n\nDosya No: '+H.caseId);
  }catch(e){
