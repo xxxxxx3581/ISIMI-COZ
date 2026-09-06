@@ -451,7 +451,8 @@ function buildCasePayload(){
  const a=H.answers;
  const sale=Number(a.sale_price)||0;
  const purchase=Number(a.acquisition_price)||0;
- const harcBase=Math.max(sale,0);
+ const municipalValue=Number(a.municipal_tax_value)||0;
+ const harcBase=Math.max(sale,municipalValue,0);
  const sellerFee=harcBase*0.02;
  const buyerFee=harcBase*0.02;
  const totalFee=harcBase*0.04;
@@ -466,6 +467,8 @@ function buildCasePayload(){
  if(a.buyer_ready!=='yes')warnings.push('Alıcının hazır olmaması işlem zamanlamasını etkileyebilir.');
  let fivePassed=false;
  if(a.acquisition_date){const d=new Date(a.acquisition_date+'T00:00:00');if(!Number.isNaN(d.getTime())){const x=new Date(d);x.setFullYear(x.getFullYear()+5);fivePassed=new Date()>=x;if(!fivePassed&&a.acquisition_type==='purchase')warnings.push('5 yıllık süre dolmadan satışta değer artış kazancı yönünden vergi değerlendirmesi gerekebilir.');}}
+ const capitalGainRelevant=!fivePassed&&a.acquisition_type!=='inheritance'&&a.acquisition_type!=='gift';
+ if(sale>0&&municipalValue>0&&sale<municipalValue)warnings.push('Beyan edilen satış bedeli emlak vergisi değerinden düşük görünüyor; tapu harcı ön hesabında daha yüksek değer esas alınmıştır.');
  return {
    case_type:'konut_satisi',
    status:'draft',
@@ -482,10 +485,11 @@ function buildCasePayload(){
      module:'tasinmaz',
      transaction_type:'konut_satisi',
      answers:a,
-     calculations:{sale_price:sale,acquisition_price:purchase,gross_difference:grossGain,seller_tapu_harci:sellerFee,buyer_tapu_harci:buyerFee,total_tapu_harci:totalFee,five_years_passed:fivePassed},
+     calculations:{sale_price:sale,municipal_tax_value:municipalValue,harc_base:harcBase,acquisition_price:purchase,gross_difference:grossGain,seller_tapu_harci:sellerFee,buyer_tapu_harci:buyerFee,total_tapu_harci:totalFee,five_years_passed:fivePassed,capital_gain_relevant:capitalGainRelevant},
      warnings,
      documents:H.documents,
      document_summary:documentSummary(getDocumentChecklist(a)),
+     rule_engine:{version:'v2',checked_at:new Date().toISOString(),capital_gain_relevant:capitalGainRelevant,tapu_harci_base:harcBase},
      source_note:'Bu dosya ön kontrol aracıdır; resmi başvuru sırasında TKGM’nin güncel koşulları esas alınmalıdır.'
    }
  };
@@ -526,6 +530,7 @@ const QUESTIONS=[
  {key:'acquisition_type',title:'Taşınmazı nasıl edindiniz?',options:[['purchase','Satın alma'],['inheritance','Miras'],['gift','Bağış'],['other','Diğer']]},
  {key:'buyer_ready',title:'Alıcı satış işlemine hazır mı?',options:[['yes','Evet'],['no','Hayır']]},
  {key:'sale_price',title:'Satış bedeli nedir?',type:'number',placeholder:'TL olarak yazın'},
+ {key:'municipal_tax_value',title:'Taşınmazın emlak vergisi değeri nedir?',type:'number',placeholder:'Biliyorsanız TL olarak yazın'},
  {key:'acquisition_price',title:'Taşınmazı kaç TL bedelle edindiniz?',type:'number',placeholder:'Biliniyorsa TL olarak yazın'},
  {key:'building',title:'Taşınmaz üzerinde bina/yapı var mı?',options:[['yes','Evet'],['no','Hayır']]}
 ];
@@ -593,20 +598,22 @@ function result(fromSaved=false){
  if(a.acquisition_date){const d=new Date(a.acquisition_date+'T00:00:00');if(!Number.isNaN(d.getTime())){const x=new Date(d);x.setFullYear(x.getFullYear()+5);fivePassed=new Date()>=x;five=fivePassed?'5 yıllık süre dolmuş görünüyor.':'5 yıllık süre henüz dolmamış görünüyor.';if(!fivePassed&&a.acquisition_type==='purchase')warnings.push('5 yıllık süre dolmadan satışta değer artış kazancı yönünden vergi değerlendirmesi gerekebilir.');}}
  const sale=Number(a.sale_price)||0;
  const purchase=Number(a.acquisition_price)||0;
- const harcBase=Math.max(sale,0);
+ const municipalValue=Number(a.municipal_tax_value)||0;
+ const harcBase=Math.max(sale,municipalValue,0);
  const sellerFee=harcBase*0.02;
  const buyerFee=harcBase*0.02;
  const totalFee=harcBase*0.04;
  const grossGain=(sale>0&&purchase>0)?sale-purchase:null;
+ const capitalGainRelevant=!fivePassed&&a.acquisition_type!=='inheritance'&&a.acquisition_type!=='gift';
  const docs=getDocumentChecklist(a);
  const docState=documentSummary(docs);
  const action=nextAction(a,docState);
- const officialNote='Bu dosya ön kontrol aracıdır; resmi başvuru sırasında TKGM’nin güncel koşulları esas alınmalıdır.';
+ const officialNote='Bu dosya ön kontrol aracıdır. Tapu işlemlerinde TKGM’nin güncel koşulları; değer artış kazancında GİB’in güncel hesaplama ve beyan kuralları esas alınmalıdır.';
  render(top('close')+'<div class="hc"><div class="hk">İşlem dosyası</div><h1>Satış dosyan hazır.</h1><p class="hm">Ön kontrol tamamlandı. Aşağıdaki sonuçlar verdiğin bilgilere göre oluşturuldu.</p>'+
- '<div class="hl"><div class="li"><strong>Dosya no:</strong> '+esc(H.caseId)+'</div><div class="li"><strong>Satış bedeli:</strong> '+money(sale)+'</div><div class="li"><strong>Edinim tarihi:</strong> '+dateText(a.acquisition_date)+'</div><div class="li"><strong>5 yıllık süre:</strong> '+esc(five)+'</div></div>'+
+ '<div class="hl"><div class="li"><strong>Dosya no:</strong> '+esc(H.caseId)+'</div><div class="li"><strong>Satış bedeli:</strong> '+money(sale)+'</div><div class="li"><strong>Emlak vergisi değeri:</strong> '+(municipalValue?money(municipalValue):'Belirtilmedi')+'</div><div class="li"><strong>Edinim tarihi:</strong> '+dateText(a.acquisition_date)+'</div><div class="li"><strong>5 yıllık süre:</strong> '+esc(five)+'</div></div>'+
  '<h2>Gerekli belgeler</h2><p class="hm small">Hazır olan belgeleri işaretle. Bu işaretler dosya takibidir; belge yüklemesi anlamına gelmez.</p><div class="li"><strong>Dosya ilerlemesi:</strong> '+docState.percent+'% <span class="hm">('+docState.ready+' / '+docState.total+' belge hazır)</span><div class="progressTrack"><span style="width:'+docState.percent+'%"></span></div></div><div class="hl">'+docs.map(d=>'<label class="docItem"><input type="checkbox" data-a="docToggle" data-k="'+esc(d.key)+'" '+(H.documents[d.key]===true?'checked':'')+'><span><strong>'+esc(d.title)+'</strong><br><span class="hm">'+esc(d.reason)+'</span><br><span class="docStatus">'+(H.documents[d.key]===true?'✓ Hazır':'○ Eksik / bekleniyor')+'</span></span></label>').join('')+'</div><div class="li"><strong>Belge durumu:</strong> '+docState.ready+' / '+docState.total+' hazır'+(docState.complete?' — ✓ Tamamlandı':' — eksikler var')+'</div>'+
- '<h2>Tapu harcı ön hesabı</h2><div class="hl"><div class="li"><strong>Satıcı:</strong> '+money(sellerFee)+' <span class="hm">(%2)</span></div><div class="li"><strong>Alıcı:</strong> '+money(buyerFee)+' <span class="hm">(%2)</span></div><div class="li"><strong>Toplam:</strong> '+money(totalFee)+' <span class="hm">(%4)</span></div></div><p class="hm small">Harç, satış için beyan edilen değerin emlak vergisi değerinden düşük olmaması esasıyla hesaplanır. Bu hesap döner sermaye ücretini içermez.</p>'+
- '<h2>Değer artış kazancı ön kontrolü</h2><div class="hl"><div class="li"><strong>Durum:</strong> '+esc(fivePassed?'5 yıllık süre dolmuş görünüyor.':'5 yıllık süre dolmamış / kontrol gerekli.')+'</div>'+(grossGain!==null&&!fivePassed?'<div class="li"><strong>Satış − alış farkı:</strong> '+money(grossGain)+'<br><span class="hm">Bu tutar nihai vergi matrahı değildir. 2026 için GİB kuralları kapsamında endeksleme, giderler ve 150.000 TL istisna gibi unsurlar ayrıca değerlendirilmelidir.</span></div>':'<div class="li"><span class="hm">Nihai değer artış kazancı hesabı için alış bedeli, edinim/satış tarihleri, endeksleme ve indirilebilir giderler ayrıca değerlendirilmelidir.</span></div>')+'</div>'+
+ '<h2>Tapu harcı ön hesabı</h2><div class="hl"><div class="li"><strong>Harç matrahı:</strong> '+money(harcBase)+'</div><div class="li"><strong>Satıcı:</strong> '+money(sellerFee)+' <span class="hm">(%2)</span></div><div class="li"><strong>Alıcı:</strong> '+money(buyerFee)+' <span class="hm">(%2)</span></div><div class="li"><strong>Toplam:</strong> '+money(totalFee)+' <span class="hm">(%4)</span></div></div><p class="hm small">Ön hesap, beyan edilen satış bedeli ile belirtilen emlak vergisi değerinin yüksek olanını esas alır. Döner sermaye ücreti dahil değildir; resmi bildirimdeki güncel tutarlar esas alınmalıdır.</p>'+
+ '<h2>Değer artış kazancı ön kontrolü</h2><div class="hl"><div class="li"><strong>Durum:</strong> '+esc(fivePassed?'5 yıllık süre dolmuş görünüyor.':(a.acquisition_type==='inheritance'||a.acquisition_type==='gift'?'Miras/bağış edinimi: bu satış değer artış kazancı kapsamı dışında değerlendirilebilir.':'5 yıllık süre dolmamış / kontrol gerekli.'))+'</div>'+(capitalGainRelevant&&grossGain!==null?'<div class="li"><strong>Satış − alış farkı:</strong> '+money(grossGain)+'<br><span class="hm">Bu yalnızca brüt farktır; nihai vergi matrahı değildir. GİB hesabında Yİ-ÜFE endekslemesi (%10 şartı), indirilebilir giderler ve satış yılının istisnası ayrıca dikkate alınır.</span></div>':'<div class="li"><span class="hm">Bu dosyada değer artış kazancı yönünden ön kontrol yapıldı; nihai vergi hesabı için GİB kuralları ve güncel veriler esas alınmalıdır.</span></div>')+'</div>'+
  '<h2>Şimdi ne yapmalısın?</h2><div class="li"><strong>'+esc(action.title)+'</strong><br><span class="hm">'+esc(action.detail)+'</span></div><h2>Sonraki adımlar</h2><div class="hl"><div class="li">1. Güncel tapu kaydı ve taraf bilgilerini doğrula.</div><div class="li">2. Gerekli belgeleri hazırla ve temsil/takyidat durumunu kontrol et.</div><div class="li">3. Tapu başvurusunu Web Tapu veya yetkili tapu kanalı üzerinden başlat.</div><div class="li">4. Harç ve döner sermaye ödemelerini resmi bildirim üzerinden kontrol et.</div><div class="li">5. İşlem tamamlandığında belgeleri dosyana ekle.</div></div>'+
  (warnings.length?'<h2>Uyarılar</h2><div class="hl">'+warnings.map(w=>'<div class="li"><span class="warn">⚠</span> '+esc(w)+'</div>').join('')+'</div>':'<div class="li"><span class="ok">✓</span> Bu cevaplarla kritik bir uyarı tespit edilmedi.</div>')+
  '<div class="li" style="margin-top:14px"><strong>Resmî kaynak notu:</strong><br><span class="hm">'+esc(officialNote)+'</span></div><div class="hg">'+(fromSaved?'<button class="hb hp" data-a="cases">← DOSYALARIMA DÖN</button>':'<button class="hb hp" data-a="savecase">DOSYAYI KAYDET</button>')+'<button class="hb" data-a="new">Yeni işlem başlat</button><button class="hb hs" data-a="close">Kapat</button></div></div>')
