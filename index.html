@@ -455,14 +455,45 @@ async function ensureCaseSteps(){
 }
 async function updateCaseStep(key){
  const fromSaved=!!H.dbId;
- if(!H.dbId){const step=H.caseSteps.find(x=>x.step_key===key);if(step){step.status=step.status==='completed'?'pending':'completed';step.completed_at=step.status==='completed'?new Date().toISOString():null;}return result(false);}
- const step=H.caseSteps.find(x=>x.step_key===key); if(!step)return;
- const nextStatus=step.status==='completed'?'pending':'completed';
- step.status=nextStatus; step.completed_at=nextStatus==='completed'?new Date().toISOString():null;
+ const step=H.caseSteps.find(x=>x.step_key===key);
+ if(!step)return;
+ const previousStatus=step.status||'pending';
+ const previousCompletedAt=step.completed_at||null;
+ const nextStatus=previousStatus==='completed'?'pending':'completed';
+ const nextCompletedAt=nextStatus==='completed'?new Date().toISOString():null;
+ if(!H.dbId){
+  step.status=nextStatus;
+  step.completed_at=nextCompletedAt;
+  return result(false);
+ }
+ if(!step.id){
+  await loadCaseSteps();
+ }
+ const target=H.caseSteps.find(x=>x.step_key===key);
+ if(!target||!target.id){
+  console.warn('İşlem adımı kimliği bulunamadı.');
+  return result(true);
+ }
+ target.status=nextStatus;
+ target.completed_at=nextCompletedAt;
  try{
-  const updated=await supabaseAuthRequest('PATCH','hallet_case_steps?case_id=eq.'+encodeURIComponent(H.dbId)+'&step_key=eq.'+encodeURIComponent(step.step_key)+'&select=id,step_key,status,completed_at',{status:step.status,completed_at:step.completed_at,updated_at:new Date().toISOString()});
+  const updated=await supabaseAuthRequest(
+   'PATCH',
+   'hallet_case_steps?id=eq.'+encodeURIComponent(target.id)+'&select=id,step_key,status,completed_at,updated_at',
+   {status:nextStatus,completed_at:nextCompletedAt,updated_at:new Date().toISOString()}
+  );
   if(!Array.isArray(updated)||!updated.length)throw new Error('İşlem adımı veritabanında güncellenemedi.');
- }catch(e){console.warn('Adım kaydı başarısız; ekran durumu korunuyor.',e);}
+  const saved=updated[0];
+  if(saved.status!==nextStatus){throw new Error('İşlem adımı durumu doğrulanamadı.');}
+  target.status=saved.status;
+  target.completed_at=saved.completed_at||null;
+ }catch(e){
+  target.status=previousStatus;
+  target.completed_at=previousCompletedAt;
+  console.error('İşlem adımı kaydedilemedi:',e);
+  const c=document.querySelector('#hallet-root .hc');
+  if(c&&!c.querySelector('.err'))c.insertAdjacentHTML('beforeend','<div class="err">İşlem adımı kaydedilemedi. Lütfen tekrar deneyin.</div>');
+ }
  result(fromSaved);
 }
 function stepSummary(){const steps=H.caseSteps&&H.caseSteps.length?H.caseSteps:defaultCaseSteps();const done=steps.filter(x=>x.status==='completed').length;return {steps,done,total:steps.length,percent:steps.length?Math.round(done/steps.length*100):0};}
