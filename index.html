@@ -32,18 +32,15 @@ textarea{min-height:120px;resize:vertical}.row{display:grid;grid-template-column
 .navBtn{border:0;background:transparent;color:#8fa3b9;padding:11px 4px 10px;font-size:10px}.navBtn b{display:block;font-size:19px;margin-bottom:3px}.navBtn.active{color:var(--primary)}
 .back{margin-bottom:12px}.hidden{display:none!important}@media(max-width:430px){main{padding:12px}.hero{padding:20px 16px}h1{font-size:27px}.grid{gap:8px}.service{padding:13px;min-height:122px}.row{grid-template-columns:1fr}}
 
-/* --- İŞİNİ HALLET GÜVENLİ BAŞLATICI --- */
-.hallet-launch{position:relative!important;z-index:1000!important;pointer-events:auto!important;touch-action:manipulation!important;cursor:pointer!important}
-.hallet-launch:disabled{opacity:.65}
-#hallet-root{pointer-events:none}
-#hallet-root[aria-live]{pointer-events:auto}
+
+.authBar{display:flex;align-items:center;gap:7px}.authBtn{border:1px solid var(--line);background:#14263b;color:var(--text);border-radius:10px;padding:8px 10px;font-size:11px;font-weight:800;cursor:pointer}.authBtn.primary{background:var(--primary);color:#03130d;border-color:var(--primary)}.authUser{max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:11px;font-weight:700}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.76);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px}.modalCard{width:min(430px,100%);background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;max-height:90vh;overflow:auto}.modalCard h2{margin-top:0}.authError{background:#35181b;border:1px solid #70272d;color:#ffb6b8;padding:10px;border-radius:10px;font-size:12px;margin-top:10px}
 </style>
-  <link rel="stylesheet" href="isini-hallet.css">
 </head>
 <body>
 <div id="connectionStatus" class="connection offline">Supabase bağlanıyor...</div>
 <div class="app">
-<header class="top"><div class="brand"><div class="logo">✓</div><div><strong>İŞİMİ ÇÖZ</strong><small>İzmir Pilot Bölgesi</small></div></div></header>
+<header class="top"><div class="brand"><div class="logo">✓</div><div><strong>İŞİMİ ÇÖZ</strong><small>İzmir Pilot Bölgesi</small></div></div><div id="authArea" style="margin-left:auto;display:flex;gap:7px;align-items:center"></div></header>
 <main id="app"></main></div>
 <nav class="bottom"><div class="bottomInner">
 <button class="navBtn" id="navHome" onclick="showHome()"><b>⌂</b>ANA</button>
@@ -361,25 +358,98 @@ async function startApp(){
   await testSupabase();
 }
 startApp();
-
-/* Hallet butonu: inline onclick yerine güvenli olay dinleyicisi. */
-document.addEventListener("click",function(event){
-  const button=event.target.closest && event.target.closest("#openHalletButton");
-  if(!button)return;
-  event.preventDefault();
-  event.stopPropagation();
-  try{
-    if(window.Hallet && typeof window.Hallet.showGate === "function"){
-      window.Hallet.showGate();
-    }else{
-      alert("İşini Hallet modülü henüz yüklenmedi. Lütfen sayfayı yenileyin.");
-    }
-  }catch(error){
-    console.error("İşini Hallet açılış hatası:",error);
-    alert("İşini Hallet açılırken bir hata oluştu. Lütfen sayfayı yenileyin.");
-  }
-},true);
 </script>
-<script src="isini-hallet.js"></script>
+
+
+<script>
+/* =========================================================
+   HESAP: KAYIT / GİRİŞ — TEK DOSYA SÜRÜMÜ
+   ========================================================= */
+let currentAuthUser=null;
+function authHeaders(token){return {"apikey":SUPABASE_KEY,"Authorization":"Bearer "+(token||SUPABASE_KEY),"Content-Type":"application/json"}}
+function getAuthSession(){try{return JSON.parse(localStorage.getItem("isimi_coz_auth_session")||"null")}catch(e){return null}}
+function saveAuthSession(session){if(session)localStorage.setItem("isimi_coz_auth_session",JSON.stringify(session));else localStorage.removeItem("isimi_coz_auth_session");updateAuthArea()}
+function updateAuthArea(){
+ const el=document.getElementById("authArea"); if(!el)return;
+ const session=getAuthSession();
+ if(session?.user){ currentAuthUser=session.user; const email=session.user.email||"Hesabım"; el.innerHTML='<div class="authBar"><span class="authUser">'+escapeHTML(email)+'</span><button class="authBtn" type="button" onclick="logoutUser()">Çıkış</button></div>'; }
+ else { currentAuthUser=null; el.innerHTML='<div class="authBar"><button class="authBtn" type="button" onclick="openAuthModal(\'login\')">Giriş</button><button class="authBtn primary" type="button" onclick="openAuthModal(\'signup\')">Kayıt Ol</button></div>'; }
+}
+function openAuthModal(mode){
+ document.getElementById("authModal")?.remove();
+ const title=mode==='signup'?'Hesap oluştur':'Giriş yap';
+ const button=mode==='signup'?'KAYIT OL':'GİRİŞ YAP';
+ const switchText=mode==='signup'?'Zaten hesabın var mı?':'Hesabın yok mu?';
+ const switchMode=mode==='signup'?'login':'signup';
+ const switchLabel=mode==='signup'?'Giriş yap':'Kayıt ol';
+ const html=`<div class="modal" id="authModal"><div class="modalCard"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><h2>${title}</h2><button class="authBtn" type="button" onclick="closeAuthModal()">Kapat</button></div><label>E-posta</label><input id="authEmail" type="email" autocomplete="email" placeholder="ornek@email.com"><label>Şifre</label><input id="authPassword" type="password" autocomplete="${mode==='signup'?'new-password':'current-password'}" placeholder="En az 6 karakter"><div id="authError"></div><button class="btn primary" id="authSubmit" type="button" onclick="submitAuth('${mode}')">${button}</button><p class="muted small" style="text-align:center;margin-bottom:0">${switchText} <button class="authBtn" type="button" onclick="openAuthModal('${switchMode}')">${switchLabel}</button></p></div></div>`;
+ document.body.insertAdjacentHTML('beforeend',html);
+ setTimeout(()=>document.getElementById('authEmail')?.focus(),50);
+}
+function closeAuthModal(){document.getElementById("authModal")?.remove()}
+async function submitAuth(mode){
+ const email=document.getElementById('authEmail')?.value.trim(); const password=document.getElementById('authPassword')?.value; const err=document.getElementById('authError'); const btn=document.getElementById('authSubmit');
+ if(!email||!password){if(err)err.innerHTML='<div class="authError">E-posta ve şifre gerekli.</div>';return}
+ if(password.length<6){if(err)err.innerHTML='<div class="authError">Şifre en az 6 karakter olmalı.</div>';return}
+ btn.disabled=true;btn.textContent='BEKLEYİN...';
+ try{
+   let url=SUPABASE_URL+'/auth/v1/'+(mode==='signup'?'signup':'token?grant_type=password');
+   const r=await fetch(url,{method:'POST',headers:{"apikey":SUPABASE_KEY,"Content-Type":"application/json"},body:JSON.stringify({email,password})});
+   const data=await r.json().catch(()=>({}));
+   if(!r.ok)throw new Error(data.error_description||data.msg||data.message||'Kimlik doğrulama başarısız.');
+   if(mode==='signup' && !data.access_token){
+      closeAuthModal(); alert('Kayıt tamamlandı. E-posta doğrulaması açıksa gelen kutunu kontrol et, ardından giriş yap.'); return;
+   }
+   saveAuthSession(data); closeAuthModal(); alert(mode==='signup'?'Hesap oluşturuldu. ✓':'Giriş başarılı. ✓');
+ }catch(e){if(err)err.innerHTML='<div class="authError">'+escapeHTML(e.message||String(e))+'</div>';}finally{if(btn){btn.disabled=false;btn.textContent=buttonText(mode)}}
+}
+function buttonText(mode){return mode==='signup'?'KAYIT OL':'GİRİŞ YAP'}
+function logoutUser(){saveAuthSession(null);alert('Çıkış yapıldı.')}
+updateAuthArea();
+
+/* =========================================================
+   İŞİNİ HALLET — TEK INDEX.HTML İÇİNE GÖMÜLÜ, BAĞIMSIZ AKIŞ
+   ========================================================= */
+(function(){
+'use strict';
+const H={step:0,answers:{},caseId:null,createdAt:null};
+const QUESTIONS=[
+ {key:'seller_type',title:'Satıcı gerçek kişi mi?',options:[['real_person','Evet, gerçek kişiyim'],['company','Hayır, şirket/tüzel kişilik']]},
+ {key:'property_location',title:'Taşınmaz Türkiye’de mi?',options:[['turkey','Evet'],['abroad','Hayır']]},
+ {key:'title_deed',title:'Taşınmaza ait tapu bilgileri mevcut mu?',options:[['yes','Evet'],['no','Hayır']]},
+ {key:'multiple_owners',title:'Taşınmazın birden fazla maliki var mı?',options:[['no','Hayır'],['yes','Evet'],['unknown','Bilmiyorum']]},
+ {key:'encumbrance',title:'Tapu kaydında haciz, ipotek veya başka bir takyidat var mı?',options:[['no','Hayır'],['yes','Evet'],['unknown','Bilmiyorum']]},
+ {key:'representation',title:'Satış işlemini vekil aracılığıyla mı yapacaksınız?',options:[['no','Hayır'],['yes','Evet']]},
+ {key:'acquisition_date',title:'Taşınmazı edinme tarihiniz nedir?',type:'date'},
+ {key:'acquisition_type',title:'Taşınmazı nasıl edindiniz?',options:[['purchase','Satın alma'],['inheritance','Miras'],['gift','Bağış'],['other','Diğer']]},
+ {key:'buyer_ready',title:'Alıcı satış işlemine hazır mı?',options:[['yes','Evet'],['no','Hayır']]},
+ {key:'sale_price',title:'Satış bedeli nedir?',type:'number',placeholder:'TL olarak yazın'},
+ {key:'building',title:'Taşınmaz üzerinde bina/yapı var mı?',options:[['yes','Evet'],['no','Hayır']]}
+];
+function esc(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+function money(v){const n=Number(v);return Number.isFinite(n)?new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(n):'—'}
+function dateText(v){if(!v)return'—';const d=new Date(v+'T00:00:00');return Number.isNaN(d.getTime())?esc(v):d.toLocaleDateString('tr-TR')}
+function root(){let r=document.getElementById('hallet-root');if(!r){r=document.createElement('div');r.id='hallet-root';document.body.appendChild(r)}return r}
+function ensureStyle(){if(document.getElementById('hallet-inline-style'))return;const s=document.createElement('style');s.id='hallet-inline-style';s.textContent=`#hallet-root{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;z-index:2147483647!important;display:none!important;background:#071318!important;color:#f5f7f7!important;overflow:auto!important;pointer-events:auto!important;-webkit-overflow-scrolling:touch!important}#hallet-root.hv{display:block!important}#hallet-root .ha{all:initial!important;display:block!important;min-height:100vh!important;width:100%!important;background:#071318!important;color:#f5f7f7!important;font-family:Arial,sans-serif!important;padding:20px!important;box-sizing:border-box!important}#hallet-root .ha *{box-sizing:border-box!important}#hallet-root .hw{width:min(760px,100%)!important;margin:auto!important;padding-bottom:40px!important}#hallet-root .ht{display:flex!important;justify-content:space-between!important;align-items:center!important;gap:10px!important;margin-bottom:18px!important}#hallet-root .hc{background:#10252b!important;border:1px solid #29464d!important;border-radius:20px!important;padding:22px!important;box-shadow:0 16px 40px rgba(0,0,0,.25)!important}#hallet-root h1,#hallet-root h2,#hallet-root p{margin-top:0!important}#hallet-root h1{font-size:32px!important;line-height:1.1!important}#hallet-root h2{font-size:23px!important;line-height:1.2!important}#hallet-root .hk{color:#b9812e!important;font-size:12px!important;font-weight:800!important;text-transform:uppercase!important;letter-spacing:.08em!important;margin-bottom:9px!important}#hallet-root .hm{color:#b8c8cb!important;line-height:1.55!important}#hallet-root .hg{display:grid!important;grid-template-columns:1fr!important;gap:12px!important;margin-top:18px!important}#hallet-root button{appearance:none!important;-webkit-appearance:none!important}#hallet-root .hb{width:100%!important;min-height:54px!important;border:1px solid #35535a!important;border-radius:15px!important;background:#122b31!important;color:#fff!important;padding:15px 17px!important;font:700 15px Arial,sans-serif!important;text-align:left!important;cursor:pointer!important;touch-action:manipulation!important}#hallet-root .hp{background:#0e5c53!important;border-color:#3d9a8e!important;text-align:center!important}#hallet-root .hs{text-align:center!important;background:#172b30!important}#hallet-root .topb{border:1px solid #35535a!important;background:#10252b!important;color:#fff!important;border-radius:12px!important;padding:10px 13px!important;font:700 13px Arial,sans-serif!important;cursor:pointer!important;touch-action:manipulation!important}#hallet-root .hi{width:100%!important;background:#091b20!important;color:#fff!important;border:1px solid #45636a!important;border-radius:13px!important;padding:15px!important;font:600 16px Arial,sans-serif!important}#hallet-root label{display:block!important;font:700 13px Arial,sans-serif!important;color:#dce7e8!important;margin:12px 0 7px!important}#hallet-root .hl{display:grid!important;gap:10px!important;margin:16px 0!important}#hallet-root .li{padding:12px 14px!important;border:1px solid #213d43!important;border-radius:12px!important;background:#0b1d22!important;line-height:1.45!important}#hallet-root .ok{color:#8ee1d5!important}#hallet-root .warn{color:#ffd18c!important}#hallet-root .pr{height:8px!important;background:#183238!important;border-radius:99px!important;overflow:hidden!important;margin-bottom:18px!important}#hallet-root .pr span{display:block!important;height:100%!important;background:#0e8b7d!important}#hallet-root .err{color:#ffb7a8!important;background:#3a1f1d!important;border:1px solid #7a3930!important;padding:10px!important;border-radius:10px!important;margin-top:10px!important}@media(min-width:620px){#hallet-root .hg{grid-template-columns:1fr 1fr!important}}`;document.head.appendChild(s)}
+function open(){ensureStyle();const r=root();r.classList.add('hv');r.style.display='block';document.body.dataset.halletOverflow=document.body.style.overflow||'';document.body.style.overflow='hidden';return r}
+function close(){const r=root();r.classList.remove('hv');r.style.display='none';r.innerHTML='';document.body.style.overflow=document.body.dataset.halletOverflow||''}
+function render(x){const r=open();r.innerHTML='<div class="ha"><div class="hw">'+x+'</div></div>';r.scrollTop=0}
+function top(back){return '<div class="ht"><strong>İşini Hallet</strong><button class="topb" data-a="'+(back||'close')+'">'+(back?'← Geri':'Kapat')+'</button></div>'}
+function gate(){H.step=0;H.answers={};H.caseId=null;H.createdAt=null;render(top('close')+'<div class="hc"><div class="hk">Dijital işlem asistanı</div><h1>Ne yapmak istiyorsun?</h1><p class="hm">İşlemini seç. Gerekli adımları birlikte tamamlayalım.</p><div class="hg"><button class="hb hp" data-a="islem">📋 Bir işlem yapmak istiyorum</button><button class="hb" data-a="evrak">📄 Evrak hazırlamak istiyorum</button><button class="hb" data-a="kurum">🏛️ Bir kuruma başvuracağım</button><button class="hb" data-a="isimi">🛠️ Hizmet / usta bulmam gerekiyor</button></div></div>')}
+function islem(){render(top('gate')+'<div class="hc"><div class="hk">İşlem seçimi</div><h2>Hangi işlemi yapmak istiyorsun?</h2><div class="hg"><button class="hb hp" data-a="tasinmaz">🏠 Taşınmaz işlemleri</button><button class="hb" data-a="evrak">📄 Evrak hazırlama</button><button class="hb" data-a="kurum">🏛️ Kurum başvurusu</button></div></div>')}
+function tasinmaz(){render(top('islem')+'<div class="hc"><div class="hk">Taşınmaz işlemleri</div><h2>Hangi taşınmaz işlemi?</h2><div class="hg"><button class="hb hp" data-a="konut">🏠 Konut satışı</button></div></div>')}
+function konut(){render(top('tasinmaz')+'<div class="hc"><div class="hk">Konut satışı</div><h2>Satış dosyasını oluşturalım</h2><p class="hm">11 kısa soruyla satış dosyasının ön kontrolünü yapacağız.</p><div class="hl"><div class="li">✓ Tapu ve mülkiyet</div><div class="li">✓ Alıcı ve satış bilgileri</div><div class="li">✓ Edinim tarihi ve vergi kontrolü</div></div><button class="hb hp" data-a="start">Satış dosyasını başlat →</button></div>')}
+function question(){const q=QUESTIONS[H.step];if(!q)return result();let html='<div class="pr"><span style="width:'+Math.max(7,Math.round(H.step/QUESTIONS.length*100))+'%"></span></div>'+top(H.step?'qback':'konut')+'<div class="hc"><div class="hk">Soru '+(H.step+1)+' / '+QUESTIONS.length+'</div><h2>'+esc(q.title)+'</h2>';if(q.type==='date')html+='<label>Tarih</label><input class="hi" id="qinput" type="date" value="'+esc(H.answers[q.key]||'')+'"><button class="hb hp" style="margin-top:14px" data-a="save" data-k="'+q.key+'">Devam et →</button>';else if(q.type==='number')html+='<label>Satış bedeli (TL)</label><input class="hi" id="qinput" type="number" min="0" step="1" inputmode="decimal" placeholder="'+esc(q.placeholder)+'" value="'+esc(H.answers[q.key]||'')+'"><button class="hb hp" style="margin-top:14px" data-a="save" data-k="'+q.key+'">Devam et →</button>';else html+='<div class="hg">'+q.options.map(o=>'<button class="hb" data-a="answer" data-k="'+q.key+'" data-v="'+o[0]+'">'+esc(o[1])+'</button>').join('')+'</div>';html+='</div>';render(html)}
+function result(){const a=H.answers;H.caseId=H.caseId||'IH-'+new Date().toISOString().replace(/\D/g,'').slice(0,14)+'-'+Math.random().toString(36).slice(2,7).toUpperCase();const warnings=[];if(a.seller_type!=='real_person')warnings.push('Bu akış gerçek kişi satışı için tasarlanmıştır.');if(a.property_location!=='turkey')warnings.push('Yurt dışı taşınmazı için bu Türkiye tapu akışı kullanılamaz.');if(a.title_deed!=='yes')warnings.push('Tapu bilgileri işlem öncesinde doğrulanmalıdır.');if(a.multiple_owners==='yes')warnings.push('Birden fazla malik varsa malik/temsil durumu ayrıca kontrol edilmelidir.');if(a.encumbrance!=='no')warnings.push('Takyidat durumu tapu kaydından doğrulanmalıdır.');if(a.representation==='yes')warnings.push('Vekâletnamenin kapsamı ve geçerliliği ayrıca kontrol edilmelidir.');if(a.buyer_ready!=='yes')warnings.push('Alıcının hazır olması işlem zamanını etkiler.');let five='Kontrol edilemedi';if(a.acquisition_date){const d=new Date(a.acquisition_date+'T00:00:00');if(!Number.isNaN(d.getTime())){const x=new Date(d);x.setFullYear(x.getFullYear()+5);five=new Date()>=x?'5 yıllık süre dolmuş görünüyor':'5 yıllık süre henüz dolmamış görünüyor'}}render(top('close')+'<div class="hc"><div class="hk">İşlem dosyası</div><h1>Satış dosyan hazır.</h1><p class="hm">Ön kontrol tamamlandı. Bu ekran resmi/hukuki danışmanlığın yerine geçmez.</p><div class="hl"><div class="li"><strong>Dosya no:</strong> '+esc(H.caseId)+'</div><div class="li"><strong>Satış bedeli:</strong> '+money(a.sale_price)+'</div><div class="li"><strong>Edinim tarihi:</strong> '+dateText(a.acquisition_date)+'</div><div class="li"><strong>Değer artış kazancı ön kontrolü:</strong> '+esc(five)+'</div></div><h2>Kontroller</h2><div class="hl"><div class="li"><span class="ok">✓</span> Temel taraf ve taşınmaz bilgileri alındı.</div><div class="li"><span class="ok">✓</span> Alıcı ve satış bedeli bilgileri alındı.</div><div class="li"><span class="ok">✓</span> Ön kontrol tamamlandı.</div></div>'+(warnings.length?'<h2>Uyarılar</h2><div class="hl">'+warnings.map(w=>'<div class="li"><span class="warn">⚠</span> '+esc(w)+'</div>').join('')+'</div>':'')+'<h2>Sonraki adımlar</h2><div class="hl"><div class="li">1. Tapu ve taraf bilgilerini güncel belgelerle doğrula.</div><div class="li">2. Harç ve döner sermaye tutarlarını güncel resmi kanallardan kontrol et.</div><div class="li">3. İlgili tapu başvurusunu güncel şartlarla tamamla.</div></div><div class="hg"><button class="hb hp" data-a="new">Yeni işlem başlat</button><button class="hb hs" data-a="close">Kapat</button></div></div>')}
+function msg(t,m,back){render(top(back||'gate')+'<div class="hc"><div class="hk">İşini Hallet</div><h2>'+esc(t)+'</h2><p class="hm">'+esc(m)+'</p><button class="hb hp" data-a="gate">İşlemlere dön</button></div>')}
+function goIsimi(){close();if(typeof window.showHome==='function')window.showHome()}
+function dispatch(a,e){if(a==='close')return close();if(a==='gate')return gate();if(a==='islem')return islem();if(a==='tasinmaz')return tasinmaz();if(a==='konut')return konut();if(a==='start'){H.step=0;return question()}if(a==='qback'){H.step=Math.max(0,H.step-1);return question()}if(a==='answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return question()}if(a==='save'){const i=document.getElementById('qinput');if(!i||!String(i.value).trim()){const c=document.querySelector('#hallet-root .hc');if(c&&!c.querySelector('.err'))c.insertAdjacentHTML('beforeend','<div class="err">Lütfen bir değer girerek devam et.</div>');return}H.answers[e.dataset.k]=i.value.trim();H.step++;return question()}if(a==='new'){H.step=0;H.answers={};H.caseId=null;return gate()}if(a==='isimi')return goIsimi();if(a==='evrak')return msg('Evrak hazırlama','Bu modül sonraki aşamada açılacak. Mevcut aktif akış taşınmaz konut satışıdır.');if(a==='kurum')return msg('Kurum başvurusu','Bu modül sonraki aşamada açılacak. Mevcut aktif akış taşınmaz konut satışıdır.')}
+document.addEventListener('click',function(e){const el=e.target.closest&&e.target.closest('#hallet-root [data-a]');if(!el)return;e.preventDefault();e.stopPropagation();dispatch(el.dataset.a,el)},true);
+window.Hallet={showGate:gate,showIslemMenu:islem,showTasinmazMenu:tasinmaz,showKonutSatis:konut,showQuestion:question,showResult:result,close:close};
+})();
+
+/* Hallet başlatıcısı — ana sayfaya dokunmadan çalışır. */
+document.addEventListener('click',function(e){const b=e.target.closest&&e.target.closest('#openHalletButton');if(!b)return;e.preventDefault();e.stopPropagation();if(window.Hallet)window.Hallet.showGate();},true);
+</script>
 </body>
 </html>
