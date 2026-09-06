@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="tr">
+<link rel="stylesheet" href="isini-hallet.css">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
@@ -2371,11 +2372,12 @@ async function restoreSession(){
   console.warn("Doğrulama isteği başarısız (ağ sorunu olabilir), oturum korunuyor:",e);
  }
 }
-async function startApp(){connection(false,"Supabase bağlanıyor...");renderAuthArea();applyThemeIcon();await restoreSession();showHome();setupRequestRealtime();await testDB()}
+async function startApp(){connection(false,"Supabase bağlanıyor...");renderAuthArea();applyThemeIcon();await restoreSession();if(window.Hallet&&typeof window.Hallet.showGate==="function"){window.Hallet.showGate();}else{showHome();}setupRequestRealtime();await testDB()}
 startApp();
 if("serviceWorker" in navigator){
  window.addEventListener("load",()=>{navigator.serviceWorker.register("sw.js").catch(e=>console.warn("SW kayıt hatası:",e))});
 }
 </script>
+<script src="isini-hallet.js"></script> 
 </body>
 </html>
