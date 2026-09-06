@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#07111f">
+<title>İşimi Çöz — İzmir</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;padding:0;background:#07111f;color:#eef4fb;font-family:Arial,Helvetica,sans-serif}
+body{min-height:100vh}button,input,select,textarea{font:inherit}button{cursor:pointer}a{text-decoration:none;color:inherit}
+:root{--bg:#07111f;--card:#0d1a2b;--card2:#102238;--line:#20344d;--text:#eef4fb;--muted:#9eb0c5;--primary:#19c37d;--danger:#ef5350;--warning:#f5b942}
+.app{max-width:760px;margin:auto;min-height:100vh;padding-bottom:90px}.top{padding:17px 16px 14px;border-bottom:1px solid var(--line);background:rgba(7,17,31,.97);position:sticky;top:0;z-index:20}
+.brand{display:flex;align-items:center;gap:10px}.logo{width:40px;height:40px;border-radius:13px;background:linear-gradient(135deg,var(--primary),#36a3ff);display:grid;place-items:center;font-size:21px;font-weight:900;color:#03120d}
+.brand strong{font-size:18px}.brand small{display:block;color:var(--muted);font-size:11px;margin-top:2px}main{padding:16px}
+.hero{background:linear-gradient(145deg,#10243a,#0b1727);border:1px solid var(--line);border-radius:24px;padding:24px 20px;margin-bottom:16px}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:99px;background:rgba(25,195,125,.12);border:1px solid rgba(25,195,125,.28);color:#6df0b5;font-size:12px;font-weight:700}
+h1{font-size:30px;line-height:1.08;margin:16px 0 10px}h2{font-size:22px;margin:0 0 8px}h3{font-size:16px;margin:0 0 6px}p{line-height:1.55}.muted{color:var(--muted)}.small{font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px}
+.service{min-height:130px;text-align:left;color:var(--text);transition:.15s transform,.15s border-color}.service:hover{border-color:#315270}.service:active{transform:scale(.98)}
+.service .emoji{font-size:28px}.service strong{display:block;margin-top:9px;font-size:16px}.service span{display:block;color:var(--muted);font-size:12px;line-height:1.4;margin-top:5px}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}.btn{width:100%;border:0;border-radius:14px;padding:14px 15px;font-weight:800}.btn.primary{background:var(--primary);color:#03130d}.btn.secondary{background:#14263b;color:var(--text);border:1px solid var(--line)}.btn.danger{background:#4a1f25;color:#ffb5b3;border:1px solid #6a2b32}.btn.smallBtn{padding:10px 12px;font-size:13px}
+.section{margin-top:18px}.sectionTitle{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.formCard{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:18px;margin-bottom:14px}
+label{display:block;font-size:13px;font-weight:700;margin:14px 0 7px}input,select,textarea{width:100%;background:#081523;color:var(--text);border:1px solid #29415d;border-radius:12px;padding:13px;outline:none}input:focus,select:focus,textarea:focus{border-color:var(--primary)}
+textarea{min-height:120px;resize:vertical}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.checks{display:grid;grid-template-columns:1fr 1fr;gap:8px}.check{display:flex;align-items:center;gap:8px;background:#091827;border:1px solid var(--line);padding:10px;border-radius:12px;font-size:13px}.check input{width:auto}
+.notice,.success,.warning,.error{padding:12px;border-radius:13px;font-size:13px;line-height:1.5;margin:12px 0}.notice{background:#0b2030;border:1px solid #1e4c66;color:#b9ddf2}.success{background:#0b2b20;border:1px solid #185d43;color:#8bf1c4}.warning{background:#30260e;border:1px solid #65501a;color:#f5d77c}.error{background:#35181b;border:1px solid #70272d;color:#ffb6b8}
+.request{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:11px}.requestTop{display:flex;justify-content:space-between;gap:10px}.status{padding:5px 9px;border-radius:99px;background:rgba(245,185,66,.12);color:#ffd76b;font-size:11px;font-weight:800;height:max-content}
+.meta{display:flex;flex-wrap:wrap;gap:8px;color:var(--muted);font-size:12px;margin:10px 0}.meta span{background:#091827;padding:6px 8px;border-radius:8px}.description{background:#091827;border-radius:12px;padding:11px;font-size:13px;line-height:1.5;margin:10px 0}
+.profileHeader{display:flex;align-items:center;gap:13px;padding:16px;background:var(--card);border:1px solid var(--line);border-radius:18px}.avatar{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:#17334d;font-weight:900;font-size:18px}
+.activeDot{width:9px;height:9px;background:var(--primary);border-radius:50%;display:inline-block;margin-right:5px}.empty{text-align:center;padding:28px 15px;color:var(--muted)}
+.connection{position:fixed;top:10px;right:10px;z-index:100;padding:6px 9px;border-radius:99px;font-size:10px;font-weight:bold;opacity:.9}.connection.online{background:#0b2b20;color:#8bf1c4}.connection.offline{background:#30260e;color:#f5d77c}
+.bottom{position:fixed;bottom:0;left:0;right:0;background:rgba(7,17,31,.98);border-top:1px solid var(--line);z-index:30}.bottomInner{max-width:760px;margin:auto;display:grid;grid-template-columns:repeat(4,1fr)}
+.navBtn{border:0;background:transparent;color:#8fa3b9;padding:11px 4px 10px;font-size:10px}.navBtn b{display:block;font-size:19px;margin-bottom:3px}.navBtn.active{color:var(--primary)}
+.back{margin-bottom:12px}.hidden{display:none!important}@media(max-width:430px){main{padding:12px}.hero{padding:20px 16px}h1{font-size:27px}.grid{gap:8px}.service{padding:13px;min-height:122px}.row{grid-template-columns:1fr}}
+
+
+.authBar{display:flex;align-items:center;gap:7px}.authBtn{border:1px solid var(--line);background:#14263b;color:var(--text);border-radius:10px;padding:8px 10px;font-size:11px;font-weight:800;cursor:pointer}.authBtn.primary{background:var(--primary);color:#03130d;border-color:var(--primary)}.authUser{max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:11px;font-weight:700}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.76);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px}.modalCard{width:min(430px,100%);background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;max-height:90vh;overflow:auto}.modalCard h2{margin-top:0}.authError{background:#35181b;border:1px solid #70272d;color:#ffb6b8;padding:10px;border-radius:10px;font-size:12px;margin-top:10px}
+</style>
+</head>
+<body>
+<div id="connectionStatus" class="connection offline">Supabase bağlanıyor...</div>
+<div class="app">
+<header class="top"><div class="brand"><div class="logo">✓</div><div><strong>İŞİMİ ÇÖZ</strong><small>İzmir Pilot Bölgesi</small></div></div><div id="authArea" style="margin-left:auto;display:flex;gap:7px;align-items:center"></div></header>
+<main id="app"></main></div>
+<nav class="bottom"><div class="bottomInner">
+<button class="navBtn" id="navHome" onclick="showHome()"><b>⌂</b>ANA</button>
+<button class="navBtn" id="navRequest" onclick="showRequest()"><b>＋</b>TALEP</button>
+<button class="navBtn" id="navRequests" onclick="showRequests()"><b>▣</b>TALEPLER</button>
+<button class="navBtn" id="navProvider" onclick="showProviderEntry()"><b>🛠️</b>HİZMET VER</button>
+</div></nav>
+
+<script>
+const SUPABASE_URL="https://zvffspbowdzvrrzefhkr.supabase.co";
+const SUPABASE_KEY="sb_publishable_L_qb9Q4fHktE51PEqEhTAg_O4R0eDiW";
+
+const SERVICES={
+ klima:{name:"Klima",emoji:"❄️",desc:"Bakım, montaj, arıza ve temizlik"},
+ elektrik:{name:"Elektrik",emoji:"⚡",desc:"Arıza, priz, tesisat ve aydınlatma"},
+ tesisat:{name:"Tesisat",emoji:"🔧",desc:"Su, gider, musluk ve kaçak sorunları"},
+ beyaz:{name:"Beyaz Eşya",emoji:"🧊",desc:"Çamaşır, bulaşık, buzdolabı ve fırın"},
+ temizlik:{name:"Temizlik",emoji:"🧹",desc:"Ev, ofis ve detaylı temizlik"},
+ nakliye:{name:"Nakliye",emoji:"🚚",desc:"Ev, ofis ve parça eşya taşıma"},
+ cilingir:{name:"Çilingir",emoji:"🔐",desc:"Kilit, anahtar ve acil giriş"},
+ oto:{name:"Oto",emoji:"🚗",desc:"Arıza, bakım, lastik ve yol yardımı"}
+};
+
+const DISTRICTS=[...new Set(["Aliağa","Balçova","Bayındır","Bayraklı","Bergama","Beydağ","Bornova","Buca","Çeşme","Çiğli","Dikili","Foça","Gaziemir","Güzelbahçe","Karabağlar","Karaburun","Karşıyaka","Konak","Menemen","Menderes","Narlıdere","Ödemiş","Seferihisar","Selçuk","Tire","Torbalı","Urla","Kiraz","Kemalpaşa","Kınık"])];
+
+const KEYS={requests:"isimi_coz_requests_v5",provider:"isimi_coz_provider_v5",providerLogged:"isimi_coz_provider_logged_v5"};
+
+function read(k,f){try{const x=localStorage.getItem(k);return x?JSON.parse(x):f}catch(e){return f}}
+function write(k,v){localStorage.setItem(k,JSON.stringify(v))}
+function getRequests(){return read(KEYS.requests,[])}
+function getProvider(){return read(KEYS.provider,null)}
+function providerLogged(){return read(KEYS.providerLogged,false)}
+function escapeHTML(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
+function app(h){document.getElementById("app").innerHTML=h;window.scrollTo(0,0)}
+function setNav(a){["navHome","navRequest","navRequests","navProvider"].forEach(id=>document.getElementById(id)?.classList.remove("active"));if(a)document.getElementById(a)?.classList.add("active")}
+function setConnection(ok,text){const e=document.getElementById("connectionStatus");if(!e)return;e.className="connection "+(ok?"online":"offline");e.textContent=text||(ok?"Supabase bağlı ✓":"Yerel mod")}
+
+async function supabaseRequest(method,path,body=null){
+ const o={method,headers:{"apikey":SUPABASE_KEY,"Authorization":"Bearer "+SUPABASE_KEY,"Content-Type":"application/json","Accept":"application/json","Prefer":"return=representation"}};
+ if(body!==null)o.body=JSON.stringify(body);
+ const r=await fetch(SUPABASE_URL+"/rest/v1/"+path,o);
+ const t=await r.text();let d=null;try{d=t?JSON.parse(t):null}catch(e){d=t}
+ if(!r.ok)throw new Error(d?.message||d?.details||d?.hint||"Supabase işlemi başarısız.");
+ return d;
+}
+
+async function supabaseAuthRequest(method,path,body=null){
+ const session=getAuthSession();
+ const token=session?.access_token;
+ if(!token)throw new Error("Bu işlem dosyasını kaydetmek için önce giriş yapmalısınız.");
+ const o={method,headers:{"apikey":SUPABASE_KEY,"Authorization":"Bearer "+token,"Content-Type":"application/json","Accept":"application/json","Prefer":"return=representation"}};
+ if(body!==null)o.body=JSON.stringify(body);
+ const r=await fetch(SUPABASE_URL+"/rest/v1/"+path,o);
+ const t=await r.text();let d=null;try{d=t?JSON.parse(t):null}catch(e){d=t}
+ if(!r.ok)throw new Error(d?.message||d?.details||d?.hint||"Yetkili Supabase işlemi başarısız.");
+ return d;
+}
+
+function normalize(v){
+ return String(v??"").trim().toLowerCase()
+ .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+ .replace(/ı/g,"i").replace(/İ/g,"i");
+}
+function pick(o,names,def=""){for(const n of names){if(o&&o[n]!==undefined&&o[n]!==null)return o[n]}return def}
+function serviceKeyFromValue(v){
+ const x=normalize(v);
+ for(const [k,s] of Object.entries(SERVICES)){
+  if(x===normalize(k)||x===normalize(s.name))return k;
+ }
+ return String(v??"").trim();
+}
+
+async function testSupabase(){
+ try{await supabaseRequest("GET","talepler?select=id&limit=1");setConnection(true,"Supabase bağlı ✓");return true}
+ catch(e){console.error(e);setConnection(false,"Yerel mod");return false}
+}
+
+async function loadRequestsFromSupabase(){
+ try{
+  const data=await supabaseRequest("GET","talepler?select=*&order=created_at.desc&limit=200");
+  if(Array.isArray(data)){
+   const mapped=data.map(mapRequest);write(KEYS.requests,mapped);setConnection(true,"Supabase bağlı ✓");return mapped;
+  }
+ }catch(e){console.warn("Talepler alınamadı:",e)}
+ return getRequests();
+}
+function mapRequest(r){
+ const kategori=pick(r,["kategori","category","service"],"");
+ return {
+  id:pick(r,["talep_no","id"],""),
+  talep_no:pick(r,["talep_no","request_no","id"],""),
+  service:serviceKeyFromValue(kategori),kategori:kategori,
+  description:pick(r,["aciklama","description"],""),
+  aciklama:pick(r,["aciklama","description"],""),
+  il:pick(r,["il","city"],"İzmir"),
+  district:pick(r,["ilce","district"],""),ilce:pick(r,["ilce","district"],""),
+  neighborhood:pick(r,["mahalle","neighborhood"],""),mahalle:pick(r,["mahalle","neighborhood"],""),
+  urgency:pick(r,["aciliyet","urgency"],""),
+  aciliyet:pick(r,["aciliyet","urgency"],""),
+  name:pick(r,["ad_soyad","name"],""),ad_soyad:pick(r,["ad_soyad","name"],""),
+  phone:pick(r,["telefon","phone"],""),telefon:pick(r,["telefon","phone"],""),
+  status:pick(r,["durum","status"],"Beklemede"),durum:pick(r,["durum","status"],"Beklemede"),
+  createdAt:pick(r,["created_at","createdAt"],"")
+ };
+}
+
+/* ---------------- PROVIDER DATA: SUPABASE ---------------- */
+
+async function loadProvidersFromSupabase(){
+ try{
+  const rows=await supabaseRequest("GET","providers?select=*&limit=500");
+  if(!Array.isArray(rows))return [];
+  const providers=rows.map(mapProvider);
+  setConnection(true,"Supabase bağlı ✓");
+  return providers;
+ }catch(e){
+  console.error("providers okunamadı:",e);
+  return [];
+ }
+}
+
+async function loadCategories(){
+ try{
+  const rows=await supabaseRequest("GET","categories?select=*&limit=500");
+  return Array.isArray(rows)?rows:[];
+ }catch(e){console.warn("categories okunamadı:",e);return []}
+}
+
+async function loadProviderCategories(){
+ try{
+  const rows=await supabaseRequest("GET","provider_categories?select=*&limit=1000");
+  return Array.isArray(rows)?rows:[];
+ }catch(e){console.warn("provider_categories okunamadı:",e);return []}
+}
+
+function mapProvider(r){
+ return {
+  id:pick(r,["id","provider_id"],""),
+  name:pick(r,["name","ad","ad_soyad","business_name","isletme"],"Hizmet Sağlayıcı"),
+  phone:pick(r,["phone","telefon","telefon_numarasi"],""),
+  category:pick(r,["category","kategori","category_id"],""),
+  city:pick(r,["il","city"],"İzmir"),
+  district:pick(r,["ilce","district"],""),
+  neighborhood:pick(r,["mahalle","neighborhood"],""),
+  description:pick(r,["description","aciklama"],""),
+  active:pick(r,["active","aktif"],true)!==false,
+  services:[]
+ };
+}
+
+function categoryValueFromRow(row,categories){
+ const raw=pick(row,["category_id","kategori_id","category","kategori"],"");
+ if(!raw)return "";
+ const c=categories.find(x=>String(x.id)===String(raw));
+ if(c)return pick(c,["name","name_tr","ad","kategori"],raw);
+ return raw;
+}
+
+async function enrichProviders(providers){
+ const [cats,links]=await Promise.all([loadCategories(),loadProviderCategories()]);
+ const byId={};
+ providers.forEach(p=>byId[String(p.id)]=p);
+
+ links.forEach(link=>{
+  const pid=pick(link,["provider_id","providers_id","provider"],"");
+  const val=categoryValueFromRow(link,cats);
+  if(byId[String(pid)]&&val)byId[String(pid)].services.push(serviceKeyFromValue(val));
+ });
+
+ providers.forEach(p=>{
+  const direct=p.category;
+  if(direct&&!p.services.length)p.services=[serviceKeyFromValue(direct)];
+  p.services=[...new Set(p.services.filter(Boolean))];
+ });
+ return providers;
+}
+
+function providerMatchesRequest(p,r){
+ if(!p.active)return false;
+ const ps=(p.services||[]).map(serviceKeyFromValue);
+ const rk=serviceKeyFromValue(r.kategori||r.service);
+ const district=normalize(p.district),rd=normalize(r.ilce||r.district);
+ const city=normalize(p.city),rc=normalize(r.il||"İzmir");
+ const categoryOK=ps.length?ps.includes(rk):true;
+ const districtOK=district?district===rd:true;
+ const cityOK=!city||!rc||city===rc||city==="izmir";
+ return categoryOK&&districtOK&&cityOK;
+}
+
+/* ---------------- HOME ---------------- */
+
+function showHome(){
+  setNav("navHome");
+  app(`<section class="hero"><span class="badge">📍 İZMİR PİLOT BÖLGESİ</span><h1>İhtiyacın varsa,<br>çözümü var.</h1><p class="muted">Ev, iş yeri, araç ve günlük yaşam hizmetlerini tek yerden bul. İhtiyacını anlat, talebini oluştur.</p><div class="actions"><button class="btn primary" type="button" onclick="showRequest()">📢 İşimi Çözdür</button><button class="btn secondary" type="button" onclick="showProviderEntry()">🛠️ Hizmet Ver</button></div></section>
+  <div class="section card" style="border-color:#2b6f65;background:linear-gradient(145deg,#102c31,#0d1a2b)">
+    <span class="badge">🤖 YENİ</span>
+    <h2 style="margin-top:12px">İşini Hallet</h2>
+    <p class="muted small">İşlem, evrak ve kurum başvurularını adım adım hazırlamak için dijital işlem asistanını kullan.</p>
+    <button id="openHalletButton" class="btn primary hallet-launch" type="button">İŞİNİ HALLET →</button>
+  </div>
+  <div class="section"><div class="sectionTitle"><h2>Hizmet kategorileri</h2><span class="small muted">İzmir</span></div><div class="grid">${Object.entries(SERVICES).map(([k,s])=>`<button class="card service" type="button" onclick="showRequest('${k}')"><div class="emoji">${s.emoji}</div><strong>${s.name}</strong><span>${s.desc}</span></button>`).join("")}</div></div>
+  <div class="section card"><h2>💡 Nasıl çalışıyor?</h2><p class="muted small">İhtiyacını oluştur. Hizmet kategorisini ve bölgeni seç. Talebin sisteme kaydedilsin. Uygun hizmet sağlayıcıları talebini görebilsin.</p></div>`);
+}
+
+function openHallet(){
+  try{
+    if(window.Hallet && typeof window.Hallet.showGate === "function"){
+      window.Hallet.showGate();
+      return;
+    }
+    console.error("İşini Hallet modülü yüklenemedi.");
+    alert("İşini Hallet modülü şu anda yüklenemedi. Lütfen sayfayı yenileyin.");
+  }catch(error){
+    console.error("İşini Hallet açılış hatası:",error);
+    alert("İşini Hallet açılırken bir hata oluştu. Lütfen sayfayı yenileyin.");
+  }
+}
+
+/* ---------------- REQUEST ---------------- */
+
+function serviceOptions(selected=""){return `<option value="">Kategori seç</option>`+Object.entries(SERVICES).map(([k,s])=>`<option value="${k}" ${k===selected?"selected":""}>${s.emoji} ${s.name}</option>`).join("")}
+function districtOptions(selected=""){return `<option value="">İlçe seç</option>`+DISTRICTS.map(d=>`<option value="${escapeHTML(d)}" ${d===selected?"selected":""}>${escapeHTML(d)}</option>`).join("")}
+function makeRequestNumber(){const d=new Date();return `IC-${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}-${Math.floor(1000+Math.random()*9000)}`}
+
+function showRequest(preselected=""){
+ setNav("navRequest");
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div>
+ <div class="formCard"><span class="badge">📋 YENİ HİZMET TALEBİ</span><h1>İhtiyacını anlat.</h1><p class="muted small">Sorununu açıkça anlat. Böylece doğru hizmet sağlayıcısına ulaşmak kolaylaşır.</p>
+ <label>Hizmet kategorisi *</label><select id="reqService">${serviceOptions(preselected)}</select>
+ <label>Sorunun / ihtiyacın *</label><textarea id="reqDescription" maxlength="1000" placeholder="Örneğin: Klima çalışıyor fakat yeterince soğutmuyor."></textarea><div class="small muted" id="charCount">0/1000</div>
+ <div class="row"><div><label>İl *</label><select id="reqCity"><option value="İzmir" selected>İzmir</option></select></div><div><label>İlçe *</label><select id="reqDistrict">${districtOptions()}</select></div></div>
+ <label>Mahalle</label><input id="reqNeighborhood" placeholder="Mahalle adı">
+ <label>Ne zaman gerekli?</label><select id="reqUrgency"><option value="Acil">🔴 Acil</option><option value="Bugün" selected>🟡 Bugün</option><option value="Uygun zamanda">🟢 Uygun zamanda</option></select>
+ <label>Adınız *</label><input id="reqName" placeholder="Adınız Soyadınız" autocomplete="name">
+ <label>Telefon *</label><input id="reqPhone" type="tel" inputmode="tel" placeholder="05xxxxxxxxx" autocomplete="tel">
+ <div class="notice">🔒 Bilgileriniz hizmet talebinin oluşturulması amacıyla kullanılır.</div>
+ <button class="btn primary" id="createRequestButton" onclick="createRequest()">TALEBİ OLUŞTUR</button></div>`);
+ document.getElementById("reqDescription")?.addEventListener("input",e=>document.getElementById("charCount").textContent=e.target.value.length+"/1000");
+}
+
+async function createRequest(){
+ const g=id=>document.getElementById(id)?.value.trim();
+ const service=document.getElementById("reqService").value,description=g("reqDescription"),city=g("reqCity"),district=g("reqDistrict"),neighborhood=g("reqNeighborhood"),urgency=document.getElementById("reqUrgency").value,name=g("reqName"),phone=g("reqPhone");
+ if(!service)return alert("Lütfen hizmet kategorisini seç.");
+ if(description.length<5)return alert("Lütfen ihtiyacınızı biraz daha açık anlat.");
+ if(!district)return alert("Lütfen ilçe seç.");
+ if(!name)return alert("Lütfen adınızı ve soyadınızı yaz.");
+ if(!phone)return alert("Lütfen telefon numaranızı yaz.");
+ const b=document.getElementById("createRequestButton");b.disabled=true;b.textContent="TALEP KAYDEDİLİYOR...";
+ const talep_no=makeRequestNumber();
+ const item={talep_no,kategori:service,aciklama:description,il:city,ilce:district,mahalle:neighborhood,aciliyet:urgency,ad_soyad:name,telefon:phone,durum:"Beklemede"};
+ try{await supabaseRequest("POST","talepler",item);setConnection(true,"Supabase bağlı ✓");write(KEYS.requests,[{...mapRequest(item),createdAt:new Date().toISOString()},...getRequests()]);alert("Talebiniz başarıyla oluşturuldu.\n\nTalep No: "+talep_no)}catch(e){console.error(e);write(KEYS.requests,[{...mapRequest(item),createdAt:new Date().toISOString()},...getRequests()]);alert("Sunucu kaydı başarısız oldu; cihazdaki yedek kaydedildi.\n\n"+e.message)}
+ b.disabled=false;b.textContent="TALEBİ OLUŞTUR";showRequests();
+}
+
+/* ---------------- REQUEST LIST ---------------- */
+
+async function showRequests(){
+ setNav("navRequests");
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div><span class="badge">▣ TALEPLERİM</span><h1>Oluşturduğun talepler.</h1><p class="muted small">Taleplerin sistemden yükleniyor...</p><div class="card" id="requestsLoading" style="text-align:center">⏳ Talepler yükleniyor...</div>`);
+ const requests=await loadRequestsFromSupabase(),area=document.getElementById("requestsLoading");if(!area)return;
+ area.outerHTML=requests.length?requests.map(renderRequest).join(""):`<div class="card empty">📋<h3>Henüz talep yok</h3><p>İhtiyacını anlat, ilk talebini oluştur.</p><button class="btn primary" onclick="showRequest()">＋ Talep oluştur</button></div>`;
+}
+function renderRequest(r){
+ const k=serviceKeyFromValue(r.service||r.kategori),s=SERVICES[k]||{name:r.kategori||"Hizmet",emoji:"🛠️"};
+ return `<article class="request"><div class="requestTop"><div><h3>${s.emoji} ${escapeHTML(s.name)}</h3><div class="small muted">${escapeHTML(r.createdAt||"")}</div></div><span class="status">${escapeHTML(r.status||r.durum||"Beklemede")}</span></div><div class="description">“${escapeHTML(r.description||r.aciklama||"")}”</div><div class="meta"><span>📍 ${escapeHTML(r.ilce||"")}</span>${r.mahalle?`<span>🏘️ ${escapeHTML(r.mahalle)}</span>`:""}<span>⏱️ ${escapeHTML(r.aciliyet||"")}</span></div><div class="small muted">Talep No: <strong>${escapeHTML(r.talep_no||"")}</strong></div></article>`;
+}
+
+/* ---------------- PROVIDER ---------------- */
+
+async function showProviderEntry(){
+ setNav("navProvider");
+ const local=getProvider();
+ if(local&&providerLogged()){showProviderPanel(local);return}
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div><div class="formCard"><span class="badge">🛠️ HİZMET SAĞLAYICI</span><h1>Hizmet Ver</h1><p class="muted small">Supabase'deki kayıtlı hizmet sağlayıcıları ve sana uygun talepleri yükleyelim.</p><button class="btn primary" onclick="loadProviderDirectory()">KAYITLI SAĞLAYICILARI GÖSTER</button><div id="providerDirectory"></div></div>`);
+ await loadProviderDirectory();
+}
+
+async function loadProviderDirectory(){
+ const box=document.getElementById("providerDirectory");if(!box)return;
+ box.innerHTML=`<div class="card" style="margin-top:14px;text-align:center">⏳ Hizmet sağlayıcılar yükleniyor...</div>`;
+ let providers=await loadProvidersFromSupabase();providers=await enrichProviders(providers);
+ if(!providers.length){box.innerHTML=`<div class="warning">Supabase'de <strong>providers</strong> tablosundan okunabilir hizmet sağlayıcı kaydı bulunamadı.</div>`;return}
+ box.innerHTML=`<div class="section"><h2>Hizmet sağlayıcılar</h2>${providers.map(p=>renderProviderCard(p)).join("")}</div>`;
+}
+
+function renderProviderCard(p){
+ const cats=(p.services||[]).map(k=>SERVICES[k]?.name||k).filter(Boolean).join(", ")||"Kategori bilgisi yok";
+ return `<article class="request"><div class="requestTop"><div><h3>🛠️ ${escapeHTML(p.name)}</h3><div class="small muted">${escapeHTML(p.city)} • ${escapeHTML(p.district)}</div></div><span class="status">${p.active?"Aktif":"Pasif"}</span></div><div class="meta"><span>🔧 ${escapeHTML(cats)}</span>${p.neighborhood?`<span>🏘️ ${escapeHTML(p.neighborhood)}</span>`:""}</div>${p.description?`<div class="description">${escapeHTML(p.description)}</div>`:""}${p.phone?`<a class="btn primary" style="display:block;text-align:center" href="tel:${escapeHTML(p.phone)}">📞 HİZMET SAĞLAYICIYI ARA</a>`:"<div class=\"warning\">Bu sağlayıcının telefon numarası kayıtlı değil.</div>"}<br><button class="btn secondary" onclick='openProviderById(${JSON.stringify(String(p.id))})'>📋 UYGUN TALEPLERİ GÖR</button></article>`;
+}
+
+async function openProviderById(id){
+ let providers=await loadProvidersFromSupabase();providers=await enrichProviders(providers);const p=providers.find(x=>String(x.id)===String(id));
+ if(p)showProviderPanel(p);else alert("Hizmet sağlayıcı bulunamadı.");
+}
+
+async function showProviderPanel(p){
+ setNav("navProvider");
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick="showProviderEntry()">← Hizmet sağlayıcılara dön</button></div><div class="profileHeader"><div class="avatar">${escapeHTML((p.name||"U").charAt(0).toUpperCase())}</div><div style="flex:1"><strong>${escapeHTML(p.name)}</strong><div class="small muted"><span class="activeDot"></span>${p.active?"Aktif":"Pasif"} • ${escapeHTML(p.district)}</div></div></div><div class="grid section"><div class="card"><div style="font-size:24px">📋</div><strong id="matchCount">...</strong><div class="small muted">Uygun İş</div></div><div class="card"><div style="font-size:24px">🛠️</div><strong>${p.services.length}</strong><div class="small muted">Kategori</div></div></div><div class="section"><h2>📋 Sana Uygun Talepler</h2><div id="matchedRequests" class="card" style="text-align:center">⏳ Eşleşmeler aranıyor...</div></div>`);
+ const requests=await loadRequestsFromSupabase();
+ const suitable=requests.filter(r=>providerMatchesRequest(p,r));
+ document.getElementById("matchCount").textContent=suitable.length;
+ const box=document.getElementById("matchedRequests");
+ if(!suitable.length){box.innerHTML=`<div class="empty">🔎<h3>Şimdilik uygun talep yok.</h3><p>Sağlayıcının kategorisi ve ilçesi ile eşleşen talepler burada görünecek.</p></div>`}
+ else box.outerHTML=suitable.map(r=>renderProviderRequest(r)).join("");
+}
+
+function renderProviderRequest(r){
+ const k=serviceKeyFromValue(r.service||r.kategori),s=SERVICES[k]||{name:r.kategori||"Hizmet",emoji:"🛠️"};
+ const phone=r.telefon||r.phone||"";
+ return `<article class="request"><div class="requestTop"><div><h3>${s.emoji} ${escapeHTML(s.name)}</h3><div class="small muted">Talep No: ${escapeHTML(r.talep_no||"")}</div></div><span class="status">${escapeHTML(r.aciliyet||"Beklemede")}</span></div><div class="description">${escapeHTML(r.aciklama||r.description||"")}</div><div class="meta"><span>📍 ${escapeHTML(r.ilce||r.district||"")}</span>${r.mahalle?`<span>🏘️ ${escapeHTML(r.mahalle)}</span>`:""}<span>👤 ${escapeHTML(r.ad_soyad||r.name||"")}</span></div>${phone?`<a class="btn primary" style="display:block;text-align:center" href="tel:${escapeHTML(phone)}">📞 MÜŞTERİYLE İLETİŞİME GEÇ</a>`:`<div class="warning">Bu talepte telefon numarası bulunmuyor.</div>`}</article>`;
+}
+
+/* ---------------- OPTIONAL LOCAL PROVIDER ---------------- */
+
+function providerLogin(){write(KEYS.providerLogged,true);showProviderPanel(getProvider())}
+function providerLogout(){write(KEYS.providerLogged,false);showProviderEntry()}
+
+/* ---------------- START ---------------- */
+async function startApp(){
+  setConnection(false,"Supabase bağlanıyor...");
+  try{showHome();}catch(error){
+    console.error("Ana ekran başlatma hatası:",error);
+    const root=document.getElementById("app");
+    if(root)root.innerHTML=`<div class="error"><strong>Uygulama başlatılamadı.</strong><br><span class="small">Lütfen sayfayı yenileyin.</span></div>`;
+  }
+  await testSupabase();
+}
+startApp();
+</script>
+
+
+<script>
+/* =========================================================
+   HESAP: KAYIT / GİRİŞ — TEK DOSYA SÜRÜMÜ
+   ========================================================= */
+let currentAuthUser=null;
+function authHeaders(token){return {"apikey":SUPABASE_KEY,"Authorization":"Bearer "+(token||SUPABASE_KEY),"Content-Type":"application/json"}}
+function getAuthSession(){try{return JSON.parse(localStorage.getItem("isimi_coz_auth_session")||"null")}catch(e){return null}}
+function saveAuthSession(session){if(session)localStorage.setItem("isimi_coz_auth_session",JSON.stringify(session));else localStorage.removeItem("isimi_coz_auth_session");updateAuthArea()}
+function updateAuthArea(){
+ const el=document.getElementById("authArea"); if(!el)return;
+ const session=getAuthSession();
+ if(session?.user){ currentAuthUser=session.user; const email=session.user.email||"Hesabım"; el.innerHTML='<div class="authBar"><span class="authUser">'+escapeHTML(email)+'</span><button class="authBtn" type="button" onclick="logoutUser()">Çıkış</button></div>'; }
+ else { currentAuthUser=null; el.innerHTML='<div class="authBar"><button class="authBtn" type="button" onclick="openAuthModal(\'login\')">Giriş</button><button class="authBtn primary" type="button" onclick="openAuthModal(\'signup\')">Kayıt Ol</button></div>'; }
+}
+function openAuthModal(mode){
+ document.getElementById("authModal")?.remove();
+ const title=mode==='signup'?'Hesap oluştur':'Giriş yap';
+ const button=mode==='signup'?'KAYIT OL':'GİRİŞ YAP';
+ const switchText=mode==='signup'?'Zaten hesabın var mı?':'Hesabın yok mu?';
+ const switchMode=mode==='signup'?'login':'signup';
+ const switchLabel=mode==='signup'?'Giriş yap':'Kayıt ol';
+ const html=`<div class="modal" id="authModal"><div class="modalCard"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><h2>${title}</h2><button class="authBtn" type="button" onclick="closeAuthModal()">Kapat</button></div><label>E-posta</label><input id="authEmail" type="email" autocomplete="email" placeholder="ornek@email.com"><label>Şifre</label><input id="authPassword" type="password" autocomplete="${mode==='signup'?'new-password':'current-password'}" placeholder="En az 6 karakter"><div id="authError"></div><button class="btn primary" id="authSubmit" type="button" onclick="submitAuth('${mode}')">${button}</button><p class="muted small" style="text-align:center;margin-bottom:0">${switchText} <button class="authBtn" type="button" onclick="openAuthModal('${switchMode}')">${switchLabel}</button></p></div></div>`;
+ document.body.insertAdjacentHTML('beforeend',html);
+ setTimeout(()=>document.getElementById('authEmail')?.focus(),50);
+}
+function closeAuthModal(){document.getElementById("authModal")?.remove()}
+async function submitAuth(mode){
+ const email=document.getElementById('authEmail')?.value.trim(); const password=document.getElementById('authPassword')?.value; const err=document.getElementById('authError'); const btn=document.getElementById('authSubmit');
+ if(!email||!password){if(err)err.innerHTML='<div class="authError">E-posta ve şifre gerekli.</div>';return}
+ if(password.length<6){if(err)err.innerHTML='<div class="authError">Şifre en az 6 karakter olmalı.</div>';return}
+ btn.disabled=true;btn.textContent='BEKLEYİN...';
+ try{
+   let url=SUPABASE_URL+'/auth/v1/'+(mode==='signup'?'signup':'token?grant_type=password');
+   const r=await fetch(url,{method:'POST',headers:{"apikey":SUPABASE_KEY,"Content-Type":"application/json"},body:JSON.stringify({email,password})});
+   const data=await r.json().catch(()=>({}));
+   if(!r.ok)throw new Error(data.error_description||data.msg||data.message||'Kimlik doğrulama başarısız.');
+   if(mode==='signup' && !data.access_token){
+      closeAuthModal(); alert('Kayıt tamamlandı. E-posta doğrulaması açıksa gelen kutunu kontrol et, ardından giriş yap.'); return;
+   }
+   saveAuthSession(data); closeAuthModal(); alert(mode==='signup'?'Hesap oluşturuldu. ✓':'Giriş başarılı. ✓');
+ }catch(e){if(err)err.innerHTML='<div class="authError">'+escapeHTML(e.message||String(e))+'</div>';}finally{if(btn){btn.disabled=false;btn.textContent=buttonText(mode)}}
+}
+function buttonText(mode){return mode==='signup'?'KAYIT OL':'GİRİŞ YAP'}
+function logoutUser(){saveAuthSession(null);alert('Çıkış yapıldı.')}
+updateAuthArea();
+
+/* =========================================================
+   İŞİNİ HALLET — TEK INDEX.HTML İÇİNE GÖMÜLÜ, BAĞIMSIZ AKIŞ
+   ========================================================= */
+(function(){
+'use strict';
+const H={step:0,answers:{},caseId:null,createdAt:null,dbId:null,documents:{}};
+function getDocumentChecklist(a){
+ const docs=[];
+ docs.push({key:'identity',title:'Kimlik belgesi',reason:'Alıcı ve satıcı için gerekli.',required:true});
+ if(a.representation==='yes')docs.push({key:'representation',title:'Temsil belgesi',reason:'Vekâletname, vasi kararı veya ilgili temsil belgesi gerekir.',required:true});
+ docs.push({key:'title_deed',title:'Tapu senedi / tapu bilgisi',reason:'Varsa işlem sırasında kullanılmak üzere hazır bulundurulmalı; resmi işlemde güncel kayıt esas alınır.',required:true});
+ if(a.building==='yes')docs.push({key:'dask',title:'Geçerli DASK poliçesi',reason:'Bina niteliğindeki taşınmazlarda satış işlemi için kontrol edilmelidir.',required:true});
+ if(a.multiple_owners==='yes')docs.push({key:'owners',title:'Malik / temsil kontrolü',reason:'Birden fazla malik için taraf ve temsil durumunun tamamlanması gerekir.',required:true});
+ return docs;
+}
+function documentSummary(docs){
+ const total=docs.length, ready=docs.filter(d=>H.documents[d.key]===true).length;
+ const percent=total?Math.round((ready/total)*100):0;
+ const missing=docs.filter(d=>H.documents[d.key]!==true);
+ return {total,ready,percent,complete:total>0&&ready===total,missing};
+}
+function nextAction(a,docState){
+ if(!Number(a.municipal_tax_value)||Number(a.municipal_tax_value)<=0)return {title:'Emlak vergisi değerini doğrula',detail:'Belediye/tapu işleminde esas alınabilecek güncel emlak vergisi değerini öğrenip dosyana ekle. Harç hesabı bu değer ile satış bedelinin karşılaştırılmasıyla netleştirilecektir.'};
+ if(docState.missing.length)return {title:'Eksik belgeleri tamamla',detail:'Sıradaki öncelik: '+docState.missing[0].title+'. Hazırladıkça belgeyi “Hazır” olarak işaretleyebilirsin.'};
+ if(a.multiple_owners==='unknown')return {title:'Malik durumunu doğrula',detail:'Güncel tapu kaydından malik sayısını kesinleştir.'};
+ if(a.encumbrance!=='no')return {title:'Takyidat durumunu doğrula',detail:'Güncel tapu kaydında haciz, ipotek veya başka bir takyidat olup olmadığını kontrol et.'};
+ if(a.buyer_ready!=='yes')return {title:'Alıcı hazırlığını tamamla',detail:'Alıcının satış işlemine hazır olduğunu teyit et.'};
+ return {title:'Tapu başvurusuna hazırlan',detail:'Belgeler hazır. Bilgileri son kez kontrol ederek Web Tapu veya yetkili tapu kanalından başvuru adımına geçebilirsin.'};
+}
+const OFFICIAL_SOURCES=[
+ {key:'tkgm_satis',title:'TKGM — Satış işlemi rehberi',url:'https://www.tkgm.gov.tr/sites/default/files/2020-12/islem_rehberi-turkce.pdf',note:'Gerçek kişiler için satışta kimlik, temsil belgesi, tapu senedi ve bina niteliğinde DASK gibi başlıklar.'},
+ {key:'tkgm_sss',title:'TKGM — Sıkça Sorulan Sorular',url:'https://www.tkgm.gov.tr/en/sss',note:'Emlak vergisi değeri, tapu harcı oranı, DASK ve döner sermaye hakkında güncel kurum açıklamaları.'},
+ {key:'tkgm_webtapu',title:'TKGM — Web Tapu',url:'https://www.tkgm.gov.tr/',note:'Tapu başvurularının Web Tapu üzerinden başlatılabildiği resmi kanal.'},
+ {key:'gib_2026',title:'GİB — Gayrimenkullerin 5 Yıl İçinde Elden Çıkarılması (2026)',url:'https://cdn.gib.gov.tr/api/gibportal-file/file/getFile?objectKey=DUYURU%2FUNIVERSAL%2F2026%2F2026_gayrimenkul5yil.pdf',note:'5 yıllık süre, iktisap tarihi, endeksleme ve değer artış kazancı ön kontrolü.'},
+ {key:'gib_hazirbeyan',title:'GİB — Değer Artışı Kazancı Hesaplama',url:'https://intvrg.gib.gov.tr/hazirbeyan/artisHesapla.html',note:'Endeksleme, gider, istisna ve vergiye tabi matrahın resmi bilgilendirme hesabı.'}
+];
+function officialSourcesHtml(){return '<div class="sourceGrid">'+OFFICIAL_SOURCES.map(s=>'<div class="sourceCard"><strong>'+esc(s.title)+'</strong><div class="hm small">'+esc(s.note)+'</div><a href="'+esc(s.url)+'" target="_blank" rel="noopener noreferrer">Resmî kaynağı aç →</a></div>').join('')+'</div>'}
+function buildCasePayload(){
+ const a=H.answers;
+ const sale=Number(a.sale_price)||0;
+ const purchase=Number(a.acquisition_price)||0;
+ const municipalValue=Number(a.municipal_tax_value)||0;
+ const harcBase=Math.max(sale,municipalValue,0);
+ const sellerFee=harcBase*0.02;
+ const buyerFee=harcBase*0.02;
+ const totalFee=harcBase*0.04;
+ const grossGain=(sale>0&&purchase>0)?sale-purchase:null;
+ const warnings=[];
+ if(a.seller_type!=='real_person')warnings.push('Bu aktif akış gerçek kişi satışı için hazırlanmıştır. Tüzel kişi satışında farklı belge ve süreçler gerekebilir.');
+ if(a.property_location!=='turkey')warnings.push('Yurt dışındaki taşınmazlar için bu Türkiye tapu satış akışı kullanılmamalıdır.');
+ if(a.title_deed!=='yes')warnings.push('Tapu bilgileri işlem öncesinde doğrulanmalıdır.');
+ if(a.multiple_owners==='yes')warnings.push('Birden fazla malik varsa tüm maliklerin veya geçerli temsilcilerinin işlem durumu ayrıca kontrol edilmelidir.');
+ if(a.encumbrance!=='no')warnings.push('Haciz, ipotek veya başka bir takyidat varsa satış öncesinde güncel tapu kaydı üzerinden ayrıca değerlendirilmelidir.');
+ if(a.representation==='yes')warnings.push('Vekâletname/temsil belgesinin kapsamı ve geçerliliği işlem öncesinde kontrol edilmelidir.');
+ if(a.buyer_ready!=='yes')warnings.push('Alıcının hazır olmaması işlem zamanlamasını etkileyebilir.');
+ let fivePassed=false;
+ if(a.acquisition_date){const d=new Date(a.acquisition_date+'T00:00:00');if(!Number.isNaN(d.getTime())){const x=new Date(d);x.setFullYear(x.getFullYear()+5);fivePassed=new Date()>=x;if(!fivePassed&&a.acquisition_type==='purchase')warnings.push('5 yıllık süre dolmadan satışta değer artış kazancı yönünden vergi değerlendirmesi gerekebilir.');}}
+ const capitalGainRelevant=!fivePassed&&a.acquisition_type!=='inheritance'&&a.acquisition_type!=='gift';
+ if(!municipalValue)warnings.push('Emlak vergisi değeri dosyada belirtilmedi. Tapu harcı hesabı şu anda yalnızca satış bedeli üzerinden geçici ön hesap olarak gösteriliyor; güncel emlak vergisi değeri girildiğinde matrah yeniden karşılaştırılmalıdır.');
+ if(sale>0&&municipalValue>0&&sale<municipalValue)warnings.push('Beyan edilen satış bedeli emlak vergisi değerinden düşük görünüyor; tapu harcı ön hesabında daha yüksek değer esas alınmıştır.');
+ return {
+   case_type:'konut_satisi',
+   status:'draft',
+   title:'Konut satışı',
+   summary:'İşini Hallet ön kontrol dosyası — konut satışı',
+   user_id:getAuthSession()?.user?.id||null,
+   customer_id:getAuthSession()?.user?.id||null,
+   district:a.district||null,
+   city:a.city||'İzmir',
+   created_at:H.createdAt||new Date().toISOString(),
+   updated_at:new Date().toISOString(),
+   metadata:{
+     case_no:H.caseId,
+     module:'tasinmaz',
+     transaction_type:'konut_satisi',
+     answers:a,
+     calculations:{sale_price:sale,municipal_tax_value:municipalValue,harc_base:harcBase,acquisition_price:purchase,gross_difference:grossGain,seller_tapu_harci:sellerFee,buyer_tapu_harci:buyerFee,total_tapu_harci:totalFee,five_years_passed:fivePassed,capital_gain_relevant:capitalGainRelevant},
+     warnings,
+     documents:H.documents,
+     document_summary:documentSummary(getDocumentChecklist(a)),
+     rule_engine:{version:'v4',checked_at:new Date().toISOString(),capital_gain_relevant:capitalGainRelevant,tapu_harci_base:harcBase,source_keys:OFFICIAL_SOURCES.map(x=>x.key)},
+     source_note:'Bu dosya ön kontrol aracıdır; resmi başvuru sırasında TKGM’nin güncel koşulları ve GİB’in güncel kuralları esas alınmalıdır.',official_sources:OFFICIAL_SOURCES.map(x=>({key:x.key,title:x.title,url:x.url}))
+   }
+ };
+}
+async function saveCase(silent=false){
+ if(!H.caseId)H.caseId='IH-'+new Date().toISOString().replace(/\D/g,'').slice(0,14)+'-'+Math.random().toString(36).slice(2,7).toUpperCase();
+ const session=getAuthSession();
+ if(!session?.access_token||!session?.user?.id){openAuthModal('login');return;}
+ const btn=document.querySelector('#hallet-root [data-a="savecase"]');
+ if(btn){btn.disabled=true;btn.textContent='KAYDEDİLİYOR...';}
+ try{
+   const payload=buildCasePayload();
+   let rows;
+   if(H.dbId){
+     rows=await supabaseAuthRequest('PATCH','hallet_cases?id=eq.'+encodeURIComponent(H.dbId),payload);
+   }else{
+     rows=await supabaseAuthRequest('POST','hallet_cases',payload);
+   }
+   const row=Array.isArray(rows)?rows[0]:rows;
+   H.dbId=row?.id||H.dbId;
+   H.createdAt=row?.created_at||H.createdAt||new Date().toISOString();
+   if(btn){btn.textContent='✓ DOSYA KAYDEDİLDİ';btn.disabled=true;btn.classList.add('saved');}
+   if(!silent)alert('İşlem dosyan Supabase hesabına kaydedildi. ✓\n\nDosya No: '+H.caseId);
+ }catch(e){
+   console.error('Hallet dosya kayıt hatası:',e);
+   if(btn){btn.disabled=false;btn.textContent='DOSYAYI KAYDET';}
+   alert('Dosya kaydedilemedi.\n\n'+(e.message||'Bilinmeyen hata'));
+ }
+}
+const QUESTIONS=[
+ {key:'seller_type',title:'Satıcı gerçek kişi mi?',options:[['real_person','Evet, gerçek kişiyim'],['company','Hayır, şirket/tüzel kişilik']]},
+ {key:'property_location',title:'Taşınmaz Türkiye’de mi?',options:[['turkey','Evet'],['abroad','Hayır']]},
+ {key:'title_deed',title:'Taşınmaza ait tapu bilgileri mevcut mu?',options:[['yes','Evet'],['no','Hayır']]},
+ {key:'multiple_owners',title:'Taşınmazın birden fazla maliki var mı?',options:[['no','Hayır'],['yes','Evet'],['unknown','Bilmiyorum']]},
+ {key:'encumbrance',title:'Tapu kaydında haciz, ipotek veya başka bir takyidat var mı?',options:[['no','Hayır'],['yes','Evet'],['unknown','Bilmiyorum']]},
+ {key:'representation',title:'Satış işlemini vekil aracılığıyla mı yapacaksınız?',options:[['no','Hayır'],['yes','Evet']]},
+ {key:'acquisition_date',title:'Taşınmazı edinme tarihiniz nedir?',type:'date'},
+ {key:'acquisition_type',title:'Taşınmazı nasıl edindiniz?',options:[['purchase','Satın alma'],['inheritance','Miras'],['gift','Bağış'],['other','Diğer']]},
+ {key:'buyer_ready',title:'Alıcı satış işlemine hazır mı?',options:[['yes','Evet'],['no','Hayır']]},
+ {key:'sale_price',title:'Satış bedeli nedir?',type:'number',placeholder:'TL olarak yazın'},
+ {key:'municipal_tax_value',title:'Taşınmazın emlak vergisi değeri nedir?',type:'number',placeholder:'Biliyorsanız TL olarak yazın'},
+ {key:'acquisition_price',title:'Taşınmazı kaç TL bedelle edindiniz?',type:'number',placeholder:'Biliniyorsa TL olarak yazın'},
+ {key:'building',title:'Taşınmaz üzerinde bina/yapı var mı?',options:[['yes','Evet'],['no','Hayır']]}
+];
+function esc(v){return String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+function money(v){const n=Number(v);return Number.isFinite(n)?new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(n):'—'}
+function dateText(v){if(!v)return'—';const d=new Date(v+'T00:00:00');return Number.isNaN(d.getTime())?esc(v):d.toLocaleDateString('tr-TR')}
+function root(){let r=document.getElementById('hallet-root');if(!r){r=document.createElement('div');r.id='hallet-root';document.body.appendChild(r)}return r}
+function ensureStyle(){if(document.getElementById('hallet-inline-style'))return;const s=document.createElement('style');s.id='hallet-inline-style';s.textContent=`#hallet-root{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;z-index:2147483647!important;display:none!important;background:#071318!important;color:#f5f7f7!important;overflow:auto!important;pointer-events:auto!important;-webkit-overflow-scrolling:touch!important}#hallet-root.hv{display:block!important}#hallet-root .ha{all:initial!important;display:block!important;min-height:100vh!important;width:100%!important;background:#071318!important;color:#f5f7f7!important;font-family:Arial,sans-serif!important;padding:20px!important;box-sizing:border-box!important}#hallet-root .ha *{box-sizing:border-box!important}#hallet-root .hw{width:min(760px,100%)!important;margin:auto!important;padding-bottom:40px!important}#hallet-root .ht{display:flex!important;justify-content:space-between!important;align-items:center!important;gap:10px!important;margin-bottom:18px!important}#hallet-root .hc{background:#10252b!important;border:1px solid #29464d!important;border-radius:20px!important;padding:22px!important;box-shadow:0 16px 40px rgba(0,0,0,.25)!important}#hallet-root h1,#hallet-root h2,#hallet-root p{margin-top:0!important}#hallet-root h1{font-size:32px!important;line-height:1.1!important}#hallet-root h2{font-size:23px!important;line-height:1.2!important}#hallet-root .hk{color:#b9812e!important;font-size:12px!important;font-weight:800!important;text-transform:uppercase!important;letter-spacing:.08em!important;margin-bottom:9px!important}#hallet-root .hm{color:#b8c8cb!important;line-height:1.55!important}#hallet-root .hg{display:grid!important;grid-template-columns:1fr!important;gap:12px!important;margin-top:18px!important}#hallet-root button{appearance:none!important;-webkit-appearance:none!important}#hallet-root .hb{width:100%!important;min-height:54px!important;border:1px solid #35535a!important;border-radius:15px!important;background:#122b31!important;color:#fff!important;padding:15px 17px!important;font:700 15px Arial,sans-serif!important;text-align:left!important;cursor:pointer!important;touch-action:manipulation!important}#hallet-root .hp{background:#0e5c53!important;border-color:#3d9a8e!important;text-align:center!important}#hallet-root .hs{text-align:center!important;background:#172b30!important}#hallet-root .topb{border:1px solid #35535a!important;background:#10252b!important;color:#fff!important;border-radius:12px!important;padding:10px 13px!important;font:700 13px Arial,sans-serif!important;cursor:pointer!important;touch-action:manipulation!important}#hallet-root .hi{width:100%!important;background:#091b20!important;color:#fff!important;border:1px solid #45636a!important;border-radius:13px!important;padding:15px!important;font:600 16px Arial,sans-serif!important}#hallet-root label{display:block!important;font:700 13px Arial,sans-serif!important;color:#dce7e8!important;margin:12px 0 7px!important}#hallet-root .hl{display:grid!important;gap:10px!important;margin:16px 0!important}#hallet-root .li{padding:12px 14px!important;border:1px solid #213d43!important;border-radius:12px!important;background:#0b1d22!important;line-height:1.45!important}#hallet-root .ok{color:#8ee1d5!important}#hallet-root .warn{color:#ffd18c!important}#hallet-root .pr{height:8px!important;background:#183238!important;border-radius:99px!important;overflow:hidden!important;margin-bottom:18px!important}#hallet-root .pr span{display:block!important;height:100%!important;background:#0e8b7d!important}#hallet-root .err{color:#ffb7a8!important;background:#3a1f1d!important;border:1px solid #7a3930!important;padding:10px!important;border-radius:10px!important;margin-top:10px!important}#hallet-root .sourceGrid{display:grid;gap:10px}.sourceCard{padding:12px;border:1px solid #24404a;border-radius:12px;background:#0b2027}.sourceCard a{display:inline-block;margin-top:8px;color:#8fd8cc;text-decoration:none;font-weight:700}.sourceCard a:hover{text-decoration:underline}.sourceCard .small{line-height:1.45}.progressTrack{height:10px!important;background:#091b20!important;border:1px solid #29464d!important;border-radius:999px!important;overflow:hidden!important;margin-top:10px!important}#hallet-root .progressTrack span{display:block!important;height:100%!important;background:#0e5c53!important;border-radius:999px!important;transition:width .2s ease!important}#hallet-root .docItem{display:flex!important;gap:12px!important;align-items:flex-start!important;padding:13px 14px!important;border:1px solid #29464d!important;border-radius:12px!important;background:#0b1d22!important;cursor:pointer!important;margin:0!important}#hallet-root .docItem input{width:22px!important;height:22px!important;accent-color:#0e8b7d!important;flex:0 0 auto!important;margin-top:2px!important}#hallet-root .docStatus{display:inline-block!important;margin-top:6px!important;font-size:12px!important;font-weight:800!important;color:#b8c8cb!important}@media(min-width:620px){#hallet-root .hg{grid-template-columns:1fr 1fr!important}}`;document.head.appendChild(s)}
+function open(){ensureStyle();const r=root();r.classList.add('hv');r.style.display='block';document.body.dataset.halletOverflow=document.body.style.overflow||'';document.body.style.overflow='hidden';return r}
+function close(){const r=root();r.classList.remove('hv');r.style.display='none';r.innerHTML='';document.body.style.overflow=document.body.dataset.halletOverflow||''}
+function render(x){const r=open();r.innerHTML='<div class="ha"><div class="hw">'+x+'</div></div>';r.scrollTop=0}
+function top(back){return '<div class="ht"><strong>İşini Hallet</strong><button class="topb" data-a="'+(back||'close')+'">'+(back?'← Geri':'Kapat')+'</button></div>'}
+function gate(){H.step=0;H.answers={};H.documents={};H.caseId=null;H.createdAt=null;H.dbId=null;render(top('close')+'<div class="hc"><div class="hk">Dijital işlem asistanı</div><h1>Ne yapmak istiyorsun?</h1><p class="hm">İşlemini seç. Gerekli adımları birlikte tamamlayalım.</p><div class="hg"><button class="hb hp" data-a="islem">📋 Bir işlem yapmak istiyorum</button><button class="hb" data-a="cases">📁 İşlem Dosyalarım</button><button class="hb" data-a="evrak">📄 Evrak hazırlamak istiyorum</button><button class="hb" data-a="kurum">🏛️ Bir kuruma başvuracağım</button><button class="hb" data-a="isimi">🛠️ Hizmet / usta bulmam gerekiyor</button></div></div>')}
+async function cases(){
+ const session=getAuthSession();
+ if(!session?.access_token||!session?.user?.id){openAuthModal('login');return;}
+ render(top('gate')+'<div class="hc"><div class="hk">İşlem Dosyalarım</div><h1>Kayıtlı dosyalar</h1><p class="hm">Hesabına kaydettiğin İşini Hallet dosyaları burada görünür.</p><div id="halletCasesBox" class="hl"><div class="li">⏳ Dosyalar yükleniyor...</div></div></div>');
+ try{
+   const rows=await supabaseAuthRequest('GET','hallet_cases?select=id,case_type,status,title,summary,district,city,metadata,created_at,updated_at&order=updated_at.desc&limit=100');
+   const list=Array.isArray(rows)?rows:[];
+   const box=document.getElementById('halletCasesBox');
+   if(!box)return;
+   if(!list.length){box.innerHTML='<div class="li"><strong>Henüz kayıtlı dosyan yok.</strong><br><span class="hm">İlk işlem dosyanı oluşturup kaydettiğinde burada görünecek.</span></div><button class="hb hp" data-a="islem">İlk dosyayı oluştur →</button>';return;}
+   box.innerHTML=list.map(r=>{
+     const m=r.metadata||{}; const no=m.case_no||'Dosya'; const city=r.city||''; const district=r.district||'';
+     const when=r.updated_at?new Date(r.updated_at).toLocaleDateString('tr-TR'):'';
+     const statusMap={draft:'Taslak',in_progress:'Devam ediyor',waiting_user:'Kullanıcı bekleniyor',completed:'Tamamlandı',cancelled:'İptal edildi'};
+     return '<button class="hb" data-a="caseopen" data-id="'+esc(r.id)+'"><strong>📄 '+esc(r.title||'İşlem Dosyası')+'</strong><br><span class="hm">'+esc(no)+' • '+esc(statusMap[r.status]||r.status||'Taslak')+' • '+esc([city,district].filter(Boolean).join(' / '))+' • '+esc(when)+'</span></button>';
+   }).join('');
+ }catch(e){
+   console.error('Hallet dosyalar yükleme hatası:',e);
+   const box=document.getElementById('halletCasesBox');
+   if(box)box.innerHTML='<div class="err"><strong>Dosyalar yüklenemedi.</strong><br>'+esc(e.message||'Bilinmeyen hata')+'</div><button class="hb" data-a="gate">← İşlemlere dön</button>';
+ }
+}
+async function openCase(id){
+ const session=getAuthSession();
+ if(!session?.access_token||!session?.user?.id){openAuthModal('login');return;}
+ try{
+   const rows=await supabaseAuthRequest('GET','hallet_cases?select=id,case_type,status,title,summary,district,city,metadata,created_at,updated_at&id=eq.'+encodeURIComponent(id)+'&limit=1');
+   const row=Array.isArray(rows)?rows[0]:null;
+   if(!row){alert('İşlem dosyası bulunamadı.');return;}
+   const m=row.metadata||{};
+   H.dbId=row.id; H.caseId=m.case_no||null; H.createdAt=row.created_at||null; H.answers=(m.answers&&typeof m.answers==='object')?m.answers:{}; H.documents=(m.documents&&typeof m.documents==='object')?m.documents:{};
+   result(true);
+ }catch(e){console.error('Hallet dosya açma hatası:',e);alert('Dosya açılamadı.\n\n'+(e.message||'Bilinmeyen hata'));}
+}
+function islem(){render(top('gate')+'<div class="hc"><div class="hk">İşlem seçimi</div><h2>Hangi işlemi yapmak istiyorsun?</h2><div class="hg"><button class="hb hp" data-a="tasinmaz">🏠 Taşınmaz işlemleri</button><button class="hb" data-a="evrak">📄 Evrak hazırlama</button><button class="hb" data-a="kurum">🏛️ Kurum başvurusu</button></div></div>')}
+function tasinmaz(){render(top('islem')+'<div class="hc"><div class="hk">Taşınmaz işlemleri</div><h2>Hangi taşınmaz işlemi?</h2><div class="hg"><button class="hb hp" data-a="konut">🏠 Konut satışı</button></div></div>')}
+function konut(){render(top('tasinmaz')+'<div class="hc"><div class="hk">Konut satışı</div><h2>Satış dosyasını oluşturalım</h2><p class="hm">13 kısa soruyla satış dosyasının ön kontrolünü yapacağız.</p><div class="hl"><div class="li">✓ Tapu ve mülkiyet</div><div class="li">✓ Alıcı ve satış bilgileri</div><div class="li">✓ Edinim tarihi ve vergi kontrolü</div></div><button class="hb hp" data-a="start">Satış dosyasını başlat →</button></div>')}
+function question(){const q=QUESTIONS[H.step];if(!q)return result();let html='<div class="pr"><span style="width:'+Math.max(7,Math.round(H.step/QUESTIONS.length*100))+'%"></span></div>'+top(H.step?'qback':'konut')+'<div class="hc"><div class="hk">Soru '+(H.step+1)+' / '+QUESTIONS.length+'</div><h2>'+esc(q.title)+'</h2>';if(q.type==='date')html+='<label>Tarih</label><input class="hi" id="qinput" type="date" value="'+esc(H.answers[q.key]||'')+'"><button class="hb hp" style="margin-top:14px" data-a="save" data-k="'+q.key+'">Devam et →</button>';else if(q.type==='number')html+='<label>Satış bedeli (TL)</label><input class="hi" id="qinput" type="number" min="0" step="1" inputmode="decimal" placeholder="'+esc(q.placeholder)+'" value="'+esc(H.answers[q.key]||'')+'"><button class="hb hp" style="margin-top:14px" data-a="save" data-k="'+q.key+'">Devam et →</button>';else html+='<div class="hg">'+q.options.map(o=>'<button class="hb" data-a="answer" data-k="'+q.key+'" data-v="'+o[0]+'">'+esc(o[1])+'</button>').join('')+'</div>';html+='</div>';render(html)}
+function result(fromSaved=false){
+ const a=H.answers;
+ H.caseId=H.caseId||'IH-'+new Date().toISOString().replace(/\D/g,'').slice(0,14)+'-'+Math.random().toString(36).slice(2,7).toUpperCase();
+ const warnings=[];
+ if(a.seller_type!=='real_person')warnings.push('Bu aktif akış gerçek kişi satışı için hazırlanmıştır. Tüzel kişi satışında farklı belge ve süreçler gerekebilir.');
+ if(a.property_location!=='turkey')warnings.push('Yurt dışındaki taşınmazlar için bu Türkiye tapu satış akışı kullanılmamalıdır.');
+ if(a.title_deed!=='yes')warnings.push('Tapu bilgileri işlem öncesinde doğrulanmalıdır.');
+ if(a.multiple_owners==='yes')warnings.push('Birden fazla malik varsa tüm maliklerin veya geçerli temsilcilerinin işlem durumu ayrıca kontrol edilmelidir.');
+ if(a.encumbrance!=='no')warnings.push('Haciz, ipotek veya başka bir takyidat varsa satış öncesinde güncel tapu kaydı üzerinden ayrıca değerlendirme yapılmalıdır.');
+ if(a.representation==='yes')warnings.push('Vekâletname/temsil belgesinin kapsamı ve geçerliliği işlem öncesinde kontrol edilmelidir.');
+ if(a.buyer_ready!=='yes')warnings.push('Alıcının hazır olmaması işlem zamanlamasını etkileyebilir.');
+ let five='Kontrol edilemedi';
+ let fivePassed=false;
+ if(a.acquisition_date){const d=new Date(a.acquisition_date+'T00:00:00');if(!Number.isNaN(d.getTime())){const x=new Date(d);x.setFullYear(x.getFullYear()+5);fivePassed=new Date()>=x;five=fivePassed?'5 yıllık süre dolmuş görünüyor.':'5 yıllık süre henüz dolmamış görünüyor.';if(!fivePassed&&a.acquisition_type==='purchase')warnings.push('5 yıllık süre dolmadan satışta değer artış kazancı yönünden vergi değerlendirmesi gerekebilir.');}}
+ const sale=Number(a.sale_price)||0;
+ const purchase=Number(a.acquisition_price)||0;
+ const municipalValue=Number(a.municipal_tax_value)||0;
+ const harcBase=Math.max(sale,municipalValue,0);
+ const sellerFee=harcBase*0.02;
+ const buyerFee=harcBase*0.02;
+ const totalFee=harcBase*0.04;
+ const grossGain=(sale>0&&purchase>0)?sale-purchase:null;
+ const capitalGainRelevant=!fivePassed&&a.acquisition_type!=='inheritance'&&a.acquisition_type!=='gift';
+ const docs=getDocumentChecklist(a);
+ const docState=documentSummary(docs);
+ const action=nextAction(a,docState);
+ const officialNote='Bu dosya ön kontrol aracıdır. Tapu işlemlerinde TKGM’nin güncel koşulları; değer artış kazancında GİB’in güncel hesaplama ve beyan kuralları esas alınmalıdır. Kaynaklar aşağıda doğrudan resmi kurum sayfalarına bağlanmıştır.';
+ render(top('close')+'<div class="hc"><div class="hk">İşlem dosyası</div><h1>Satış dosyan hazır.</h1><p class="hm">Ön kontrol tamamlandı. Aşağıdaki sonuçlar verdiğin bilgilere göre oluşturuldu.</p>'+
+ '<div class="hl"><div class="li"><strong>Dosya no:</strong> '+esc(H.caseId)+'</div><div class="li"><strong>Satış bedeli:</strong> '+money(sale)+'</div><div class="li"><strong>Emlak vergisi değeri:</strong> '+(municipalValue?money(municipalValue):'Belirtilmedi')+'</div><div class="li"><strong>Edinim tarihi:</strong> '+dateText(a.acquisition_date)+'</div><div class="li"><strong>5 yıllık süre:</strong> '+esc(five)+'</div></div>'+
+ '<h2>Gerekli belgeler</h2><p class="hm small">Hazır olan belgeleri işaretle. Bu işaretler dosya takibidir; belge yüklemesi anlamına gelmez.</p><div class="li"><strong>Dosya ilerlemesi:</strong> '+docState.percent+'% <span class="hm">('+docState.ready+' / '+docState.total+' belge hazır)</span><div class="progressTrack"><span style="width:'+docState.percent+'%"></span></div></div><div class="hl">'+docs.map(d=>'<label class="docItem"><input type="checkbox" data-a="docToggle" data-k="'+esc(d.key)+'" '+(H.documents[d.key]===true?'checked':'')+'><span><strong>'+esc(d.title)+'</strong><br><span class="hm">'+esc(d.reason)+'</span><br><span class="docStatus">'+(H.documents[d.key]===true?'✓ Hazır':'○ Eksik / bekleniyor')+'</span></span></label>').join('')+'</div><div class="li"><strong>Belge durumu:</strong> '+docState.ready+' / '+docState.total+' hazır'+(docState.complete?' — ✓ Tamamlandı':' — eksikler var')+'</div>'+
+ '<h2>Tapu harcı ön hesabı</h2><div class="hl"><div class="li"><strong>Satış bedeli:</strong> '+money(sale)+'</div><div class="li"><strong>Emlak vergisi değeri:</strong> '+(municipalValue?money(municipalValue):'Belirtilmedi')+'</div><div class="li"><strong>Harç matrahı ön hesabı:</strong> '+money(harcBase)+'</div><div class="li"><strong>Satıcı:</strong> '+money(sellerFee)+' <span class="hm">(%2)</span></div><div class="li"><strong>Alıcı:</strong> '+money(buyerFee)+' <span class="hm">(%2)</span></div><div class="li"><strong>Toplam:</strong> '+money(totalFee)+' <span class="hm">(%4)</span></div></div><p class="hm small">Ön hesap, beyan edilen satış bedeli ile belirtilen emlak vergisi değerinin yüksek olanını esas alır. Döner sermaye ücreti dahil değildir; resmi bildirimdeki güncel tutarlar esas alınmalıdır.</p>'+
+ '<h2>Değer artış kazancı ön kontrolü</h2><div class="hl"><div class="li"><strong>Durum:</strong> '+esc(fivePassed?'5 yıllık süre dolmuş görünüyor.':(a.acquisition_type==='inheritance'||a.acquisition_type==='gift'?'Miras/bağış edinimi: bu satış değer artış kazancı kapsamı dışında değerlendirilebilir.':'5 yıllık süre dolmamış / kontrol gerekli.'))+'</div>'+(capitalGainRelevant&&grossGain!==null?'<div class="li"><strong>Satış − alış farkı:</strong> '+money(grossGain)+'<br><span class="hm">Bu yalnızca brüt farktır; nihai vergi matrahı değildir. GİB hesabında Yİ-ÜFE endekslemesi (%10 şartı), indirilebilir giderler ve satış yılının istisnası ayrıca dikkate alınır.</span></div>':'<div class="li"><span class="hm">Bu dosyada değer artış kazancı yönünden ön kontrol yapıldı; nihai vergi hesabı için GİB kuralları ve güncel veriler esas alınmalıdır.</span></div>')+'</div>'+
+ '<h2>Şimdi ne yapmalısın?</h2><div class="li"><strong>'+esc(action.title)+'</strong><br><span class="hm">'+esc(action.detail)+'</span></div><h2>Sonraki adımlar</h2><div class="hl"><div class="li">1. Güncel tapu kaydı ve taraf bilgilerini doğrula.</div><div class="li">2. Gerekli belgeleri hazırla ve temsil/takyidat durumunu kontrol et.</div><div class="li">3. Tapu başvurusunu Web Tapu veya yetkili tapu kanalı üzerinden başlat.</div><div class="li">4. Harç ve döner sermaye ödemelerini resmi bildirim üzerinden kontrol et.</div><div class="li">5. İşlem tamamlandığında belgeleri dosyana ekle.</div></div>'+
+ (warnings.length?'<h2>Uyarılar</h2><div class="hl">'+warnings.map(w=>'<div class="li"><span class="warn">⚠</span> '+esc(w)+'</div>').join('')+'</div>':'<div class="li"><span class="ok">✓</span> Bu cevaplarla kritik bir uyarı tespit edilmedi.</div>')+
+ '<h2>Resmî kaynaklar ve dayanak</h2>'+officialSourcesHtml()+'<div class="li" style="margin-top:14px"><strong>Resmî kaynak notu:</strong><br><span class="hm">'+esc(officialNote)+'</span></div><div class="hg">'+(fromSaved?'<button class="hb hp" data-a="cases">← DOSYALARIMA DÖN</button>':'<button class="hb hp" data-a="savecase">DOSYAYI KAYDET</button>')+'<button class="hb" data-a="new">Yeni işlem başlat</button><button class="hb hs" data-a="close">Kapat</button></div></div>')
+}
+function msg(t,m,back){render(top(back||'gate')+'<div class="hc"><div class="hk">İşini Hallet</div><h2>'+esc(t)+'</h2><p class="hm">'+esc(m)+'</p><button class="hb hp" data-a="gate">İşlemlere dön</button></div>')}
+function goIsimi(){close();if(typeof window.showHome==='function')window.showHome()}
+function dispatch(a,e){if(a==='close')return close();if(a==='gate')return gate();if(a==='cases')return cases();if(a==='caseopen')return openCase(e.dataset.id);if(a==='islem')return islem();if(a==='tasinmaz')return tasinmaz();if(a==='konut')return konut();if(a==='start'){H.step=0;return question()}if(a==='qback'){H.step=Math.max(0,H.step-1);return question()}if(a==='answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return question()}if(a==='docToggle'){H.documents[e.dataset.k]=!!e.checked;result(!!H.dbId);if(H.dbId)return saveCase(true);return;}if(a==='savecase')return saveCase();if(a==='save'){const i=document.getElementById('qinput');if(!i||!String(i.value).trim()){const c=document.querySelector('#hallet-root .hc');if(c&&!c.querySelector('.err'))c.insertAdjacentHTML('beforeend','<div class="err">Lütfen bir değer girerek devam et.</div>');return}H.answers[e.dataset.k]=i.value.trim();H.step++;return question()}if(a==='new'){H.step=0;H.answers={};H.documents={};H.caseId=null;return gate()}if(a==='isimi')return goIsimi();if(a==='evrak')return msg('Evrak hazırlama','Bu modül sonraki aşamada açılacak. Mevcut aktif akış taşınmaz konut satışıdır.');if(a==='kurum')return msg('Kurum başvurusu','Bu modül sonraki aşamada açılacak. Mevcut aktif akış taşınmaz konut satışıdır.')}
+document.addEventListener('click',function(e){const el=e.target.closest&&e.target.closest('#hallet-root [data-a]');if(!el)return;e.preventDefault();e.stopPropagation();dispatch(el.dataset.a,el)},true);
+window.Hallet={showGate:gate,showIslemMenu:islem,showTasinmazMenu:tasinmaz,showKonutSatis:konut,showQuestion:question,showResult:result,close:close};
+})();
+
+/* Hallet başlatıcısı — ana sayfaya dokunmadan çalışır. */
+document.addEventListener('click',function(e){const b=e.target.closest&&e.target.closest('#openHalletButton');if(!b)return;e.preventDefault();e.stopPropagation();if(window.Hallet)window.Hallet.showGate();},true);
+</script>
+</body>
+</html>
