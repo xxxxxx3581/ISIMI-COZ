@@ -31,6 +31,12 @@ textarea{min-height:120px;resize:vertical}.row{display:grid;grid-template-column
 .bottom{position:fixed;bottom:0;left:0;right:0;background:rgba(7,17,31,.98);border-top:1px solid var(--line);z-index:30}.bottomInner{max-width:760px;margin:auto;display:grid;grid-template-columns:repeat(4,1fr)}
 .navBtn{border:0;background:transparent;color:#8fa3b9;padding:11px 4px 10px;font-size:10px}.navBtn b{display:block;font-size:19px;margin-bottom:3px}.navBtn.active{color:var(--primary)}
 .back{margin-bottom:12px}.hidden{display:none!important}@media(max-width:430px){main{padding:12px}.hero{padding:20px 16px}h1{font-size:27px}.grid{gap:8px}.service{padding:13px;min-height:122px}.row{grid-template-columns:1fr}}
+
+/* --- İŞİNİ HALLET GÜVENLİ BAŞLATICI --- */
+.hallet-launch{position:relative!important;z-index:1000!important;pointer-events:auto!important;touch-action:manipulation!important;cursor:pointer!important}
+.hallet-launch:disabled{opacity:.65}
+#hallet-root{pointer-events:none}
+#hallet-root[aria-live]{pointer-events:auto}
 </style>
   <link rel="stylesheet" href="isini-hallet.css">
 </head>
@@ -224,7 +230,7 @@ function showHome(){
     <span class="badge">🤖 YENİ</span>
     <h2 style="margin-top:12px">İşini Hallet</h2>
     <p class="muted small">İşlem, evrak ve kurum başvurularını adım adım hazırlamak için dijital işlem asistanını kullan.</p>
-    <button class="btn primary" type="button" onclick="openHallet()">İŞİNİ HALLET →</button>
+    <button id="openHalletButton" class="btn primary hallet-launch" type="button">İŞİNİ HALLET →</button>
   </div>
   <div class="section"><div class="sectionTitle"><h2>Hizmet kategorileri</h2><span class="small muted">İzmir</span></div><div class="grid">${Object.entries(SERVICES).map(([k,s])=>`<button class="card service" type="button" onclick="showRequest('${k}')"><div class="emoji">${s.emoji}</div><strong>${s.name}</strong><span>${s.desc}</span></button>`).join("")}</div></div>
   <div class="section card"><h2>💡 Nasıl çalışıyor?</h2><p class="muted small">İhtiyacını oluştur. Hizmet kategorisini ve bölgeni seç. Talebin sisteme kaydedilsin. Uygun hizmet sağlayıcıları talebini görebilsin.</p></div>`);
@@ -355,7 +361,25 @@ async function startApp(){
   await testSupabase();
 }
 startApp();
+
+/* Hallet butonu: inline onclick yerine güvenli olay dinleyicisi. */
+document.addEventListener("click",function(event){
+  const button=event.target.closest && event.target.closest("#openHalletButton");
+  if(!button)return;
+  event.preventDefault();
+  event.stopPropagation();
+  try{
+    if(window.Hallet && typeof window.Hallet.showGate === "function"){
+      window.Hallet.showGate();
+    }else{
+      alert("İşini Hallet modülü henüz yüklenmedi. Lütfen sayfayı yenileyin.");
+    }
+  }catch(error){
+    console.error("İşini Hallet açılış hatası:",error);
+    alert("İşini Hallet açılırken bir hata oluştu. Lütfen sayfayı yenileyin.");
+  }
+},true);
 </script>
-<script src="isini-hallet.js" defer></script>
+<script src="isini-hallet.js"></script>
 </body>
 </html>
