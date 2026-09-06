@@ -445,7 +445,7 @@ function buildCasePayload(){
  let fivePassed=false;
  if(a.acquisition_date){const d=new Date(a.acquisition_date+'T00:00:00');if(!Number.isNaN(d.getTime())){const x=new Date(d);x.setFullYear(x.getFullYear()+5);fivePassed=new Date()>=x;if(!fivePassed&&a.acquisition_type==='purchase')warnings.push('5 yıllık süre dolmadan satışta değer artış kazancı yönünden vergi değerlendirmesi gerekebilir.');}}
  return {
-   case_type:'tasinmaz_konut_satisi',
+   case_type:'konut_satisi',
    status:'draft',
    title:'Konut satışı',
    summary:'İşini Hallet ön kontrol dosyası — konut satışı',
