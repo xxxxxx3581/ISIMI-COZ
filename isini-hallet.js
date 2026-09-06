@@ -1,390 +1,489 @@
-(function () {
+(() => {
   "use strict";
 
-  let state = {
+  const state = {
     step: 0,
-    answers: {}
+    answers: {},
+    caseId: null,
+    createdAt: null
   };
 
   const questions = [
     {
-      id: "seller_type",
+      key: "seller_type",
       title: "Satıcı kim?",
-      desc: "Satış işlemini hangi kişi veya yapı adına yapıyorsunuz?",
       type: "choice",
       options: [
-        { value: "real_person", label: "Gerçek kişi", icon: "👤" },
-        { value: "company", label: "Şirket / tüzel kişi", icon: "🏢" }
+        ["real_person", "Gerçek kişi"],
+        ["company", "Şirket / tüzel kişi"]
       ]
     },
-
     {
-      id: "property_location",
+      key: "property_location",
       title: "Taşınmaz nerede?",
-      desc: "Satışa konu taşınmaz Türkiye'de mi?",
       type: "choice",
       options: [
-        { value: "turkey", label: "Türkiye'de", icon: "🇹🇷" },
-        { value: "foreign", label: "Türkiye dışında", icon: "🌍" }
+        ["turkey", "Türkiye'de"],
+        ["abroad", "Yurt dışında"]
       ]
     },
-
     {
-      id: "title_deed",
-      title: "Tapu mevcut mu?",
-      desc: "Satışa konu taşınmaz için tapu kaydı bulunuyor mu?",
+      key: "title_deed",
+      title: "Taşınmaza ait tapu bilgileri mevcut mu?",
       type: "choice",
       options: [
-        { value: "yes", label: "Evet", icon: "📄" },
-        { value: "no", label: "Hayır / Emin değilim", icon: "❓" }
+        ["yes", "Evet, mevcut"],
+        ["no", "Hayır / emin değilim"]
       ]
     },
-
     {
-      id: "multiple_owners",
-      title: "Birden fazla malik var mı?",
-      desc: "Taşınmaz tapuda birden fazla kişinin adına kayıtlı mı?",
+      key: "multiple_owners",
+      title: "Taşınmazın birden fazla maliki var mı?",
       type: "choice",
       options: [
-        { value: "yes", label: "Evet", icon: "👥" },
-        { value: "no", label: "Hayır", icon: "👤" },
-        { value: "unknown", label: "Bilmiyorum", icon: "❓" }
+        ["no", "Hayır, tek malik"],
+        ["yes", "Evet, birden fazla malik"],
+        ["unknown", "Bilmiyorum"]
       ]
     },
-
     {
-      id: "encumbrance",
-      title: "Tapuda kısıtlayıcı bir kayıt var mı?",
-      desc: "İpotek, haciz, şerh, beyan veya benzeri bir kayıt biliyor musunuz?",
+      key: "encumbrance",
+      title: "Tapu kaydında ipotek, haciz, şerh veya benzeri bir kayıt var mı?",
       type: "choice",
       options: [
-        { value: "yes", label: "Evet", icon: "⚠️" },
-        { value: "no", label: "Hayır", icon: "✓" },
-        { value: "unknown", label: "Bilmiyorum", icon: "❓" }
+        ["no", "Hayır"],
+        ["yes", "Evet"],
+        ["unknown", "Bilmiyorum"]
       ]
     },
-
     {
-      id: "representation",
-      title: "Vekâlet veya temsil var mı?",
-      desc: "Satış işlemini siz yerine başka biri mi yürütecek?",
+      key: "representation",
+      title: "Satışta vekil, vasi veya başka bir temsilci olacak mı?",
       type: "choice",
       options: [
-        { value: "yes", label: "Evet", icon: "📝" },
-        { value: "no", label: "Hayır", icon: "👤" }
+        ["no", "Hayır"],
+        ["yes", "Evet"]
       ]
     },
-
     {
-      id: "acquisition_date",
-      title: "Taşınmazı ne zaman edindiniz?",
-      desc: "Bu bilgi, satış sonrası vergi durumunun değerlendirilmesinde kullanılacaktır.",
+      key: "acquisition_date",
+      title: "Taşınmazı hangi tarihte edindiniz?",
       type: "date"
     },
-
     {
-      id: "acquisition_type",
+      key: "acquisition_type",
       title: "Taşınmazı nasıl edindiniz?",
-      desc: "Edinim şekli değer artış kazancı değerlendirmesinde önem taşıyabilir.",
       type: "choice",
       options: [
-        { value: "purchase", label: "Satın alarak", icon: "🏠" },
-        { value: "inheritance", label: "Miras yoluyla", icon: "📜" },
-        { value: "gift", label: "Bağış / bedelsiz", icon: "🎁" },
-        { value: "other", label: "Diğer", icon: "❓" }
+        ["purchase", "Satın alarak"],
+        ["inheritance", "Miras yoluyla"],
+        ["gift", "Bağış / bedelsiz edinim"],
+        ["other", "Diğer"]
       ]
     },
-
     {
-      id: "buyer_ready",
+      key: "buyer_ready",
       title: "Alıcı belli mi?",
-      desc: "Satış yapacağınız alıcı şu anda belli mi?",
       type: "choice",
       options: [
-        { value: "yes", label: "Evet", icon: "🤝" },
-        { value: "no", label: "Hayır", icon: "🔎" }
+        ["yes", "Evet"],
+        ["no", "Hayır"]
       ]
     },
-
     {
-      id: "sale_price",
-      title: "Satış bedeli belli mi?",
-      desc: "Satış için üzerinde anlaşılan bir bedel var mı?",
+      key: "sale_price",
+      title: "Planlanan satış bedeli nedir?",
       type: "number",
-      placeholder: "TL olarak girin"
+      placeholder: "TL"
     },
-
     {
-      id: "building",
-      title: "Taşınmaz üzerinde bina/konut var mı?",
-      desc: "Konut satışında bina niteliği ve sigorta gibi konular önem taşıyabilir.",
+      key: "building",
+      title: "Taşınmaz üzerinde bina / konut / bağımsız bölüm var mı?",
       type: "choice",
       options: [
-        { value: "yes", label: "Evet", icon: "🏠" },
-        { value: "no", label: "Hayır", icon: "🌳" }
+        ["yes", "Evet"],
+        ["no", "Hayır"]
       ]
     }
   ];
 
-  function getRoot() {
-    return document.querySelector("main") ||
-           document.querySelector(".container") ||
-           document.body;
+  function esc(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
   }
 
-  function paint(html) {
-    const root = getRoot();
+  function money(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return "Belirtilmedi";
 
-    const old = document.getElementById("hallet-screen");
+    return new Intl.NumberFormat("tr-TR", {
+      style: "currency",
+      currency: "TRY",
+      maximumFractionDigits: 0
+    }).format(n);
+  }
 
-    if (old) {
-      old.innerHTML = html;
-    } else {
-      const screen = document.createElement("div");
-      screen.id = "hallet-screen";
-      screen.innerHTML = html;
-      root.prepend(screen);
+  function dateText(value) {
+    if (!value) return "Belirtilmedi";
+
+    const d = new Date(`${value}T12:00:00`);
+
+    if (Number.isNaN(d.getTime())) {
+      return value;
     }
 
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    return new Intl.DateTimeFormat("tr-TR").format(d);
   }
 
-  function backButton() {
-    return `
-      <button id="hallet-back"
-        style="
-          border:0;
-          background:transparent;
-          color:#aaa;
-          padding:8px 0;
-          font-size:14px;
-          cursor:pointer;
-        ">
-        ← Geri
-      </button>
+  function answerLabel(key, value) {
+    const q = questions.find(x => x.key === key);
+
+    if (!q || !q.options) {
+      return value || "Belirtilmedi";
+    }
+
+    const item = q.options.find(x => x[0] === value);
+
+    return item ? item[1] : (value || "Belirtilmedi");
+  }
+
+  function createCaseId() {
+    const d = new Date();
+
+    const p = n => String(n).padStart(2, "0");
+
+    return `IH-KS-${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}`;
+  }
+
+  function root() {
+    return (
+      document.getElementById("hallet-root") ||
+      document.getElementById("app") ||
+      document.querySelector("main") ||
+      document.body
+    );
+  }
+
+  function styles() {
+    if (document.getElementById("hallet-file-style")) return;
+
+    const s = document.createElement("style");
+
+    s.id = "hallet-file-style";
+
+    s.textContent = `
+      .hf-wrap {
+        max-width: 760px;
+        margin: 0 auto;
+        padding-bottom: 30px;
+      }
+
+      .hf-card {
+        background: #fff;
+        border: 1px solid #e4eae8;
+        border-radius: 16px;
+        padding: 18px;
+        margin-bottom: 12px;
+        box-shadow: 0 4px 18px rgba(0,0,0,.04);
+      }
+
+      .hf-head {
+        background: linear-gradient(135deg,#0E5C53,#174f49);
+        color: white;
+        border-radius: 18px;
+        padding: 22px;
+        margin-bottom: 12px;
+      }
+
+      .hf-kicker {
+        font-size: 11px;
+        font-weight: 800;
+        letter-spacing: .14em;
+        opacity: .75;
+      }
+
+      .hf-title {
+        margin: 6px 0;
+        font-size: 26px;
+        font-weight: 800;
+      }
+
+      .hf-meta {
+        font-size: 12px;
+        line-height: 1.6;
+        opacity: .9;
+      }
+
+      .hf-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 15px;
+      }
+
+      .hf-stat {
+        background: rgba(255,255,255,.1);
+        border: 1px solid rgba(255,255,255,.15);
+        border-radius: 11px;
+        padding: 10px;
+      }
+
+      .hf-stat-label {
+        font-size: 10px;
+        opacity: .7;
+      }
+
+      .hf-stat-value {
+        font-size: 13px;
+        font-weight: 700;
+        margin-top: 3px;
+      }
+
+      .hf-card h3 {
+        margin: 0 0 10px;
+        font-size: 17px;
+      }
+
+      .hf-item {
+        display: flex;
+        gap: 10px;
+        padding: 11px 0;
+        border-bottom: 1px solid #edf0ef;
+      }
+
+      .hf-item:last-child {
+        border-bottom: 0;
+      }
+
+      .hf-icon {
+        width: 27px;
+        height: 27px;
+        min-width: 27px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        font-size: 13px;
+      }
+
+      .hf-ok {
+        background: #e7f4ed;
+        color: #176947;
+      }
+
+      .hf-warn {
+        background: #fff1d7;
+        color: #875d12;
+      }
+
+      .hf-info {
+        background: #e9f1f7;
+        color: #245a78;
+      }
+
+      .hf-danger {
+        background: #fde9e7;
+        color: #9b3028;
+      }
+
+      .hf-text strong {
+        display: block;
+        font-size: 14px;
+        margin-bottom: 3px;
+      }
+
+      .hf-text span {
+        display: block;
+        font-size: 13px;
+        color: #606c69;
+        line-height: 1.5;
+      }
+
+      .hf-disclaimer {
+        background: #f5f7f6;
+        border-radius: 11px;
+        padding: 12px;
+        margin-top: 10px;
+        font-size: 12px;
+        color: #65716e;
+        line-height: 1.55;
+      }
+
+      .hf-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 15px;
+      }
+
+      .hf-btn {
+        border: 0;
+        border-radius: 11px;
+        padding: 12px 15px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .hf-primary {
+        background: #0E5C53;
+        color: white;
+      }
+
+      .hf-secondary {
+        background: #edf2f0;
+        color: #17413c;
+      }
+
+      .hf-back {
+        border: 0;
+        background: transparent;
+        color: #5b6966;
+        cursor: pointer;
+        padding: 4px 0;
+      }
+
+      .hf-choice {
+        width: 100%;
+        text-align: left;
+        border: 1px solid #dfe7e4;
+        background: white;
+        border-radius: 12px;
+        padding: 14px;
+        margin: 7px 0;
+        font-weight: 650;
+        cursor: pointer;
+      }
+
+      .hf-choice:hover {
+        border-color: #0E5C53;
+      }
+
+      .hf-input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 14px;
+        border: 1px solid #dfe7e4;
+        border-radius: 12px;
+        font-size: 16px;
+        margin: 10px 0;
+      }
+
+      .hf-progress {
+        height: 7px;
+        background: #e9eeec;
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 8px 0 20px;
+      }
+
+      .hf-progress div {
+        height: 100%;
+        background: #0E5C53;
+      }
+
+      @media(max-width:560px) {
+        .hf-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .hf-title {
+          font-size: 22px;
+        }
+      }
     `;
+
+    document.head.appendChild(s);
+  }
+
+  function render(html) {
+    styles();
+    root().innerHTML = html;
   }
 
   function showGate() {
-    paint(`
-      <div class="hallet-gate">
-        <div class="hallet-gate-badge">İŞİNİ HALLET</div>
+    render(`
+      <div class="hf-wrap">
+        <div class="hf-card" style="text-align:center;">
+          <div style="font-size:12px;font-weight:800;letter-spacing:.12em;color:#0E5C53;">
+            İŞİNİ HALLET
+          </div>
 
-        <h1 class="hallet-gate-title">
-          Ne yapmak istiyorsun?
-        </h1>
+          <h1>Ne yapmak istiyorsun?</h1>
 
-        <p class="hallet-gate-sub">
-          İşlemini seç, gerekli adımları birlikte tamamlayalım.
-        </p>
+          <p style="color:#65716f;">
+            İşlemini seç, gerekli adımları birlikte çıkaralım.
+          </p>
 
-        <div class="hallet-gate-list">
-
-          <button class="hallet-gate-card" id="hallet-process">
-            <span class="hallet-gate-card-icon">📋</span>
-            <span class="hallet-gate-card-body">
-              <strong class="hallet-gate-card-title">
-                Bir işlem yapmak istiyorum
-              </strong>
-              <small class="hallet-gate-card-desc">
-                Tapu, araç ve diğer işlemler
-              </small>
-            </span>
-            <span class="hallet-gate-card-arrow">›</span>
+          <button class="hf-choice" onclick="Hallet.showIslemMenu()">
+            📋 Bir işlem yapmak istiyorum
           </button>
 
-          <button class="hallet-gate-card" id="hallet-document">
-            <span class="hallet-gate-card-icon">📄</span>
-            <span class="hallet-gate-card-body">
-              <strong class="hallet-gate-card-title">
-                Evrak hazırlamak istiyorum
-              </strong>
-              <small class="hallet-gate-card-desc">
-                Dilekçe, başvuru ve belgeler
-              </small>
-            </span>
-            <span class="hallet-gate-card-arrow">›</span>
+          <button class="hf-choice" onclick="Hallet.showMessage('Evrak hazırlama modülü sonraki aşamada açılacak.')">
+            📄 Evrak hazırlamak istiyorum
           </button>
 
-          <button class="hallet-gate-card" id="hallet-application">
-            <span class="hallet-gate-card-icon">🏛️</span>
-            <span class="hallet-gate-card-body">
-              <strong class="hallet-gate-card-title">
-                Bir kuruma başvuracağım
-              </strong>
-              <small class="hallet-gate-card-desc">
-                Kurum işlemlerini adım adım tamamla
-              </small>
-            </span>
-            <span class="hallet-gate-card-arrow">›</span>
+          <button class="hf-choice" onclick="Hallet.showMessage('Kurum başvuru modülü sonraki aşamada açılacak.')">
+            🏛️ Bir kuruma başvuracağım
           </button>
 
-          <button class="hallet-gate-card" id="hallet-isimi-coz">
-            <span class="hallet-gate-card-icon">🛠️</span>
-            <span class="hallet-gate-card-body">
-              <strong class="hallet-gate-card-title">
-                Hizmet / usta bulmam gerekiyor
-              </strong>
-              <small class="hallet-gate-card-desc">
-                İşimi Çöz ile hizmet bul
-              </small>
-            </span>
-            <span class="hallet-gate-card-arrow">›</span>
+          <button class="hf-choice" onclick="Hallet.goIsimiCoz()">
+            🛠️ Hizmet / usta bulmam gerekiyor
           </button>
-
         </div>
       </div>
     `);
-
-    document
-      .getElementById("hallet-process")
-      ?.addEventListener("click", showIslemMenu);
-
-    document
-      .getElementById("hallet-isimi-coz")
-      ?.addEventListener("click", goIsimiCoz);
-
-    document
-      .getElementById("hallet-document")
-      ?.addEventListener("click", function () {
-        showMessage("Evrak hazırlama modülü sıradaki aşamada açılacak.");
-      });
-
-    document
-      .getElementById("hallet-application")
-      ?.addEventListener("click", function () {
-        showMessage("Kurum başvuru modülü sıradaki aşamada açılacak.");
-      });
   }
 
   function showIslemMenu() {
-    paint(`
-      <div class="hallet-gate">
-        ${backButton()}
+    render(`
+      <div class="hf-wrap">
+        <button class="hf-back" onclick="Hallet.showGate()">← Geri</button>
 
-        <div class="hallet-gate-badge">İŞLEM SEÇ</div>
+        <div class="hf-card">
+          <h2>Hangi işlemi yapmak istiyorsun?</h2>
 
-        <h1 class="hallet-gate-title">
-          Hangi işlemi yapmak istiyorsun?
-        </h1>
-
-        <div class="hallet-gate-list">
-
-          <button class="hallet-gate-card" id="tasinmaz">
-            <span class="hallet-gate-card-icon">🏠</span>
-            <span class="hallet-gate-card-body">
-              <strong class="hallet-gate-card-title">
-                Taşınmaz / Ev işlemleri
-              </strong>
-              <small class="hallet-gate-card-desc">
-                Ev, arsa ve diğer taşınmaz işlemleri
-              </small>
-            </span>
-            <span class="hallet-gate-card-arrow">›</span>
+          <button class="hf-choice" onclick="Hallet.showTasinmazMenu()">
+            🏠 Taşınmaz işlemleri
           </button>
 
-          <button class="hallet-gate-card" id="arac">
-            <span class="hallet-gate-card-icon">🚗</span>
-            <span class="hallet-gate-card-body">
-              <strong class="hallet-gate-card-title">
-                Araç işlemleri
-              </strong>
-              <small class="hallet-gate-card-desc">
-                Araç satış ve diğer işlemler
-              </small>
-            </span>
-            <span class="hallet-gate-card-arrow">›</span>
+          <button class="hf-choice" onclick="Hallet.showMessage('Diğer işlem türleri sonraki aşamada eklenecek.')">
+            📑 Diğer işlemler
           </button>
-
         </div>
       </div>
     `);
-
-    document
-      .getElementById("hallet-back")
-      ?.addEventListener("click", showGate);
-
-    document
-      .getElementById("tasinmaz")
-      ?.addEventListener("click", showTasinmazMenu);
-
-    document
-      .getElementById("arac")
-      ?.addEventListener("click", function () {
-        showMessage("Araç işlemleri sıradaki işlem ailesi olarak hazırlanacak.");
-      });
   }
 
   function showTasinmazMenu() {
-    paint(`
-      <div class="hallet-gate">
-        ${backButton()}
+    render(`
+      <div class="hf-wrap">
+        <button class="hf-back" onclick="Hallet.showIslemMenu()">← Geri</button>
 
-        <div class="hallet-gate-badge">TAŞINMAZ</div>
+        <div class="hf-card">
+          <h2>Taşınmaz işlemi</h2>
 
-        <h1 class="hallet-gate-title">
-          Taşınmazla ne yapmak istiyorsun?
-        </h1>
-
-        <div class="hallet-gate-list">
-
-          <button class="hallet-gate-card" id="konut-satis">
-            <span class="hallet-gate-card-icon">🏠</span>
-            <span class="hallet-gate-card-body">
-              <strong class="hallet-gate-card-title">
-                Konut satışı
-              </strong>
-              <small class="hallet-gate-card-desc">
-                Ev satış işlemini adım adım hazırla
-              </small>
-            </span>
-            <span class="hallet-gate-card-arrow">›</span>
+          <button class="hf-choice" onclick="Hallet.showKonutSatis()">
+            🏠 Konut / taşınmaz satışı
           </button>
 
-          <button class="hallet-gate-card">
-            <span class="hallet-gate-card-icon">🛒</span>
-            <span class="hallet-gate-card-body">
-              <strong class="hallet-gate-card-title">
-                Konut alımı
-              </strong>
-              <small class="hallet-gate-card-desc">
-                Yakında
-              </small>
-            </span>
-            <span class="hallet-gate-card-arrow">›</span>
+          <button class="hf-choice" onclick="Hallet.showMessage('Taşınmaz satın alma akışı sonraki aşamada eklenecek.')">
+            🏡 Taşınmaz satın alma
           </button>
-
-          <button class="hallet-gate-card">
-            <span class="hallet-gate-card-icon">📑</span>
-            <span class="hallet-gate-card-body">
-              <strong class="hallet-gate-card-title">
-                Diğer taşınmaz işlemleri
-              </strong>
-              <small class="hallet-gate-card-desc">
-                Yakında
-              </small>
-            </span>
-            <span class="hallet-gate-card-arrow">›</span>
-          </button>
-
         </div>
       </div>
     `);
-
-    document
-      .getElementById("hallet-back")
-      ?.addEventListener("click", showIslemMenu);
-
-    document
-      .getElementById("konut-satis")
-      ?.addEventListener("click", showKonutSatis);
   }
 
   function showKonutSatis() {
-    state = {
-      step: 0,
-      answers: {}
-    };
+    state.step = 0;
+    state.answers = {};
+    state.caseId = createCaseId();
+    state.createdAt = new Date();
 
     showQuestion();
   }
@@ -397,441 +496,605 @@
       return;
     }
 
-    const total = questions.length;
-    const current = state.step + 1;
-    const percent = Math.round((state.step / total) * 100);
+    const percent = Math.round(
+      ((state.step + 1) / questions.length) * 100
+    );
 
-    let control = "";
+    let input = "";
 
     if (q.type === "choice") {
-      control = `
-        <div style="display:grid;gap:12px;margin-top:22px;">
-          ${q.options.map(function (option) {
-            return `
-              <button
-                class="hallet-gate-card hallet-answer"
-                data-value="${option.value}"
-                style="width:100%;text-align:left;"
-              >
-                <span class="hallet-gate-card-icon">
-                  ${option.icon}
-                </span>
-
-                <span class="hallet-gate-card-body">
-                  <strong class="hallet-gate-card-title">
-                    ${option.label}
-                  </strong>
-                </span>
-
-                <span class="hallet-gate-card-arrow">›</span>
-              </button>
-            `;
-          }).join("")}
-        </div>
-      `;
+      input = q.options.map(([value, label]) => `
+        <button
+          class="hf-choice"
+          onclick="Hallet.choose('${esc(value)}')">
+          ${esc(label)}
+        </button>
+      `).join("");
     }
 
     if (q.type === "date") {
-      control = `
+      input = `
         <input
-          id="hallet-input"
+          id="hf-input"
+          class="hf-input"
           type="date"
-          style="
-            width:100%;
-            box-sizing:border-box;
-            padding:15px;
-            border-radius:12px;
-            border:1px solid #444;
-            background:#171717;
-            color:#fff;
-            font-size:16px;
-            margin-top:22px;
-          "
+          value="${esc(state.answers[q.key] || "")}"
         >
 
-        <button
-          id="hallet-next"
-          style="
-            width:100%;
-            margin-top:14px;
-            padding:15px;
-            border:0;
-            border-radius:12px;
-            background:#0e5c53;
-            color:#fff;
-            font-size:16px;
-            font-weight:700;
-          "
-        >
+        <button class="hf-choice" onclick="Hallet.submitInput()">
           Devam et →
         </button>
       `;
     }
 
     if (q.type === "number") {
-      control = `
+      input = `
         <input
-          id="hallet-input"
+          id="hf-input"
+          class="hf-input"
           type="number"
           min="0"
-          inputmode="decimal"
-          placeholder="${q.placeholder || ""}"
-          style="
-            width:100%;
-            box-sizing:border-box;
-            padding:15px;
-            border-radius:12px;
-            border:1px solid #444;
-            background:#171717;
-            color:#fff;
-            font-size:16px;
-            margin-top:22px;
-          "
+          step="1"
+          placeholder="${esc(q.placeholder)}"
+          value="${esc(state.answers[q.key] || "")}"
         >
 
-        <button
-          id="hallet-next"
-          style="
-            width:100%;
-            margin-top:14px;
-            padding:15px;
-            border:0;
-            border-radius:12px;
-            background:#0e5c53;
-            color:#fff;
-            font-size:16px;
-            font-weight:700;
-          "
-        >
+        <button class="hf-choice" onclick="Hallet.submitInput()">
           Devam et →
         </button>
       `;
     }
 
-    paint(`
-      <div class="hallet-gate">
+    render(`
+      <div class="hf-wrap">
 
-        ${backButton()}
+        <button class="hf-back" onclick="Hallet.back()">
+          ← Geri
+        </button>
 
-        <div style="margin-top:12px;color:#999;font-size:13px;">
-          KONUT SATIŞI · ${current}/${total}
+        <div class="hf-card">
+
+          <div style="font-size:13px;color:#687572;">
+            Adım ${state.step + 1} / ${questions.length}
+          </div>
+
+          <div class="hf-progress">
+            <div style="width:${percent}%"></div>
+          </div>
+
+          <h2>${esc(q.title)}</h2>
+
+          ${input}
+
         </div>
-
-        <div
-          style="
-            height:5px;
-            background:#292929;
-            border-radius:10px;
-            overflow:hidden;
-            margin:10px 0 25px;
-          "
-        >
-          <div
-            style="
-              width:${percent}%;
-              height:100%;
-              background:#0e5c53;
-            "
-          ></div>
-        </div>
-
-        <h1 class="hallet-gate-title">
-          ${q.title}
-        </h1>
-
-        <p class="hallet-gate-sub">
-          ${q.desc}
-        </p>
-
-        ${control}
 
       </div>
     `);
+  }
 
-    document
-      .getElementById("hallet-back")
-      ?.addEventListener("click", function () {
-        if (state.step > 0) {
-          state.step--;
-          showQuestion();
-        } else {
-          showTasinmazMenu();
-        }
-      });
+  function choose(value) {
+    const q = questions[state.step];
 
-    document.querySelectorAll(".hallet-answer").forEach(function (button) {
-      button.addEventListener("click", function () {
-        state.answers[q.id] = button.dataset.value;
-        state.step++;
-        showQuestion();
-      });
-    });
+    state.answers[q.key] = value;
 
-    document
-      .getElementById("hallet-next")
-      ?.addEventListener("click", function () {
-        const input = document.getElementById("hallet-input");
+    state.step++;
 
-        if (!input || !input.value) {
-          alert("Lütfen bir değer girin.");
-          return;
-        }
+    showQuestion();
+  }
 
-        state.answers[q.id] = input.value;
-        state.step++;
-        showQuestion();
-      });
+  function submitInput() {
+    const q = questions[state.step];
+    const input = document.getElementById("hf-input");
+
+    if (!input || !input.value) {
+      input?.focus();
+      return;
+    }
+
+    if (
+      q.type === "number" &&
+      (!Number.isFinite(Number(input.value)) || Number(input.value) < 0)
+    ) {
+      input.focus();
+      return;
+    }
+
+    state.answers[q.key] = input.value;
+
+    state.step++;
+
+    showQuestion();
+  }
+
+  function back() {
+    if (state.step <= 0) {
+      showTasinmazMenu();
+      return;
+    }
+
+    state.step--;
+
+    showQuestion();
+  }
+
+  function withinFiveYears(value) {
+    if (!value) return null;
+
+    const acquired = new Date(`${value}T12:00:00`);
+
+    if (Number.isNaN(acquired.getTime())) {
+      return null;
+    }
+
+    const limit = new Date(acquired);
+
+    limit.setFullYear(limit.getFullYear() + 5);
+
+    return new Date() < limit;
+  }
+
+  function taxAssessment() {
+    const a = state.answers;
+
+    if (
+      a.acquisition_type === "inheritance" ||
+      a.acquisition_type === "gift"
+    ) {
+      return {
+        type: "info",
+        title: "Miras / bedelsiz edinim",
+        text:
+          "Miras veya bedelsiz edinim seçildi. GİB açıklamalarına göre bu tür edinimlerde değer artış kazancı bakımından farklı kural uygulanır."
+      };
+    }
+
+    const fiveYears = withinFiveYears(a.acquisition_date);
+
+    if (
+      a.acquisition_type === "purchase" &&
+      fiveYears === true
+    ) {
+      return {
+        type: "warn",
+        title: "5 yıllık süre dolmamış görünüyor",
+        text:
+          "Edinim tarihine göre satış 5 yıllık süre içinde görünüyor. Değer artış kazancı ve beyan durumu ayrıca hesaplanmalı."
+      };
+    }
+
+    if (
+      a.acquisition_type === "purchase" &&
+      fiveYears === false
+    ) {
+      return {
+        type: "ok",
+        title: "5 yıllık süre aşılmış görünüyor",
+        text:
+          "Edinim tarihine göre 5 yıllık süre aşılmış görünüyor. Satış tarihi ve edinim tarihi resmî hesaplamayla doğrulanmalı."
+      };
+    }
+
+    return {
+      type: "info",
+      title: "Vergi incelemesi gerekli",
+      text:
+        "Kesin vergi sonucu bu bilgilerle otomatik olarak çıkarılmadı."
+    };
+  }
+
+  function item(icon, cls, title, text) {
+    return `
+      <div class="hf-item">
+        <div class="hf-icon ${cls}">
+          ${icon}
+        </div>
+
+        <div class="hf-text">
+          <strong>${esc(title)}</strong>
+          <span>${esc(text)}</span>
+        </div>
+      </div>
+    `;
   }
 
   function showResult() {
     const a = state.answers;
+    const tax = taxAssessment();
 
+    const completed = [];
     const warnings = [];
 
-    if (a.encumbrance === "yes") {
-      warnings.push(
-        "Taşınmaz üzerinde ipotek, haciz veya başka bir kayıt bulunduğunu belirttiniz. Satıştan önce kaydın niteliği ve satışa etkisi kontrol edilmelidir."
-      );
-    }
+    completed.push([
+      "✓",
+      "Satıcı",
+      answerLabel("seller_type", a.seller_type)
+    ]);
 
-    if (a.encumbrance === "unknown") {
-      warnings.push(
-        "Tapu kaydındaki şerh, beyan ve ipoteklerin kontrol edilmesi gerekiyor."
-      );
-    }
-
-    if (a.multiple_owners === "yes") {
-      warnings.push(
-        "Birden fazla malik bulunduğu için tüm maliklerin ve temsil durumlarının ayrıca değerlendirilmesi gerekiyor."
-      );
-    }
-
-    if (a.representation === "yes") {
-      warnings.push(
-        "Temsil/vekalet bulunduğu için temsil belgesinin işlem açısından uygunluğu kontrol edilmelidir."
-      );
-    }
-
-    if (a.property_location === "foreign") {
-      warnings.push(
-        "Taşınmaz Türkiye dışında olduğundan bu konut satış akışı uygun olmayabilir."
-      );
-    }
-
-    if (a.acquisition_type === "inheritance" ||
-        a.acquisition_type === "gift") {
-      warnings.push(
-        "Taşınmazın bedelsiz/miras yoluyla edinildiğini belirttiniz. Değer artış kazancı değerlendirmesi farklı olabilir."
-      );
-    }
-
-    const basicDocs = [
-      "Satıcı kimlik belgesi",
-      "Alıcı kimlik belgesi",
-      "Varsa temsil / vekâlet belgesi"
-    ];
-
-    if (a.building === "yes") {
-      basicDocs.push("Konut için gerekli sigorta durumunun kontrolü");
+    if (a.property_location === "turkey") {
+      completed.push([
+        "✓",
+        "Taşınmaz konumu",
+        "Türkiye'de"
+      ]);
+    } else {
+      warnings.push([
+        "!",
+        "Taşınmaz konumu",
+        "Bu akış Türkiye'deki tapu işlemleri için hazırlanmıştır."
+      ]);
     }
 
     if (a.title_deed === "yes") {
-      basicDocs.push("Varsa tapu senedi / taşınmaz bilgilerinin hazırlanması");
+      completed.push([
+        "✓",
+        "Tapu bilgileri",
+        "Mevcut olarak belirtildi."
+      ]);
+    } else {
+      warnings.push([
+        "!",
+        "Tapu bilgileri",
+        "Tapu bilgileri/senedi işlem öncesinde doğrulanmalı."
+      ]);
     }
 
-    paint(`
-      <div class="hallet-gate">
+    if (a.multiple_owners === "no") {
+      completed.push([
+        "✓",
+        "Malik durumu",
+        "Tek malik."
+      ]);
+    } else {
+      warnings.push([
+        "!",
+        "Malik durumu",
+        a.multiple_owners === "yes"
+          ? "Birden fazla malik var. Maliklerin veya geçerli temsilcilerinin durumu ayrıca kontrol edilmeli."
+          : "Malik sayısı güncel tapu kaydından kontrol edilmeli."
+      ]);
+    }
 
-        <div class="hallet-gate-badge">
-          İŞLEM DOSYASI
+    if (a.encumbrance === "no") {
+      completed.push([
+        "✓",
+        "Tapu kaydı",
+        "Bilinen bir ipotek/haciz/şerh olmadığı belirtildi."
+      ]);
+    } else {
+      warnings.push([
+        "!",
+        "Tapu kaydı",
+        a.encumbrance === "yes"
+          ? "İpotek, haciz, şerh veya benzeri kayıt bulunduğu belirtildi."
+          : "Güncel tapu kaydındaki ipotek, haciz, şerh ve beyanlar kontrol edilmeli."
+      ]);
+    }
+
+    if (a.representation === "no") {
+      completed.push([
+        "✓",
+        "Temsil",
+        "Vekil/vasi/başka temsilci yok."
+      ]);
+    } else {
+      warnings.push([
+        "!",
+        "Temsil belgesi",
+        "Vekâletname, vasi kararı veya diğer temsil belgesi kontrol edilmeli."
+      ]);
+    }
+
+    if (a.acquisition_date) {
+      completed.push([
+        "✓",
+        "Edinim tarihi",
+        dateText(a.acquisition_date)
+      ]);
+    }
+
+    completed.push([
+      "✓",
+      "Edinim şekli",
+      answerLabel("acquisition_type", a.acquisition_type)
+    ]);
+
+    if (a.buyer_ready === "yes") {
+      completed.push([
+        "✓",
+        "Alıcı",
+        "Alıcı belli."
+      ]);
+    } else {
+      warnings.push([
+        "!",
+        "Alıcı",
+        "Alıcı henüz belli değil."
+      ]);
+    }
+
+    if (a.sale_price) {
+      completed.push([
+        "✓",
+        "Planlanan satış bedeli",
+        money(a.sale_price)
+      ]);
+    } else {
+      warnings.push([
+        "!",
+        "Satış bedeli",
+        "Satış bedeli girilmedi."
+      ]);
+    }
+
+    if (a.building === "yes") {
+      warnings.push([
+        "!",
+        "DASK",
+        "Bina/konut için geçerli DASK poliçesi kontrol edilmeli."
+      ]);
+    }
+
+    if (a.seller_type === "company") {
+      warnings.push([
+        "!",
+        "Tüzel kişi belgeleri",
+        "Şirket yetkisi, temsil ve şirket belgeleri için ayrı kontrol gerekir."
+      ]);
+    }
+
+    const steps = [
+      "Kimlik belgelerini hazırla.",
+      "Tapu bilgilerini/senedini hazır bulundur.",
+      "Güncel tapu kaydındaki şerh, beyan, ipotek ve hacizleri kontrol et.",
+      "Emlak beyan değeri / belediye verisini kontrol et.",
+      "Bina veya konut ise DASK poliçesini kontrol et.",
+      "Temsil varsa temsil belgesini hazırla.",
+      "Web Tapu üzerinden başvuru sürecini başlat ve başvuru bildirimlerini takip et."
+    ];
+
+    const taxClass =
+      tax.type === "ok"
+        ? "hf-ok"
+        : tax.type === "warn"
+          ? "hf-warn"
+          : "hf-info";
+
+    const taxIcon =
+      tax.type === "ok"
+        ? "✓"
+        : tax.type === "warn"
+          ? "!"
+          : "i";
+
+    render(`
+      <div class="hf-wrap">
+
+        <div class="hf-head">
+
+          <div class="hf-kicker">
+            İŞLEM DOSYASI
+          </div>
+
+          <div class="hf-title">
+            Konut / Taşınmaz Satışı
+          </div>
+
+          <div class="hf-meta">
+            Ön kontrol tamamlandı<br>
+            Dosya No: ${esc(state.caseId)}<br>
+            Oluşturulma: ${esc(dateText(new Date(state.createdAt).toISOString().slice(0,10)))}
+          </div>
+
+          <div class="hf-grid">
+
+            <div class="hf-stat">
+              <div class="hf-stat-label">SATICI</div>
+              <div class="hf-stat-value">
+                ${esc(answerLabel("seller_type", a.seller_type))}
+              </div>
+            </div>
+
+            <div class="hf-stat">
+              <div class="hf-stat-label">TAŞINMAZ</div>
+              <div class="hf-stat-value">
+                ${esc(answerLabel("property_location", a.property_location))}
+              </div>
+            </div>
+
+            <div class="hf-stat">
+              <div class="hf-stat-label">EDİNİM</div>
+              <div class="hf-stat-value">
+                ${esc(answerLabel("acquisition_type", a.acquisition_type))}
+              </div>
+            </div>
+
+            <div class="hf-stat">
+              <div class="hf-stat-label">SATIŞ BEDELİ</div>
+              <div class="hf-stat-value">
+                ${esc(money(a.sale_price))}
+              </div>
+            </div>
+
+          </div>
+
         </div>
 
-        <h1 class="hallet-gate-title">
-          İlk değerlendirme tamamlandı
-        </h1>
+        <div class="hf-card">
+          <h3>✓ Tamamlananlar</h3>
 
-        <p class="hallet-gate-sub">
-          Verdiğiniz cevaplara göre konut satış dosyanızın ilk kontrolünü oluşturduk.
-        </p>
-
-        <div style="
-          margin-top:24px;
-          padding:18px;
-          border-radius:14px;
-          background:#171717;
-          border:1px solid #333;
-        ">
-          <h3 style="margin:0 0 14px;color:#fff;">
-            📄 Temel belgeler
-          </h3>
-
-          ${basicDocs.map(function (doc) {
-            return `
-              <div style="
-                padding:10px 0;
-                border-bottom:1px solid #292929;
-                color:#ddd;
-              ">
-                ✓ ${doc}
-              </div>
-            `;
-          }).join("")}
+          ${
+            completed.length
+              ? completed.map(x =>
+                  item(x[0], "hf-ok", x[1], x[2])
+                ).join("")
+              : item("i", "hf-info", "Henüz yok", "Kontroller tamamlanmadı.")
+          }
         </div>
 
-        ${
-          warnings.length
-            ? `
-              <div style="
-                margin-top:16px;
-                padding:18px;
-                border-radius:14px;
-                background:#241d12;
-                border:1px solid #6b5123;
-              ">
-                <h3 style="margin:0 0 12px;color:#e2b96b;">
-                  ⚠️ Dikkat edilmesi gerekenler
-                </h3>
+        <div class="hf-card">
+          <h3>⚠ Kontrol Edilmesi Gerekenler</h3>
 
-                ${warnings.map(function (warning) {
-                  return `
-                    <div style="
-                      padding:10px 0;
-                      color:#ddd;
-                      line-height:1.5;
-                    ">
-                      • ${warning}
-                    </div>
-                  `;
-                }).join("")}
-              </div>
-            `
-            : `
-              <div style="
-                margin-top:16px;
-                padding:18px;
-                border-radius:14px;
-                background:#10201d;
-                border:1px solid #24574f;
-                color:#d8eee9;
-              ">
-                ✓ İlk cevaplarınızda özel bir uyarı tespit edilmedi.
-              </div>
-            `
-        }
-
-        <div style="
-          margin-top:18px;
-          padding:14px;
-          color:#999;
-          font-size:12px;
-          line-height:1.5;
-        ">
-          Bu ekran ön değerlendirmedir. Kesin belge, harç ve vergi sonucu
-          işlem sırasında güncel resmî kaynaklar üzerinden doğrulanacaktır.
+          ${
+            warnings.length
+              ? warnings.map(x =>
+                  item(x[0], "hf-warn", x[1], x[2])
+                ).join("")
+              : item(
+                  "✓",
+                  "hf-ok",
+                  "Kritik uyarı bulunmadı",
+                  "Yine de işlem öncesinde resmî kayıtlar doğrulanmalı."
+                )
+          }
         </div>
 
-        <button
-          id="hallet-restart"
-          style="
-            width:100%;
-            margin-top:10px;
-            padding:15px;
-            border:0;
-            border-radius:12px;
-            background:#0e5c53;
-            color:#fff;
-            font-size:16px;
-            font-weight:700;
-          "
-        >
-          İşlem Dosyasını Yeniden Başlat
-        </button>
+        <div class="hf-card">
 
-        <button
-          id="hallet-home"
-          style="
-            width:100%;
-            margin-top:10px;
-            padding:13px;
-            border:1px solid #444;
-            border-radius:12px;
-            background:transparent;
-            color:#ddd;
-            font-size:15px;
-          "
-        >
-          İşini Hallet Ana Sayfası
-        </button>
+          <h3>₺ Vergi Kontrolü</h3>
+
+          ${item(
+            taxIcon,
+            taxClass,
+            tax.title,
+            tax.text
+          )}
+
+          ${
+            a.sale_price
+              ? item(
+                  "₺",
+                  "hf-info",
+                  "Planlanan satış bedeli",
+                  money(a.sale_price)
+                )
+              : ""
+          }
+
+          <div class="hf-disclaimer">
+            2026 yılında değer artış kazancı istisna tutarı 150.000 TL'dir.
+            Ancak vergi sonucu yalnızca satış bedeline bakılarak belirlenmez;
+            edinim tarihi, edinim bedeli, satış bedeli, giderler ve gerekli
+            endeksleme gibi unsurlar dikkate alınır.
+            Bu ekran kesin vergi hesabı yapmaz.
+          </div>
+
+        </div>
+
+        <div class="hf-card">
+
+          <h3>→ Sonraki Adımlar</h3>
+
+          ${steps.map((text, i) =>
+            item(
+              String(i + 1),
+              "hf-info",
+              `Adım ${i + 1}`,
+              text
+            )
+          ).join("")}
+
+        </div>
+
+        <div class="hf-card">
+
+          <h3>📌 Dosya Özeti</h3>
+
+          ${item(
+            "•",
+            "hf-info",
+            "Edinim tarihi",
+            dateText(a.acquisition_date)
+          )}
+
+          ${item(
+            "•",
+            "hf-info",
+            "Edinim şekli",
+            answerLabel("acquisition_type", a.acquisition_type)
+          )}
+
+          ${item(
+            "•",
+            "hf-info",
+            "Alıcı durumu",
+            answerLabel("buyer_ready", a.buyer_ready)
+          )}
+
+          ${item(
+            "•",
+            "hf-info",
+            "Bina durumu",
+            answerLabel("building", a.building)
+          )}
+
+        </div>
+
+        <div class="hf-disclaimer">
+          <b>Önemli:</b> Bu İşlem Dosyası, verdiğin cevaplara göre hazırlanmış
+          bir ön değerlendirmedir. Kesin belge, harç, vergi ve işlem sonucu
+          güncel TKGM, GİB ve ilgili kurum kayıtları üzerinden doğrulanmalıdır.
+        </div>
+
+        <div class="hf-actions">
+
+          <button
+            class="hf-btn hf-primary"
+            onclick="Hallet.showMessage('İşlem Dosyası kayıt altyapısı bir sonraki aşamada Supabase\\'e bağlanacak.')">
+            💾 Dosyayı Kaydet
+          </button>
+
+          <button
+            class="hf-btn hf-secondary"
+            onclick="Hallet.showKonutSatis()">
+            ↺ Cevapları Düzenle
+          </button>
+
+          <button
+            class="hf-btn hf-secondary"
+            onclick="Hallet.showGate()">
+            Ana Menü
+          </button>
+
+        </div>
 
       </div>
     `);
-
-    document
-      .getElementById("hallet-restart")
-      ?.addEventListener("click", showKonutSatis);
-
-    document
-      .getElementById("hallet-home")
-      ?.addEventListener("click", showGate);
   }
 
   function showMessage(message) {
-    paint(`
-      <div class="hallet-gate">
-        <div class="hallet-gate-badge">İŞİNİ HALLET</div>
+    render(`
+      <div class="hf-wrap">
+        <div class="hf-card" style="text-align:center;padding:35px 20px;">
 
-        <h1 class="hallet-gate-title">
-          Yakında
-        </h1>
+          <div style="font-size:40px;">✓</div>
 
-        <p class="hallet-gate-sub">
-          ${message}
-        </p>
+          <h2>${esc(message)}</h2>
 
-        <button
-          id="hallet-message-back"
-          style="
-            width:100%;
-            margin-top:20px;
-            padding:15px;
-            border:0;
-            border-radius:12px;
-            background:#0e5c53;
-            color:#fff;
-            font-size:16px;
-            font-weight:700;
-          "
-        >
-          ← Geri
-        </button>
+          <button
+            class="hf-choice"
+            onclick="Hallet.showGate()">
+            Ana menüye dön
+          </button>
+
+        </div>
       </div>
     `);
-
-    document
-      .getElementById("hallet-message-back")
-      ?.addEventListener("click", showGate);
   }
 
   function goIsimiCoz() {
-    const selectors = [
-      "#homeScreen",
-      "#home",
-      ".home-screen",
-      "[data-screen='home']"
-    ];
-
-    for (const selector of selectors) {
-      const el = document.querySelector(selector);
-
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth" });
-        return;
-      }
-    }
-
     if (typeof window.showHome === "function") {
       window.showHome();
+      return;
     }
+
+    if (typeof window.renderCategories === "function") {
+      window.renderCategories();
+      return;
+    }
+
+    showMessage(
+      "İşimi Çöz modülü mevcut uygulamanın ana ekranından açılabilir."
+    );
   }
 
   window.Hallet = {
@@ -839,7 +1102,13 @@
     showIslemMenu,
     showTasinmazMenu,
     showKonutSatis,
-    goIsimiCoz
+    showQuestion,
+    showResult,
+    showMessage,
+    goIsimiCoz,
+    choose,
+    submitInput,
+    back
   };
 
 })();
