@@ -118,14 +118,45 @@ async function testSupabase(){
  catch(e){console.error(e);setConnection(false,"Yerel mod");return false}
 }
 
-async function loadRequestsFromSupabase(){
+async function loadRequestsFromSupabase(opts={}){
+ const mineOnly=!!opts.mineOnly;
  try{
-  const data=await supabaseRequest("GET","talepler?select=*&order=created_at.desc&limit=200");
-  if(Array.isArray(data)){
-   const mapped=data.map(mapRequest);write(KEYS.requests,mapped);setConnection(true,"Supabase bağlı ✓");return mapped;
+  let path="talepler?select=*&order=created_at.desc&limit=200";
+  if(mineOnly){
+   const session=getAuthSession();
+   const uid=session?.user?.id;
+   if(!uid){
+    // Giriş yok: sunucudan kişisel talep çekme; yalnızca cihazdaki kendi yedekleri (user_id yok/local)
+    return getRequests().filter(r=>!r.user_id&&!r.customer_id);
+   }
+   // Kendi kayıtları: user_id (tercih) — kolon yoksa sorgu hata verir, catch local fallback
+   path="talepler?select=*&user_id=eq."+encodeURIComponent(uid)+"&order=created_at.desc&limit=200";
   }
- }catch(e){console.warn("Talepler alınamadı:",e)}
- return getRequests();
+  const data=await supabaseRequest("GET",path);
+  if(Array.isArray(data)){
+   let mapped=data.map(mapRequest);
+   if(mineOnly){
+    const session=getAuthSession();
+    const uid=session?.user?.id;
+    if(uid)mapped=mapped.filter(r=>!r.user_id&&!r.customer_id||r.user_id===uid||r.customer_id===uid);
+    write(KEYS.requests,mapped);
+   }else{
+    // Sağlayıcı eşleştirme için gelen liste — RLS asıl koruma; istemci yine de saklar
+    write(KEYS.requests,mapped);
+   }
+   setConnection(true,"Supabase bağlı ✓");
+   return mapped;
+  }
+ }catch(e){
+  console.warn("Talepler alınamadı:",e);
+  if(mineOnly){
+   const session=getAuthSession();
+   const uid=session?.user?.id;
+   if(!uid)return getRequests().filter(r=>!r.user_id&&!r.customer_id);
+   return getRequests().filter(r=>r.user_id===uid||r.customer_id===uid||(!r.user_id&&!r.customer_id));
+  }
+ }
+ return mineOnly?[]:getRequests();
 }
 function mapRequest(r){
  const kategori=pick(r,["kategori","category","service"],"");
@@ -143,7 +174,9 @@ function mapRequest(r){
   name:pick(r,["ad_soyad","name"],""),ad_soyad:pick(r,["ad_soyad","name"],""),
   phone:pick(r,["telefon","phone"],""),telefon:pick(r,["telefon","phone"],""),
   status:pick(r,["durum","status"],"Beklemede"),durum:pick(r,["durum","status"],"Beklemede"),
-  createdAt:pick(r,["created_at","createdAt"],"")
+  createdAt:pick(r,["created_at","createdAt"],""),
+  user_id:pick(r,["user_id","owner_id"],null),
+  customer_id:pick(r,["customer_id"],null)
  };
 }
 
@@ -291,7 +324,9 @@ async function createRequest(){
  if(!phone)return alert("Lütfen telefon numaranızı yaz.");
  const b=document.getElementById("createRequestButton");b.disabled=true;b.textContent="TALEP KAYDEDİLİYOR...";
  const talep_no=makeRequestNumber();
+ const session=getAuthSession();
  const item={talep_no,kategori:service,aciklama:description,il:city,ilce:district,mahalle:neighborhood,aciliyet:urgency,ad_soyad:name,telefon:phone,durum:"Beklemede"};
+ if(session?.user?.id){item.user_id=session.user.id;item.customer_id=session.user.id;}
  try{await supabaseRequest("POST","talepler",item);setConnection(true,"Supabase bağlı ✓");write(KEYS.requests,[{...mapRequest(item),createdAt:new Date().toISOString()},...getRequests()]);alert("Talebiniz başarıyla oluşturuldu.\n\nTalep No: "+talep_no)}catch(e){console.error(e);write(KEYS.requests,[{...mapRequest(item),createdAt:new Date().toISOString()},...getRequests()]);alert("Sunucu kaydı başarısız oldu; cihazdaki yedek kaydedildi.\n\n"+e.message)}
  b.disabled=false;b.textContent="TALEBİ OLUŞTUR";showRequests();
 }
@@ -300,8 +335,13 @@ async function createRequest(){
 
 async function showRequests(){
  setNav("navRequests");
- app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div><span class="badge">▣ TALEPLERİM</span><h1>Oluşturduğun talepler.</h1><p class="muted small">Taleplerin sistemden yükleniyor...</p><div class="card" id="requestsLoading" style="text-align:center">⏳ Talepler yükleniyor...</div>`);
- const requests=await loadRequestsFromSupabase(),area=document.getElementById("requestsLoading");if(!area)return;
+ const session=getAuthSession();
+ if(!session?.user?.id){
+  app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div><span class="badge">▣ TALEPLERİM</span><h1>Oluşturduğun talepler.</h1><div class="card empty">🔒<h3>Giriş gerekli</h3><p>Taleplerini görmek için giriş yapmalısın. Başka kullanıcıların talepleri burada gösterilmez.</p><button class="btn primary" onclick="openAuthModal('login')">Giriş yap</button></div>`);
+  return;
+ }
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div><span class="badge">▣ TALEPLERİM</span><h1>Oluşturduğun talepler.</h1><p class="muted small">Yalnızca senin taleplerin yükleniyor...</p><div class="card" id="requestsLoading" style="text-align:center">⏳ Talepler yükleniyor...</div>`);
+ const requests=await loadRequestsFromSupabase({mineOnly:true}),area=document.getElementById("requestsLoading");if(!area)return;
  area.outerHTML=requests.length?requests.map(renderRequest).join(""):`<div class="card empty">📋<h3>Henüz talep yok</h3><p>İhtiyacını anlat, ilk talebini oluştur.</p><button class="btn primary" onclick="showRequest()">＋ Talep oluştur</button></div>`;
 }
 function renderRequest(r){
@@ -494,6 +534,10 @@ function activeDocumentChecklist(a){
  if(H.module==='kurum_basvurusu')return getKurumDocumentChecklist(a);
  return getDocumentChecklist(a);
 }
+function showActiveResult(fromSaved){
+ if(H.module==='kurum_basvurusu')return kurumResult(!!fromSaved);
+ return result(!!fromSaved);
+}
 
 function defaultCaseSteps(){return activeStepTemplate().map(x=>({id:null,step_key:x.key,title:x.title,description:x.description,sort_order:x.sort_order,institution:x.institution,status:'pending',is_optional:false,metadata:{},completed_at:null}));}
 function normalizeCaseSteps(rows){const byKey={};(Array.isArray(rows)?rows:[]).forEach(r=>{if(r&&r.step_key)byKey[r.step_key]=r;});return activeStepTemplate().map(t=>byKey[t.key]||({...t,key:t.key,step_key:t.key,title:t.title,description:t.description,sort_order:t.sort_order,institution:t.institution,status:'pending',id:null,is_optional:false,metadata:{},completed_at:null}));}
@@ -527,7 +571,7 @@ async function updateCaseStep(key){
  if(!H.dbId){
   step.status=nextStatus;
   step.completed_at=nextCompletedAt;
-  return result(false);
+  return showActiveResult(false);
  }
  const target=H.caseSteps.find(x=>x.step_key===key)||step;
  target.status=nextStatus;
@@ -553,7 +597,7 @@ async function updateCaseStep(key){
   const c=document.querySelector('#hallet-root .hc');
   if(c&&!c.querySelector('.err'))c.insertAdjacentHTML('beforeend','<div class="err">İşlem adımı kaydedilemedi. Lütfen tekrar deneyin.</div>');
  }
- result(fromSaved);
+ showActiveResult(fromSaved);
 }
 function stepSummary(){const steps=H.caseSteps&&H.caseSteps.length?H.caseSteps:defaultCaseSteps();const done=steps.filter(x=>x.status==='completed').length;return {steps,done,total:steps.length,percent:steps.length?Math.round(done/steps.length*100):0};}
 function getDocumentChecklist(a){
@@ -936,7 +980,7 @@ async function openDocument(docKey,index=0){
   }catch(e){console.error(e);alert('Belge açılamadı.\n\n'+(e.message||'Bilinmeyen hata'));}
 }
 async function markCaseCompleted(){
- if(H.status==='completed'){result(!!H.dbId);return;}
+ if(H.status==='completed'){showActiveResult(!!H.dbId);return;}
  const stepState=stepSummary();
  const docs=activeDocumentChecklist(H.answers||{});
  const docState=documentSummary(docs);
@@ -944,19 +988,23 @@ async function markCaseCompleted(){
   alert('Tamamlandı işaretlemek için tüm işlem adımları ve gerekli belgeler tamamlanmış olmalıdır.');
   return;
  }
- if(!confirm('Satışı tamamlandı olarak işaretlemek istediğinize emin misiniz?\n\nBu işlem resmi tapu satışının gerçekleştiği anlamına gelmez; yalnızca işlem dosyanızın durumunu “Tamamlandı” yapar.'))return;
+ const confirmMsg=H.module==='kurum_basvurusu'
+  ? 'Başvuruyu tamamlandı olarak işaretlemek istediğinize emin misiniz?\n\nBu, resmî kurum başvurusunun sonucu değildir; yalnızca işlem dosyanızın durumunu “Tamamlandı” yapar.'
+  : 'Satışı tamamlandı olarak işaretlemek istediğinize emin misiniz?\n\nBu işlem resmi tapu satışının gerçekleştiği anlamına gelmez; yalnızca işlem dosyanızın durumunu “Tamamlandı” yapar.';
+ if(!confirm(confirmMsg))return;
  const session=getAuthSession();
  if(!session?.access_token||!session?.user?.id){openAuthModal('login');return;}
  try{
   if(!H.dbId){
-   await saveCase(true);
+   if(H.module==='kurum_basvurusu')await saveKurumCase();
+   else await saveCase(true);
    if(!H.dbId)throw new Error('Dosya kaydedilemedi; tamamlanamadı.');
   }
   const rows=await supabaseAuthRequest('PATCH','hallet_cases?id=eq.'+encodeURIComponent(H.dbId)+'&select=id,status,updated_at',{status:'completed',updated_at:new Date().toISOString()});
   const row=Array.isArray(rows)?rows[0]:rows;
   H.status=(row&&row.status)||'completed';
   alert('İşlem tamamlandı.\n\nBu işlem dosyası başarıyla tamamlandı olarak işaretlendi.');
-  result(true);
+  showActiveResult(true);
  }catch(e){
   console.error('Tamamlama hatası:',e);
   alert('Tamamlanamadı.\n\n'+(e.message||'Bilinmeyen hata'));
