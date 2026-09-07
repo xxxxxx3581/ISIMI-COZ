@@ -247,6 +247,10 @@ function showHome(){
 
 function openHallet(){
   try{
+    if(window.__HalletGate && typeof window.__HalletGate === "function"){
+      window.__HalletGate();
+      return;
+    }
     if(window.Hallet && typeof window.Hallet.showGate === "function"){
       window.Hallet.showGate();
       return;
@@ -618,6 +622,7 @@ function close(){const r=root();r.classList.remove('hv');r.style.display='none';
 function render(x){const r=open();r.innerHTML='<div class="ha"><div class="hw">'+x+'</div></div>';r.scrollTop=0}
 function top(back){return '<div class="ht"><strong>İşini Hallet</strong><button class="topb" data-a="'+(back||'close')+'">'+(back?'← Geri':'Kapat')+'</button></div>'}
 function gate(){H.step=0;H.answers={};H.documents={};H.documentStatuses={};H.documentFiles={};H.evrakDraft=null;H.caseId=null;H.createdAt=null;H.dbId=null;render(top('close')+'<div class="hc"><div class="hk">Dijital işlem asistanı</div><h1>Ne yapmak istiyorsun?</h1><p class="hm">İşlemini seç. Gerekli adımları birlikte tamamlayalım.</p><div class="hg"><button class="hb hp" data-a="islem">📋 Bir işlem yapmak istiyorum</button><button class="hb" data-a="cases">📁 İşlem Dosyalarım</button><button class="hb" data-a="evrak">📄 Evrak hazırlamak istiyorum</button><button class="hb" data-a="kurum">🏛️ Bir kuruma başvuracağım</button><button class="hb" data-a="isimi">🛠️ Hizmet / usta bulmam gerekiyor</button></div></div>')}
+window.__HalletGate=gate;
 async function cases(){
  const session=getAuthSession();
  if(!session?.access_token||!session?.user?.id){openAuthModal('login');return;}
@@ -803,7 +808,7 @@ window.Hallet={showGate:gate,showIslemMenu:islem,showTasinmazMenu:tasinmaz,showK
 })();
 
 /* Hallet başlatıcısı — ana sayfaya dokunmadan çalışır. */
-document.addEventListener('click',function(e){const b=e.target.closest&&e.target.closest('#openHalletButton');if(!b)return;e.preventDefault();e.stopPropagation();if(window.Hallet)window.Hallet.showGate();},true);
+document.addEventListener('click',function(e){const b=e.target.closest&&e.target.closest('#openHalletButton');if(!b)return;e.preventDefault();e.stopPropagation();openHallet();},true);
 </script>
 </body>
 </html>
