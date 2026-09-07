@@ -521,6 +521,25 @@ const KURUM_FLOWS={
  }
 };
 function getKurumFlow(id){return (id&&KURUM_FLOWS[id])?KURUM_FLOWS[id]:null;}
+function kurumQuestionsAnswered(){
+ const flow=getKurumFlow(H.kurumFlowId);
+ if(!flow||!flow.questions||!flow.questions.length)return true;
+ const a=H.answers||{};
+ return flow.questions.every(q=>a[q.key]!=null&&String(a[q.key]).trim()!=='');
+}
+function kurumRequiredDocsUploaded(){
+ const docs=getKurumDocumentChecklist(H.answers||{});
+ return docs.filter(d=>d.required!==false).every(d=>getDocumentFiles(d.key).length>0);
+}
+function kurumAnswerLabel(q,val){
+ if(!q)return String(val||'');
+ if(q.type==='choice'&&q.options){
+  const hit=q.options.find(o=>o[0]===val);
+  return hit?hit[1]:String(val||'');
+ }
+ return String(val||'');
+}
+
 function activeStepTemplate(){
  if(H.module==='kurum_basvurusu')return KURUM_STEP_TEMPLATE;
  return CASE_STEP_TEMPLATE;
@@ -566,8 +585,18 @@ async function updateCaseStep(key){
  if(!step)return;
  const previousStatus=step.status||'pending';
  const previousCompletedAt=step.completed_at||null;
- const nextStatus=previousStatus==='completed'?'pending':'completed';
+ let nextStatus=previousStatus==='completed'?'pending':'completed';
  const nextCompletedAt=nextStatus==='completed'?new Date().toISOString():null;
+ if(H.module==='kurum_basvurusu'&&nextStatus==='completed'){
+  if(key==='info'&&!kurumQuestionsAnswered()){
+   alert('Önce başvuru bilgilerini tamamla (soruları yanıtla).');
+   return;
+  }
+  if(key==='documents'&&!kurumRequiredDocsUploaded()){
+   alert('Zorunlu belgeler yüklenmeden bu adım tamamlanamaz.');
+   return;
+  }
+ }
  if(!H.dbId){
   step.status=nextStatus;
   step.completed_at=nextCompletedAt;
@@ -989,6 +1018,10 @@ async function markCaseCompleted(){
  const stepState=stepSummary();
  const docs=activeDocumentChecklist(H.answers||{});
  const docState=documentSummary(docs);
+ if(H.module==='kurum_basvurusu'&&!kurumQuestionsAnswered()){
+  alert('Başvuru bilgileri tamamlanmadan işlem tamamlandı işaretlenemez.');
+  return;
+ }
  if((stepState.done||0)<(stepState.total||5)||!docState.complete){
   alert('Tamamlandı işaretlemek için tüm işlem adımları ve gerekli belgeler tamamlanmış olmalıdır.');
   return;
@@ -1167,6 +1200,15 @@ function kurumResult(fromSaved){
  html+='<div class="li"><strong>İlerleme:</strong> '+stepState.done+' / '+stepState.total+' adım ('+stepState.percent+'%)</div>';
  html+='<div class="li"><strong>Belgeler:</strong> '+docState.ready+' / '+docState.total+' hazır'+(docState.missing&&docState.missing.length?(' — eksik: '+esc(docState.missing[0].title)):'')+'</div>';
  html+='<div class="li"><strong>Şimdi:</strong> '+(isCompleted?'<span class="ok">✓ İşlem tamamlandı</span>':esc(action?action.title:'—'))+'</div></div>';
+ html+='<h2>Başvuru bilgileri</h2><p class="hm small">Bu bilgiler yalnızca hazırlık ve dosya takibi içindir. Resmî başvuru e-Devlet üzerinden yapılır; T.C. kimlik numarası burada istenmez.</p><div class="hl">';
+ (flow.questions||[]).forEach(q=>{
+  const val=a[q.key];
+  const shown=(val!=null&&String(val).trim()!=='')?kurumAnswerLabel(q,val):'— henüz yanıtlanmadı';
+  html+='<div class="li"><strong>'+esc(q.title)+'</strong><br><span class="hm">'+esc(shown)+'</span></div>';
+ });
+ html+='<div class="li"><label class="hm">Hazırlık notu (isteğe bağlı)</label><textarea class="hi" id="kurumNotes" rows="3" placeholder="Örn. randevu için yanında bulunduracakların, hatırlatmalar…">'+esc(a.notes||'')+'</textarea></div>';
+ html+='</div><div class="hg"><button type="button" class="hb" data-a="kurum_edit_info">Bilgileri düzenle</button><button type="button" class="hb" data-a="kurum_save_notes">Notu kaydet</button></div>';
+ if(!kurumQuestionsAnswered())html+='<div class="li"><span class="hm">Başvuru bilgileri eksik. “Bilgileri düzenle” ile soruları tamamla.</span></div>';
  html+='<h2>Resmî başvuru</h2><div class="li"><span class="hm">Başvuruyu resmî kurumun kendi sistemi üzerinden tamamlamalısın. İşini Hallet resmî başvuru yapmaz ve sonuç garantisi vermez.</span></div>';
  html+='<div class="hg"><a class="hb hp" href="'+esc(flow.official_channel_url)+'" target="_blank" rel="noopener noreferrer">Resmî kanala git →</a></div>';
  html+='<p class="hm small">'+esc(flow.source_note)+' Kontrol: '+esc(flow.checked_at)+'</p>';
@@ -1187,7 +1229,7 @@ function kurumResult(fromSaved){
  render(html);
 }
 
-function dispatch(a,e){if(a==='close')return close();if(a==='gate')return gate();if(a==='cases')return cases();if(a==='caseopen')return openCase(e.dataset.id);if(a==='openDoc')return openDocument(e.dataset.k,Number(e.dataset.i||0));if(a==='stepToggle')return updateCaseStep(e.dataset.k);if(a==='islem')return islem();if(a==='tasinmaz')return tasinmaz();if(a==='konut')return konut();if(a==='start'){H.step=0;return question()}if(a==='qback'){H.step=Math.max(0,H.step-1);return question()}if(a==='answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return question()}if(a==='docReady')return;if(a==='docToggle'){H.documents[e.dataset.k]=!!e.checked;if(H.module==='kurum_basvurusu'){kurumResult(!!H.dbId);if(H.dbId)return saveKurumCase();return;}result(!!H.dbId);if(H.dbId)return saveCase(true);return;}if(a==='savecase')return saveCase();if(a==='save'){const i=document.getElementById('qinput');if(!i||!String(i.value).trim()){const c=document.querySelector('#hallet-root .hc');if(c&&!c.querySelector('.err'))c.insertAdjacentHTML('beforeend','<div class="err">Lütfen bir değer girerek devam et.</div>');return}H.answers[e.dataset.k]=i.value.trim();H.step++;return question()}if(a==='new'){H.step=0;H.answers={};H.documents={};H.documentStatuses={};H.documentFiles={};H.caseId=null;H.dbId=null;H.status=null;H.module=null;H.kurumFlowId=null;H.caseSteps=[];return gate()}if(a==='isimi')return goIsimi();if(a==='evrak')return evrak();if(a==='evrak_satis_bilgi')return evrakSatisBilgi();if(a==='evrak_preview')return evrakPreview();if(a==='evrak_print')return evrakPrint();if(a==='evrak_savecase')return evrakSaveCase();if(a==='evrak_back')return islem();if(a==='completecase')return markCaseCompleted();if(a==='kurum')return kurumHome();if(a==='kurum_flow')return kurumStartFlow(e.dataset.id);if(a==='kurum_q')return kurumAnswer(e.dataset.k,e.dataset.v);if(a==='kurum_save')return saveKurumCase();if(a==='kurum_result')return kurumResult(!!H.dbId);}
+function dispatch(a,e){if(a==='close')return close();if(a==='gate')return gate();if(a==='cases')return cases();if(a==='caseopen')return openCase(e.dataset.id);if(a==='openDoc')return openDocument(e.dataset.k,Number(e.dataset.i||0));if(a==='stepToggle')return updateCaseStep(e.dataset.k);if(a==='islem')return islem();if(a==='tasinmaz')return tasinmaz();if(a==='konut')return konut();if(a==='start'){H.step=0;return question()}if(a==='qback'){H.step=Math.max(0,H.step-1);return question()}if(a==='answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return question()}if(a==='docReady')return;if(a==='docToggle'){H.documents[e.dataset.k]=!!e.checked;if(H.module==='kurum_basvurusu'){kurumResult(!!H.dbId);if(H.dbId)return saveKurumCase();return;}result(!!H.dbId);if(H.dbId)return saveCase(true);return;}if(a==='savecase')return saveCase();if(a==='save'){const i=document.getElementById('qinput');if(!i||!String(i.value).trim()){const c=document.querySelector('#hallet-root .hc');if(c&&!c.querySelector('.err'))c.insertAdjacentHTML('beforeend','<div class="err">Lütfen bir değer girerek devam et.</div>');return}H.answers[e.dataset.k]=i.value.trim();H.step++;return question()}if(a==='new'){H.step=0;H.answers={};H.documents={};H.documentStatuses={};H.documentFiles={};H.caseId=null;H.dbId=null;H.status=null;H.module=null;H.kurumFlowId=null;H.caseSteps=[];return gate()}if(a==='isimi')return goIsimi();if(a==='evrak')return evrak();if(a==='evrak_satis_bilgi')return evrakSatisBilgi();if(a==='evrak_preview')return evrakPreview();if(a==='evrak_print')return evrakPrint();if(a==='evrak_savecase')return evrakSaveCase();if(a==='evrak_back')return islem();if(a==='completecase')return markCaseCompleted();if(a==='kurum')return kurumHome();if(a==='kurum_flow')return kurumStartFlow(e.dataset.id);if(a==='kurum_q')return kurumAnswer(e.dataset.k,e.dataset.v);if(a==='kurum_save')return saveKurumCase();if(a==='kurum_result')return kurumResult(!!H.dbId);if(a==='kurum_edit_info'){H.step=0;return kurumQuestion();}if(a==='kurum_save_notes'){const t=document.getElementById('kurumNotes');if(t)H.answers.notes=t.value||'';return saveKurumCase();}}
 document.addEventListener('click',function(e){const el=e.target.closest&&e.target.closest('#hallet-root [data-a]');if(!el)return;e.preventDefault();e.stopPropagation();dispatch(el.dataset.a,el)},true);
 document.addEventListener('change',function(e){
   const box=e.target.closest&&e.target.closest('#hallet-root input[data-kurum-doc]');
