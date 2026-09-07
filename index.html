@@ -621,13 +621,16 @@ function gate(){H.step=0;H.answers={};H.documents={};H.documentStatuses={};H.doc
 async function cases(){
  const session=getAuthSession();
  if(!session?.access_token||!session?.user?.id){openAuthModal('login');return;}
- render(top('gate')+'<div class="hc"><div class="hk">İşlem Dosyalarım</div><h1>Kayıtlı dosyalar</h1><p class="hm">Hesabına kaydettiğin İşini Hallet dosyaları burada görünür.</p><div id="halletCasesBox" class="hl"><div class="li">⏳ Dosyalar yükleniyor...</div></div></div>');
+ render(top('gate')+'<div class="hc"><div class="hk">İşlem Dosyalarım</div><h1>İşlem dosyaları</h1><p class="hm">Kayıtlı dosyalarını buradan takip et; kaldığın yerden devam et.</p><div id="halletCasesBox" class="hl"><div class="li">⏳ Dosyalar yükleniyor...</div></div></div>');
  try{
    const rows=await supabaseAuthRequest('GET','hallet_cases?select=id,case_type,status,title,summary,district,city,metadata,created_at,updated_at&order=updated_at.desc&limit=100');
    const list=Array.isArray(rows)?rows:[];
    const box=document.getElementById('halletCasesBox');
    if(!box)return;
-   if(!list.length){box.innerHTML='<div class="li"><strong>Henüz kayıtlı dosyan yok.</strong><br><span class="hm">İlk işlem dosyanı oluşturup kaydettiğinde burada görünecek.</span></div><button class="hb hp" data-a="islem">İlk dosyayı oluştur →</button>';return;}
+   if(!list.length){
+     box.innerHTML='<div class="li" style="text-align:left"><strong>Henüz işlem dosyan yok.</strong><br><span class="hm">Bir işlem başlatarak dosyanı burada takip edebilirsin.</span></div><button class="hb hp" data-a="islem">İşlem başlat →</button>';
+     return;
+   }
    const stepDoneByCase={};
    try{
      const tasinmazIds=list.filter(r=>{const m=r.metadata||{};return m.module!=='evrak_hazirlama'&&(m.module==='tasinmaz'||m.transaction_type==='konut_satisi'||r.case_type==='konut_satisi');}).map(r=>r.id).filter(Boolean);
@@ -641,13 +644,26 @@ async function cases(){
        });
      }
    }catch(stepErr){console.warn('Liste adım özeti yüklenemedi:',stepErr);}
+   const statusMap={draft:'Taslak',in_progress:'Devam ediyor',waiting_user:'Bekliyor',completed:'Tamamlandı',cancelled:'İptal edildi'};
+   const fmtWhen=(iso)=>{
+     if(!iso)return '';
+     try{return new Date(iso).toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});}catch(e){return '';}
+   };
    box.innerHTML=list.map(r=>{
-     const m=r.metadata||{}; const no=m.case_no||'Dosya'; const city=r.city||''; const district=r.district||'';
-     const when=r.updated_at?new Date(r.updated_at).toLocaleDateString('tr-TR'):'';
-     const statusMap={draft:'Taslak',in_progress:'Devam ediyor',waiting_user:'Bekliyor',completed:'Tamamlandı',cancelled:'İptal edildi'};
+     const m=(r.metadata&&typeof r.metadata==='object')?r.metadata:{};
+     const no=m.case_no||'';
+     const city=r.city||'';
+     const district=r.district||'';
+     const place=[city,district].filter(Boolean).join(' / ');
+     const stLabel=statusMap[r.status]||r.status||'Taslak';
+     const isCompleted=r.status==='completed';
      const isEvrak=m.module==='evrak_hazirlama';
-     let extra='';
-     if(!isEvrak&&(m.module==='tasinmaz'||m.transaction_type==='konut_satisi'||r.case_type==='konut_satisi')){
+     const isTasinmaz=!isEvrak&&(m.module==='tasinmaz'||m.transaction_type==='konut_satisi'||r.case_type==='konut_satisi');
+     const typeLabel=isEvrak?'Evrak Hazırlama':(isTasinmaz?'Konut Satışı':'İşlem Dosyası');
+     const updated=fmtWhen(r.updated_at);
+     const created=fmtWhen(r.created_at);
+     let bodyLines='';
+     if(isTasinmaz){
        const answers=(m.answers&&typeof m.answers==='object')?m.answers:{};
        const docs=getDocumentChecklist(answers);
        let docState=(m.document_summary&&typeof m.document_summary==='object')?m.document_summary:null;
@@ -656,21 +672,41 @@ async function cases(){
          const ready=docs.filter(d=>docFlags[d.key]===true).length;
          docState={total:docs.length,ready,percent:docs.length?Math.round(ready/docs.length*100):0,missing:docs.filter(d=>docFlags[d.key]!==true)};
        }else if(!Array.isArray(docState.missing)){
-         docState={...docState,missing:docs.filter(d=>!((m.documents||{})[d.key]===true))};
+         const docFlags=(m.documents&&typeof m.documents==='object')?m.documents:{};
+         docState={...docState,missing:docs.filter(d=>docFlags[d.key]!==true)};
        }
-       const action=nextAction(answers,docState);
+       let action=null;
+       try{action=nextAction(answers,docState);}catch(e){action=null;}
        const st=stepDoneByCase[r.id];
-       const stepTotal=st&&st.total?st.total:5;
+       const stepTotal=(st&&st.total)?st.total:5;
        const stepDone=st?st.done:0;
-       const miss=docState.missing&&docState.missing.length?docState.missing[0].title:null;
-       const doneBadge=(r.status==='completed')?'<span class="ok"> ✓ Tamamlandı</span>':'';
-       const nextLine=(r.status==='completed')?'':(action&&action.title?(' · Sıradaki: '+esc(action.title)):'');
-       extra='<br><span class="hm" style="display:block;margin-top:6px;line-height:1.45">Konut Satışı · '+esc(statusMap[r.status]||r.status||'Taslak')+doneBadge+'<br>İlerleme: '+stepDone+'/'+stepTotal+' adım · Belgeler: '+(docState.ready||0)+'/'+(docState.total||0)+' hazır'+(miss?(' · Eksik: '+esc(miss)):'')+nextLine+'</span>';
+       const miss=(docState.missing&&docState.missing.length)?docState.missing[0].title:null;
+       bodyLines=
+         '<div class="hm" style="margin-top:8px;line-height:1.5;word-break:break-word">'+
+         '<div><strong>Durum:</strong> '+(isCompleted?'<span class="ok">✓ Tamamlandı</span>':esc(stLabel))+'</div>'+
+         '<div><strong>İlerleme:</strong> '+stepDone+' / '+stepTotal+' adım</div>'+
+         '<div><strong>Belgeler:</strong> '+(docState.ready||0)+' / '+(docState.total||0)+' hazır</div>'+
+         (miss&&!isCompleted?('<div><strong>Eksik:</strong> '+esc(miss)+'</div>'):'')+
+         ((!isCompleted&&action&&action.title)?('<div><strong>Sıradaki:</strong> '+esc(action.title)+'</div>'):'')+
+         '</div>';
      }else if(isEvrak){
-       extra='<br><span class="hm" style="display:block;margin-top:6px">Evrak Hazırlama · '+esc(statusMap[r.status]||r.status||'Taslak')+'</span>';
+       bodyLines='<div class="hm" style="margin-top:8px;line-height:1.5"><div><strong>Durum:</strong> '+esc(stLabel)+'</div></div>';
+     }else{
+       bodyLines='<div class="hm" style="margin-top:8px;line-height:1.5"><div><strong>Durum:</strong> '+(isCompleted?'<span class="ok">✓ Tamamlandı</span>':esc(stLabel))+'</div></div>';
      }
-     return '<button class="hb" data-a="caseopen" data-id="'+esc(r.id)+'" style="text-align:left"><strong>📄 '+esc(r.title||'İşlem Dosyası')+'</strong><br><span class="hm">'+esc(no)+' • '+esc(statusMap[r.status]||r.status||'Taslak')+' • '+esc([city,district].filter(Boolean).join(' / '))+' • '+esc(when)+'</span>'+extra+'</button>';
-   }).join('');
+     const metaBits=[no?('No: '+no):'',place,created?('Oluşturulma: '+created):'',updated?('Güncelleme: '+updated):''].filter(Boolean).map(esc);
+     const cta=isCompleted?'İncele →':'Devam Et →';
+     return (
+       '<div class="li" style="text-align:left;overflow:hidden">'+
+       '<div style="font-weight:800;font-size:15px;word-break:break-word">📄 '+esc(r.title||typeLabel)+'</div>'+
+       '<div class="hm" style="margin-top:4px;word-break:break-word">'+esc(typeLabel)+(metaBits.length?(' · '+metaBits.join(' · ')):'')+'</div>'+
+       bodyLines+
+       '<div class="hg" style="margin-top:10px">'+
+       '<button type="button" class="hb hp" data-a="caseopen" data-id="'+esc(r.id)+'">'+cta+'</button>'+
+       '</div></div>'
+     );
+   }).join('')+
+   '<div class="hg" style="margin-top:8px"><button type="button" class="hb" data-a="islem">＋ Yeni işlem başlat</button></div>';
  }catch(e){
    console.error('Hallet dosyalar yükleme hatası:',e);
    const box=document.getElementById('halletCasesBox');
