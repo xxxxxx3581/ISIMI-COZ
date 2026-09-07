@@ -424,7 +424,7 @@ updateAuthArea();
    ========================================================= */
 (function(){
 'use strict';
-const H={step:0,answers:{},caseId:null,createdAt:null,dbId:null,documents:{},documentStatuses:{},documentFiles:{},caseSteps:[]};
+const H={step:0,answers:{},caseId:null,createdAt:null,dbId:null,status:null,documents:{},documentStatuses:{},documentFiles:{},caseSteps:[]};
 const CASE_STEP_TEMPLATE=[
  {key:'precheck',title:'Ön kontrol',description:'Verilen bilgiler üzerinden satış için temel uygunluk kontrolü.',institution:'İşini Hallet',sort_order:1},
  {key:'documents',title:'Belgeleri tamamla',description:'Gerekli belgeleri yükle ve hazır olduklarını kontrol et.',institution:'İşini Hallet',sort_order:2},
@@ -544,7 +544,7 @@ function buildCasePayload(){
  if(sale>0&&municipalValue>0&&sale<municipalValue)warnings.push('Beyan edilen satış bedeli emlak vergisi değerinden düşük görünüyor; tapu harcı ön hesabında daha yüksek değer esas alınmıştır.');
  return {
    case_type:'konut_satisi',
-   status:'draft',
+   status:(H.status==='completed'?'completed':(H.status||'draft')),
    title:'Konut satışı',
    summary:'İşini Hallet ön kontrol dosyası — konut satışı',
    user_id:getAuthSession()?.user?.id||null,
@@ -644,7 +644,7 @@ async function cases(){
    box.innerHTML=list.map(r=>{
      const m=r.metadata||{}; const no=m.case_no||'Dosya'; const city=r.city||''; const district=r.district||'';
      const when=r.updated_at?new Date(r.updated_at).toLocaleDateString('tr-TR'):'';
-     const statusMap={draft:'Taslak',in_progress:'Devam ediyor',waiting_user:'Kullanıcı bekleniyor',completed:'Tamamlandı',cancelled:'İptal edildi'};
+     const statusMap={draft:'Taslak',in_progress:'Devam ediyor',waiting_user:'Bekliyor',completed:'Tamamlandı',cancelled:'İptal edildi'};
      const isEvrak=m.module==='evrak_hazirlama';
      let extra='';
      if(!isEvrak&&(m.module==='tasinmaz'||m.transaction_type==='konut_satisi'||r.case_type==='konut_satisi')){
@@ -663,7 +663,11 @@ async function cases(){
        const stepTotal=st&&st.total?st.total:5;
        const stepDone=st?st.done:0;
        const miss=docState.missing&&docState.missing.length?docState.missing[0].title:null;
-       extra='<br><span class="hm" style="display:block;margin-top:6px;line-height:1.45">İlerleme: '+stepDone+'/'+stepTotal+' adım · Belgeler: '+(docState.ready||0)+'/'+(docState.total||0)+' hazır'+(miss?(' · Eksik: '+esc(miss)):'')+(action&&action.title?(' · Sıradaki: '+esc(action.title)):'')+'</span>';
+       const doneBadge=(r.status==='completed')?'<span class="ok"> ✓ Tamamlandı</span>':'';
+       const nextLine=(r.status==='completed')?'':(action&&action.title?(' · Sıradaki: '+esc(action.title)):'');
+       extra='<br><span class="hm" style="display:block;margin-top:6px;line-height:1.45">Konut Satışı · '+esc(statusMap[r.status]||r.status||'Taslak')+doneBadge+'<br>İlerleme: '+stepDone+'/'+stepTotal+' adım · Belgeler: '+(docState.ready||0)+'/'+(docState.total||0)+' hazır'+(miss?(' · Eksik: '+esc(miss)):'')+nextLine+'</span>';
+     }else if(isEvrak){
+       extra='<br><span class="hm" style="display:block;margin-top:6px">Evrak Hazırlama · '+esc(statusMap[r.status]||r.status||'Taslak')+'</span>';
      }
      return '<button class="hb" data-a="caseopen" data-id="'+esc(r.id)+'" style="text-align:left"><strong>📄 '+esc(r.title||'İşlem Dosyası')+'</strong><br><span class="hm">'+esc(no)+' • '+esc(statusMap[r.status]||r.status||'Taslak')+' • '+esc([city,district].filter(Boolean).join(' / '))+' • '+esc(when)+'</span>'+extra+'</button>';
    }).join('');
@@ -685,7 +689,7 @@ async function openCase(id){
   if(m.draft&&typeof m.draft==='object') return evrakSavedCasePreview(row,m.draft);
   return evrakSatisBilgiSaved(row,m);
 }
-   H.dbId=row.id; H.caseId=m.case_no||null; H.createdAt=row.created_at||null; H.answers=(m.answers&&typeof m.answers==='object')?m.answers:{}; H.documents=(m.documents&&typeof m.documents==='object')?m.documents:{}; H.documentStatuses={}; H.documentFiles={};
+   H.dbId=row.id; H.caseId=m.case_no||null; H.createdAt=row.created_at||null; H.status=row.status||'draft'; H.answers=(m.answers&&typeof m.answers==='object')?m.answers:{}; H.documents=(m.documents&&typeof m.documents==='object')?m.documents:{}; H.documentStatuses={}; H.documentFiles={};
    try{
     const docs=await supabaseAuthRequest('GET','hallet_documents?select=id,doc_key,title,status,storage_path,mime_type,file_size_bytes,metadata,created_at&case_id=eq.'+encodeURIComponent(H.dbId)+'&order=created_at.asc&limit=200');
     (Array.isArray(docs)?docs:[]).forEach(d=>{
@@ -799,6 +803,34 @@ async function openDocument(docKey,index=0){
     window.open(signed.startsWith('http')?signed:SUPABASE_URL+'/storage/v1'+signed,'_blank','noopener');
   }catch(e){console.error(e);alert('Belge açılamadı.\n\n'+(e.message||'Bilinmeyen hata'));}
 }
+async function markCaseCompleted(){
+ if(H.status==='completed'){result(!!H.dbId);return;}
+ const stepState=stepSummary();
+ const docs=getDocumentChecklist(H.answers||{});
+ const docState=documentSummary(docs);
+ if((stepState.done||0)<(stepState.total||5)||!docState.complete){
+  alert('Satışı tamamlandı işaretlemek için tüm işlem adımları (5/5) ve gerekli belgeler tamamlanmış olmalıdır.');
+  return;
+ }
+ if(!confirm('Satışı tamamlandı olarak işaretlemek istediğinize emin misiniz?\n\nBu işlem resmi tapu satışının gerçekleştiği anlamına gelmez; yalnızca işlem dosyanızın durumunu “Tamamlandı” yapar.'))return;
+ const session=getAuthSession();
+ if(!session?.access_token||!session?.user?.id){openAuthModal('login');return;}
+ try{
+  if(!H.dbId){
+   await saveCase(true);
+   if(!H.dbId)throw new Error('Dosya kaydedilemedi; tamamlanamadı.');
+  }
+  const rows=await supabaseAuthRequest('PATCH','hallet_cases?id=eq.'+encodeURIComponent(H.dbId)+'&select=id,status,updated_at',{status:'completed',updated_at:new Date().toISOString()});
+  const row=Array.isArray(rows)?rows[0]:rows;
+  H.status=(row&&row.status)||'completed';
+  alert('İşlem tamamlandı.\n\nBu işlem dosyası başarıyla tamamlandı olarak işaretlendi.');
+  result(true);
+ }catch(e){
+  console.error('Tamamlama hatası:',e);
+  alert('Tamamlanamadı.\n\n'+(e.message||'Bilinmeyen hata'));
+ }
+}
+
 function result(fromSaved=false){
  const a=H.answers;
  H.caseId=H.caseId||'IH-'+new Date().toISOString().replace(/\D/g,'').slice(0,14)+'-'+Math.random().toString(36).slice(2,7).toUpperCase();
@@ -826,23 +858,25 @@ function result(fromSaved=false){
  const docState=documentSummary(docs);
  const action=nextAction(a,docState);
  const stepState=stepSummary();
+ const isCompleted=H.status==='completed';
+ const canComplete=!isCompleted&&!!docState.complete&&(stepState.done||0)>=(stepState.total||5)&&(stepState.total||0)>0;
  const readyPercent=Math.round(((docState.ready||0)+(stepState.done||0))/Math.max(1,(docState.total||0)+(stepState.total||0))*100);
- const overviewStatus=warnings.length?'Kontrol gerekli':'Ön kontrol tamamlandı';
+ const overviewStatus=isCompleted?'Tamamlandı':(warnings.length?'Kontrol gerekli':'Ön kontrol tamamlandı');
  const officialNote='Bu dosya ön kontrol aracıdır. Tapu işlemlerinde TKGM’nin güncel koşulları; değer artış kazancında GİB’in güncel hesaplama ve beyan kuralları esas alınmalıdır.';
  render(top('close')+'<div class="hc"><div class="hk">İşlem dosyası</div><h1>Satış dosyan hazır.</h1><p class="hm">Ön kontrol tamamlandı. Aşağıdaki sonuçlar verdiğin bilgilere göre oluşturuldu.</p>'+
- '<h2>Durum özeti</h2><div class="hl" style="border:1px solid #35535a;border-radius:12px;padding:4px 0;background:#0e2025"><div class="li"><strong>İlerleme:</strong> '+stepState.done+' / '+stepState.total+' adım <span class="hm">('+stepState.percent+'%)</span><div class="progressTrack"><span style="width:'+stepState.percent+'%"></span></div></div><div class="li"><strong>Belgeler:</strong> '+docState.ready+' / '+docState.total+' hazır'+(docState.missing&&docState.missing.length?(' <span class="hm">— ilk eksik: '+esc(docState.missing[0].title)+'</span>'):' <span class="ok">— ✓ tamam</span>')+'</div><div class="li"><strong>Şimdi:</strong> '+esc(action.title)+'<br><span class="hm">'+esc(action.detail)+'</span></div></div>'+
+ '<h2>Durum özeti</h2><div class="hl" style="border:1px solid #35535a;border-radius:12px;padding:4px 0;background:#0e2025"><div class="li"><strong>İlerleme:</strong> '+stepState.done+' / '+stepState.total+' adım <span class="hm">('+stepState.percent+'%)</span><div class="progressTrack"><span style="width:'+stepState.percent+'%"></span></div></div><div class="li"><strong>Belgeler:</strong> '+docState.ready+' / '+docState.total+' hazır'+(docState.missing&&docState.missing.length?(' <span class="hm">— ilk eksik: '+esc(docState.missing[0].title)+'</span>'):' <span class="ok">— ✓ tamam</span>')+'</div><div class="li"><strong>Şimdi:</strong> '+(isCompleted?'<span class="ok">✓ İşlem tamamlandı</span><br><span class="hm">Bu işlem dosyası başarıyla tamamlandı.</span>':(esc(action.title)+'<br><span class="hm">'+esc(action.detail)+'</span>'))+'</div></div>'+
  '<div class="hl"><div class="li"><strong>Dosya no:</strong> '+esc(H.caseId)+'</div><div class="li"><strong>Satış bedeli:</strong> '+money(sale)+'</div><div class="li"><strong>Emlak vergisi değeri:</strong> '+(municipalValue?money(municipalValue):'Belirtilmedi')+'</div><div class="li"><strong>Edinim tarihi:</strong> '+dateText(a.acquisition_date)+'</div><div class="li"><strong>5 yıllık süre:</strong> '+esc(five)+'</div></div>'+
  '<h2>Gerekli belgeler</h2><p class="hm small">Her belge türü için birden fazla PDF veya görsel yükleyebilirsin. Örneğin kimliğin ön ve arka yüzünü ayrı dosyalar olarak ekleyebilirsin.</p><div class="li"><strong>Dosya ilerlemesi:</strong> '+docState.percent+'% <span class="hm">('+docState.ready+' / '+docState.total+' belge türü hazır)</span><div class="progressTrack"><span style="width:'+docState.percent+'%"></span></div></div><div class="hl">'+docs.map(d=>{const files=getDocumentFiles(d.key);const dbStatus=H.documentStatuses[d.key]||((H.documents[d.key]===true)?'uploaded':'missing');const statusLabel=dbStatus==='verified'?'✓ Doğrulandı':(dbStatus==='uploaded'?'✓ Yüklendi':'○ Eksik / bekleniyor');const statusClass=dbStatus==='verified'?'ok':(dbStatus==='uploaded'?'ok':'warn');return '<div class="docItem"><input type="checkbox" data-a="docToggle" data-k="'+esc(d.key)+'" '+(H.documents[d.key]===true?'checked':'')+'><span style="flex:1"><strong>'+esc(d.title)+'</strong><br><span class="hm">'+esc(d.reason)+'</span><br><span class="docStatus" style="display:inline-flex;align-items:center;gap:6px;margin-top:6px">'+'<span class="'+statusClass+'" style="display:inline-block;padding:5px 8px;border-radius:8px;background:#102b2a;font-weight:700">'+statusLabel+'</span>'+'</span>'+(files.length?'<div style="margin-top:9px;display:grid;gap:7px">'+files.map((f,i)=>'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border:1px solid #29464d;border-radius:10px;background:#0e2025"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📄 '+esc(f.name||('Belge '+(i+1)))+'</span><button type="button" class="topb" data-a="openDoc" data-k="'+esc(d.key)+'" data-i="'+i+'">Görüntüle</button></div>').join('')+'</div>':'')+'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:9px"><label style="display:inline-flex;align-items:center;gap:7px;margin:0;padding:8px 10px;border:1px solid #35535a;border-radius:10px;background:#10252b;color:#fff;font:700 12px Arial,sans-serif;cursor:pointer">📎 Belge ekle<input type="file" data-upload-doc="'+esc(d.key)+'" accept="application/pdf,image/*" style="display:none"></label></div></span></div>'}).join('')+'</div><div class="li"><strong>Belge durumu:</strong> '+docState.ready+' / '+docState.total+' hazır'+(docState.complete?' — ✓ Tamamlandı':' — eksikler var')+'</div>'+
  '<h2>İşlem adımları</h2><p class="hm small">Dosyanın hangi aşamada olduğunu buradan takip edebilirsin.</p><div class="hl">'+stepSummary().steps.map((st,i)=>'<div class="li" style="display:flex;gap:10px;align-items:flex-start"><span style="font-weight:800">'+(st.status==='completed'?'✅':(i+1)+'.')+'</span><span style="flex:1"><strong>'+esc(st.title)+'</strong><br><span class="hm">'+esc(st.description||'')+'</span>'+(st.institution?'<br><span class="hm small">Kurum: '+esc(st.institution)+'</span>':'')+'</span><button type="button" class="topb" data-a="stepToggle" data-k="'+esc(st.step_key)+'">'+(st.status==='completed'?'Geri al':'Tamamla')+'</button></div>').join('')+'</div><div class="li"><strong>Adım ilerlemesi:</strong> '+stepSummary().percent+'% ('+stepSummary().done+' / '+stepSummary().total+')</div>'+
  '<h2>Tapu harcı ön hesabı</h2><div class="hl"><div class="li"><strong>Harç matrahı:</strong> '+money(harcBase)+'</div><div class="li"><strong>Satıcı:</strong> '+money(sellerFee)+' <span class="hm">(%2)</span></div><div class="li"><strong>Alıcı:</strong> '+money(buyerFee)+' <span class="hm">(%2)</span></div><div class="li"><strong>Toplam:</strong> '+money(totalFee)+' <span class="hm">(%4)</span></div></div><p class="hm small">Ön hesap, beyan edilen satış bedeli ile belirtilen emlak vergisi değerinin yüksek olanını esas alır. Döner sermaye ücreti dahil değildir; resmi bildirimdeki güncel tutarlar esas alınmalıdır.</p>'+
  '<h2>Değer artış kazancı ön kontrolü</h2><div class="hl"><div class="li"><strong>Durum:</strong> '+esc(fivePassed?'5 yıllık süre dolmuş görünüyor.':(a.acquisition_type==='inheritance'||a.acquisition_type==='gift'?'Miras/bağış edinimi: bu satış değer artış kazancı kapsamı dışında değerlendirilebilir.':'5 yıllık süre dolmamış / kontrol gerekli.'))+'</div>'+(capitalGainRelevant&&grossGain!==null?'<div class="li"><strong>Satış − alış farkı:</strong> '+money(grossGain)+'<br><span class="hm">Bu yalnızca brüt farktır; nihai vergi matrahı değildir. GİB hesabında Yİ-ÜFE endekslemesi (%10 şartı), indirilebilir giderler ve satış yılının istisnası ayrıca dikkate alınır.</span></div>':'<div class="li"><span class="hm">Bu dosyada değer artış kazancı yönünden ön kontrol yapıldı; nihai vergi hesabı için GİB kuralları ve güncel veriler esas alınmalıdır.</span></div>')+'</div>'+
- '<h2>Şimdi ne yapmalısın?</h2><div class="li"><strong>'+esc(action.title)+'</strong><br><span class="hm">'+esc(action.detail)+'</span></div><h2>Sonraki adımlar</h2><div class="hl"><div class="li">1. Güncel tapu kaydı ve taraf bilgilerini doğrula.</div><div class="li">2. Gerekli belgeleri hazırla ve temsil/takyidat durumunu kontrol et.</div><div class="li">3. Tapu başvurusunu Web Tapu veya yetkili tapu kanalı üzerinden başlat.</div><div class="li">4. Harç ve döner sermaye ödemelerini resmi bildirim üzerinden kontrol et.</div><div class="li">5. İşlem tamamlandığında belgeleri dosyana ekle.</div></div>'+
+ (isCompleted?'<h2>✓ İşlem tamamlandı</h2><div class="li"><span class="ok">✓</span> <strong>Bu işlem dosyası başarıyla tamamlandı.</strong><br><span class="hm">Resmi tapu süreci ayrıdır; bu işaret yalnızca dosya durumunuzu yansıtır.</span></div>':'<h2>Şimdi ne yapmalısın?</h2><div class="li"><strong>'+esc(action.title)+'</strong><br><span class="hm">'+esc(action.detail)+'</span></div><h2>Sonraki adımlar</h2><div class="hl"><div class="li">1. Güncel tapu kaydı ve taraf bilgilerini doğrula.</div><div class="li">2. Gerekli belgeleri hazırla ve temsil/takyidat durumunu kontrol et.</div><div class="li">3. Tapu başvurusunu Web Tapu veya yetkili tapu kanalı üzerinden başlat.</div><div class="li">4. Harç ve döner sermaye ödemelerini resmi bildirim üzerinden kontrol et.</div><div class="li">5. İşlem tamamlandığında belgeleri dosyana ekle.</div></div>')+
  (warnings.length?'<h2>Uyarılar</h2><div class="hl">'+warnings.map(w=>'<div class="li"><span class="warn">⚠</span> '+esc(w)+'</div>').join('')+'</div>':'<div class="li"><span class="ok">✓</span> Bu cevaplarla kritik bir uyarı tespit edilmedi.</div>')+
- '<div class="li" style="margin-top:14px"><strong>Resmî kaynak notu:</strong><br><span class="hm">'+esc(officialNote)+'</span></div><div class="hg">'+(fromSaved?'<button class="hb hp" data-a="cases">← DOSYALARIMA DÖN</button>':'<button class="hb hp" data-a="savecase">DOSYAYI KAYDET</button>')+'<button class="hb" data-a="new">Yeni işlem başlat</button><button class="hb hs" data-a="close">Kapat</button></div></div>')
+ '<div class="li" style="margin-top:14px"><strong>Resmî kaynak notu:</strong><br><span class="hm">'+esc(officialNote)+'</span></div>'+(canComplete?'<div class="li" style="margin-top:12px;border:1px solid #2f6f4e;border-radius:12px;padding:12px;background:#0f2a1c"><strong class="ok">✓ Hazır</strong><br><span class="hm">Tüm adımlar ve belgeler tamam. İsterseniz dosyayı tamamlandı olarak işaretleyebilirsiniz. Bu, resmi tapu satışı anlamına gelmez.</span><div class="hg" style="margin-top:10px"><button class="hb hp" data-a="completecase">✓ Satışı Tamamlandı Olarak İşaretle</button></div></div>':'')+'<div class="hg">'+(fromSaved?'<button class="hb hp" data-a="cases">← DOSYALARIMA DÖN</button>':'<button class="hb hp" data-a="savecase">DOSYAYI KAYDET</button>')+'<button class="hb" data-a="new">Yeni işlem başlat</button><button class="hb hs" data-a="close">Kapat</button></div></div>')
 }
 function msg(t,m,back){render(top(back||'gate')+'<div class="hc"><div class="hk">İşini Hallet</div><h2>'+esc(t)+'</h2><p class="hm">'+esc(m)+'</p><button class="hb hp" data-a="gate">İşlemlere dön</button></div>')}
 function goIsimi(){close();if(typeof window.showHome==='function')window.showHome()}
-function dispatch(a,e){if(a==='close')return close();if(a==='gate')return gate();if(a==='cases')return cases();if(a==='caseopen')return openCase(e.dataset.id);if(a==='openDoc')return openDocument(e.dataset.k,Number(e.dataset.i||0));if(a==='stepToggle')return updateCaseStep(e.dataset.k);if(a==='islem')return islem();if(a==='tasinmaz')return tasinmaz();if(a==='konut')return konut();if(a==='start'){H.step=0;return question()}if(a==='qback'){H.step=Math.max(0,H.step-1);return question()}if(a==='answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return question()}if(a==='docReady')return;if(a==='docToggle'){H.documents[e.dataset.k]=!!e.checked;result(!!H.dbId);if(H.dbId)return saveCase(true);return;}if(a==='savecase')return saveCase();if(a==='save'){const i=document.getElementById('qinput');if(!i||!String(i.value).trim()){const c=document.querySelector('#hallet-root .hc');if(c&&!c.querySelector('.err'))c.insertAdjacentHTML('beforeend','<div class="err">Lütfen bir değer girerek devam et.</div>');return}H.answers[e.dataset.k]=i.value.trim();H.step++;return question()}if(a==='new'){H.step=0;H.answers={};H.documents={};H.documentStatuses={};H.documentFiles={};H.caseId=null;H.caseSteps=[];return gate()}if(a==='isimi')return goIsimi();if(a==='evrak')return evrak();if(a==='evrak_satis_bilgi')return evrakSatisBilgi();if(a==='evrak_preview')return evrakPreview();if(a==='evrak_print')return evrakPrint();if(a==='evrak_savecase')return evrakSaveCase();if(a==='evrak_back')return islem();if(a==='kurum')return msg('Kurum başvurusu','Bu modül sonraki aşamada açılacak. Mevcut aktif akış taşınmaz konut satışıdır.')}
+function dispatch(a,e){if(a==='close')return close();if(a==='gate')return gate();if(a==='cases')return cases();if(a==='caseopen')return openCase(e.dataset.id);if(a==='openDoc')return openDocument(e.dataset.k,Number(e.dataset.i||0));if(a==='stepToggle')return updateCaseStep(e.dataset.k);if(a==='islem')return islem();if(a==='tasinmaz')return tasinmaz();if(a==='konut')return konut();if(a==='start'){H.step=0;return question()}if(a==='qback'){H.step=Math.max(0,H.step-1);return question()}if(a==='answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return question()}if(a==='docReady')return;if(a==='docToggle'){H.documents[e.dataset.k]=!!e.checked;result(!!H.dbId);if(H.dbId)return saveCase(true);return;}if(a==='savecase')return saveCase();if(a==='save'){const i=document.getElementById('qinput');if(!i||!String(i.value).trim()){const c=document.querySelector('#hallet-root .hc');if(c&&!c.querySelector('.err'))c.insertAdjacentHTML('beforeend','<div class="err">Lütfen bir değer girerek devam et.</div>');return}H.answers[e.dataset.k]=i.value.trim();H.step++;return question()}if(a==='new'){H.step=0;H.answers={};H.documents={};H.documentStatuses={};H.documentFiles={};H.caseId=null;H.dbId=null;H.status=null;H.caseSteps=[];return gate()}if(a==='isimi')return goIsimi();if(a==='evrak')return evrak();if(a==='evrak_satis_bilgi')return evrakSatisBilgi();if(a==='evrak_preview')return evrakPreview();if(a==='evrak_print')return evrakPrint();if(a==='evrak_savecase')return evrakSaveCase();if(a==='evrak_back')return islem();if(a==='completecase')return markCaseCompleted();if(a==='kurum')return msg('Kurum başvurusu','Bu modül sonraki aşamada açılacak. Mevcut aktif akış taşınmaz konut satışıdır.')}
 document.addEventListener('click',function(e){const el=e.target.closest&&e.target.closest('#hallet-root [data-a]');if(!el)return;e.preventDefault();e.stopPropagation();dispatch(el.dataset.a,el)},true);
 document.addEventListener('change',function(e){
   const el=e.target.closest&&e.target.closest('#hallet-root input[data-upload-doc]');
