@@ -239,7 +239,7 @@ function showHome(){
     <span class="badge">🤖 YENİ</span>
     <h2 style="margin-top:12px">İşini Hallet</h2>
     <p class="muted small">İşlem, evrak ve kurum başvurularını adım adım hazırlamak için dijital işlem asistanını kullan.</p>
-    <button id="openHalletButton" class="btn primary hallet-launch" type="button" onclick="openHallet()">İŞİNİ HALLET →</button>
+    <button id="openHalletButton" class="btn primary hallet-launch" type="button">İŞİNİ HALLET →</button>
   </div>
   <div class="section"><div class="sectionTitle"><h2>Hizmet kategorileri</h2><span class="small muted">İzmir</span></div><div class="grid">${Object.entries(SERVICES).map(([k,s])=>`<button class="card service" type="button" onclick="showRequest('${k}')"><div class="emoji">${s.emoji}</div><strong>${s.name}</strong><span>${s.desc}</span></button>`).join("")}</div></div>
   <div class="section card"><h2>💡 Nasıl çalışıyor?</h2><p class="muted small">İhtiyacını oluştur. Hizmet kategorisini ve bölgeni seç. Talebin sisteme kaydedilsin. Uygun hizmet sağlayıcıları talebini görebilsin.</p></div>`);
@@ -247,12 +247,12 @@ function showHome(){
 
 function openHallet(){
   try{
-    if(window.__HalletGate && typeof window.__HalletGate === "function"){
-      window.__HalletGate();
-      return;
-    }
     if(window.Hallet && typeof window.Hallet.showGate === "function"){
       window.Hallet.showGate();
+      return;
+    }
+    if(window.__HalletGate && typeof window.__HalletGate === "function"){
+      window.__HalletGate();
       return;
     }
     console.error("İşini Hallet modülü yüklenemedi.");
@@ -808,7 +808,7 @@ window.Hallet={showGate:gate,showIslemMenu:islem,showTasinmazMenu:tasinmaz,showK
 })();
 
 /* Hallet başlatıcısı — ana sayfaya dokunmadan çalışır. */
-document.addEventListener('click',function(e){const b=e.target.closest&&e.target.closest('#openHalletButton');if(!b)return;e.preventDefault();e.stopPropagation();openHallet();},true);
+document.addEventListener('click',function(e){const b=e.target.closest&&e.target.closest('#openHalletButton');if(!b)return;e.preventDefault();openHallet();},false);
 </script>
 </body>
 </html>
