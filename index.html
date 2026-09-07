@@ -956,8 +956,13 @@ async function uploadDocument(docKey,file){
     const uploadedFile={path,name:file.name||safeName,type:file.type||null,size:file.size||0};
     const existingFiles=getDocumentFiles(docKey);
     H.documentFiles[docKey]=existingFiles.concat([uploadedFile]);
-    await saveCase(true);
-    result(!!H.dbId);
+    if(H.module==='kurum_basvurusu'){
+      await saveKurumCase(true);
+      kurumResult(!!H.dbId);
+    }else{
+      await saveCase(true);
+      result(!!H.dbId);
+    }
     alert('Belge başarıyla yüklendi. ✓\n\n'+(file.name||'Belge'));
   }catch(e){
     console.error('Hallet belge yükleme hatası:',e);
@@ -1088,7 +1093,7 @@ function kurumAnswer(k,v){
  if(flow&&H.step>=(flow.questions||[]).length)return kurumResult(false);
  return kurumQuestion();
 }
-async function saveKurumCase(){
+async function saveKurumCase(silent){
  const flow=getKurumFlow(H.kurumFlowId);
  if(!flow){alert('Akış bulunamadı.');return;}
  const session=getAuthSession();
@@ -1130,8 +1135,8 @@ async function saveKurumCase(){
   H.module='kurum_basvurusu';
   await ensureCaseSteps();
   if(btn){btn.disabled=false;btn.textContent='✓ KAYDEDİLDİ';}
-  alert('Kurum başvuru dosyan kaydedildi.\\n\\nDosya No: '+H.caseId);
-  kurumResult(true);
+  if(!silent)alert('Kurum başvuru dosyan kaydedildi.\n\nDosya No: '+H.caseId)
+  if(!silent)kurumResult(true);
  }catch(e){
   console.error('Kurum kayıt hatası:',e);
   if(btn){btn.disabled=false;btn.textContent='DOSYAYI KAYDET';}
@@ -1143,9 +1148,15 @@ function kurumResult(fromSaved){
  if(!flow){return kurumHome();}
  const a=H.answers||{};
  const docs=getKurumDocumentChecklist(a);
- const docState=documentSummary(docs);
  const stepState=stepSummary();
  const isCompleted=H.status==='completed';
+ const readyDocs=docs.filter(d=>{
+  if(getDocumentFiles(d.key).length)return true;
+  if(d.required===false&&H.documents[d.key]===true)return true;
+  return false;
+ });
+ const missingDocs=docs.filter(d=>readyDocs.indexOf(d)<0);
+ const docState={total:docs.length,ready:readyDocs.length,percent:docs.length?Math.round(readyDocs.length/docs.length*100):0,complete:docs.length>0&&missingDocs.length===0,missing:missingDocs};
  const canComplete=!isCompleted&&!!docState.complete&&(stepState.done||0)>=(stepState.total||5)&&(stepState.total||0)>0;
  const action=isCompleted?null:(docState.missing&&docState.missing.length?{title:'Eksik belgeleri tamamla',detail:docState.missing[0].title}:{title:'Resmî kanala git',detail:'Başvuruyu e-Devlet üzerinden tamamla.'});
  let html=top(fromSaved?'cases':'kurum')+'<div class="hc"><div class="hk">Kurum başvurusu</div><h1>'+esc(flow.title)+'</h1>';
@@ -1159,9 +1170,12 @@ function kurumResult(fromSaved){
  html+='<h2>Resmî başvuru</h2><div class="li"><span class="hm">Başvuruyu resmî kurumun kendi sistemi üzerinden tamamlamalısın. İşini Hallet resmî başvuru yapmaz ve sonuç garantisi vermez.</span></div>';
  html+='<div class="hg"><a class="hb hp" href="'+esc(flow.official_channel_url)+'" target="_blank" rel="noopener noreferrer">Resmî kanala git →</a></div>';
  html+='<p class="hm small">'+esc(flow.source_note)+' Kontrol: '+esc(flow.checked_at)+'</p>';
- html+='<h2>Gerekli belgeler</h2><div class="hl">'+docs.map(d=>{
-  const on=H.documents[d.key]===true;
-  return '<div class="li"><label style="display:flex;gap:8px;align-items:flex-start"><input type="checkbox" data-kurum-doc="'+esc(d.key)+'" '+(on?'checked':'')+'><span><strong>'+esc(d.title)+'</strong><br><span class="hm">'+esc(d.reason||'')+'</span></span></label></div>';
+ html+='<h2>Gerekli belgeler</h2><p class="hm small">Belgeleri işlem dosyana yükleyebilirsin. Yalnızca işaretlemek, dosya yüklemiş sayılmaz.</p><div class="hl">'+docs.map(d=>{
+  const files=getDocumentFiles(d.key);
+  const uploaded=files.length>0;
+  const statusLabel=uploaded?'✓ Yüklendi':'○ Eksik';
+  const statusClass=uploaded?'ok':'';
+  return '<div class="li"><div><strong>'+esc(d.title)+'</strong>'+(d.required===false?' <span class="hm">(opsiyonel)</span>':'')+'<br><span class="hm">'+esc(d.reason||'')+'</span><br><span class="'+statusClass+'">'+statusLabel+'</span></div>'+(files.length?('<div style="margin-top:8px;display:grid;gap:6px">'+files.map((f,i)=>'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border:1px solid #29464d;border-radius:10px;background:#0e2025"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📄 '+esc(f.name||('Belge '+(i+1)))+'</span><button type="button" class="topb" data-a="openDoc" data-k="'+esc(d.key)+'" data-i="'+i+'">Görüntüle</button></div>').join('')+'</div>'):'')+'<div style="margin-top:9px"><label style="display:inline-flex;align-items:center;gap:7px;margin:0;padding:8px 10px;border:1px solid #35535a;border-radius:10px;background:#10252b;color:#fff;font:700 12px Arial,sans-serif;cursor:pointer">📎 Belge ekle<input type="file" data-upload-doc="'+esc(d.key)+'" accept="application/pdf,image/*" style="display:none"></label></div></div>';
  }).join('')+'</div>';
  html+='<h2>İşlem adımları</h2><div class="hl">'+stepState.steps.map((st,i)=>'<div class="li" style="display:flex;gap:10px;align-items:flex-start"><span>'+(st.status==='completed'?'✅':(i+1)+'.')+'</span><span style="flex:1"><strong>'+esc(st.title)+'</strong><br><span class="hm">'+esc(st.description||'')+'</span></span><button type="button" class="topb" data-a="stepToggle" data-k="'+esc(st.step_key)+'">'+(st.status==='completed'?'Geri al':'Tamamla')+'</button></div>').join('')+'</div>';
  if(canComplete)html+='<div class="li" style="margin-top:12px;border:1px solid #2f6f4e;border-radius:12px;padding:12px;background:#0f2a1c"><strong class="ok">✓ Hazır</strong><br><span class="hm">Adımlar ve belgeler tamam. Dosyayı tamamlandı işaretleyebilirsin (resmî başvuru anlamına gelmez).</span><div class="hg" style="margin-top:10px"><button class="hb hp" data-a="completecase">✓ Başvuruyu Tamamlandı Olarak İşaretle</button></div></div>';
