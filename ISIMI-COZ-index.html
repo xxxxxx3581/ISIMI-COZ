@@ -239,18 +239,10 @@ function showHome(){
     <span class="badge">🤖 YENİ</span>
     <h2 style="margin-top:12px">İşini Hallet</h2>
     <p class="muted small">İşlem, evrak ve kurum başvurularını adım adım hazırlamak için dijital işlem asistanını kullan.</p>
-    <button id="openHalletButton" class="btn primary hallet-launch" type="button">İŞİNİ HALLET →</button>
+    <button id="openHalletButton" class="btn primary hallet-launch" type="button" onclick="openHallet()">İŞİNİ HALLET →</button>
   </div>
   <div class="section"><div class="sectionTitle"><h2>Hizmet kategorileri</h2><span class="small muted">İzmir</span></div><div class="grid">${Object.entries(SERVICES).map(([k,s])=>`<button class="card service" type="button" onclick="showRequest('${k}')"><div class="emoji">${s.emoji}</div><strong>${s.name}</strong><span>${s.desc}</span></button>`).join("")}</div></div>
   <div class="section card"><h2>💡 Nasıl çalışıyor?</h2><p class="muted small">İhtiyacını oluştur. Hizmet kategorisini ve bölgeni seç. Talebin sisteme kaydedilsin. Uygun hizmet sağlayıcıları talebini görebilsin.</p></div>`);
-  const halletButton=document.getElementById("openHalletButton");
-  if(halletButton){
-    halletButton.addEventListener("click",function(e){
-      e.preventDefault();
-      e.stopPropagation();
-      openHallet();
-    },{once:true});
-  }
 }
 
 function openHallet(){
@@ -370,18 +362,6 @@ function renderProviderRequest(r){
 
 function providerLogin(){write(KEYS.providerLogged,true);showProviderPanel(getProvider())}
 function providerLogout(){write(KEYS.providerLogged,false);showProviderEntry()}
-
-/* İşini Hallet ana ekran başlatıcısı: buton yeniden çizilse bile çalışır. */
-if(!window.__isimiCozHalletLauncherBound){
-  window.__isimiCozHalletLauncherBound=true;
-  document.addEventListener("pointerup",function(e){
-    const b=e.target&&e.target.closest?e.target.closest("#openHalletButton"):null;
-    if(!b)return;
-    e.preventDefault();
-    e.stopPropagation();
-    openHallet();
-  },true);
-}
 
 /* ---------------- START ---------------- */
 async function startApp(){
@@ -827,7 +807,8 @@ document.addEventListener('change',function(e){
 window.Hallet={showGate:gate,showIslemMenu:islem,showTasinmazMenu:tasinmaz,showKonutSatis:konut,showQuestion:question,showResult:result,close:close};
 })();
 
-/* Hallet başlatıcısı: doğrudan buton onclick ile çalışır. */
+/* Hallet başlatıcısı — ana sayfaya dokunmadan çalışır. */
+document.addEventListener('click',function(e){const b=e.target.closest&&e.target.closest('#openHalletButton');if(!b)return;e.preventDefault();e.stopPropagation();if(window.Hallet)window.Hallet.showGate();},true);
 </script>
 </body>
 </html>
