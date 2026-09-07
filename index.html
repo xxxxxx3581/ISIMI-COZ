@@ -267,15 +267,25 @@ function providerMatchesRequest(p,r){
 
 function showHome(){
   setNav("navHome");
-  app(`<section class="hero"><span class="badge">📍 İZMİR PİLOT BÖLGESİ</span><h1>İhtiyacın varsa,<br>çözümü var.</h1><p class="muted">Ev, iş yeri, araç ve günlük yaşam hizmetlerini tek yerden bul. İhtiyacını anlat, talebini oluştur.</p><div class="actions"><button class="btn primary" type="button" onclick="showRequest()">📢 İşimi Çözdür</button><button class="btn secondary" type="button" onclick="showProviderEntry()">🛠️ Hizmet Ver</button></div></section>
+  app(`<section class="hero"><span class="badge">📍 İZMİR PİLOT</span><h1>İşini hallet,<br>işini çöz.</h1><p class="muted">Resmî işlem hazırlığı, evrak, kurum başvurusu ve güvenilir hizmeti tek yerden yönet.</p></section>
+  <div class="section"><div class="sectionTitle"><h2>Ne yapmak istiyorsun?</h2></div>
+  <div class="grid">
+    <button class="card service" type="button" onclick="openHalletAction('showIslemMenu')"><div class="emoji">📋</div><strong>Bir işlem yap</strong><span>Taşınmaz ve diğer işlem dosyaları</span></button>
+    <button class="card service" type="button" onclick="openHalletAction('showEvrak')"><div class="emoji">📄</div><strong>Evrak hazırla</strong><span>Form ve belge hazırlığı</span></button>
+    <button class="card service" type="button" onclick="openHalletAction('showKurum')"><div class="emoji">🏛️</div><strong>Kuruma başvur</strong><span>NVİ ve resmî kanal rehberi</span></button>
+    <button class="card service" type="button" onclick="showRequest()"><div class="emoji">🛠️</div><strong>Hizmet / usta bul</strong><span>İşimi Çöz marketplace</span></button>
+  </div></div>
   <div class="section card" style="border-color:#2b6f65;background:linear-gradient(145deg,#102c31,#0d1a2b)">
-    <span class="badge">🤖 YENİ</span>
-    <h2 style="margin-top:12px">İşini Hallet</h2>
-    <p class="muted small">İşlem, evrak ve kurum başvurularını adım adım hazırlamak için dijital işlem asistanını kullan.</p>
-    <button id="openHalletButton" class="btn primary hallet-launch" type="button">İŞİNİ HALLET →</button>
+    <div class="sectionTitle"><h2>İşlem Dosyalarım</h2></div>
+    <p class="muted small">Kayıtlı işlemlerini durum, ilerleme ve belgelerle takip et. Kaldığın yerden devam et.</p>
+    <div class="actions" style="margin-top:12px">
+      <button class="btn primary" type="button" onclick="openHalletAction('showCases')">📁 İşlem Dosyalarım</button>
+      <button id="openHalletButton" class="btn secondary hallet-launch" type="button">İşini Hallet menüsü</button>
+    </div>
   </div>
-  <div class="section"><div class="sectionTitle"><h2>Hizmet kategorileri</h2><span class="small muted">İzmir</span></div><div class="grid">${Object.entries(SERVICES).map(([k,s])=>`<button class="card service" type="button" onclick="showRequest('${k}')"><div class="emoji">${s.emoji}</div><strong>${s.name}</strong><span>${s.desc}</span></button>`).join("")}</div></div>
-  <div class="section card"><h2>💡 Nasıl çalışıyor?</h2><p class="muted small">İhtiyacını oluştur. Hizmet kategorisini ve bölgeni seç. Talebin sisteme kaydedilsin. Uygun hizmet sağlayıcıları talebini görebilsin.</p></div>`);
+  <div class="section"><div class="sectionTitle"><h2>Hizmet / usta kategorileri</h2><span class="small muted">İşimi Çöz · İzmir</span></div><div class="grid">${Object.entries(SERVICES).map(([k,s])=>`<button class="card service" type="button" onclick="showRequest('${k}')"><div class="emoji">${s.emoji}</div><strong>${s.name}</strong><span>${s.desc}</span></button>`).join("")}</div></div>
+  <div class="section card"><h2>💡 Nasıl çalışıyor?</h2><p class="muted small">İşlem veya evrak için İşini Hallet’i kullan. Usta / hizmet için talep oluştur. Kayıtlı işlem dosyalarından kaldığın yerden devam et.</p>
+  <div class="actions" style="margin-top:12px"><button class="btn secondary" type="button" onclick="showProviderEntry()">🛠️ Hizmet ver</button></div></div>`);
 }
 
 function openHallet(){
@@ -289,6 +299,18 @@ function openHallet(){
   }catch(error){
     console.error("İşini Hallet açılış hatası:",error);
     alert("İşini Hallet açılırken bir hata oluştu. Lütfen sayfayı yenileyin.");
+  }
+}
+function openHalletAction(fnName){
+  try{
+    if(window.Hallet && typeof window.Hallet[fnName] === "function"){
+      window.Hallet[fnName]();
+      return;
+    }
+    openHallet();
+  }catch(error){
+    console.error("İşini Hallet aksiyon hatası:",error);
+    openHallet();
   }
 }
 
@@ -1247,7 +1269,7 @@ document.addEventListener('change',function(e){
   el.value='';
 },true);
 
-window.Hallet={showGate:gate,showIslemMenu:islem,showTasinmazMenu:tasinmaz,showKonutSatis:konut,showQuestion:question,showResult:result,close:close};
+window.Hallet={showGate:gate,showIslemMenu:islem,showTasinmazMenu:tasinmaz,showKonutSatis:konut,showQuestion:question,showResult:result,showCases:cases,showEvrak:evrak,showKurum:kurumHome,close:close};
 })();
 
 /* Hallet başlatıcısı — ana sayfaya dokunmadan çalışır. */
