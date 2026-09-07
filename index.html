@@ -424,7 +424,7 @@ updateAuthArea();
    ========================================================= */
 (function(){
 'use strict';
-const H={step:0,answers:{},caseId:null,createdAt:null,dbId:null,status:null,documents:{},documentStatuses:{},documentFiles:{},caseSteps:[]};
+const H={step:0,answers:{},caseId:null,createdAt:null,dbId:null,status:null,module:null,kurumFlowId:null,documents:{},documentStatuses:{},documentFiles:{},caseSteps:[]};
 const CASE_STEP_TEMPLATE=[
  {key:'precheck',title:'Ön kontrol',description:'Verilen bilgiler üzerinden satış için temel uygunluk kontrolü.',institution:'İşini Hallet',sort_order:1},
  {key:'documents',title:'Belgeleri tamamla',description:'Gerekli belgeleri yükle ve hazır olduklarını kontrol et.',institution:'İşini Hallet',sort_order:2},
@@ -432,8 +432,71 @@ const CASE_STEP_TEMPLATE=[
  {key:'fees',title:'Harç ve ödemeler',description:'Resmî bildirimdeki tapu harcı ve döner sermaye tutarlarını kontrol et.',institution:'Tapu / GİB',sort_order:4},
  {key:'completion',title:'Satışı tamamla',description:'Randevu ve satış işlemi tamamlandıktan sonra dosyanı güncelle.',institution:'Tapu Müdürlüğü',sort_order:5}
 ];
-function defaultCaseSteps(){return CASE_STEP_TEMPLATE.map(x=>({id:null,step_key:x.key,title:x.title,description:x.description,sort_order:x.sort_order,institution:x.institution,status:'pending',is_optional:false,metadata:{},completed_at:null}));}
-function normalizeCaseSteps(rows){const byKey={};(Array.isArray(rows)?rows:[]).forEach(r=>{if(r&&r.step_key)byKey[r.step_key]=r;});return CASE_STEP_TEMPLATE.map(t=>byKey[t.key]||({...t,status:'pending',id:null,is_optional:false,metadata:{},completed_at:null}));}
+const KURUM_STEP_TEMPLATE=[
+ {key:'info',title:'Başvuru bilgilerini tamamla',description:'Kurum ve başvuru türüne göre gerekli ön bilgileri tamamla.',institution:'İşini Hallet',sort_order:1},
+ {key:'documents',title:'Belgeleri hazırla',description:'Gerekli belgeleri hazırla ve dosyana ekle.',institution:'İşini Hallet',sort_order:2},
+ {key:'official',title:'Resmî kanala git',description:'Başvuruyu ilgili resmî kurum sisteminde başlat.',institution:'e-Devlet / Kurum',sort_order:3},
+ {key:'submit',title:'Başvuruyu tamamla',description:'Resmî kanaldaki başvurunu tamamladığını not et.',institution:'Kullanıcı',sort_order:4},
+ {key:'close',title:'İşlemi kapat',description:'Dosyayı gözden geçirip tamamlandı olarak işaretle.',institution:'İşini Hallet',sort_order:5}
+];
+const KURUM_FLOWS={
+ nvi_adres_degisikligi:{
+  id:'nvi_adres_degisikligi',
+  institution:'Nüfus ve Vatandaşlık İşleri Genel Müdürlüğü',
+  application_type:'Adres Değişikliği Bildirimi',
+  title:'Adres Değişikliği Bildirimi',
+  official_channel_url:'https://www.turkiye.gov.tr/adres-degisikligi-bildirimi',
+  source_note:'Resmî kanal: e-Devlet Kapısı — Nüfus ve Vatandaşlık İşleri Genel Müdürlüğü / Adres Değişikliği Bildirimi (turkiye.gov.tr). Başvuru yalnızca ilgili kurum sisteminde yapılır; İşini Hallet resmî başvuru yerine geçmez.',
+  checked_at:'2026-09-07',
+  questions:[
+   {key:'citizen_tr',title:'T.C. vatandaşı mısın?',type:'choice',options:[['yes','Evet'],['no','Hayır']]},
+   {key:'has_edevlet',title:'e-Devlet girişi yapabiliyor musun?',type:'choice',options:[['yes','Evet'],['no','Hayır / emin değilim']]},
+   {key:'address_ready',title:'Yeni adres bilgilerin hazır mı?',type:'choice',options:[['yes','Evet'],['partial','Kısmen'],['no','Hayır']]}
+  ],
+  documents:function(a){
+   const d=[{key:'identity',title:'Kimlik belgesi',reason:'Kimlik doğrulama ve başvuru için hazır bulundurulmalı.',required:true}];
+   if(a&&a.has_edevlet==='no')d.push({key:'edevlet_help',title:'e-Devlet erişim notu',reason:'e-Devlet şifresi veya alternatif giriş yöntemi için resmî kanalları kontrol et.',required:false});
+   return d;
+  }
+ },
+ nvi_kimlik_randevu:{
+  id:'nvi_kimlik_randevu',
+  institution:'Nüfus ve Vatandaşlık İşleri Genel Müdürlüğü',
+  application_type:'T.C. Kimlik Kartı Başvuru Randevusu',
+  title:'T.C. Kimlik Kartı Başvuru Randevusu',
+  official_channel_url:'https://www.turkiye.gov.tr/nvi-tc-kimlik-karti-basvuru-randevusu',
+  source_note:'Resmî kanal: e-Devlet Kapısı — Nüfus ve Vatandaşlık İşleri Genel Müdürlüğü / T.C. Kimlik Kartı Başvuru Randevusu (turkiye.gov.tr). Randevu ve başvuru kurum sisteminde tamamlanır; İşini Hallet resmî işlem yapmaz.',
+  checked_at:'2026-09-07',
+  questions:[
+   {key:'card_reason',title:'Başvuru nedenin nedir?',type:'choice',options:[['renew','Yenileme / süre'],['lost','Kayıp / çalıntı'],['first','İlk kez / diğer']]},
+   {key:'has_edevlet',title:'e-Devlet ile randevu alabilecek misin?',type:'choice',options:[['yes','Evet'],['no','Hayır / emin değilim']]},
+   {key:'photo_ready',title:'Biyometrik fotoğraf ve gerekli belgeler hakkında bilgin var mı?',type:'choice',options:[['yes','Evet'],['no','Hayır, araştıracağım']]}
+  ],
+  documents:function(a){
+   const d=[{key:'identity',title:'Mevcut kimlik / nüfus cüzdanı',reason:'Başvuru ve kimlik doğrulama için gerekebilir.',required:true}];
+   if(a&&a.card_reason==='lost')d.push({key:'lost_note',title:'Kayıp bildirimi notu',reason:'Kayıp/çalıntı durumunda resmî bildirim adımlarını e-Devlet/NVI kanallarından kontrol et.',required:true});
+   d.push({key:'photo',title:'Biyometrik fotoğraf hazırlığı',reason:'Nüfus müdürlüğü başvurusunda istenen fotoğraf kurallarını resmî duyurulardan doğrula.',required:false});
+   return d;
+  }
+ }
+};
+function getKurumFlow(id){return (id&&KURUM_FLOWS[id])?KURUM_FLOWS[id]:null;}
+function activeStepTemplate(){
+ if(H.module==='kurum_basvurusu')return KURUM_STEP_TEMPLATE;
+ return CASE_STEP_TEMPLATE;
+}
+function getKurumDocumentChecklist(a){
+ const flow=getKurumFlow(H.kurumFlowId);
+ if(!flow)return [];
+ try{return flow.documents(a||H.answers||{})||[];}catch(e){return [];}
+}
+function activeDocumentChecklist(a){
+ if(H.module==='kurum_basvurusu')return getKurumDocumentChecklist(a);
+ return getDocumentChecklist(a);
+}
+
+function defaultCaseSteps(){return activeStepTemplate().map(x=>({id:null,step_key:x.key,title:x.title,description:x.description,sort_order:x.sort_order,institution:x.institution,status:'pending',is_optional:false,metadata:{},completed_at:null}));}
+function normalizeCaseSteps(rows){const byKey={};(Array.isArray(rows)?rows:[]).forEach(r=>{if(r&&r.step_key)byKey[r.step_key]=r;});return activeStepTemplate().map(t=>byKey[t.key]||({...t,key:t.key,step_key:t.key,title:t.title,description:t.description,sort_order:t.sort_order,institution:t.institution,status:'pending',id:null,is_optional:false,metadata:{},completed_at:null}));}
 async function loadCaseSteps(){
  H.caseSteps=defaultCaseSteps();
  if(!H.dbId)return;
@@ -633,7 +696,7 @@ async function cases(){
    }
    const stepDoneByCase={};
    try{
-     const tasinmazIds=list.filter(r=>{const m=r.metadata||{};return m.module!=='evrak_hazirlama'&&(m.module==='tasinmaz'||m.transaction_type==='konut_satisi'||r.case_type==='konut_satisi');}).map(r=>r.id).filter(Boolean);
+     const tasinmazIds=list.filter(r=>{const m=r.metadata||{};if(m.module==='evrak_hazirlama')return false;return m.module==='tasinmaz'||m.module==='kurum_basvurusu'||m.transaction_type==='konut_satisi'||r.case_type==='konut_satisi'||r.case_type==='kurum_basvurusu';}).map(r=>r.id).filter(Boolean);
      if(tasinmazIds.length){
        const stepRows=await supabaseAuthRequest('GET','hallet_case_steps?select=case_id,status&case_id=in.('+tasinmazIds.join(',')+')&limit=500');
        (Array.isArray(stepRows)?stepRows:[]).forEach(s=>{
@@ -659,7 +722,7 @@ async function cases(){
      const isCompleted=r.status==='completed';
      const isEvrak=m.module==='evrak_hazirlama';
      const isTasinmaz=!isEvrak&&(m.module==='tasinmaz'||m.transaction_type==='konut_satisi'||r.case_type==='konut_satisi');
-     const typeLabel=isEvrak?'Evrak Hazırlama':(isTasinmaz?'Konut Satışı':'İşlem Dosyası');
+     let typeLabel=isEvrak?'Evrak Hazırlama':(isTasinmaz?'Konut Satışı':'İşlem Dosyası');
      const updated=fmtWhen(r.updated_at);
      const created=fmtWhen(r.created_at);
      let bodyLines='';
@@ -691,6 +754,23 @@ async function cases(){
          '</div>';
      }else if(isEvrak){
        bodyLines='<div class="hm" style="margin-top:8px;line-height:1.5"><div><strong>Durum:</strong> '+esc(stLabel)+'</div></div>';
+     }else if(m.module==='kurum_basvurusu'){
+       typeLabel='Kurum Başvurusu';
+       const st=stepDoneByCase[r.id];
+       const stepTotal=(st&&st.total)?st.total:5;
+       const stepDone=st?st.done:0;
+       let docState=(m.document_summary&&typeof m.document_summary==='object')?m.document_summary:{total:0,ready:0,missing:[]};
+       if(!Array.isArray(docState.missing))docState={...docState,missing:[]};
+       const miss=docState.missing&&docState.missing.length?(docState.missing[0].title||docState.missing[0]):null;
+       const next=(isCompleted)?'':((miss)?('Eksik: '+miss):'Sıradaki: Resmî kanala git');
+       bodyLines='<div class="hm" style="margin-top:8px;line-height:1.5;word-break:break-word">'+
+         '<div><strong>Kurum:</strong> '+esc(m.institution||'')+'</div>'+
+         '<div><strong>Başvuru:</strong> '+esc(m.application_type||'')+'</div>'+
+         '<div><strong>Durum:</strong> '+(isCompleted?'<span class="ok">✓ Tamamlandı</span>':esc(stLabel))+'</div>'+
+         '<div><strong>İlerleme:</strong> '+stepDone+' / '+stepTotal+' adım</div>'+
+         '<div><strong>Belgeler:</strong> '+(docState.ready||0)+' / '+(docState.total||0)+' hazır</div>'+
+         (next?('<div>'+esc(next)+'</div>'):'')+
+         '</div>';
      }else{
        bodyLines='<div class="hm" style="margin-top:8px;line-height:1.5"><div><strong>Durum:</strong> '+(isCompleted?'<span class="ok">✓ Tamamlandı</span>':esc(stLabel))+'</div></div>';
      }
@@ -725,7 +805,23 @@ async function openCase(id){
   if(m.draft&&typeof m.draft==='object') return evrakSavedCasePreview(row,m.draft);
   return evrakSatisBilgiSaved(row,m);
 }
-   H.dbId=row.id; H.caseId=m.case_no||null; H.createdAt=row.created_at||null; H.status=row.status||'draft'; H.answers=(m.answers&&typeof m.answers==='object')?m.answers:{}; H.documents=(m.documents&&typeof m.documents==='object')?m.documents:{}; H.documentStatuses={}; H.documentFiles={};
+   if(m.module==='kurum_basvurusu'){
+    H.dbId=row.id; H.caseId=m.case_no||null; H.createdAt=row.created_at||null; H.status=row.status||'draft'; H.module='kurum_basvurusu'; H.kurumFlowId=m.flow_id||null; H.answers=(m.answers&&typeof m.answers==='object')?m.answers:{}; H.documents=(m.documents&&typeof m.documents==='object')?m.documents:{}; H.documentStatuses={}; H.documentFiles={}; H.caseSteps=[];
+    try{
+     const docs=await supabaseAuthRequest('GET','hallet_documents?select=id,doc_key,title,status,storage_path,mime_type,file_size_bytes,metadata,created_at&case_id=eq.'+encodeURIComponent(H.dbId)+'&order=created_at.asc&limit=200');
+     (Array.isArray(docs)?docs:[]).forEach(d=>{
+       if(d.doc_key&&d.status==='uploaded'&&d.storage_path){
+         H.documents[d.doc_key]=true;
+         if(!Array.isArray(H.documentFiles[d.doc_key]))H.documentFiles[d.doc_key]=[];
+         H.documentFiles[d.doc_key].push({id:d.id,path:d.storage_path,name:d.metadata?.original_name||d.title||d.doc_key,type:d.mime_type||null,size:d.file_size_bytes||0,created_at:d.created_at||null});
+       }
+     });
+    }catch(docErr){console.warn('Kurum belgeleri yüklenemedi:',docErr)}
+    await loadCaseSteps();
+    await ensureCaseSteps();
+    return kurumResult(true);
+   }
+   H.module='tasinmaz'; H.kurumFlowId=null; H.dbId=row.id; H.caseId=m.case_no||null; H.createdAt=row.created_at||null; H.status=row.status||'draft'; H.answers=(m.answers&&typeof m.answers==='object')?m.answers:{}; H.documents=(m.documents&&typeof m.documents==='object')?m.documents:{}; H.documentStatuses={}; H.documentFiles={};
    try{
     const docs=await supabaseAuthRequest('GET','hallet_documents?select=id,doc_key,title,status,storage_path,mime_type,file_size_bytes,metadata,created_at&case_id=eq.'+encodeURIComponent(H.dbId)+'&order=created_at.asc&limit=200');
     (Array.isArray(docs)?docs:[]).forEach(d=>{
@@ -842,10 +938,10 @@ async function openDocument(docKey,index=0){
 async function markCaseCompleted(){
  if(H.status==='completed'){result(!!H.dbId);return;}
  const stepState=stepSummary();
- const docs=getDocumentChecklist(H.answers||{});
+ const docs=activeDocumentChecklist(H.answers||{});
  const docState=documentSummary(docs);
  if((stepState.done||0)<(stepState.total||5)||!docState.complete){
-  alert('Satışı tamamlandı işaretlemek için tüm işlem adımları (5/5) ve gerekli belgeler tamamlanmış olmalıdır.');
+  alert('Tamamlandı işaretlemek için tüm işlem adımları ve gerekli belgeler tamamlanmış olmalıdır.');
   return;
  }
  if(!confirm('Satışı tamamlandı olarak işaretlemek istediğinize emin misiniz?\n\nBu işlem resmi tapu satışının gerçekleştiği anlamına gelmez; yalnızca işlem dosyanızın durumunu “Tamamlandı” yapar.'))return;
@@ -912,8 +1008,132 @@ function result(fromSaved=false){
 }
 function msg(t,m,back){render(top(back||'gate')+'<div class="hc"><div class="hk">İşini Hallet</div><h2>'+esc(t)+'</h2><p class="hm">'+esc(m)+'</p><button class="hb hp" data-a="gate">İşlemlere dön</button></div>')}
 function goIsimi(){close();if(typeof window.showHome==='function')window.showHome()}
-function dispatch(a,e){if(a==='close')return close();if(a==='gate')return gate();if(a==='cases')return cases();if(a==='caseopen')return openCase(e.dataset.id);if(a==='openDoc')return openDocument(e.dataset.k,Number(e.dataset.i||0));if(a==='stepToggle')return updateCaseStep(e.dataset.k);if(a==='islem')return islem();if(a==='tasinmaz')return tasinmaz();if(a==='konut')return konut();if(a==='start'){H.step=0;return question()}if(a==='qback'){H.step=Math.max(0,H.step-1);return question()}if(a==='answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return question()}if(a==='docReady')return;if(a==='docToggle'){H.documents[e.dataset.k]=!!e.checked;result(!!H.dbId);if(H.dbId)return saveCase(true);return;}if(a==='savecase')return saveCase();if(a==='save'){const i=document.getElementById('qinput');if(!i||!String(i.value).trim()){const c=document.querySelector('#hallet-root .hc');if(c&&!c.querySelector('.err'))c.insertAdjacentHTML('beforeend','<div class="err">Lütfen bir değer girerek devam et.</div>');return}H.answers[e.dataset.k]=i.value.trim();H.step++;return question()}if(a==='new'){H.step=0;H.answers={};H.documents={};H.documentStatuses={};H.documentFiles={};H.caseId=null;H.dbId=null;H.status=null;H.caseSteps=[];return gate()}if(a==='isimi')return goIsimi();if(a==='evrak')return evrak();if(a==='evrak_satis_bilgi')return evrakSatisBilgi();if(a==='evrak_preview')return evrakPreview();if(a==='evrak_print')return evrakPrint();if(a==='evrak_savecase')return evrakSaveCase();if(a==='evrak_back')return islem();if(a==='completecase')return markCaseCompleted();if(a==='kurum')return msg('Kurum başvurusu','Bu modül sonraki aşamada açılacak. Mevcut aktif akış taşınmaz konut satışıdır.')}
+
+function kurumHome(){
+ H.module='kurum_basvurusu'; H.kurumFlowId=null; H.step=0; H.answers={}; H.documents={}; H.documentFiles={}; H.documentStatuses={}; H.caseId=null; H.dbId=null; H.status=null; H.caseSteps=[];
+ const cards=Object.keys(KURUM_FLOWS).map(id=>{
+  const f=KURUM_FLOWS[id];
+  return '<button class="hb" data-a="kurum_flow" data-id="'+esc(id)+'" style="text-align:left"><strong>'+esc(f.title)+'</strong><br><span class="hm">'+esc(f.institution)+'</span></button>';
+ }).join('');
+ render(top('gate')+'<div class="hc"><div class="hk">Kurum Başvuruları</div><h2>Hangi başvuruyu hazırlayacaksın?</h2><p class="hm">V1 pilot: Nüfus ve Vatandaşlık (e-Devlet). Başvuru resmî kurum sisteminde yapılır; burada yalnızca hazırlık ve takip yapılır.</p><div class="hg">'+cards+'</div><button class="hb" data-a="gate">← Geri</button></div>');
+}
+function kurumStartFlow(id){
+ const flow=getKurumFlow(id);
+ if(!flow){alert('Başvuru akışı bulunamadı.');return kurumHome();}
+ H.module='kurum_basvurusu'; H.kurumFlowId=id; H.step=0; H.answers={}; H.documents={}; H.documentFiles={}; H.documentStatuses={}; H.caseId=null; H.dbId=null; H.status=null; H.caseSteps=defaultCaseSteps();
+ kurumQuestion();
+}
+function kurumQuestion(){
+ const flow=getKurumFlow(H.kurumFlowId);
+ if(!flow)return kurumHome();
+ const qs=flow.questions||[];
+ if(H.step>=qs.length)return kurumResult(false);
+ const q=qs[H.step];
+ let html=top('kurum')+'<div class="hc"><div class="hk">Soru '+(H.step+1)+' / '+qs.length+'</div><h2>'+esc(q.title)+'</h2>';
+ if(q.type==='choice')html+='<div class="hg">'+q.options.map(o=>'<button class="hb" data-a="kurum_q" data-k="'+esc(q.key)+'" data-v="'+esc(o[0])+'">'+esc(o[1])+'</button>').join('')+'</div>';
+ html+='</div>';
+ render(html);
+}
+function kurumAnswer(k,v){
+ H.answers[k]=v; H.step++;
+ const flow=getKurumFlow(H.kurumFlowId);
+ if(flow&&H.step>=(flow.questions||[]).length)return kurumResult(false);
+ return kurumQuestion();
+}
+async function saveKurumCase(){
+ const flow=getKurumFlow(H.kurumFlowId);
+ if(!flow){alert('Akış bulunamadı.');return;}
+ const session=getAuthSession();
+ if(!session?.access_token||!session?.user?.id){openAuthModal('login');return;}
+ if(!H.caseId)H.caseId='IH-'+new Date().toISOString().replace(/\D/g,'').slice(0,14)+'-'+Math.random().toString(36).slice(2,7).toUpperCase();
+ const docs=getKurumDocumentChecklist(H.answers);
+ const payload={
+  case_type:'kurum_basvurusu',
+  status:(H.status==='completed'?'completed':(H.status||'draft')),
+  title:flow.title,
+  summary:flow.institution+' — '+flow.application_type,
+  user_id:session.user.id,
+  customer_id:session.user.id,
+  updated_at:new Date().toISOString(),
+  metadata:{
+   case_no:H.caseId,
+   module:'kurum_basvurusu',
+   flow_id:flow.id,
+   institution:flow.institution,
+   application_type:flow.application_type,
+   answers:H.answers||{},
+   documents:H.documents||{},
+   document_summary:documentSummary(docs),
+   official_channel_url:flow.official_channel_url,
+   source_note:flow.source_note,
+   checked_at:flow.checked_at
+  }
+ };
+ if(!H.dbId)payload.created_at=new Date().toISOString();
+ const btn=document.querySelector('#hallet-root [data-a="kurum_save"]');
+ if(btn){btn.disabled=true;btn.textContent='KAYDEDİLİYOR...';}
+ try{
+  let rows;
+  if(H.dbId)rows=await supabaseAuthRequest('PATCH','hallet_cases?id=eq.'+encodeURIComponent(H.dbId)+'&select=id,status,created_at',payload);
+  else rows=await supabaseAuthRequest('POST','hallet_cases?select=id,status,created_at',payload);
+  const row=Array.isArray(rows)?rows[0]:rows;
+  H.dbId=row?.id||H.dbId;
+  H.createdAt=row?.created_at||H.createdAt;
+  H.module='kurum_basvurusu';
+  await ensureCaseSteps();
+  if(btn){btn.disabled=false;btn.textContent='✓ KAYDEDİLDİ';}
+  alert('Kurum başvuru dosyan kaydedildi.\\n\\nDosya No: '+H.caseId);
+  kurumResult(true);
+ }catch(e){
+  console.error('Kurum kayıt hatası:',e);
+  if(btn){btn.disabled=false;btn.textContent='DOSYAYI KAYDET';}
+  alert('Dosya kaydedilemedi.\\n\\n'+(e&&e.message?e.message:'Bilinmeyen hata')+'\\n\\nNot: case_type constraint sadece konut_satisi ise migration gerekir.');
+ }
+}
+function kurumResult(fromSaved){
+ const flow=getKurumFlow(H.kurumFlowId);
+ if(!flow){return kurumHome();}
+ const a=H.answers||{};
+ const docs=getKurumDocumentChecklist(a);
+ const docState=documentSummary(docs);
+ const stepState=stepSummary();
+ const isCompleted=H.status==='completed';
+ const canComplete=!isCompleted&&!!docState.complete&&(stepState.done||0)>=(stepState.total||5)&&(stepState.total||0)>0;
+ const action=isCompleted?null:(docState.missing&&docState.missing.length?{title:'Eksik belgeleri tamamla',detail:docState.missing[0].title}:{title:'Resmî kanala git',detail:'Başvuruyu e-Devlet üzerinden tamamla.'});
+ let html=top(fromSaved?'cases':'kurum')+'<div class="hc"><div class="hk">Kurum başvurusu</div><h1>'+esc(flow.title)+'</h1>';
+ html+='<div class="hl" style="border:1px solid #35535a;border-radius:12px;padding:4px 0;background:#0e2025">';
+ html+='<div class="li"><strong>İşlem:</strong> Kurum Başvurusu</div>';
+ html+='<div class="li"><strong>Kurum:</strong> '+esc(flow.institution)+'</div>';
+ html+='<div class="li"><strong>Başvuru:</strong> '+esc(flow.application_type)+'</div>';
+ html+='<div class="li"><strong>İlerleme:</strong> '+stepState.done+' / '+stepState.total+' adım ('+stepState.percent+'%)</div>';
+ html+='<div class="li"><strong>Belgeler:</strong> '+docState.ready+' / '+docState.total+' hazır'+(docState.missing&&docState.missing.length?(' — eksik: '+esc(docState.missing[0].title)):'')+'</div>';
+ html+='<div class="li"><strong>Şimdi:</strong> '+(isCompleted?'<span class="ok">✓ İşlem tamamlandı</span>':esc(action?action.title:'—'))+'</div></div>';
+ html+='<h2>Resmî başvuru</h2><div class="li"><span class="hm">Başvuruyu resmî kurumun kendi sistemi üzerinden tamamlamalısın. İşini Hallet resmî başvuru yapmaz ve sonuç garantisi vermez.</span></div>';
+ html+='<div class="hg"><a class="hb hp" href="'+esc(flow.official_channel_url)+'" target="_blank" rel="noopener noreferrer">Resmî kanala git →</a></div>';
+ html+='<p class="hm small">'+esc(flow.source_note)+' Kontrol: '+esc(flow.checked_at)+'</p>';
+ html+='<h2>Gerekli belgeler</h2><div class="hl">'+docs.map(d=>{
+  const on=H.documents[d.key]===true;
+  return '<div class="li"><label style="display:flex;gap:8px;align-items:flex-start"><input type="checkbox" data-kurum-doc="'+esc(d.key)+'" '+(on?'checked':'')+'><span><strong>'+esc(d.title)+'</strong><br><span class="hm">'+esc(d.reason||'')+'</span></span></label></div>';
+ }).join('')+'</div>';
+ html+='<h2>İşlem adımları</h2><div class="hl">'+stepState.steps.map((st,i)=>'<div class="li" style="display:flex;gap:10px;align-items:flex-start"><span>'+(st.status==='completed'?'✅':(i+1)+'.')+'</span><span style="flex:1"><strong>'+esc(st.title)+'</strong><br><span class="hm">'+esc(st.description||'')+'</span></span><button type="button" class="topb" data-a="stepToggle" data-k="'+esc(st.step_key)+'">'+(st.status==='completed'?'Geri al':'Tamamla')+'</button></div>').join('')+'</div>';
+ if(canComplete)html+='<div class="li" style="margin-top:12px;border:1px solid #2f6f4e;border-radius:12px;padding:12px;background:#0f2a1c"><strong class="ok">✓ Hazır</strong><br><span class="hm">Adımlar ve belgeler tamam. Dosyayı tamamlandı işaretleyebilirsin (resmî başvuru anlamına gelmez).</span><div class="hg" style="margin-top:10px"><button class="hb hp" data-a="completecase">✓ Başvuruyu Tamamlandı Olarak İşaretle</button></div></div>';
+ if(isCompleted)html+='<div class="li"><span class="ok">✓</span> <strong>Bu işlem dosyası tamamlandı.</strong></div>';
+ html+='<div class="hg" style="margin-top:14px">';
+ if(!isCompleted)html+='<button class="hb hp" data-a="kurum_save">DOSYAYI KAYDET</button>';
+ if(fromSaved)html+='<button class="hb" data-a="cases">← DOSYALARIMA DÖN</button>';
+ html+='<button class="hb" data-a="kurum">Kurum listesi</button><button class="hb hs" data-a="close">Kapat</button></div></div>';
+ render(html);
+}
+
+function dispatch(a,e){if(a==='close')return close();if(a==='gate')return gate();if(a==='cases')return cases();if(a==='caseopen')return openCase(e.dataset.id);if(a==='openDoc')return openDocument(e.dataset.k,Number(e.dataset.i||0));if(a==='stepToggle')return updateCaseStep(e.dataset.k);if(a==='islem')return islem();if(a==='tasinmaz')return tasinmaz();if(a==='konut')return konut();if(a==='start'){H.step=0;return question()}if(a==='qback'){H.step=Math.max(0,H.step-1);return question()}if(a==='answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return question()}if(a==='docReady')return;if(a==='docToggle'){H.documents[e.dataset.k]=!!e.checked;if(H.module==='kurum_basvurusu'){kurumResult(!!H.dbId);if(H.dbId)return saveKurumCase();return;}result(!!H.dbId);if(H.dbId)return saveCase(true);return;}if(a==='savecase')return saveCase();if(a==='save'){const i=document.getElementById('qinput');if(!i||!String(i.value).trim()){const c=document.querySelector('#hallet-root .hc');if(c&&!c.querySelector('.err'))c.insertAdjacentHTML('beforeend','<div class="err">Lütfen bir değer girerek devam et.</div>');return}H.answers[e.dataset.k]=i.value.trim();H.step++;return question()}if(a==='new'){H.step=0;H.answers={};H.documents={};H.documentStatuses={};H.documentFiles={};H.caseId=null;H.dbId=null;H.status=null;H.module=null;H.kurumFlowId=null;H.caseSteps=[];return gate()}if(a==='isimi')return goIsimi();if(a==='evrak')return evrak();if(a==='evrak_satis_bilgi')return evrakSatisBilgi();if(a==='evrak_preview')return evrakPreview();if(a==='evrak_print')return evrakPrint();if(a==='evrak_savecase')return evrakSaveCase();if(a==='evrak_back')return islem();if(a==='completecase')return markCaseCompleted();if(a==='kurum')return kurumHome();if(a==='kurum_flow')return kurumStartFlow(e.dataset.id);if(a==='kurum_q')return kurumAnswer(e.dataset.k,e.dataset.v);if(a==='kurum_save')return saveKurumCase();if(a==='kurum_result')return kurumResult(!!H.dbId);}
 document.addEventListener('click',function(e){const el=e.target.closest&&e.target.closest('#hallet-root [data-a]');if(!el)return;e.preventDefault();e.stopPropagation();dispatch(el.dataset.a,el)},true);
+document.addEventListener('change',function(e){
+  const box=e.target.closest&&e.target.closest('#hallet-root input[data-kurum-doc]');
+  if(!box)return;
+  H.documents[box.getAttribute('data-kurum-doc')]=!!box.checked;
+  if(H.module==='kurum_basvurusu'){kurumResult(!!H.dbId);if(H.dbId)saveKurumCase();}
+},true);
+
 document.addEventListener('change',function(e){
   const el=e.target.closest&&e.target.closest('#hallet-root input[data-upload-doc]');
   if(!el)return;
