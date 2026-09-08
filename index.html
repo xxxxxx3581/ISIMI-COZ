@@ -290,7 +290,7 @@ function showHome(){
   setNav("navHome");
   app(`<section class="hero">
     <span class="badge">🇹🇷 Türkiye · İzmir pilot</span>
-    <h1>Resmî işlerini hazırla,<br>hizmetini bul.</h1>
+    <h1>Bugün ne yapmak istiyorsun?</h1>
     <p class="muted">Gov.tr tarzı net adımlar + yerel usta marketplace. Başvuruyu sen kurumda tamamlarsın; biz hazırlık, belge ve takibi kolaylaştırırız.</p>
     <div class="splitActions">
       <button class="btn primary" type="button" onclick="openHalletAction('showCases')">📁 İşlem dosyalarım</button>
@@ -934,7 +934,7 @@ async function cases(){
          ((!isCompleted&&action&&action.title)?('<div><strong>Sıradaki:</strong> '+esc(action.title)+'</div>'):'')+
          '</div>';
      }else if(isEvrak){
-       bodyLines='<div class="hm" style="margin-top:8px;line-height:1.5"><div><strong>Durum:</strong> '+esc(stLabel)+'</div></div>';
+       bodyLines='<div class="hm" style="margin-top:8px;line-height:1.5"><div><strong>Durum:</strong> '+(isCompleted?'<span class="ok">✓ Tamamlandı</span>':esc(stLabel))+'</div><div><strong>Tür:</strong> Evrak taslağı</div></div>';
      }else if(m.module==='kurum_basvurusu'){
        typeLabel='Kurum Başvurusu';
        const st=stepDoneByCase[r.id];
