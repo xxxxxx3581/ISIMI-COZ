@@ -19,7 +19,6 @@ jobs:
         shell: python
         run: |
           from pathlib import Path
-          import re
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
           old_root = ':root{--bg:#07111f;--card:#0d1a2b;--card2:#102238;--line:#20344d;--text:#eef4fb;--muted:#9eb0c5;--primary:#19c37d;--danger:#ef5350;--warning:#f5b942}'
@@ -49,7 +48,7 @@ jobs:
           if s.count('function shareAppSite()') != 1: raise SystemExit('shareAppSite count invalid')
           class P(HTMLParser): pass
           P().feed(s)
-          scripts = re.findall(r'<script[^>]*>([\\s\\S]*?)</script>', s, re.I)
+          scripts = re.findall(r'<script[^>]*>(.*?)</script>', s, re.I|re.S)
           if not scripts: raise SystemExit('No inline scripts found')
           for x in scripts:
               f = tempfile.NamedTemporaryFile('w', suffix='.js', delete=False, encoding='utf-8')
@@ -59,11 +58,11 @@ jobs:
       - name: Validate diff
         shell: bash
         run: git diff --check
-      - name: Commit patch and remove workflow
+      - name: Commit patch
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html .github/workflows/ui-safe-patch-v2.yml
+          git add index.html
           git commit -m "Integrate V1 theme and share controls"
           git push
