@@ -2,6 +2,8 @@ name: V1.1 surgical fix
 on:
   push:
     branches: [v1.1-surgical-fix]
+  pull_request:
+    branches: [main]
 permissions:
   contents: write
 jobs:
