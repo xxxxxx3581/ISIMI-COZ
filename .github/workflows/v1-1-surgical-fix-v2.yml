@@ -27,25 +27,22 @@ jobs:
           new_open="""   if(m.module==='arac'||row.case_type==='arac_satisi'){\n    H.module='arac'; H.kurumFlowId=null; H.dbId=row.id; H.caseId=m.case_no||null; H.createdAt=row.created_at||null; H.status=row.status||'draft'; H.answers=(m.answers&&typeof m.answers==='object')?m.answers:{}; H.documents=(m.documents&&typeof m.documents==='object')?m.documents:{}; H.documentStatuses={}; H.documentFiles={}; H.caseSteps=[];\n    try{\n     const docs=await supabaseAuthRequest('GET','hallet_documents?select=id,doc_key,title,status,storage_path,mime_type,file_size_bytes,metadata,created_at&case_id=eq.'+encodeURIComponent(H.dbId)+'&order=created_at.asc&limit=200');\n     (Array.isArray(docs)?docs:[]).forEach(d=>{\n       if(d.doc_key&&d.status==='uploaded'&&d.storage_path){\n         H.documents[d.doc_key]=true;\n         if(!Array.isArray(H.documentFiles[d.doc_key]))H.documentFiles[d.doc_key]=[];\n         H.documentFiles[d.doc_key].push({id:d.id,path:d.storage_path,name:d.metadata?.original_name||d.title||d.doc_key,type:d.mime_type||null,size:d.file_size_bytes||0,created_at:d.created_at||null});\n       }\n     });\n    }catch(docErr){console.warn('Araç belgeleri yüklenemedi:',docErr)}\n    await loadCaseSteps();\n    await ensureCaseSteps();\n    return aracResult(true);\n   }"""
           if s.count(old_open)!=1: raise SystemExit(f'openCase anchor count={s.count(old_open)}')
           s=s.replace(old_open,new_open)
-          if 'data-a="complete">Tamamlandı işaretle' in s: raise SystemExit('old complete action remains')
-          if phrase in s: raise SystemExit('stale phrase remains')
+          if old in s or phrase in s: raise SystemExit('surgical replacement incomplete')
           p.write_text(s,encoding='utf-8')
       - name: Validate
         shell: bash
         run: |
           python - <<'PY'
           from pathlib import Path
-          from bs4 import BeautifulSoup
-          from collections import Counter
+          import re
           s=Path('index.html').read_text(encoding='utf-8')
-          soup=BeautifulSoup(s,'html.parser')
-          assert soup.html and soup.body
-          ids=[x.get('id') for x in soup.find_all(id=True)]
-          dup=[k for k,v in Counter(ids).items() if v>1]
+          assert s.count('<html')==1 and s.count('<body')==1
+          ids=re.findall(r'\bid=["\']([^"\']+)["\']',s)
+          dup=sorted({x for x in ids if ids.count(x)>1})
           assert not dup, dup
-          for i,sc in enumerate(soup.find_all('script')):
-            Path(f'/tmp/script{i}.js').write_text(sc.get_text(),encoding='utf-8')
-          assert len(soup.find_all('script'))==2
+          scripts=re.findall(r'<script[^>]*>(.*?)</script>',s,re.I|re.S)
+          assert len(scripts)==2, len(scripts)
+          for i,sc in enumerate(scripts): Path(f'/tmp/script{i}.js').write_text(sc,encoding='utf-8')
           PY
           node --check /tmp/script0.js
           node --check /tmp/script1.js
