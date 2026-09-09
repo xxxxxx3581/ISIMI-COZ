@@ -1037,6 +1037,16 @@ async function openCase(id){
    }
    if(m.module==='arac'||row.case_type==='arac_satisi'){
     H.module='arac'; H.kurumFlowId=null; H.dbId=row.id; H.caseId=m.case_no||null; H.createdAt=row.created_at||null; H.status=row.status||'draft'; H.answers=(m.answers&&typeof m.answers==='object')?m.answers:{}; H.documents=(m.documents&&typeof m.documents==='object')?m.documents:{}; H.documentStatuses={}; H.documentFiles={}; H.caseSteps=[];
+    try{
+     const docs=await supabaseAuthRequest('GET','hallet_documents?select=id,doc_key,title,status,storage_path,mime_type,file_size_bytes,metadata,created_at&case_id=eq.'+encodeURIComponent(H.dbId)+'&order=created_at.asc&limit=200');
+     (Array.isArray(docs)?docs:[]).forEach(d=>{
+       if(d.doc_key&&d.status==='uploaded'&&d.storage_path){
+         H.documents[d.doc_key]=true;
+         if(!Array.isArray(H.documentFiles[d.doc_key]))H.documentFiles[d.doc_key]=[];
+         H.documentFiles[d.doc_key].push({id:d.id,path:d.storage_path,name:d.metadata?.original_name||d.title||d.doc_key,type:d.mime_type||null,size:d.file_size_bytes||0,created_at:d.created_at||null});
+       }
+     });
+    }catch(docErr){console.warn('Araç belgeleri yüklenemedi:',docErr)}
     await loadCaseSteps();
     await ensureCaseSteps();
     return aracResult(true);
@@ -1359,7 +1369,7 @@ function aracResult(fromSaved){
   '<h3 style="margin-top:16px">Belgeler</h3><div class="hl">'+docHtml+'</div>'+
   '<h3 style="margin-top:16px">Adımlar</h3><div class="hl">'+stepHtml+'</div>'+
   '<div class="hg" style="margin-top:14px"><a class="hb" href="https://www.turkiye.gov.tr/turkiye-noterler-birligi-adima-tescilli-arac-sorgulama" target="_blank" rel="noopener noreferrer">e-Devlet: Araç sorgula →</a><button class="hb hp" data-a="arac_save">'+(fromSaved||H.dbId?'Dosyayı güncelle':'Dosyayı kaydet')+'</button>'+
-  (H.dbId?'<button class="hb" data-a="complete">Tamamlandı işaretle</button>':'')+
+  (H.dbId?'<button class="hb" data-a="completecase">Tamamlandı işaretle</button>':'')+
   '<button class="hb" data-a="cases">İşlem Dosyalarım</button></div>'+
   '<p class="hm small">Doğrulanmış resmi ücret/evrak listesi bu V1’de verilmez; noter ve e-Devlet güncel koşulları geçerlidir.</p></div>');
 }
@@ -1398,7 +1408,7 @@ async function saveAracCase(silent){
   aracResult(true);
  }catch(e){
   console.error(e);
-  alert('Kayıt başarısız. Olası neden: hallet_cases case_type constraint (arac_satisi eklenmemiş olabilir).\\n\\n'+((e&&e.message)||e));
+  alert('Kayıt başarısız. \\n\\n'+((e&&e.message)||e));
  }
 }
 
