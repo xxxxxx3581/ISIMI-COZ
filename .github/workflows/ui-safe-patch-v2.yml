@@ -1,0 +1,69 @@
+name: Safe V1 UI patch v2
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: "!contains(github.event.head_commit.message, 'Integrate V1 theme and share controls')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Patch header theme and share controls
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          old_root = ':root{--bg:#07111f;--card:#0d1a2b;--card2:#102238;--line:#20344d;--text:#eef4fb;--muted:#9eb0c5;--primary:#19c37d;--danger:#ef5350;--warning:#f5b942}'
+          new_root = old_root + '\nhtml[data-theme="light"]{--bg:#f4f7fb;--card:#ffffff;--card2:#eef3f8;--line:#d5dee8;--text:#122033;--muted:#5a6b7d;--primary:#0f9f63;--danger:#d32f2f;--warning:#c48a00}\nhtml[data-theme="light"] body{background:var(--bg);color:var(--text)}\nhtml[data-theme="light"] .top{background:rgba(255,255,255,.96)}\nhtml[data-theme="light"] .hero{background:linear-gradient(145deg,#e8f5ef,#f4f7fb);border-color:var(--line)}\nhtml[data-theme="light"] .card,html[data-theme="light"] .actionCard,html[data-theme="light"] .trustItem{background:var(--card);color:var(--text)}\n.headerTools{display:flex;align-items:center;gap:6px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end}\n.iconBtn{border:1px solid var(--line);background:var(--card2);color:var(--text);border-radius:10px;padding:7px 9px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}\n.iconBtn:hover{border-color:rgba(25,195,125,.45)}\n@media(max-width:420px){.brand small{display:none}.iconBtn{padding:7px 8px;font-size:11px}.authUser{max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block}}'
+          if old_root not in s: raise SystemExit('CSS anchor not found; abort')
+          if 'id="themeToggleBtn"' in s or 'function getAppTheme()' in s: raise SystemExit('Already patched; abort')
+          s = s.replace(old_root, new_root, 1)
+          old_header = '<header class="top"><div class="brand"><div class="logo">✓</div><div><strong>İŞİMİ ÇÖZ</strong><small>İşini Hallet · İzmir pilot</small></div></div><div id="authArea" style="margin-left:auto;display:flex;gap:7px;align-items:center"></div></header>'
+          new_header = '<header class="top"><div class="brand"><div class="logo">✓</div><div><strong>İŞİMİ ÇÖZ</strong><small>İşini Hallet · İzmir pilot</small></div></div><div class="headerTools"><button type="button" class="iconBtn" id="themeToggleBtn" onclick="toggleAppTheme()" aria-label="Tema">🌙 Koyu</button><button type="button" class="iconBtn" id="shareSiteBtn" onclick="shareAppSite()" aria-label="Paylaş">↗ Paylaş</button><div id="authArea" style="display:flex;gap:7px;align-items:center"></div></div></header>'
+          if old_header not in s: raise SystemExit('Header anchor not found; abort')
+          s = s.replace(old_header, new_header, 1)
+          anchor = 'function saveAuthSession(session){if(session)localStorage.setItem("isimi_coz_auth_session",JSON.stringify(session));else localStorage.removeItem("isimi_coz_auth_session");updateAuthArea()}'
+          addition = '''\nfunction getAppTheme(){try{return localStorage.getItem('isimi-theme')||'dark';}catch(e){return 'dark';}}\nfunction applyAppTheme(theme){const t=(theme==='light')?'light':'dark';document.documentElement.setAttribute('data-theme',t);try{localStorage.setItem('isimi-theme',t);}catch(e){}const btn=document.getElementById('themeToggleBtn');if(btn)btn.textContent=(t==='light')?'🌙 Koyu':'☀️ Açık';}\nfunction toggleAppTheme(){applyAppTheme(getAppTheme()==='light'?'dark':'light');}\nfunction shareAppSite(){const url=(typeof location!=='undefined'&&location.origin)?(location.origin+'/'):'https://isimi-coz.onrender.com/';const title='İşimi Çöz · İşini Hallet';const text='Resmî işlem hazırlığı ve yerel hizmet — İzmir pilot';if(navigator.share){navigator.share({title,text,url}).catch(()=>{});return;}try{if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(url).then(()=>alert('Site bağlantısı kopyalandı.')).catch(()=>prompt('Bağlantıyı kopyala:',url));}else prompt('Bağlantıyı kopyala:',url);}catch(e){prompt('Bağlantıyı kopyala:',url);}}\n\n'''
+          if anchor not in s: raise SystemExit('Auth anchor not found; abort')
+          s = s.replace(anchor, anchor + addition, 1)
+          p.write_text(s, encoding='utf-8')
+      - name: Validate before commit
+        shell: python
+        run: |
+          from pathlib import Path
+          from html.parser import HTMLParser
+          import re, subprocess, tempfile
+          s = Path('index.html').read_text(encoding='utf-8')
+          if s.count('id="themeToggleBtn"') != 1: raise SystemExit('themeToggleBtn count invalid')
+          if s.count('id="shareSiteBtn"') != 1: raise SystemExit('shareSiteBtn count invalid')
+          if s.count('function getAppTheme()') != 1: raise SystemExit('getAppTheme count invalid')
+          if s.count('function shareAppSite()') != 1: raise SystemExit('shareAppSite count invalid')
+          class P(HTMLParser): pass
+          P().feed(s)
+          scripts = re.findall(r'<script[^>]*>([\\s\\S]*?)</script>', s, re.I)
+          if not scripts: raise SystemExit('No inline scripts found')
+          for x in scripts:
+              f = tempfile.NamedTemporaryFile('w', suffix='.js', delete=False, encoding='utf-8')
+              f.write(x); f.close()
+              subprocess.run(['node','--check',f.name], check=True)
+          print('HTML/JS validation OK')
+      - name: Validate diff
+        shell: bash
+        run: git diff --check
+      - name: Commit patch and remove workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html .github/workflows/ui-safe-patch-v2.yml
+          git commit -m "Integrate V1 theme and share controls"
+          git push
