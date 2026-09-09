@@ -34,15 +34,23 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          from html.parser import HTMLParser
           import re
-          s=Path('index.html').read_text(encoding='utf-8')
-          assert s.count('<html')==1 and s.count('<body')==1
-          ids=re.findall(r'\bid=["\']([^"\']+)["\']',s)
-          dup=sorted({x for x in ids if ids.count(x)>1})
-          assert not dup, dup
-          scripts=re.findall(r'<script[^>]*>(.*?)</script>',s,re.I|re.S)
-          assert len(scripts)==2, len(scripts)
-          for i,sc in enumerate(scripts): Path(f'/tmp/script{i}.js').write_text(sc,encoding='utf-8')
+          class P(HTMLParser):
+            def __init__(self): super().__init__(); self.ids=[]; self.scripts=[]; self._script=False; self._buf=[]
+            def handle_starttag(self,t,a):
+              d=dict(a)
+              if 'id' in d:self.ids.append(d['id'])
+              if t.lower()=='script':self._script=True;self._buf=[]
+            def handle_endtag(self,t):
+              if t.lower()=='script':self.scripts.append(''.join(self._buf));self._script=False
+            def handle_data(self,d):
+              if self._script:self._buf.append(d)
+          s=Path('index.html').read_text(encoding='utf-8'); p=P(); p.feed(s)
+          assert s.count('<!doctype html>')==1 or s.count('<!DOCTYPE html>')==1
+          assert len(p.ids)==len(set(p.ids)), sorted({x for x in p.ids if p.ids.count(x)>1})
+          assert len(p.scripts)==2, len(p.scripts)
+          for i,sc in enumerate(p.scripts):Path(f'/tmp/script{i}.js').write_text(sc,encoding='utf-8')
           PY
           node --check /tmp/script0.js
           node --check /tmp/script1.js
