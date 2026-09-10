@@ -576,6 +576,76 @@ const ARAC_STEP_TEMPLATE=[
  {key:'close',title:'Dosyayı kapat',description:'Hazırlık bittiğinde dosyayı tamamlandı olarak işaretle.',institution:'İşini Hallet',sort_order:5}
 ];
 
+
+const PROP_STEP_TEMPLATE=[
+ {key:'precheck',title:'Ön bilgiler',description:'İşlem türüne göre temel uygunluk ve hazırlık soruları.',institution:'İşini Hallet',sort_order:1},
+ {key:'details',title:'İşlem detayları',description:'Taşınmaz / taraflar hakkında özet bilgiler.',institution:'İşini Hallet',sort_order:2},
+ {key:'documents',title:'Belge kontrol listesi',description:'Hazırlaman gereken belgeleri işaretle (zorunlu yükleme yok).',institution:'İşini Hallet',sort_order:3},
+ {key:'official',title:'Resmî kanal',description:'e-Devlet / TKGM yönlendirmesi — işlem kurumda tamamlanır.',institution:'TKGM / e-Devlet',sort_order:4},
+ {key:'close',title:'Dosyayı kapat',description:'Hazırlık bittiğinde tamamlandı olarak işaretle.',institution:'İşini Hallet',sort_order:5}
+];
+const PROP_FLOWS={
+ konut_alimi:{
+  id:'konut_alimi', case_type:'konut_alimi', title:'Konut alımı hazırlığı',
+  disclaimer:'Alım hazırlığı / rehberliktir. Tapu tescili TKGM süreçlerinde tamamlanır; bu uygulama resmî kurum değildir.',
+  official:[{label:'e-Devlet Kapısı',url:'https://www.turkiye.gov.tr/'},{label:'Web Tapu (e-Devlet araması)',url:'https://www.turkiye.gov.tr/'}],
+  questions:[
+   {key:'buyer_ready',title:'Alıcı olarak işlemi sen mi yürüteceksin?',options:[['yes','Evet'],['proxy','Vekil ile'],['unsure','Emin değilim']]},
+   {key:'in_turkey',title:'Taşınmaz Türkiye’de mi?',options:[['yes','Evet'],['no','Hayır'],['unknown','Bilmiyorum']]},
+   {key:'has_deed_info',title:'Tapu / taşınmaz bilgilerine erişimin var mı?',options:[['yes','Evet'],['partial','Kısmen'],['no','Henüz yok']]},
+   {key:'financing',title:'Finansman durumu',options:[['cash','Peşin / hazır'],['credit','Kredi düşünülüyor'],['unsure','Belirsiz']]},
+   {key:'budget',title:'Yaklaşık bütçe (TL, isteğe bağlı)',type:'number'},
+   {key:'notes',title:'Notlar (isteğe bağlı)',type:'text',placeholder:'Kısa not'}
+  ],
+  docs:function(a){return [
+   {key:'identity',title:'Kimlik belgesi',reason:'Başvuru ve noter/tapu için hazır bulundur.',required:true},
+   {key:'deed_info',title:'Tapu / taşınmaz bilgi notu',reason:'Ada, parsel, il/ilçe bilgilerini dosyanda tut.',required:true},
+   {key:'payment_plan',title:'Ödeme / kredi planı notu',reason:'Finansman hazırlığını not et.',required:false}
+  ];}
+ },
+ isyeri_satisi:{
+  id:'isyeri_satisi', case_type:'isyeri_satisi', title:'İş yeri satışı hazırlığı',
+  disclaimer:'İş yeri satışı hazırlık dosyasıdır. Tüzel kişi, vergi ve tapu gerekleri işin niteliğine göre değişir; kesin liste kurumda netleşir.',
+  official:[{label:'e-Devlet Kapısı',url:'https://www.turkiye.gov.tr/'},{label:'GİB (e-Devlet)',url:'https://www.turkiye.gov.tr/'}],
+  questions:[
+   {key:'seller_type',title:'Satıcı türü',options:[['real','Gerçek kişi'],['company','Şirket / tüzel'],['unsure','Emin değilim']]},
+   {key:'in_turkey',title:'İş yeri Türkiye’de mi?',options:[['yes','Evet'],['no','Hayır']]},
+   {key:'has_deed',title:'Tapu kaydı mevcut mu?',options:[['yes','Evet'],['no','Hayır'],['unknown','Bilmiyorum']]},
+   {key:'buyer_ready',title:'Alıcı belli mi?',options:[['yes','Evet'],['no','Hayır'],['maybe','Görüşülüyor']]},
+   {key:'sale_price',title:'Yaklaşık satış bedeli (TL)',type:'number'},
+   {key:'notes',title:'Notlar',type:'text',placeholder:'İsteğe bağlı'}
+  ],
+  docs:function(a){return [
+   {key:'identity',title:'Kimlik / yetki belgesi',reason:'Satıcı veya yetkili imza için.',required:true},
+   {key:'deed',title:'Tapu bilgisi',reason:'Taşınmaz kaydını kontrol et.',required:true},
+   {key:'tax_note',title:'Vergi / fatura notu',reason:'İş yeri satışında vergi boyutu için danışman/GİB kanalı.',required:false}
+  ];}
+ },
+ kira_hazirligi:{
+  id:'kira_hazirligi', case_type:'kira_hazirligi', title:'Kira hazırlığı',
+  disclaimer:'Yalnızca hazırlık / rehberliktir. Kira sözleşmesi işlemleri resmî e-Devlet kanalında yürütülür; uygulama hukuken sözleşme tamamlamaz.',
+  official:[{label:'e-Devlet Kira Sözleşmesi İşlemleri',url:'https://www.turkiye.gov.tr/hazine-ve-maliye-kira-sozlesmesi-islemleri'}],
+  questions:[
+   {key:'role',title:'Rolün',options:[['landlord','Kiraya veren'],['tenant','Kiracı'],['other','Diğer']]},
+   {key:'in_turkey',title:'Taşınmaz Türkiye’de mi?',options:[['yes','Evet'],['no','Hayır']]},
+   {key:'has_parties',title:'Taraflar net mi?',options:[['yes','Evet'],['no','Henüz değil']]},
+   {key:'rent',title:'Aylık kira (TL, yaklaşık)',type:'number'},
+   {key:'start',title:'Başlangıç (isteğe bağlı)',type:'text',placeholder:'YYYY-AA veya açıklama'},
+   {key:'notes',title:'Notlar',type:'text',placeholder:'İsteğe bağlı'}
+  ],
+  docs:function(a){return [
+   {key:'identity',title:'Kimlik',reason:'Sözleşme tarafı doğrulaması için.',required:true},
+   {key:'property_note',title:'Taşınmaz özeti',reason:'Adres / taşınmaz tanımı notu.',required:true},
+   {key:'draft_terms',title:'Taslak şart notları',reason:'Bedel, süre, depozito notları (taslak).',required:false}
+  ];}
+ }
+};
+function getPropFlow(id){return PROP_FLOWS[id]||null;}
+function getPropDocumentChecklist(a){
+ const f=getPropFlow(H.propFlowId); if(!f)return [];
+ try{return f.docs(a||H.answers||{})||[];}catch(e){return [];}
+}
+
 const KURUM_FLOWS={
  nvi_adres_degisikligi:{
   id:'nvi_adres_degisikligi',
@@ -674,6 +744,7 @@ function kurumAnswerLabel(q,val){
 function activeStepTemplate(){
  if(H.module==='kurum_basvurusu')return KURUM_STEP_TEMPLATE;
  if(H.module==='arac')return ARAC_STEP_TEMPLATE;
+ if(H.module==='prop')return PROP_STEP_TEMPLATE;
  return CASE_STEP_TEMPLATE;
 }
 function getKurumDocumentChecklist(a){
@@ -684,11 +755,13 @@ function getKurumDocumentChecklist(a){
 function activeDocumentChecklist(a){
  if(H.module==='kurum_basvurusu')return getKurumDocumentChecklist(a);
  if(H.module==='arac')return getAracDocumentChecklist(a);
+ if(H.module==='prop')return getPropDocumentChecklist(a);
  return getDocumentChecklist(a);
 }
 function showActiveResult(fromSaved){
  if(H.module==='kurum_basvurusu')return kurumResult(!!fromSaved);
  if(H.module==='arac')return aracResult(!!fromSaved);
+ if(H.module==='prop')return propResult(!!fromSaved);
  return result(!!fromSaved);
 }
 
@@ -903,7 +976,7 @@ async function cases(){
    }
    const stepDoneByCase={};
    try{
-     const tasinmazIds=list.filter(r=>{const m=r.metadata||{};if(m.module==='evrak_hazirlama')return false;return m.module==='tasinmaz'||m.module==='kurum_basvurusu'||m.module==='arac'||m.transaction_type==='konut_satisi'||m.transaction_type==='arac_satisi'||r.case_type==='konut_satisi'||r.case_type==='kurum_basvurusu'||r.case_type==='arac_satisi';}).map(r=>r.id).filter(Boolean);
+     const tasinmazIds=list.filter(r=>{const m=r.metadata||{};if(m.module==='evrak_hazirlama')return false;return m.module==='tasinmaz'||m.module==='kurum_basvurusu'||m.module==='arac'||m.module==='prop'||m.transaction_type==='konut_satisi'||m.transaction_type==='arac_satisi'||r.case_type==='konut_satisi'||r.case_type==='kurum_basvurusu'||r.case_type==='arac_satisi'||r.case_type==='konut_alimi'||r.case_type==='isyeri_satisi'||r.case_type==='kira_hazirligi';}).map(r=>r.id).filter(Boolean);
      if(tasinmazIds.length){
        const stepRows=await supabaseAuthRequest('GET','hallet_case_steps?select=case_id,status&case_id=in.('+tasinmazIds.join(',')+')&limit=500');
        (Array.isArray(stepRows)?stepRows:[]).forEach(s=>{
@@ -930,7 +1003,8 @@ async function cases(){
      const isEvrak=m.module==='evrak_hazirlama';
      const isTasinmaz=!isEvrak&&(m.module==='tasinmaz'||m.transaction_type==='konut_satisi'||r.case_type==='konut_satisi');
      const isArac=!isEvrak&&(m.module==='arac'||m.transaction_type==='arac_satisi'||r.case_type==='arac_satisi');
-     let typeLabel=isEvrak?(function(){const dt=(m.document_type||'');if(dt==='dilekce')return 'Dilekçe';if(dt==='kira_sozlesmesi')return 'Kira taslağı';if(dt==='genel_basvuru')return 'Genel başvuru';if(dt==='arac_kiralama')return 'Araç kiralama';if(dt==='konut_satis_bilgi_formu')return 'Konut satış formu';return 'Evrak';})():(isArac?'Araç Satışı':(isTasinmaz?'Konut Satışı':'İşlem Dosyası'));
+     const isProp=!isEvrak&&!isArac&&(m.module==='prop'||['konut_alimi','isyeri_satisi','kira_hazirligi'].indexOf(r.case_type)>=0);
+     let typeLabel=isEvrak?(function(){const dt=(m.document_type||'');if(dt==='dilekce')return 'Dilekçe';if(dt==='kira_sozlesmesi')return 'Kira taslağı';if(dt==='genel_basvuru')return 'Genel başvuru';if(dt==='arac_kiralama')return 'Araç kiralama';if(dt==='konut_satis_bilgi_formu')return 'Konut satış formu';return 'Evrak';})():(isProp?(r.case_type==='konut_alimi'?'Konut alımı':r.case_type==='isyeri_satisi'?'İş yeri satışı':r.case_type==='kira_hazirligi'?'Kira hazırlığı':'Taşınmaz'):(isArac?'Araç Satışı':(isTasinmaz?'Konut Satışı':'İşlem Dosyası')));
      const updated=fmtWhen(r.updated_at);
      const created=fmtWhen(r.created_at);
      let bodyLines='';
@@ -961,6 +1035,12 @@ async function cases(){
          ((!isCompleted&&action&&action.title)?('<div><strong>Sıradaki:</strong> '+esc(action.title)+'</div>'):'')+
          '</div>';
      }else if(isArac){
+       const st=stepDoneByCase[r.id];
+       const stepTotal=(st&&st.total)?st.total:5;
+       const stepDone=st?st.done:0;
+       let docState=(m.document_summary&&typeof m.document_summary==='object')?m.document_summary:{total:0,ready:0};
+       bodyLines='<div class="hm" style="margin-top:8px;line-height:1.5"><div><strong>Durum:</strong> '+(isCompleted?'<span class="ok">✓ Tamamlandı</span>':esc(stLabel))+'</div><div><strong>İlerleme:</strong> '+stepDone+' / '+stepTotal+' adım</div><div><strong>Belgeler:</strong> '+(docState.ready||0)+' / '+(docState.total||0)+' hazır</div></div>';
+     }else if(isProp){
        const st=stepDoneByCase[r.id];
        const stepTotal=(st&&st.total)?st.total:5;
        const stepDone=st?st.done:0;
@@ -1036,10 +1116,36 @@ async function openCase(id){
     return kurumResult(true);
    }
    if(m.module==='arac'||row.case_type==='arac_satisi'){
-    H.module='arac'; H.kurumFlowId=null; H.dbId=row.id; H.caseId=m.case_no||null; H.createdAt=row.created_at||null; H.status=row.status||'draft'; H.answers=(m.answers&&typeof m.answers==='object')?m.answers:{}; H.documents=(m.documents&&typeof m.documents==='object')?m.documents:{}; H.documentStatuses={}; H.documentFiles={}; H.caseSteps=[];
+    H.module='arac'; H.kurumFlowId=null; H.propFlowId=null; H.dbId=row.id; H.caseId=m.case_no||null; H.createdAt=row.created_at||null; H.status=row.status||'draft'; H.answers=(m.answers&&typeof m.answers==='object')?m.answers:{}; H.documents=(m.documents&&typeof m.documents==='object')?m.documents:{}; H.documentStatuses={}; H.documentFiles={}; H.caseSteps=[];
+    try{
+     const docs=await supabaseAuthRequest('GET','hallet_documents?select=id,doc_key,title,status,storage_path,mime_type,file_size_bytes,metadata,created_at&case_id=eq.'+encodeURIComponent(H.dbId)+'&order=created_at.asc&limit=200');
+     (Array.isArray(docs)?docs:[]).forEach(d=>{
+       if(d.doc_key&&d.status==='uploaded'&&d.storage_path){
+         H.documents[d.doc_key]=true;
+         if(!Array.isArray(H.documentFiles[d.doc_key]))H.documentFiles[d.doc_key]=[];
+         H.documentFiles[d.doc_key].push({id:d.id,path:d.storage_path,name:d.metadata?.original_name||d.title||d.doc_key,type:d.mime_type||null,size:d.file_size_bytes||0,created_at:d.created_at||null});
+       }
+     });
+    }catch(docErr){console.warn('Araç belgeleri yüklenemedi:',docErr);}
     await loadCaseSteps();
     await ensureCaseSteps();
     return aracResult(true);
+   }
+   if(m.module==='prop'||['konut_alimi','isyeri_satisi','kira_hazirligi'].indexOf(row.case_type)>=0){
+    H.module='prop'; H.propFlowId=m.prop_flow||row.case_type; H.kurumFlowId=null; H.dbId=row.id; H.caseId=m.case_no||null; H.createdAt=row.created_at||null; H.status=row.status||'draft'; H.answers=(m.answers&&typeof m.answers==='object')?m.answers:{}; H.documents=(m.documents&&typeof m.documents==='object')?m.documents:{}; H.documentStatuses={}; H.documentFiles={}; H.caseSteps=[];
+    try{
+     const docs=await supabaseAuthRequest('GET','hallet_documents?select=id,doc_key,title,status,storage_path,mime_type,file_size_bytes,metadata,created_at&case_id=eq.'+encodeURIComponent(H.dbId)+'&order=created_at.asc&limit=200');
+     (Array.isArray(docs)?docs:[]).forEach(d=>{
+       if(d.doc_key&&d.status==='uploaded'&&d.storage_path){
+         H.documents[d.doc_key]=true;
+         if(!Array.isArray(H.documentFiles[d.doc_key]))H.documentFiles[d.doc_key]=[];
+         H.documentFiles[d.doc_key].push({id:d.id,path:d.storage_path,name:d.metadata?.original_name||d.title||d.doc_key,type:d.mime_type||null,size:d.file_size_bytes||0,created_at:d.created_at||null});
+       }
+     });
+    }catch(docErr){console.warn('Taşınmaz prop belgeleri yüklenemedi:',docErr);}
+    await loadCaseSteps();
+    await ensureCaseSteps();
+    return propResult(true);
    }
    H.module='tasinmaz'; H.kurumFlowId=null; H.dbId=row.id; H.caseId=m.case_no||null; H.createdAt=row.created_at||null; H.status=row.status||'draft'; H.answers=(m.answers&&typeof m.answers==='object')?m.answers:{}; H.documents=(m.documents&&typeof m.documents==='object')?m.documents:{}; H.documentStatuses={}; H.documentFiles={};
    try{
@@ -1299,7 +1405,91 @@ function evrakSatisBilgiSaved(row,m){
 function evrakSavedCasePreview(row,draft){const seller=draft.seller||'—',buyer=draft.buyer||'—',location=draft.location||'—',parcel=draft.parcel||'—',price=Number(draft.sale_price)||0,date=draft.planned_date||null,notes=draft.notes||'—',stamp=row.created_at?new Date(row.created_at).toLocaleString('tr-TR'):new Date().toLocaleString('tr-TR');const dateText=date?new Date(date+'T00:00:00').toLocaleDateString('tr-TR'):'—';render(top('cases')+'<div class="hc"><div class="hk">Kayıtlı evrak taslağı</div><h2>Konut Satış Bilgi Formu</h2><p class="hm">Kaydedilme: '+esc(stamp)+'</p><div class="evrakPaper"><h3 style="margin-top:0">1. Taraflar</h3><p><strong>Satıcı:</strong> '+esc(seller)+'</p><p><strong>Alıcı:</strong> '+esc(buyer)+'</p><h3>2. Taşınmaz</h3><p><strong>İl / İlçe:</strong> '+esc(location)+'</p><p><strong>Mahalle / Ada / Parsel:</strong> '+esc(parcel)+'</p><h3>3. Satış bilgileri</h3><p><strong>Satış bedeli:</strong> '+(price?('₺'+price.toLocaleString('tr-TR')):'—')+'</p><p><strong>Planlanan tarih:</strong> '+esc(dateText)+'</p><h3>4. Notlar</h3><p>'+esc(notes).replace(/\n/g,'<br>')+'</p><hr><p style="font-size:12px;color:#5d6a6d;margin-bottom:0">Bu belge İşini Hallet tarafından bilgi toplama ve taslak oluşturma amacıyla hazırlanmıştır. Taşınmaz mülkiyetinin devrine ilişkin resmî sözleşme yerine geçmez; resmî işlem yetkili tapu müdürlüğü veya mevzuatın izin verdiği noterlik süreci üzerinden gerçekleştirilir.</p></div><div class="hg" style="margin-top:14px"><button class="hb hp" data-a="evrak_print">🖨️ Yazdır / PDF olarak kaydet</button><button class="hb" data-a="cases">← Dosyalarıma dön</button></div></div>')}
 async function evrakSaveCase(){const d=(H.evrakDraft&&typeof H.evrakDraft==='object')?H.evrakDraft:{};const seller=d.seller||null,buyer=d.buyer||null,location=d.location||null,parcel=d.parcel||null,notes=d.notes||null;const price=Number(d.sale_price)||0;const date=d.planned_date||null;const session=getAuthSession();if(!session?.user?.id){gate();openLogin();return}const city=(location||'').split('/')[0]?.trim()||null;const draft={seller,buyer,location,parcel,sale_price:price||null,planned_date:date,notes,created_at:new Date().toISOString()};const payload={case_type:'konut_satisi',status:'draft',title:'Konut satış bilgi formu',summary:'Evrak hazırlama modülünden oluşturulan konut satış bilgi formu.',user_id:session.user.id,customer_id:session.user.id,city,created_at:new Date().toISOString(),updated_at:new Date().toISOString(),metadata:{module:'evrak_hazirlama',document_type:'konut_satis_bilgi_formu',draft,source:'İşini Hallet'}};const btn=document.querySelector('#hallet-root [data-a="evrak_savecase"]');if(btn){btn.disabled=true;btn.textContent='KAYDEDİLİYOR...'}try{const rows=await supabaseAuthRequest('POST','hallet_cases?select=id,case_type,status,title,created_at',{...payload});if(!Array.isArray(rows)||!rows.length)throw new Error('İşlem dosyası oluşturulamadı.');if(btn){btn.disabled=false;btn.textContent='✓ İŞLEM DOSYASINA KAYDEDİLDİ'}alert('Konut satış bilgi formu işlem dosyasına kaydedildi.');}catch(e){console.error('Evrak dosyaya kaydedilemedi:',e);if(btn){btn.disabled=false;btn.textContent='📁 İşlem dosyasına kaydet'}alert('İşlem dosyasına kaydedilemedi: '+(e?.message||'Bilinmeyen hata'));}}
 function evrakPrint(){document.body.classList.add("printing-evrak");window.setTimeout(()=>window.print(),30);window.setTimeout(()=>document.body.classList.remove("printing-evrak"),500)}
-function tasinmaz(){render(top('islem')+'<div class="hc"><div class="hk">Taşınmaz işlemleri</div><h2>Hangi taşınmaz işlemi?</h2><p class="hm">Şu an tam akış: <strong>Konut satışı</strong>. Diğerleri menüde yer tutar; uydurma hukuki süreç eklenmez.</p><div class="hg"><button class="hb hp" data-a="konut">🏠 Konut satışı</button><button class="hb" data-a="yakinda" data-t="Konut alımı">🏠 Konut alımı (yakında)</button><button class="hb" data-a="yakinda" data-t="İş yeri satışı">🏢 İş yeri satışı (yakında)</button><button class="hb" data-a="yakinda" data-t="Kira sözleşmesi hazırlığı">📝 Kira hazırlığı (yakında)</button><button class="hb" data-a="yakinda" data-t="Tapu işlem rehberi">📑 Tapu rehberi (yakında)</button></div></div>')}function arac(){render(top('islem')+'<div class="hc"><div class="hk">Araç işlemleri</div><h2>Araç için ne yapmak istiyorsun?</h2><p class="hm">İşini Hallet resmî noter/tescil işleminin yerine geçmez. V1 pilot: <strong>araç satışı hazırlığı</strong>. Hassas kimlik/ruhsat numarası istenmez.</p><div class="hg"><button class="hb hp" data-a="arac_satis">🚗 Aracımı satmak istiyorum</button><button class="hb" data-a="yakinda" data-t="Araç satın alma">Araç satın alma (yakında)</button><button class="hb" data-a="yakinda" data-t="Araç devri">Araç devri (yakında)</button><a class="hb" href="https://www.turkiye.gov.tr/turkiye-noterler-birligi-adima-tescilli-arac-sorgulama" target="_blank" rel="noopener noreferrer">Resmî: Adıma tescilli araç sorgula →</a><button class="hb" data-a="islem">← Geri</button></div><p class="hm small">Kaynak: e-Devlet / Türkiye Noterler Birliği — Adıma Tescilli Araç Sorgulama.</p></div>')}
+function tasinmaz(){render(top('islem')+'<div class="hc"><div class="hk">Taşınmaz işlemleri</div><h2>Hangi taşınmaz işlemi?</h2><p class="hm">Akışlar <strong>hazırlık / rehberlik</strong> amaçlıdır. Resmî tescil ve sözleşme kurum kanallarında tamamlanır.</p><div class="hg"><button class="hb hp" data-a="konut">🏠 Konut satışı</button><button class="hb" data-a="prop_start" data-id="konut_alimi">🏠 Konut alımı</button><button class="hb" data-a="prop_start" data-id="isyeri_satisi">🏢 İş yeri satışı</button><button class="hb" data-a="prop_start" data-id="kira_hazirligi">📝 Kira hazırlığı</button><button class="hb" data-a="tapu_rehber">📑 Tapu işlem rehberi</button></div></div>')}
+function tapuRehber(){render(top('tasinmaz')+'<div class="hc"><div class="hk">Tapu işlem rehberi</div><h2>Hazırlık adımları</h2><p class="hm">Bilgilendirme merkezidir; harç/ücret burada kesinleşmez. İşlem TKGM / Web Tapu / ilgili müdürlükte tamamlanır.</p><div class="hl"><div class="li"><strong>1.</strong> Tapu bilgilerini kontrol et (ada, parsel, malik)</div><div class="li"><strong>2.</strong> Web Tapu / e-Devlet üzerinden işlem kanallarını incele</div><div class="li"><strong>3.</strong> Harç ve döner sermaye için resmî duyuruları kontrol et</div><div class="li"><strong>4.</strong> Gerekirse yetkilendirme / vekâlet durumunu netleştir</div><div class="li"><strong>5.</strong> Konut satışı veya ilgili hazırlık dosyasını oluştur</div></div><div class="hg" style="margin-top:12px"><button class="hb hp" data-a="konut">Konut satışı dosyası →</button><a class="hb" href="https://www.turkiye.gov.tr/" target="_blank" rel="noopener noreferrer">e-Devlet Kapısı →</a><button class="hb" data-a="tasinmaz">← Geri</button></div></div>')}
+function propStart(id){
+ const f=getPropFlow(id); if(!f){alert('Akış bulunamadı');return;}
+ H.module='prop'; H.propFlowId=id; H.kurumFlowId=null; H.step=0; H.answers={}; H.documents={}; H.documentStatuses={}; H.documentFiles={}; H.caseId=null; H.dbId=null; H.createdAt=null; H.status='draft'; H.caseSteps=[];
+ return propQuestion();
+}
+function propQuestion(){
+ const f=getPropFlow(H.propFlowId); if(!f)return tasinmaz();
+ const q=f.questions[H.step];
+ if(!q)return propResult(false);
+ const pct=Math.max(7,Math.round(H.step/f.questions.length*100));
+ let html='<div class="pr"><span style="width:'+pct+'%"></span></div>'+top(H.step?'prop_qback':'tasinmaz')+'<div class="hc"><div class="hk">'+esc(f.title)+' · '+(H.step+1)+' / '+f.questions.length+'</div><h2>'+esc(q.title)+'</h2>';
+ if(q.type==='number')html+='<label>Değer</label><input class="hi" id="qinput" type="number" min="0" step="1" value="'+esc(H.answers[q.key]||'')+'"><button class="hb hp" data-a="prop_answer_input">Devam →</button>';
+ else if(q.type==='text')html+='<label>Bilgi</label><input class="hi" id="qinput" type="text" placeholder="'+esc(q.placeholder||'')+'" value="'+esc(H.answers[q.key]||'')+'"><button class="hb hp" data-a="prop_answer_input">Devam →</button>';
+ else html+='<div class="hg">'+(q.options||[]).map(o=>'<button class="hb" data-a="prop_answer" data-k="'+esc(q.key)+'" data-v="'+esc(o[0])+'">'+esc(o[1])+'</button>').join('')+'</div>';
+ html+='<p class="hm small" style="margin-top:12px">'+esc(f.disclaimer)+'</p></div>';
+ render(html);
+}
+function propResult(fromSaved){
+ const f=getPropFlow(H.propFlowId)||{title:'Taşınmaz hazırlığı',disclaimer:'',official:[]};
+ const a=H.answers||{};
+ const docs=getPropDocumentChecklist(a);
+ const docHtml=docs.map(d=>{
+   const on=!!H.documents[d.key];
+   return '<label class="li" style="display:flex;gap:10px;align-items:flex-start;text-align:left"><input type="checkbox" data-a="prop_doc" data-k="'+esc(d.key)+'" '+(on?'checked':'')+'><span><strong>'+esc(d.title)+'</strong>'+(d.required?' · gerekli':'')+'<br><span class="hm">'+esc(d.reason||'')+'</span></span></label>';
+ }).join('');
+ const steps=(H.caseSteps&&H.caseSteps.length)?H.caseSteps:defaultCaseSteps();
+ const stepHtml=steps.map(s=>{
+   const done=s.status==='completed';
+   return '<label class="li" style="display:flex;gap:10px;align-items:flex-start"><input type="checkbox" data-a="stepToggle" data-k="'+esc(s.step_key||s.key)+'" '+(done?'checked':'')+'><span><strong>'+esc(s.title)+'</strong><br><span class="hm">'+esc(s.description||'')+'</span></span></label>';
+ }).join('');
+ const off=(f.official||[]).map(o=>'<a class="hb" href="'+esc(o.url)+'" target="_blank" rel="noopener noreferrer">'+esc(o.label)+' →</a>').join('');
+ const miss=docs.filter(d=>d.required&&!H.documents[d.key]);
+ render(top('tasinmaz')+'<div class="hc"><div class="hk">'+esc(f.title)+'</div><h2>İşlem dosyası özeti</h2><p class="hm">'+esc(f.disclaimer)+'</p>'+
+  (miss.length?('<div class="hl"><div class="li">⚠️ Eksik işaretlenen gerekli kalem: '+esc(miss.map(x=>x.title).join(', '))+'</div></div>'):'<p class="ok">Belge listesi tamam göründü (kontrol listesi).</p>')+
+  '<h3 style="margin-top:14px">Belgeler</h3><div class="hl">'+docHtml+'</div>'+
+  '<h3 style="margin-top:14px">Adımlar</h3><div class="hl">'+stepHtml+'</div>'+
+  '<div class="hg" style="margin-top:14px">'+off+
+  '<button class="hb hp" data-a="prop_save">'+(fromSaved||H.dbId?'Dosyayı güncelle':'Dosyayı kaydet')+'</button>'+
+  (H.dbId?'<button class="hb" data-a="completecase">Tamamlandı işaretle</button>':'')+
+  '<button class="hb" data-a="cases">İşlem Dosyalarım</button></div></div>');
+}
+async function savePropCase(silent){
+ const f=getPropFlow(H.propFlowId); if(!f){alert('Akış yok');return;}
+ const session=getAuthSession();
+ if(!session?.access_token||!session?.user?.id){openAuthModal('login');return;}
+ if(!H.caseId)H.caseId='IH-'+new Date().toISOString().replace(/\D/g,'').slice(0,14)+'-'+Math.random().toString(36).slice(2,7).toUpperCase();
+ const docs=getPropDocumentChecklist(H.answers);
+ const ready=docs.filter(d=>H.documents[d.key]).length;
+ const payload={
+  case_type:f.case_type,
+  status:(H.status==='completed'?'completed':(H.status||'draft')),
+  title:f.title,
+  summary:'Hazırlık dosyası — resmî işlem yerine geçmez',
+  city:'İzmir',
+  district:null,
+  metadata:{
+   module:'prop',
+   prop_flow:f.id,
+   transaction_type:f.case_type,
+   case_no:H.caseId,
+   answers:H.answers||{},
+   documents:H.documents||{},
+   document_summary:{total:docs.length,ready,percent:docs.length?Math.round(ready/docs.length*100):0,missing:docs.filter(d=>!H.documents[d.key]).map(d=>({key:d.key,title:d.title}))},
+   disclaimer:f.disclaimer
+  }
+ };
+ try{
+  let rows;
+  if(H.dbId)rows=await supabaseAuthRequest('PATCH','hallet_cases?id=eq.'+encodeURIComponent(H.dbId),payload);
+  else rows=await supabaseAuthRequest('POST','hallet_cases',payload);
+  const row=Array.isArray(rows)?rows[0]:rows;
+  H.dbId=row?.id||H.dbId;
+  H.createdAt=row?.created_at||H.createdAt||new Date().toISOString();
+  await ensureCaseSteps();
+  if(!silent)alert('Dosya kaydedildi.\n\n'+f.title+'\nNo: '+H.caseId);
+  propResult(true);
+ }catch(e){
+  console.error(e);
+  alert('Kayıt başarısız. case_type için DB constraint güncel mi kontrol edin.\n\n'+((e&&e.message)||e));
+ }
+}
+
+function arac(){render(top('islem')+'<div class="hc"><div class="hk">Araç işlemleri</div><h2>Araç için ne yapmak istiyorsun?</h2><p class="hm">İşini Hallet resmî noter/tescil işleminin yerine geçmez. V1 pilot: <strong>araç satışı hazırlığı</strong>. Hassas kimlik/ruhsat numarası istenmez.</p><div class="hg"><button class="hb hp" data-a="arac_satis">🚗 Aracımı satmak istiyorum</button><button class="hb" data-a="yakinda" data-t="Araç satın alma">Araç satın alma (yakında)</button><button class="hb" data-a="yakinda" data-t="Araç devri">Araç devri (yakında)</button><a class="hb" href="https://www.turkiye.gov.tr/turkiye-noterler-birligi-adima-tescilli-arac-sorgulama" target="_blank" rel="noopener noreferrer">Resmî: Adıma tescilli araç sorgula →</a><button class="hb" data-a="islem">← Geri</button></div><p class="hm small">Kaynak: e-Devlet / Türkiye Noterler Birliği — Adıma Tescilli Araç Sorgulama.</p></div>')}
 
 const ARAC_QUESTIONS=[
  {key:'seller_ready',title:'Satıcı olarak işlemi sen mi yürüteceksin?',options:[['yes','Evet'],['proxy','Vekil / başkası aracılığıyla'],['unsure','Emin değilim']]},
@@ -1359,7 +1549,7 @@ function aracResult(fromSaved){
   '<h3 style="margin-top:16px">Belgeler</h3><div class="hl">'+docHtml+'</div>'+
   '<h3 style="margin-top:16px">Adımlar</h3><div class="hl">'+stepHtml+'</div>'+
   '<div class="hg" style="margin-top:14px"><a class="hb" href="https://www.turkiye.gov.tr/turkiye-noterler-birligi-adima-tescilli-arac-sorgulama" target="_blank" rel="noopener noreferrer">e-Devlet: Araç sorgula →</a><button class="hb hp" data-a="arac_save">'+(fromSaved||H.dbId?'Dosyayı güncelle':'Dosyayı kaydet')+'</button>'+
-  (H.dbId?'<button class="hb" data-a="complete">Tamamlandı işaretle</button>':'')+
+  (H.dbId?'<button class="hb" data-a="completecase">Tamamlandı işaretle</button>':'')+
   '<button class="hb" data-a="cases">İşlem Dosyalarım</button></div>'+
   '<p class="hm small">Doğrulanmış resmi ücret/evrak listesi bu V1’de verilmez; noter ve e-Devlet güncel koşulları geçerlidir.</p></div>');
 }
@@ -1398,7 +1588,7 @@ async function saveAracCase(silent){
   aracResult(true);
  }catch(e){
   console.error(e);
-  alert('Kayıt başarısız. Olası neden: hallet_cases case_type constraint (arac_satisi eklenmemiş olabilir).\\n\\n'+((e&&e.message)||e));
+  alert('Kayıt başarısız.\n\n'+((e&&e.message)||e));
  }
 }
 
@@ -1708,7 +1898,7 @@ function kurumResult(fromSaved){
  render(html);
 }
 
-function dispatch(a,e){if(a==='close')return close();if(a==='gate')return gate();if(a==='cases')return cases();if(a==='caseopen')return openCase(e.dataset.id);if(a==='openDoc')return openDocument(e.dataset.k,Number(e.dataset.i||0));if(a==='stepToggle')return updateCaseStep(e.dataset.k);if(a==='islem')return islem();if(a==='tasinmaz')return tasinmaz();if(a==='arac')return arac();if(a==='arac_satis')return aracSatisStart();if(a==='arac_qback'){H.step=Math.max(0,H.step-1);return aracQuestion();}if(a==='arac_answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return aracQuestion();}if(a==='arac_answer_input'){const i=document.getElementById('qinput');const q=ARAC_QUESTIONS[H.step];if(q)H.answers[q.key]=i?i.value:'';H.step++;return aracQuestion();}if(a==='arac_doc'){H.documents[e.dataset.k]=!!e.checked;return aracResult(!!H.dbId);}if(a==='arac_save')return saveAracCase();if(a==='evrak_type'){if(e&&e.dataset&&e.dataset.fresh==='1'){H.dbId=null;H.evrakDraft=null;}return evrakTypeForm(e.dataset.t,H.evrakDraft);}if(a==='evrak_type_preview')return evrakTypePreview(e.dataset.t);if(a==='evrak_type_save')return evrakTypeSave(e.dataset.t);if(a==='evrak_mark_done')return evrakMarkDone();if(a==='evrak_print')return evrakPrint();if(a==='evrak_whatsapp')return evrakShareWhatsApp();if(a==='evrak_konut_edit'){const d=H.evrakDraft||{};return evrakSatisBilgiSaved({id:H.dbId,status:H.status||'draft',title:'Konut satış bilgi formu'},{document_type:'konut_satis_bilgi_formu',draft:d,case_no:H.caseId});}if(a==='yakinda')return msg((e&&e.dataset&&e.dataset.t)||'Yakında','Bu kategori menüde yer alıyor; tam akış henüz açılmadı. Uydurma hukuki süreç eklenmez. Şimdilik Konut satışı, Evrak (konut form) ve Kurum pilotlarını kullan.');if(a==='konut')return konut();if(a==='start'){H.step=0;return question()}if(a==='qback'){H.step=Math.max(0,H.step-1);return question()}if(a==='answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return question()}if(a==='docReady')return;if(a==='docToggle'){H.documents[e.dataset.k]=!!e.checked;if(H.module==='kurum_basvurusu'){kurumResult(!!H.dbId);if(H.dbId)return saveKurumCase();return;}result(!!H.dbId);if(H.dbId)return saveCase(true);return;}if(a==='savecase')return saveCase();if(a==='save'){const i=document.getElementById('qinput');if(!i||!String(i.value).trim()){const c=document.querySelector('#hallet-root .hc');if(c&&!c.querySelector('.err'))c.insertAdjacentHTML('beforeend','<div class="err">Lütfen bir değer girerek devam et.</div>');return}H.answers[e.dataset.k]=i.value.trim();H.step++;return question()}if(a==='new'){H.step=0;H.answers={};H.documents={};H.documentStatuses={};H.documentFiles={};H.caseId=null;H.dbId=null;H.status=null;H.module=null;H.kurumFlowId=null;H.caseSteps=[];return gate()}if(a==='isimi')return goIsimi();if(a==='evrak')return evrak();if(a==='evrak_satis_bilgi')return evrakSatisBilgi();if(a==='evrak_preview')return evrakPreview();if(a==='evrak_print')return evrakPrint();if(a==='evrak_savecase')return evrakSaveCase();if(a==='evrak_back')return islem();if(a==='completecase')return markCaseCompleted();if(a==='kurum')return kurumHome();if(a==='kurum_flow')return kurumStartFlow(e.dataset.id);if(a==='kurum_q')return kurumAnswer(e.dataset.k,e.dataset.v);if(a==='kurum_save')return saveKurumCase();if(a==='kurum_result')return kurumResult(!!H.dbId);if(a==='kurum_edit_info'){H.step=0;return kurumQuestion();}if(a==='kurum_save_notes'){const t=document.getElementById('kurumNotes');if(t)H.answers.notes=t.value||'';return saveKurumCase();}}
+function dispatch(a,e){if(a==='close')return close();if(a==='gate')return gate();if(a==='cases')return cases();if(a==='caseopen')return openCase(e.dataset.id);if(a==='openDoc')return openDocument(e.dataset.k,Number(e.dataset.i||0));if(a==='stepToggle')return updateCaseStep(e.dataset.k);if(a==='islem')return islem();if(a==='tasinmaz')return tasinmaz();if(a==='tapu_rehber')return tapuRehber();if(a==='prop_start')return propStart(e.dataset.id);if(a==='prop_qback'){H.step=Math.max(0,H.step-1);return propQuestion();}if(a==='prop_answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return propQuestion();}if(a==='prop_answer_input'){const i=document.getElementById('qinput');const f=getPropFlow(H.propFlowId);const q=f&&f.questions[H.step];if(q)H.answers[q.key]=i?i.value:'';H.step++;return propQuestion();}if(a==='prop_doc'){H.documents[e.dataset.k]=!!e.checked;return propResult(!!H.dbId);}if(a==='prop_save')return savePropCase();if(a==='arac')return arac();if(a==='arac_satis')return aracSatisStart();if(a==='arac_qback'){H.step=Math.max(0,H.step-1);return aracQuestion();}if(a==='arac_answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return aracQuestion();}if(a==='arac_answer_input'){const i=document.getElementById('qinput');const q=ARAC_QUESTIONS[H.step];if(q)H.answers[q.key]=i?i.value:'';H.step++;return aracQuestion();}if(a==='arac_doc'){H.documents[e.dataset.k]=!!e.checked;return aracResult(!!H.dbId);}if(a==='arac_save')return saveAracCase();if(a==='evrak_type'){if(e&&e.dataset&&e.dataset.fresh==='1'){H.dbId=null;H.evrakDraft=null;}return evrakTypeForm(e.dataset.t,H.evrakDraft);}if(a==='evrak_type_preview')return evrakTypePreview(e.dataset.t);if(a==='evrak_type_save')return evrakTypeSave(e.dataset.t);if(a==='evrak_mark_done')return evrakMarkDone();if(a==='evrak_print')return evrakPrint();if(a==='evrak_whatsapp')return evrakShareWhatsApp();if(a==='evrak_konut_edit'){const d=H.evrakDraft||{};return evrakSatisBilgiSaved({id:H.dbId,status:H.status||'draft',title:'Konut satış bilgi formu'},{document_type:'konut_satis_bilgi_formu',draft:d,case_no:H.caseId});}if(a==='yakinda')return msg((e&&e.dataset&&e.dataset.t)||'Yakında','Bu kategori menüde yer alıyor; tam akış henüz açılmadı. Uydurma hukuki süreç eklenmez. Şimdilik Konut satışı, Evrak (konut form) ve Kurum pilotlarını kullan.');if(a==='konut')return konut();if(a==='start'){H.step=0;return question()}if(a==='qback'){H.step=Math.max(0,H.step-1);return question()}if(a==='answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return question()}if(a==='docReady')return;if(a==='docToggle'){H.documents[e.dataset.k]=!!e.checked;if(H.module==='kurum_basvurusu'){kurumResult(!!H.dbId);if(H.dbId)return saveKurumCase();return;}result(!!H.dbId);if(H.dbId)return saveCase(true);return;}if(a==='savecase')return saveCase();if(a==='save'){const i=document.getElementById('qinput');if(!i||!String(i.value).trim()){const c=document.querySelector('#hallet-root .hc');if(c&&!c.querySelector('.err'))c.insertAdjacentHTML('beforeend','<div class="err">Lütfen bir değer girerek devam et.</div>');return}H.answers[e.dataset.k]=i.value.trim();H.step++;return question()}if(a==='new'){H.step=0;H.answers={};H.documents={};H.documentStatuses={};H.documentFiles={};H.caseId=null;H.dbId=null;H.status=null;H.module=null;H.kurumFlowId=null;H.caseSteps=[];return gate()}if(a==='isimi')return goIsimi();if(a==='evrak')return evrak();if(a==='evrak_satis_bilgi')return evrakSatisBilgi();if(a==='evrak_preview')return evrakPreview();if(a==='evrak_print')return evrakPrint();if(a==='evrak_savecase')return evrakSaveCase();if(a==='evrak_back')return islem();if(a==='completecase')return markCaseCompleted();if(a==='kurum')return kurumHome();if(a==='kurum_flow')return kurumStartFlow(e.dataset.id);if(a==='kurum_q')return kurumAnswer(e.dataset.k,e.dataset.v);if(a==='kurum_save')return saveKurumCase();if(a==='kurum_result')return kurumResult(!!H.dbId);if(a==='kurum_edit_info'){H.step=0;return kurumQuestion();}if(a==='kurum_save_notes'){const t=document.getElementById('kurumNotes');if(t)H.answers.notes=t.value||'';return saveKurumCase();}}
 document.addEventListener('click',function(e){const el=e.target.closest&&e.target.closest('#hallet-root [data-a]');if(!el)return;e.preventDefault();e.stopPropagation();dispatch(el.dataset.a,el)},true);
 document.addEventListener('change',function(e){
   const box=e.target.closest&&e.target.closest('#hallet-root input[data-kurum-doc]');
