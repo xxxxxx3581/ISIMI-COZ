@@ -1,0 +1,67 @@
+name: Fix document viewer v4
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    if: github.event.head_commit.message != 'fix: robust common document viewer'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch and validate index
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          start=s.index('async function openDocument(docKey,index=0){')
+          m=re.search(r'\n(?:async )?function [A-Za-z_$][\w$]*\s*\(',s[start:])
+          if not m:
+              raise SystemExit('next function boundary not found')
+          end=start+m.start()
+          fn=r'''async function openDocument(docKey,index=0){
+  const files=getDocumentFiles(docKey);
+  const f=files[index];
+  const session=getAuthSession();
+  if(!f?.path||!session?.access_token){alert('Belge bağlantısı bulunamadı.');return;}
+  try{
+    const objectPath=f.path.split('/').map(encodeURIComponent).join('/');
+    const signRes=await fetch(SUPABASE_URL+'/storage/v1/object/sign/hallet-documents/'+objectPath,{method:'POST',headers:{'Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({expiresIn:600})});
+    const text=await signRes.text();
+    let d=null;try{d=text?JSON.parse(text):null}catch(e){}
+    if(!signRes.ok)throw new Error(d?.message||d?.error||text||'Belge bağlantısı oluşturulamadı.');
+    const signed=d?.signedURL||d?.signedUrl||d?.signed_url;
+    if(!signed)throw new Error('Belge bağlantısı oluşturulamadı.');
+    const full=signed.startsWith('http')?signed:(SUPABASE_URL+'/storage/v1'+signed);
+    const isImage=(f.type||'').startsWith('image/') || /\.(jpe?g|png|gif|webp|bmp|heic|heif)$/i.test(f.name||'');
+    const old=document.getElementById('halletDocViewer');if(old)old.remove();
+    const viewer=document.createElement('div');viewer.id='halletDocViewer';viewer.style.cssText='position:fixed;inset:0;z-index:999999;background:rgba(0,0,0,.95);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px;box-sizing:border-box';
+    const head=document.createElement('div');head.style.cssText='width:100%;max-width:1100px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;color:#fff;font:700 14px Arial,sans-serif';
+    const title=document.createElement('div');title.textContent=f.name||'Belge';title.style.cssText='min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+    const close=document.createElement('button');close.type='button';close.textContent='✕ Kapat';close.style.cssText='border:1px solid #52717a;background:#10252b;color:#fff;border-radius:10px;padding:9px 12px;font:700 13px Arial,sans-serif';
+    const remove=()=>viewer.remove();close.onclick=remove;head.append(title,close);viewer.appendChild(head);
+    const box=document.createElement('div');box.style.cssText='width:100%;max-width:1100px;height:calc(100vh - 65px);display:flex;align-items:center;justify-content:center;overflow:auto;background:#111;border-radius:12px';
+    if(isImage){const img=document.createElement('img');img.src=full;img.alt=f.name||'Belge';img.style.cssText='display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain';img.onerror=()=>{alert('Görsel yüklenemedi.');remove()};box.appendChild(img);}else{const frame=document.createElement('iframe');frame.src=full;frame.title=f.name||'Belge';frame.style.cssText='display:block;width:100%;height:100%;border:0;background:#fff';box.appendChild(frame);}
+    viewer.appendChild(box);viewer.addEventListener('click',e=>{if(e.target===viewer)remove()});document.body.appendChild(viewer);
+  }catch(e){console.error('Hallet belge görüntüleme hatası:',e);alert('Belge açılamadı.\n\n'+(e.message||'Bilinmeyen hata'));}
+}'''
+          s=s[:start]+fn+s[end:]
+          p.write_text(s,encoding='utf-8')
+          scripts=re.findall(r'<script[^>]*>(.*?)</script>',s,re.S|re.I)
+          Path('/tmp/app.js').write_text('\n'.join(scripts),encoding='utf-8')
+          print('patched openDocument')
+          PY
+          node --check /tmp/app.js
+      - name: Commit patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "fix: robust common document viewer"
+          git push
