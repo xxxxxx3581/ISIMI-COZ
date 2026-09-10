@@ -62,8 +62,6 @@ jobs:
           print('clickable rows patched:',n)
           p.write_text(s,encoding='utf-8')
 
-          # Syntax sanity check for the HTML's JavaScript is done by extracting script content.
-          from pathlib import Path
           html=p.read_text(encoding='utf-8')
           scripts=re.findall(r'<script[^>]*>(.*?)</script>',html,re.S|re.I)
           Path('/tmp/app.js').write_text('\n'.join(scripts),encoding='utf-8')
