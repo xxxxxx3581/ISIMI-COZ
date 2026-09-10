@@ -850,6 +850,45 @@ function getDocumentFiles(docKey){
  if(!v)return [];
  return Array.isArray(v)?v:[v];
 }
+/** Eski/yeni storage path varyantlarını tek object path'e indirger (veri değiştirmez). */
+function normalizeStorageObjectPath(p){
+  let s=String(p||'').trim();
+  if(!s)return '';
+  // Tam URL ise bucket sonrası object path'i çıkar
+  const markers=[
+    '/storage/v1/object/public/hallet-documents/',
+    '/storage/v1/object/sign/hallet-documents/',
+    '/storage/v1/object/authenticated/hallet-documents/',
+    '/storage/v1/object/hallet-documents/',
+    '/object/public/hallet-documents/',
+    '/object/sign/hallet-documents/',
+    '/object/authenticated/hallet-documents/',
+    '/object/hallet-documents/'
+  ];
+  for(let i=0;i<markers.length;i++){
+    const m=markers[i];
+    const idx=s.indexOf(m);
+    if(idx>=0){s=s.slice(idx+m.length);break;}
+  }
+  // query/hash temizle
+  s=s.split('?')[0].split('#')[0];
+  // bucket adı path içinde tekrarlanıyorsa düş
+  if(s.indexOf('hallet-documents/')===0)s=s.slice('hallet-documents/'.length);
+  // gereksiz baştaki slash
+  s=s.replace(/^\/+/, '');
+  // segment decode (çift encode'u düzelt)
+  s=s.split('/').filter(Boolean).map(function(seg){
+    try{return decodeURIComponent(seg);}catch(e){return seg;}
+  }).join('/');
+  return s;
+}
+function resolveDocumentStoragePath(d){
+  if(!d||typeof d!=='object')return '';
+  const meta=(d.metadata&&typeof d.metadata==='object')?d.metadata:{};
+  const raw=d.storage_path||d.path||meta.storage_path||meta.path||meta.object_path||meta.file_path||'';
+  return normalizeStorageObjectPath(raw);
+}
+
 function documentSummary(docs){
  const total=docs.length, ready=docs.filter(d=>H.documents[d.key]===true).length;
  const percent=total?Math.round((ready/total)*100):0;
@@ -1104,10 +1143,15 @@ async function openCase(id){
     try{
      const docs=await supabaseAuthRequest('GET','hallet_documents?select=id,doc_key,title,status,storage_path,mime_type,file_size_bytes,metadata,created_at&case_id=eq.'+encodeURIComponent(H.dbId)+'&order=created_at.asc&limit=200');
      (Array.isArray(docs)?docs:[]).forEach(d=>{
-       if(d.doc_key&&d.status==='uploaded'&&d.storage_path){
+       const sp=resolveDocumentStoragePath(d);
+       if(d.doc_key&&sp){
          H.documents[d.doc_key]=true;
          if(!Array.isArray(H.documentFiles[d.doc_key]))H.documentFiles[d.doc_key]=[];
-         H.documentFiles[d.doc_key].push({id:d.id,path:d.storage_path,name:d.metadata?.original_name||d.title||d.doc_key,type:d.mime_type||null,size:d.file_size_bytes||0,created_at:d.created_at||null});
+         const meta=(d.metadata&&typeof d.metadata==='object')?d.metadata:{};
+         H.documentFiles[d.doc_key].push({id:d.id,path:sp,name:meta.original_name||d.title||d.doc_key,type:d.mime_type||null,size:d.file_size_bytes||0,created_at:d.created_at||null});
+       }else if(d.doc_key&&(d.status==='uploaded'||d.status==='ready'||d.status==='checked')){
+         // Eski kayıtlarda path yoksa en azından işaret durumunu koru (görüntüleme path ister)
+         H.documents[d.doc_key]=true;
        }
      });
     }catch(docErr){console.warn('Kurum belgeleri yüklenemedi:',docErr)}
@@ -1120,10 +1164,15 @@ async function openCase(id){
     try{
      const docs=await supabaseAuthRequest('GET','hallet_documents?select=id,doc_key,title,status,storage_path,mime_type,file_size_bytes,metadata,created_at&case_id=eq.'+encodeURIComponent(H.dbId)+'&order=created_at.asc&limit=200');
      (Array.isArray(docs)?docs:[]).forEach(d=>{
-       if(d.doc_key&&d.status==='uploaded'&&d.storage_path){
+       const sp=resolveDocumentStoragePath(d);
+       if(d.doc_key&&sp){
          H.documents[d.doc_key]=true;
          if(!Array.isArray(H.documentFiles[d.doc_key]))H.documentFiles[d.doc_key]=[];
-         H.documentFiles[d.doc_key].push({id:d.id,path:d.storage_path,name:d.metadata?.original_name||d.title||d.doc_key,type:d.mime_type||null,size:d.file_size_bytes||0,created_at:d.created_at||null});
+         const meta=(d.metadata&&typeof d.metadata==='object')?d.metadata:{};
+         H.documentFiles[d.doc_key].push({id:d.id,path:sp,name:meta.original_name||d.title||d.doc_key,type:d.mime_type||null,size:d.file_size_bytes||0,created_at:d.created_at||null});
+       }else if(d.doc_key&&(d.status==='uploaded'||d.status==='ready'||d.status==='checked')){
+         // Eski kayıtlarda path yoksa en azından işaret durumunu koru (görüntüleme path ister)
+         H.documents[d.doc_key]=true;
        }
      });
     }catch(docErr){console.warn('Araç belgeleri yüklenemedi:',docErr);}
@@ -1136,10 +1185,15 @@ async function openCase(id){
     try{
      const docs=await supabaseAuthRequest('GET','hallet_documents?select=id,doc_key,title,status,storage_path,mime_type,file_size_bytes,metadata,created_at&case_id=eq.'+encodeURIComponent(H.dbId)+'&order=created_at.asc&limit=200');
      (Array.isArray(docs)?docs:[]).forEach(d=>{
-       if(d.doc_key&&d.status==='uploaded'&&d.storage_path){
+       const sp=resolveDocumentStoragePath(d);
+       if(d.doc_key&&sp){
          H.documents[d.doc_key]=true;
          if(!Array.isArray(H.documentFiles[d.doc_key]))H.documentFiles[d.doc_key]=[];
-         H.documentFiles[d.doc_key].push({id:d.id,path:d.storage_path,name:d.metadata?.original_name||d.title||d.doc_key,type:d.mime_type||null,size:d.file_size_bytes||0,created_at:d.created_at||null});
+         const meta=(d.metadata&&typeof d.metadata==='object')?d.metadata:{};
+         H.documentFiles[d.doc_key].push({id:d.id,path:sp,name:meta.original_name||d.title||d.doc_key,type:d.mime_type||null,size:d.file_size_bytes||0,created_at:d.created_at||null});
+       }else if(d.doc_key&&(d.status==='uploaded'||d.status==='ready'||d.status==='checked')){
+         // Eski kayıtlarda path yoksa en azından işaret durumunu koru (görüntüleme path ister)
+         H.documents[d.doc_key]=true;
        }
      });
     }catch(docErr){console.warn('Taşınmaz prop belgeleri yüklenemedi:',docErr);}
@@ -1151,12 +1205,17 @@ async function openCase(id){
    try{
     const docs=await supabaseAuthRequest('GET','hallet_documents?select=id,doc_key,title,status,storage_path,mime_type,file_size_bytes,metadata,created_at&case_id=eq.'+encodeURIComponent(H.dbId)+'&order=created_at.asc&limit=200');
     (Array.isArray(docs)?docs:[]).forEach(d=>{
-      if(d.doc_key&&d.status==='uploaded'&&d.storage_path){
-        H.documents[d.doc_key]=true;
-        if(!Array.isArray(H.documentFiles[d.doc_key]))H.documentFiles[d.doc_key]=[];
-        H.documentFiles[d.doc_key].push({id:d.id,path:d.storage_path,name:d.metadata?.original_name||d.title||d.doc_key,type:d.mime_type||null,size:d.file_size_bytes||0,created_at:d.created_at||null});
-      }
-    });
+       const sp=resolveDocumentStoragePath(d);
+       if(d.doc_key&&sp){
+         H.documents[d.doc_key]=true;
+         if(!Array.isArray(H.documentFiles[d.doc_key]))H.documentFiles[d.doc_key]=[];
+         const meta=(d.metadata&&typeof d.metadata==='object')?d.metadata:{};
+         H.documentFiles[d.doc_key].push({id:d.id,path:sp,name:meta.original_name||d.title||d.doc_key,type:d.mime_type||null,size:d.file_size_bytes||0,created_at:d.created_at||null});
+       }else if(d.doc_key&&(d.status==='uploaded'||d.status==='ready'||d.status==='checked')){
+         // Eski kayıtlarda path yoksa en azından işaret durumunu koru (görüntüleme path ister)
+         H.documents[d.doc_key]=true;
+       }
+     });
    }catch(docErr){console.warn('Hallet belgeleri yüklenemedi:',docErr)}
    await loadCaseSteps();
    await ensureCaseSteps();
@@ -1691,12 +1750,12 @@ async function openDocument(docKey,index=0){
     if(typeof openAuthModal==='function')openAuthModal('login');
     return;
   }
-  if(!f?.path){
-    alert('Belge bulunamadı. Dosyayı kapatıp işlem dosyasından yeniden açmayı deneyin.');
+  const normalizedPath=normalizeStorageObjectPath(f&&f.path);
+  if(!normalizedPath){
+    alert('Belge dosya yolu bulunamadı. Bu kayıtta Storage path eksik olabilir. Dosyayı yeniden yüklemeden önce işlem dosyasını kaydedip tekrar açmayı deneyin.');
     return;
   }
 
-  // Viewer'ı hemen göster (ağ beklemesinde "hiçbir şey olmuyor" hissini önle)
   document.getElementById('halletDocViewer')?.remove();
   const viewer=document.createElement('div');
   viewer.id='halletDocViewer';
@@ -1706,7 +1765,7 @@ async function openDocument(docKey,index=0){
   const head=document.createElement('div');
   head.style.cssText='width:100%;max-width:960px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;color:#fff;font:700 14px Arial,sans-serif';
   const title=document.createElement('div');
-  title.textContent=f.name||'Belge';
+  title.textContent=(f&&f.name)||'Belge';
   title.style.cssText='min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
   const close=document.createElement('button');
   close.type='button';
@@ -1727,8 +1786,7 @@ async function openDocument(docKey,index=0){
   document.body.appendChild(viewer);
 
   try{
-    const rawPath=String(f.path).split('/').filter(Boolean).map(function(p){try{return decodeURIComponent(p);}catch(e){return p;}}).join('/');
-    const objectPath=rawPath.split('/').map(encodeURIComponent).join('/');
+    const objectPath=normalizedPath.split('/').map(encodeURIComponent).join('/');
     const signEndpoint=SUPABASE_URL+'/storage/v1/object/sign/hallet-documents/'+objectPath;
     const signRes=await fetch(signEndpoint,{
       method:'POST',
@@ -1744,18 +1802,21 @@ async function openDocument(docKey,index=0){
     try{signData=signText?JSON.parse(signText):null;}catch(e){}
     if(!signRes.ok){
       const msg=signData?.message||signData?.error||signData?.msg||signText||'Belge bağlantısı oluşturulamadı.';
+      console.error('Signed URL hatası:', {status:signRes.status, msg, path:normalizedPath});
       if(/jwt|token|auth|expired|oturum/i.test(String(msg))){
         throw new Error('Oturum süresi dolmuş olabilir. Lütfen tekrar giriş yapıp belgeyi açın.');
+      }
+      if(/not found|No such|does not exist|404/i.test(String(msg))){
+        throw new Error('Dosya Storage içinde bulunamadı. Kayıt path: '+normalizedPath);
       }
       throw new Error(msg);
     }
     const signed=signData?.signedURL||signData?.signedUrl||signData?.signed_url||signData?.url;
     if(!signed)throw new Error('Belge bağlantısı oluşturulamadı.');
-    // Signed URL doğrudan kullanılır — ikinci fetch/blob YOK
     const viewUrl=signed.startsWith('http')?signed:(SUPABASE_URL+'/storage/v1'+(signed.startsWith('/')?signed:('/'+signed)));
 
-    const mime=(f.type||'').toLowerCase();
-    const name=(f.name||f.path||'').toLowerCase();
+    const mime=((f&&f.type)||'').toLowerCase();
+    const name=(((f&&f.name)||normalizedPath)||'').toLowerCase();
     const isImage=mime.startsWith('image/')||/\.(jpe?g|png|gif|webp|bmp|heic|heif)$/i.test(name);
     const isPdf=mime==='application/pdf'||mime.includes('pdf')||/\.pdf$/i.test(name);
 
@@ -1763,14 +1824,14 @@ async function openDocument(docKey,index=0){
     if(isImage){
       const img=document.createElement('img');
       img.src=viewUrl;
-      img.alt=f.name||'Belge';
+      img.alt=(f&&f.name)||'Belge';
       img.style.cssText='max-width:100%;max-height:78vh;object-fit:contain;border-radius:10px;background:#111';
       img.onerror=function(){alert('Görsel görüntülenemedi. Bağlantı geçersiz veya dosya okunamadı.');};
       body.appendChild(img);
     }else if(isPdf){
       const frame=document.createElement('iframe');
       frame.src=viewUrl;
-      frame.title=f.name||'PDF';
+      frame.title=(f&&f.name)||'PDF';
       frame.style.cssText='width:100%;height:78vh;border:0;border-radius:10px;background:#fff';
       body.appendChild(frame);
     }else{
@@ -1793,6 +1854,7 @@ async function openDocument(docKey,index=0){
     document.getElementById('halletDocViewer')?.remove();
   }
 }
+
 
 
 function result(fromSaved=false){
