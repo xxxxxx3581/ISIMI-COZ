@@ -1,0 +1,31 @@
+name: Apply common document viewer fix
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  apply-fix:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Apply viewer patch
+        run: |
+          if [ ! -f patch-document-viewer.diff ]; then
+            echo 'No pending document viewer patch.'
+            exit 0
+          fi
+          git apply --check patch-document-viewer.diff
+          git apply patch-document-viewer.diff
+          rm patch-document-viewer.diff
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git add -u patch-document-viewer.diff || true
+          git commit -m 'fix: common document viewer for all transaction flows'
+          git push
