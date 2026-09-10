@@ -25,7 +25,7 @@ jobs:
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
           start = s.index('async function openDocument')
-          end = s.index('\nasync function markCaseCompleted', start)
+          end = s.index('\nfunction result', start)
           new = r'''async function openDocument(docKey,index=0){
             const files=getDocumentFiles(docKey);
             const f=files[index];
