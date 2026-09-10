@@ -25,7 +25,7 @@ jobs:
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
           start = s.index('async function openDocument')
-          end = s.index('\nfunction markCaseCompleted', start)
+          end = s.index('\nasync function markCaseCompleted', start)
           new = r'''async function openDocument(docKey,index=0){
             const files=getDocumentFiles(docKey);
             const f=files[index];
@@ -63,7 +63,6 @@ jobs:
             }catch(e){console.error('Hallet belge görüntüleme hatası:',e);alert('Belge açılamadı.\n\n'+(e.message||'Bilinmeyen hata'));}
           }
           '''
-          # Normalize the inserted block's indentation because it lives inside a heredoc.
           new = '\n'.join(line[12:] if line.startswith('            ') else line for line in new.split('\n'))
           p.write_text(s[:start] + new + s[end:], encoding='utf-8')
           PY
