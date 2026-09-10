@@ -1718,42 +1718,6 @@ async function openDocument(docKey,index=0){
   }catch(e){console.error('Hallet belge görüntüleme hatası:',e);alert('Belge açılamadı.\n\n'+(e.message||'Bilinmeyen hata'));}
 }
 
-async function markCaseCompleted(){
- if(H.status==='completed'){showActiveResult(!!H.dbId);return;}
- const stepState=stepSummary();
- const docs=activeDocumentChecklist(H.answers||{});
- const docState=documentSummary(docs);
- if(H.module==='kurum_basvurusu'&&!kurumQuestionsAnswered()){
-  alert('Başvuru bilgileri tamamlanmadan işlem tamamlandı işaretlenemez.');
-  return;
- }
- if((stepState.done||0)<(stepState.total||5)||!docState.complete){
-  alert('Tamamlandı işaretlemek için tüm işlem adımları ve gerekli belgeler tamamlanmış olmalıdır.');
-  return;
- }
- const confirmMsg=H.module==='kurum_basvurusu'
-  ? 'Başvuruyu tamamlandı olarak işaretlemek istediğinize emin misiniz?\n\nBu, resmî kurum başvurusunun sonucu değildir; yalnızca işlem dosyanızın durumunu “Tamamlandı” yapar.'
-  : 'Satışı tamamlandı olarak işaretlemek istediğinize emin misiniz?\n\nBu işlem resmi tapu satışının gerçekleştiği anlamına gelmez; yalnızca işlem dosyanızın durumunu “Tamamlandı” yapar.';
- if(!confirm(confirmMsg))return;
- const session=getAuthSession();
- if(!session?.access_token||!session?.user?.id){openAuthModal('login');return;}
- try{
-  if(!H.dbId){
-   if(H.module==='kurum_basvurusu')await saveKurumCase();
-   else await saveCase(true);
-   if(!H.dbId)throw new Error('Dosya kaydedilemedi; tamamlanamadı.');
-  }
-  const rows=await supabaseAuthRequest('PATCH','hallet_cases?id=eq.'+encodeURIComponent(H.dbId)+'&select=id,status,updated_at',{status:'completed',updated_at:new Date().toISOString()});
-  const row=Array.isArray(rows)?rows[0]:rows;
-  H.status=(row&&row.status)||'completed';
-  alert('İşlem tamamlandı.\n\nBu işlem dosyası başarıyla tamamlandı olarak işaretlendi.');
-  showActiveResult(true);
- }catch(e){
-  console.error('Tamamlama hatası:',e);
-  alert('Tamamlanamadı.\n\n'+(e.message||'Bilinmeyen hata'));
- }
-}
-
 function result(fromSaved=false){
  const a=H.answers;
  H.caseId=H.caseId||'IH-'+new Date().toISOString().replace(/\D/g,'').slice(0,14)+'-'+Math.random().toString(36).slice(2,7).toUpperCase();
