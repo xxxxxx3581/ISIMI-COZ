@@ -1623,7 +1623,7 @@ async function storageUpload(path,file,token){
 async function saveDocumentRow(docKey,file,path){
   const session=getAuthSession();
   if(!session?.access_token||!session?.user?.id||!H.dbId)throw new Error('Belgeyi kaydetmek için önce işlem dosyasını kaydetmelisiniz.');
-  const docs=getDocumentChecklist(H.answers);
+  const docs=(H.module==='prop')?(getPropDocumentChecklist(H.answers||{})||[]):((typeof activeDocumentChecklist==='function'?activeDocumentChecklist(H.answers):getDocumentChecklist(H.answers))||[]);
   const meta=docs.find(d=>d.key===docKey);
   const body={
     case_id:H.dbId,
@@ -1645,7 +1645,10 @@ async function saveDocumentRow(docKey,file,path){
 }
 async function ensureCaseSaved(){
   if(H.dbId)return true;
-  await saveCase(true);
+  if(H.module==='prop')await savePropCase(true);
+  else if(H.module==='kurum_basvurusu')await saveKurumCase(true);
+  else if(H.module==='arac'||H.module==='arac_satisi')await saveAracCase(true);
+  else await saveCase(true);
   return !!H.dbId;
 }
 async function uploadDocument(docKey,file){
@@ -1670,7 +1673,10 @@ async function uploadDocument(docKey,file){
       kurumResult(!!H.dbId);
     }else if(H.module==='prop'){
       await savePropCase(true);
-      propResult(true);
+      propResult(!!H.dbId);
+    }else if(H.module==='arac'||H.module==='arac_satisi'){
+      await saveAracCase(true);
+      aracResult(!!H.dbId);
     }else{
       await saveCase(true);
       result(!!H.dbId);
@@ -1687,14 +1693,49 @@ async function openDocument(docKey,index=0){
   const session=getAuthSession();
   if(!f?.path||!session?.access_token){alert('Belge bağlantısı bulunamadı.');return;}
   try{
-    const url=SUPABASE_URL+'/storage/v1/object/sign/hallet-documents/'+f.path.split('/').map(encodeURIComponent).join('/');
-    const res=await fetch(url,{method:'POST',headers:{'Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({expiresIn:600})});
-    const text=await res.text();let d=null;try{d=text?JSON.parse(text):null}catch(e){}
-    if(!res.ok)throw new Error(d?.message||d?.error||text||'Belge açılamadı.');
-    const signed=d?.signedURL||d?.signedUrl||d?.signed_url;
-    if(!signed)throw new Error('Belge bağlantısı oluşturulamadı.');
-    window.open(signed.startsWith('http')?signed:SUPABASE_URL+'/storage/v1'+signed,'_blank','noopener');
-  }catch(e){console.error(e);alert('Belge açılamadı.\n\n'+(e.message||'Bilinmeyen hata'));}
+    const objectPath=f.path.split('/').map(encodeURIComponent).join('/');
+    let res=await fetch(SUPABASE_URL+'/storage/v1/object/authenticated/hallet-documents/'+objectPath,{
+      headers:{'Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_KEY}
+    });
+    if(!res.ok){
+      const signRes=await fetch(SUPABASE_URL+'/storage/v1/object/sign/hallet-documents/'+objectPath,{
+        method:'POST',
+        headers:{'Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
+        body:JSON.stringify({expiresIn:600})
+      });
+      const text=await signRes.text();
+      let d=null;try{d=text?JSON.parse(text):null;}catch(e){}
+      if(!signRes.ok)throw new Error(d?.message||d?.error||text||'Belge açılamadı.');
+      const signed=d?.signedURL||d?.signedUrl||d?.signed_url;
+      if(!signed)throw new Error('Belge bağlantısı oluşturulamadı.');
+      const full=signed.startsWith('http')?signed:(SUPABASE_URL+'/storage/v1'+signed);
+      res=await fetch(full);
+      if(!res.ok)throw new Error('Belge indirilemedi.');
+    }
+    const blob=await res.blob();
+    const objUrl=URL.createObjectURL(blob);
+    const mime=(f.type||blob.type||'').toLowerCase();
+    const name=(f.name||'').toLowerCase();
+    const isImg=mime.startsWith('image/')||/\.(png|jpe?g|gif|webp|bmp)$/.test(name);
+    const isPdf=mime==='application/pdf'||mime.includes('pdf')||/\.pdf$/.test(name);
+    document.getElementById('docViewerModal')?.remove();
+    const modal=document.createElement('div');
+    modal.id='docViewerModal';
+    modal.setAttribute('role','dialog');
+    modal.style.cssText='position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+    let content='';
+    if(isImg) content='<img src="'+objUrl+'" alt="Belge" style="max-width:100%;max-height:78vh;border-radius:10px;display:block;margin:0 auto">';
+    else if(isPdf) content='<iframe src="'+objUrl+'" title="PDF belge" style="width:min(960px,96vw);height:78vh;border:0;border-radius:10px;background:#fff"></iframe>';
+    else content='<div style="color:#fff;text-align:center;padding:20px"><p>Bu dosya türü önizlenemiyor.</p><a href="'+objUrl+'" download="'+(f.name||'belge').replace(/"/g,'')+'" style="color:#7fd4a8;font-weight:700">Dosyayı indir</a></div>';
+    modal.innerHTML='<div style="max-width:100%;text-align:center">'+content+'<div style="margin-top:12px"><button type="button" id="docViewerClose" style="padding:10px 18px;border-radius:10px;border:0;font-weight:800;cursor:pointer;background:#19c37d;color:#062">Kapat</button></div></div>';
+    document.body.appendChild(modal);
+    const close=()=>{try{URL.revokeObjectURL(objUrl);}catch(e){} modal.remove();};
+    modal.querySelector('#docViewerClose').onclick=close;
+    modal.addEventListener('click',function(ev){if(ev.target===modal)close();});
+  }catch(e){
+    console.error(e);
+    alert('Belge açılamadı.\n\n'+(e.message||'Bilinmeyen hata'));
+  }
 }
 async function markCaseCompleted(){
  if(H.status==='completed'){showActiveResult(!!H.dbId);return;}
