@@ -69,7 +69,8 @@ jobs:
           rm -f patch-document-viewer.diff
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add index.html patch-document-viewer.diff
+          git add index.html
+          git add -u -- patch-document-viewer.diff || true
           git diff --cached --quiet && echo 'No changes needed.' && exit 0
           git commit -m 'fix: common document viewer for all transaction flows'
           git push
