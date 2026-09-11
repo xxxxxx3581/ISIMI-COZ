@@ -1,19 +1,19 @@
-name: Fix document viewer interaction
+name: Finalize Hallet document viewer
 on:
-  workflow_dispatch:
   push:
     paths:
       - '.github/workflows/fix-doc-viewer.yml'
+  workflow_dispatch:
 permissions:
   contents: write
 jobs:
-  patch:
+  finalize:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Patch document viewer
+      - name: Apply final Hallet fix
         shell: bash
         run: |
           python - <<'PY'
@@ -22,48 +22,53 @@ jobs:
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
 
-          # The viewer lives inside the Hallet IIFE. Handle openDoc directly
-          # in that same scope during capture, instead of relying on inline
-          # onclick execution. This removes the last fragile link in the
-          # click chain on mobile browsers.
-          old="if(!el)return;if(el.dataset.a==='openDoc')return;e.preventDefault();e.stopPropagation();dispatch(el.dataset.a,el)"
-          new="if(!el)return;if(el.dataset.a==='openDoc'){e.preventDefault();e.stopPropagation();openDocument(el.dataset.k,Number(el.dataset.i||0));return;}e.preventDefault();e.stopPropagation();dispatch(el.dataset.a,el)"
+          # 1) The viewer must live inside the Hallet root. The root is the
+          # visible fixed layer; appending the viewer to body creates a
+          # competing stacking context and can make taps appear dead.
+          s2=s.replace("  document.body.appendChild(modal);", "  root().appendChild(modal);", 1)
+          if s2==s:
+              raise SystemExit('viewer append point not found')
+          s=s2
+
+          # Keep the viewer below the Hallet root itself but above its content.
+          s=s.replace("z-index:2147483647;background:rgba(0,0,0,.88)", "z-index:2147483646;background:rgba(0,0,0,.88)", 1)
+
+          # 2) After a document upload, do not auto-save/re-render the property
+          # case as a saved result. The user must still see DOSYAYI KAYDET and
+          # explicitly save the updated case metadata.
+          old="""    }else if(H.module==='prop'){
+      await savePropCase(true);
+      propResult(!!H.dbId);
+    }else if(H.module==='arac'||H.module==='arac_satisi'){
+      await saveAracCase(true);
+      aracResult(!!H.dbId);
+    }else{
+      await saveCase(true);
+      result(!!H.dbId);
+    }"""
+          new="""    }else if(H.module==='prop'){
+      propResult(false);
+    }else if(H.module==='arac'||H.module==='arac_satisi'){
+      aracResult(false);
+    }else{
+      result(false);
+    }"""
           if old not in s:
-              raise SystemExit('expected Hallet capture handler not found')
+              raise SystemExit('upload post-save block not found')
           s=s.replace(old,new,1)
 
-          # Keep a visible UI fallback even if auth state is unexpectedly
-          # absent, so a tap can never appear to do absolutely nothing.
-          needle="async function openDocument(docKey,index=0){\n  const files=getDocumentFiles(docKey); const f=files[index]; const session=getAuthSession();\n  if(!f?.path||!session?.access_token){alert('Belge bağlantısı bulunamadı.');return;}"
-          replacement="async function openDocument(docKey,index=0){\n  const files=getDocumentFiles(docKey); const f=files[index]; const session=getAuthSession();\n  if(!f?.path){alert('Belge bağlantısı bulunamadı.');return;}\n  if(!session?.access_token){alert('Belgeyi görüntülemek için giriş yapmanız gerekiyor.');return;}"
-          if needle not in s:
-              raise SystemExit('openDocument start not found')
-          s=s.replace(needle,replacement,1)
-
-          # Keep exactly one inline bridge on every Görüntüle button. It is
-          # harmless now, but also preserves compatibility with older paths.
-          pattern=r' onclick="window\.__halletOpenDocument\(this\.dataset\.k,Number\(this\.dataset\.i\|\|0\)\);return false;"'
-          s=re.sub(pattern,'',s)
-          s=s.replace('>Görüntüle</button>', ' onclick="window.__halletOpenDocument(this.dataset.k,Number(this.dataset.i||0));return false;">Görüntüle</button>')
-
-          bridge='window.__halletOpenDocument=openDocument;\n'
-          start=s.find('async function openDocument(docKey,index=0){')
-          end=s.find('async function markCaseCompleted()', start)
-          if start < 0 or end < 0:
-              raise SystemExit('openDocument boundaries not found')
-          if bridge not in s[start:end]:
-              s=s[:end]+bridge+s[end:]
-
+          # 3) The direct openDoc capture handler remains the single click path.
+          # Do not add another automated patch layer here.
+          print('viewer-inside-root:', 'root().appendChild(modal);' in s)
+          print('prop-upload-keeps-save:', "propResult(false);" in s)
           p.write_text(s,encoding='utf-8')
-          print('DIRECT OPEN HANDLER:', new in s)
-          print('VIEWER BRIDGES:', s.count('window.__halletOpenDocument(this.dataset.k'))
           PY
-      - name: Commit patch
+      - name: Remove automatic patch workflows
         shell: bash
         run: |
+          git rm -f .github/workflows/fix-doc-viewer.yml
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
-          git diff --cached --quiet && exit 0
-          git commit -m 'Make document preview click handling direct'
+          git commit -m 'Fix Hallet viewer layering and preserve save action'
           git push
