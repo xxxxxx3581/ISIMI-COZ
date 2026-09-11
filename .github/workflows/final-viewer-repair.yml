@@ -1,67 +1,56 @@
 name: Final document viewer repair
 
 on:
-  workflow_dispatch:
   push:
-    paths:
-      - '.github/workflows/final-viewer-repair.yml'
+    branches: [main]
 
 permissions:
   contents: write
 
 jobs:
   repair:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Apply robust viewer repair
+      - name: Patch viewer
         shell: python
         run: |
           from pathlib import Path
-          import re
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
 
-          p = Path('index.html')
-          s = p.read_text(encoding='utf-8')
-
-          # 1) Prevent the underlying app/root from receiving any pointer input
-          # while the full-screen viewer is open. Restore it on close.
-          old = """  const viewer=document.createElement('div');
+          old="""  const viewer=document.createElement('div');
   viewer.id='halletDocViewer';"""
-          new = """  const viewer=document.createElement('div');
+          new="""  const viewer=document.createElement('div');
   const halletRoot=document.getElementById('hallet-root');
   const previousRootPointerEvents=halletRoot?halletRoot.style.pointerEvents:'';
   const previousBodyOverflow=document.body.style.overflow;
   if(halletRoot)halletRoot.style.pointerEvents='none';
   document.body.style.overflow='hidden';
   viewer.id='halletDocViewer';"""
-          if old not in s:
-              raise SystemExit('viewer creation anchor not found')
-          s = s.replace(old, new, 1)
+          if old not in s: raise SystemExit('viewer creation anchor not found')
+          s=s.replace(old,new,1)
 
-          old = """  const closeFn=function(){
+          old="""  const closeFn=function(){
     try{if(objectUrl)URL.revokeObjectURL(objectUrl);}catch(e){}
     viewer.remove();
   };"""
-          new = """  const closeFn=function(){
+          new="""  const closeFn=function(){
     try{if(objectUrl)URL.revokeObjectURL(objectUrl);}catch(e){}
     viewer.remove();
     if(halletRoot)halletRoot.style.pointerEvents=previousRootPointerEvents;
     document.body.style.overflow=previousBodyOverflow;
   };"""
-          if old not in s:
-              raise SystemExit('close function anchor not found')
-          s = s.replace(old, new, 1)
+          if old not in s: raise SystemExit('close function anchor not found')
+          s=s.replace(old,new,1)
 
-          # 2) Keep the viewer isolated from all document/root touch/click handlers.
-          old = """  // AYNI DOKUNUŞ/TIKLAMA viewer'ı hemen kapatmasın (mobilde flash→geri dönme kök nedeni)
-  viewer.addEventListener('pointerdown',function(ev){ev.stopPropagation();},true);
+          old="""  viewer.addEventListener('pointerdown',function(ev){ev.stopPropagation();},true);
   viewer.addEventListener('pointerup',function(ev){ev.stopPropagation();},true);
   viewer.addEventListener('touchstart',function(ev){ev.stopPropagation();},true);
   viewer.addEventListener('touchend',function(ev){ev.stopPropagation();},true);
   viewer.addEventListener('click',function(ev){ev.stopPropagation();},true);"""
-          new = """  // Viewer tamamen modal: alttaki uygulama hiçbir dokunuşu alamaz.
-  viewer.style.touchAction='none';
+          new="""  viewer.style.touchAction='none';
   viewer.addEventListener('pointerdown',function(ev){ev.stopPropagation();},true);
   viewer.addEventListener('pointerup',function(ev){ev.stopPropagation();},true);
   viewer.addEventListener('pointercancel',function(ev){ev.stopPropagation();},true);
@@ -69,31 +58,25 @@ jobs:
   viewer.addEventListener('touchmove',function(ev){ev.stopPropagation();},true);
   viewer.addEventListener('touchend',function(ev){ev.stopPropagation();},true);
   viewer.addEventListener('click',function(ev){ev.stopPropagation();},true);"""
-          if old not in s:
-              raise SystemExit('viewer event block not found')
-          s = s.replace(old, new, 1)
+          if old not in s: raise SystemExit('viewer event block not found')
+          s=s.replace(old,new,1)
 
-          # 3) Do not create the modal inside the opener's active click event.
-          # This eliminates mobile synthetic-click/touch timing races.
-          old = """    openDocument(openBtn.getAttribute('data-k')||'',Number(openBtn.getAttribute('data-i')||0)||0);
+          old="""    openDocument(openBtn.getAttribute('data-k')||'',Number(openBtn.getAttribute('data-i')||0)||0);
     return;"""
-          new = """    const k=openBtn.getAttribute('data-k')||'';
+          new="""    const k=openBtn.getAttribute('data-k')||'';
     const i=Number(openBtn.getAttribute('data-i')||0)||0;
     setTimeout(function(){openDocument(k,i);},0);
     return;"""
-          if old not in s:
-              raise SystemExit('openDoc dispatcher anchor not found')
-          s = s.replace(old, new, 1)
+          if old not in s: raise SystemExit('openDoc dispatcher anchor not found')
+          s=s.replace(old,new,1)
 
-          p.write_text(s, encoding='utf-8')
-          print('viewer repair applied')
-
-      - name: Commit repair and remove temporary workflow
-        shell: bash
+          p.write_text(s,encoding='utf-8')
+          print('PATCH_OK')
+      - name: Commit repair and remove workflow
         run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
           git rm .github/workflows/final-viewer-repair.yml
-          git commit -m 'Harden document viewer against mobile close race'
+          git commit -m "Harden document viewer against mobile close race"
           git push
