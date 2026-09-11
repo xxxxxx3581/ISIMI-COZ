@@ -25,34 +25,32 @@ jobs:
           if start < 0 or end < 0:
               raise SystemExit('openDocument boundaries not found')
 
+          # Expose the LOCAL openDocument function on window. The inline
+          # button handler cannot see functions declared inside the app IIFE.
           bridge='window.__halletOpenDocument=openDocument;\n'
-          if 'window.__halletOpenDocument=openDocument;' not in s:
+          if bridge not in s[start:end]:
               s=s[:end]+bridge+s[end:]
 
-          # The document button is handled directly by the global bridge.
-          old='>Görüntüle</button>'
-          new=' onclick="window.__halletOpenDocument(this.dataset.k,Number(this.dataset.i||0));return false;">Görüntüle</button>'
-          count=s.count(old)
-          if count:
-              s=s.replace(old,new)
-          print('preview buttons patched:',count)
+          # Replace any previous duplicate viewer handlers with exactly one.
+          import re
+          pattern=r' onclick="window\.__halletOpenDocument\(this\.dataset\.k,Number\(this\.dataset\.i\|\|0\)\);return false;"'
+          s=re.sub(pattern,'',s)
+          s=s.replace('>Görüntüle</button>', ' onclick="window.__halletOpenDocument(this.dataset.k,Number(this.dataset.i||0));return false;">Görüntüle</button>')
 
-          # IMPORTANT: the app has a document-level CAPTURE click handler.
-          # It was stopping the event before the button's inline onclick could run.
+          # Do not let the capture handler swallow document clicks.
           capture_old="if(!el)return;e.preventDefault();e.stopPropagation();dispatch(el.dataset.a,el)"
           capture_new="if(!el)return;if(el.dataset.a==='openDoc')return;e.preventDefault();e.stopPropagation();dispatch(el.dataset.a,el)"
           if capture_old in s:
               s=s.replace(capture_old,capture_new,1)
-              print('capture handler patched: yes')
-          else:
-              print('capture handler patched: pattern not found')
 
-          # Remove any obsolete fallback appended after </html>.
+          # Remove obsolete post-HTML fallback code if present.
           marker='\n/* Hard fallback for document preview buttons. */'
           if marker in s:
               s=s.split(marker,1)[0].rstrip()+"\n"
 
           p.write_text(s,encoding='utf-8')
+          print('GLOBAL BRIDGE:', bridge in s[start:end])
+          print('VIEWER BUTTONS:', s.count('window.__halletOpenDocument(this.dataset.k'))
           PY
       - name: Commit patch
         shell: bash
@@ -61,5 +59,5 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
           git diff --cached --quiet && exit 0
-          git commit -m 'Fix document viewer capture handler'
+          git commit -m 'Fix document viewer global bridge'
           git push
