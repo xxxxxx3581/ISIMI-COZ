@@ -1,0 +1,52 @@
+name: Final document viewer repair
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Disable viewer backdrop close and isolate events
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          old="""  viewer.addEventListener('click',function(ev){
+              if(!allowBackdropClose)return;
+              if(ev.target===viewer)closeFn();
+            });"""
+          new="""  viewer.addEventListener('pointerdown',function(ev){ev.stopPropagation();},true);
+            viewer.addEventListener('pointerup',function(ev){ev.stopPropagation();},true);
+            viewer.addEventListener('touchstart',function(ev){ev.stopPropagation();},true);
+            viewer.addEventListener('touchend',function(ev){ev.stopPropagation();},true);
+            viewer.addEventListener('click',function(ev){ev.stopPropagation();},true);"""
+          if old not in s:
+              raise SystemExit('Expected viewer click handler not found')
+          s=s.replace(old,new,1)
+          s=s.replace("  let allowBackdropClose=false;\n  setTimeout(function(){allowBackdropClose=true;},450);\n", "", 1)
+          p.write_text(s,encoding='utf-8')
+          PY
+          node --check <(python3 - <<'PY2'
+          from pathlib import Path
+          import re
+          s=Path('index.html').read_text(encoding='utf-8')
+          for m in re.finditer(r'<script(?:[^>]*)>(.*?)</script>',s,re.S|re.I):
+              print(m.group(1))
+          PY2
+          )
+      - name: Commit final repair
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Isolate document viewer from mobile event propagation" || exit 0
+          git push
