@@ -1608,7 +1608,7 @@ function question(){const q=QUESTIONS[H.step];if(!q)return result();let html='<d
 async function storageUpload(path,file,token){
   if(!token)throw new Error('Belge yüklemek için giriş yapmalısınız.');
   const safePath=path.split('/').map(encodeURIComponent).join('/');
-  const url=SUPABASE_URL+'/storage/v1/object/hallet-documents/'+safePath;
+  const url=SUPABASE_URL+'/storage/v1/object/authenticated/hallet-documents/'+safePath;
   const headers={
     'Authorization':'Bearer '+token,
     'apikey':SUPABASE_KEY,
