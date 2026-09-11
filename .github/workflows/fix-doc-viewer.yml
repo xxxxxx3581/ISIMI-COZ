@@ -18,39 +18,45 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
+          import re
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-          start=s.find('async function openDocument(docKey,index=0){')
-          end=s.find('async function markCaseCompleted()', start)
-          if start < 0 or end < 0:
-              raise SystemExit('openDocument boundaries not found')
 
-          # Expose the LOCAL openDocument function on window. The inline
-          # button handler cannot see functions declared inside the app IIFE.
-          bridge='window.__halletOpenDocument=openDocument;\n'
-          if bridge not in s[start:end]:
-              s=s[:end]+bridge+s[end:]
+          # The viewer lives inside the Hallet IIFE. Handle openDoc directly
+          # in that same scope during capture, instead of relying on inline
+          # onclick execution. This removes the last fragile link in the
+          # click chain on mobile browsers.
+          old="if(!el)return;if(el.dataset.a==='openDoc')return;e.preventDefault();e.stopPropagation();dispatch(el.dataset.a,el)"
+          new="if(!el)return;if(el.dataset.a==='openDoc'){e.preventDefault();e.stopPropagation();openDocument(el.dataset.k,Number(el.dataset.i||0));return;}e.preventDefault();e.stopPropagation();dispatch(el.dataset.a,el)"
+          if old not in s:
+              raise SystemExit('expected Hallet capture handler not found')
+          s=s.replace(old,new,1)
 
-          # Replace any previous duplicate viewer handlers with exactly one.
-          import re
+          # Keep a visible UI fallback even if auth state is unexpectedly
+          # absent, so a tap can never appear to do absolutely nothing.
+          needle="async function openDocument(docKey,index=0){\n  const files=getDocumentFiles(docKey); const f=files[index]; const session=getAuthSession();\n  if(!f?.path||!session?.access_token){alert('Belge bağlantısı bulunamadı.');return;}"
+          replacement="async function openDocument(docKey,index=0){\n  const files=getDocumentFiles(docKey); const f=files[index]; const session=getAuthSession();\n  if(!f?.path){alert('Belge bağlantısı bulunamadı.');return;}\n  if(!session?.access_token){alert('Belgeyi görüntülemek için giriş yapmanız gerekiyor.');return;}"
+          if needle not in s:
+              raise SystemExit('openDocument start not found')
+          s=s.replace(needle,replacement,1)
+
+          # Keep exactly one inline bridge on every Görüntüle button. It is
+          # harmless now, but also preserves compatibility with older paths.
           pattern=r' onclick="window\.__halletOpenDocument\(this\.dataset\.k,Number\(this\.dataset\.i\|\|0\)\);return false;"'
           s=re.sub(pattern,'',s)
           s=s.replace('>Görüntüle</button>', ' onclick="window.__halletOpenDocument(this.dataset.k,Number(this.dataset.i||0));return false;">Görüntüle</button>')
 
-          # Do not let the capture handler swallow document clicks.
-          capture_old="if(!el)return;e.preventDefault();e.stopPropagation();dispatch(el.dataset.a,el)"
-          capture_new="if(!el)return;if(el.dataset.a==='openDoc')return;e.preventDefault();e.stopPropagation();dispatch(el.dataset.a,el)"
-          if capture_old in s:
-              s=s.replace(capture_old,capture_new,1)
-
-          # Remove obsolete post-HTML fallback code if present.
-          marker='\n/* Hard fallback for document preview buttons. */'
-          if marker in s:
-              s=s.split(marker,1)[0].rstrip()+"\n"
+          bridge='window.__halletOpenDocument=openDocument;\n'
+          start=s.find('async function openDocument(docKey,index=0){')
+          end=s.find('async function markCaseCompleted()', start)
+          if start < 0 or end < 0:
+              raise SystemExit('openDocument boundaries not found')
+          if bridge not in s[start:end]:
+              s=s[:end]+bridge+s[end:]
 
           p.write_text(s,encoding='utf-8')
-          print('GLOBAL BRIDGE:', bridge in s[start:end])
-          print('VIEWER BUTTONS:', s.count('window.__halletOpenDocument(this.dataset.k'))
+          print('DIRECT OPEN HANDLER:', new in s)
+          print('VIEWER BRIDGES:', s.count('window.__halletOpenDocument(this.dataset.k'))
           PY
       - name: Commit patch
         shell: bash
@@ -59,5 +65,5 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
           git diff --cached --quiet && exit 0
-          git commit -m 'Fix document viewer global bridge'
+          git commit -m 'Make document preview click handling direct'
           git push
