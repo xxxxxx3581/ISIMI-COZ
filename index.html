@@ -1686,105 +1686,136 @@ async function openDocument(docKey,index=0){
   const files=getDocumentFiles(docKey);
   const f=files[Number(index)||0];
   const session=getAuthSession();
-  if(!session?.access_token){
+  if(!session||!session.access_token){
     alert('Oturum süresi dolmuş olabilir. Lütfen tekrar giriş yap.');
     if(typeof openAuthModal==='function')openAuthModal('login');
     return;
   }
-  if(!f?.path){
+  if(!f||!f.path){
     alert('Belge bulunamadı. Dosyayı kapatıp işlem dosyasından yeniden açmayı deneyin.');
     return;
   }
 
-  // Viewer'ı hemen göster (ağ beklemesinde "hiçbir şey olmuyor" hissini önle)
   document.getElementById('halletDocViewer')?.remove();
+
   const viewer=document.createElement('div');
   viewer.id='halletDocViewer';
   viewer.setAttribute('role','dialog');
   viewer.setAttribute('aria-modal','true');
-  viewer.style.cssText='position:fixed;inset:0;z-index:2147483646;background:rgba(0,0,0,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;box-sizing:border-box';
+  // body'ye ekle + root ile aynı max z-index (son eklenen üstte çizilir)
+  viewer.style.cssText='position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;pointer-events:auto;';
+
   const head=document.createElement('div');
-  head.style.cssText='width:100%;max-width:960px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;color:#fff;font:700 14px Arial,sans-serif';
+  head.style.cssText='width:100%;max-width:960px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;color:#fff;font:700 14px Arial,sans-serif;';
   const title=document.createElement('div');
   title.textContent=f.name||'Belge';
   title.style.cssText='min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
   const close=document.createElement('button');
   close.type='button';
-  close.textContent='✕ Kapat';
-  close.style.cssText='border:1px solid #52717a;background:#10252b;color:#fff;border-radius:10px;padding:9px 12px;font:700 13px Arial,sans-serif;cursor:pointer';
-  const closeFn=function(){viewer.remove();if(viewer.dataset.objectUrl)URL.revokeObjectURL(viewer.dataset.objectUrl);};
-  close.onclick=closeFn;
-  head.append(title,close);
+  close.textContent='Kapat';
+  close.style.cssText='border:1px solid #52717a;background:#10252b;color:#fff;border-radius:10px;padding:10px 14px;font:700 13px Arial,sans-serif;cursor:pointer;';
+
+  let objectUrl=null;
+  const closeFn=function(){
+    try{if(objectUrl)URL.revokeObjectURL(objectUrl);}catch(e){}
+    viewer.remove();
+  };
+  close.onclick=function(ev){ev.preventDefault();ev.stopPropagation();closeFn();};
+
+  head.appendChild(title);
+  head.appendChild(close);
+
   const body=document.createElement('div');
-  body.style.cssText='width:100%;max-width:960px;flex:1;display:flex;align-items:center;justify-content:center;min-height:0';
+  body.style.cssText='width:100%;max-width:960px;flex:1;display:flex;align-items:center;justify-content:center;min-height:0;';
   const loading=document.createElement('div');
   loading.textContent='Belge yükleniyor…';
-  loading.style.cssText='color:#fff;font:700 14px Arial,sans-serif;padding:20px';
+  loading.style.cssText='color:#fff;font:700 15px Arial,sans-serif;padding:20px;';
   body.appendChild(loading);
   viewer.appendChild(head);
   viewer.appendChild(body);
-  viewer.addEventListener('click',function(ev){if(ev.target===viewer)closeFn();});
-  root().appendChild(viewer);
+
+  // AYNI DOKUNUŞ/TIKLAMA viewer'ı hemen kapatmasın (mobilde flash→geri dönme kök nedeni)
+  let allowBackdropClose=false;
+  setTimeout(function(){allowBackdropClose=true;},450);
+  viewer.addEventListener('click',function(ev){
+    if(!allowBackdropClose)return;
+    if(ev.target===viewer)closeFn();
+  });
+
+  document.body.appendChild(viewer);
 
   try{
-    const rawPath=String(f.path).split('/').filter(Boolean).map(function(p){try{return decodeURIComponent(p);}catch(e){return p;}}).join('/');
-    const objectPath=rawPath.split('/').map(encodeURIComponent).join('/');
-    // Mobil tarayıcıda signed URL yerine authenticated object GET + blob kullan.
+    const rawPath=String(f.path).split('/').filter(Boolean).map(function(p){
+      try{return decodeURIComponent(p);}catch(e){return p;}
+    }).join('/');
+    const objectPath=rawPath.split('/').filter(Boolean).map(encodeURIComponent).join('/');
     const objectEndpoint=SUPABASE_URL+'/storage/v1/object/authenticated/hallet-documents/'+objectPath;
     const fileRes=await fetch(objectEndpoint,{
       method:'GET',
-      headers:{'Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_KEY}
+      headers:{
+        'Authorization':'Bearer '+session.access_token,
+        'apikey':SUPABASE_KEY
+      }
     });
     if(!fileRes.ok){
-      const errText=await fileRes.text().catch(()=> '');
-      let errData=null; try{errData=errText?JSON.parse(errText):null;}catch(e){}
-      const msg=errData?.message||errData?.error||errText||('Dosya okunamadı (HTTP '+fileRes.status+').');
-      if(fileRes.status===401||fileRes.status===403||/jwt|token|auth|expired|oturum/i.test(String(msg))) throw new Error('Oturum süresi dolmuş olabilir. Lütfen tekrar giriş yapıp belgeyi açın.');
+      const errText=await fileRes.text().catch(function(){return '';});
+      let errData=null;
+      try{errData=errText?JSON.parse(errText):null;}catch(e){}
+      const msg=(errData&&(errData.message||errData.error))||errText||('Dosya okunamadı (HTTP '+fileRes.status+').');
+      if(fileRes.status===401||fileRes.status===403||/jwt|token|auth|expired|oturum/i.test(String(msg))){
+        throw new Error('Oturum süresi dolmuş olabilir. Lütfen tekrar giriş yapıp belgeyi açın.');
+      }
       throw new Error(msg);
     }
     const blob=await fileRes.blob();
     if(!blob||!blob.size)throw new Error('Dosya boş geldi veya okunamadı.');
-    const viewUrl=URL.createObjectURL(blob);
-    viewer.dataset.objectUrl=viewUrl;
-    const mime=(f.type||blob.type||'').toLowerCase();
-    const name=(f.name||f.path||'').toLowerCase();
-    const isImage=mime.startsWith('image/')||/\.(jpe?g|png|gif|webp|bmp|heic|heif)$/i.test(name);
-    const isPdf=mime==='application/pdf'||mime.includes('pdf')||/\.pdf$/i.test(name);
+    objectUrl=URL.createObjectURL(blob);
+
+    const mime=String(f.type||blob.type||'').toLowerCase();
+    const name=String(f.name||f.path||'').toLowerCase();
+    const isImage=mime.indexOf('image/')===0||/\.(jpe?g|png|gif|webp|bmp|heic|heif)$/i.test(name);
+    const isPdf=mime==='application/pdf'||mime.indexOf('pdf')>=0||/\.pdf$/i.test(name);
 
     loading.remove();
     if(isImage){
       const img=document.createElement('img');
-      img.src=viewUrl;
+      img.src=objectUrl;
       img.alt=f.name||'Belge';
-      img.style.cssText='max-width:100%;max-height:78vh;object-fit:contain;border-radius:10px;background:#111';
-      img.onerror=function(){URL.revokeObjectURL(viewUrl);alert('Görsel görüntülenemedi. Dosya okunamadı.');};
+      img.style.cssText='max-width:100%;max-height:78vh;object-fit:contain;border-radius:10px;background:#111;';
+      img.onerror=function(){alert('Görsel görüntülenemedi. Dosya okunamadı.');};
       body.appendChild(img);
     }else if(isPdf){
       const frame=document.createElement('iframe');
-      frame.src=viewUrl;
+      frame.src=objectUrl;
       frame.title=f.name||'PDF';
-      frame.style.cssText='width:100%;height:78vh;border:0;border-radius:10px;background:#fff';
+      frame.style.cssText='width:100%;height:78vh;border:0;border-radius:10px;background:#fff;';
       body.appendChild(frame);
     }else{
       const box=document.createElement('div');
-      box.style.cssText='color:#fff;text-align:center;padding:20px';
+      box.style.cssText='color:#fff;text-align:center;padding:20px;';
       const p=document.createElement('p');
       p.textContent='Bu dosya türü önizlenemiyor.';
       const a=document.createElement('a');
-      a.href=viewUrl;
+      a.href=objectUrl;
       a.target='_blank';
       a.rel='noopener noreferrer';
       a.textContent='Dosyayı aç / indir';
-      a.style.cssText='color:#7fd4a8;font-weight:800';
-      box.append(p,a);
+      a.style.cssText='color:#7fd4a8;font-weight:800;';
+      box.appendChild(p);
+      box.appendChild(a);
       body.appendChild(box);
     }
   }catch(e){
     console.error('Hallet belge görüntüleme hatası:',e);
-    alert('Belge açılamadı.\n\n'+(e.message||'Bilinmeyen hata'));
-    document.getElementById('halletDocViewer')?.remove();
+    // Viewer'ı anında silme: hata mesajını modal içinde göster (flash→geri dönme olmasın)
+    body.innerHTML='';
+    const errBox=document.createElement('div');
+    errBox.style.cssText='color:#fff;text-align:center;padding:20px;max-width:520px;';
+    errBox.innerHTML='<p style="font:700 16px Arial,sans-serif;margin:0 0 10px">Belge açılamadı</p><p style="white-space:pre-wrap;line-height:1.45;opacity:.9">'+(e&&e.message?String(e.message):'Bilinmeyen hata')+'</p>';
+    body.appendChild(errBox);
   }
 }
+
 
 
 function result(fromSaved=false){
@@ -1968,7 +1999,24 @@ function kurumResult(fromSaved){
 }
 
 function dispatch(a,e){if(a==='close')return close();if(a==='gate')return gate();if(a==='cases')return cases();if(a==='caseopen')return openCase(e.dataset.id);if(a==='openDoc')return openDocument(e.dataset.k,Number(e.dataset.i||0));if(a==='stepToggle')return updateCaseStep(e.dataset.k);if(a==='islem')return islem();if(a==='tasinmaz')return tasinmaz();if(a==='tapu_rehber')return tapuRehber();if(a==='prop_start')return propStart(e.dataset.id);if(a==='prop_qback'){H.step=Math.max(0,H.step-1);return propQuestion();}if(a==='prop_answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return propQuestion();}if(a==='prop_answer_input'){const i=document.getElementById('qinput');const f=getPropFlow(H.propFlowId);const q=f&&f.questions[H.step];if(q)H.answers[q.key]=i?i.value:'';H.step++;return propQuestion();}if(a==='prop_doc'){H.documents[e.dataset.k]=!!e.checked;if(H.dbId)return savePropCase(true);return propResult(!!H.dbId);}if(a==='prop_save')return savePropCase();if(a==='prop_print')return propPrint();if(a==='prop_whatsapp')return propShareWhatsApp();if(a==='arac')return arac();if(a==='arac_satis')return aracSatisStart();if(a==='arac_qback'){H.step=Math.max(0,H.step-1);return aracQuestion();}if(a==='arac_answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return aracQuestion();}if(a==='arac_answer_input'){const i=document.getElementById('qinput');const q=ARAC_QUESTIONS[H.step];if(q)H.answers[q.key]=i?i.value:'';H.step++;return aracQuestion();}if(a==='arac_doc'){H.documents[e.dataset.k]=!!e.checked;return aracResult(!!H.dbId);}if(a==='arac_save')return saveAracCase();if(a==='evrak_type'){if(e&&e.dataset&&e.dataset.fresh==='1'){H.dbId=null;H.evrakDraft=null;}return evrakTypeForm(e.dataset.t,H.evrakDraft);}if(a==='evrak_type_preview')return evrakTypePreview(e.dataset.t);if(a==='evrak_type_save')return evrakTypeSave(e.dataset.t);if(a==='evrak_mark_done')return evrakMarkDone();if(a==='evrak_print')return evrakPrint();if(a==='evrak_whatsapp')return evrakShareWhatsApp();if(a==='evrak_konut_edit'){const d=H.evrakDraft||{};return evrakSatisBilgiSaved({id:H.dbId,status:H.status||'draft',title:'Konut satış bilgi formu'},{document_type:'konut_satis_bilgi_formu',draft:d,case_no:H.caseId});}if(a==='yakinda')return msg((e&&e.dataset&&e.dataset.t)||'Yakında','Bu kategori menüde yer alıyor; tam akış henüz açılmadı. Uydurma hukuki süreç eklenmez. Şimdilik Konut satışı, Evrak (konut form) ve Kurum pilotlarını kullan.');if(a==='konut')return konut();if(a==='start'){H.step=0;return question()}if(a==='qback'){H.step=Math.max(0,H.step-1);return question()}if(a==='answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return question()}if(a==='docReady')return;if(a==='docToggle'){H.documents[e.dataset.k]=!!e.checked;if(H.module==='kurum_basvurusu'){kurumResult(false);if(H.dbId)return saveKurumCase();return;}result(false);if(H.dbId)return saveCase(true);return;}if(a==='savecase')return saveCase();if(a==='save'){const i=document.getElementById('qinput');if(!i||!String(i.value).trim()){const c=document.querySelector('#hallet-root .hc');if(c&&!c.querySelector('.err'))c.insertAdjacentHTML('beforeend','<div class="err">Lütfen bir değer girerek devam et.</div>');return}H.answers[e.dataset.k]=i.value.trim();H.step++;return question()}if(a==='new'){H.step=0;H.answers={};H.documents={};H.documentStatuses={};H.documentFiles={};H.caseId=null;H.dbId=null;H.status=null;H.module=null;H.kurumFlowId=null;H.caseSteps=[];return gate()}if(a==='isimi')return goIsimi();if(a==='evrak')return evrak();if(a==='evrak_satis_bilgi')return evrakSatisBilgi();if(a==='evrak_preview')return evrakPreview();if(a==='evrak_print')return evrakPrint();if(a==='evrak_savecase')return evrakSaveCase();if(a==='evrak_back')return islem();if(a==='completecase')return markCaseCompleted();if(a==='kurum')return kurumHome();if(a==='kurum_flow')return kurumStartFlow(e.dataset.id);if(a==='kurum_q')return kurumAnswer(e.dataset.k,e.dataset.v);if(a==='kurum_save')return saveKurumCase();if(a==='kurum_result')return kurumResult(false);if(a==='kurum_edit_info'){H.step=0;return kurumQuestion();}if(a==='kurum_save_notes'){const t=document.getElementById('kurumNotes');if(t)H.answers.notes=t.value||'';return saveKurumCase();}}
-document.addEventListener('click',function(e){const el=e.target.closest&&e.target.closest('#hallet-root [data-a]');if(!el)return;e.preventDefault();e.stopPropagation();dispatch(el.dataset.a,el)},true);
+document.addEventListener('click',function(e){
+  var node=e.target;
+  if(node&&node.nodeType===3)node=node.parentElement;
+  if(!node||!node.closest)return;
+  var openBtn=node.closest('#hallet-root [data-a="openDoc"]');
+  if(openBtn){
+    e.preventDefault();
+    e.stopPropagation();
+    if(e.stopImmediatePropagation)e.stopImmediatePropagation();
+    openDocument(openBtn.getAttribute('data-k')||'',Number(openBtn.getAttribute('data-i')||0)||0);
+    return;
+  }
+  var el=node.closest('#hallet-root [data-a]');
+  if(!el)return;
+  e.preventDefault();
+  e.stopPropagation();
+  dispatch(el.getAttribute('data-a')||el.dataset.a,el);
+},true);
 document.addEventListener('change',function(e){
   const box=e.target.closest&&e.target.closest('#hallet-root input[data-kurum-doc]');
   if(!box)return;
