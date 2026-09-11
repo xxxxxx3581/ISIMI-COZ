@@ -29,7 +29,7 @@ jobs:
           if 'window.__halletOpenDocument=openDocument;' not in s:
               s=s[:end]+bridge+s[end:]
 
-          # Directly bind the preview action in the generated button HTML.
+          # The document button is handled directly by the global bridge.
           old='>Görüntüle</button>'
           new=' onclick="window.__halletOpenDocument(this.dataset.k,Number(this.dataset.i||0));return false;">Görüntüle</button>'
           count=s.count(old)
@@ -37,7 +37,17 @@ jobs:
               s=s.replace(old,new)
           print('preview buttons patched:',count)
 
-          # Remove the old fallback that was appended after </html> and therefore was not executable.
+          # IMPORTANT: the app has a document-level CAPTURE click handler.
+          # It was stopping the event before the button's inline onclick could run.
+          capture_old="if(!el)return;e.preventDefault();e.stopPropagation();dispatch(el.dataset.a,el)"
+          capture_new="if(!el)return;if(el.dataset.a==='openDoc')return;e.preventDefault();e.stopPropagation();dispatch(el.dataset.a,el)"
+          if capture_old in s:
+              s=s.replace(capture_old,capture_new,1)
+              print('capture handler patched: yes')
+          else:
+              print('capture handler patched: pattern not found')
+
+          # Remove any obsolete fallback appended after </html>.
           marker='\n/* Hard fallback for document preview buttons. */'
           if marker in s:
               s=s.split(marker,1)[0].rstrip()+"\n"
@@ -51,5 +61,5 @@ jobs:
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add index.html
           git diff --cached --quiet && exit 0
-          git commit -m 'Fix document preview direct click bridge'
+          git commit -m 'Fix document viewer capture handler'
           git push
