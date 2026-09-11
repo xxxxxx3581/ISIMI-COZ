@@ -1735,12 +1735,11 @@ async function openDocument(docKey,index=0){
   viewer.appendChild(body);
 
   // AYNI DOKUNUŞ/TIKLAMA viewer'ı hemen kapatmasın (mobilde flash→geri dönme kök nedeni)
-  let allowBackdropClose=false;
-  setTimeout(function(){allowBackdropClose=true;},450);
-  viewer.addEventListener('click',function(ev){
-    if(!allowBackdropClose)return;
-    if(ev.target===viewer)closeFn();
-  });
+  viewer.addEventListener('pointerdown',function(ev){ev.stopPropagation();},true);
+  viewer.addEventListener('pointerup',function(ev){ev.stopPropagation();},true);
+  viewer.addEventListener('touchstart',function(ev){ev.stopPropagation();},true);
+  viewer.addEventListener('touchend',function(ev){ev.stopPropagation();},true);
+  viewer.addEventListener('click',function(ev){ev.stopPropagation();},true);
 
   document.body.appendChild(viewer);
 
