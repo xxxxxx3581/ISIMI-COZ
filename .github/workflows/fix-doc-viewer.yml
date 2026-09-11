@@ -18,83 +18,50 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          import re
-
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-
           start=s.find('async function openDocument(docKey,index=0){')
           end=s.find('async function markCaseCompleted()', start)
           if start < 0 or end < 0:
               raise SystemExit('openDocument boundaries not found')
-
           new_func=r'''async function openDocument(docKey,index=0){
-            const files=getDocumentFiles(docKey);
-            const f=files[index];
-            const session=getAuthSession();
+            const files=getDocumentFiles(docKey); const f=files[index]; const session=getAuthSession();
             if(!f?.path||!session?.access_token){alert('Belge bağlantısı bulunamadı.');return;}
-            const old=document.getElementById('docViewerModal');
-            if(old)old.remove();
-            const modal=document.createElement('div');
-            modal.id='docViewerModal';
-            modal.setAttribute('role','dialog');
+            document.getElementById('docViewerModal')?.remove();
+            const modal=document.createElement('div'); modal.id='docViewerModal'; modal.setAttribute('role','dialog');
             modal.style.cssText='position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
             modal.innerHTML='<div style="width:min(960px,96vw);max-height:92vh;overflow:auto;background:#10252b;color:#fff;border-radius:14px;padding:18px;box-sizing:border-box;text-align:center"><div style="font:700 16px Arial,sans-serif">Belge yükleniyor…</div><div style="margin-top:8px;opacity:.75;font:13px Arial,sans-serif">Lütfen bekleyin.</div></div>';
             document.body.appendChild(modal);
             const closeModal=()=>{try{if(modal._objectUrl)URL.revokeObjectURL(modal._objectUrl);}catch(e){}modal.remove();};
-            const fail=(msg)=>{console.error('Belge görüntüleme:',msg);modal.innerHTML='<div style="width:min(700px,94vw);background:#10252b;color:#fff;border-radius:14px;padding:20px;box-sizing:border-box;text-align:center"><h3 style="margin:0 0 10px">Belge açılamadı</h3><p style="white-space:pre-wrap;line-height:1.5;margin:0 0 16px">'+String(msg||'Bilinmeyen hata').replace(/[&<>"']/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]})+'</p><button type="button" id="docViewerClose" style="padding:10px 18px;border:0;border-radius:10px;font-weight:800;cursor:pointer">Kapat</button></div>';modal.querySelector('#docViewerClose').onclick=closeModal;};
+            const fail=(msg)=>{console.error('Belge görüntüleme:',msg);modal.innerHTML='<div style="width:min(700px,94vw);background:#10252b;color:#fff;border-radius:14px;padding:20px;box-sizing:border-box;text-align:center"><h3>Belge açılamadı</h3><p style="white-space:pre-wrap;line-height:1.5">'+String(msg||'Bilinmeyen hata').replace(/[&<>"']/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]})+'</p><button type="button" id="docViewerClose">Kapat</button></div>'; modal.querySelector('#docViewerClose').onclick=closeModal;};
             const fetchWithTimeout=async(url,opts,ms)=>{const c=new AbortController();const t=setTimeout(()=>c.abort(),ms);try{return await fetch(url,{...opts,signal:c.signal});}finally{clearTimeout(t);}};
             try{
               const objectPath=f.path.split('/').map(encodeURIComponent).join('/');
               let res=await fetchWithTimeout(SUPABASE_URL+'/storage/v1/object/authenticated/hallet-documents/'+objectPath,{headers:{'Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_KEY}},15000);
               if(!res.ok){
                 const signRes=await fetchWithTimeout(SUPABASE_URL+'/storage/v1/object/sign/hallet-documents/'+objectPath,{method:'POST',headers:{'Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({expiresIn:600})},15000);
-                const text=await signRes.text();
-                let d=null;try{d=text?JSON.parse(text):null;}catch(e){}
+                const text=await signRes.text(); let d=null; try{d=text?JSON.parse(text):null;}catch(e){}
                 if(!signRes.ok)throw new Error(d?.message||d?.error||text||('Belge bağlantısı oluşturulamadı ('+signRes.status+').'));
-                const signed=d?.signedURL||d?.signedUrl||d?.signed_url;
-                if(!signed)throw new Error('Belge bağlantısı oluşturulamadı.');
-                const full=signed.startsWith('http')?signed:(SUPABASE_URL+'/storage/v1'+signed);
-                res=await fetchWithTimeout(full,{},15000);
+                const signed=d?.signedURL||d?.signedUrl||d?.signed_url; if(!signed)throw new Error('Belge bağlantısı oluşturulamadı.');
+                const full=signed.startsWith('http')?signed:(SUPABASE_URL+'/storage/v1'+signed); res=await fetchWithTimeout(full,{},15000);
                 if(!res.ok)throw new Error('Belge indirilemedi ('+res.status+').');
               }
-              const blob=await res.blob();
-              const objUrl=URL.createObjectURL(blob);
-              modal._objectUrl=objUrl;
-              const mime=(f.type||blob.type||'').toLowerCase();
-              const name=(f.name||'').toLowerCase();
-              const isImg=mime.startsWith('image/')||/\.(png|jpe?g|gif|webp|bmp)$/.test(name);
-              const isPdf=mime==='application/pdf'||mime.includes('pdf')||/\.pdf$/.test(name);
+              const blob=await res.blob(); const objUrl=URL.createObjectURL(blob); modal._objectUrl=objUrl;
+              const mime=(f.type||blob.type||'').toLowerCase(), name=(f.name||'').toLowerCase();
+              const isImg=mime.startsWith('image/')||/\.(png|jpe?g|gif|webp|bmp)$/.test(name); const isPdf=mime==='application/pdf'||mime.includes('pdf')||/\.pdf$/.test(name);
               let content='';
               if(isImg)content='<img src="'+objUrl+'" alt="Belge" style="max-width:100%;max-height:78vh;border-radius:10px;display:block;margin:0 auto">';
               else if(isPdf)content='<iframe src="'+objUrl+'" title="PDF belge" style="width:min(920px,92vw);height:78vh;border:0;border-radius:10px;background:#fff"></iframe>';
               else content='<div style="color:#fff;text-align:center;padding:20px"><p>Bu dosya türü önizlenemiyor.</p><a href="'+objUrl+'" download="'+(f.name||'belge').replace(/"/g,'')+'" style="color:#7fd4a8;font-weight:700">Dosyayı indir</a></div>';
               modal.innerHTML='<div style="max-width:100%;max-height:92vh;overflow:auto;text-align:center">'+content+'<div style="margin-top:12px"><button type="button" id="docViewerClose" style="padding:10px 18px;border-radius:10px;border:0;font-weight:800;cursor:pointer">Kapat</button></div></div>';
-              modal.querySelector('#docViewerClose').onclick=closeModal;
-              modal.addEventListener('click',function(ev){if(ev.target===modal)closeModal();});
-            }catch(e){
-              const msg=e?.name==='AbortError'?'Belge sunucusundan yanıt alınamadı (15 saniye zaman aşımı).':(e?.message||'Bilinmeyen hata');
-              fail(msg);
-            }
+              modal.querySelector('#docViewerClose').onclick=closeModal; modal.addEventListener('click',ev=>{if(ev.target===modal)closeModal();});
+            }catch(e){fail(e?.name==='AbortError'?'Belge sunucusundan yanıt alınamadı (15 saniye zaman aşımı).':(e?.message||'Bilinmeyen hata'));}
           }
-
           '''
           s=s[:start]+new_func+s[end:]
-
-          marker="document.addEventListener('click',function(e){"
-          pos=s.find(marker)
-          if pos<0:
-              raise SystemExit('main click listener not found')
-          direct="""\n\n/* Hard fallback for document preview buttons: do not depend on the generic dispatcher. */\ndocument.addEventListener('click',function(e){\n  var el=e.target&&e.target.closest?e.target.closest('#hallet-root [data-a=\"openDoc\"]'):null;\n  if(!el||e.defaultPrevented)return;\n  e.preventDefault();\n  e.stopPropagation();\n  try{openDocument(el.getAttribute('data-k')||'',Number(el.getAttribute('data-i')||0)||0);}catch(err){console.error(err);alert('Belge: '+(err&&err.message?err.message:err));}\n},true);\n"""
-          # Insert after the existing generic listener block, immediately before the next obvious function declaration.
-          after=s.find('\nfunction ',pos+len(marker))
-          if after<0:
-              after=s.find('\nasync function ',pos+len(marker))
-          if after<0:
-              raise SystemExit('click listener insertion point not found')
-          if 'Hard fallback for document preview buttons' not in s:
-              s=s[:after]+direct+s[after:]
-
+          direct='''\n/* Hard fallback for document preview buttons. */\ndocument.addEventListener('click',function(e){\n  var el=e.target&&e.target.closest?e.target.closest('#hallet-root [data-a="openDoc"]'):null;\n  if(!el||e.defaultPrevented)return;\n  e.preventDefault(); e.stopPropagation();\n  try{openDocument(el.getAttribute('data-k')||'',Number(el.getAttribute('data-i')||0)||0);}catch(err){console.error(err);alert('Belge: '+(err&&err.message?err.message:err));}\n},true);\n'''
+          if 'Hard fallback for document preview buttons.' not in s:
+              s += direct
           p.write_text(s,encoding='utf-8')
           print('document viewer patched')
           PY
