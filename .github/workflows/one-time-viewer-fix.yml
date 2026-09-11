@@ -10,7 +10,6 @@ permissions:
 
 jobs:
   repair:
-    if: ${{ !contains(github.event.head_commit.message, 'Remove one-time viewer repair') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,54 +22,28 @@ jobs:
           start=s.index('async function openDocument(docKey,index=0){')
           end=s.index('\nfunction result(fromSaved=false){', start)
           new=r'''async function openDocument(docKey,index=0){
-  const files=getDocumentFiles(docKey);
-  const f=files[Number(index)||0];
-  const session=getAuthSession();
+  const files=getDocumentFiles(docKey);const f=files[Number(index)||0];const session=getAuthSession();
   if(!session?.access_token){alert('Oturum süresi dolmuş olabilir. Lütfen tekrar giriş yap.');if(typeof openAuthModal==='function')openAuthModal('login');return;}
   if(!f?.path){alert('Belge bulunamadı.');return;}
   document.getElementById('halletDocViewer')?.remove();
-  const rootEl=document.getElementById('hallet-root');
-  const oldPointer=rootEl?.style.pointerEvents||'';
-  const oldOverflow=document.body.style.overflow||'';
-  if(rootEl)rootEl.style.pointerEvents='none';
-  document.body.style.overflow='hidden';
-  const viewer=document.createElement('div');
-  viewer.id='halletDocViewer';
-  viewer.setAttribute('role','dialog');
-  viewer.setAttribute('aria-modal','true');
-  viewer.style.cssText='position:fixed;inset:0;width:100vw;height:100vh;z-index:2147483647;background:rgba(0,0,0,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;pointer-events:auto;touch-action:none;';
-  const head=document.createElement('div');
-  head.style.cssText='width:100%;max-width:960px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;color:#fff;font:700 14px Arial,sans-serif;';
+  const rootEl=document.getElementById('hallet-root');const oldPointer=rootEl?.style.pointerEvents||'';const oldOverflow=document.body.style.overflow||'';
+  if(rootEl)rootEl.style.pointerEvents='none';document.body.style.overflow='hidden';
+  const viewer=document.createElement('div');viewer.id='halletDocViewer';viewer.setAttribute('role','dialog');viewer.setAttribute('aria-modal','true');viewer.style.cssText='position:fixed;inset:0;width:100vw;height:100vh;z-index:2147483647;background:rgba(0,0,0,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;pointer-events:auto;touch-action:none;';
+  const head=document.createElement('div');head.style.cssText='width:100%;max-width:960px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;color:#fff;font:700 14px Arial,sans-serif;';
   const title=document.createElement('div');title.textContent=f.name||'Belge';title.style.cssText='min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
-  const close=document.createElement('button');close.type='button';close.textContent='Kapat';close.style.cssText='border:1px solid #52717a;background:#10252b;color:#fff;border-radius:10px;padding:10px 14px;font:700 13px Arial,sans-serif;';
-  head.append(title,close);
-  const body=document.createElement('div');body.style.cssText='width:100%;max-width:960px;flex:1;display:flex;align-items:center;justify-content:center;min-height:0;overflow:auto;';body.innerHTML='<div style="color:#fff;font:700 15px Arial,sans-serif;padding:20px">Belge yükleniyor…</div>';
-  viewer.append(head,body);document.body.appendChild(viewer);
-  let objectUrl=null;
-  const cleanup=()=>{try{if(objectUrl)URL.revokeObjectURL(objectUrl);}catch(e){}viewer.remove();if(rootEl)rootEl.style.pointerEvents=oldPointer;document.body.style.overflow=oldOverflow;};
-  close.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();cleanup();},true);
-  ['pointerdown','pointerup','pointercancel','touchstart','touchmove','touchend','click'].forEach(t=>viewer.addEventListener(t,e=>e.stopPropagation(),true));
+  const close=document.createElement('button');close.type='button';close.textContent='Kapat';close.style.cssText='border:1px solid #52717a;background:#10252b;color:#fff;border-radius:10px;padding:10px 14px;font:700 13px Arial,sans-serif;';head.append(title,close);
+  const body=document.createElement('div');body.style.cssText='width:100%;max-width:960px;flex:1;display:flex;align-items:center;justify-content:center;min-height:0;overflow:auto;';body.innerHTML='<div style="color:#fff;font:700 15px Arial,sans-serif;padding:20px">Belge yükleniyor…</div>';viewer.append(head,body);document.body.appendChild(viewer);
+  let objectUrl=null;const cleanup=()=>{try{if(objectUrl)URL.revokeObjectURL(objectUrl);}catch(e){}viewer.remove();if(rootEl)rootEl.style.pointerEvents=oldPointer;document.body.style.overflow=oldOverflow;};
+  close.addEventListener('click',e=>{e.preventDefault();e.stopPropagation();cleanup();},true);['pointerdown','pointerup','pointercancel','touchstart','touchmove','touchend','click'].forEach(t=>viewer.addEventListener(t,e=>e.stopPropagation(),true));
   try{
-    const rawPath=String(f.path).split('/').filter(Boolean).map(p=>{try{return decodeURIComponent(p)}catch(e){return p}}).join('/');
-    const objectPath=rawPath.split('/').filter(Boolean).map(encodeURIComponent).join('/');
-    const endpoint=SUPABASE_URL+'/storage/v1/object/authenticated/hallet-documents/'+objectPath;
-    const res=await fetch(endpoint,{method:'GET',headers:{'Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_KEY}});
-    if(!res.ok)throw new Error('Dosya okunamadı (HTTP '+res.status+').');
-    const blob=await res.blob();if(!blob.size)throw new Error('Dosya boş geldi.');
-    objectUrl=URL.createObjectURL(blob);body.innerHTML='';
+    const rawPath=String(f.path).split('/').filter(Boolean).map(p=>{try{return decodeURIComponent(p)}catch(e){return p}}).join('/');const objectPath=rawPath.split('/').filter(Boolean).map(encodeURIComponent).join('/');
+    const endpoint=SUPABASE_URL+'/storage/v1/object/authenticated/hallet-documents/'+objectPath;const res=await fetch(endpoint,{method:'GET',headers:{'Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_KEY}});
+    if(!res.ok)throw new Error('Dosya okunamadı (HTTP '+res.status+').');const blob=await res.blob();if(!blob.size)throw new Error('Dosya boş geldi.');objectUrl=URL.createObjectURL(blob);body.innerHTML='';
     const mime=String(f.type||blob.type||'').toLowerCase();const name=String(f.name||f.path||'').toLowerCase();
-    if(mime.indexOf('image/')===0||/\.(jpe?g|png|gif|webp|bmp|heic|heif)$/i.test(name)){
-      const img=document.createElement('img');img.src=objectUrl;img.alt=f.name||'Belge';img.style.cssText='display:block;max-width:100%;max-height:88vh;width:auto;height:auto;object-fit:contain;border-radius:10px;background:#111;';body.appendChild(img);
-      const open=document.createElement('a');open.href=objectUrl;open.target='_blank';open.rel='noopener noreferrer';open.textContent='Yeni sekmede aç';open.style.cssText='position:fixed;bottom:18px;left:18px;color:#fff;background:#10252b;border:1px solid #52717a;border-radius:10px;padding:9px 12px;font:700 12px Arial,sans-serif;text-decoration:none;';viewer.appendChild(open);
-    }else if(mime==='application/pdf'||mime.indexOf('pdf')>=0||/\.pdf$/i.test(name)){
-      const frame=document.createElement('iframe');frame.src=objectUrl;frame.title=f.name||'PDF';frame.style.cssText='width:100%;height:88vh;border:0;border-radius:10px;background:#fff;';body.appendChild(frame);
-    }else{
-      const a=document.createElement('a');a.href=objectUrl;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Dosyayı aç / indir';a.style.cssText='color:#fff;background:#10252b;border:1px solid #52717a;border-radius:10px;padding:14px;font:700 14px Arial,sans-serif;text-decoration:none;';body.appendChild(a);
-    }
-  }catch(e){
-    console.error('Hallet belge görüntüleme hatası:',e);
-    body.innerHTML='<div style="color:#fff;text-align:center;padding:24px;max-width:520px"><div style="font:700 17px Arial,sans-serif;margin-bottom:10px">Belge açılamadı</div><div style="line-height:1.5;white-space:pre-wrap">'+String(e?.message||e)+'</div></div>';
-  }
+    if(mime.indexOf('image/')===0||/\.(jpe?g|png|gif|webp|bmp|heic|heif)$/i.test(name)){const img=document.createElement('img');img.src=objectUrl;img.alt=f.name||'Belge';img.style.cssText='display:block;max-width:100%;max-height:88vh;width:auto;height:auto;object-fit:contain;border-radius:10px;background:#111;';body.appendChild(img);const open=document.createElement('a');open.href=objectUrl;open.target='_blank';open.rel='noopener noreferrer';open.textContent='Yeni sekmede aç';open.style.cssText='position:fixed;bottom:18px;left:18px;color:#fff;background:#10252b;border:1px solid #52717a;border-radius:10px;padding:9px 12px;font:700 12px Arial,sans-serif;text-decoration:none;';viewer.appendChild(open);}
+    else if(mime==='application/pdf'||mime.indexOf('pdf')>=0||/\.pdf$/i.test(name)){const frame=document.createElement('iframe');frame.src=objectUrl;frame.title=f.name||'PDF';frame.style.cssText='width:100%;height:88vh;border:0;border-radius:10px;background:#fff;';body.appendChild(frame);}
+    else{const a=document.createElement('a');a.href=objectUrl;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Dosyayı aç / indir';a.style.cssText='color:#fff;background:#10252b;border:1px solid #52717a;border-radius:10px;padding:14px;font:700 14px Arial,sans-serif;text-decoration:none;';body.appendChild(a);}
+  }catch(e){console.error('Hallet belge görüntüleme hatası:',e);body.innerHTML='<div style="color:#fff;text-align:center;padding:24px;max-width:520px"><div style="font:700 17px Arial,sans-serif;margin-bottom:10px">Belge açılamadı</div><div style="line-height:1.5;white-space:pre-wrap">'+String(e?.message||e)+'</div></div>';}
 }
 '''
           p.write_text(s[:start]+new+s[end:],encoding='utf-8')
