@@ -1529,7 +1529,7 @@ function propResult(fromSaved){
  const docHtml=docs.map(d=>{
    const files=getDocumentFiles(d.key), uploaded=files.length>0, checked=!!H.documents[d.key];
    const statusLabel=uploaded?'✓ Yüklendi':(checked?'✓ Hazır olarak işaretlendi':'○ Eksik / bekleniyor');
-   return '<div class="docItem"><input type="checkbox" data-a="prop_doc" data-k="'+esc(d.key)+'" '+(checked?'checked':'')+'><span style="flex:1"><strong>'+esc(d.title)+'</strong>'+(d.required?' · gerekli':' · opsiyonel')+'<br><span class="hm">'+esc(d.reason||'')+'</span><br><span class="docStatus"><span class="'+(uploaded||checked?'ok':'warn')+'">'+statusLabel+'</span></span>'+(files.length?'<div style="margin-top:9px;display:grid;gap:7px">'+files.map((file,i)=>'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border:1px solid #29464d;border-radius:10px;background:#0e2025"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📄 '+esc(file.name||('Belge '+(i+1)))+'</span><button type="button" class="topb" data-a="openDoc" data-k="'+esc(d.key)+'" data-i="'+i+'" onclick="window.openHalletDocument&&window.openHalletDocument(this.dataset.k,Number(this.dataset.i||0));return false;">Görüntüle</button></div>').join('')+'</div>':'')+'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:9px"><label style="display:inline-flex;align-items:center;gap:7px;margin:0;padding:8px 10px;border:1px solid #35535a;border-radius:10px;background:#10252b;color:#fff;font:700 12px Arial,sans-serif;cursor:pointer">📎 Belge ekle<input type="file" data-upload-doc="'+esc(d.key)+'" accept="application/pdf,image/*" style="display:none"></label></div></span></div>';
+   return '<div class="docItem"><input type="checkbox" data-a="prop_doc" data-k="'+esc(d.key)+'" '+(checked?'checked':'')+'><span style="flex:1"><strong>'+esc(d.title)+'</strong>'+(d.required?' · gerekli':' · opsiyonel')+'<br><span class="hm">'+esc(d.reason||'')+'</span><br><span class="docStatus"><span class="'+(uploaded||checked?'ok':'warn')+'">'+statusLabel+'</span></span>'+(files.length?'<div style="margin-top:9px;display:grid;gap:7px">'+files.map((file,i)=>'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border:1px solid #29464d;border-radius:10px;background:#0e2025"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📄 '+esc(file.name||('Belge '+(i+1)))+'</span><button type="button" class="topb" data-a="openDoc" data-k="'+esc(d.key)+'" data-i="'+i+'" onclick="try{window.openHalletDocument(this.dataset.k,Number(this.dataset.i||0))}catch(e){alert(e.message||e)}return false;">Görüntüle</button></div>').join('')+'</div>':'')+'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:9px"><label style="display:inline-flex;align-items:center;gap:7px;margin:0;padding:8px 10px;border:1px solid #35535a;border-radius:10px;background:#10252b;color:#fff;font:700 12px Arial,sans-serif;cursor:pointer">📎 Belge ekle<input type="file" data-upload-doc="'+esc(d.key)+'" accept="application/pdf,image/*" style="display:none"></label></div></span></div>';
  }).join('');
  const stepHtml=steps.map((st,i)=>'<div class="li" style="display:flex;gap:10px;align-items:flex-start"><span>'+(st.status==='completed'?'✅':(i+1)+'.')+'</span><span style="flex:1"><strong>'+esc(st.title)+'</strong><br><span class="hm">'+esc(st.description||'')+'</span></span><button type="button" class="topb" data-a="stepToggle" data-k="'+esc(st.step_key||st.key)+'">'+(st.status==='completed'?'Geri al':'Tamamla')+'</button></div>').join('');
  const off=(f.official||[]).map(o=>'<a class="hb" href="'+esc(o.url)+'" target="_blank" rel="noopener noreferrer">'+esc(o.label)+' →</a>').join('');
@@ -1772,124 +1772,154 @@ async function uploadDocument(docKey,file){
   }
 }
 async function openDocument(docKey,index=0){
-  try{console.log('[Hallet] openDocument',docKey,index);}catch(e){}
-  var flash=document.getElementById('halletOpenFlash');
-  if(flash)flash.remove();
-  flash=document.createElement('div');
-  flash.id='halletOpenFlash';
-  flash.textContent='Belge aciliyor...';
-  flash.style.cssText='position:fixed;left:50%;top:18px;transform:translateX(-50%);z-index:2147483647;background:#0e5c53;color:#fff;padding:12px 18px;border-radius:12px;font:700 14px Arial,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.45);';
-  document.body.appendChild(flash);
+  // 1) Aninda gorunur tepki - tiklama calisti mi netlesin
+  try{
+    var fl0=document.getElementById('halletOpenFlash');
+    if(fl0)fl0.remove();
+    fl0=document.createElement('div');
+    fl0.id='halletOpenFlash';
+    fl0.textContent='Belge aciliyor...';
+    fl0.style.cssText='position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:2147483647;background:#0e5c53;color:#fff;padding:14px 20px;border-radius:12px;font:700 15px Arial,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.5);';
+    document.body.appendChild(fl0);
+  }catch(e){}
+
   try{
     var session=getAuthSession();
     if(!session||!session.access_token){
-      flash.remove();
-      alert('Oturum suresi dolmus olabilir. Lutfen tekrar giris yapin.');
+      var x=document.getElementById('halletOpenFlash'); if(x)x.remove();
+      alert('Oturum yok. Lutfen giris yapin.');
       if(typeof openAuthModal==='function')openAuthModal('login');
       return;
     }
+
     var files=getDocumentFiles(docKey);
     var f=files[Number(index)||0];
+
+    // Path yoksa DB'den cek
     if((!f||!f.path)&&H.dbId&&docKey){
       try{
-        var q='hallet_documents?select=id,doc_key,title,status,storage_path,mime_type,file_size_bytes,metadata,created_at&case_id=eq.'+encodeURIComponent(H.dbId)+'&doc_key=eq.'+encodeURIComponent(docKey)+'&order=created_at.asc&limit=20';
+        var q='hallet_documents?select=id,doc_key,title,status,storage_path,mime_type,file_size_bytes,metadata,created_at&case_id=eq.'+encodeURIComponent(H.dbId)+'&doc_key=eq.'+encodeURIComponent(String(docKey))+'&order=created_at.asc&limit=20';
         var rows=await supabaseAuthRequest('GET',q);
         var list=Array.isArray(rows)?rows:[];
         if(!Array.isArray(H.documentFiles[docKey]))H.documentFiles[docKey]=[];
         list.forEach(function(d){
-          var sp=typeof resolveDocumentStoragePath==='function'?resolveDocumentStoragePath(d):(d.storage_path||'');
+          var sp=(typeof resolveDocumentStoragePath==='function')?resolveDocumentStoragePath(d):(d.storage_path||'');
           if(!sp)return;
-          H.documents[d.doc_key]=true;
+          H.documents[d.doc_key||docKey]=true;
           H.documentFiles[docKey].push({id:d.id,path:sp,name:(d.metadata&&d.metadata.original_name)||d.title||d.doc_key,type:d.mime_type||null,size:d.file_size_bytes||0});
         });
         files=getDocumentFiles(docKey);
         f=files[Number(index)||0];
-      }catch(loadErr){console.warn('Belge DB yenileme',loadErr);}
+      }catch(e){console.warn(e);}
     }
-    var normalizedPath=typeof normalizeStorageObjectPath==='function'?normalizeStorageObjectPath(f&&f.path):(f&&f.path?String(f.path):'');
+
+    var rawPath=f&&f.path?String(f.path):'';
+    var normalizedPath=(typeof normalizeStorageObjectPath==='function')?normalizeStorageObjectPath(rawPath):rawPath.replace(/^\/+/,'').replace(/^hallet-documents\//,'');
     if(!normalizedPath){
-      flash.remove();
-      alert('Belge dosya yolu bulunamadi. Doc: '+String(docKey||'-')+' / adet: '+String((files&&files.length)||0));
+      var x2=document.getElementById('halletOpenFlash'); if(x2)x2.remove();
+      alert('Belge yolu yok. DocKey='+String(docKey)+' dosyaAdet='+String((files&&files.length)||0));
       return;
     }
-    var prev=document.getElementById('halletDocViewer');
-    if(prev)prev.remove();
+
+    var objectPath=normalizedPath.split('/').filter(Boolean).map(encodeURIComponent).join('/');
+    var authUrl=SUPABASE_URL+'/storage/v1/object/authenticated/hallet-documents/'+objectPath;
+    var plainUrl=SUPABASE_URL+'/storage/v1/object/hallet-documents/'+objectPath;
+
+    // 2) Modal hemen
+    var prev=document.getElementById('halletDocViewer'); if(prev)prev.remove();
     var viewer=document.createElement('div');
     viewer.id='halletDocViewer';
-    viewer.setAttribute('role','dialog');
-    viewer.style.cssText='position:fixed;left:0;top:0;right:0;bottom:0;width:100vw;height:100vh;z-index:2147483647;background:rgba(0,0,0,0.96);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;';
+    viewer.style.cssText='position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;';
     var head=document.createElement('div');
-    head.style.cssText='width:100%;max-width:960px;display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;color:#fff;font:700 14px Arial,sans-serif;';
-    var title=document.createElement('div');
-    title.textContent=(f&&f.name)||'Belge';
-    title.style.cssText='overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
-    var close=document.createElement('button');
-    close.type='button';
-    close.textContent='Kapat';
+    head.style.cssText='width:100%;max-width:960px;display:flex;justify-content:space-between;align-items:center;color:#fff;font:700 14px Arial,sans-serif;margin-bottom:10px;';
+    var title=document.createElement('div'); title.textContent=(f&&f.name)||'Belge';
+    var close=document.createElement('button'); close.type='button'; close.textContent='Kapat';
     close.style.cssText='border:1px solid #52717a;background:#10252b;color:#fff;border-radius:10px;padding:10px 14px;font:700 14px Arial,sans-serif;cursor:pointer;';
-    var closeFn=function(){viewer.remove();var fl=document.getElementById('halletOpenFlash');if(fl)fl.remove();};
+    var objectUrl=null;
+    var closeFn=function(){
+      if(objectUrl){try{URL.revokeObjectURL(objectUrl);}catch(e){}}
+      viewer.remove();
+      var fl=document.getElementById('halletOpenFlash'); if(fl)fl.remove();
+    };
     close.onclick=closeFn;
-    head.appendChild(title);head.appendChild(close);
+    head.appendChild(title); head.appendChild(close);
     var body=document.createElement('div');
     body.style.cssText='width:100%;max-width:960px;flex:1;display:flex;align-items:center;justify-content:center;';
-    var loading=document.createElement('div');
-    loading.textContent='Belge yukleniyor...';
+    var loading=document.createElement('div'); loading.textContent='Belge yukleniyor...';
     loading.style.cssText='color:#fff;font:700 16px Arial,sans-serif;';
     body.appendChild(loading);
-    viewer.appendChild(head);viewer.appendChild(body);
-    viewer.addEventListener('click',function(ev){if(ev.target===viewer)closeFn();});
+    viewer.appendChild(head); viewer.appendChild(body);
     document.body.appendChild(viewer);
     viewer.style.setProperty('z-index','2147483647','important');
-    flash.remove();
-    var objectPath=normalizedPath.split('/').filter(Boolean).map(encodeURIComponent).join('/');
-    var signRes=await fetch(SUPABASE_URL+'/storage/v1/object/sign/hallet-documents/'+objectPath,{
-      method:'POST',
-      headers:{'Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({expiresIn:600})
-    });
-    var signText=await signRes.text();
-    var signData=null;
-    try{signData=signText?JSON.parse(signText):null;}catch(e){}
-    if(!signRes.ok){
-      var msg=(signData&&(signData.message||signData.error||signData.msg))||signText||'Belge baglantisi olusturulamadi.';
-      throw new Error(msg);
+    var fl3=document.getElementById('halletOpenFlash'); if(fl3)fl3.remove();
+
+    var headers={'Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_KEY};
+    var fileRes=await fetch(authUrl,{method:'GET',headers:headers});
+    if(!fileRes.ok){
+      fileRes=await fetch(plainUrl,{method:'GET',headers:headers});
     }
-    var signed=(signData&&(signData.signedURL||signData.signedUrl||signData.signed_url||signData.url))||null;
-    if(!signed)throw new Error('Belge baglantisi olusturulamadi.');
-    var viewUrl=signed.indexOf('http')===0?signed:(SUPABASE_URL+'/storage/v1'+(signed.charAt(0)==='/'?signed:('/'+signed)));
-    var mime=String((f&&f.type)||'').toLowerCase();
+    // signed URL yedek
+    if(!fileRes.ok){
+      var signRes=await fetch(SUPABASE_URL+'/storage/v1/object/sign/hallet-documents/'+objectPath,{
+        method:'POST',
+        headers:{'Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
+        body:JSON.stringify({expiresIn:600})
+      });
+      var signText=await signRes.text();
+      var signData=null; try{signData=signText?JSON.parse(signText):null;}catch(e){}
+      if(signRes.ok){
+        var signed=(signData&&(signData.signedURL||signData.signedUrl||signData.signed_url||signData.url))||null;
+        if(signed){
+          var viewUrl=signed.indexOf('http')===0?signed:(SUPABASE_URL+'/storage/v1'+(signed.charAt(0)==='/'?signed:('/'+signed)));
+          fileRes=await fetch(viewUrl);
+        }
+      }
+    }
+    if(!fileRes.ok){
+      var errTxt=''; try{errTxt=await fileRes.text();}catch(e){}
+      throw new Error('Dosya okunamadi ('+fileRes.status+'). '+(errTxt||'').slice(0,180));
+    }
+
+    var blob=await fileRes.blob();
+    objectUrl=URL.createObjectURL(blob);
+    var mime=String((f&&f.type)||blob.type||'').toLowerCase();
     var name=String((f&&f.name)||normalizedPath||'').toLowerCase();
     var isImage=mime.indexOf('image/')===0||/\.(jpe?g|png|gif|webp|bmp|heic|heif)$/i.test(name);
-    var isPdf=mime==='application/pdf'||mime.indexOf('pdf')>=0||/\.pdf$/i.test(name);
+    var isPdf=mime.indexOf('pdf')>=0||/\.pdf$/i.test(name);
     loading.remove();
+
     if(isImage){
       var img=document.createElement('img');
-      img.src=viewUrl; img.alt=(f&&f.name)||'Belge';
-      img.style.cssText='max-width:100%;max-height:78vh;object-fit:contain;border-radius:10px;';
-      img.onerror=function(){alert('Gorsel goruntulenemedi.');};
+      img.src=objectUrl;
+      img.alt=(f&&f.name)||'Belge';
+      img.style.cssText='max-width:100%;max-height:78vh;object-fit:contain;border-radius:10px;background:#111;';
+      img.onerror=function(){alert('Gorsel acilamadi.');};
       body.appendChild(img);
     }else if(isPdf){
       var frame=document.createElement('iframe');
-      frame.src=viewUrl; frame.title='PDF';
+      frame.src=objectUrl;
+      frame.title='PDF';
       frame.style.cssText='width:100%;height:78vh;border:0;border-radius:10px;background:#fff;';
       body.appendChild(frame);
     }else{
       var a=document.createElement('a');
-      a.href=viewUrl; a.target='_blank'; a.rel='noopener noreferrer';
-      a.textContent='Dosyayi ac / indir';
+      a.href=objectUrl; a.download=(f&&f.name)||'belge'; a.target='_blank';
+      a.textContent='Dosyayi indir / ac';
       a.style.cssText='color:#7fd4a8;font-weight:800;font-size:16px;';
       body.appendChild(a);
     }
   }catch(e){
-    console.error('Hallet belge goruntuleme hatasi:',e);
+    console.error('openDocument error',e);
     var fl=document.getElementById('halletOpenFlash'); if(fl)fl.remove();
     var v=document.getElementById('halletDocViewer'); if(v)v.remove();
-    alert('Belge acilamadi.\n\n'+(e.message||'Bilinmeyen hata'));
+    alert('Belge acilamadi.\n\n'+(e&&e.message?e.message:e));
   }
 }
-
-
 window.openHalletDocument=openDocument;
+
+
+
+
 
 
 
@@ -1929,7 +1959,7 @@ function result(fromSaved=false){
  render(top('close')+'<div class="hc"><div class="hk">İşlem dosyası</div><h1>Satış dosyan hazır.</h1><p class="hm">Ön kontrol tamamlandı. Aşağıdaki sonuçlar verdiğin bilgilere göre oluşturuldu.</p>'+
  '<h2>Durum özeti</h2><div class="hl" style="border:1px solid #35535a;border-radius:12px;padding:4px 0;background:#0e2025"><div class="li"><strong>İlerleme:</strong> '+stepState.done+' / '+stepState.total+' adım <span class="hm">('+stepState.percent+'%)</span><div class="progressTrack"><span style="width:'+stepState.percent+'%"></span></div></div><div class="li"><strong>Belgeler:</strong> '+docState.ready+' / '+docState.total+' hazır'+(docState.missing&&docState.missing.length?(' <span class="hm">— ilk eksik: '+esc(docState.missing[0].title)+'</span>'):' <span class="ok">— ✓ tamam</span>')+'</div><div class="li"><strong>Şimdi:</strong> '+(isCompleted?'<span class="ok">✓ İşlem tamamlandı</span><br><span class="hm">Bu işlem dosyası başarıyla tamamlandı.</span>':(esc(action.title)+'<br><span class="hm">'+esc(action.detail)+'</span>'))+'</div></div>'+
  '<div class="hl"><div class="li"><strong>Dosya no:</strong> '+esc(H.caseId)+'</div><div class="li"><strong>Satış bedeli:</strong> '+money(sale)+'</div><div class="li"><strong>Emlak vergisi değeri:</strong> '+(municipalValue?money(municipalValue):'Belirtilmedi')+'</div><div class="li"><strong>Edinim tarihi:</strong> '+dateText(a.acquisition_date)+'</div><div class="li"><strong>5 yıllık süre:</strong> '+esc(five)+'</div></div>'+
- '<h2>Gerekli belgeler</h2><p class="hm small">Her belge türü için birden fazla PDF veya görsel yükleyebilirsin. Örneğin kimliğin ön ve arka yüzünü ayrı dosyalar olarak ekleyebilirsin.</p><div class="li"><strong>Dosya ilerlemesi:</strong> '+docState.percent+'% <span class="hm">('+docState.ready+' / '+docState.total+' belge türü hazır)</span><div class="progressTrack"><span style="width:'+docState.percent+'%"></span></div></div><div class="hl">'+docs.map(d=>{const files=getDocumentFiles(d.key);const dbStatus=H.documentStatuses[d.key]||((H.documents[d.key]===true)?'uploaded':'missing');const statusLabel=dbStatus==='verified'?'✓ Doğrulandı':(dbStatus==='uploaded'?'✓ Yüklendi':'○ Eksik / bekleniyor');const statusClass=dbStatus==='verified'?'ok':(dbStatus==='uploaded'?'ok':'warn');return '<div class="docItem"><input type="checkbox" data-a="docToggle" data-k="'+esc(d.key)+'" '+(H.documents[d.key]===true?'checked':'')+'><span style="flex:1"><strong>'+esc(d.title)+'</strong><br><span class="hm">'+esc(d.reason)+'</span><br><span class="docStatus" style="display:inline-flex;align-items:center;gap:6px;margin-top:6px">'+'<span class="'+statusClass+'" style="display:inline-block;padding:5px 8px;border-radius:8px;background:#102b2a;font-weight:700">'+statusLabel+'</span>'+'</span>'+(files.length?'<div style="margin-top:9px;display:grid;gap:7px">'+files.map((f,i)=>'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border:1px solid #29464d;border-radius:10px;background:#0e2025"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📄 '+esc(f.name||('Belge '+(i+1)))+'</span><button type="button" class="topb" data-a="openDoc" data-k="'+esc(d.key)+'" data-i="'+i+'" onclick="window.openHalletDocument&&window.openHalletDocument(this.dataset.k,Number(this.dataset.i||0));return false;">Görüntüle</button></div>').join('')+'</div>':'')+'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:9px"><label style="display:inline-flex;align-items:center;gap:7px;margin:0;padding:8px 10px;border:1px solid #35535a;border-radius:10px;background:#10252b;color:#fff;font:700 12px Arial,sans-serif;cursor:pointer">📎 Belge ekle<input type="file" data-upload-doc="'+esc(d.key)+'" accept="application/pdf,image/*" style="display:none"></label></div></span></div>'}).join('')+'</div><div class="li"><strong>Belge durumu:</strong> '+docState.ready+' / '+docState.total+' hazır'+(docState.complete?' — ✓ Tamamlandı':' — eksikler var')+'</div>'+
+ '<h2>Gerekli belgeler</h2><p class="hm small">Her belge türü için birden fazla PDF veya görsel yükleyebilirsin. Örneğin kimliğin ön ve arka yüzünü ayrı dosyalar olarak ekleyebilirsin.</p><div class="li"><strong>Dosya ilerlemesi:</strong> '+docState.percent+'% <span class="hm">('+docState.ready+' / '+docState.total+' belge türü hazır)</span><div class="progressTrack"><span style="width:'+docState.percent+'%"></span></div></div><div class="hl">'+docs.map(d=>{const files=getDocumentFiles(d.key);const dbStatus=H.documentStatuses[d.key]||((H.documents[d.key]===true)?'uploaded':'missing');const statusLabel=dbStatus==='verified'?'✓ Doğrulandı':(dbStatus==='uploaded'?'✓ Yüklendi':'○ Eksik / bekleniyor');const statusClass=dbStatus==='verified'?'ok':(dbStatus==='uploaded'?'ok':'warn');return '<div class="docItem"><input type="checkbox" data-a="docToggle" data-k="'+esc(d.key)+'" '+(H.documents[d.key]===true?'checked':'')+'><span style="flex:1"><strong>'+esc(d.title)+'</strong><br><span class="hm">'+esc(d.reason)+'</span><br><span class="docStatus" style="display:inline-flex;align-items:center;gap:6px;margin-top:6px">'+'<span class="'+statusClass+'" style="display:inline-block;padding:5px 8px;border-radius:8px;background:#102b2a;font-weight:700">'+statusLabel+'</span>'+'</span>'+(files.length?'<div style="margin-top:9px;display:grid;gap:7px">'+files.map((f,i)=>'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border:1px solid #29464d;border-radius:10px;background:#0e2025"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📄 '+esc(f.name||('Belge '+(i+1)))+'</span><button type="button" class="topb" data-a="openDoc" data-k="'+esc(d.key)+'" data-i="'+i+'" onclick="try{window.openHalletDocument(this.dataset.k,Number(this.dataset.i||0))}catch(e){alert(e.message||e)}return false;">Görüntüle</button></div>').join('')+'</div>':'')+'<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:9px"><label style="display:inline-flex;align-items:center;gap:7px;margin:0;padding:8px 10px;border:1px solid #35535a;border-radius:10px;background:#10252b;color:#fff;font:700 12px Arial,sans-serif;cursor:pointer">📎 Belge ekle<input type="file" data-upload-doc="'+esc(d.key)+'" accept="application/pdf,image/*" style="display:none"></label></div></span></div>'}).join('')+'</div><div class="li"><strong>Belge durumu:</strong> '+docState.ready+' / '+docState.total+' hazır'+(docState.complete?' — ✓ Tamamlandı':' — eksikler var')+'</div>'+
  '<h2>İşlem adımları</h2><p class="hm small">Dosyanın hangi aşamada olduğunu buradan takip edebilirsin.</p><div class="hl">'+stepSummary().steps.map((st,i)=>'<div class="li" style="display:flex;gap:10px;align-items:flex-start"><span style="font-weight:800">'+(st.status==='completed'?'✅':(i+1)+'.')+'</span><span style="flex:1"><strong>'+esc(st.title)+'</strong><br><span class="hm">'+esc(st.description||'')+'</span>'+(st.institution?'<br><span class="hm small">Kurum: '+esc(st.institution)+'</span>':'')+'</span><button type="button" class="topb" data-a="stepToggle" data-k="'+esc(st.step_key)+'">'+(st.status==='completed'?'Geri al':'Tamamla')+'</button></div>').join('')+'</div><div class="li"><strong>Adım ilerlemesi:</strong> '+stepSummary().percent+'% ('+stepSummary().done+' / '+stepSummary().total+')</div>'+
  '<h2>Tapu harcı ön hesabı</h2><div class="hl"><div class="li"><strong>Harç matrahı:</strong> '+money(harcBase)+'</div><div class="li"><strong>Satıcı:</strong> '+money(sellerFee)+' <span class="hm">(%2)</span></div><div class="li"><strong>Alıcı:</strong> '+money(buyerFee)+' <span class="hm">(%2)</span></div><div class="li"><strong>Toplam:</strong> '+money(totalFee)+' <span class="hm">(%4)</span></div></div><p class="hm small">Ön hesap, beyan edilen satış bedeli ile belirtilen emlak vergisi değerinin yüksek olanını esas alır. Döner sermaye ücreti dahil değildir; resmi bildirimdeki güncel tutarlar esas alınmalıdır.</p>'+
  '<h2>Değer artış kazancı ön kontrolü</h2><div class="hl"><div class="li"><strong>Durum:</strong> '+esc(fivePassed?'5 yıllık süre dolmuş görünüyor.':(a.acquisition_type==='inheritance'||a.acquisition_type==='gift'?'Miras/bağış edinimi: bu satış değer artış kazancı kapsamı dışında değerlendirilebilir.':'5 yıllık süre dolmamış / kontrol gerekli.'))+'</div>'+(capitalGainRelevant&&grossGain!==null?'<div class="li"><strong>Satış − alış farkı:</strong> '+money(grossGain)+'<br><span class="hm">Bu yalnızca brüt farktır; nihai vergi matrahı değildir. GİB hesabında Yİ-ÜFE endekslemesi (%10 şartı), indirilebilir giderler ve satış yılının istisnası ayrıca dikkate alınır.</span></div>':'<div class="li"><span class="hm">Bu dosyada değer artış kazancı yönünden ön kontrol yapıldı; nihai vergi hesabı için GİB kuralları ve güncel veriler esas alınmalıdır.</span></div>')+'</div>'+
@@ -2062,7 +2092,7 @@ function kurumResult(fromSaved){
   const uploaded=files.length>0;
   const statusLabel=uploaded?'✓ Yüklendi':'○ Eksik';
   const statusClass=uploaded?'ok':'';
-  return '<div class="li"><div><strong>'+esc(d.title)+'</strong>'+(d.required===false?' <span class="hm">(opsiyonel)</span>':'')+'<br><span class="hm">'+esc(d.reason||'')+'</span><br><span class="'+statusClass+'">'+statusLabel+'</span></div>'+(files.length?('<div style="margin-top:8px;display:grid;gap:6px">'+files.map((f,i)=>'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border:1px solid #29464d;border-radius:10px;background:#0e2025"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📄 '+esc(f.name||('Belge '+(i+1)))+'</span><button type="button" class="topb" data-a="openDoc" data-k="'+esc(d.key)+'" data-i="'+i+'" onclick="window.openHalletDocument&&window.openHalletDocument(this.dataset.k,Number(this.dataset.i||0));return false;">Görüntüle</button></div>').join('')+'</div>'):'')+'<div style="margin-top:9px"><label style="display:inline-flex;align-items:center;gap:7px;margin:0;padding:8px 10px;border:1px solid #35535a;border-radius:10px;background:#10252b;color:#fff;font:700 12px Arial,sans-serif;cursor:pointer">📎 Belge ekle<input type="file" data-upload-doc="'+esc(d.key)+'" accept="application/pdf,image/*" style="display:none"></label></div></div>';
+  return '<div class="li"><div><strong>'+esc(d.title)+'</strong>'+(d.required===false?' <span class="hm">(opsiyonel)</span>':'')+'<br><span class="hm">'+esc(d.reason||'')+'</span><br><span class="'+statusClass+'">'+statusLabel+'</span></div>'+(files.length?('<div style="margin-top:8px;display:grid;gap:6px">'+files.map((f,i)=>'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border:1px solid #29464d;border-radius:10px;background:#0e2025"><span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">📄 '+esc(f.name||('Belge '+(i+1)))+'</span><button type="button" class="topb" data-a="openDoc" data-k="'+esc(d.key)+'" data-i="'+i+'" onclick="try{window.openHalletDocument(this.dataset.k,Number(this.dataset.i||0))}catch(e){alert(e.message||e)}return false;">Görüntüle</button></div>').join('')+'</div>'):'')+'<div style="margin-top:9px"><label style="display:inline-flex;align-items:center;gap:7px;margin:0;padding:8px 10px;border:1px solid #35535a;border-radius:10px;background:#10252b;color:#fff;font:700 12px Arial,sans-serif;cursor:pointer">📎 Belge ekle<input type="file" data-upload-doc="'+esc(d.key)+'" accept="application/pdf,image/*" style="display:none"></label></div></div>';
  }).join('')+'</div>';
  html+='<h2>İşlem adımları</h2><div class="hl">'+stepState.steps.map((st,i)=>'<div class="li" style="display:flex;gap:10px;align-items:flex-start"><span>'+(st.status==='completed'?'✅':(i+1)+'.')+'</span><span style="flex:1"><strong>'+esc(st.title)+'</strong><br><span class="hm">'+esc(st.description||'')+'</span></span><button type="button" class="topb" data-a="stepToggle" data-k="'+esc(st.step_key)+'">'+(st.status==='completed'?'Geri al':'Tamamla')+'</button></div>').join('')+'</div>';
  if(canComplete)html+='<div class="li" style="margin-top:12px;border:1px solid #2f6f4e;border-radius:12px;padding:12px;background:#0f2a1c"><strong class="ok">✓ Hazır</strong><br><span class="hm">Adımlar ve belgeler tamam. Dosyayı tamamlandı işaretleyebilirsin (resmî başvuru anlamına gelmez).</span><div class="hg" style="margin-top:10px"><button class="hb hp" data-a="completecase">✓ Başvuruyu Tamamlandı Olarak İşaretle</button></div></div>';
