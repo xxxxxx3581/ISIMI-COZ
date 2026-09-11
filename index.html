@@ -1761,7 +1761,7 @@ async function openDocument(docKey,index=0){
   viewer.id='halletDocViewer';
   viewer.setAttribute('role','dialog');
   viewer.setAttribute('aria-modal','true');
-  viewer.style.cssText='position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;box-sizing:border-box';
+  viewer.style.cssText='position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;box-sizing:border-box';
   const head=document.createElement('div');
   head.style.cssText='width:100%;max-width:960px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;color:#fff;font:700 14px Arial,sans-serif';
   const title=document.createElement('div');
@@ -1784,6 +1784,7 @@ async function openDocument(docKey,index=0){
   viewer.appendChild(body);
   viewer.addEventListener('click',function(ev){if(ev.target===viewer)closeFn();});
   document.body.appendChild(viewer);
+  viewer.style.zIndex='2147483647';
 
   try{
     const objectPath=normalizedPath.split('/').map(encodeURIComponent).join('/');
