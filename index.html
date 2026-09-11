@@ -553,7 +553,7 @@ updateAuthArea();
    ========================================================= */
 (function(){
 'use strict';
-const H={step:0,answers:{},caseId:null,createdAt:null,dbId:null,status:null,module:null,kurumFlowId:null,documents:{},documentStatuses:{},documentFiles:{},caseSteps:[]};
+const H={step:0,answers:{},documentBlobs:{},caseId:null,createdAt:null,dbId:null,status:null,module:null,kurumFlowId:null,documents:{},documentStatuses:{},documentFiles:{},caseSteps:[]};
 const CASE_STEP_TEMPLATE=[
  {key:'precheck',title:'Ön kontrol',description:'Verilen bilgiler üzerinden satış için temel uygunluk kontrolü.',institution:'İşini Hallet',sort_order:1},
  {key:'documents',title:'Belgeleri tamamla',description:'Gerekli belgeleri yükle ve hazır olduklarını kontrol et.',institution:'İşini Hallet',sort_order:2},
@@ -894,26 +894,21 @@ function bindOpenDocButtons(){
   if(!root)return;
   var list=root.querySelectorAll('[data-a="openDoc"]');
   for(var i=0;i<list.length;i++){
-    var btn=list[i];
-    if(btn.getAttribute('data-bound-open')==='1')continue;
-    btn.setAttribute('data-bound-open','1');
-    btn.addEventListener('click',function(ev){
-      ev.preventDefault();
-      ev.stopPropagation();
-      if(ev.stopImmediatePropagation)ev.stopImmediatePropagation();
-      var k=this.getAttribute('data-k')||'';
-      var ix=Number(this.getAttribute('data-i')||0)||0;
-      try{
-        if(typeof openDocument==='function')openDocument(k,ix);
-        else if(window.openHalletDocument)window.openHalletDocument(k,ix);
-        else alert('Görüntüleme fonksiyonu hazır değil. Sayfayı yenileyip tekrar deneyin.');
-      }catch(err){
-        console.error(err);
-        alert('Belge açılamadı.\n\n'+(err&&err.message?err.message:String(err)));
-      }
-    }, true);
+    (function(btn){
+      btn.style.pointerEvents='auto';
+      btn.style.position='relative';
+      btn.style.zIndex='50';
+      btn.onclick=function(ev){
+        if(ev){ev.preventDefault();ev.stopPropagation();}
+        var k=btn.getAttribute('data-k')||'';
+        var ix=Number(btn.getAttribute('data-i')||0)||0;
+        try{openDocument(k,ix);}catch(err){alert('Belge: '+(err&&err.message?err.message:err));}
+        return false;
+      };
+    })(list[i]);
   }
 }
+
 
 
 function documentSummary(docs){
@@ -1754,13 +1749,17 @@ async function uploadDocument(docKey,file){
     const uploadedFile={path,name:file.name||safeName,type:file.type||null,size:file.size||0};
     const existingFiles=getDocumentFiles(docKey);
     H.documentFiles[docKey]=existingFiles.concat([uploadedFile]);
+    try{
+      if(!H.documentBlobs)H.documentBlobs={};
+      if(!Array.isArray(H.documentBlobs[docKey]))H.documentBlobs[docKey]=[];
+      H.documentBlobs[docKey].push({url:URL.createObjectURL(file),name:file.name||safeName,type:file.type||null});
+    }catch(blobErr){console.warn(blobErr);}
     if(H.module==='kurum_basvurusu'){
       await saveKurumCase(true);
       kurumResult(false);
     }else if(H.module==='prop'){
-      // Belge yükleme sonrası dosya formunu yeniden kaydetme: kullanıcı açıkça
-      // “DOSYAYI KAYDET” butonuna bastığında dosya metadata'sı güncellensin.
       propResult(false);
+      try{if(typeof bindOpenDocButtons==='function'){bindOpenDocButtons();setTimeout(bindOpenDocButtons,50);}}catch(e){}
     }else{
       await saveCase(true);
       result(false);
@@ -1772,157 +1771,115 @@ async function uploadDocument(docKey,file){
   }
 }
 async function openDocument(docKey,index=0){
-  // 1) Aninda gorunur tepki - tiklama calisti mi netlesin
   try{
-    var fl0=document.getElementById('halletOpenFlash');
-    if(fl0)fl0.remove();
-    fl0=document.createElement('div');
-    fl0.id='halletOpenFlash';
-    fl0.textContent='Belge aciliyor...';
-    fl0.style.cssText='position:fixed;left:50%;top:12px;transform:translateX(-50%);z-index:2147483647;background:#0e5c53;color:#fff;padding:14px 20px;border-radius:12px;font:700 15px Arial,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.5);';
-    document.body.appendChild(fl0);
+    var fl=document.getElementById('halletOpenFlash'); if(fl)fl.remove();
+    fl=document.createElement('div'); fl.id='halletOpenFlash';
+    fl.textContent='Belge aciliyor...';
+    fl.style.cssText='position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:2147483647;background:#0e5c53;color:#fff;padding:14px 22px;border-radius:12px;font:700 15px Arial,sans-serif;';
+    document.body.appendChild(fl);
   }catch(e){}
-
-  try{
-    var session=getAuthSession();
-    if(!session||!session.access_token){
-      var x=document.getElementById('halletOpenFlash'); if(x)x.remove();
-      alert('Oturum yok. Lutfen giris yapin.');
-      if(typeof openAuthModal==='function')openAuthModal('login');
-      return;
-    }
-
-    var files=getDocumentFiles(docKey);
-    var f=files[Number(index)||0];
-
-    // Path yoksa DB'den cek
-    if((!f||!f.path)&&H.dbId&&docKey){
-      try{
-        var q='hallet_documents?select=id,doc_key,title,status,storage_path,mime_type,file_size_bytes,metadata,created_at&case_id=eq.'+encodeURIComponent(H.dbId)+'&doc_key=eq.'+encodeURIComponent(String(docKey))+'&order=created_at.asc&limit=20';
-        var rows=await supabaseAuthRequest('GET',q);
-        var list=Array.isArray(rows)?rows:[];
-        if(!Array.isArray(H.documentFiles[docKey]))H.documentFiles[docKey]=[];
-        list.forEach(function(d){
-          var sp=(typeof resolveDocumentStoragePath==='function')?resolveDocumentStoragePath(d):(d.storage_path||'');
-          if(!sp)return;
-          H.documents[d.doc_key||docKey]=true;
-          H.documentFiles[docKey].push({id:d.id,path:sp,name:(d.metadata&&d.metadata.original_name)||d.title||d.doc_key,type:d.mime_type||null,size:d.file_size_bytes||0});
-        });
-        files=getDocumentFiles(docKey);
-        f=files[Number(index)||0];
-      }catch(e){console.warn(e);}
-    }
-
-    var rawPath=f&&f.path?String(f.path):'';
-    var normalizedPath=(typeof normalizeStorageObjectPath==='function')?normalizeStorageObjectPath(rawPath):rawPath.replace(/^\/+/,'').replace(/^hallet-documents\//,'');
-    if(!normalizedPath){
-      var x2=document.getElementById('halletOpenFlash'); if(x2)x2.remove();
-      alert('Belge yolu yok. DocKey='+String(docKey)+' dosyaAdet='+String((files&&files.length)||0));
-      return;
-    }
-
-    var objectPath=normalizedPath.split('/').filter(Boolean).map(encodeURIComponent).join('/');
-    var authUrl=SUPABASE_URL+'/storage/v1/object/authenticated/hallet-documents/'+objectPath;
-    var plainUrl=SUPABASE_URL+'/storage/v1/object/hallet-documents/'+objectPath;
-
-    // 2) Modal hemen
+  function showViewer(src,name,isImage,isPdf){
     var prev=document.getElementById('halletDocViewer'); if(prev)prev.remove();
     var viewer=document.createElement('div');
     viewer.id='halletDocViewer';
     viewer.style.cssText='position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;';
     var head=document.createElement('div');
     head.style.cssText='width:100%;max-width:960px;display:flex;justify-content:space-between;align-items:center;color:#fff;font:700 14px Arial,sans-serif;margin-bottom:10px;';
-    var title=document.createElement('div'); title.textContent=(f&&f.name)||'Belge';
+    var title=document.createElement('div'); title.textContent=name||'Belge';
     var close=document.createElement('button'); close.type='button'; close.textContent='Kapat';
     close.style.cssText='border:1px solid #52717a;background:#10252b;color:#fff;border-radius:10px;padding:10px 14px;font:700 14px Arial,sans-serif;cursor:pointer;';
-    var objectUrl=null;
-    var closeFn=function(){
-      if(objectUrl){try{URL.revokeObjectURL(objectUrl);}catch(e){}}
-      viewer.remove();
-      var fl=document.getElementById('halletOpenFlash'); if(fl)fl.remove();
-    };
-    close.onclick=closeFn;
+    close.onclick=function(){viewer.remove(); var x=document.getElementById('halletOpenFlash'); if(x)x.remove();};
     head.appendChild(title); head.appendChild(close);
     var body=document.createElement('div');
     body.style.cssText='width:100%;max-width:960px;flex:1;display:flex;align-items:center;justify-content:center;';
-    var loading=document.createElement('div'); loading.textContent='Belge yukleniyor...';
-    loading.style.cssText='color:#fff;font:700 16px Arial,sans-serif;';
-    body.appendChild(loading);
+    if(isImage){
+      var img=document.createElement('img'); img.src=src; img.alt=name||'';
+      img.style.cssText='max-width:100%;max-height:78vh;object-fit:contain;border-radius:10px;';
+      body.appendChild(img);
+    }else if(isPdf){
+      var frame=document.createElement('iframe'); frame.src=src;
+      frame.style.cssText='width:100%;height:78vh;border:0;border-radius:10px;background:#fff;';
+      body.appendChild(frame);
+    }else{
+      var a=document.createElement('a'); a.href=src; a.target='_blank'; a.rel='noopener';
+      a.textContent='Dosyayi ac'; a.style.cssText='color:#7fd4a8;font-weight:800;font-size:16px;';
+      body.appendChild(a);
+    }
     viewer.appendChild(head); viewer.appendChild(body);
     document.body.appendChild(viewer);
     viewer.style.setProperty('z-index','2147483647','important');
-    var fl3=document.getElementById('halletOpenFlash'); if(fl3)fl3.remove();
-
-    var headers={'Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_KEY};
-    var fileRes=await fetch(authUrl,{method:'GET',headers:headers});
-    if(!fileRes.ok){
-      fileRes=await fetch(plainUrl,{method:'GET',headers:headers});
+    var x2=document.getElementById('halletOpenFlash'); if(x2)x2.remove();
+  }
+  try{
+    var idx=Number(index)||0;
+    if(H.documentBlobs&&H.documentBlobs[docKey]&&H.documentBlobs[docKey][idx]&&H.documentBlobs[docKey][idx].url){
+      var b=H.documentBlobs[docKey][idx];
+      var mime=String(b.type||'').toLowerCase();
+      var nm=String(b.name||'').toLowerCase();
+      showViewer(b.url,b.name,mime.indexOf('image/')===0||/\.(jpe?g|png|gif|webp)$/i.test(nm),mime.indexOf('pdf')>=0||/\.pdf$/i.test(nm));
+      return;
     }
-    // signed URL yedek
+    var session=getAuthSession();
+    if(!session||!session.access_token){
+      var x3=document.getElementById('halletOpenFlash'); if(x3)x3.remove();
+      alert('Oturum yok. Giris yapin.');
+      if(typeof openAuthModal==='function')openAuthModal('login');
+      return;
+    }
+    var files=getDocumentFiles(docKey);
+    var f=files[idx];
+    if((!f||!f.path)&&H.dbId&&docKey){
+      try{
+        var rows=await supabaseAuthRequest('GET','hallet_documents?select=id,doc_key,title,status,storage_path,mime_type,file_size_bytes,metadata,created_at&case_id=eq.'+encodeURIComponent(H.dbId)+'&doc_key=eq.'+encodeURIComponent(String(docKey))+'&order=created_at.asc&limit=20');
+        var list=Array.isArray(rows)?rows:[];
+        if(!Array.isArray(H.documentFiles[docKey]))H.documentFiles[docKey]=[];
+        list.forEach(function(d){
+          var sp=(typeof resolveDocumentStoragePath==='function')?resolveDocumentStoragePath(d):(d.storage_path||'');
+          if(!sp)return;
+          H.documentFiles[docKey].push({id:d.id,path:sp,name:(d.metadata&&d.metadata.original_name)||d.title||d.doc_key,type:d.mime_type||null,size:d.file_size_bytes||0});
+        });
+        files=getDocumentFiles(docKey); f=files[idx];
+      }catch(e){console.warn(e);}
+    }
+    var raw=f&&f.path?String(f.path):'';
+    var normalizedPath=(typeof normalizeStorageObjectPath==='function')?normalizeStorageObjectPath(raw):raw.replace(/^\/+/,'').replace(/^hallet-documents\//,'');
+    if(!normalizedPath){
+      var x4=document.getElementById('halletOpenFlash'); if(x4)x4.remove();
+      alert('Belge yolu yok: '+String(docKey));
+      return;
+    }
+    var objectPath=normalizedPath.split('/').filter(Boolean).map(encodeURIComponent).join('/');
+    var headers={'Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_KEY};
+    var fileRes=await fetch(SUPABASE_URL+'/storage/v1/object/authenticated/hallet-documents/'+objectPath,{headers:headers});
+    if(!fileRes.ok) fileRes=await fetch(SUPABASE_URL+'/storage/v1/object/hallet-documents/'+objectPath,{headers:headers});
     if(!fileRes.ok){
       var signRes=await fetch(SUPABASE_URL+'/storage/v1/object/sign/hallet-documents/'+objectPath,{
-        method:'POST',
-        headers:{'Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
+        method:'POST',headers:{'Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
         body:JSON.stringify({expiresIn:600})
       });
-      var signText=await signRes.text();
-      var signData=null; try{signData=signText?JSON.parse(signText):null;}catch(e){}
+      var st=await signRes.text(); var sd=null; try{sd=st?JSON.parse(st):null;}catch(e){}
       if(signRes.ok){
-        var signed=(signData&&(signData.signedURL||signData.signedUrl||signData.signed_url||signData.url))||null;
+        var signed=(sd&&(sd.signedURL||sd.signedUrl||sd.signed_url||sd.url))||null;
         if(signed){
           var viewUrl=signed.indexOf('http')===0?signed:(SUPABASE_URL+'/storage/v1'+(signed.charAt(0)==='/'?signed:('/'+signed)));
           fileRes=await fetch(viewUrl);
         }
       }
     }
-    if(!fileRes.ok){
-      var errTxt=''; try{errTxt=await fileRes.text();}catch(e){}
-      throw new Error('Dosya okunamadi ('+fileRes.status+'). '+(errTxt||'').slice(0,180));
-    }
-
+    if(!fileRes.ok) throw new Error('Dosya okunamadi HTTP '+fileRes.status);
     var blob=await fileRes.blob();
-    objectUrl=URL.createObjectURL(blob);
+    var src=URL.createObjectURL(blob);
     var mime=String((f&&f.type)||blob.type||'').toLowerCase();
-    var name=String((f&&f.name)||normalizedPath||'').toLowerCase();
-    var isImage=mime.indexOf('image/')===0||/\.(jpe?g|png|gif|webp|bmp|heic|heif)$/i.test(name);
-    var isPdf=mime.indexOf('pdf')>=0||/\.pdf$/i.test(name);
-    loading.remove();
-
-    if(isImage){
-      var img=document.createElement('img');
-      img.src=objectUrl;
-      img.alt=(f&&f.name)||'Belge';
-      img.style.cssText='max-width:100%;max-height:78vh;object-fit:contain;border-radius:10px;background:#111;';
-      img.onerror=function(){alert('Gorsel acilamadi.');};
-      body.appendChild(img);
-    }else if(isPdf){
-      var frame=document.createElement('iframe');
-      frame.src=objectUrl;
-      frame.title='PDF';
-      frame.style.cssText='width:100%;height:78vh;border:0;border-radius:10px;background:#fff;';
-      body.appendChild(frame);
-    }else{
-      var a=document.createElement('a');
-      a.href=objectUrl; a.download=(f&&f.name)||'belge'; a.target='_blank';
-      a.textContent='Dosyayi indir / ac';
-      a.style.cssText='color:#7fd4a8;font-weight:800;font-size:16px;';
-      body.appendChild(a);
-    }
+    var nm=String((f&&f.name)||normalizedPath||'').toLowerCase();
+    showViewer(src,(f&&f.name)||'Belge',mime.indexOf('image/')===0||/\.(jpe?g|png|gif|webp)$/i.test(nm),mime.indexOf('pdf')>=0||/\.pdf$/i.test(nm));
   }catch(e){
-    console.error('openDocument error',e);
-    var fl=document.getElementById('halletOpenFlash'); if(fl)fl.remove();
+    console.error(e);
+    var x5=document.getElementById('halletOpenFlash'); if(x5)x5.remove();
     var v=document.getElementById('halletDocViewer'); if(v)v.remove();
-    alert('Belge acilamadi.\n\n'+(e&&e.message?e.message:e));
+    alert('Belge acilamadi: '+(e&&e.message?e.message:e));
   }
 }
 window.openHalletDocument=openDocument;
-
-
-
-
-
-
-
 
 function result(fromSaved=false){
  const a=H.answers;
