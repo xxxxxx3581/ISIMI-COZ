@@ -889,6 +889,33 @@ function resolveDocumentStoragePath(d){
   return normalizeStorageObjectPath(raw);
 }
 
+function bindOpenDocButtons(){
+  var root=document.getElementById('hallet-root');
+  if(!root)return;
+  var list=root.querySelectorAll('[data-a="openDoc"]');
+  for(var i=0;i<list.length;i++){
+    var btn=list[i];
+    if(btn.getAttribute('data-bound-open')==='1')continue;
+    btn.setAttribute('data-bound-open','1');
+    btn.addEventListener('click',function(ev){
+      ev.preventDefault();
+      ev.stopPropagation();
+      if(ev.stopImmediatePropagation)ev.stopImmediatePropagation();
+      var k=this.getAttribute('data-k')||'';
+      var ix=Number(this.getAttribute('data-i')||0)||0;
+      try{
+        if(typeof openDocument==='function')openDocument(k,ix);
+        else if(window.openHalletDocument)window.openHalletDocument(k,ix);
+        else alert('Görüntüleme fonksiyonu hazır değil. Sayfayı yenileyip tekrar deneyin.');
+      }catch(err){
+        console.error(err);
+        alert('Belge açılamadı.\n\n'+(err&&err.message?err.message:String(err)));
+      }
+    }, true);
+  }
+}
+
+
 function documentSummary(docs){
  const total=docs.length, ready=docs.filter(d=>H.documents[d.key]===true).length;
  const percent=total?Math.round((ready/total)*100):0;
@@ -997,7 +1024,7 @@ function root(){let r=document.getElementById('hallet-root');if(!r){r=document.c
 function ensureStyle(){if(document.getElementById('hallet-inline-style'))return;const s=document.createElement('style');s.id='hallet-inline-style';s.textContent=`#hallet-root{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;z-index:2147483647!important;display:none!important;background:#071318!important;color:#f5f7f7!important;overflow:auto!important;pointer-events:auto!important;-webkit-overflow-scrolling:touch!important}#hallet-root.hv{display:block!important}#hallet-root .ha{all:initial!important;display:block!important;min-height:100vh!important;width:100%!important;background:#071318!important;color:#f5f7f7!important;font-family:Arial,sans-serif!important;padding:20px!important;box-sizing:border-box!important}#hallet-root .ha *{box-sizing:border-box!important}#hallet-root .hw{width:min(760px,100%)!important;margin:auto!important;padding-bottom:40px!important}#hallet-root .ht{display:flex!important;justify-content:space-between!important;align-items:center!important;gap:10px!important;margin-bottom:18px!important}#hallet-root .hc{background:#10252b!important;border:1px solid #29464d!important;border-radius:20px!important;padding:22px!important;box-shadow:0 16px 40px rgba(0,0,0,.25)!important}#hallet-root h1,#hallet-root h2,#hallet-root p{margin-top:0!important}#hallet-root h1{font-size:32px!important;line-height:1.1!important}#hallet-root h2{font-size:23px!important;line-height:1.2!important}#hallet-root .hk{color:#b9812e!important;font-size:12px!important;font-weight:800!important;text-transform:uppercase!important;letter-spacing:.08em!important;margin-bottom:9px!important}#hallet-root .hm{color:#b8c8cb!important;line-height:1.55!important}#hallet-root .hg{display:grid!important;grid-template-columns:1fr!important;gap:12px!important;margin-top:18px!important}#hallet-root button{appearance:none!important;-webkit-appearance:none!important}#hallet-root .hb{width:100%!important;min-height:54px!important;border:1px solid #35535a!important;border-radius:15px!important;background:#122b31!important;color:#fff!important;padding:15px 17px!important;font:700 15px Arial,sans-serif!important;text-align:left!important;cursor:pointer!important;touch-action:manipulation!important}#hallet-root .hp{background:#0e5c53!important;border-color:#3d9a8e!important;text-align:center!important}#hallet-root .hs{text-align:center!important;background:#172b30!important}#hallet-root .topb{border:1px solid #35535a!important;background:#10252b!important;color:#fff!important;border-radius:12px!important;padding:10px 13px!important;font:700 13px Arial,sans-serif!important;cursor:pointer!important;touch-action:manipulation!important}#hallet-root .hi{width:100%!important;background:#091b20!important;color:#fff!important;border:1px solid #45636a!important;border-radius:13px!important;padding:15px!important;font:600 16px Arial,sans-serif!important}#hallet-root label{display:block!important;font:700 13px Arial,sans-serif!important;color:#dce7e8!important;margin:12px 0 7px!important}#hallet-root .hl{display:grid!important;gap:10px!important;margin:16px 0!important}#hallet-root .li{padding:12px 14px!important;border:1px solid #213d43!important;border-radius:12px!important;background:#0b1d22!important;line-height:1.45!important}#hallet-root .ok{color:#8ee1d5!important}#hallet-root .warn{color:#ffd18c!important}#hallet-root .pr{height:8px!important;background:#183238!important;border-radius:99px!important;overflow:hidden!important;margin-bottom:18px!important}#hallet-root .pr span{display:block!important;height:100%!important;background:#0e8b7d!important}#hallet-root .err{color:#ffb7a8!important;background:#3a1f1d!important;border:1px solid #7a3930!important;padding:10px!important;border-radius:10px!important;margin-top:10px!important}#hallet-root .progressTrack{height:10px!important;background:#091b20!important;border:1px solid #29464d!important;border-radius:999px!important;overflow:hidden!important;margin-top:10px!important}#hallet-root .progressTrack span{display:block!important;height:100%!important;background:#0e5c53!important;border-radius:999px!important;transition:width .2s ease!important}#hallet-root .hl,#hallet-root .li,#hallet-root .docItem{min-width:0!important;max-width:100%!important}#hallet-root .docItem{display:flex!important;gap:12px!important;align-items:flex-start!important;padding:13px 14px!important;border:1px solid #29464d!important;border-radius:12px!important;background:#0b1d22!important;cursor:pointer!important;margin:0!important;width:100%!important;overflow:hidden!important}#hallet-root .docItem>span{min-width:0!important;flex:1 1 auto!important;max-width:100%!important;overflow:hidden!important}#hallet-root .docItem input{width:22px!important;height:22px!important;accent-color:#0e8b7d!important;flex:0 0 auto!important;margin-top:2px!important}#hallet-root .docStatus{display:inline-flex!important;align-items:center!important;visibility:visible!important;opacity:1!important;margin-top:6px!important;font-size:12px!important;font-weight:800!important;color:#8ee1d5!important;min-height:26px!important}#hallet-root .docStatus *{visibility:visible!important;opacity:1!important;color:#8ee1d5!important}@media(min-width:620px){#hallet-root .hg{grid-template-columns:1fr 1fr!important}}#hallet-root .evrakPaper{background:#fff!important;color:#172326!important;padding:28px!important;border-radius:14px!important;border:1px solid #d7e0e2!important;box-shadow:0 8px 24px rgba(0,0,0,.12)!important;margin-top:14px!important;line-height:1.55!important}#hallet-root .evrakPaper h3{color:#172326!important;margin:18px 0 8px!important;font-size:17px!important}#hallet-root .evrakPaper p{color:#26383c!important;margin:7px 0!important}#hallet-root .evrakPaper hr{border:0!important;border-top:1px solid #d7e0e2!important;margin:20px 0!important}#hallet-root .evrakPaper strong{color:#172326!important}@media print{body.printing-evrak *{visibility:hidden!important}body.printing-evrak .no-print{display:none!important}body.printing-evrak #hallet-root,body.printing-evrak #hallet-root *{visibility:visible!important}body.printing-evrak #hallet-root{position:static!important;display:block!important;background:#fff!important;color:#172326!important;width:auto!important;height:auto!important;overflow:visible!important}body.printing-evrak #hallet-root .ha{background:#fff!important;color:#172326!important;padding:0!important;min-height:0!important}body.printing-evrak #hallet-root .hw{width:100%!important;max-width:none!important;padding:0!important}body.printing-evrak #hallet-root .ht,body.printing-evrak #hallet-root .hg,body.printing-evrak #hallet-root .topb{display:none!important}body.printing-evrak #hallet-root .hc{background:#fff!important;color:#172326!important;border:0!important;box-shadow:none!important;padding:0!important;border-radius:0!important}body.printing-evrak #hallet-root .hk,body.printing-evrak #hallet-root h2,body.printing-evrak #hallet-root .hm{color:#172326!important}body.printing-evrak #hallet-root .evrakPaper{border:0!important;box-shadow:none!important;border-radius:0!important;margin:0!important;padding:12mm!important;color:#172326!important}body.printing-evrak #hallet-root .evrakPaper *{color:#172326!important}}`;document.head.appendChild(s)}
 function open(){ensureStyle();const r=root();r.classList.add('hv');r.style.display='block';document.body.dataset.halletOverflow=document.body.style.overflow||'';document.body.style.overflow='hidden';return r}
 function close(){const r=root();r.classList.remove('hv');r.style.display='none';r.innerHTML='';document.body.style.overflow=document.body.dataset.halletOverflow||''}
-function render(x){const r=open();r.innerHTML='<div class="ha"><div class="hw">'+x+'</div></div>';r.scrollTop=0}
+function render(x){const r=open();r.innerHTML='<div class="ha"><div class="hw">'+x+'</div></div>';r.scrollTop=0;try{bindOpenDocButtons();}catch(e){console.error(e);}}
 function top(back){return '<div class="ht"><strong>İşini Hallet</strong><button class="topb" data-a="'+(back||'close')+'">'+(back?'← Geri':'Kapat')+'</button></div>'}
 function gate(){H.step=0;H.answers={};H.documents={};H.documentStatuses={};H.documentFiles={};H.caseId=null;H.createdAt=null;H.dbId=null;render(top('close')+'<div class="hc"><div class="hk">Dijital işlem asistanı</div><h1>Bugün ne yapmak istiyorsun?</h1><p class="hm">İşlem, evrak, kurum veya hizmet — net seç, adım adım ilerle.</p><div class="hg"><button class="hb hp" data-a="islem">📋 Bir işlem yapmak istiyorum</button><button class="hb" data-a="cases">📁 İşlem Dosyalarım</button><button class="hb" data-a="evrak">📄 Evrak hazırlamak istiyorum</button><button class="hb" data-a="kurum">🏛️ Bir kuruma başvuracağım</button><button class="hb" data-a="isimi">🛠️ Hizmet / usta bulmam gerekiyor</button></div></div>')}
 async function cases(){
@@ -1742,54 +1769,63 @@ async function uploadDocument(docKey,file){
   }
 }
 async function openDocument(docKey,index=0){
-  const files=getDocumentFiles(docKey);
-  const f=files[Number(index)||0];
-  const session=getAuthSession();
-  if(!session?.access_token){
-    alert('Oturum süresi dolmuş olabilir. Lütfen tekrar giriş yap.');
+  try{console.log('[Hallet] openDocument',docKey,index, getDocumentFiles(docKey));}catch(e){}
+  var files=getDocumentFiles(docKey);
+  var f=files[Number(index)||0];
+  var session=getAuthSession();
+  if(!session||!session.access_token){
+    alert('Oturum süresi dolmuş olabilir. Lütfen tekrar giriş yapın.');
     if(typeof openAuthModal==='function')openAuthModal('login');
     return;
   }
-  const normalizedPath=normalizeStorageObjectPath(f&&f.path);
+  var normalizedPath=typeof normalizeStorageObjectPath==='function'?normalizeStorageObjectPath(f&&f.path):(f&&f.path?String(f.path):'');
   if(!normalizedPath){
-    alert('Belge dosya yolu bulunamadı. Bu kayıtta Storage path eksik olabilir. Dosyayı yeniden yüklemeden önce işlem dosyasını kaydedip tekrar açmayı deneyin.');
+    alert('Belge dosya yolu bulunamadı (docKey: '+String(docKey||'')+'). Dosyayı yeniden yüklemeyi deneyin.');
     return;
   }
 
-  document.getElementById('halletDocViewer')?.remove();
-  const viewer=document.createElement('div');
+  var prev=document.getElementById('halletDocViewer');
+  if(prev)prev.remove();
+
+  var viewer=document.createElement('div');
   viewer.id='halletDocViewer';
   viewer.setAttribute('role','dialog');
   viewer.setAttribute('aria-modal','true');
-  viewer.style.cssText='position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;box-sizing:border-box';
-  const head=document.createElement('div');
-  head.style.cssText='width:100%;max-width:960px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;color:#fff;font:700 14px Arial,sans-serif';
-  const title=document.createElement('div');
+  viewer.style.cssText='position:fixed;left:0;top:0;right:0;bottom:0;width:100vw;height:100vh;z-index:2147483647;background:rgba(0,0,0,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;pointer-events:auto;';
+
+  var head=document.createElement('div');
+  head.style.cssText='width:100%;max-width:960px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;color:#fff;font:700 14px Arial,sans-serif;';
+  var title=document.createElement('div');
   title.textContent=(f&&f.name)||'Belge';
-  title.style.cssText='min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
-  const close=document.createElement('button');
+  title.style.cssText='min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+  var close=document.createElement('button');
   close.type='button';
-  close.textContent='✕ Kapat';
-  close.style.cssText='border:1px solid #52717a;background:#10252b;color:#fff;border-radius:10px;padding:9px 12px;font:700 13px Arial,sans-serif;cursor:pointer';
-  const closeFn=function(){viewer.remove();};
+  close.textContent='Kapat';
+  close.style.cssText='border:1px solid #52717a;background:#10252b;color:#fff;border-radius:10px;padding:10px 14px;font:700 14px Arial,sans-serif;cursor:pointer;';
+  var closeFn=function(){viewer.remove();};
   close.onclick=closeFn;
-  head.append(title,close);
-  const body=document.createElement('div');
-  body.style.cssText='width:100%;max-width:960px;flex:1;display:flex;align-items:center;justify-content:center;min-height:0';
-  const loading=document.createElement('div');
+  head.appendChild(title);
+  head.appendChild(close);
+
+  var body=document.createElement('div');
+  body.style.cssText='width:100%;max-width:960px;flex:1;display:flex;align-items:center;justify-content:center;min-height:0;';
+  var loading=document.createElement('div');
   loading.textContent='Belge yükleniyor…';
-  loading.style.cssText='color:#fff;font:700 14px Arial,sans-serif;padding:20px';
+  loading.style.cssText='color:#fff;font:700 16px Arial,sans-serif;padding:24px;';
   body.appendChild(loading);
   viewer.appendChild(head);
   viewer.appendChild(body);
   viewer.addEventListener('click',function(ev){if(ev.target===viewer)closeFn();});
+
+  // Panelin ÜSTÜNDE görünsün: body sonuna ekle + max z-index
   document.body.appendChild(viewer);
-  viewer.style.zIndex='2147483647';
+  viewer.style.setProperty('z-index','2147483647','important');
+  viewer.style.setProperty('display','flex','important');
 
   try{
-    const objectPath=normalizedPath.split('/').map(encodeURIComponent).join('/');
-    const signEndpoint=SUPABASE_URL+'/storage/v1/object/sign/hallet-documents/'+objectPath;
-    const signRes=await fetch(signEndpoint,{
+    var objectPath=normalizedPath.split('/').filter(Boolean).map(encodeURIComponent).join('/');
+    var signEndpoint=SUPABASE_URL+'/storage/v1/object/sign/hallet-documents/'+objectPath;
+    var signRes=await fetch(signEndpoint,{
       method:'POST',
       headers:{
         'Authorization':'Bearer '+session.access_token,
@@ -1798,63 +1834,51 @@ async function openDocument(docKey,index=0){
       },
       body:JSON.stringify({expiresIn:600})
     });
-    const signText=await signRes.text();
-    let signData=null;
+    var signText=await signRes.text();
+    var signData=null;
     try{signData=signText?JSON.parse(signText):null;}catch(e){}
     if(!signRes.ok){
-      const msg=signData?.message||signData?.error||signData?.msg||signText||'Belge bağlantısı oluşturulamadı.';
-      console.error('Signed URL hatası:', {status:signRes.status, msg, path:normalizedPath});
-      if(/jwt|token|auth|expired|oturum/i.test(String(msg))){
-        throw new Error('Oturum süresi dolmuş olabilir. Lütfen tekrar giriş yapıp belgeyi açın.');
-      }
-      if(/not found|No such|does not exist|404/i.test(String(msg))){
-        throw new Error('Dosya Storage içinde bulunamadı. Kayıt path: '+normalizedPath);
-      }
+      var msg=(signData&&(signData.message||signData.error||signData.msg))||signText||'Belge bağlantısı oluşturulamadı.';
+      console.error('Signed URL hatası', signRes.status, msg, normalizedPath);
       throw new Error(msg);
     }
-    const signed=signData?.signedURL||signData?.signedUrl||signData?.signed_url||signData?.url;
+    var signed=(signData&&(signData.signedURL||signData.signedUrl||signData.signed_url||signData.url))||null;
     if(!signed)throw new Error('Belge bağlantısı oluşturulamadı.');
-    const viewUrl=signed.startsWith('http')?signed:(SUPABASE_URL+'/storage/v1'+(signed.startsWith('/')?signed:('/'+signed)));
+    var viewUrl=signed.indexOf('http')===0?signed:(SUPABASE_URL+'/storage/v1'+(signed.charAt(0)==='/'?signed:('/'+signed)));
 
-    const mime=((f&&f.type)||'').toLowerCase();
-    const name=(((f&&f.name)||normalizedPath)||'').toLowerCase();
-    const isImage=mime.startsWith('image/')||/\.(jpe?g|png|gif|webp|bmp|heic|heif)$/i.test(name);
-    const isPdf=mime==='application/pdf'||mime.includes('pdf')||/\.pdf$/i.test(name);
+    var mime=String((f&&f.type)||'').toLowerCase();
+    var name=String((f&&f.name)||normalizedPath||'').toLowerCase();
+    var isImage=mime.indexOf('image/')===0||/\.(jpe?g|png|gif|webp|bmp|heic|heif)$/i.test(name);
+    var isPdf=mime==='application/pdf'||mime.indexOf('pdf')>=0||/\.pdf$/i.test(name);
 
     loading.remove();
     if(isImage){
-      const img=document.createElement('img');
+      var img=document.createElement('img');
       img.src=viewUrl;
       img.alt=(f&&f.name)||'Belge';
-      img.style.cssText='max-width:100%;max-height:78vh;object-fit:contain;border-radius:10px;background:#111';
-      img.onerror=function(){alert('Görsel görüntülenemedi. Bağlantı geçersiz veya dosya okunamadı.');};
+      img.style.cssText='max-width:100%;max-height:78vh;object-fit:contain;border-radius:10px;background:#111;';
+      img.onerror=function(){alert('Görsel görüntülenemedi.');};
       body.appendChild(img);
     }else if(isPdf){
-      const frame=document.createElement('iframe');
+      var frame=document.createElement('iframe');
       frame.src=viewUrl;
       frame.title=(f&&f.name)||'PDF';
-      frame.style.cssText='width:100%;height:78vh;border:0;border-radius:10px;background:#fff';
+      frame.style.cssText='width:100%;height:78vh;border:0;border-radius:10px;background:#fff;';
       body.appendChild(frame);
     }else{
-      const box=document.createElement('div');
-      box.style.cssText='color:#fff;text-align:center;padding:20px';
-      const p=document.createElement('p');
-      p.textContent='Bu dosya türü önizlenemiyor.';
-      const a=document.createElement('a');
-      a.href=viewUrl;
-      a.target='_blank';
-      a.rel='noopener noreferrer';
-      a.textContent='Dosyayı aç / indir';
-      a.style.cssText='color:#7fd4a8;font-weight:800';
-      box.append(p,a);
+      var box=document.createElement('div');
+      box.style.cssText='color:#fff;text-align:center;padding:20px;';
+      box.innerHTML='<p>Önizleme yok.</p><p><a href="'+viewUrl+'" target="_blank" rel="noopener noreferrer" style="color:#7fd4a8;font-weight:800">Dosyayı aç</a></p>';
       body.appendChild(box);
     }
   }catch(e){
     console.error('Hallet belge görüntüleme hatası:',e);
     alert('Belge açılamadı.\n\n'+(e.message||'Bilinmeyen hata'));
-    document.getElementById('halletDocViewer')?.remove();
+    var v=document.getElementById('halletDocViewer');
+    if(v)v.remove();
   }
 }
+
 window.openHalletDocument=openDocument;
 
 
