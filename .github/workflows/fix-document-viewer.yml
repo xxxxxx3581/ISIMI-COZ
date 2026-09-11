@@ -1,0 +1,170 @@
+name: Repair document viewer
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  repair:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Replace document viewer with stable modal
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          start = s.find('async function openDocument(docKey,index){')
+          end = s.find('function result(fromSaved=false){', start)
+          if start < 0 or end < 0:
+              raise SystemExit('openDocument boundaries not found')
+
+          new_fn = r'''async function openDocument(docKey,index){
+            const files=getDocumentFiles(docKey);
+            const f=files[Number(index)||0];
+            const session=getAuthSession();
+            if(!session||!session.access_token){
+              alert('Oturum süresi dolmuş olabilir. Lütfen tekrar giriş yap.');
+              if(typeof openAuthModal==='function')openAuthModal('login');
+              return;
+            }
+            if(!f||!f.path){
+              alert('Belge bulunamadı. Dosyayı kapatıp işlem dosyasından yeniden açmayı deneyin.');
+              return;
+            }
+
+            const old=document.getElementById('halletDocViewer');
+            if(old) old.remove();
+
+            const viewer=document.createElement('div');
+            viewer.id='halletDocViewer';
+            viewer.setAttribute('role','dialog');
+            viewer.setAttribute('aria-modal','true');
+            viewer.setAttribute('data-hallet-viewer','1');
+            viewer.style.cssText='position:fixed;inset:0;width:100vw;height:100dvh;z-index:2147483647;background:rgba(0,0,0,.96);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;pointer-events:auto;touch-action:auto;overscroll-behavior:contain;';
+
+            const head=document.createElement('div');
+            head.style.cssText='width:100%;max-width:960px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;color:#fff;font:700 14px Arial,sans-serif;flex:0 0 auto;';
+            const title=document.createElement('div');
+            title.textContent=f.name||'Belge';
+            title.style.cssText='min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+            const close=document.createElement('button');
+            close.type='button';
+            close.textContent='Kapat';
+            close.style.cssText='border:1px solid #52717a;background:#10252b;color:#fff;border-radius:10px;padding:10px 14px;font:700 13px Arial,sans-serif;cursor:pointer;touch-action:manipulation;';
+
+            let objectUrl=null;
+            let closed=false;
+            const closeFn=function(ev){
+              if(ev){ev.preventDefault();ev.stopPropagation();}
+              if(closed)return;
+              closed=true;
+              try{if(objectUrl)URL.revokeObjectURL(objectUrl);}catch(e){}
+              viewer.remove();
+            };
+            close.addEventListener('click',closeFn,true);
+            close.addEventListener('pointerup',function(ev){ev.stopPropagation();},true);
+            close.addEventListener('touchend',function(ev){ev.stopPropagation();},true);
+            head.appendChild(title);
+            head.appendChild(close);
+
+            const body=document.createElement('div');
+            body.style.cssText='width:100%;max-width:960px;flex:1 1 auto;display:flex;align-items:center;justify-content:center;min-height:0;overflow:auto;';
+            const loading=document.createElement('div');
+            loading.textContent='Belge yükleniyor…';
+            loading.style.cssText='color:#fff;font:700 15px Arial,sans-serif;padding:20px;';
+            body.appendChild(loading);
+            viewer.appendChild(head);
+            viewer.appendChild(body);
+
+            // Deliberately NO backdrop-close handler. Only the Kapat button may close this viewer.
+            // This makes the viewer immune to mobile touch/click propagation from the opening button.
+            const blocker=function(ev){ev.stopPropagation();};
+            viewer.addEventListener('pointerdown',blocker,true);
+            viewer.addEventListener('pointerup',blocker,true);
+            viewer.addEventListener('touchstart',blocker,true);
+            viewer.addEventListener('touchend',blocker,true);
+            viewer.addEventListener('click',blocker,true);
+
+            document.body.appendChild(viewer);
+
+            try{
+              const rawPath=String(f.path).split('/').filter(Boolean).map(function(p){
+                try{return decodeURIComponent(p);}catch(e){return p;}
+              }).join('/');
+              const objectPath=rawPath.split('/').filter(Boolean).map(encodeURIComponent).join('/');
+              const objectEndpoint=SUPABASE_URL+'/storage/v1/object/authenticated/hallet-documents/'+objectPath;
+              const fileRes=await fetch(objectEndpoint,{method:'GET',headers:{'Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_KEY}});
+              if(!fileRes.ok){
+                const errText=await fileRes.text().catch(function(){return '';});
+                let errData=null;
+                try{errData=errText?JSON.parse(errText):null;}catch(e){}
+                const msg=(errData&&(errData.message||errData.error))||errText||('Dosya okunamadı (HTTP '+fileRes.status+').');
+                if(fileRes.status===401||fileRes.status===403||/jwt|token|auth|expired|oturum/i.test(String(msg))) throw new Error('Oturum süresi dolmuş olabilir. Lütfen tekrar giriş yapıp belgeyi açın.');
+                throw new Error(msg);
+              }
+              const blob=await fileRes.blob();
+              if(!blob||!blob.size)throw new Error('Dosya boş geldi veya okunamadı.');
+              objectUrl=URL.createObjectURL(blob);
+              const mime=String(f.type||blob.type||'').toLowerCase();
+              const name=String(f.name||f.path||'').toLowerCase();
+              const isImage=mime.indexOf('image/')===0||/\.(jpe?g|png|gif|webp|bmp|heic|heif)$/i.test(name);
+              const isPdf=mime==='application/pdf'||mime.indexOf('pdf')>=0||/\.pdf$/i.test(name);
+              loading.remove();
+              if(isImage){
+                const img=document.createElement('img');
+                img.src=objectUrl;
+                img.alt=f.name||'Belge';
+                img.style.cssText='max-width:100%;max-height:78vh;object-fit:contain;border-radius:10px;background:#111;display:block;';
+                img.onerror=function(){body.innerHTML='<div style="color:#fff;text-align:center;padding:20px">Görsel görüntülenemedi.</div>';};
+                body.appendChild(img);
+              }else if(isPdf){
+                const frame=document.createElement('iframe');
+                frame.src=objectUrl;
+                frame.title=f.name||'PDF';
+                frame.style.cssText='width:100%;height:78vh;border:0;border-radius:10px;background:#fff;display:block;';
+                body.appendChild(frame);
+              }else{
+                const box=document.createElement('div');
+                box.style.cssText='color:#fff;text-align:center;padding:20px;';
+                const p=document.createElement('p');
+                p.textContent='Bu dosya türü önizlenemiyor.';
+                const a=document.createElement('a');
+                a.href=objectUrl;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Dosyayı aç / indir';
+                a.style.cssText='color:#7fd4a8;font-weight:800;';
+                box.appendChild(p);box.appendChild(a);body.appendChild(box);
+              }
+            }catch(e){
+              console.error('Hallet belge görüntüleme hatası:',e);
+              body.innerHTML='';
+              const errBox=document.createElement('div');
+              errBox.style.cssText='color:#fff;text-align:center;padding:20px;max-width:520px;';
+              const h=document.createElement('p');h.textContent='Belge açılamadı';h.style.cssText='font:700 16px Arial,sans-serif;margin:0 0 10px';
+              const p=document.createElement('p');p.textContent=e&&e.message?String(e.message):'Bilinmeyen hata';p.style.cssText='white-space:pre-wrap;line-height:1.45;opacity:.9';
+              errBox.appendChild(h);errBox.appendChild(p);body.appendChild(errBox);
+            }
+          }
+
+          s = s[:start] + new_fn + '\n\n' + s[end:]
+          p.write_text(s, encoding='utf-8')
+      - name: Commit repaired file
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet || git commit -m "Fix document viewer closing on mobile"
+          git push
+      - name: Remove one-time workflow
+        if: success()
+        run: |
+          git rm .github/workflows/fix-document-viewer.yml
+          git commit -m "Remove one-time document viewer repair workflow"
+          git push
