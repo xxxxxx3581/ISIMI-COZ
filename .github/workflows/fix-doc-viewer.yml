@@ -20,35 +20,29 @@ jobs:
           from pathlib import Path
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-
-          # Keep the hardened viewer function already in the file.
           start=s.find('async function openDocument(docKey,index=0){')
           end=s.find('async function markCaseCompleted()', start)
           if start < 0 or end < 0:
               raise SystemExit('openDocument boundaries not found')
 
-          # Expose the closure-scoped viewer through a guaranteed global bridge.
           bridge='window.__halletOpenDocument=openDocument;\n'
           if 'window.__halletOpenDocument=openDocument;' not in s:
               s=s[:end]+bridge+s[end:]
 
-          # The generic delegated click handler has been unreliable on this screen.
-          # Put the actual call directly on every preview button, so it cannot depend on dispatch().
-          old='data-i="\'+i+'">Görüntüle</button>'
-          new='data-i="\'+i+'" onclick="window.__halletOpenDocument(this.dataset.k,Number(this.dataset.i||0));return false;">Görüntüle</button>'
+          # Directly bind the preview action in the generated button HTML.
+          old='>Görüntüle</button>'
+          new=' onclick="window.__halletOpenDocument(this.dataset.k,Number(this.dataset.i||0));return false;">Görüntüle</button>'
           count=s.count(old)
           if count:
               s=s.replace(old,new)
-          else:
-              print('preview button pattern already patched or not found')
+          print('preview buttons patched:',count)
 
-          # Remove the previous fallback that was accidentally appended after </html> and therefore never executed.
+          # Remove the old fallback that was appended after </html> and therefore was not executable.
           marker='\n/* Hard fallback for document preview buttons. */'
           if marker in s:
               s=s.split(marker,1)[0].rstrip()+"\n"
 
           p.write_text(s,encoding='utf-8')
-          print('direct document preview bridge patched; buttons changed:',count)
           PY
       - name: Commit patch
         shell: bash
