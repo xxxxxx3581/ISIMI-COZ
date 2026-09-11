@@ -1,0 +1,31 @@
+name: Fix authenticated document viewer
+on:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch storage download endpoint
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          old="SUPABASE_URL+'/storage/v1/object/hallet-documents/'"
+          new="SUPABASE_URL+'/storage/v1/object/authenticated/hallet-documents/'"
+          if old not in s:
+              raise SystemExit('target string not found')
+          s=s.replace(old,new,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Use authenticated Supabase Storage endpoint for document preview"
+          git push
