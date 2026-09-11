@@ -1731,7 +1731,10 @@ async function saveDocumentRow(docKey,file,path){
 }
 async function ensureCaseSaved(){
   if(H.dbId)return true;
-  await saveCase(true);
+  if(H.module==='prop')await savePropCase(true);
+  else if(H.module==='kurum_basvurusu')await saveKurumCase(true);
+  else if(H.module==='arac'||H.module==='arac_satisi')await saveAracCase(true);
+  else await saveCase(true);
   return !!H.dbId;
 }
 async function uploadDocument(docKey,file){
@@ -1769,115 +1772,122 @@ async function uploadDocument(docKey,file){
   }
 }
 async function openDocument(docKey,index=0){
-  try{console.log('[Hallet] openDocument',docKey,index, getDocumentFiles(docKey));}catch(e){}
-  var files=getDocumentFiles(docKey);
-  var f=files[Number(index)||0];
-  var session=getAuthSession();
-  if(!session||!session.access_token){
-    alert('Oturum süresi dolmuş olabilir. Lütfen tekrar giriş yapın.');
-    if(typeof openAuthModal==='function')openAuthModal('login');
-    return;
-  }
-  var normalizedPath=typeof normalizeStorageObjectPath==='function'?normalizeStorageObjectPath(f&&f.path):(f&&f.path?String(f.path):'');
-  if(!normalizedPath){
-    alert('Belge dosya yolu bulunamadı (docKey: '+String(docKey||'')+'). Dosyayı yeniden yüklemeyi deneyin.');
-    return;
-  }
-
-  var prev=document.getElementById('halletDocViewer');
-  if(prev)prev.remove();
-
-  var viewer=document.createElement('div');
-  viewer.id='halletDocViewer';
-  viewer.setAttribute('role','dialog');
-  viewer.setAttribute('aria-modal','true');
-  viewer.style.cssText='position:fixed;left:0;top:0;right:0;bottom:0;width:100vw;height:100vh;z-index:2147483647;background:rgba(0,0,0,0.95);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;pointer-events:auto;';
-
-  var head=document.createElement('div');
-  head.style.cssText='width:100%;max-width:960px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;color:#fff;font:700 14px Arial,sans-serif;';
-  var title=document.createElement('div');
-  title.textContent=(f&&f.name)||'Belge';
-  title.style.cssText='min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
-  var close=document.createElement('button');
-  close.type='button';
-  close.textContent='Kapat';
-  close.style.cssText='border:1px solid #52717a;background:#10252b;color:#fff;border-radius:10px;padding:10px 14px;font:700 14px Arial,sans-serif;cursor:pointer;';
-  var closeFn=function(){viewer.remove();};
-  close.onclick=closeFn;
-  head.appendChild(title);
-  head.appendChild(close);
-
-  var body=document.createElement('div');
-  body.style.cssText='width:100%;max-width:960px;flex:1;display:flex;align-items:center;justify-content:center;min-height:0;';
-  var loading=document.createElement('div');
-  loading.textContent='Belge yükleniyor…';
-  loading.style.cssText='color:#fff;font:700 16px Arial,sans-serif;padding:24px;';
-  body.appendChild(loading);
-  viewer.appendChild(head);
-  viewer.appendChild(body);
-  viewer.addEventListener('click',function(ev){if(ev.target===viewer)closeFn();});
-
-  // Panelin ÜSTÜNDE görünsün: body sonuna ekle + max z-index
-  document.body.appendChild(viewer);
-  viewer.style.setProperty('z-index','2147483647','important');
-  viewer.style.setProperty('display','flex','important');
-
+  try{console.log('[Hallet] openDocument',docKey,index);}catch(e){}
+  var flash=document.getElementById('halletOpenFlash');
+  if(flash)flash.remove();
+  flash=document.createElement('div');
+  flash.id='halletOpenFlash';
+  flash.textContent='Belge aciliyor...';
+  flash.style.cssText='position:fixed;left:50%;top:18px;transform:translateX(-50%);z-index:2147483647;background:#0e5c53;color:#fff;padding:12px 18px;border-radius:12px;font:700 14px Arial,sans-serif;box-shadow:0 8px 24px rgba(0,0,0,.45);';
+  document.body.appendChild(flash);
   try{
+    var session=getAuthSession();
+    if(!session||!session.access_token){
+      flash.remove();
+      alert('Oturum suresi dolmus olabilir. Lutfen tekrar giris yapin.');
+      if(typeof openAuthModal==='function')openAuthModal('login');
+      return;
+    }
+    var files=getDocumentFiles(docKey);
+    var f=files[Number(index)||0];
+    if((!f||!f.path)&&H.dbId&&docKey){
+      try{
+        var q='hallet_documents?select=id,doc_key,title,status,storage_path,mime_type,file_size_bytes,metadata,created_at&case_id=eq.'+encodeURIComponent(H.dbId)+'&doc_key=eq.'+encodeURIComponent(docKey)+'&order=created_at.asc&limit=20';
+        var rows=await supabaseAuthRequest('GET',q);
+        var list=Array.isArray(rows)?rows:[];
+        if(!Array.isArray(H.documentFiles[docKey]))H.documentFiles[docKey]=[];
+        list.forEach(function(d){
+          var sp=typeof resolveDocumentStoragePath==='function'?resolveDocumentStoragePath(d):(d.storage_path||'');
+          if(!sp)return;
+          H.documents[d.doc_key]=true;
+          H.documentFiles[docKey].push({id:d.id,path:sp,name:(d.metadata&&d.metadata.original_name)||d.title||d.doc_key,type:d.mime_type||null,size:d.file_size_bytes||0});
+        });
+        files=getDocumentFiles(docKey);
+        f=files[Number(index)||0];
+      }catch(loadErr){console.warn('Belge DB yenileme',loadErr);}
+    }
+    var normalizedPath=typeof normalizeStorageObjectPath==='function'?normalizeStorageObjectPath(f&&f.path):(f&&f.path?String(f.path):'');
+    if(!normalizedPath){
+      flash.remove();
+      alert('Belge dosya yolu bulunamadi. Doc: '+String(docKey||'-')+' / adet: '+String((files&&files.length)||0));
+      return;
+    }
+    var prev=document.getElementById('halletDocViewer');
+    if(prev)prev.remove();
+    var viewer=document.createElement('div');
+    viewer.id='halletDocViewer';
+    viewer.setAttribute('role','dialog');
+    viewer.style.cssText='position:fixed;left:0;top:0;right:0;bottom:0;width:100vw;height:100vh;z-index:2147483647;background:rgba(0,0,0,0.96);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;';
+    var head=document.createElement('div');
+    head.style.cssText='width:100%;max-width:960px;display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;color:#fff;font:700 14px Arial,sans-serif;';
+    var title=document.createElement('div');
+    title.textContent=(f&&f.name)||'Belge';
+    title.style.cssText='overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+    var close=document.createElement('button');
+    close.type='button';
+    close.textContent='Kapat';
+    close.style.cssText='border:1px solid #52717a;background:#10252b;color:#fff;border-radius:10px;padding:10px 14px;font:700 14px Arial,sans-serif;cursor:pointer;';
+    var closeFn=function(){viewer.remove();var fl=document.getElementById('halletOpenFlash');if(fl)fl.remove();};
+    close.onclick=closeFn;
+    head.appendChild(title);head.appendChild(close);
+    var body=document.createElement('div');
+    body.style.cssText='width:100%;max-width:960px;flex:1;display:flex;align-items:center;justify-content:center;';
+    var loading=document.createElement('div');
+    loading.textContent='Belge yukleniyor...';
+    loading.style.cssText='color:#fff;font:700 16px Arial,sans-serif;';
+    body.appendChild(loading);
+    viewer.appendChild(head);viewer.appendChild(body);
+    viewer.addEventListener('click',function(ev){if(ev.target===viewer)closeFn();});
+    document.body.appendChild(viewer);
+    viewer.style.setProperty('z-index','2147483647','important');
+    flash.remove();
     var objectPath=normalizedPath.split('/').filter(Boolean).map(encodeURIComponent).join('/');
-    var signEndpoint=SUPABASE_URL+'/storage/v1/object/sign/hallet-documents/'+objectPath;
-    var signRes=await fetch(signEndpoint,{
+    var signRes=await fetch(SUPABASE_URL+'/storage/v1/object/sign/hallet-documents/'+objectPath,{
       method:'POST',
-      headers:{
-        'Authorization':'Bearer '+session.access_token,
-        'apikey':SUPABASE_KEY,
-        'Content-Type':'application/json'
-      },
+      headers:{'Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
       body:JSON.stringify({expiresIn:600})
     });
     var signText=await signRes.text();
     var signData=null;
     try{signData=signText?JSON.parse(signText):null;}catch(e){}
     if(!signRes.ok){
-      var msg=(signData&&(signData.message||signData.error||signData.msg))||signText||'Belge bağlantısı oluşturulamadı.';
-      console.error('Signed URL hatası', signRes.status, msg, normalizedPath);
+      var msg=(signData&&(signData.message||signData.error||signData.msg))||signText||'Belge baglantisi olusturulamadi.';
       throw new Error(msg);
     }
     var signed=(signData&&(signData.signedURL||signData.signedUrl||signData.signed_url||signData.url))||null;
-    if(!signed)throw new Error('Belge bağlantısı oluşturulamadı.');
+    if(!signed)throw new Error('Belge baglantisi olusturulamadi.');
     var viewUrl=signed.indexOf('http')===0?signed:(SUPABASE_URL+'/storage/v1'+(signed.charAt(0)==='/'?signed:('/'+signed)));
-
     var mime=String((f&&f.type)||'').toLowerCase();
     var name=String((f&&f.name)||normalizedPath||'').toLowerCase();
     var isImage=mime.indexOf('image/')===0||/\.(jpe?g|png|gif|webp|bmp|heic|heif)$/i.test(name);
     var isPdf=mime==='application/pdf'||mime.indexOf('pdf')>=0||/\.pdf$/i.test(name);
-
     loading.remove();
     if(isImage){
       var img=document.createElement('img');
-      img.src=viewUrl;
-      img.alt=(f&&f.name)||'Belge';
-      img.style.cssText='max-width:100%;max-height:78vh;object-fit:contain;border-radius:10px;background:#111;';
-      img.onerror=function(){alert('Görsel görüntülenemedi.');};
+      img.src=viewUrl; img.alt=(f&&f.name)||'Belge';
+      img.style.cssText='max-width:100%;max-height:78vh;object-fit:contain;border-radius:10px;';
+      img.onerror=function(){alert('Gorsel goruntulenemedi.');};
       body.appendChild(img);
     }else if(isPdf){
       var frame=document.createElement('iframe');
-      frame.src=viewUrl;
-      frame.title=(f&&f.name)||'PDF';
+      frame.src=viewUrl; frame.title='PDF';
       frame.style.cssText='width:100%;height:78vh;border:0;border-radius:10px;background:#fff;';
       body.appendChild(frame);
     }else{
-      var box=document.createElement('div');
-      box.style.cssText='color:#fff;text-align:center;padding:20px;';
-      box.innerHTML='<p>Önizleme yok.</p><p><a href="'+viewUrl+'" target="_blank" rel="noopener noreferrer" style="color:#7fd4a8;font-weight:800">Dosyayı aç</a></p>';
-      body.appendChild(box);
+      var a=document.createElement('a');
+      a.href=viewUrl; a.target='_blank'; a.rel='noopener noreferrer';
+      a.textContent='Dosyayi ac / indir';
+      a.style.cssText='color:#7fd4a8;font-weight:800;font-size:16px;';
+      body.appendChild(a);
     }
   }catch(e){
-    console.error('Hallet belge görüntüleme hatası:',e);
-    alert('Belge açılamadı.\n\n'+(e.message||'Bilinmeyen hata'));
-    var v=document.getElementById('halletDocViewer');
-    if(v)v.remove();
+    console.error('Hallet belge goruntuleme hatasi:',e);
+    var fl=document.getElementById('halletOpenFlash'); if(fl)fl.remove();
+    var v=document.getElementById('halletDocViewer'); if(v)v.remove();
+    alert('Belge acilamadi.\n\n'+(e.message||'Bilinmeyen hata'));
   }
 }
+
 
 window.openHalletDocument=openDocument;
 
