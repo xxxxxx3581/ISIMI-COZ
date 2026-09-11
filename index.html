@@ -1712,7 +1712,7 @@ async function openDocument(docKey,index=0){
   close.type='button';
   close.textContent='✕ Kapat';
   close.style.cssText='border:1px solid #52717a;background:#10252b;color:#fff;border-radius:10px;padding:9px 12px;font:700 13px Arial,sans-serif;cursor:pointer';
-  const closeFn=function(){viewer.remove();};
+  const closeFn=function(){viewer.remove();if(viewer.dataset.objectUrl)URL.revokeObjectURL(viewer.dataset.objectUrl);};
   close.onclick=closeFn;
   head.append(title,close);
   const body=document.createElement('div');
@@ -1729,32 +1729,24 @@ async function openDocument(docKey,index=0){
   try{
     const rawPath=String(f.path).split('/').filter(Boolean).map(function(p){try{return decodeURIComponent(p);}catch(e){return p;}}).join('/');
     const objectPath=rawPath.split('/').map(encodeURIComponent).join('/');
-    const signEndpoint=SUPABASE_URL+'/storage/v1/object/sign/hallet-documents/'+objectPath;
-    const signRes=await fetch(signEndpoint,{
-      method:'POST',
-      headers:{
-        'Authorization':'Bearer '+session.access_token,
-        'apikey':SUPABASE_KEY,
-        'Content-Type':'application/json'
-      },
-      body:JSON.stringify({expiresIn:600})
+    // Mobil tarayıcıda signed URL yerine authenticated object GET + blob kullan.
+    const objectEndpoint=SUPABASE_URL+'/storage/v1/object/hallet-documents/'+objectPath;
+    const fileRes=await fetch(objectEndpoint,{
+      method:'GET',
+      headers:{'Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_KEY}
     });
-    const signText=await signRes.text();
-    let signData=null;
-    try{signData=signText?JSON.parse(signText):null;}catch(e){}
-    if(!signRes.ok){
-      const msg=signData?.message||signData?.error||signData?.msg||signText||'Belge bağlantısı oluşturulamadı.';
-      if(/jwt|token|auth|expired|oturum/i.test(String(msg))){
-        throw new Error('Oturum süresi dolmuş olabilir. Lütfen tekrar giriş yapıp belgeyi açın.');
-      }
+    if(!fileRes.ok){
+      const errText=await fileRes.text().catch(()=> '');
+      let errData=null; try{errData=errText?JSON.parse(errText):null;}catch(e){}
+      const msg=errData?.message||errData?.error||errText||('Dosya okunamadı (HTTP '+fileRes.status+').');
+      if(fileRes.status===401||fileRes.status===403||/jwt|token|auth|expired|oturum/i.test(String(msg))) throw new Error('Oturum süresi dolmuş olabilir. Lütfen tekrar giriş yapıp belgeyi açın.');
       throw new Error(msg);
     }
-    const signed=signData?.signedURL||signData?.signedUrl||signData?.signed_url||signData?.url;
-    if(!signed)throw new Error('Belge bağlantısı oluşturulamadı.');
-    // Signed URL doğrudan kullanılır — ikinci fetch/blob YOK
-    const viewUrl=signed.startsWith('http')?signed:(SUPABASE_URL+'/storage/v1'+(signed.startsWith('/')?signed:('/'+signed)));
-
-    const mime=(f.type||'').toLowerCase();
+    const blob=await fileRes.blob();
+    if(!blob||!blob.size)throw new Error('Dosya boş geldi veya okunamadı.');
+    const viewUrl=URL.createObjectURL(blob);
+    viewer.dataset.objectUrl=viewUrl;
+    const mime=(f.type||blob.type||'').toLowerCase();
     const name=(f.name||f.path||'').toLowerCase();
     const isImage=mime.startsWith('image/')||/\.(jpe?g|png|gif|webp|bmp|heic|heif)$/i.test(name);
     const isPdf=mime==='application/pdf'||mime.includes('pdf')||/\.pdf$/i.test(name);
@@ -1765,7 +1757,7 @@ async function openDocument(docKey,index=0){
       img.src=viewUrl;
       img.alt=f.name||'Belge';
       img.style.cssText='max-width:100%;max-height:78vh;object-fit:contain;border-radius:10px;background:#111';
-      img.onerror=function(){alert('Görsel görüntülenemedi. Bağlantı geçersiz veya dosya okunamadı.');};
+      img.onerror=function(){URL.revokeObjectURL(viewUrl);alert('Görsel görüntülenemedi. Dosya okunamadı.');};
       body.appendChild(img);
     }else if(isPdf){
       const frame=document.createElement('iframe');
