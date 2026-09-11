@@ -1688,54 +1688,37 @@ async function uploadDocument(docKey,file){
   }
 }
 async function openDocument(docKey,index=0){
-  const files=getDocumentFiles(docKey);
-  const f=files[index];
-  const session=getAuthSession();
+  const files=getDocumentFiles(docKey); const f=files[index]; const session=getAuthSession();
   if(!f?.path||!session?.access_token){alert('Belge bağlantısı bulunamadı.');return;}
+  document.getElementById('docViewerModal')?.remove();
+  const modal=document.createElement('div'); modal.id='docViewerModal'; modal.setAttribute('role','dialog');
+  modal.style.cssText='position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+  modal.innerHTML='<div style="width:min(960px,96vw);max-height:92vh;overflow:auto;background:#10252b;color:#fff;border-radius:14px;padding:18px;box-sizing:border-box;text-align:center"><div style="font:700 16px Arial,sans-serif">Belge yükleniyor…</div><div style="margin-top:8px;opacity:.75;font:13px Arial,sans-serif">Lütfen bekleyin.</div></div>';
+  document.body.appendChild(modal);
+  const closeModal=()=>{try{if(modal._objectUrl)URL.revokeObjectURL(modal._objectUrl);}catch(e){}modal.remove();};
+  const fail=(msg)=>{console.error('Belge görüntüleme:',msg);modal.innerHTML='<div style="width:min(700px,94vw);background:#10252b;color:#fff;border-radius:14px;padding:20px;box-sizing:border-box;text-align:center"><h3>Belge açılamadı</h3><p style="white-space:pre-wrap;line-height:1.5">'+String(msg||'Bilinmeyen hata').replace(/[&<>"']/g,function(c){return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]})+'</p><button type="button" id="docViewerClose">Kapat</button></div>'; modal.querySelector('#docViewerClose').onclick=closeModal;};
+  const fetchWithTimeout=async(url,opts,ms)=>{const c=new AbortController();const t=setTimeout(()=>c.abort(),ms);try{return await fetch(url,{...opts,signal:c.signal});}finally{clearTimeout(t);}};
   try{
     const objectPath=f.path.split('/').map(encodeURIComponent).join('/');
-    let res=await fetch(SUPABASE_URL+'/storage/v1/object/authenticated/hallet-documents/'+objectPath,{
-      headers:{'Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_KEY}
-    });
+    let res=await fetchWithTimeout(SUPABASE_URL+'/storage/v1/object/authenticated/hallet-documents/'+objectPath,{headers:{'Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_KEY}},15000);
     if(!res.ok){
-      const signRes=await fetch(SUPABASE_URL+'/storage/v1/object/sign/hallet-documents/'+objectPath,{
-        method:'POST',
-        headers:{'Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
-        body:JSON.stringify({expiresIn:600})
-      });
-      const text=await signRes.text();
-      let d=null;try{d=text?JSON.parse(text):null;}catch(e){}
-      if(!signRes.ok)throw new Error(d?.message||d?.error||text||'Belge açılamadı.');
-      const signed=d?.signedURL||d?.signedUrl||d?.signed_url;
-      if(!signed)throw new Error('Belge bağlantısı oluşturulamadı.');
-      const full=signed.startsWith('http')?signed:(SUPABASE_URL+'/storage/v1'+signed);
-      res=await fetch(full);
-      if(!res.ok)throw new Error('Belge indirilemedi.');
+      const signRes=await fetchWithTimeout(SUPABASE_URL+'/storage/v1/object/sign/hallet-documents/'+objectPath,{method:'POST',headers:{'Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({expiresIn:600})},15000);
+      const text=await signRes.text(); let d=null; try{d=text?JSON.parse(text):null;}catch(e){}
+      if(!signRes.ok)throw new Error(d?.message||d?.error||text||('Belge bağlantısı oluşturulamadı ('+signRes.status+').'));
+      const signed=d?.signedURL||d?.signedUrl||d?.signed_url; if(!signed)throw new Error('Belge bağlantısı oluşturulamadı.');
+      const full=signed.startsWith('http')?signed:(SUPABASE_URL+'/storage/v1'+signed); res=await fetchWithTimeout(full,{},15000);
+      if(!res.ok)throw new Error('Belge indirilemedi ('+res.status+').');
     }
-    const blob=await res.blob();
-    const objUrl=URL.createObjectURL(blob);
-    const mime=(f.type||blob.type||'').toLowerCase();
-    const name=(f.name||'').toLowerCase();
-    const isImg=mime.startsWith('image/')||/\.(png|jpe?g|gif|webp|bmp)$/.test(name);
-    const isPdf=mime==='application/pdf'||mime.includes('pdf')||/\.pdf$/.test(name);
-    document.getElementById('docViewerModal')?.remove();
-    const modal=document.createElement('div');
-    modal.id='docViewerModal';
-    modal.setAttribute('role','dialog');
-    modal.style.cssText='position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;padding:16px;box-sizing:border-box';
+    const blob=await res.blob(); const objUrl=URL.createObjectURL(blob); modal._objectUrl=objUrl;
+    const mime=(f.type||blob.type||'').toLowerCase(), name=(f.name||'').toLowerCase();
+    const isImg=mime.startsWith('image/')||/\.(png|jpe?g|gif|webp|bmp)$/.test(name); const isPdf=mime==='application/pdf'||mime.includes('pdf')||/\.pdf$/.test(name);
     let content='';
-    if(isImg) content='<img src="'+objUrl+'" alt="Belge" style="max-width:100%;max-height:78vh;border-radius:10px;display:block;margin:0 auto">';
-    else if(isPdf) content='<iframe src="'+objUrl+'" title="PDF belge" style="width:min(960px,96vw);height:78vh;border:0;border-radius:10px;background:#fff"></iframe>';
+    if(isImg)content='<img src="'+objUrl+'" alt="Belge" style="max-width:100%;max-height:78vh;border-radius:10px;display:block;margin:0 auto">';
+    else if(isPdf)content='<iframe src="'+objUrl+'" title="PDF belge" style="width:min(920px,92vw);height:78vh;border:0;border-radius:10px;background:#fff"></iframe>';
     else content='<div style="color:#fff;text-align:center;padding:20px"><p>Bu dosya türü önizlenemiyor.</p><a href="'+objUrl+'" download="'+(f.name||'belge').replace(/"/g,'')+'" style="color:#7fd4a8;font-weight:700">Dosyayı indir</a></div>';
-    modal.innerHTML='<div style="max-width:100%;text-align:center">'+content+'<div style="margin-top:12px"><button type="button" id="docViewerClose" style="padding:10px 18px;border-radius:10px;border:0;font-weight:800;cursor:pointer;background:#19c37d;color:#062">Kapat</button></div></div>';
-    document.body.appendChild(modal);
-    const close=()=>{try{URL.revokeObjectURL(objUrl);}catch(e){} modal.remove();};
-    modal.querySelector('#docViewerClose').onclick=close;
-    modal.addEventListener('click',function(ev){if(ev.target===modal)close();});
-  }catch(e){
-    console.error(e);
-    alert('Belge açılamadı.\n\n'+(e.message||'Bilinmeyen hata'));
-  }
+    modal.innerHTML='<div style="max-width:100%;max-height:92vh;overflow:auto;text-align:center">'+content+'<div style="margin-top:12px"><button type="button" id="docViewerClose" style="padding:10px 18px;border-radius:10px;border:0;font-weight:800;cursor:pointer">Kapat</button></div></div>';
+    modal.querySelector('#docViewerClose').onclick=closeModal; modal.addEventListener('click',ev=>{if(ev.target===modal)closeModal();});
+  }catch(e){fail(e?.name==='AbortError'?'Belge sunucusundan yanıt alınamadı (15 saniye zaman aşımı).':(e?.message||'Bilinmeyen hata'));}
 }
 async function markCaseCompleted(){
  if(H.status==='completed'){showActiveResult(!!H.dbId);return;}
@@ -1979,3 +1962,11 @@ document.addEventListener('click',function(e){const b=e.target.closest&&e.target
 </script>
 </body>
 </html>
+
+/* Hard fallback for document preview buttons. */
+document.addEventListener('click',function(e){
+  var el=e.target&&e.target.closest?e.target.closest('#hallet-root [data-a="openDoc"]'):null;
+  if(!el||e.defaultPrevented)return;
+  e.preventDefault(); e.stopPropagation();
+  try{openDocument(el.getAttribute('data-k')||'',Number(el.getAttribute('data-i')||0)||0);}catch(err){console.error(err);alert('Belge: '+(err&&err.message?err.message:err));}
+},true);
