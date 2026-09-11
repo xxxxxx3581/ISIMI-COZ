@@ -1730,7 +1730,7 @@ async function openDocument(docKey,index=0){
     const rawPath=String(f.path).split('/').filter(Boolean).map(function(p){try{return decodeURIComponent(p);}catch(e){return p;}}).join('/');
     const objectPath=rawPath.split('/').map(encodeURIComponent).join('/');
     // Mobil tarayıcıda signed URL yerine authenticated object GET + blob kullan.
-    const objectEndpoint=SUPABASE_URL+'/storage/v1/object/hallet-documents/'+objectPath;
+    const objectEndpoint=SUPABASE_URL+'/storage/v1/object/authenticated/hallet-documents/'+objectPath;
     const fileRes=await fetch(objectEndpoint,{
       method:'GET',
       headers:{'Authorization':'Bearer '+session.access_token,'apikey':SUPABASE_KEY}
