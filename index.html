@@ -2037,27 +2037,46 @@ function kurumResult(fromSaved){
  render(html);
 }
 
-function dispatch(a,e){if(a==='close')return close();if(a==='gate')return gate();if(a==='cases')return cases();if(a==='caseopen')return openCase(e.dataset.id);if(a==='openDoc')return openDocument((e&&(e.getAttribute('data-k')||e.dataset.k))||'',Number((e&&(e.getAttribute('data-i')||e.dataset.i))||0));if(a==='stepToggle')return updateCaseStep(e.dataset.k);if(a==='islem')return islem();if(a==='tasinmaz')return tasinmaz();if(a==='tapu_rehber')return tapuRehber();if(a==='prop_start')return propStart(e.dataset.id);if(a==='prop_qback'){H.step=Math.max(0,H.step-1);return propQuestion();}if(a==='prop_answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return propQuestion();}if(a==='prop_answer_input'){const i=document.getElementById('qinput');const f=getPropFlow(H.propFlowId);const q=f&&f.questions[H.step];if(q)H.answers[q.key]=i?i.value:'';H.step++;return propQuestion();}if(a==='prop_doc'){H.documents[e.dataset.k]=!!e.checked;if(H.dbId)return savePropCase(true);return propResult(!!H.dbId);}if(a==='prop_save')return savePropCase();if(a==='prop_print')return propPrint();if(a==='prop_whatsapp')return propShareWhatsApp();if(a==='arac')return arac();if(a==='arac_satis')return aracSatisStart();if(a==='arac_qback'){H.step=Math.max(0,H.step-1);return aracQuestion();}if(a==='arac_answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return aracQuestion();}if(a==='arac_answer_input'){const i=document.getElementById('qinput');const q=ARAC_QUESTIONS[H.step];if(q)H.answers[q.key]=i?i.value:'';H.step++;return aracQuestion();}if(a==='arac_doc'){H.documents[e.dataset.k]=!!e.checked;return aracResult(!!H.dbId);}if(a==='arac_save')return saveAracCase();if(a==='evrak_type'){if(e&&e.dataset&&e.dataset.fresh==='1'){H.dbId=null;H.evrakDraft=null;}return evrakTypeForm(e.dataset.t,H.evrakDraft);}if(a==='evrak_type_preview')return evrakTypePreview(e.dataset.t);if(a==='evrak_type_save')return evrakTypeSave(e.dataset.t);if(a==='evrak_mark_done')return evrakMarkDone();if(a==='evrak_print')return evrakPrint();if(a==='evrak_whatsapp')return evrakShareWhatsApp();if(a==='evrak_konut_edit'){const d=H.evrakDraft||{};return evrakSatisBilgiSaved({id:H.dbId,status:H.status||'draft',title:'Konut satış bilgi formu'},{document_type:'konut_satis_bilgi_formu',draft:d,case_no:H.caseId});}if(a==='yakinda')return msg((e&&e.dataset&&e.dataset.t)||'Yakında','Bu kategori menüde yer alıyor; tam akış henüz açılmadı. Uydurma hukuki süreç eklenmez. Şimdilik Konut satışı, Evrak (konut form) ve Kurum pilotlarını kullan.');if(a==='konut')return konut();if(a==='start'){H.step=0;return question()}if(a==='qback'){H.step=Math.max(0,H.step-1);return question()}if(a==='answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return question()}if(a==='docReady')return;if(a==='docToggle'){H.documents[e.dataset.k]=!!e.checked;if(H.module==='kurum_basvurusu'){kurumResult(false);if(H.dbId)return saveKurumCase();return;}result(false);if(H.dbId)return saveCase(true);return;}if(a==='savecase')return saveCase();if(a==='save'){const i=document.getElementById('qinput');if(!i||!String(i.value).trim()){const c=document.querySelector('#hallet-root .hc');if(c&&!c.querySelector('.err'))c.insertAdjacentHTML('beforeend','<div class="err">Lütfen bir değer girerek devam et.</div>');return}H.answers[e.dataset.k]=i.value.trim();H.step++;return question()}if(a==='new'){H.step=0;H.answers={};H.documents={};H.documentStatuses={};H.documentFiles={};H.caseId=null;H.dbId=null;H.status=null;H.module=null;H.kurumFlowId=null;H.caseSteps=[];return gate()}if(a==='isimi')return goIsimi();if(a==='evrak')return evrak();if(a==='evrak_satis_bilgi')return evrakSatisBilgi();if(a==='evrak_preview')return evrakPreview();if(a==='evrak_print')return evrakPrint();if(a==='evrak_savecase')return evrakSaveCase();if(a==='evrak_back')return islem();if(a==='completecase')return markCaseCompleted();if(a==='kurum')return kurumHome();if(a==='kurum_flow')return kurumStartFlow(e.dataset.id);if(a==='kurum_q')return kurumAnswer(e.dataset.k,e.dataset.v);if(a==='kurum_save')return saveKurumCase();if(a==='kurum_result')return kurumResult(false);if(a==='kurum_edit_info'){H.step=0;return kurumQuestion();}if(a==='kurum_save_notes'){const t=document.getElementById('kurumNotes');if(t)H.answers.notes=t.value||'';return saveKurumCase();}}
+function dispatch(a,e){if(a==='close')return close();if(a==='gate')return gate();if(a==='cases')return cases();if(a==='caseopen')return openCase(e.dataset.id);if(a==='openDoc')return openDocument((e&&e.getAttribute&&(e.getAttribute('data-k')||''))||(e&&e.dataset&&e.dataset.k)||'',Number((e&&e.getAttribute&&e.getAttribute('data-i'))||(e&&e.dataset&&e.dataset.i)||0)||0);if(a==='stepToggle')return updateCaseStep(e.dataset.k);if(a==='islem')return islem();if(a==='tasinmaz')return tasinmaz();if(a==='tapu_rehber')return tapuRehber();if(a==='prop_start')return propStart(e.dataset.id);if(a==='prop_qback'){H.step=Math.max(0,H.step-1);return propQuestion();}if(a==='prop_answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return propQuestion();}if(a==='prop_answer_input'){const i=document.getElementById('qinput');const f=getPropFlow(H.propFlowId);const q=f&&f.questions[H.step];if(q)H.answers[q.key]=i?i.value:'';H.step++;return propQuestion();}if(a==='prop_doc'){H.documents[e.dataset.k]=!!e.checked;if(H.dbId)return savePropCase(true);return propResult(!!H.dbId);}if(a==='prop_save')return savePropCase();if(a==='prop_print')return propPrint();if(a==='prop_whatsapp')return propShareWhatsApp();if(a==='arac')return arac();if(a==='arac_satis')return aracSatisStart();if(a==='arac_qback'){H.step=Math.max(0,H.step-1);return aracQuestion();}if(a==='arac_answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return aracQuestion();}if(a==='arac_answer_input'){const i=document.getElementById('qinput');const q=ARAC_QUESTIONS[H.step];if(q)H.answers[q.key]=i?i.value:'';H.step++;return aracQuestion();}if(a==='arac_doc'){H.documents[e.dataset.k]=!!e.checked;return aracResult(!!H.dbId);}if(a==='arac_save')return saveAracCase();if(a==='evrak_type'){if(e&&e.dataset&&e.dataset.fresh==='1'){H.dbId=null;H.evrakDraft=null;}return evrakTypeForm(e.dataset.t,H.evrakDraft);}if(a==='evrak_type_preview')return evrakTypePreview(e.dataset.t);if(a==='evrak_type_save')return evrakTypeSave(e.dataset.t);if(a==='evrak_mark_done')return evrakMarkDone();if(a==='evrak_print')return evrakPrint();if(a==='evrak_whatsapp')return evrakShareWhatsApp();if(a==='evrak_konut_edit'){const d=H.evrakDraft||{};return evrakSatisBilgiSaved({id:H.dbId,status:H.status||'draft',title:'Konut satış bilgi formu'},{document_type:'konut_satis_bilgi_formu',draft:d,case_no:H.caseId});}if(a==='yakinda')return msg((e&&e.dataset&&e.dataset.t)||'Yakında','Bu kategori menüde yer alıyor; tam akış henüz açılmadı. Uydurma hukuki süreç eklenmez. Şimdilik Konut satışı, Evrak (konut form) ve Kurum pilotlarını kullan.');if(a==='konut')return konut();if(a==='start'){H.step=0;return question()}if(a==='qback'){H.step=Math.max(0,H.step-1);return question()}if(a==='answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return question()}if(a==='docReady')return;if(a==='docToggle'){H.documents[e.dataset.k]=!!e.checked;if(H.module==='kurum_basvurusu'){kurumResult(false);if(H.dbId)return saveKurumCase();return;}result(false);if(H.dbId)return saveCase(true);return;}if(a==='savecase')return saveCase();if(a==='save'){const i=document.getElementById('qinput');if(!i||!String(i.value).trim()){const c=document.querySelector('#hallet-root .hc');if(c&&!c.querySelector('.err'))c.insertAdjacentHTML('beforeend','<div class="err">Lütfen bir değer girerek devam et.</div>');return}H.answers[e.dataset.k]=i.value.trim();H.step++;return question()}if(a==='new'){H.step=0;H.answers={};H.documents={};H.documentStatuses={};H.documentFiles={};H.caseId=null;H.dbId=null;H.status=null;H.module=null;H.kurumFlowId=null;H.caseSteps=[];return gate()}if(a==='isimi')return goIsimi();if(a==='evrak')return evrak();if(a==='evrak_satis_bilgi')return evrakSatisBilgi();if(a==='evrak_preview')return evrakPreview();if(a==='evrak_print')return evrakPrint();if(a==='evrak_savecase')return evrakSaveCase();if(a==='evrak_back')return islem();if(a==='completecase')return markCaseCompleted();if(a==='kurum')return kurumHome();if(a==='kurum_flow')return kurumStartFlow(e.dataset.id);if(a==='kurum_q')return kurumAnswer(e.dataset.k,e.dataset.v);if(a==='kurum_save')return saveKurumCase();if(a==='kurum_result')return kurumResult(false);if(a==='kurum_edit_info'){H.step=0;return kurumQuestion();}if(a==='kurum_save_notes'){const t=document.getElementById('kurumNotes');if(t)H.answers.notes=t.value||'';return saveKurumCase();}}
 document.addEventListener('click',function(e){
-  // Text node tıklamalarında closest yok → sessiz hata olmasın
-  var t=e.target;
-  if(t&&t.nodeType===3)t=t.parentElement;
-  if(!t||!t.closest)return;
-  // openDoc: dataset yerine getAttribute (data-k / data-i daha güvenilir)
-  var openBtn=t.closest('#hallet-root [data-a="openDoc"]');
+  var raw=e.target;
+  var t=(raw&&raw.nodeType===3)?raw.parentElement:raw;
+  if(!t||typeof t.closest!=='function')return;
+  var openBtn=null;
+  if(t.matches&&t.matches('#hallet-root [data-a="openDoc"]'))openBtn=t;
+  if(!openBtn)openBtn=t.closest('#hallet-root [data-a="openDoc"]');
+  if(!openBtn&&typeof e.composedPath==='function'){
+    var path=e.composedPath();
+    for(var pi=0;pi<path.length;pi++){
+      var n=path[pi];
+      if(n&&n.nodeType===1&&n.getAttribute&&n.getAttribute('data-a')==='openDoc'){openBtn=n;break;}
+    }
+  }
   if(openBtn){
     e.preventDefault();
     e.stopPropagation();
+    if(typeof e.stopImmediatePropagation==='function')e.stopImmediatePropagation();
     var k=openBtn.getAttribute('data-k')||'';
-    var i=Number(openBtn.getAttribute('data-i')||0);
-    try{openDocument(k,i);}catch(err){console.error(err);alert('Belge açılamadı.\n\n'+(err&&err.message?err.message:err));}
+    var ix=Number(openBtn.getAttribute('data-i')||0)||0;
+    try{
+      if(typeof openDocument!=='function'){alert('openDocument bulunamadı');return;}
+      openDocument(k,ix);
+    }catch(err){
+      console.error('openDoc click error',err);
+      alert('Belge açılamadı.\n\n'+(err&&err.message?err.message:String(err)));
+    }
     return;
   }
   var el=t.closest('#hallet-root [data-a]');
   if(!el)return;
   e.preventDefault();
   e.stopPropagation();
-  try{dispatch(el.getAttribute('data-a')||el.dataset.a,el);}catch(err){console.error(err);alert('İşlem hatası: '+(err&&err.message?err.message:err));}
+  try{
+    dispatch(el.getAttribute('data-a')||(el.dataset&&el.dataset.a)||'',el);
+  }catch(err){
+    console.error(err);
+    alert('İşlem hatası: '+(err&&err.message?err.message:String(err)));
+  }
 },true);
 document.addEventListener('change',function(e){
   const box=e.target.closest&&e.target.closest('#hallet-root input[data-kurum-doc]');
