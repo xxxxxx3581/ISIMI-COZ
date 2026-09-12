@@ -1,0 +1,95 @@
+name: One-time direct document viewer fix
+
+on:
+  push:
+    paths:
+      - .github/workflows/_fix-viewer-direct.yml
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Replace document viewer with direct tab navigation
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          start = s.find('async function openDocument(docKey,index=0){')
+          end = s.find('\nfunction result(fromSaved=false){', start)
+          if start < 0 or end < 0:
+              raise SystemExit('openDocument boundaries not found')
+          fn = r'''async function openDocument(docKey,index=0){
+            const files=getDocumentFiles(docKey);
+            const f=files[Number(index)||0];
+            const session=getAuthSession();
+            if(!session||!session.access_token){
+              alert('Oturum süresi dolmuş olabilir. Lütfen tekrar giriş yap.');
+              if(typeof openAuthModal==='function')openAuthModal('login');
+              return;
+            }
+            if(!f||!f.path){
+              alert('Belge bulunamadı. Dosyayı kapatıp işlem dosyasından yeniden açmayı deneyin.');
+              return;
+            }
+
+            // Yeni sekmeyi DOĞRUDAN kullanıcı dokunuşu sırasında açıyoruz.
+            // Böylece Android popup engeli ve modal/touch kapanma zinciri devre dışı kalır.
+            let target=null;
+            try{target=window.open('about:blank','_blank');}catch(e){target=null;}
+            if(!target){
+              alert('Belge yeni sekmede açılamadı. Tarayıcının açılır pencere engelini kontrol edin.');
+              return;
+            }
+            try{target.document.title=f.name||'Belge';}catch(e){}
+
+            try{
+              const rawPath=String(f.path).split('/').filter(Boolean).map(function(p){
+                try{return decodeURIComponent(p);}catch(e){return p;}
+              }).join('/');
+              const objectPath=rawPath.split('/').filter(Boolean).map(encodeURIComponent).join('/');
+              const objectEndpoint=SUPABASE_URL+'/storage/v1/object/authenticated/hallet-documents/'+objectPath;
+              const fileRes=await fetch(objectEndpoint,{
+                method:'GET',
+                headers:{
+                  'Authorization':'Bearer '+session.access_token,
+                  'apikey':SUPABASE_KEY
+                }
+              });
+              if(!fileRes.ok){
+                const errText=await fileRes.text().catch(function(){return '';});
+                let errData=null;
+                try{errData=errText?JSON.parse(errText):null;}catch(e){}
+                const msg=(errData&&(errData.message||errData.error))||errText||('Dosya okunamadı (HTTP '+fileRes.status+').');
+                throw new Error(msg);
+              }
+              const blob=await fileRes.blob();
+              if(!blob||!blob.size)throw new Error('Dosya boş geldi veya okunamadı.');
+              const objectUrl=URL.createObjectURL(blob);
+              target.location.href=objectUrl;
+              setTimeout(function(){try{URL.revokeObjectURL(objectUrl);}catch(e){}},60000);
+            }catch(e){
+              console.error('Hallet belge görüntüleme hatası:',e);
+              try{
+                target.document.body.innerHTML='<div style="font-family:Arial,sans-serif;padding:24px;color:#222"><h2>Belge açılamadı</h2><p style="white-space:pre-wrap">'+String(e&&e.message?e.message:'Bilinmeyen hata').replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];})+'</p><p>Bu pencereyi kapatıp tekrar deneyebilirsiniz.</p></div>';
+              }catch(x){try{target.close();}catch(y){}}
+            }
+          }
+          '''
+          p.write_text(s[:start] + fn + s[end:] , encoding='utf-8')
+          print('direct viewer replacement applied')
+      - name: Remove this workflow and commit fix
+        run: |
+          rm -f .github/workflows/_fix-viewer-direct.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html .github/workflows/_fix-viewer-direct.yml
+          git commit -m "Fix document preview with direct tab" || exit 0
+          git push
