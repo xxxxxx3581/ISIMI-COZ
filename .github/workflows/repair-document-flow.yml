@@ -1,0 +1,22 @@
+name: Repair document flow
+on: push
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply repair
+        shell: python
+        run: python scripts/repair_document_flow.py
+      - name: Commit repair and remove workflow
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Fix document upload preview and delete flow'
+          git rm scripts/repair_document_flow.py .github/workflows/repair-document-flow.yml
+          git commit -m 'Remove one-time document repair files'
+          git push
