@@ -8,7 +8,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Apply repair
-        shell: python
+        shell: bash
         run: python scripts/repair_document_flow.py
       - name: Commit repair and remove workflow
         shell: bash
