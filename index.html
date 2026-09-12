@@ -1960,5 +1960,65 @@ window.Hallet={showGate:gate,showIslemMenu:islem,showTasinmazMenu:tasinmaz,showK
 /* Hallet başlatıcısı — ana sayfaya dokunmadan çalışır. */
 document.addEventListener('click',function(e){const b=e.target.closest&&e.target.closest('#openHalletButton');if(!b)return;e.preventDefault();e.stopPropagation();if(window.Hallet)window.Hallet.showGate();},true);
 </script>
+<script>
+/* DOCUMENT-ACTIONS-REPAIR */
+(function(){
+  function session(){try{return getAuthSession&&getAuthSession()}catch(e){return null}}
+  function filesFor(k){try{return getDocumentFiles(k)||[]}catch(e){return []}}
+  window.openDocument=async function(docKey,index){
+    const ses=session();
+    const f=filesFor(docKey)[Number(index)||0];
+    if(!ses||!ses.access_token||!f||!f.path){alert('Belge bulunamadı veya oturum süresi doldu.');return;}
+    const tab=window.open('about:blank','_blank');
+    if(!tab){alert('Tarayıcı yeni sekmeyi engelledi. Lütfen açılır pencerelere izin verin.');return;}
+    try{
+      const path=f.path.split('/').filter(Boolean).map(encodeURIComponent).join('/');
+      const r=await fetch(SUPABASE_URL+'/storage/v1/object/authenticated/hallet-documents/'+path,{headers:{Authorization:'Bearer '+ses.access_token,apikey:SUPABASE_KEY}});
+      if(!r.ok)throw new Error('Belge erişimi başarısız (HTTP '+r.status+').');
+      const b=await r.blob();
+      const u=URL.createObjectURL(b);
+      tab.location.href=u;
+      setTimeout(function(){URL.revokeObjectURL(u)},60000);
+    }catch(e){tab.document.body.innerHTML='<pre style="padding:20px;font:16px sans-serif;white-space:pre-wrap">Belge açılamadı.\\n\\n'+String(e.message||e)+'</pre>'}
+  };
+  window.deleteDocument=async function(docKey,index){
+    const ses=session(), arr=filesFor(docKey), i=Number(index)||0, f=arr[i];
+    if(!ses||!ses.access_token){alert('Oturum süresi doldu.');return}
+    if(!f||!f.path){alert('Silinecek belge bulunamadı.');return}
+    if(!confirm('Bu belgeyi kalıcı olarak silmek istiyor musun?'))return;
+    try{
+      const path=f.path.split('/').filter(Boolean).map(encodeURIComponent).join('/');
+      const r=await fetch(SUPABASE_URL+'/storage/v1/object/hallet-documents/'+path,{method:'DELETE',headers:{Authorization:'Bearer '+ses.access_token,apikey:SUPABASE_KEY}});
+      if(!r.ok)throw new Error('Storage silme başarısız (HTTP '+r.status+').');
+      if(f.id) await supabaseAuthRequest('DELETE','hallet_documents?id=eq.'+encodeURIComponent(f.id));
+      else if(typeof H!=='undefined'&&H.dbId) await supabaseAuthRequest('DELETE','hallet_documents?case_id=eq.'+encodeURIComponent(H.dbId)+'&doc_key=eq.'+encodeURIComponent(docKey)+'&storage_path=eq.'+encodeURIComponent(f.path));
+      if(typeof H!=='undefined'){
+        H.documentFiles=H.documentFiles||{};
+        H.documentFiles[docKey]=arr.filter(function(_,n){return n!==i});
+        if(!H.documentFiles[docKey].length){delete H.documentFiles[docKey];H.documents[docKey]=false;}
+      }
+      if(typeof result==='function') result(true);
+      else location.reload();
+    }catch(e){alert('Belge silinemedi.\\n\\n'+String(e.message||e));}
+  };
+  function repairButtons(){
+    document.querySelectorAll('#hallet-root button[data-a="openDoc"]').forEach(function(btn){
+      if(btn.nextElementSibling&&btn.nextElementSibling.getAttribute('data-doc-delete')==='1')return;
+      const b=document.createElement('button');
+      b.type='button'; b.className=btn.className||'topb'; b.textContent='Sil'; b.setAttribute('data-doc-delete','1');
+      b.setAttribute('data-k',btn.getAttribute('data-k')||''); b.setAttribute('data-i',btn.getAttribute('data-i')||'0');
+      btn.parentNode.insertBefore(b,btn.nextSibling);
+    });
+  }
+  document.addEventListener('click',function(e){
+    const b=e.target&&e.target.closest&&e.target.closest('[data-doc-delete="1"]');
+    if(!b)return;
+    e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation();
+    deleteDocument(b.getAttribute('data-k')||'',Number(b.getAttribute('data-i')||0));
+  },true);
+  repairButtons();
+  new MutationObserver(repairButtons).observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>
 </body>
 </html>
