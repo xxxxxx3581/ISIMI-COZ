@@ -1,0 +1,192 @@
+name: Repair document flow
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-document-flow.yml'
+
+jobs:
+  repair:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Patch document flow
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          old = "SUPABASE_URL+'/storage/v1/object/authenticated/hallet-documents/'+safePath"
+          new = "SUPABASE_URL+'/storage/v1/object/hallet-documents/'+safePath"
+          if old not in s:
+              raise SystemExit('Expected upload endpoint was not found; refusing to patch.')
+          s = s.replace(old, new, 1)
+
+          marker = '/* DOCUMENT-ACTIONS-REPAIR */'
+          start = s.find(marker)
+          if start < 0:
+              raise SystemExit('Document repair marker was not found; refusing to patch.')
+          script_start = s.rfind('<script>', 0, start)
+          script_end = s.find('</script>', start)
+          if script_start < 0 or script_end < 0:
+              raise SystemExit('Repair script boundaries were not found.')
+
+          clean = r'''<script>
+/* DOCUMENT-ACTIONS-REPAIR — clean document flow */
+(function(){
+  function getSession(){try{return getAuthSession&&getAuthSession()}catch(e){return null}}
+  function getFiles(key){try{return getDocumentFiles(key)||[]}catch(e){return []}}
+
+  function ensureViewerStyles(){
+    if(document.getElementById('docViewerRepairStyle'))return;
+    const st=document.createElement('style');
+    st.id='docViewerRepairStyle';
+    st.textContent='#hallet-root input[data-upload-doc]{display:block!important;position:absolute!important;inset:0!important;width:100%!important;height:100%!important;opacity:0!important;cursor:pointer!important;margin:0!important;padding:0!important}#hallet-root label:has(input[data-upload-doc]){position:relative!important;overflow:hidden!important;cursor:pointer!important}.docRepairOverlay{position:fixed!important;inset:0!important;z-index:2147483647!important;background:rgba(0,0,0,.88)!important;display:flex!important;align-items:center!important;justify-content:center!important;padding:14px!important}.docRepairCard{position:relative!important;width:min(96vw,900px)!important;height:min(92vh,900px)!important;background:#07111f!important;border:1px solid #35535a!important;border-radius:16px!important;display:flex!important;flex-direction:column!important;overflow:hidden!important}.docRepairHead{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;padding:10px 12px!important;color:#fff!important;background:#10252b!important}.docRepairBody{flex:1!important;min-height:0!important;display:flex!important;align-items:center!important;justify-content:center!important;overflow:auto!important;padding:8px!important}.docRepairBody img{max-width:100%!important;max-height:100%!important;object-fit:contain!important}.docRepairBody iframe{width:100%!important;height:100%!important;border:0!important;background:#fff!important}.docRepairClose{border:1px solid #45616a!important;background:#17313a!important;color:#fff!important;border-radius:9px!important;padding:8px 12px!important;font-weight:700!important}';
+    document.head.appendChild(st);
+  }
+
+  function prepareFileInputs(root){
+    (root||document).querySelectorAll('#hallet-root label').forEach(function(label){
+      const input=label.querySelector('input[data-upload-doc]');
+      if(!input)return;
+      label.style.position='relative';
+      label.style.overflow='hidden';
+      input.style.display='block';
+      input.style.position='absolute';
+      input.style.inset='0';
+      input.style.width='100%';
+      input.style.height='100%';
+      input.style.opacity='0';
+      input.style.cursor='pointer';
+      input.style.margin='0';
+      input.style.padding='0';
+    });
+  }
+
+  async function openDocumentClean(docKey,index){
+    const ses=getSession();
+    if(!ses||!ses.access_token){alert('Oturum süresi dolmuş olabilir. Lütfen tekrar giriş yap.');return}
+    const f=getFiles(docKey)[Number(index)||0];
+    if(!f||!f.path){alert('Belgenin dosya yolu bulunamadı.');return}
+    ensureViewerStyles();
+    const old=document.getElementById('docRepairOverlay');
+    if(old)old.remove();
+    const overlay=document.createElement('div');
+    overlay.id='docRepairOverlay';
+    overlay.className='docRepairOverlay';
+    const card=document.createElement('div');
+    card.className='docRepairCard';
+    const head=document.createElement('div');
+    head.className='docRepairHead';
+    const title=document.createElement('div');
+    title.textContent=f.name||'Belge';
+    const close=document.createElement('button');
+    close.type='button'; close.className='docRepairClose'; close.textContent='Kapat';
+    close.onclick=function(){overlay.remove()};
+    head.appendChild(title);head.appendChild(close);
+    const body=document.createElement('div'); body.className='docRepairBody';
+    const loading=document.createElement('div'); loading.textContent='Belge açılıyor…'; loading.style.color='#fff'; body.appendChild(loading);
+    card.appendChild(head);card.appendChild(body);overlay.appendChild(card);document.body.appendChild(overlay);
+    overlay.addEventListener('click',function(e){if(e.target===overlay)overlay.remove()});
+    try{
+      const safe=f.path.split('/').map(encodeURIComponent).join('/');
+      const url=SUPABASE_URL+'/storage/v1/object/authenticated/hallet-documents/'+safe;
+      const res=await fetch(url,{method:'GET',headers:{Authorization:'Bearer '+ses.access_token,apikey:SUPABASE_KEY},cache:'no-store'});
+      if(!res.ok)throw new Error((await res.text())||('HTTP '+res.status));
+      const blob=await res.blob();
+      const objectUrl=URL.createObjectURL(blob);
+      body.innerHTML='';
+      if((f.type||blob.type||'').toLowerCase().includes('pdf')){
+        const frame=document.createElement('iframe'); frame.src=objectUrl; frame.title=f.name||'PDF'; body.appendChild(frame);
+      }else{
+        const img=document.createElement('img'); img.src=objectUrl; img.alt=f.name||'Belge'; body.appendChild(img);
+      }
+      overlay.dataset.objectUrl=objectUrl;
+      overlay.addEventListener('remove',function(){try{URL.revokeObjectURL(objectUrl)}catch(e){}});
+      setTimeout(function(){try{URL.revokeObjectURL(objectUrl)}catch(e){}},120000);
+    }catch(err){
+      body.innerHTML='';
+      const msg=document.createElement('div'); msg.style.color='#ffb6b8'; msg.style.padding='20px'; msg.textContent='Belge açılamadı: '+String(err&&err.message||err); body.appendChild(msg);
+    }
+  }
+  window.openDocument=openDocumentClean;
+
+  async function deleteDocumentClean(docKey,index){
+    const ses=getSession();
+    if(!ses||!ses.access_token){alert('Oturum süresi dolmuş olabilir.');return}
+    const f=getFiles(docKey)[Number(index)||0];
+    if(!f||!f.path){alert('Silinecek belgenin yolu bulunamadı.');return}
+    if(!confirm('Bu belgeyi silmek istediğine emin misin?'))return;
+    try{
+      const safe=f.path.split('/').map(encodeURIComponent).join('/');
+      const res=await fetch(SUPABASE_URL+'/storage/v1/object/hallet-documents/'+safe,{method:'DELETE',headers:{Authorization:'Bearer '+ses.access_token,apikey:SUPABASE_KEY}});
+      if(!res.ok){const t=await res.text();throw new Error(t||('HTTP '+res.status))}
+      const row=(H.documentFiles&&H.documentFiles[docKey]||[])[Number(index)||0];
+      if(row&&row.id){
+        const r=await fetch(SUPABASE_URL+'/rest/v1/hallet_documents?id=eq.'+encodeURIComponent(row.id),{method:'DELETE',headers:{Authorization:'Bearer '+ses.access_token,apikey:SUPABASE_KEY}});
+        if(!r.ok)throw new Error((await r.text())||('DB HTTP '+r.status));
+      }else{
+        const r=await fetch(SUPABASE_URL+'/rest/v1/hallet_documents?case_id=eq.'+encodeURIComponent(H.dbId)+'&doc_key=eq.'+encodeURIComponent(docKey)+'&storage_path=eq.'+encodeURIComponent(f.path),{method:'DELETE',headers:{Authorization:'Bearer '+ses.access_token,apikey:SUPABASE_KEY}});
+        if(!r.ok)throw new Error((await r.text())||('DB HTTP '+r.status));
+      }
+      const arr=getFiles(docKey).slice();arr.splice(Number(index)||0,1);H.documentFiles[docKey]=arr;
+      H.documents[docKey]=arr.length>0;
+      if(typeof result==='function')result(false);else if(typeof propResult==='function')propResult(!!H.dbId);
+    }catch(err){alert('Belge silinemedi.\n\n'+String(err&&err.message||err))}
+  }
+  window.deleteDocument=deleteDocumentClean;
+
+  function addDeleteButtons(){
+    document.querySelectorAll('#hallet-root button[data-a="openDoc"]').forEach(function(btn){
+      if(btn.nextElementSibling&&btn.nextElementSibling.getAttribute('data-doc-delete')==='1')return;
+      const b=document.createElement('button');
+      b.type='button'; b.className=btn.className||'topb'; b.textContent='Sil'; b.setAttribute('data-doc-delete','1');
+      b.setAttribute('data-k',btn.getAttribute('data-k')||''); b.setAttribute('data-i',btn.getAttribute('data-i')||'0');
+      btn.parentNode.insertBefore(b,btn.nextSibling);
+    });
+  }
+
+  document.addEventListener('click',function(e){
+    const b=e.target&&e.target.closest&&e.target.closest('#hallet-root button[data-a="openDoc"]');
+    if(b){e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation();openDocumentClean(b.getAttribute('data-k')||'',Number(b.getAttribute('data-i')||0));return;}
+    const d=e.target&&e.target.closest&&e.target.closest('#hallet-root [data-doc-delete="1"]');
+    if(d){e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation();deleteDocumentClean(d.getAttribute('data-k')||'',Number(d.getAttribute('data-i')||0));return;}
+  },true);
+
+  ensureViewerStyles();
+  prepareFileInputs(document);
+  addDeleteButtons();
+  new MutationObserver(function(){prepareFileInputs(document);addDeleteButtons()}).observe(document.documentElement,{childList:true,subtree:true});
+})();
+</script>'''
+
+          s = s[:script_start] + clean + s[script_end + len('</script>'):]
+          p.write_text(s, encoding='utf-8')
+
+          # Sanity checks: fail closed rather than committing a partial repair.
+          checks = [
+              "SUPABASE_URL+'/storage/v1/object/hallet-documents/'+safePath",
+              'DOCUMENT-ACTIONS-REPAIR — clean document flow',
+              'window.openDocument=openDocumentClean',
+              'data-upload-doc',
+          ]
+          for c in checks:
+              if c not in s:
+                  raise SystemExit('Sanity check failed: '+c)
+
+      - name: Commit repaired index and remove workflow
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Fix document upload preview and delete flow' || true
+          git rm .github/workflows/fix-document-flow.yml
+          git commit -m 'Remove one-time document flow repair workflow'
+          git push
