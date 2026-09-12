@@ -1698,12 +1698,20 @@ async function openDocument(docKey,index=0){
 
   document.getElementById('halletDocViewer')?.remove();
 
+  const rootEl=document.getElementById('hallet-root');
+  const oldRootPointer=rootEl? (rootEl.style.pointerEvents||'') : '';
+  const oldRootZ=rootEl? (rootEl.style.zIndex||'') : '';
+  if(rootEl){
+    rootEl.style.setProperty('pointer-events','none','important');
+    rootEl.style.setProperty('z-index','1','important');
+  }
+
   const viewer=document.createElement('div');
   viewer.id='halletDocViewer';
   viewer.setAttribute('role','dialog');
   viewer.setAttribute('aria-modal','true');
-  // body'ye ekle + root ile aynı max z-index (son eklenen üstte çizilir)
-  viewer.style.cssText='position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;pointer-events:auto;';
+  viewer.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;pointer-events:auto;';
+  viewer.style.setProperty('z-index','2147483647','important');
 
   const head=document.createElement('div');
   head.style.cssText='width:100%;max-width:960px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;color:#fff;font:700 14px Arial,sans-serif;';
@@ -1719,6 +1727,12 @@ async function openDocument(docKey,index=0){
   const closeFn=function(){
     try{if(objectUrl)URL.revokeObjectURL(objectUrl);}catch(e){}
     viewer.remove();
+    if(rootEl){
+      if(oldRootPointer) rootEl.style.setProperty('pointer-events',oldRootPointer,'important');
+      else rootEl.style.removeProperty('pointer-events');
+      if(oldRootZ) rootEl.style.setProperty('z-index',oldRootZ,'important');
+      else rootEl.style.removeProperty('z-index');
+    }
   };
   close.onclick=function(ev){ev.preventDefault();ev.stopPropagation();closeFn();};
 
