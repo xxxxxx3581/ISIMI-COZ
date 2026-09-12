@@ -1696,66 +1696,15 @@ async function openDocument(docKey,index=0){
     return;
   }
 
-  document.getElementById('halletDocViewer')?.remove();
-
-  const rootEl=document.getElementById('hallet-root');
-  const oldRootPointer=rootEl? (rootEl.style.pointerEvents||'') : '';
-  const oldRootZ=rootEl? (rootEl.style.zIndex||'') : '';
-  if(rootEl){
-    rootEl.style.setProperty('pointer-events','none','important');
-    rootEl.style.setProperty('z-index','1','important');
+  // Yeni sekmeyi DOĞRUDAN kullanıcı dokunuşu sırasında açıyoruz.
+  // Böylece Android popup engeli ve modal/touch kapanma zinciri devre dışı kalır.
+  let target=null;
+  try{target=window.open('about:blank','_blank');}catch(e){target=null;}
+  if(!target){
+    alert('Belge yeni sekmede açılamadı. Tarayıcının açılır pencere engelini kontrol edin.');
+    return;
   }
-
-  const viewer=document.createElement('div');
-  viewer.id='halletDocViewer';
-  viewer.setAttribute('role','dialog');
-  viewer.setAttribute('aria-modal','true');
-  viewer.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.94);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12px;box-sizing:border-box;pointer-events:auto;';
-  viewer.style.setProperty('z-index','2147483647','important');
-
-  const head=document.createElement('div');
-  head.style.cssText='width:100%;max-width:960px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;color:#fff;font:700 14px Arial,sans-serif;';
-  const title=document.createElement('div');
-  title.textContent=f.name||'Belge';
-  title.style.cssText='min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
-  const close=document.createElement('button');
-  close.type='button';
-  close.textContent='Kapat';
-  close.style.cssText='border:1px solid #52717a;background:#10252b;color:#fff;border-radius:10px;padding:10px 14px;font:700 13px Arial,sans-serif;cursor:pointer;';
-
-  let objectUrl=null;
-  const closeFn=function(){
-    try{if(objectUrl)URL.revokeObjectURL(objectUrl);}catch(e){}
-    viewer.remove();
-    if(rootEl){
-      if(oldRootPointer) rootEl.style.setProperty('pointer-events',oldRootPointer,'important');
-      else rootEl.style.removeProperty('pointer-events');
-      if(oldRootZ) rootEl.style.setProperty('z-index',oldRootZ,'important');
-      else rootEl.style.removeProperty('z-index');
-    }
-  };
-  close.onclick=function(ev){ev.preventDefault();ev.stopPropagation();closeFn();};
-
-  head.appendChild(title);
-  head.appendChild(close);
-
-  const body=document.createElement('div');
-  body.style.cssText='width:100%;max-width:960px;flex:1;display:flex;align-items:center;justify-content:center;min-height:0;';
-  const loading=document.createElement('div');
-  loading.textContent='Belge yükleniyor…';
-  loading.style.cssText='color:#fff;font:700 15px Arial,sans-serif;padding:20px;';
-  body.appendChild(loading);
-  viewer.appendChild(head);
-  viewer.appendChild(body);
-
-  // AYNI DOKUNUŞ/TIKLAMA viewer'ı hemen kapatmasın (mobilde flash→geri dönme kök nedeni)
-  viewer.addEventListener('pointerdown',function(ev){ev.stopPropagation();},true);
-  viewer.addEventListener('pointerup',function(ev){ev.stopPropagation();},true);
-  viewer.addEventListener('touchstart',function(ev){ev.stopPropagation();},true);
-  viewer.addEventListener('touchend',function(ev){ev.stopPropagation();},true);
-  viewer.addEventListener('click',function(ev){ev.stopPropagation();},true);
-
-  document.body.appendChild(viewer);
+  try{target.document.title=f.name||'Belge';}catch(e){}
 
   try{
     const rawPath=String(f.path).split('/').filter(Boolean).map(function(p){
@@ -1775,61 +1724,20 @@ async function openDocument(docKey,index=0){
       let errData=null;
       try{errData=errText?JSON.parse(errText):null;}catch(e){}
       const msg=(errData&&(errData.message||errData.error))||errText||('Dosya okunamadı (HTTP '+fileRes.status+').');
-      if(fileRes.status===401||fileRes.status===403||/jwt|token|auth|expired|oturum/i.test(String(msg))){
-        throw new Error('Oturum süresi dolmuş olabilir. Lütfen tekrar giriş yapıp belgeyi açın.');
-      }
       throw new Error(msg);
     }
     const blob=await fileRes.blob();
     if(!blob||!blob.size)throw new Error('Dosya boş geldi veya okunamadı.');
-    objectUrl=URL.createObjectURL(blob);
-
-    const mime=String(f.type||blob.type||'').toLowerCase();
-    const name=String(f.name||f.path||'').toLowerCase();
-    const isImage=mime.indexOf('image/')===0||/\.(jpe?g|png|gif|webp|bmp|heic|heif)$/i.test(name);
-    const isPdf=mime==='application/pdf'||mime.indexOf('pdf')>=0||/\.pdf$/i.test(name);
-
-    loading.remove();
-    if(isImage){
-      const img=document.createElement('img');
-      img.src=objectUrl;
-      img.alt=f.name||'Belge';
-      img.style.cssText='max-width:100%;max-height:78vh;object-fit:contain;border-radius:10px;background:#111;';
-      img.onerror=function(){alert('Görsel görüntülenemedi. Dosya okunamadı.');};
-      body.appendChild(img);
-    }else if(isPdf){
-      const frame=document.createElement('iframe');
-      frame.src=objectUrl;
-      frame.title=f.name||'PDF';
-      frame.style.cssText='width:100%;height:78vh;border:0;border-radius:10px;background:#fff;';
-      body.appendChild(frame);
-    }else{
-      const box=document.createElement('div');
-      box.style.cssText='color:#fff;text-align:center;padding:20px;';
-      const p=document.createElement('p');
-      p.textContent='Bu dosya türü önizlenemiyor.';
-      const a=document.createElement('a');
-      a.href=objectUrl;
-      a.target='_blank';
-      a.rel='noopener noreferrer';
-      a.textContent='Dosyayı aç / indir';
-      a.style.cssText='color:#7fd4a8;font-weight:800;';
-      box.appendChild(p);
-      box.appendChild(a);
-      body.appendChild(box);
-    }
+    const objectUrl=URL.createObjectURL(blob);
+    target.location.href=objectUrl;
+    setTimeout(function(){try{URL.revokeObjectURL(objectUrl);}catch(e){}},60000);
   }catch(e){
     console.error('Hallet belge görüntüleme hatası:',e);
-    // Viewer'ı anında silme: hata mesajını modal içinde göster (flash→geri dönme olmasın)
-    body.innerHTML='';
-    const errBox=document.createElement('div');
-    errBox.style.cssText='color:#fff;text-align:center;padding:20px;max-width:520px;';
-    errBox.innerHTML='<p style="font:700 16px Arial,sans-serif;margin:0 0 10px">Belge açılamadı</p><p style="white-space:pre-wrap;line-height:1.45;opacity:.9">'+(e&&e.message?String(e.message):'Bilinmeyen hata')+'</p>';
-    body.appendChild(errBox);
+    try{
+      target.document.body.innerHTML='<div style="font-family:Arial,sans-serif;padding:24px;color:#222"><h2>Belge açılamadı</h2><p style="white-space:pre-wrap">'+String(e&&e.message?e.message:'Bilinmeyen hata').replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c];})+'</p><p>Bu pencereyi kapatıp tekrar deneyebilirsiniz.</p></div>';
+    }catch(x){try{target.close();}catch(y){}}
   }
 }
-
-
 
 function result(fromSaved=false){
  const a=H.answers;
