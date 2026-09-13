@@ -530,6 +530,67 @@ function serviceOptions(selected=""){return `<option value="">Kategori seç</opt
 function districtOptions(selected=""){return `<option value="">İlçe seç</option>`+DISTRICTS.map(d=>`<option value="${escapeHTML(d)}" ${d===selected?"selected":""}>${escapeHTML(d)}</option>`).join("")}
 function makeRequestNumber(){const d=new Date();return `IC-${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}-${Math.floor(1000+Math.random()*9000)}`}
 
+
+// === MARKETPLACE 2.0 A2 HUB START ===
+// Isolated Marketplace 2.0 hub only. No listings CRUD, no Supabase, no Hallet changes.
+function showListingsHub(){
+  try{ if(typeof setNav==='function') setNav('navHome'); }catch(e){}
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="listingsHubBack()">← Ana sayfaya dön</button></div>
+  <div class="section">
+    <span class="badge">Marketplace 2.0</span>
+    <h1>İlan kategorileri</h1>
+    <p class="muted small">Gayrimenkul ve otomobil ilan altyapısı hazırlanıyor. Hizmetler mevcut talep akışına bağlanır.</p>
+    <div class="actionGrid homeMenuGrid" style="margin-top:12px">
+      <button class="actionCard homeMenuCard" type="button" onclick="showListingsCategory('gayrimenkul')">
+        <div class="emoji">🏠</div>
+        <strong>Gayrimenkul</strong>
+        <span>Konut, iş yeri ve arsa ilanları</span>
+      </button>
+      <button class="actionCard homeMenuCard" type="button" onclick="showListingsCategory('otomobil')">
+        <div class="emoji">🚗</div>
+        <strong>Otomobil</strong>
+        <span>Araç alım-satım ilanları</span>
+      </button>
+      <button class="actionCard homeMenuCard" type="button" onclick="showListingsCategory('hizmet')">
+        <div class="emoji">🛠️</div>
+        <strong>Hizmetler</strong>
+        <span>Mevcut hizmet talebi ve usta eşleştirme</span>
+      </button>
+    </div>
+  </div>`);
+}
+
+function showListingsCategory(type){
+  const t=String(type||'');
+  if(t==='hizmet'){
+    if(typeof showRequest==='function') return showRequest();
+    alert('Hizmet talebi ekranı yüklenemedi.');
+    return;
+  }
+  const labels={gayrimenkul:'Gayrimenkul',otomobil:'Otomobil'};
+  const title=labels[t]||'Kategori';
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showListingsHub()">← Marketplace 2.0</button></div>
+  <div class="formCard">
+    <span class="badge">Marketplace 2.0</span>
+    <h1>${title}</h1>
+    <p class="muted">İlan sistemi yakında.</p>
+    <p class="muted small">Bu kategoride ilan listeleme ve oluşturma bir sonraki aşamada eklenecek. Mevcut hizmet ve İşini Hallet akışlarınız aynen çalışmaya devam eder.</p>
+    <div class="splitActions" style="margin-top:12px">
+      <button class="btn secondary" type="button" onclick="showListingsHub()">Kategorilere dön</button>
+      <button class="btn secondary" type="button" onclick="listingsHubBack()">Ana sayfa</button>
+    </div>
+  </div>`);
+}
+
+function listingsHubBack(){
+  if(typeof showHome==='function') return showHome();
+}
+
+window.showListingsHub=showListingsHub;
+window.showListingsCategory=showListingsCategory;
+window.listingsHubBack=listingsHubBack;
+// === MARKETPLACE 2.0 A2 HUB END ===
+
 function showRequest(preselected=""){
  setNav("navRequest");
  app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div>
