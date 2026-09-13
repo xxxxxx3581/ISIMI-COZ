@@ -2929,6 +2929,27 @@ function kurumResult(fromSaved){
  render(html);
 }
 
+async function markCaseCompleted(){
+     const session=getAuthSession();
+     if(!session?.access_token||!session?.user?.id){openAuthModal('login');return;}
+     if(!H.dbId){alert('Önce işlem dosyasını kaydetmelisin.');return;}
+     const stepState=stepSummary();
+     const docs=activeDocumentChecklist(H.answers||{});
+     const docState=documentSummary(docs);
+     const canComplete=docState.complete&&stepState.done>=stepState.total&&stepState.total>0;
+     if(!canComplete){alert('Önce tüm hazırlık adımlarını ve gerekli belgeleri tamamla.');return;}
+     if(!confirm('Hazırlık dosyasını tamamlandı olarak işaretlemek istiyor musun?\\n\\nBu işlem resmî satış/tescil anlamına gelmez; yalnızca hazırlık dosyasını kapatır.'))return;
+     try{
+      const updated=await supabaseAuthRequest('PATCH','hallet_cases?id=eq.'+encodeURIComponent(H.dbId),{status:'completed',updated_at:new Date().toISOString()});
+      if(!Array.isArray(updated)||!updated.length)throw new Error('Dosya durumu güncellenemedi.');
+      H.status='completed';
+      showActiveResult(true);
+     }catch(e){
+      console.error('Hazırlık dosyası tamamlanamadı:',e);
+      alert('Hazırlık dosyası tamamlanamadı. Lütfen tekrar deneyin.');
+     }
+    }
+
 async function markOfficialTransactionCompleted(){
  const session=getAuthSession();
  if(!session?.access_token||!session?.user?.id){openAuthModal('login');return;}
