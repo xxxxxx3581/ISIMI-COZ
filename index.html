@@ -703,10 +703,48 @@ function showGayrimenkulCreateForm(){
   </div>`);
 }
 
+
+// A3.1-only write helper (does not modify global supabaseWrite)
+async function listingsAuthWrite(method, path, body){
+  const session=typeof getAuthSession==='function'?getAuthSession():null;
+  const token=session&&(session.access_token||session.accessToken);
+  const uid=session&&session.user&&(session.user.id||session.user.user_id);
+  if(!token){
+    throw new Error('Oturum token bulunamadı. Çıkış yapıp tekrar giriş yapın.');
+  }
+  if(!uid){
+    throw new Error('Kullanıcı kimliği bulunamadı. Çıkış yapıp tekrar giriş yapın.');
+  }
+  const headers={
+    "apikey":SUPABASE_KEY,
+    "Authorization":"Bearer "+token,
+    "Content-Type":"application/json",
+    "Accept":"application/json",
+    "Prefer":"return=representation"
+  };
+  const r=await fetch(SUPABASE_URL+"/rest/v1/"+path,{
+    method:method,
+    headers:headers,
+    body:(body!==null&&body!==undefined)?JSON.stringify(body):undefined
+  });
+  const txt=await r.text();
+  let d=null; try{d=txt?JSON.parse(txt):null;}catch(e){d=txt;}
+  if(!r.ok){
+    const msg=(d&&(d.message||d.error_description||d.details||d.hint))||("Supabase "+method+" başarısız ("+r.status+")");
+    throw new Error(msg);
+  }
+  if((method==="POST"||method==="PATCH")&&Array.isArray(d)&&d.length===0){
+    throw new Error("Kayıt yazılamadı (0 satır döndü). JWT ile owner_id eşleşmesini kontrol edin.");
+  }
+  return {data:d, uid:uid, token:token};
+}
+
 async function createGayrimenkulListing(){
   const session=typeof getAuthSession==='function'?getAuthSession():null;
-  if(!session||!session.user||!session.user.id){
-    alert('Giriş gerekli.');
+  const uid=session&&session.user&&(session.user.id||session.user.user_id);
+  const token=session&&(session.access_token||session.accessToken);
+  if(!session||!uid||!token){
+    alert('Giriş gerekli. Oturum veya token eksik; çıkış yapıp tekrar giriş yapın.');
     return showGayrimenkulCreateForm();
   }
   const title=(document.getElementById('gmTitle')?.value||'').trim();
@@ -729,8 +767,9 @@ async function createGayrimenkulListing(){
   const btn=document.getElementById('gmSaveBtn');
   if(btn){ btn.disabled=true; btn.textContent='Kaydediliyor…'; }
   try{
+    // owner_id MUST equal JWT sub (auth.uid()) for A1 RLS WITH CHECK
     const body={
-      owner_id: session.user.id,
+      owner_id: uid,
       listing_type: 'gayrimenkul',
       category: category,
       title: title,
@@ -743,7 +782,8 @@ async function createGayrimenkulListing(){
       status: 'draft',
       metadata: { source: 'a3.1', property_kind: category }
     };
-    const res=await supabaseWrite('POST','listings',body,{requireAuth:true});
+    const out=await listingsAuthWrite('POST','listings',body);
+    const res=out.data;
     const row=Array.isArray(res)?res[0]:res;
     if(!row||!row.id) throw new Error('Kayıt oluşturulamadı.');
     showGayrimenkulDraftResult(row);
@@ -752,6 +792,7 @@ async function createGayrimenkulListing(){
     if(btn){ btn.disabled=false; btn.textContent='Taslak olarak kaydet'; }
   }
 }
+
 
 function showGayrimenkulDraftResult(row){
   const id=row&&row.id?String(row.id):'';
@@ -776,18 +817,19 @@ async function publishGayrimenkulListing(id){
   const listingId=String(id||'').trim();
   if(!listingId){ alert('İlan bulunamadı.'); return; }
   const session=typeof getAuthSession==='function'?getAuthSession():null;
-  if(!session||!session.user||!session.user.id){
+  const uid=session&&session.user&&(session.user.id||session.user.user_id);
+  const token=session&&(session.access_token||session.accessToken);
+  if(!uid||!token){
     alert('Giriş gerekli.');
     return openAuthModal('login');
   }
   try{
-    const res=await supabaseWrite(
+    const out=await listingsAuthWrite(
       'PATCH',
       'listings?id=eq.'+encodeURIComponent(listingId),
-      { status: 'published' },
-      { requireAuth: true }
+      { status: 'published' }
     );
-    const rows=Array.isArray(res)?res:[];
+    const rows=Array.isArray(out.data)?out.data:[];
     if(rows.length===0){
       throw new Error('İlan yayınlanamadı. Bu ilanın sahibi olduğunuzdan ve giriş yaptığınızdan emin olun.');
     }
@@ -806,12 +848,14 @@ async function publishGayrimenkulListing(id){
   }
 }
 
+
 window.showListingsHub=showListingsHub;
 window.showListingsCategory=showListingsCategory;
 window.listingsHubBack=listingsHubBack;
 window.showGayrimenkulHub=showGayrimenkulHub;
 window.showGayrimenkulBrowse=showGayrimenkulBrowse;
 window.showGayrimenkulCreateForm=showGayrimenkulCreateForm;
+window.listingsAuthWrite=listingsAuthWrite;
 window.createGayrimenkulListing=createGayrimenkulListing;
 window.publishGayrimenkulListing=publishGayrimenkulListing;
 // === MARKETPLACE 2.0 A2 HUB END ===
