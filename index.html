@@ -1964,7 +1964,7 @@ async function openCase(id){
     return aracResult(true);
    }
    if(m.module==='prop'||['konut_alimi','isyeri_satisi','kira_hazirligi'].indexOf(row.case_type)>=0){
-    H.module='prop'; H.propFlowId=m.prop_flow||row.case_type; H.kurumFlowId=null; H.dbId=row.id; H.caseId=m.case_no||null; H.createdAt=row.created_at||null; H.status=row.status||'draft'; H.answers=(m.answers&&typeof m.answers==='object')?m.answers:{}; H.documents=(m.documents&&typeof m.documents==='object')?m.documents:{}; H.documentStatuses={}; H.documentFiles={}; H.caseSteps=[];
+    H.module='prop'; H.propFlowId=m.prop_flow||row.case_type; H.kurumFlowId=null; H.dbId=row.id; H.caseId=m.case_no||null; H.createdAt=row.created_at||null; H.status=row.status||'draft'; H.answers=(m.answers&&typeof m.answers==='object')?m.answers:{}; H.documents=(m.documents&&typeof m.documents==='object')?m.documents:{}; H.documentStatuses={}; H.documentFiles={}; H.caseSteps=[]; H.officialTransactionStatus=m.official_transaction_status||'not_completed';
     try{
      const docs=await supabaseAuthRequest('GET','hallet_documents?select=id,doc_key,title,status,storage_path,mime_type,file_size_bytes,metadata,created_at&case_id=eq.'+encodeURIComponent(H.dbId)+'&order=created_at.asc&limit=200');
      (Array.isArray(docs)?docs:[]).forEach(d=>{
