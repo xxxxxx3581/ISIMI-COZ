@@ -537,14 +537,14 @@ function makeRequestNumber(){const d=new Date();return `IC-${d.getFullYear()}${S
 
 
 // === MARKETPLACE 2.0 A2 HUB START ===
-// Isolated Marketplace 2.0 hub only. No listings CRUD, no Supabase, no Hallet changes.
+// Isolated Marketplace 2.0 hub. A3.1: gayrimenkul browse/create via public.listings only.
 function showListingsHub(){
   try{ if(typeof setNav==='function') setNav('navHome'); }catch(e){}
   app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="listingsHubBack()">← Ana sayfaya dön</button></div>
   <div class="section">
     <span class="badge">Marketplace 2.0</span>
     <h1>İlan kategorileri</h1>
-    <p class="muted small">Gayrimenkul ve otomobil ilan altyapısı hazırlanıyor. Hizmetler mevcut talep akışına bağlanır.</p>
+    <p class="muted small">Gayrimenkul ilanları aktif. Otomobil yakında. Hizmetler mevcut talep akışına bağlanır.</p>
     <div class="actionGrid homeMenuGrid" style="margin-top:12px">
       <button class="actionCard homeMenuCard" type="button" onclick="showListingsCategory('gayrimenkul')">
         <div class="emoji">🏠</div>
@@ -572,14 +572,17 @@ function showListingsCategory(type){
     alert('Hizmet talebi ekranı yüklenemedi.');
     return;
   }
-  const labels={gayrimenkul:'Gayrimenkul',otomobil:'Otomobil'};
+  if(t==='gayrimenkul'){
+    return showGayrimenkulHub();
+  }
+  const labels={otomobil:'Otomobil'};
   const title=labels[t]||'Kategori';
   app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showListingsHub()">← Marketplace 2.0</button></div>
   <div class="formCard">
     <span class="badge">Marketplace 2.0</span>
     <h1>${title}</h1>
     <p class="muted">İlan sistemi yakında.</p>
-    <p class="muted small">Bu kategoride ilan listeleme ve oluşturma bir sonraki aşamada eklenecek. Mevcut hizmet ve İşini Hallet akışlarınız aynen çalışmaya devam eder.</p>
+    <p class="muted small">Bu kategoride ilan listeleme ve oluşturma bir sonraki aşamada eklenecek.</p>
     <div class="splitActions" style="margin-top:12px">
       <button class="btn secondary" type="button" onclick="showListingsHub()">Kategorilere dön</button>
       <button class="btn secondary" type="button" onclick="listingsHubBack()">Ana sayfa</button>
@@ -591,10 +594,228 @@ function listingsHubBack(){
   if(typeof showHome==='function') return showHome();
 }
 
+function showGayrimenkulHub(){
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showListingsHub()">← Marketplace 2.0</button></div>
+  <div class="section">
+    <span class="badge">🏠 Gayrimenkul</span>
+    <h1>Gayrimenkul ilanları</h1>
+    <p class="muted small">Yayınlanmış ilanlara bak veya giriş yaparak ilan ver.</p>
+    <div class="actionGrid homeMenuGrid" style="margin-top:12px">
+      <button class="actionCard homeMenuCard" type="button" onclick="showGayrimenkulBrowse()">
+        <div class="emoji">🔍</div>
+        <strong>İlanlara Bak</strong>
+        <span>Yayındaki gayrimenkul ilanlarını listele</span>
+      </button>
+      <button class="actionCard homeMenuCard" type="button" onclick="showGayrimenkulCreateForm()">
+        <div class="emoji">➕</div>
+        <strong>İlan Ver</strong>
+        <span>Taslak oluştur, sonra yayınla</span>
+      </button>
+    </div>
+  </div>`);
+}
+
+function formatListingPrice(price, currency){
+  if(price===null||price===undefined||price==='') return 'Fiyat belirtilmedi';
+  const n=Number(price);
+  if(!isFinite(n)) return 'Fiyat belirtilmedi';
+  try{
+    return new Intl.NumberFormat('tr-TR').format(n)+' '+(currency||'TRY');
+  }catch(e){
+    return n+' '+(currency||'TRY');
+  }
+}
+
+async function showGayrimenkulBrowse(){
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showGayrimenkulHub()">← Gayrimenkul</button></div>
+  <div class="section">
+    <span class="badge">🏠 Gayrimenkul</span>
+    <h1>Yayındaki ilanlar</h1>
+    <p class="muted small">Yalnızca yayınlanmış gayrimenkul ilanları gösterilir.</p>
+    <div id="gmListArea" class="muted small">Yükleniyor…</div>
+  </div>`);
+  const box=document.getElementById('gmListArea');
+  try{
+    const path="listings?listing_type=eq.gayrimenkul&status=eq.published&order=created_at.desc&select=id,title,price,currency,city,district,neighborhood,category,description,status,created_at";
+    const rows=await supabaseRequest('GET', path);
+    const list=Array.isArray(rows)?rows:[];
+    if(!list.length){
+      box.innerHTML=`<div class="card empty"><h3>Henüz yayınlanmış gayrimenkul ilanı yok</h3><p>İlk ilanı sen verebilirsin.</p><button class="btn primary" type="button" onclick="showGayrimenkulCreateForm()">İlan Ver</button></div>`;
+      return;
+    }
+    box.innerHTML=`<div class="actionGrid" style="grid-template-columns:1fr;gap:10px">`+list.map(function(row){
+      const title=escapeHTML(row.title||'İlan');
+      const price=escapeHTML(formatListingPrice(row.price, row.currency));
+      const loc=[row.city,row.district,row.neighborhood].filter(Boolean).map(escapeHTML).join(' / ')||'Konum belirtilmedi';
+      const cat=escapeHTML(row.category||'—');
+      return `<div class="card" style="text-align:left">
+        <strong style="display:block;font-size:16px;margin-bottom:6px">${title}</strong>
+        <div class="small" style="margin-bottom:4px"><b>${price}</b></div>
+        <div class="small muted">${loc}</div>
+        <div class="small muted">Tür: ${cat}</div>
+      </div>`;
+    }).join('')+`</div>`;
+  }catch(err){
+    box.innerHTML=`<div class="card empty"><h3>İlanlar yüklenemedi</h3><p class="small muted">${escapeHTML(err&&err.message?err.message:String(err))}</p><button class="btn secondary" type="button" onclick="showGayrimenkulBrowse()">Tekrar dene</button></div>`;
+  }
+}
+
+function showGayrimenkulCreateForm(){
+  const session=typeof getAuthSession==='function'?getAuthSession():null;
+  if(!session||!session.user||!session.user.id){
+    app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showGayrimenkulHub()">← Gayrimenkul</button></div>
+    <div class="formCard">
+      <span class="badge">🏠 İlan Ver</span>
+      <h1>Giriş gerekli</h1>
+      <p class="muted">İlan vermek için giriş yapmalısın. Mevcut hesap sistemin kullanılır.</p>
+      <button class="btn primary" type="button" onclick="openAuthModal('login')">Giriş yap</button>
+    </div>`);
+    return;
+  }
+  const districts=typeof districtOptions==='function'?districtOptions():'<option value="">İlçe seç</option>';
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showGayrimenkulHub()">← Gayrimenkul</button></div>
+  <div class="formCard">
+    <span class="badge">🏠 İlan Ver</span>
+    <h1>Gayrimenkul ilanı</h1>
+    <p class="muted small">İlan önce taslak olarak kaydedilir. İstersen ardından yayınlayabilirsin.</p>
+    <label>İlan başlığı *</label>
+    <input id="gmTitle" maxlength="120" placeholder="Örn: Karşıyaka 3+1 daire">
+    <label>Açıklama</label>
+    <textarea id="gmDesc" maxlength="2000" placeholder="Özellikler, konum avantajları…"></textarea>
+    <label>Gayrimenkul türü *</label>
+    <select id="gmCategory">
+      <option value="Konut">Konut</option>
+      <option value="Arsa">Arsa</option>
+      <option value="İş Yeri">İş Yeri</option>
+    </select>
+    <div class="row">
+      <div><label>Fiyat</label><input id="gmPrice" type="number" min="0" step="1" placeholder="Opsiyonel"></div>
+      <div><label>Para birimi</label><select id="gmCurrency"><option value="TRY" selected>TRY</option><option value="USD">USD</option><option value="EUR">EUR</option></select></div>
+    </div>
+    <label>İl *</label>
+    <select id="gmCity"><option value="İzmir" selected>İzmir</option></select>
+    <label>İlçe *</label>
+    <select id="gmDistrict">${districts}</select>
+    <label>Mahalle</label>
+    <input id="gmNeighborhood" maxlength="80" placeholder="Mahalle">
+    <div class="notice">🔒 İlan sahibi olarak sen görünürsün. Taslak yalnızca sende kalır; yayınlayana kadar başkaları görmez.</div>
+    <button class="btn primary" type="button" id="gmSaveBtn" onclick="createGayrimenkulListing()">Taslak olarak kaydet</button>
+  </div>`);
+}
+
+async function createGayrimenkulListing(){
+  const session=typeof getAuthSession==='function'?getAuthSession():null;
+  if(!session||!session.user||!session.user.id){
+    alert('Giriş gerekli.');
+    return showGayrimenkulCreateForm();
+  }
+  const title=(document.getElementById('gmTitle')?.value||'').trim();
+  const description=(document.getElementById('gmDesc')?.value||'').trim();
+  const category=(document.getElementById('gmCategory')?.value||'').trim();
+  const priceRaw=(document.getElementById('gmPrice')?.value||'').trim();
+  const currency=(document.getElementById('gmCurrency')?.value||'TRY').trim()||'TRY';
+  const city=(document.getElementById('gmCity')?.value||'').trim();
+  const district=(document.getElementById('gmDistrict')?.value||'').trim();
+  const neighborhood=(document.getElementById('gmNeighborhood')?.value||'').trim();
+  if(!title){ alert('Başlık zorunlu.'); return; }
+  if(!category){ alert('Tür seçin.'); return; }
+  if(!city){ alert('İl seçin.'); return; }
+  if(!district){ alert('İlçe seçin.'); return; }
+  let price=null;
+  if(priceRaw!==''){
+    price=Number(priceRaw);
+    if(!isFinite(price)||price<0){ alert('Geçerli bir fiyat girin.'); return; }
+  }
+  const btn=document.getElementById('gmSaveBtn');
+  if(btn){ btn.disabled=true; btn.textContent='Kaydediliyor…'; }
+  try{
+    const body={
+      owner_id: session.user.id,
+      listing_type: 'gayrimenkul',
+      category: category,
+      title: title,
+      description: description||null,
+      price: price,
+      currency: currency,
+      city: city,
+      district: district,
+      neighborhood: neighborhood||null,
+      status: 'draft',
+      metadata: { source: 'a3.1', property_kind: category }
+    };
+    const res=await supabaseWrite('POST','listings',body,{requireAuth:true});
+    const row=Array.isArray(res)?res[0]:res;
+    if(!row||!row.id) throw new Error('Kayıt oluşturulamadı.');
+    showGayrimenkulDraftResult(row);
+  }catch(err){
+    alert(err&&err.message?err.message:String(err));
+    if(btn){ btn.disabled=false; btn.textContent='Taslak olarak kaydet'; }
+  }
+}
+
+function showGayrimenkulDraftResult(row){
+  const id=row&&row.id?String(row.id):'';
+  const title=escapeHTML(row&&row.title?row.title:'İlan');
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showGayrimenkulHub()">← Gayrimenkul</button></div>
+  <div class="formCard">
+    <span class="badge">Taslak</span>
+    <h1>İlan taslağın oluşturuldu</h1>
+    <p class="muted">Yayınlamak için devam et. Yayınlanana kadar yalnızca sen görürsün.</p>
+    <div class="card" style="text-align:left;margin:12px 0">
+      <strong>${title}</strong>
+      <div class="small muted">Durum: draft</div>
+    </div>
+    <div class="splitActions">
+      <button class="btn primary" type="button" onclick="publishGayrimenkulListing('${id.replace(/'/g,"")}')">İlanı Yayınla</button>
+      <button class="btn secondary" type="button" onclick="showGayrimenkulHub()">Daha sonra</button>
+    </div>
+  </div>`);
+}
+
+async function publishGayrimenkulListing(id){
+  const listingId=String(id||'').trim();
+  if(!listingId){ alert('İlan bulunamadı.'); return; }
+  const session=typeof getAuthSession==='function'?getAuthSession():null;
+  if(!session||!session.user||!session.user.id){
+    alert('Giriş gerekli.');
+    return openAuthModal('login');
+  }
+  try{
+    const res=await supabaseWrite(
+      'PATCH',
+      'listings?id=eq.'+encodeURIComponent(listingId),
+      { status: 'published' },
+      { requireAuth: true }
+    );
+    const rows=Array.isArray(res)?res:[];
+    if(rows.length===0){
+      throw new Error('İlan yayınlanamadı. Bu ilanın sahibi olduğunuzdan ve giriş yaptığınızdan emin olun.');
+    }
+    app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showGayrimenkulHub()">← Gayrimenkul</button></div>
+    <div class="formCard">
+      <span class="badge">Yayında</span>
+      <h1>İlan yayınlandı</h1>
+      <p class="muted">İlan artık “İlanlara Bak” listesinde görünebilir.</p>
+      <div class="splitActions">
+        <button class="btn primary" type="button" onclick="showGayrimenkulBrowse()">İlanlara Bak</button>
+        <button class="btn secondary" type="button" onclick="showGayrimenkulHub()">Gayrimenkul</button>
+      </div>
+    </div>`);
+  }catch(err){
+    alert(err&&err.message?err.message:String(err));
+  }
+}
+
 window.showListingsHub=showListingsHub;
 window.showListingsCategory=showListingsCategory;
 window.listingsHubBack=listingsHubBack;
+window.showGayrimenkulHub=showGayrimenkulHub;
+window.showGayrimenkulBrowse=showGayrimenkulBrowse;
+window.showGayrimenkulCreateForm=showGayrimenkulCreateForm;
+window.createGayrimenkulListing=createGayrimenkulListing;
+window.publishGayrimenkulListing=publishGayrimenkulListing;
 // === MARKETPLACE 2.0 A2 HUB END ===
+
 
 function showRequest(preselected=""){
  setNav("navRequest");
