@@ -534,16 +534,46 @@ async function updateRequestStatus(talepNo,newStatus){
 async function loadOffersForRequest(talepNo){
   if(!talepNo)return [];
   try{
+    // Resolve real requests.id (offers.request_id FK)
     let requestId=null;
-    const local=(getRequests()||[]).find(function(x){return String(x.talep_no||'')===String(talepNo);});
-    if(local&&local.id&&String(local.id).length>20)requestId=local.id;
+    let local=(getRequests()||[]).find(function(x){
+      return String(x.talep_no||'')===String(talepNo)||String(x.id)===String(talepNo);
+    });
+    if(local&&local.id&&String(local.id).length>30)requestId=local.id;
     if(!requestId){
-      const rows=await supabaseRequest('GET','talepler?select=id,talep_no&talep_no=eq.'+encodeURIComponent(String(talepNo))+'&limit=1');
-      if(Array.isArray(rows)&&rows[0]&&rows[0].id)requestId=rows[0].id;
+      try{
+        const found=await findRequestByNo(talepNo);
+        if(found&&found.id&&String(found.id).length>30)requestId=found.id;
+      }catch(e){}
     }
-    if(!requestId)return [];
-    const rows=await supabaseRequest('GET','offers?select=*&request_id=eq.'+encodeURIComponent(String(requestId))+'&order=olusturulma_tarihi.desc&limit=50');
+    if(!requestId){
+      // Search requests by encoded talep_no in description
+      try{
+        const rows=await supabaseRequest('GET','requests?select=id,description&order=created_at.desc&limit=100');
+        if(Array.isArray(rows)){
+          for(let i=0;i<rows.length;i++){
+            const meta=parseRequestDescription(rows[i].description||'');
+            if(String(meta.talep_no)===String(talepNo)||String(rows[i].id)===String(talepNo)){
+              requestId=rows[i].id;break;
+            }
+          }
+        }
+      }catch(e){console.warn('requests lookup',e);}
+    }
+    if(!requestId){
+      console.warn('[OFFER] request id bulunamadı', talepNo);
+      return [];
+    }
+    // offers uses created_at (NOT olusturulma_tarihi)
+    let rows;
+    try{
+      rows=await supabaseRequest('GET','offers?select=*&request_id=eq.'+encodeURIComponent(String(requestId))+'&order=created_at.desc&limit=50');
+    }catch(e1){
+      console.warn('[OFFER] ordered select failed, retry plain', e1);
+      rows=await supabaseRequest('GET','offers?select=*&request_id=eq.'+encodeURIComponent(String(requestId))+'&limit=50');
+    }
     const list=Array.isArray(rows)?rows:[];
+    console.log('[OFFER] loaded', list.length, 'for request', requestId);
     const out=[];
     for(let i=0;i<list.length;i++){
       const o=list[i];
@@ -555,11 +585,29 @@ async function loadOffersForRequest(talepNo){
         }catch(e){}
       }
       const st=o.status||'pending';
-      out.push({id:o.id,request_id:o.request_id,provider_id:o.provider_id,provider_name:pname||'Hizmet Sağlayıcı',provider_phone:pphone||'',fiyat:o.price,price:o.price,aciklama:o.note||'',note:o.note||'',available_time:o.available_time||'',durum:st==='accepted'?'Kabul edildi':(st==='rejected'?'Reddedildi':'Beklemede'),status:st,created_at:o.created_at||''});
+      out.push({
+        id:o.id,
+        request_id:o.request_id,
+        provider_id:o.provider_id,
+        provider_name:pname||'Hizmet Sağlayıcı',
+        provider_phone:pphone||'',
+        fiyat:o.price,
+        price:o.price,
+        aciklama:o.note||'',
+        note:o.note||'',
+        available_time:o.available_time||'',
+        durum:st==='accepted'?'Kabul edildi':(st==='rejected'?'Reddedildi':'Teklif bekliyor'),
+        status:st,
+        created_at:o.created_at||''
+      });
     }
     return out;
-  }catch(e){console.warn('offers okunamadı:',e.message||e);return [];}
+  }catch(e){
+    console.error('[OFFER] load failed', e);
+    return [];
+  }
 }
+
 async function submitOffer(talepNo){
   const p=getProvider();
   if(!p||!p.id){alert('Hizmet sağlayıcı seçili değil. Sağlayıcı listesinden paneli açın.');return;}
@@ -574,24 +622,45 @@ async function submitOffer(talepNo){
   if(!fiyatNum||fiyatNum<=0){alert('Geçerli bir fiyat girin.');return;}
   try{
     let requestId=null;
-    const local=(getRequests()||[]).find(function(x){return String(x.talep_no||'')===String(talepNo);});
-    if(local&&local.id&&String(local.id).length>20)requestId=local.id;
+    const local=(getRequests()||[]).find(function(x){
+      return String(x.talep_no||'')===String(talepNo)||String(x.id)===String(talepNo);
+    });
+    if(local&&local.id&&String(local.id).length>30)requestId=local.id;
     if(!requestId){
-      const rows=await supabaseRequest('GET','talepler?select=id,talep_no&talep_no=eq.'+encodeURIComponent(String(talepNo))+'&limit=1');
-      if(Array.isArray(rows)&&rows[0])requestId=rows[0].id;
+      const found=await findRequestByNo(talepNo);
+      if(found&&found.id)requestId=found.id;
+    }
+    if(!requestId){
+      const rows=await supabaseRequest('GET','requests?select=id,description&order=created_at.desc&limit=100');
+      if(Array.isArray(rows)){
+        for(let i=0;i<rows.length;i++){
+          const meta=parseRequestDescription(rows[i].description||'');
+          if(String(meta.talep_no)===String(talepNo)||String(rows[i].id)===String(talepNo)){
+            requestId=rows[i].id;break;
+          }
+        }
+      }
     }
     if(!requestId)throw new Error('Talep id bulunamadı: '+talepNo);
-    const body={request_id:String(requestId),provider_id:String(p.id),price:fiyatNum,available_time:available_time,note:aciklama||null,status:'pending'};
+    const body={
+      request_id:String(requestId),
+      provider_id:String(p.id),
+      price:fiyatNum,
+      available_time:available_time,
+      note:aciklama||null,
+      status:'pending'
+    };
     console.log('[OFFER] insert', body);
     const res=await supabaseRequest('POST','offers',body);
-    if(!res)throw new Error('Supabase bos yanit.');
-    alert('Teklif gönderildi. Fiyat: '+fiyatNum+' TL');
+    if(!res)throw new Error('Supabase boş yanıt.');
+    alert('Teklif gönderildi.\n\nFiyat: '+fiyatNum+' TL');
     if(typeof showProviderRequestDetail==='function')showProviderRequestDetail(talepNo);
   }catch(e){
     console.error('[OFFER] fail', e);
-    alert('Teklif gönderilemedi. '+(e&&e.message?e.message:e));
+    alert('Teklif gönderilemedi.\n\n'+(e&&e.message?e.message:e));
   }
 }
+
 async function acceptOffer(talepNo,offerId,providerName,price){
   try{
     if(offerId){
