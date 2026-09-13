@@ -663,27 +663,37 @@ async function submitOffer(talepNo){
 
 async function acceptOffer(talepNo,offerId,providerName,price){
   try{
-    if(offerId){
-      await supabaseRequest('PATCH','offers?id=eq.'+encodeURIComponent(String(offerId)),{status:'accepted'});
-      try{
-        const r=await findRequestByNo(talepNo);
-        if(r&&r.id){
-          const others=await supabaseRequest('GET','offers?select=id&request_id=eq.'+encodeURIComponent(String(r.id))+'&status=eq.pending');
-          if(Array.isArray(others)){
-            for(let i=0;i<others.length;i++){
-              if(String(others[i].id)!==String(offerId)){
-                try{await supabaseRequest('PATCH','offers?id=eq.'+encodeURIComponent(String(others[i].id)),{status:'rejected'});}catch(e){}
-              }
-            }
+    if(!offerId)throw new Error('Teklif id yok');
+    await supabaseRequest('PATCH','offers?id=eq.'+encodeURIComponent(String(offerId)),{status:'accepted'});
+    const r=await findRequestByNo(talepNo);
+    if(!r||!r.id)throw new Error('Talep bulunamadı');
+    // Reject other pending offers
+    try{
+      const others=await supabaseRequest('GET','offers?select=id&request_id=eq.'+encodeURIComponent(String(r.id))+'&status=eq.pending');
+      if(Array.isArray(others)){
+        for(let i=0;i<others.length;i++){
+          if(String(others[i].id)!==String(offerId)){
+            try{await supabaseRequest('PATCH','offers?id=eq.'+encodeURIComponent(String(others[i].id)),{status:'rejected'});}catch(e){}
           }
         }
-      }catch(e){console.warn(e);}
-    }
-    await updateRequestStatus(talepNo,'Devam ediyor');
+      }
+    }catch(e){console.warn(e);}
+    // Direct DB: requests.status = accepted
+    await supabaseRequest('PATCH','requests?id=eq.'+encodeURIComponent(String(r.id)),{status:'accepted'});
+    try{
+      const list=(getRequests()||[]).map(function(x){
+        if(String(x.talep_no||'')===String(talepNo)||String(x.id)===String(r.id)){
+          x.status='Devam ediyor';x.durum='Devam ediyor';
+        }
+        return x;
+      });
+      write(KEYS.requests,list);
+    }catch(e){}
     alert('Teklif kabul edildi. Durum: Devam ediyor');
     showRequestDetail(talepNo);
   }catch(e){alert('Teklif kabul edilemedi. '+(e.message||e));}
 }
+
 async function rejectOffer(offerId,talepNo){
   try{
     if(!offerId)return;
@@ -728,6 +738,28 @@ async function completeRequest(talepNo){
     alert('Tamamlama kaydedilemedi.\n\n'+(e.message||e));
   }
 }
+async function completeRequestFromCustomer(talepNo){
+  try{
+    const r=await findRequestByNo(talepNo);
+    if(!r||!r.id)throw new Error('Talep bulunamadı');
+    await supabaseRequest('PATCH','requests?id=eq.'+encodeURIComponent(String(r.id)),{status:'completed'});
+    try{
+      const list=(getRequests()||[]).map(function(x){
+        if(String(x.talep_no||'')===String(talepNo)||String(x.id)===String(r.id)){
+          x.status='Tamamlandı';x.durum='Tamamlandı';
+        }
+        return x;
+      });
+      write(KEYS.requests,list);
+    }catch(e){}
+    alert('İş tamamlandı olarak işaretlendi.');
+    if(typeof showRequestDetail==='function')showRequestDetail(talepNo);
+    else showRequests();
+  }catch(e){
+    alert('Tamamlama kaydedilemedi.\n\n'+(e.message||e));
+  }
+}
+
 
 async function findRequestByNo(talepNo){
   if(!talepNo)return null;
@@ -768,8 +800,11 @@ async function showRequestDetail(talepNo){
 async function showRequestDetailData(r){
   const k=serviceKeyFromValue(r.service||r.kategori);
   const s=SERVICES[k]||{name:r.kategori||'Hizmet',emoji:'🛠️'};
-  const st=r.status||r.durum||'Beklemede';
+  let st=String(r.status||r.durum||'Beklemede');
   const no=String(r.talep_no||r.id||'');
+  const stNorm=st.toLowerCase();
+  const isAccepted=stNorm==='accepted'||stNorm.indexOf('devam')>=0;
+  const isCompleted=stNorm==='completed'||stNorm.indexOf('tamam')>=0;
   app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showRequests()">← Taleplerime dön</button></div>
   <span class="badge">▣ TALEP DETAYI</span>
   <h1>${s.emoji} ${escapeHTML(s.name)}</h1>
@@ -789,11 +824,24 @@ async function showRequestDetailData(r){
       <span>👤 ${escapeHTML(r.ad_soyad||r.name||'')}</span>
       ${(r.telefon||r.phone)?`<span>📞 ${escapeHTML(r.telefon||r.phone)}</span>`:''}
     </div>
-    ${(r.provider_name||r.accepted_price)?`<div class="notice" style="margin-top:12px">Sağlayıcı: <strong>${escapeHTML(r.provider_name||'-')}</strong>${r.accepted_price?` · Kabul edilen fiyat: <strong>${escapeHTML(String(r.accepted_price))} TL</strong>`:''}</div>`:''}
   </div>
+  <div id="jobActionBox"></div>
   <div class="section"><h2>Gelen teklifler</h2><div id="offersBox" class="card" style="text-align:center">⏳ Teklifler yükleniyor...</div></div>`);
   const box=document.getElementById('offersBox');
+  const jobBox=document.getElementById('jobActionBox');
   const offers=await loadOffersForRequest(no);
+  const hasAcceptedOffer=(offers||[]).some(function(o){return String(o.status||'').toLowerCase()==='accepted';});
+  // Job complete: when request accepted/devam OR an offer is accepted
+  if(jobBox){
+    if(isCompleted){
+      jobBox.innerHTML='<div class="notice" style="margin-top:12px">✅ İş tamamlandı.</div>';
+    }else if(isAccepted||hasAcceptedOffer){
+      jobBox.innerHTML=`<div class="card" style="margin-top:12px">
+        <div class="notice">İş devam ediyor. İş bitince tamamlandı olarak işaretleyin.</div>
+        <button type="button" class="btn primary" style="width:100%;margin-top:10px" onclick='completeRequestFromCustomer(${JSON.stringify(no)})'>🏁 İşi Tamamlandı</button>
+      </div>`;
+    }
+  }
   if(!box)return;
   if(!offers.length){
     box.innerHTML='<div class="empty"><h3>Henüz teklif yok</h3><p>Hizmet sağlayıcılar teklif verdiğinde burada görünür.</p></div>';
@@ -805,12 +853,12 @@ async function showRequestDetailData(r){
     const pname=o.provider_name||o.name||'Sağlayıcı';
     const pphone=o.provider_phone||o.phone||'';
     const odurum=o.durum||o.status||'Beklemede';
+    const oStatus=String(o.status||'').toLowerCase();
     const wa=whatsappHref(pphone);
     const tel=telHref(pphone);
-        let acts='';
-    const oStatus=String(o.status||'').toLowerCase();
-    const reqDone=String(st||'').toLowerCase().indexOf('tamam')>=0||String(st||'').toLowerCase()==='completed';
-    if(!reqDone&&(oStatus==='pending'||odurum==='Teklif bekliyor'||odurum==='Beklemede'||odurum==='beklemede')){
+    let acts='';
+    const reqDone=isCompleted;
+    if(!reqDone&&!isAccepted&&!hasAcceptedOffer&&(oStatus==='pending'||odurum==='Teklif bekliyor'||odurum==='Beklemede')){
       acts=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
         <button type="button" class="btn primary" style="width:100%" onclick='acceptOffer(${JSON.stringify(no)},${JSON.stringify(String(oid))},${JSON.stringify(String(pname))},${JSON.stringify(String(fiyat))})'>✅ Teklifi Kabul Et</button>
         <button type="button" class="btn secondary" style="width:100%" onclick='rejectOffer(${JSON.stringify(String(oid))},${JSON.stringify(no)})'>❌ Teklifi Reddet</button>
@@ -820,11 +868,11 @@ async function showRequestDetailData(r){
     }else if(oStatus==='rejected'||odurum==='Reddedildi'){
       acts=`<div class="small muted" style="margin-top:8px">Teklif reddedildi</div>`;
     }else{
-      acts=`<div class="small muted" style="margin-top:8px">Teklif durumu: ${escapeHTML(odurum)}</div>`;
+      acts=`<div class="small muted" style="margin-top:8px">Teklif durumu: ${escapeHTML(String(odurum))}</div>`;
     }
     return `<article class="request">
-      <div class="requestTop"><div><h3>🛠️ ${escapeHTML(pname)}</h3><div class="small muted">${escapeHTML(o.created_at||'')}</div></div><span class="status">${escapeHTML(odurum)}</span></div>
-      <div class="description"><strong>${escapeHTML(String(fiyat))} TL</strong>${o.aciklama?` — ${escapeHTML(o.aciklama)}`:''}</div>
+      <div class="requestTop"><div><h3>🛠️ ${escapeHTML(pname)}</h3><div class="small muted">${escapeHTML(o.created_at||'')}</div></div><span class="status">${escapeHTML(String(odurum))}</span></div>
+      <div class="description"><strong>${escapeHTML(String(fiyat))} TL</strong>${o.aciklama?` — ${escapeHTML(o.aciklama)}`:''}${o.available_time?`<div class="small muted" style="margin-top:4px">Ne zaman: ${escapeHTML(o.available_time)}</div>`:''}</div>
       ${pphone?`<div class="meta"><span>📞 ${escapeHTML(pphone)}</span></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
         ${tel?`<a class="btn secondary" style="text-align:center;text-decoration:none" href="${tel}">Ara</a>`:''}
@@ -834,6 +882,7 @@ async function showRequestDetailData(r){
     </article>`;
   }).join('');
 }
+
 async function showProviderRequestDetail(talepNo){
   const r=await findRequestByNo(talepNo);
   if(!r){alert('Talep bulunamadı.');return;}
