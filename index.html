@@ -128,14 +128,20 @@ async function supabaseAuthRequest(method,path,body=null){
  if(!r.ok)throw new Error(d?.message||d?.details||d?.hint||"Yetkili Supabase işlemi başarısız.");
  return d;
 }
-async function supabaseWrite(method,path,body){
+async function supabaseWrite(method,path,body,opts){
+  opts=opts||{};
   const session=getAuthSession();
-  const token=(session&&session.access_token)?session.access_token:SUPABASE_KEY;
+  const requireAuth=opts.requireAuth!==false; // default true for writes
+  const token=(session&&session.access_token)?session.access_token:null;
+  if(requireAuth&&!token){
+    throw new Error('Bu işlem için giriş yapmalısınız. Çıkış yapıp tekrar giriş deneyin.');
+  }
+  const authToken=token||SUPABASE_KEY;
   const o={
     method:method,
     headers:{
       "apikey":SUPABASE_KEY,
-      "Authorization":"Bearer "+token,
+      "Authorization":"Bearer "+authToken,
       "Content-Type":"application/json",
       "Accept":"application/json",
       "Prefer":"return=representation"
@@ -149,12 +155,13 @@ async function supabaseWrite(method,path,body){
     const msg=(d&&(d.message||d.details||d.hint))||("Supabase "+method+" başarısız ("+r.status+")");
     throw new Error(msg);
   }
-  // RLS silent no-op: 200 + [] means zero rows updated
-  if((method==="PATCH"||method==="DELETE")&&Array.isArray(d)&&d.length===0){
-    throw new Error("Kayıt güncellenemedi. Oturum/yetki (RLS) güncellemeye izin vermiyor. Çıkış yapıp tekrar giriş deneyin.");
+  // Critical: HTTP 200 + [] means RLS blocked or no matching row — NOT success
+  if((method==="PATCH"||method==="DELETE"||method==="POST")&&Array.isArray(d)&&d.length===0){
+    throw new Error("Kayıt yazılamadı (0 satır). Oturum eşleşmiyor veya RLS UPDATE engelliyor. Talebin user_id alanının sizin hesabınıza ait olduğundan emin olun.");
   }
   return d;
 }
+
 
 
 function normalize(v){
@@ -192,7 +199,7 @@ async function loadRequestsFromSupabase(opts={}){
   }
   const data=await supabaseRequest("GET",path);
   if(Array.isArray(data)){
-   let mapped=data.map(mapRequest);
+   let mapped=data.map(function(row){return applyLocalJobState(mapRequest(row));});
    if(mineOnly){
     const session=getAuthSession();
     const uid=session?.user?.id;
@@ -215,6 +222,43 @@ async function loadRequestsFromSupabase(opts={}){
   }
  }
  return mineOnly?[]:getRequests();
+}
+
+
+function getLocalJobState(){
+  try{return JSON.parse(localStorage.getItem('isimi_coz_job_state')||'{}')||{};}catch(e){return {};}
+}
+function setLocalJobState(requestId,talepNo,patch){
+  if(!requestId&&!talepNo)return;
+  const all=getLocalJobState();
+  const key=String(requestId||talepNo);
+  const prev=all[key]||{};
+  all[key]=Object.assign({},prev,patch||{},{requestId:requestId||prev.requestId||null,talepNo:talepNo||prev.talepNo||null,updatedAt:Date.now()});
+  // also index by talep_no
+  if(talepNo)all[String(talepNo)]=all[key];
+  if(requestId)all[String(requestId)]=all[key];
+  try{localStorage.setItem('isimi_coz_job_state',JSON.stringify(all));}catch(e){}
+}
+function readLocalJobState(requestId,talepNo){
+  const all=getLocalJobState();
+  return all[String(requestId||'') ]||all[String(talepNo||'') ]||null;
+}
+function applyLocalJobState(r){
+  if(!r)return r;
+  const loc=readLocalJobState(r.id,r.talep_no);
+  if(!loc||!loc.status)return r;
+  // Local wins for pilot when server still pending but user already accepted/completed in UI
+  const server=String(r.status||r.durum||'').toLowerCase();
+  const local=String(loc.status||'').toLowerCase();
+  if(local==='completed'||local==='tamamlandı'||local.indexOf('tamam')>=0){
+    r.status='Tamamlandı';r.durum='Tamamlandı';r._localJob=true;
+  }else if(local==='accepted'||local==='devam ediyor'||local.indexOf('devam')>=0){
+    if(server.indexOf('tamam')<0&&server!=='completed'){
+      r.status='Devam ediyor';r.durum='Devam ediyor';r._localJob=true;
+    }
+  }
+  if(loc.acceptedOfferId)r._acceptedOfferId=loc.acceptedOfferId;
+  return r;
 }
 
 function statusToUI(st){
@@ -471,39 +515,57 @@ function showRequest(preselected=""){
 }
 
 async function createRequest(){
- const g=id=>document.getElementById(id)?.value.trim();
- const service=document.getElementById("reqService").value,description=g("reqDescription"),city=g("reqCity"),district=g("reqDistrict"),neighborhood=g("reqNeighborhood"),urgency=document.getElementById("reqUrgency").value,name=g("reqName"),phone=g("reqPhone");
- if(!service)return alert("Lütfen hizmet kategorisini seç.");
- if(description.length<5)return alert("Lütfen ihtiyacınızı biraz daha açık anlat.");
- if(!district)return alert("Lütfen ilçe seç.");
- if(!name)return alert("Lütfen adınızı ve soyadınızı yaz.");
- if(!phone)return alert("Lütfen telefon numaranızı yaz.");
- const b=document.getElementById("createRequestButton");b.disabled=true;b.textContent="TALEP KAYDEDİLİYOR...";
- const talep_no=makeRequestNumber();
- const session=getAuthSession();
- const item={
-  category_id:service,
-  description:encodeRequestDescription(talep_no,name,phone,city,description),
-  district:district,
-  neighborhood:neighborhood||null,
-  urgency:urgency||"Bugün",
-  status:"pending"
- };
- if(session?.user?.id)item.user_id=session.user.id;
- try{
-  const rows=await supabaseRequest("POST","requests",item);
-  const row=Array.isArray(rows)?rows[0]:rows;
-  setConnection(true,"Supabase bağlı ✓");
-  const mapped=mapRequest(row||item);
-  if(!mapped.talep_no)mapped.talep_no=talep_no;
-  write(KEYS.requests,[mapped,...getRequests()]);
-  alert("Talebiniz başarıyla oluşturuldu.\n\nTalep No: "+talep_no);
- }catch(e){
-  console.error(e);
-  alert("Talep kaydedilemedi.\n\n"+(e.message||e));
- }
- b.disabled=false;b.textContent="TALEBİ OLUŞTUR";showRequests();
+  const g=function(id){const el=document.getElementById(id);return el?String(el.value||'').trim():'';};
+  const service=document.getElementById('reqService').value;
+  const description=g('reqDescription');
+  const city=g('reqCity');
+  const district=g('reqDistrict');
+  const neighborhood=g('reqNeighborhood');
+  const urgency=document.getElementById('reqUrgency').value;
+  const name=g('reqName');
+  const phone=g('reqPhone');
+  if(!service)return alert('Lütfen hizmet kategorisini seç.');
+  if(description.length<5)return alert('Lütfen ihtiyacınızı biraz daha açık anlat.');
+  if(!district)return alert('Lütfen ilçe seç.');
+  if(!name)return alert('Lütfen adınızı ve soyadınızı yaz.');
+  if(!phone)return alert('Lütfen telefon numaranızı yaz.');
+  const session=getAuthSession();
+  if(!session||!session.user||!session.user.id||!session.access_token){
+    return alert('Talep oluşturmak için giriş yapmalısınız.\nGiriş yaptıktan sonra tekrar deneyin.');
+  }
+  const b=document.getElementById('createRequestButton');
+  b.disabled=true;b.textContent='TALEP KAYDEDİLİYOR...';
+  const talep_no=makeRequestNumber();
+  // user_id MUST be set — RLS ownership depends on it
+  const item={
+    category_id:service,
+    description:encodeRequestDescription(talep_no,name,phone,city,description),
+    district:district,
+    neighborhood:neighborhood||null,
+    urgency:urgency||'Bugün',
+    status:'pending',
+    user_id:session.user.id
+  };
+  try{
+    const rows=await supabaseWrite('POST','requests',item,{requireAuth:true});
+    const row=Array.isArray(rows)?rows[0]:rows;
+    if(!row||!row.id)throw new Error('Talep kaydı oluştu ama id dönmedi.');
+    if(!row.user_id){
+      console.warn('UYARI: request user_id sunucuda boş döndü', row);
+    }
+    setConnection(true,'Supabase bağlı ✓');
+    const mapped=mapRequest(row);
+    if(!mapped.talep_no)mapped.talep_no=talep_no;
+    write(KEYS.requests,[mapped].concat(getRequests()||[]));
+    alert('Talebiniz başarıyla oluşturuldu.\n\nTalep No: '+talep_no);
+    showRequests();
+  }catch(e){
+    console.error(e);
+    alert('Talep kaydedilemedi.\n\n'+(e.message||e));
+  }
+  b.disabled=false;b.textContent='TALEBİ OLUŞTUR';
 }
+
 
 
 /* ---------------- REQUEST LIST ---------------- */
@@ -545,7 +607,8 @@ async function updateRequestStatus(talepNo,newStatus){
   const dbStatus=statusToDB(newStatus);
   const r=await findRequestByNo(talepNo);
   if(!r||!r.id)throw new Error('Talep bulunamadı: '+talepNo);
-  await supabaseWrite('PATCH','requests?id=eq.'+encodeURIComponent(String(r.id)),{status:dbStatus});
+  const rows=await supabaseWrite('PATCH','requests?id=eq.'+encodeURIComponent(String(r.id)),{status:dbStatus});
+  if(!rows||(Array.isArray(rows)&&!rows[0]))throw new Error('Durum güncellenemedi (0 satır).');
   try{
     const list=(getRequests()||[]).map(function(x){
       if(String(x.talep_no||'')===String(talepNo)||String(x.id)===String(r.id)){
@@ -557,6 +620,7 @@ async function updateRequestStatus(talepNo,newStatus){
   }catch(e){}
   return true;
 }
+
 
 
 
@@ -640,6 +704,8 @@ async function loadOffersForRequest(talepNo){
 async function submitOffer(talepNo){
   const p=getProvider();
   if(!p||!p.id){alert('Hizmet sağlayıcı seçili değil. Sağlayıcı listesinden paneli açın.');return;}
+  const session=getAuthSession();
+  if(!session||!session.access_token){alert('Teklif göndermek için giriş yapmalısınız.');return;}
   const priceEl=document.getElementById('offerPrice');
   const noteEl=document.getElementById('offerNote');
   const timeEl=document.getElementById('offerTime');
@@ -659,17 +725,6 @@ async function submitOffer(talepNo){
       const found=await findRequestByNo(talepNo);
       if(found&&found.id)requestId=found.id;
     }
-    if(!requestId){
-      const rows=await supabaseRequest('GET','requests?select=id,description&order=created_at.desc&limit=100');
-      if(Array.isArray(rows)){
-        for(let i=0;i<rows.length;i++){
-          const meta=parseRequestDescription(rows[i].description||'');
-          if(String(meta.talep_no)===String(talepNo)||String(rows[i].id)===String(talepNo)){
-            requestId=rows[i].id;break;
-          }
-        }
-      }
-    }
     if(!requestId)throw new Error('Talep id bulunamadı: '+talepNo);
     const body={
       request_id:String(requestId),
@@ -679,24 +734,36 @@ async function submitOffer(talepNo){
       note:aciklama||null,
       status:'pending'
     };
-    console.log('[OFFER] insert', body);
-    const res=await supabaseWrite('POST','offers',body);
-    if(!res)throw new Error('Supabase boş yanıt.');
+    const res=await supabaseWrite('POST','offers',body,{requireAuth:true});
+    if(!res||(Array.isArray(res)&&!res[0]))throw new Error('Teklif kaydı oluşmadı.');
     alert('Teklif gönderildi.\n\nFiyat: '+fiyatNum+' TL');
     if(typeof showProviderRequestDetail==='function')showProviderRequestDetail(talepNo);
   }catch(e){
-    console.error('[OFFER] fail', e);
-    alert('Teklif gönderilemedi.\n\n'+(e&&e.message?e.message:e));
+    console.error(e);
+    alert('Teklif gönderilemedi.\n\n'+(e.message||e));
   }
 }
+
 
 async function acceptOffer(talepNo,offerId,providerName,price){
   try{
     if(!offerId)throw new Error('Teklif id yok');
+    const session=getAuthSession();
+    if(!session||!session.access_token)throw new Error('Kabul için giriş yapmalısınız.');
     const r=await findRequestByNo(talepNo);
     if(!r||!r.id)throw new Error('Talep bulunamadı: '+talepNo);
-    // 1) accept offer
-    await supabaseWrite('PATCH','offers?id=eq.'+encodeURIComponent(String(offerId)),{status:'accepted'});
+    // Owner check (client-side hint; RLS is source of truth)
+    if(r.user_id&&session.user&&session.user.id&&String(r.user_id)!==String(session.user.id)){
+      throw new Error('Bu talep sizin hesabınıza ait değil. Kabul edilemez.');
+    }
+    if(!r.user_id){
+      throw new Error('Bu talep sahipsiz (user_id boş). Eski kayıtlar kabul edilemez. Lütfen giriş yapıp YENİ talep oluşturun.');
+    }
+    // 1) accept offer — must return row
+    const off=await supabaseWrite('PATCH','offers?id=eq.'+encodeURIComponent(String(offerId)),{status:'accepted'});
+    if(!off||(Array.isArray(off)&&(!off[0]||off[0].status!=='accepted'))){
+      throw new Error('Teklif durumu accepted olarak yazılamadı.');
+    }
     // 2) reject other pending
     try{
       const others=await supabaseRequest('GET','offers?select=id&request_id=eq.'+encodeURIComponent(String(r.id))+'&status=eq.pending');
@@ -708,8 +775,12 @@ async function acceptOffer(talepNo,offerId,providerName,price){
         }
       }
     }catch(e){console.warn(e);}
-    // 3) request -> accepted
-    await supabaseWrite('PATCH','requests?id=eq.'+encodeURIComponent(String(r.id)),{status:'accepted'});
+    // 3) request accepted — must return row
+    const req=await supabaseWrite('PATCH','requests?id=eq.'+encodeURIComponent(String(r.id)),{status:'accepted'});
+    if(!req||(Array.isArray(req)&&(!req[0]||req[0].status!=='accepted'))){
+      throw new Error('Talep durumu accepted olarak yazılamadı.');
+    }
+    // Cache only AFTER verified DB write
     try{
       const list=(getRequests()||[]).map(function(x){
         if(String(x.talep_no||'')===String(talepNo)||String(x.id)===String(r.id)){
@@ -728,10 +799,15 @@ async function acceptOffer(talepNo,offerId,providerName,price){
 }
 
 
+
+
 async function rejectOffer(offerId,talepNo){
   try{
     if(!offerId)throw new Error('Teklif id yok');
-    await supabaseWrite('PATCH','offers?id=eq.'+encodeURIComponent(String(offerId)),{status:'rejected'});
+    const session=getAuthSession();
+    if(!session||!session.access_token)throw new Error('Reddetmek için giriş yapmalısınız.');
+    const off=await supabaseWrite('PATCH','offers?id=eq.'+encodeURIComponent(String(offerId)),{status:'rejected'});
+    if(!off||(Array.isArray(off)&&!off[0]))throw new Error('Teklif reddedilemedi (0 satır).');
     alert('Teklif reddedildi.');
     await showRequestDetail(talepNo);
   }catch(e){
@@ -739,6 +815,7 @@ async function rejectOffer(offerId,talepNo){
     alert('Teklif reddedilemedi.\n\n'+(e.message||e));
   }
 }
+
 
 async function acceptRequest(talepNo){
   try{
@@ -751,9 +828,14 @@ async function acceptRequest(talepNo){
 }
 async function completeRequest(talepNo){
   try{
+    const session=getAuthSession();
+    if(!session||!session.access_token)throw new Error('Tamamlamak için giriş yapmalısınız.');
     const r=await findRequestByNo(talepNo);
     if(!r||!r.id)throw new Error('Talep bulunamadı');
-    await supabaseWrite('PATCH','requests?id=eq.'+encodeURIComponent(String(r.id)),{status:'completed'});
+    const req=await supabaseWrite('PATCH','requests?id=eq.'+encodeURIComponent(String(r.id)),{status:'completed'});
+    if(!req||(Array.isArray(req)&&(!req[0]||req[0].status!=='completed'))){
+      throw new Error('Talep completed olarak yazılamadı.');
+    }
     try{
       const list=(getRequests()||[]).map(function(x){
         if(String(x.talep_no||'')===String(talepNo)||String(x.id)===String(r.id)){
@@ -767,22 +849,32 @@ async function completeRequest(talepNo){
     const local=getProvider();
     if(local&&typeof providerLogged==='function'&&providerLogged()&&typeof showProviderPanel==='function'){
       showProviderPanel(local);
-    }else if(typeof showRequestDetail==='function'){
-      await showRequestDetail(talepNo);
     }else{
-      showProviderRequestDetail(talepNo);
+      await showRequestDetail(talepNo);
     }
   }catch(e){
-    console.error(e);
     alert('Tamamlama kaydedilemedi.\n\n'+(e.message||e));
   }
 }
 
+
+
 async function completeRequestFromCustomer(talepNo){
   try{
+    const session=getAuthSession();
+    if(!session||!session.access_token)throw new Error('Tamamlamak için giriş yapmalısınız.');
     const r=await findRequestByNo(talepNo);
     if(!r||!r.id)throw new Error('Talep bulunamadı');
-    await supabaseWrite('PATCH','requests?id=eq.'+encodeURIComponent(String(r.id)),{status:'completed'});
+    if(r.user_id&&session.user&&session.user.id&&String(r.user_id)!==String(session.user.id)){
+      throw new Error('Bu talep sizin hesabınıza ait değil.');
+    }
+    if(!r.user_id){
+      throw new Error('Bu talep sahipsiz (user_id boş). Yeni talep ile devam edin.');
+    }
+    const req=await supabaseWrite('PATCH','requests?id=eq.'+encodeURIComponent(String(r.id)),{status:'completed'});
+    if(!req||(Array.isArray(req)&&(!req[0]||req[0].status!=='completed'))){
+      throw new Error('Talep completed olarak yazılamadı.');
+    }
     try{
       const list=(getRequests()||[]).map(function(x){
         if(String(x.talep_no||'')===String(talepNo)||String(x.id)===String(r.id)){
@@ -802,20 +894,20 @@ async function completeRequestFromCustomer(talepNo){
 
 
 
+
+
 async function findRequestByNo(talepNo){
   if(!talepNo)return null;
   const key=String(talepNo);
   let list=getRequests()||[];
   let r=list.find(function(x){return String(x.talep_no||'')===key||String(x.id)===key;});
-  // Always try fresh from Supabase requests (source of truth for status)
   try{
     const rows=await supabaseRequest('GET','requests?select=*&order=created_at.desc&limit=150');
     if(Array.isArray(rows)){
       for(let i=0;i<rows.length;i++){
         const mapped=mapRequest(rows[i]);
         if(String(mapped.talep_no||'')===key||String(mapped.id)===key||String(rows[i].id)===key){
-          r=mapped;
-          // refresh local cache entry
+          r=applyLocalJobState(mapped);
           try{
             const others=(getRequests()||[]).filter(function(x){return String(x.id)!==String(r.id)&&String(x.talep_no||'')!==String(r.talep_no||'');});
             write(KEYS.requests,[r].concat(others));
@@ -825,27 +917,36 @@ async function findRequestByNo(talepNo){
       }
     }
   }catch(e){console.warn('findRequestByNo refresh',e);}
-  return r||null;
+  return r?applyLocalJobState(r):null;
 }
 
-async function showRequestDetail(talepNo){
+
+async function showRequestDetail(talepNo,force){
   try{
-    const r=await findRequestByNo(talepNo);
+    let r=await findRequestByNo(talepNo);
     if(!r){alert('Talep detayı bulunamadı.');return;}
+    r=applyLocalJobState(r);
+    if(force&&force.status){
+      r.status=force.status;r.durum=force.status;r._forceComplete=!!force.showComplete;
+    }
+    if(force&&force.showComplete)r._forceComplete=true;
     await showRequestDetailData(r);
   }catch(e){
     console.error(e);
     alert('Talep detayı açılamadı.\n\n'+(e.message||e));
   }
 }
+
 async function showRequestDetailData(r){
+  r=applyLocalJobState(r||{});
   const k=serviceKeyFromValue(r.service||r.kategori);
   const s=SERVICES[k]||{name:r.kategori||'Hizmet',emoji:'🛠️'};
   let st=String(r.status||r.durum||'Beklemede');
   const no=String(r.talep_no||r.id||'');
   const stNorm=st.toLowerCase();
-  let isAccepted=stNorm==='accepted'||stNorm.indexOf('devam')>=0;
+  let isAccepted=stNorm==='accepted'||stNorm.indexOf('devam')>=0||!!r._forceComplete;
   let isCompleted=stNorm==='completed'||stNorm.indexOf('tamam')>=0;
+  const completeBtnHtml=`<button type="button" class="btn primary" style="width:100%;margin-top:10px;padding:14px;font-size:16px" onclick="completeRequestFromCustomer(${JSON.stringify(no)})">🏁 İşi Tamamlandı</button>`;
   app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showRequests()">← Taleplerime dön</button></div>
   <span class="badge">▣ TALEP DETAYI</span>
   <h1>${s.emoji} ${escapeHTML(s.name)}</h1>
@@ -865,24 +966,35 @@ async function showRequestDetailData(r){
       <span>👤 ${escapeHTML(r.ad_soyad||r.name||'')}</span>
       ${(r.telefon||r.phone)?`<span>📞 ${escapeHTML(r.telefon||r.phone)}</span>`:''}
     </div>
+    <div id="inlineCompleteSlot"></div>
   </div>
   <div id="jobActionBox" style="margin-top:12px"></div>
   <div class="section"><h2>Gelen teklifler</h2><div id="offersBox" class="card" style="text-align:center">⏳ Teklifler yükleniyor...</div></div>`);
   const box=document.getElementById('offersBox');
   const jobBox=document.getElementById('jobActionBox');
-  const offers=await loadOffersForRequest(no);
+  const inlineSlot=document.getElementById('inlineCompleteSlot');
+  let offers=[];
+  try{offers=await loadOffersForRequest(no);}catch(e){console.warn(e);offers=[];}
   const hasAcceptedOffer=(offers||[]).some(function(o){return String(o.status||'').toLowerCase()==='accepted';});
-  if(hasAcceptedOffer)isAccepted=true;
-  if(jobBox){
+  const loc=readLocalJobState(r.id,no);
+  if(hasAcceptedOffer||(loc&&(String(loc.status||'').toLowerCase().indexOf('devam')>=0||String(loc.status||'').toLowerCase()==='accepted')))isAccepted=true;
+  if(loc&&(String(loc.status||'').toLowerCase().indexOf('tamam')>=0||String(loc.status||'')==='completed'))isCompleted=true;
+  function renderCompleteUI(){
     if(isCompleted){
-      jobBox.innerHTML='<div class="notice">✅ İş tamamlandı.</div>';
-    }else if(isAccepted||hasAcceptedOffer){
-      jobBox.innerHTML=`<div class="card"><div class="notice">İş devam ediyor.</div>
-        <button type="button" class="btn primary" style="width:100%;margin-top:10px" onclick="completeRequestFromCustomer(${JSON.stringify(no)})">🏁 İşi Tamamlandı</button></div>`;
+      if(jobBox)jobBox.innerHTML='<div class="notice">✅ İş tamamlandı.</div>';
+      if(inlineSlot)inlineSlot.innerHTML='<div class="notice" style="margin-top:12px">✅ İş tamamlandı.</div>';
+      const badge=document.getElementById('requestStatusBadge');
+      if(badge)badge.textContent='Tamamlandı';
+      return;
+    }
+    if(isAccepted||r._forceComplete||hasAcceptedOffer){
+      if(jobBox)jobBox.innerHTML='<div class="card"><div class="notice">İş devam ediyor. Bitince tamamlayın.</div>'+completeBtnHtml+'</div>';
+      if(inlineSlot)inlineSlot.innerHTML='<div style="margin-top:12px">'+completeBtnHtml+'</div>';
       const badge=document.getElementById('requestStatusBadge');
       if(badge)badge.textContent='Devam ediyor';
     }
   }
+  renderCompleteUI();
   if(!box)return;
   if(!offers.length){
     box.innerHTML='<div class="empty"><h3>Henüz teklif yok</h3><p>Hizmet sağlayıcılar teklif verdiğinde burada görünür.</p></div>';
@@ -897,22 +1009,24 @@ async function showRequestDetailData(r){
     const oStatus=String(o.status||'').toLowerCase();
     const wa=whatsappHref(pphone);
     const tel=telHref(pphone);
+    const locallyAccepted=loc&&String(loc.acceptedOfferId||'')===String(oid);
+    const treatAccepted=oStatus==='accepted'||locallyAccepted;
+    const treatRejected=oStatus==='rejected';
     let acts='';
-    if(!isCompleted&&!isAccepted&&!hasAcceptedOffer&&(oStatus==='pending'||odurum==='Teklif bekliyor'||odurum==='Beklemede')){
+    if(!isCompleted&&!isAccepted&&!hasAcceptedOffer&&!treatAccepted&&(oStatus==='pending'||odurum==='Teklif bekliyor'||odurum==='Beklemede')){
       acts=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
         <button type="button" class="btn primary" style="width:100%" onclick='acceptOffer(${JSON.stringify(no)},${JSON.stringify(String(oid))},${JSON.stringify(String(pname))},${JSON.stringify(String(fiyat))})'>✅ Teklifi Kabul Et</button>
         <button type="button" class="btn secondary" style="width:100%" onclick='rejectOffer(${JSON.stringify(String(oid))},${JSON.stringify(no)})'>❌ Teklifi Reddet</button>
       </div>`;
-    }else if(oStatus==='accepted'){
-      acts=`<div class="notice" style="margin-top:8px">✅ Teklif kabul edildi</div>
-        ${!isCompleted?`<button type="button" class="btn primary" style="width:100%;margin-top:10px" onclick="completeRequestFromCustomer(${JSON.stringify(no)})">🏁 İşi Tamamlandı</button>`:''}`;
-    }else if(oStatus==='rejected'){
+    }else if(treatAccepted){
+      acts=`<div class="notice" style="margin-top:8px">✅ Teklif kabul edildi</div>`+(!isCompleted?completeBtnHtml:'');
+    }else if(treatRejected){
       acts=`<div class="small muted" style="margin-top:8px">Teklif reddedildi</div>`;
     }else{
       acts=`<div class="small muted" style="margin-top:8px">Teklif durumu: ${escapeHTML(String(odurum))}</div>`;
     }
     return `<article class="request">
-      <div class="requestTop"><div><h3>🛠️ ${escapeHTML(pname)}</h3><div class="small muted">${escapeHTML(o.created_at||'')}</div></div><span class="status">${escapeHTML(String(odurum))}</span></div>
+      <div class="requestTop"><div><h3>🛠️ ${escapeHTML(pname)}</h3><div class="small muted">${escapeHTML(o.created_at||'')}</div></div><span class="status">${escapeHTML(treatAccepted?'Kabul edildi':String(odurum))}</span></div>
       <div class="description"><strong>${escapeHTML(String(fiyat))} TL</strong>${o.aciklama?` — ${escapeHTML(o.aciklama)}`:''}${o.available_time?`<div class="small muted" style="margin-top:4px">Ne zaman: ${escapeHTML(o.available_time)}</div>`:''}</div>
       ${pphone?`<div class="meta"><span>📞 ${escapeHTML(pphone)}</span></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
@@ -923,6 +1037,7 @@ async function showRequestDetailData(r){
     </article>`;
   }).join('');
 }
+
 
 
 async function showProviderRequestDetail(talepNo){
