@@ -47,7 +47,7 @@ h1{font-size:30px;line-height:1.08;margin:16px 0 10px}h2{font-size:22px;margin:0
 label{display:block;font-size:13px;font-weight:700;margin:14px 0 7px}input,select,textarea{width:100%;background:#081523;color:var(--text);border:1px solid #29415d;border-radius:12px;padding:13px;outline:none}input:focus,select:focus,textarea:focus{border-color:var(--primary)}
 textarea{min-height:120px;resize:vertical}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.checks{display:grid;grid-template-columns:1fr 1fr;gap:8px}.check{display:flex;align-items:center;gap:8px;background:#091827;border:1px solid var(--line);padding:10px;border-radius:12px;font-size:13px}.check input{width:auto}
 .notice,.success,.warning,.error{padding:12px;border-radius:13px;font-size:13px;line-height:1.5;margin:12px 0}.notice{background:#0b2030;border:1px solid #1e4c66;color:#b9ddf2}.success{background:#0b2b20;border:1px solid #185d43;color:#8bf1c4}.warning{background:#30260e;border:1px solid #65501a;color:#f5d77c}.error{background:#35181b;border:1px solid #70272d;color:#ffb6b8}
-.request{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:11px}.requestClickable{cursor:pointer;-webkit-tap-highlight-color:transparent}.requestClickable:active{opacity:.92;transform:scale(0.997)}.requestTop{display:flex;justify-content:space-between;gap:10px}.status{padding:5px 9px;border-radius:99px;background:rgba(245,185,66,.12);color:#ffd76b;font-size:11px;font-weight:800;height:max-content}
+.request{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:11px}.requestClickable{cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none}.requestClickable:active{opacity:.92;transform:scale(0.997)}.requestTop{display:flex;justify-content:space-between;gap:10px}.status{padding:5px 9px;border-radius:99px;background:rgba(245,185,66,.12);color:#ffd76b;font-size:11px;font-weight:800;height:max-content}
 .meta{display:flex;flex-wrap:wrap;gap:8px;color:var(--muted);font-size:12px;margin:10px 0}.meta span{background:#091827;padding:6px 8px;border-radius:8px}.description{background:#091827;border-radius:12px;padding:11px;font-size:13px;line-height:1.5;margin:10px 0}
 .profileHeader{display:flex;align-items:center;gap:13px;padding:16px;background:var(--card);border:1px solid var(--line);border-radius:18px}.avatar{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:#17334d;font-weight:900;font-size:18px}
 .activeDot{width:9px;height:9px;background:var(--primary);border-radius:50%;display:inline-block;margin-right:5px}.empty{text-align:center;padding:28px 15px;color:var(--muted)}
@@ -386,7 +386,7 @@ function showRequest(preselected=""){
  app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div>
  <div class="formCard"><span class="badge">📋 YENİ HİZMET TALEBİ</span><h1>İhtiyacını anlat.</h1><p class="muted small">Sorununu açıkça anlat. Böylece doğru hizmet sağlayıcısına ulaşmak kolaylaşır.</p>
  <label>Hizmet kategorisi *</label><select id="reqService">${serviceOptions(preselected)}</select>
- <label>Sorunun / ihtiyacın *</label><textarea id="reqDescription" maxlength="1000" placeholder="Örneğin: Klima çalışıyor fakat yeterince soğutmuyor."></textarea><div class="small muted" id="charCount">0/1000</div>
+ <label>Sorunun / ihtiyacın *</label><textarea id="reqDescription" maxlength="1000" placeholder="Örneğin: Klima çalışıyor fakat yeterince soğutmuyor."></textarea><div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap"><button type="button" class="btn secondary smallBtn" id="voiceBtn" onclick="startVoiceInput()">🎤 Sesli anlat</button><span class="small muted" id="charCount">0/1000</span></div>
  <div class="row"><div><label>İl *</label><select id="reqCity"><option value="İzmir" selected>İzmir</option></select></div><div><label>İlçe *</label><select id="reqDistrict">${districtOptions()}</select></div></div>
  <label>Mahalle</label><input id="reqNeighborhood" placeholder="Mahalle adı">
  <label>Ne zaman gerekli?</label><select id="reqUrgency"><option value="Acil">🔴 Acil</option><option value="Bugün" selected>🟡 Bugün</option><option value="Uygun zamanda">🟢 Uygun zamanda</option></select>
@@ -428,13 +428,14 @@ async function showRequests(){
  area.outerHTML=requests.length?requests.map(renderRequest).join(""):`<div class="card empty">📋<h3>Henüz talep yok</h3><p>İhtiyacını anlat, ilk talebini oluştur.</p><button class="btn primary" onclick="showRequest()">＋ Talep oluştur</button></div>`;
 }
 
+
 function normalizeWhatsAppPhone(phone){
   let d=String(phone||'').replace(/\D+/g,'');
   if(!d)return '';
-  if(d.startsWith('00'))d=d.slice(2);
-  if(d.length===10&&d.startsWith('5'))d='90'+d;
-  if(d.length===11&&d.startsWith('0'))d='90'+d.slice(1);
-  if(d.startsWith('90')&&d.length>=12)return d;
+  if(d.indexOf('00')===0)d=d.slice(2);
+  if(d.length===10&&d.charAt(0)==='5')d='90'+d;
+  if(d.length===11&&d.charAt(0)==='0')d='90'+d.slice(1);
+  if(d.indexOf('90')===0&&d.length>=12)return d;
   if(d.length>=10)return d;
   return '';
 }
@@ -442,11 +443,15 @@ function whatsappHref(phone){
   const n=normalizeWhatsAppPhone(phone);
   return n?('https://wa.me/'+n):'';
 }
-async function updateRequestStatus(talepNo,newStatus){
+function telHref(phone){
+  const n=normalizeWhatsAppPhone(phone);
+  if(!n)return '';
+  return 'tel:+'+n;
+}
+async function updateRequestStatus(talepNo,newStatus,extra){
   if(!talepNo||!newStatus)return false;
-  const body={durum:newStatus};
+  const body=Object.assign({durum:newStatus},extra||{});
   try{
-    // Prefer auth session if available (RLS)
     const session=getAuthSession();
     if(session&&session.access_token){
       await supabaseAuthRequest('PATCH','talepler?talep_no=eq.'+encodeURIComponent(String(talepNo)),body);
@@ -455,24 +460,93 @@ async function updateRequestStatus(talepNo,newStatus){
     }
   }catch(e){
     console.error('Talep durum güncellenemedi:',e);
-    // Local fallback update
-    try{
-      const list=getRequests().map(r=>{
-        if(String(r.talep_no||r.id)===String(talepNo)){r.status=newStatus;r.durum=newStatus;}
-        return r;
-      });
-      write(KEYS.requests,list);
-    }catch(e2){}
     throw e;
   }
   try{
-    const list=getRequests().map(r=>{
-      if(String(r.talep_no||r.id)===String(talepNo)){r.status=newStatus;r.durum=newStatus;}
+    const list=(getRequests()||[]).map(function(r){
+      if(String(r.talep_no||r.id)===String(talepNo)){
+        r.status=newStatus;r.durum=newStatus;
+        if(extra){Object.keys(extra).forEach(function(k){r[k]=extra[k];});}
+      }
       return r;
     });
     write(KEYS.requests,list);
   }catch(e){}
   return true;
+}
+async function loadOffersForRequest(talepNo){
+  if(!talepNo)return [];
+  try{
+    const rows=await supabaseRequest('GET','teklifler?talep_no=eq.'+encodeURIComponent(String(talepNo))+'&order=created_at.desc&limit=50');
+    return Array.isArray(rows)?rows:[];
+  }catch(e){
+    console.warn('teklifler okunamadı:',e.message||e);
+    return [];
+  }
+}
+async function submitOffer(talepNo){
+  const p=getProvider();
+  if(!p||!p.id){alert('Hizmet sağlayıcı oturumu gerekli.');return;}
+  const priceEl=document.getElementById('offerPrice');
+  const noteEl=document.getElementById('offerNote');
+  const fiyat=priceEl?String(priceEl.value||'').trim():'';
+  const aciklama=noteEl?String(noteEl.value||'').trim():'';
+  if(!fiyat){alert('Lütfen fiyat girin (ör. 2500).');return;}
+  const body={
+    talep_no:String(talepNo),
+    provider_id:String(p.id),
+    provider_name:p.name||'Hizmet Sağlayıcı',
+    provider_phone:p.phone||'',
+    fiyat:fiyat,
+    aciklama:aciklama,
+    durum:'Beklemede'
+  };
+  try{
+    const session=getAuthSession();
+    if(session&&session.access_token){
+      await supabaseAuthRequest('POST','teklifler',body);
+    }else{
+      await supabaseRequest('POST','teklifler',body);
+    }
+    alert('Teklif gönderildi.');
+    showProviderRequestDetail(talepNo);
+  }catch(e){
+    console.error(e);
+    alert('Teklif gönderilemedi. Lütfen tekrar deneyin.\n\n'+(e.message||e)+'\n\nNot: Supabase\'de teklifler tablosu yoksa yöneticiye bildirin.');
+  }
+}
+async function acceptOffer(talepNo,offerId,providerName,price){
+  try{
+    if(offerId){
+      try{
+        const session=getAuthSession();
+        const path='teklifler?id=eq.'+encodeURIComponent(String(offerId));
+        const body={durum:'Kabul edildi'};
+        if(session&&session.access_token)await supabaseAuthRequest('PATCH',path,body);
+        else await supabaseRequest('PATCH',path,body);
+      }catch(e){console.warn('teklif patch',e);}
+    }
+    await updateRequestStatus(talepNo,'Devam ediyor',{
+      provider_name:providerName||null,
+      accepted_price:price||null
+    });
+    alert('Teklif kabul edildi. Durum: Devam ediyor');
+    showRequestDetail(talepNo);
+  }catch(e){
+    alert('Teklif kabul edilemedi.\n\n'+(e.message||e));
+  }
+}
+async function rejectOffer(offerId,talepNo){
+  try{
+    if(!offerId)return;
+    const session=getAuthSession();
+    const path='teklifler?id=eq.'+encodeURIComponent(String(offerId));
+    const body={durum:'Reddedildi'};
+    if(session&&session.access_token)await supabaseAuthRequest('PATCH',path,body);
+    else await supabaseRequest('PATCH',path,body);
+    alert('Teklif reddedildi.');
+    showRequestDetail(talepNo);
+  }catch(e){alert('Teklif reddedilemedi.\n\n'+(e.message||e));}
 }
 async function acceptRequest(talepNo){
   try{
@@ -480,7 +554,7 @@ async function acceptRequest(talepNo){
     alert('Talep kabul edildi. Durum: Devam ediyor');
     const local=getProvider();
     if(local&&providerLogged())showProviderPanel(local);
-    else showProviderEntry();
+    else showProviderRequestDetail(talepNo);
   }catch(e){alert('Talep kabul edilemedi.\n\n'+(e.message||e));}
 }
 async function completeRequest(talepNo){
@@ -489,34 +563,46 @@ async function completeRequest(talepNo){
     alert('İş tamamlandı olarak işaretlendi.');
     const local=getProvider();
     if(local&&providerLogged())showProviderPanel(local);
-    else showProviderEntry();
+    else showProviderRequestDetail(talepNo);
   }catch(e){alert('Tamamlama kaydedilemedi.\n\n'+(e.message||e));}
 }
-function showRequestDetail(talepNo){
-  const list=getRequests()||[];
-  let r=list.find(x=>String(x.talep_no||x.id)===String(talepNo));
-  if(!r){
-    // try reload async
-    loadRequestsFromSupabase({mineOnly:true}).then(rows=>{
-      const found=(rows||[]).find(x=>String(x.talep_no||x.id)===String(talepNo));
-      if(found)showRequestDetailData(found);
-      else alert('Talep detayı bulunamadı.');
-    });
-    return;
-  }
-  showRequestDetailData(r);
+async function findRequestByNo(talepNo){
+  let list=getRequests()||[];
+  let r=list.find(function(x){return String(x.talep_no||x.id)===String(talepNo);});
+  if(r)return r;
+  try{
+    const rows=await loadRequestsFromSupabase({mineOnly:false});
+    r=(rows||[]).find(function(x){return String(x.talep_no||x.id)===String(talepNo);});
+    if(r)return r;
+  }catch(e){}
+  try{
+    const rows=await loadRequestsFromSupabase({mineOnly:true});
+    r=(rows||[]).find(function(x){return String(x.talep_no||x.id)===String(talepNo);});
+  }catch(e){}
+  return r||null;
 }
-function showRequestDetailData(r){
+async function showRequestDetail(talepNo){
+  try{
+    const r=await findRequestByNo(talepNo);
+    if(!r){alert('Talep detayı bulunamadı.');return;}
+    await showRequestDetailData(r);
+  }catch(e){
+    console.error(e);
+    alert('Talep detayı açılamadı.\n\n'+(e.message||e));
+  }
+}
+async function showRequestDetailData(r){
   const k=serviceKeyFromValue(r.service||r.kategori);
   const s=SERVICES[k]||{name:r.kategori||'Hizmet',emoji:'🛠️'};
   const st=r.status||r.durum||'Beklemede';
-  app(`<div class="back"><button class="btn secondary smallBtn" onclick="showRequests()">← Taleplerime dön</button></div>
+  const no=String(r.talep_no||r.id||'');
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showRequests()">← Taleplerime dön</button></div>
   <span class="badge">▣ TALEP DETAYI</span>
   <h1>${s.emoji} ${escapeHTML(s.name)}</h1>
-  <div class="card">
+  <div class="card" id="requestDetailCard">
     <div class="requestTop"><strong>Durum</strong><span class="status">${escapeHTML(st)}</span></div>
     <div class="meta" style="margin-top:10px">
-      <span>🔢 ${escapeHTML(r.talep_no||'')}</span>
+      <span>🔢 ${escapeHTML(no)}</span>
       <span>📅 ${escapeHTML(r.createdAt||'')}</span>
     </div>
     <div class="description" style="margin-top:12px">${escapeHTML(r.description||r.aciklama||'')}</div>
@@ -529,12 +615,137 @@ function showRequestDetailData(r){
       <span>👤 ${escapeHTML(r.ad_soyad||r.name||'')}</span>
       ${(r.telefon||r.phone)?`<span>📞 ${escapeHTML(r.telefon||r.phone)}</span>`:''}
     </div>
+    ${(r.provider_name||r.accepted_price)?`<div class="notice" style="margin-top:12px">Sağlayıcı: <strong>${escapeHTML(r.provider_name||'-')}</strong>${r.accepted_price?` · Kabul edilen fiyat: <strong>${escapeHTML(String(r.accepted_price))} TL</strong>`:''}</div>`:''}
+  </div>
+  <div class="section"><h2>Gelen teklifler</h2><div id="offersBox" class="card" style="text-align:center">⏳ Teklifler yükleniyor...</div></div>`);
+  const box=document.getElementById('offersBox');
+  const offers=await loadOffersForRequest(no);
+  if(!box)return;
+  if(!offers.length){
+    box.innerHTML='<div class="empty"><h3>Henüz teklif yok</h3><p>Hizmet sağlayıcılar teklif verdiğinde burada görünür.</p></div>';
+    return;
+  }
+  box.outerHTML=offers.map(function(o){
+    const oid=o.id||'';
+    const fiyat=o.fiyat||o.price||'';
+    const pname=o.provider_name||o.name||'Sağlayıcı';
+    const pphone=o.provider_phone||o.phone||'';
+    const odurum=o.durum||o.status||'Beklemede';
+    const wa=whatsappHref(pphone);
+    const tel=telHref(pphone);
+    let acts='';
+    if(st!=='Tamamlandı'&&(odurum==='Beklemede'||odurum==='beklemede')){
+      acts=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+        <button type="button" class="btn primary" onclick='acceptOffer(${JSON.stringify(no)},${JSON.stringify(String(oid))},${JSON.stringify(String(pname))},${JSON.stringify(String(fiyat))})'>Teklifi Kabul Et</button>
+        <button type="button" class="btn secondary" onclick='rejectOffer(${JSON.stringify(String(oid))},${JSON.stringify(no)})'>Reddet</button>
+      </div>`;
+    }else{
+      acts=`<div class="small muted" style="margin-top:8px">Teklif durumu: ${escapeHTML(odurum)}</div>`;
+    }
+    return `<article class="request">
+      <div class="requestTop"><div><h3>🛠️ ${escapeHTML(pname)}</h3><div class="small muted">${escapeHTML(o.created_at||'')}</div></div><span class="status">${escapeHTML(odurum)}</span></div>
+      <div class="description"><strong>${escapeHTML(String(fiyat))} TL</strong>${o.aciklama?` — ${escapeHTML(o.aciklama)}`:''}</div>
+      ${pphone?`<div class="meta"><span>📞 ${escapeHTML(pphone)}</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+        ${tel?`<a class="btn secondary" style="text-align:center;text-decoration:none" href="${tel}">Ara</a>`:''}
+        ${wa?`<a class="btn secondary" style="text-align:center;text-decoration:none;background:#128C7E;border-color:#128C7E;color:#fff" href="${wa}" target="_blank" rel="noopener noreferrer">WhatsApp</a>`:''}
+      </div>`:''}
+      ${acts}
+    </article>`;
+  }).join('');
+}
+async function showProviderRequestDetail(talepNo){
+  const r=await findRequestByNo(talepNo);
+  if(!r){alert('Talep bulunamadı.');return;}
+  const k=serviceKeyFromValue(r.service||r.kategori);
+  const s=SERVICES[k]||{name:r.kategori||'Hizmet',emoji:'🛠️'};
+  const st=r.status||r.durum||'Beklemede';
+  const no=String(r.talep_no||r.id||'');
+  const phone=r.telefon||r.phone||'';
+  const wa=whatsappHref(phone);
+  const tel=telHref(phone);
+  let actions='';
+  if(st==='Beklemede'){
+    actions=`<button type="button" class="btn primary" style="width:100%;margin-top:8px" onclick='acceptRequest(${JSON.stringify(no)})'>✅ Talebi Kabul Et</button>
+    <div class="card" style="margin-top:12px">
+      <strong>Fiyat teklifi ver</strong>
+      <label style="display:block;margin-top:8px">Fiyat (TL)</label>
+      <input id="offerPrice" type="number" inputmode="numeric" placeholder="Örn. 2500" style="width:100%;box-sizing:border-box;padding:12px;border-radius:12px;border:1px solid var(--line)">
+      <label style="display:block;margin-top:8px">Not (isteğe bağlı)</label>
+      <textarea id="offerNote" maxlength="500" placeholder="İş kapsamı, malzeme vb." style="width:100%;box-sizing:border-box;min-height:80px;padding:12px;border-radius:12px;border:1px solid var(--line)"></textarea>
+      <button type="button" class="btn secondary" style="width:100%;margin-top:10px" onclick='submitOffer(${JSON.stringify(no)})'>Teklif Gönder</button>
+    </div>`;
+  }else if(st==='Devam ediyor'){
+    actions=`<button type="button" class="btn primary" style="width:100%;margin-top:8px" onclick='completeRequest(${JSON.stringify(no)})'>🏁 İşi Tamamlandı</button>`;
+  }else if(st==='Tamamlandı'){
+    actions=`<div class="notice" style="margin-top:8px">Bu iş tamamlandı.</div>`;
+  }
+  app(`<div class="back"><button type="button" class="btn secondary smallBtn" onclick="showProviderEntry()">← Sağlayıcı paneline dön</button></div>
+  <span class="badge">🛠️ TALEP</span>
+  <h1>${s.emoji} ${escapeHTML(s.name)}</h1>
+  <div class="card">
+    <div class="requestTop"><strong>Durum</strong><span class="status">${escapeHTML(st)}</span></div>
+    <div class="meta" style="margin-top:10px"><span>🔢 ${escapeHTML(no)}</span><span>📅 ${escapeHTML(r.createdAt||'')}</span></div>
+    <div class="description" style="margin-top:12px">${escapeHTML(r.aciklama||r.description||'')}</div>
+    <div class="meta" style="margin-top:12px">
+      <span>📍 ${escapeHTML(r.ilce||r.district||'')}</span>
+      ${r.mahalle?`<span>🏘️ ${escapeHTML(r.mahalle)}</span>`:''}
+      <span>👤 ${escapeHTML(r.ad_soyad||r.name||'')}</span>
+      <span>⏱️ ${escapeHTML(r.aciliyet||'')}</span>
+    </div>
+    ${phone?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
+      ${tel?`<a class="btn secondary" style="text-align:center;text-decoration:none" href="${tel}">📞 Ara</a>`:''}
+      ${wa?`<a class="btn secondary" style="text-align:center;text-decoration:none;background:#128C7E;border-color:#128C7E;color:#fff" href="${wa}" target="_blank" rel="noopener noreferrer">💬 WhatsApp</a>`:''}
+    </div>`:''}
+    ${actions}
   </div>`);
 }
+
+function startVoiceInput(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  const ta=document.getElementById('reqDescription');
+  if(!ta)return;
+  if(!SR){
+    alert('Bu tarayıcı sesli girişi desteklemiyor. Lütfen metni elle yazın.');
+    return;
+  }
+  try{
+    const rec=new SR();
+    rec.lang='tr-TR';
+    rec.interimResults=false;
+    rec.maxAlternatives=1;
+    const btn=document.getElementById('voiceBtn');
+    if(btn){btn.disabled=true;btn.textContent='Dinleniyor…';}
+    rec.onresult=function(ev){
+      const text=(ev.results&&ev.results[0]&&ev.results[0][0]&&ev.results[0][0].transcript)||'';
+      if(text){
+        ta.value=(ta.value?ta.value+' ':'')+text;
+        const cc=document.getElementById('charCount');
+        if(cc)cc.textContent=ta.value.length+'/1000';
+      }
+    };
+    rec.onerror=function(){
+      alert('Ses algılanamadı. Lütfen tekrar deneyin veya metni yazın.');
+    };
+    rec.onend=function(){
+      if(btn){btn.disabled=false;btn.textContent='🎤 Sesli anlat';}
+    };
+    rec.start();
+  }catch(e){
+    alert('Sesli giriş başlatılamadı. Lütfen metni yazın.');
+  }
+}
+
 function renderRequest(r){
  const k=serviceKeyFromValue(r.service||r.kategori),s=SERVICES[k]||{name:r.kategori||"Hizmet",emoji:"🛠️"};
  const no=String(r.talep_no||r.id||"");
- return `<article class="request requestClickable" role="button" tabindex="0" onclick='showRequestDetail(${JSON.stringify(no)})'><div class="requestTop"><div><h3>${s.emoji} ${escapeHTML(s.name)}</h3><div class="small muted">${escapeHTML(r.createdAt||"")}</div></div><span class="status">${escapeHTML(r.status||r.durum||"Beklemede")}</span></div><div class="description">“${escapeHTML(r.description||r.aciklama||"")}”</div><div class="meta"><span>📍 ${escapeHTML(r.ilce||"")}</span>${r.mahalle?`<span>🏘️ ${escapeHTML(r.mahalle)}</span>`:""}<span>⏱️ ${escapeHTML(r.aciliyet||"")}</span></div><div class="small muted">Talep No: <strong>${escapeHTML(r.talep_no||"")}</strong> · Detay için dokun</div></article>`;
+ return `<article class="request requestClickable" data-talep-no="${escapeHTML(no)}">
+  <div class="requestTop"><div><h3>${s.emoji} ${escapeHTML(s.name)}</h3><div class="small muted">${escapeHTML(r.createdAt||"")}</div></div><span class="status">${escapeHTML(r.status||r.durum||"Beklemede")}</span></div>
+  <div class="description">“${escapeHTML(r.description||r.aciklama||"")}”</div>
+  <div class="meta"><span>📍 ${escapeHTML(r.ilce||"")}</span>${r.mahalle?`<span>🏘️ ${escapeHTML(r.mahalle)}</span>`:""}<span>⏱️ ${escapeHTML(r.aciliyet||"")}</span></div>
+  <div class="small muted">Talep No: <strong>${escapeHTML(no)}</strong></div>
+  <button type="button" class="btn secondary" style="width:100%;margin-top:10px" data-open-talep="${escapeHTML(no)}">Detayı aç</button>
+ </article>`;
 }
 
 /* ---------------- PROVIDER ---------------- */
@@ -559,14 +770,15 @@ function renderProviderCard(p){
  const cats=(p.services||[]).map(k=>SERVICES[k]?.name||k).filter(Boolean).join(", ")||"Kategori bilgisi yok";
  const phone=p.phone||"";
  const wa=whatsappHref(phone);
+ const tel=telHref(phone);
  const phoneBlock=phone
   ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
-      <a class="btn primary" style="display:block;text-align:center;text-decoration:none" href="tel:${escapeHTML(phone)}">📞 Ara</a>
+      ${tel?`<a class="btn primary" style="display:block;text-align:center;text-decoration:none" href="${tel}">📞 Ara</a>`:""}
       ${wa?`<a class="btn secondary" style="display:block;text-align:center;text-decoration:none;background:#128C7E;border-color:#128C7E;color:#fff" href="${wa}" target="_blank" rel="noopener noreferrer">💬 WhatsApp</a>`:`<span class="warning" style="display:flex;align-items:center;justify-content:center;padding:8px">WhatsApp yok</span>`}
      </div>
      <div class="small muted" style="margin-top:6px">📞 ${escapeHTML(phone)}</div>`
   : `<div class="warning">Bu sağlayıcının telefon numarası kayıtlı değil.</div>`;
- return `<article class="request"><div class="requestTop"><div><h3>🛠️ ${escapeHTML(p.name)}</h3><div class="small muted">${escapeHTML(p.city)} • ${escapeHTML(p.district)}</div></div><span class="status">${p.active?"Aktif":"Pasif"}</span></div><div class="meta"><span>🔧 ${escapeHTML(cats)}</span>${p.neighborhood?`<span>🏘️ ${escapeHTML(p.neighborhood)}</span>`:""}</div>${p.description?`<div class="description">${escapeHTML(p.description)}</div>`:""}${phoneBlock}<br><button class="btn secondary" onclick='openProviderById(${JSON.stringify(String(p.id))})'>📋 UYGUN TALEPLERİ GÖR</button></article>`;
+ return `<article class="request"><div class="requestTop"><div><h3>🛠️ ${escapeHTML(p.name)}</h3><div class="small muted">${escapeHTML(p.city)} • ${escapeHTML(p.district)}</div></div><span class="status">${p.active?"Aktif":"Pasif"}</span></div><div class="meta"><span>🔧 ${escapeHTML(cats)}</span>${p.neighborhood?`<span>🏘️ ${escapeHTML(p.neighborhood)}</span>`:""}</div>${p.description?`<div class="description">${escapeHTML(p.description)}</div>`:""}${phoneBlock}<br><button type="button" class="btn secondary" onclick='openProviderById(${JSON.stringify(String(p.id))})'>📋 UYGUN TALEPLERİ GÖR</button></article>`;
 }
 
 async function openProviderById(id){
@@ -591,23 +803,17 @@ function renderProviderRequest(r){
  const st=r.status||r.durum||"Beklemede";
  const no=String(r.talep_no||r.id||"");
  const wa=whatsappHref(phone);
- let actions="";
- if(st==="Beklemede"||st==="beklemede"){
-  actions=`<button class="btn primary" style="width:100%;margin-top:8px" onclick='event.stopPropagation();acceptRequest(${JSON.stringify(no)})'>✅ Talebi Kabul Et</button>`;
- }else if(st==="Devam ediyor"||st==="Devam Ediyor"||st==="İşlemde"){
-  actions=`<button class="btn primary" style="width:100%;margin-top:8px" onclick='event.stopPropagation();completeRequest(${JSON.stringify(no)})'>🏁 İşi Tamamlandı</button>`;
- }else if(st==="Tamamlandı"){
-  actions=`<div class="small muted" style="margin-top:8px">Bu iş tamamlandı. Yeni aksiyon yok.</div>`;
- }else{
-  actions=`<button class="btn primary" style="width:100%;margin-top:8px" onclick='event.stopPropagation();acceptRequest(${JSON.stringify(no)})'>✅ Talebi Kabul Et</button>`;
- }
- const contact=phone
-  ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-      <a class="btn secondary" style="display:block;text-align:center;text-decoration:none" href="tel:${escapeHTML(phone)}" onclick="event.stopPropagation()">📞 Ara</a>
-      ${wa?`<a class="btn secondary" style="display:block;text-align:center;text-decoration:none;background:#128C7E;border-color:#128C7E;color:#fff" href="${wa}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">💬 WhatsApp</a>`:""}
-     </div>`
-  : `<div class="warning">Bu talepte telefon numarası bulunmuyor.</div>`;
- return `<article class="request"><div class="requestTop"><div><h3>${s.emoji} ${escapeHTML(s.name)}</h3><div class="small muted">Talep No: ${escapeHTML(r.talep_no||"")}</div></div><span class="status">${escapeHTML(st)}</span></div><div class="description">${escapeHTML(r.aciklama||r.description||"")}</div><div class="meta"><span>📍 ${escapeHTML(r.ilce||r.district||"")}</span>${r.mahalle?`<span>🏘️ ${escapeHTML(r.mahalle)}</span>`:""}<span>👤 ${escapeHTML(r.ad_soyad||r.name||"")}</span><span>⏱️ ${escapeHTML(r.aciliyet||"")}</span></div>${contact}${actions}</article>`;
+ const tel=telHref(phone);
+ return `<article class="request">
+  <div class="requestTop"><div><h3>${s.emoji} ${escapeHTML(s.name)}</h3><div class="small muted">Talep No: ${escapeHTML(no)}</div></div><span class="status">${escapeHTML(st)}</span></div>
+  <div class="description">${escapeHTML(r.aciklama||r.description||"")}</div>
+  <div class="meta"><span>📍 ${escapeHTML(r.ilce||r.district||"")}</span>${r.mahalle?`<span>🏘️ ${escapeHTML(r.mahalle)}</span>`:""}<span>👤 ${escapeHTML(r.ad_soyad||r.name||"")}</span><span>⏱️ ${escapeHTML(r.aciliyet||"")}</span></div>
+  ${phone?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+    ${tel?`<a class="btn secondary" style="text-align:center;text-decoration:none" href="${tel}">📞 Ara</a>`:""}
+    ${wa?`<a class="btn secondary" style="text-align:center;text-decoration:none;background:#128C7E;border-color:#128C7E;color:#fff" href="${wa}" target="_blank" rel="noopener noreferrer">💬 WhatsApp</a>`:""}
+  </div>`:`<div class="warning">Bu talepte telefon numarası bulunmuyor.</div>`}
+  <button type="button" class="btn primary" style="width:100%;margin-top:10px" onclick='showProviderRequestDetail(${JSON.stringify(no)})'>Detay / Teklif / İşlem</button>
+ </article>`;
 }
 
 /* ---------------- OPTIONAL LOCAL PROVIDER ---------------- */
@@ -616,6 +822,34 @@ function providerLogin(){write(KEYS.providerLogged,true);showProviderPanel(getPr
 function providerLogout(){write(KEYS.providerLogged,false);showProviderEntry()}
 
 /* ---------------- START ---------------- */
+
+document.addEventListener('click',function(e){
+  var t=e.target;
+  if(!t||!t.closest)return;
+  var btn=t.closest('[data-open-talep]');
+  if(btn){
+    e.preventDefault();
+    e.stopPropagation();
+    var no=btn.getAttribute('data-open-talep');
+    if(no&&typeof showRequestDetail==='function')showRequestDetail(no);
+    return;
+  }
+  var card=t.closest('article.requestClickable[data-talep-no]');
+  if(card&&!t.closest('a,button,input,textarea,select')){
+    var no2=card.getAttribute('data-talep-no');
+    if(no2&&typeof showRequestDetail==='function')showRequestDetail(no2);
+  }
+},false);
+
+window.showRequestDetail=showRequestDetail;
+window.showProviderRequestDetail=showProviderRequestDetail;
+window.acceptRequest=acceptRequest;
+window.completeRequest=completeRequest;
+window.submitOffer=submitOffer;
+window.acceptOffer=acceptOffer;
+window.rejectOffer=rejectOffer;
+window.startVoiceInput=startVoiceInput;
+window.openProviderById=openProviderById;
 async function startApp(){
   setConnection(false,"Supabase bağlanıyor...");
   try{showHome();}catch(error){
