@@ -59,6 +59,21 @@ textarea{min-height:120px;resize:vertical}.row{display:grid;grid-template-column
 
 .authBar{display:flex;align-items:center;gap:7px}.authBtn{border:1px solid var(--line);background:#14263b;color:var(--text);border-radius:10px;padding:8px 10px;font-size:11px;font-weight:800;cursor:pointer}.authBtn.primary{background:var(--primary);color:#03130d;border-color:var(--primary)}.authUser{max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:11px;font-weight:700}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.76);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px}.modalCard{width:min(430px,100%);background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;max-height:90vh;overflow:auto}.modalCard h2{margin-top:0}.authError{background:#35181b;border:1px solid #70272d;color:#ffb6b8;padding:10px;border-radius:10px;font-size:12px;margin-top:10px}
+
+/* V2 home shell only */
+.homeHero h1{letter-spacing:-0.02em}
+.homeMenuGrid{grid-template-columns:1fr 1fr;gap:12px}
+.homeMenuCard{min-height:132px}
+.homeQuickRow{margin-top:0}
+.homeHow{margin-top:4px}
+@media (min-width:900px){
+  .homeMenuGrid{grid-template-columns:repeat(3,1fr)}
+}
+@media (max-width:420px){
+  .homeMenuCard{min-height:120px;padding:14px}
+  .homeMenuCard strong{font-size:14px}
+}
+
 </style>
 </head>
 <body>
@@ -414,49 +429,65 @@ function providerMatchesRequest(p,r){
 
 function showHome(){
   setNav("navHome");
-  app(`<section class="hero">
+  app(`<section class="hero homeHero">
     <span class="badge">🇹🇷 Türkiye · İzmir pilot</span>
-    <h1>Bugün ne yapmak istiyorsun?</h1>
-    <p class="muted">Gov.tr tarzı net adımlar + yerel usta marketplace. Başvuruyu sen kurumda tamamlarsın; biz hazırlık, belge ve takibi kolaylaştırırız.</p>
+    <h1>İşini Hallet</h1>
+    <p class="muted">Resmî işlem hazırlığı, belge takibi ve yerel hizmet talepleri tek yerde. Başvuruyu sen kurumda tamamlarsın; biz adımları netleştiririz.</p>
     <div class="splitActions">
-      <button class="btn primary" type="button" onclick="openHalletAction('showCases')">📁 İşlem dosyalarım</button>
-      <button id="openHalletButton" class="btn secondary hallet-launch" type="button">Tüm İşini Hallet menüsü</button>
-    </div>
-    <div class="trustRow">
-      <button type="button" class="trustItem" style="cursor:pointer;text-align:left;width:100%;font:inherit" onclick="openHalletAction('showIslemMenu')"><b>Hazırlık</b>Soru, belge, adım listesi — işlem başlat</button>
-      <button type="button" class="trustItem" style="cursor:pointer;text-align:left;width:100%;font:inherit" onclick="openHalletAction('showKurum')"><b>Resmî kanal</b>e-Devlet / kurum rehberi — kuruma başvur</button>
-      <button type="button" class="trustItem" style="cursor:pointer;text-align:left;width:100%;font:inherit" onclick="openHalletAction('showCases')"><b>Dosya takibi</b>Kaydet, devam et, tamamla — dosyalarım</button>
-      <button type="button" class="trustItem" style="cursor:pointer;text-align:left;width:100%;font:inherit" onclick="showRequest()"><b>Hizmet</b>İzmir’de usta / talep — hizmet bul</button>
+      <button id="openHalletButton" class="btn primary hallet-launch" type="button">İşini Hallet menüsü</button>
+      <button class="btn secondary" type="button" onclick="openHalletAction('showCases')">📁 İşlem dosyalarım</button>
     </div>
   </section>
 
   <div class="section">
-    <div class="sectionTitle"><h2>Ana işlemler</h2><span class="small muted">Tek tıkla başla</span></div>
-    <div class="actionGrid">
-      <button class="actionCard" type="button" onclick="openHalletAction('showIslemMenu')"><div class="emoji">📋</div><strong>Bir işlem yap</strong><span>Taşınmaz satışı ve işlem dosyası oluştur</span></button>
-      <button class="actionCard" type="button" onclick="openHalletAction('showEvrak')"><div class="emoji">📄</div><strong>Evrak hazırla</strong><span>Konut satış bilgi formu ve taslaklar</span></button>
-      <button class="actionCard" type="button" onclick="openHalletAction('showKurum')"><div class="emoji">🏛️</div><strong>Kuruma başvur</strong><span>NVİ adres ve kimlik randevu rehberi</span></button>
-      <button class="actionCard" type="button" onclick="showRequest()"><div class="emoji">🛠️</div><strong>Hizmet / usta bul</strong><span>Klima, elektrik, tesisat ve daha fazlası</span></button>
-    </div>
-  </div>
-
-  <div class="section card" style="border-color:#2b6f65;background:linear-gradient(145deg,#102c31,#0d1a2b)">
-    <h2>İşlem Dosyalarım</h2>
-    <p class="muted small">Durum, ilerleme, belgeler ve eksikler tek yerde. Kaldığın dosyadan devam et veya inceleye tıkla.</p>
-    <div class="splitActions">
-      <button class="btn primary" type="button" onclick="openHalletAction('showCases')">Dosyaları aç</button>
-      <button class="btn secondary" type="button" onclick="openHalletAction('showGate')">İşini Hallet’e gir</button>
+    <div class="sectionTitle"><h2>Ne yapmak istiyorsun?</h2><span class="small muted">Mobil uyumlu menü</span></div>
+    <div class="actionGrid homeMenuGrid">
+      <button class="actionCard homeMenuCard" type="button" onclick="openHallet()">
+        <div class="emoji">🏛️</div>
+        <strong>İşini Hallet</strong>
+        <span>Hazırlık, belge, kurum rehberi ve işlem adımları</span>
+      </button>
+      <button class="actionCard homeMenuCard" type="button" onclick="showRequest()">
+        <div class="emoji">🛠️</div>
+        <strong>Hizmet Bul / Talep Oluştur</strong>
+        <span>Klima, elektrik, tesisat — ihtiyacını anlat, teklif al</span>
+      </button>
+      <button class="actionCard homeMenuCard" type="button" onclick="showRequests()">
+        <div class="emoji">📋</div>
+        <strong>Taleplerim</strong>
+        <span>Oluşturduğun talepleri ve gelen teklifleri gör</span>
+      </button>
+      <button class="actionCard homeMenuCard" type="button" onclick="showProviderEntry()">
+        <div class="emoji">🔧</div>
+        <strong>Hizmet Ver</strong>
+        <span>Kayıtlı sağlayıcı paneli — teklif ver, işi tamamla</span>
+      </button>
+      <button class="actionCard homeMenuCard" type="button" onclick="openHalletAction('showCases')">
+        <div class="emoji">📁</div>
+        <strong>İşlem Dosyalarım</strong>
+        <span>Kaydet, devam et, belge yükle, tamamla</span>
+      </button>
+      <button class="actionCard homeMenuCard" type="button" onclick="openAuthModal('login')">
+        <div class="emoji">👤</div>
+        <strong>Profil / Hesap</strong>
+        <span>Giriş yap veya hesabını yönet</span>
+      </button>
     </div>
   </div>
 
   <div class="section">
-    <div class="sectionTitle"><h2>Hizmet kategorileri</h2><span class="small muted">İşimi Çöz marketplace · İzmir</span></div>
-    <div class="grid">${Object.entries(SERVICES).map(([k,s])=>`<button class="card service" type="button" onclick="showRequest('${k}')"><div class="emoji">${s.emoji}</div><strong>${s.name}</strong><span>${s.desc}</span></button>`).join("")}</div>
+    <div class="sectionTitle"><h2>Hızlı kısayollar</h2><span class="small muted">İşini Hallet</span></div>
+    <div class="trustRow homeQuickRow">
+      <button type="button" class="trustItem" style="cursor:pointer;text-align:left;width:100%;font:inherit" onclick="openHalletAction('showIslemMenu')"><b>Bir işlem yap</b>Taşınmaz ve işlem dosyası</button>
+      <button type="button" class="trustItem" style="cursor:pointer;text-align:left;width:100%;font:inherit" onclick="openHalletAction('showEvrak')"><b>Evrak hazırla</b>Konut satış bilgi formu</button>
+      <button type="button" class="trustItem" style="cursor:pointer;text-align:left;width:100%;font:inherit" onclick="openHalletAction('showKurum')"><b>Kuruma başvur</b>NVİ adres / kimlik randevu</button>
+      <button type="button" class="trustItem" style="cursor:pointer;text-align:left;width:100%;font:inherit" onclick="showRequest()"><b>Usta bul</b>İzmir’de hizmet talebi</button>
+    </div>
   </div>
 
-  <div class="section card">
-    <h2>Nasıl çalışır?</h2>
-    <p class="muted small"><strong>1.</strong> İşlem veya kurum seç · <strong>2.</strong> Bilgi ve belgeyi hazırla · <strong>3.</strong> Resmî kanala git · <strong>4.</strong> Dosyanda takip et. Usta lazımsa talep oluştur; hizmet verenler eşleşen ilçede görsün.</p>
+  <div class="section homeHow">
+    <div class="sectionTitle"><h2>Nasıl çalışır?</h2></div>
+    <p class="muted small" style="margin:0 0 12px">1. İhtiyacını seç · 2. Belgeleri ve adımları hazırla · 3. Resmî kanala git veya hizmet talebi oluştur · 4. Dosyanda / taleplerinde takip et.</p>
     <div class="splitActions">
       <button class="btn secondary" type="button" onclick="showProviderEntry()">Hizmet ver olarak katıl</button>
       <button class="btn secondary" type="button" onclick="showRequests()">Taleplerim</button>
@@ -465,6 +496,7 @@ function showHome(){
 
   <div class="homeFooterNote">İşimi Çöz / İşini Hallet resmî kurum değildir; başvuru sonucu garantisi vermez. Resmî işlemler ilgili kurumun kendi sisteminde tamamlanır. Kişisel verilerini yalnızca ihtiyacın kadar paylaş.</div>`);
 }
+
 
 function openHallet(){
   try{
