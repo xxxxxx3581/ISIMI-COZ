@@ -151,7 +151,7 @@ async function testSupabase(){
 async function loadRequestsFromSupabase(opts={}){
  const mineOnly=!!opts.mineOnly;
  try{
-  let path="talepler?select=*&order=created_at.desc&limit=200";
+  let path="talepler?select=*&order=olusturulma_tarihi.desc&limit=200";
   if(mineOnly){
    const session=getAuthSession();
    const uid=session?.user?.id;
@@ -160,7 +160,7 @@ async function loadRequestsFromSupabase(opts={}){
     return getRequests().filter(r=>!r.user_id&&!r.customer_id);
    }
    // Kendi kayıtları: user_id (tercih) — kolon yoksa sorgu hata verir, catch local fallback
-   path="talepler?select=*&user_id=eq."+encodeURIComponent(uid)+"&order=created_at.desc&limit=200";
+   path="talepler?select=*&user_id=eq."+encodeURIComponent(uid)+"&order=olusturulma_tarihi.desc&limit=200";
   }
   const data=await supabaseRequest("GET",path);
   if(Array.isArray(data)){
@@ -191,7 +191,7 @@ async function loadRequestsFromSupabase(opts={}){
 function mapRequest(r){
  const kategori=pick(r,["kategori","category","service"],"");
  return {
-  id:pick(r,["talep_no","id"],""),
+  id:pick(r,["id"],""),
   talep_no:pick(r,["talep_no","request_no","id"],""),
   service:serviceKeyFromValue(kategori),kategori:kategori,
   description:pick(r,["aciklama","description"],""),
@@ -204,7 +204,7 @@ function mapRequest(r){
   name:pick(r,["ad_soyad","name"],""),ad_soyad:pick(r,["ad_soyad","name"],""),
   phone:pick(r,["telefon","phone"],""),telefon:pick(r,["telefon","phone"],""),
   status:pick(r,["durum","status"],"Beklemede"),durum:pick(r,["durum","status"],"Beklemede"),
-  createdAt:pick(r,["created_at","createdAt"],""),
+  createdAt:pick(r,["olusturulma_tarihi","tarih","created_at","createdAt"],""),
   user_id:pick(r,["user_id","owner_id"],null),
   customer_id:pick(r,["customer_id"],null)
  };
@@ -477,76 +477,94 @@ async function updateRequestStatus(talepNo,newStatus,extra){
 async function loadOffersForRequest(talepNo){
   if(!talepNo)return [];
   try{
-    const rows=await supabaseRequest('GET','teklifler?talep_no=eq.'+encodeURIComponent(String(talepNo))+'&order=created_at.desc&limit=50');
-    return Array.isArray(rows)?rows:[];
-  }catch(e){
-    console.warn('teklifler okunamadı:',e.message||e);
-    return [];
-  }
+    let requestId=null;
+    const local=(getRequests()||[]).find(function(x){return String(x.talep_no||'')===String(talepNo);});
+    if(local&&local.id&&String(local.id).length>20)requestId=local.id;
+    if(!requestId){
+      const rows=await supabaseRequest('GET','talepler?select=id,talep_no&talep_no=eq.'+encodeURIComponent(String(talepNo))+'&limit=1');
+      if(Array.isArray(rows)&&rows[0]&&rows[0].id)requestId=rows[0].id;
+    }
+    if(!requestId)return [];
+    const rows=await supabaseRequest('GET','offers?select=*&request_id=eq.'+encodeURIComponent(String(requestId))+'&order=olusturulma_tarihi.desc&limit=50');
+    const list=Array.isArray(rows)?rows:[];
+    const out=[];
+    for(let i=0;i<list.length;i++){
+      const o=list[i];
+      let pname='',pphone='';
+      if(o.provider_id){
+        try{
+          const pr=await supabaseRequest('GET','providers?select=id,name,phone&id=eq.'+encodeURIComponent(String(o.provider_id))+'&limit=1');
+          if(Array.isArray(pr)&&pr[0]){pname=pr[0].name||'';pphone=pr[0].phone||'';}
+        }catch(e){}
+      }
+      const st=o.status||'pending';
+      out.push({id:o.id,request_id:o.request_id,provider_id:o.provider_id,provider_name:pname||'Hizmet Sağlayıcı',provider_phone:pphone||'',fiyat:o.price,price:o.price,aciklama:o.note||'',note:o.note||'',available_time:o.available_time||'',durum:st==='accepted'?'Kabul edildi':(st==='rejected'?'Reddedildi':'Beklemede'),status:st,created_at:o.created_at||''});
+    }
+    return out;
+  }catch(e){console.warn('offers okunamadı:',e.message||e);return [];}
 }
 async function submitOffer(talepNo){
   const p=getProvider();
-  if(!p||!p.id){alert('Hizmet sağlayıcı oturumu gerekli.');return;}
+  if(!p||!p.id){alert('Hizmet sağlayıcı seçili değil. Sağlayıcı listesinden paneli açın.');return;}
   const priceEl=document.getElementById('offerPrice');
   const noteEl=document.getElementById('offerNote');
-  const fiyat=priceEl?String(priceEl.value||'').trim():'';
+  const timeEl=document.getElementById('offerTime');
+  const fiyatRaw=priceEl?String(priceEl.value||'').trim():'';
   const aciklama=noteEl?String(noteEl.value||'').trim():'';
-  if(!fiyat){alert('Lütfen fiyat girin (ör. 2500).');return;}
-  const body={
-    talep_no:String(talepNo),
-    provider_id:String(p.id),
-    provider_name:p.name||'Hizmet Sağlayıcı',
-    provider_phone:p.phone||'',
-    fiyat:fiyat,
-    aciklama:aciklama,
-    durum:'Beklemede'
-  };
+  const available_time=(timeEl&&String(timeEl.value||'').trim())?String(timeEl.value).trim():'Uygun zamanda';
+  if(!fiyatRaw){alert('Lütfen fiyat girin (ör. 2500).');return;}
+  const fiyatNum=Number(String(fiyatRaw).replace(',','.').replace(/[^0-9.]/g,''));
+  if(!fiyatNum||fiyatNum<=0){alert('Geçerli bir fiyat girin.');return;}
   try{
-    const session=getAuthSession();
-    if(session&&session.access_token){
-      await supabaseAuthRequest('POST','teklifler',body);
-    }else{
-      await supabaseRequest('POST','teklifler',body);
+    let requestId=null;
+    const local=(getRequests()||[]).find(function(x){return String(x.talep_no||'')===String(talepNo);});
+    if(local&&local.id&&String(local.id).length>20)requestId=local.id;
+    if(!requestId){
+      const rows=await supabaseRequest('GET','talepler?select=id,talep_no&talep_no=eq.'+encodeURIComponent(String(talepNo))+'&limit=1');
+      if(Array.isArray(rows)&&rows[0])requestId=rows[0].id;
     }
-    alert('Teklif gönderildi.');
-    showProviderRequestDetail(talepNo);
+    if(!requestId)throw new Error('Talep id bulunamadı: '+talepNo);
+    const body={request_id:String(requestId),provider_id:String(p.id),price:fiyatNum,available_time:available_time,note:aciklama||null,status:'pending'};
+    console.log('[OFFER] insert', body);
+    const res=await supabaseRequest('POST','offers',body);
+    if(!res)throw new Error('Supabase bos yanit.');
+    alert('Teklif gönderildi. Fiyat: '+fiyatNum+' TL');
+    if(typeof showProviderRequestDetail==='function')showProviderRequestDetail(talepNo);
   }catch(e){
-    console.error(e);
-    alert('Teklif gönderilemedi. Lütfen tekrar deneyin.\n\n'+(e.message||e)+'\n\nNot: Supabase\'de teklifler tablosu yoksa yöneticiye bildirin.');
+    console.error('[OFFER] fail', e);
+    alert('Teklif gönderilemedi. '+(e&&e.message?e.message:e));
   }
 }
 async function acceptOffer(talepNo,offerId,providerName,price){
   try{
     if(offerId){
+      await supabaseRequest('PATCH','offers?id=eq.'+encodeURIComponent(String(offerId)),{status:'accepted'});
       try{
-        const session=getAuthSession();
-        const path='teklifler?id=eq.'+encodeURIComponent(String(offerId));
-        const body={durum:'Kabul edildi'};
-        if(session&&session.access_token)await supabaseAuthRequest('PATCH',path,body);
-        else await supabaseRequest('PATCH',path,body);
-      }catch(e){console.warn('teklif patch',e);}
+        const r=await findRequestByNo(talepNo);
+        if(r&&r.id){
+          const others=await supabaseRequest('GET','offers?select=id&request_id=eq.'+encodeURIComponent(String(r.id))+'&status=eq.pending');
+          if(Array.isArray(others)){
+            for(let i=0;i<others.length;i++){
+              if(String(others[i].id)!==String(offerId)){
+                try{await supabaseRequest('PATCH','offers?id=eq.'+encodeURIComponent(String(others[i].id)),{status:'rejected'});}catch(e){}
+              }
+            }
+          }
+        }
+      }catch(e){console.warn(e);}
     }
-    await updateRequestStatus(talepNo,'Devam ediyor',{
-      provider_name:providerName||null,
-      accepted_price:price||null
-    });
+    await updateRequestStatus(talepNo,'Devam ediyor');
     alert('Teklif kabul edildi. Durum: Devam ediyor');
     showRequestDetail(talepNo);
-  }catch(e){
-    alert('Teklif kabul edilemedi.\n\n'+(e.message||e));
-  }
+  }catch(e){alert('Teklif kabul edilemedi. '+(e.message||e));}
 }
 async function rejectOffer(offerId,talepNo){
   try{
     if(!offerId)return;
-    const session=getAuthSession();
-    const path='teklifler?id=eq.'+encodeURIComponent(String(offerId));
-    const body={durum:'Reddedildi'};
-    if(session&&session.access_token)await supabaseAuthRequest('PATCH',path,body);
-    else await supabaseRequest('PATCH',path,body);
+    await supabaseRequest('PATCH','offers?id=eq.'+encodeURIComponent(String(offerId)),{status:'rejected'});
     alert('Teklif reddedildi.');
     showRequestDetail(talepNo);
-  }catch(e){alert('Teklif reddedilemedi.\n\n'+(e.message||e));}
+  }catch(e){alert('Teklif reddedilemedi. '+(e.message||e));}
 }
 async function acceptRequest(talepNo){
   try{
@@ -671,6 +689,8 @@ async function showProviderRequestDetail(talepNo){
       <strong>Fiyat teklifi ver</strong>
       <label style="display:block;margin-top:8px">Fiyat (TL)</label>
       <input id="offerPrice" type="number" inputmode="numeric" placeholder="Örn. 2500" style="width:100%;box-sizing:border-box;padding:12px;border-radius:12px;border:1px solid var(--line)">
+      <label style="display:block;margin-top:8px">Ne zaman gelebilirsiniz? *</label>
+      <input id="offerTime" type="text" placeholder="Örn. Bugün 15:00" value="Bugün" style="width:100%;box-sizing:border-box;padding:12px;border-radius:12px;border:1px solid var(--line)">
       <label style="display:block;margin-top:8px">Not (isteğe bağlı)</label>
       <textarea id="offerNote" maxlength="500" placeholder="İş kapsamı, malzeme vb." style="width:100%;box-sizing:border-box;min-height:80px;padding:12px;border-radius:12px;border:1px solid var(--line)"></textarea>
       <button type="button" class="btn secondary" style="width:100%;margin-top:10px" onclick='submitOffer(${JSON.stringify(no)})'>Teklif Gönder</button>
@@ -786,7 +806,7 @@ async function openProviderById(id){
  if(p)showProviderPanel(p);else alert("Hizmet sağlayıcı bulunamadı.");
 }
 
-async function showProviderPanel(p){
+async function showProviderPanel(p){if(p){write(KEYS.provider,p);write(KEYS.providerLogged,true);}
  setNav("navProvider");
  app(`<div class="back"><button class="btn secondary smallBtn" onclick="showProviderEntry()">← Hizmet sağlayıcılara dön</button></div><div class="profileHeader"><div class="avatar">${escapeHTML((p.name||"U").charAt(0).toUpperCase())}</div><div style="flex:1"><strong>${escapeHTML(p.name)}</strong><div class="small muted"><span class="activeDot"></span>${p.active?"Aktif":"Pasif"} • ${escapeHTML(p.district)}</div></div></div><div class="grid section"><div class="card"><div style="font-size:24px">📋</div><strong id="matchCount">...</strong><div class="small muted">Uygun İş</div></div><div class="card"><div style="font-size:24px">🛠️</div><strong>${p.services.length}</strong><div class="small muted">Kategori</div></div></div><div class="section"><h2>📋 Sana Uygun Talepler</h2><div id="matchedRequests" class="card" style="text-align:center">⏳ Eşleşmeler aranıyor...</div></div>`);
  const requests=await loadRequestsFromSupabase();
