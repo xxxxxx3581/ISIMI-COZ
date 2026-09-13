@@ -631,7 +631,7 @@ async function showGayrimenkulBrowse(){
   <div class="section">
     <span class="badge">🏠 Gayrimenkul</span>
     <h1>Yayındaki ilanlar</h1>
-    <p class="muted small">Yalnızca yayınlanmış gayrimenkul ilanları gösterilir.</p>
+    <p class="muted small">Yalnızca yayınlanmış gayrimenkul ilanları gösterilir. Detay için ilana dokun.</p>
     <div id="gmListArea" class="muted small">Yükleniyor…</div>
   </div>`);
   const box=document.getElementById('gmListArea');
@@ -644,21 +644,81 @@ async function showGayrimenkulBrowse(){
       return;
     }
     box.innerHTML=`<div class="actionGrid" style="grid-template-columns:1fr;gap:10px">`+list.map(function(row){
+      const id=String(row.id||'').replace(/[^a-zA-Z0-9-]/g,'');
       const title=escapeHTML(row.title||'İlan');
       const price=escapeHTML(formatListingPrice(row.price, row.currency));
       const loc=[row.city,row.district,row.neighborhood].filter(Boolean).map(escapeHTML).join(' / ')||'Konum belirtilmedi';
       const cat=escapeHTML(row.category||'—');
-      return `<div class="card" style="text-align:left">
+      return `<button type="button" class="card" style="text-align:left;width:100%;cursor:pointer;font:inherit;color:inherit;background:var(--card)" onclick="showGayrimenkulDetail('${id}')">
         <strong style="display:block;font-size:16px;margin-bottom:6px">${title}</strong>
         <div class="small" style="margin-bottom:4px"><b>${price}</b></div>
         <div class="small muted">${loc}</div>
         <div class="small muted">Tür: ${cat}</div>
-      </div>`;
+        <div class="small muted" style="margin-top:8px">Detayı gör →</div>
+      </button>`;
     }).join('')+`</div>`;
   }catch(err){
     box.innerHTML=`<div class="card empty"><h3>İlanlar yüklenemedi</h3><p class="small muted">${escapeHTML(err&&err.message?err.message:String(err))}</p><button class="btn secondary" type="button" onclick="showGayrimenkulBrowse()">Tekrar dene</button></div>`;
   }
 }
+async function showGayrimenkulDetail(listingId){
+  const id=String(listingId||'').replace(/[^a-zA-Z0-9-]/g,'');
+  if(!id){
+    alert('İlan bulunamadı.');
+    return showGayrimenkulBrowse();
+  }
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showGayrimenkulBrowse()">← Gayrimenkul ilanlarına dön</button></div>
+  <div class="formCard">
+    <span class="badge">🏠 İlan detayı</span>
+    <div id="gmDetailArea" class="muted small">Yükleniyor…</div>
+  </div>`);
+  const box=document.getElementById('gmDetailArea');
+  try{
+    const path="listings?id=eq."+encodeURIComponent(id)+"&listing_type=eq.gayrimenkul&status=eq.published&select=id,title,price,currency,city,district,neighborhood,category,description,status,created_at&limit=1";
+    const rows=await supabaseRequest('GET', path);
+    const row=Array.isArray(rows)&&rows[0]?rows[0]:null;
+    if(!row){
+      box.innerHTML=`<h1>İlan bulunamadı</h1><p class="muted">Bu ilan yayında değil veya kaldırılmış olabilir.</p>
+        <button class="btn secondary" type="button" onclick="showGayrimenkulBrowse()">Listeye dön</button>`;
+      return;
+    }
+    const title=escapeHTML(row.title||'İlan');
+    const price=escapeHTML(formatListingPrice(row.price, row.currency));
+    const cat=escapeHTML(row.category||'—');
+    const desc=escapeHTML(row.description||'Açıklama eklenmemiş.');
+    const city=escapeHTML(row.city||'—');
+    const district=escapeHTML(row.district||'—');
+    const neighborhood=escapeHTML(row.neighborhood||'—');
+    let dateStr='—';
+    try{
+      if(row.created_at) dateStr=new Date(row.created_at).toLocaleString('tr-TR');
+    }catch(e){}
+    dateStr=escapeHTML(dateStr);
+    box.innerHTML=`<h1 style="margin-top:8px">${title}</h1>
+      <p style="font-size:20px;font-weight:700;margin:8px 0">${price}</p>
+      <div class="card" style="text-align:left;margin:12px 0">
+        <div class="small muted">Gayrimenkul türü</div>
+        <div><strong>${cat}</strong></div>
+        <div class="small muted" style="margin-top:10px">Konum</div>
+        <div>${city} / ${district} / ${neighborhood}</div>
+        <div class="small muted" style="margin-top:10px">İlan tarihi</div>
+        <div>${dateStr}</div>
+        <div class="small muted" style="margin-top:10px">İlan sahibi</div>
+        <div>İlan sahibi</div>
+      </div>
+      <div class="sectionTitle"><h2 style="font-size:16px">Açıklama</h2></div>
+      <p class="muted" style="white-space:pre-wrap;line-height:1.5">${desc}</p>
+      <div class="splitActions" style="margin-top:16px">
+        <button class="btn secondary" type="button" onclick="showGayrimenkulBrowse()">← İlanlara dön</button>
+        <button class="btn secondary" type="button" onclick="showGayrimenkulHub()">Gayrimenkul menü</button>
+      </div>`;
+  }catch(err){
+    box.innerHTML=`<h1>Detay yüklenemedi</h1><p class="small muted">${escapeHTML(err&&err.message?err.message:String(err))}</p>
+      <button class="btn secondary" type="button" onclick="showGayrimenkulBrowse()">Listeye dön</button>`;
+  }
+}
+
+
 
 function showGayrimenkulCreateForm(){
   const session=typeof getAuthSession==='function'?getAuthSession():null;
@@ -854,6 +914,7 @@ window.showListingsCategory=showListingsCategory;
 window.listingsHubBack=listingsHubBack;
 window.showGayrimenkulHub=showGayrimenkulHub;
 window.showGayrimenkulBrowse=showGayrimenkulBrowse;
+window.showGayrimenkulDetail=showGayrimenkulDetail;
 window.showGayrimenkulCreateForm=showGayrimenkulCreateForm;
 window.listingsAuthWrite=listingsAuthWrite;
 window.createGayrimenkulListing=createGayrimenkulListing;
