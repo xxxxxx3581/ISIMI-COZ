@@ -626,6 +626,49 @@ function formatListingPrice(price, currency){
   }
 }
 
+// A3.3 listing photos (bucket: listing-photos) — does not touch Hallet storage
+function listingPhotoPublicUrl(path){
+  if(!path)return '';
+  const safe=String(path).split('/').filter(Boolean).map(encodeURIComponent).join('/');
+  return SUPABASE_URL+'/storage/v1/object/public/listing-photos/'+safe;
+}
+function listingPhotosFromRow(row){
+  try{
+    const m=row&&row.metadata;
+    if(!m)return [];
+    const photos=m.photos;
+    if(Array.isArray(photos))return photos.filter(function(p){return p&&(p.path||typeof p==='string');});
+  }catch(e){}
+  return [];
+}
+async function uploadListingPhoto(ownerId, listingId, file, token){
+  if(!file||!token)throw new Error('Fotoğraf yükleme için giriş gerekli.');
+  if(!(file.type&&file.type.indexOf('image/')===0))throw new Error('Sadece görsel dosyaları yüklenebilir.');
+  if(file.size>5*1024*1024)throw new Error('Her fotoğraf en fazla 5 MB olabilir.');
+  const safeName=String(file.name||'photo.jpg').replace(/[^a-zA-Z0-9._-]/g,'_').slice(0,80)||'photo.jpg';
+  const path=ownerId+'/'+listingId+'/'+Date.now()+'-'+safeName;
+  const safePath=path.split('/').filter(Boolean).map(encodeURIComponent).join('/');
+  const url=SUPABASE_URL+'/storage/v1/object/listing-photos/'+safePath;
+  const res=await fetch(url,{
+    method:'POST',
+    headers:{
+      'Authorization':'Bearer '+token,
+      'apikey':SUPABASE_KEY,
+      'Content-Type':file.type||'image/jpeg',
+      'x-upsert':'false'
+    },
+    body:file
+  });
+  const text=await res.text();
+  if(!res.ok){
+    let d=null;try{d=text?JSON.parse(text):null;}catch(e){}
+    throw new Error((d&&(d.message||d.error))||('Fotoğraf yüklenemedi (HTTP '+res.status+')'));
+  }
+  return {path:path, name:safeName, size:file.size, type:file.type||'image/jpeg'};
+}
+
+
+
 async function showGayrimenkulBrowse(){
   app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showGayrimenkulHub()">← Gayrimenkul</button></div>
   <div class="section">
@@ -636,7 +679,7 @@ async function showGayrimenkulBrowse(){
   </div>`);
   const box=document.getElementById('gmListArea');
   try{
-    const path="listings?listing_type=eq.gayrimenkul&status=eq.published&order=created_at.desc&select=id,title,price,currency,city,district,neighborhood,category,description,status,created_at";
+    const path="listings?listing_type=eq.gayrimenkul&status=eq.published&order=created_at.desc&select=id,title,price,currency,city,district,neighborhood,category,description,status,created_at,metadata";
     const rows=await supabaseRequest('GET', path);
     const list=Array.isArray(rows)?rows:[];
     if(!list.length){
@@ -649,7 +692,18 @@ async function showGayrimenkulBrowse(){
       const price=escapeHTML(formatListingPrice(row.price, row.currency));
       const loc=[row.city,row.district,row.neighborhood].filter(Boolean).map(escapeHTML).join(' / ')||'Konum belirtilmedi';
       const cat=escapeHTML(row.category||'—');
+      const photos=listingPhotosFromRow(row);
+      let cover='';
+      if(photos.length){
+        const p0=photos[0];
+        const pth=typeof p0==='string'?p0:(p0.path||'');
+        if(pth){
+          const src=escapeHTML(listingPhotoPublicUrl(pth));
+          cover=`<div style="margin-bottom:8px;border-radius:12px;overflow:hidden;background:#0b1727;aspect-ratio:16/10"><img src="${src}" alt="" style="width:100%;height:100%;object-fit:cover;display:block" loading="lazy"></div>`;
+        }
+      }
       return `<button type="button" class="card" style="text-align:left;width:100%;cursor:pointer;font:inherit;color:inherit;background:var(--card)" onclick="showGayrimenkulDetail('${id}')">
+        ${cover}
         <strong style="display:block;font-size:16px;margin-bottom:6px">${title}</strong>
         <div class="small" style="margin-bottom:4px"><b>${price}</b></div>
         <div class="small muted">${loc}</div>
@@ -661,6 +715,7 @@ async function showGayrimenkulBrowse(){
     box.innerHTML=`<div class="card empty"><h3>İlanlar yüklenemedi</h3><p class="small muted">${escapeHTML(err&&err.message?err.message:String(err))}</p><button class="btn secondary" type="button" onclick="showGayrimenkulBrowse()">Tekrar dene</button></div>`;
   }
 }
+
 async function showGayrimenkulDetail(listingId){
   const id=String(listingId||'').replace(/[^a-zA-Z0-9-]/g,'');
   if(!id){
@@ -674,7 +729,7 @@ async function showGayrimenkulDetail(listingId){
   </div>`);
   const box=document.getElementById('gmDetailArea');
   try{
-    const path="listings?id=eq."+encodeURIComponent(id)+"&listing_type=eq.gayrimenkul&status=eq.published&select=id,title,price,currency,city,district,neighborhood,category,description,status,created_at&limit=1";
+    const path="listings?id=eq."+encodeURIComponent(id)+"&listing_type=eq.gayrimenkul&status=eq.published&select=id,title,price,currency,city,district,neighborhood,category,description,status,created_at,metadata&limit=1";
     const rows=await supabaseRequest('GET', path);
     const row=Array.isArray(rows)&&rows[0]?rows[0]:null;
     if(!row){
@@ -694,8 +749,19 @@ async function showGayrimenkulDetail(listingId){
       if(row.created_at) dateStr=new Date(row.created_at).toLocaleString('tr-TR');
     }catch(e){}
     dateStr=escapeHTML(dateStr);
+    const photos=listingPhotosFromRow(row);
+    let gallery='';
+    if(photos.length){
+      gallery=`<div style="display:grid;grid-template-columns:1fr;gap:8px;margin:12px 0">`+photos.map(function(p){
+        const pth=typeof p==='string'?p:(p&&p.path)||'';
+        if(!pth)return '';
+        const src=escapeHTML(listingPhotoPublicUrl(pth));
+        return `<div style="border-radius:12px;overflow:hidden;background:#0b1727;aspect-ratio:16/10"><img src="${src}" alt="" style="width:100%;height:100%;object-fit:cover;display:block" loading="lazy"></div>`;
+      }).join('')+`</div>`;
+    }
     box.innerHTML=`<h1 style="margin-top:8px">${title}</h1>
       <p style="font-size:20px;font-weight:700;margin:8px 0">${price}</p>
+      ${gallery}
       <div class="card" style="text-align:left;margin:12px 0">
         <div class="small muted">Gayrimenkul türü</div>
         <div><strong>${cat}</strong></div>
@@ -717,6 +783,7 @@ async function showGayrimenkulDetail(listingId){
       <button class="btn secondary" type="button" onclick="showGayrimenkulBrowse()">Listeye dön</button>`;
   }
 }
+
 
 
 
@@ -758,10 +825,14 @@ function showGayrimenkulCreateForm(){
     <select id="gmDistrict">${districts}</select>
     <label>Mahalle</label>
     <input id="gmNeighborhood" maxlength="80" placeholder="Mahalle">
+    <label>Fotoğraflar</label>
+    <input id="gmPhotos" type="file" accept="image/*" multiple>
+    <p class="small muted">İsteğe bağlı. Birden fazla görsel seçebilirsin (her biri en fazla 5 MB). Android galeri / kamera desteklenir.</p>
     <div class="notice">🔒 İlan sahibi olarak sen görünürsün. Taslak yalnızca sende kalır; yayınlayana kadar başkaları görmez.</div>
     <button class="btn primary" type="button" id="gmSaveBtn" onclick="createGayrimenkulListing()">Taslak olarak kaydet</button>
   </div>`);
 }
+
 
 
 // A3.1-only write helper (does not modify global supabaseWrite)
@@ -815,10 +886,13 @@ async function createGayrimenkulListing(){
   const city=(document.getElementById('gmCity')?.value||'').trim();
   const district=(document.getElementById('gmDistrict')?.value||'').trim();
   const neighborhood=(document.getElementById('gmNeighborhood')?.value||'').trim();
+  const fileInput=document.getElementById('gmPhotos');
+  const files=fileInput&&fileInput.files?Array.from(fileInput.files):[];
   if(!title){ alert('Başlık zorunlu.'); return; }
   if(!category){ alert('Tür seçin.'); return; }
   if(!city){ alert('İl seçin.'); return; }
   if(!district){ alert('İlçe seçin.'); return; }
+  if(files.length>8){ alert('En fazla 8 fotoğraf yükleyebilirsin.'); return; }
   let price=null;
   if(priceRaw!==''){
     price=Number(priceRaw);
@@ -827,7 +901,6 @@ async function createGayrimenkulListing(){
   const btn=document.getElementById('gmSaveBtn');
   if(btn){ btn.disabled=true; btn.textContent='Kaydediliyor…'; }
   try{
-    // owner_id MUST equal JWT sub (auth.uid()) for A1 RLS WITH CHECK
     const body={
       owner_id: uid,
       listing_type: 'gayrimenkul',
@@ -840,13 +913,47 @@ async function createGayrimenkulListing(){
       district: district,
       neighborhood: neighborhood||null,
       status: 'draft',
-      metadata: { source: 'a3.1', property_kind: category }
+      metadata: { source: 'a3.1', property_kind: category, photos: [] }
     };
     const out=await listingsAuthWrite('POST','listings',body);
     const res=out.data;
     const row=Array.isArray(res)?res[0]:res;
     if(!row||!row.id) throw new Error('Kayıt oluşturulamadı.');
-    showGayrimenkulDraftResult(row);
+
+    // Photos after listing exists (path isolated by owner_id/listing_id)
+    const uploaded=[];
+    const failed=[];
+    if(files.length){
+      if(btn) btn.textContent='Fotoğraflar yükleniyor…';
+      for(let i=0;i<files.length;i++){
+        try{
+          const meta=await uploadListingPhoto(uid, row.id, files[i], token);
+          uploaded.push(meta);
+        }catch(pe){
+          failed.push((files[i]&&files[i].name?files[i].name:'foto')+': '+(pe&&pe.message?pe.message:String(pe)));
+        }
+      }
+      if(uploaded.length){
+        try{
+          const md=Object.assign({}, row.metadata||{}, {
+            source: 'a3.1',
+            property_kind: category,
+            photos: uploaded
+          });
+          const patch=await listingsAuthWrite(
+            'PATCH',
+            'listings?id=eq.'+encodeURIComponent(row.id),
+            { metadata: md }
+          );
+          const patched=Array.isArray(patch.data)?patch.data[0]:patch.data;
+          if(patched) Object.assign(row, patched);
+          else row.metadata=md;
+        }catch(me){
+          failed.push('Fotoğraf kaydı güncellenemedi: '+(me&&me.message?me.message:String(me)));
+        }
+      }
+    }
+    showGayrimenkulDraftResult(row, {uploaded:uploaded.length, failed:failed});
   }catch(err){
     alert(err&&err.message?err.message:String(err));
     if(btn){ btn.disabled=false; btn.textContent='Taslak olarak kaydet'; }
@@ -854,9 +961,21 @@ async function createGayrimenkulListing(){
 }
 
 
-function showGayrimenkulDraftResult(row){
+
+function showGayrimenkulDraftResult(row, photoInfo){
   const id=row&&row.id?String(row.id):'';
   const title=escapeHTML(row&&row.title?row.title:'İlan');
+  const photos=listingPhotosFromRow(row);
+  let photoNote='';
+  if(photoInfo){
+    if(photoInfo.uploaded) photoNote+=`<p class="small" style="color:var(--ok,#19c37d)">✓ ${photoInfo.uploaded} fotoğraf yüklendi.</p>`;
+    if(photoInfo.failed&&photoInfo.failed.length){
+      photoNote+=`<p class="small muted">Bazı fotoğraflar yüklenemedi (ilan kaydı korundu):</p><ul class="small muted">`+
+        photoInfo.failed.map(function(f){return `<li>${escapeHTML(f)}</li>`;}).join('')+`</ul>`;
+    }
+  }else if(photos.length){
+    photoNote=`<p class="small muted">${photos.length} fotoğraf bağlı.</p>`;
+  }
   app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showGayrimenkulHub()">← Gayrimenkul</button></div>
   <div class="formCard">
     <span class="badge">Taslak</span>
@@ -865,6 +984,7 @@ function showGayrimenkulDraftResult(row){
     <div class="card" style="text-align:left;margin:12px 0">
       <strong>${title}</strong>
       <div class="small muted">Durum: draft</div>
+      ${photoNote}
     </div>
     <div class="splitActions">
       <button class="btn primary" type="button" onclick="publishGayrimenkulListing('${id.replace(/'/g,"")}')">İlanı Yayınla</button>
@@ -872,6 +992,7 @@ function showGayrimenkulDraftResult(row){
     </div>
   </div>`);
 }
+
 
 async function publishGayrimenkulListing(id){
   const listingId=String(id||'').trim();
@@ -913,6 +1034,9 @@ window.showListingsHub=showListingsHub;
 window.showListingsCategory=showListingsCategory;
 window.listingsHubBack=listingsHubBack;
 window.showGayrimenkulHub=showGayrimenkulHub;
+window.listingPhotosFromRow=listingPhotosFromRow;
+window.uploadListingPhoto=uploadListingPhoto;
+window.listingPhotoPublicUrl=listingPhotoPublicUrl;
 window.showGayrimenkulBrowse=showGayrimenkulBrowse;
 window.showGayrimenkulDetail=showGayrimenkulDetail;
 window.showGayrimenkulCreateForm=showGayrimenkulCreateForm;
