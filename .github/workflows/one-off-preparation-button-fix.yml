@@ -1,0 +1,80 @@
+name: One-off preparation button fix
+on:
+  push:
+    branches:
+      - fix/preparation-completion-button
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Patch preparation completion handler
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          if 'async function markCaseCompleted()' not in s:
+              anchor = 'async function markOfficialTransactionCompleted(){'
+              if anchor not in s:
+                  raise SystemExit('markOfficialTransactionCompleted anchor not found')
+              fn = r'''async function markCaseCompleted(){
+               const session=getAuthSession();
+               if(!session?.access_token||!session?.user?.id){openAuthModal('login');return;}
+               if(!H.dbId){alert('Önce işlem dosyasını kaydetmelisin.');return;}
+               const stepState=stepSummary();
+               const docs=activeDocumentChecklist(H.answers||{});
+               const docState=documentSummary(docs);
+               const canComplete=docState.complete&&stepState.done>=stepState.total&&stepState.total>0;
+               if(!canComplete){alert('Önce tüm hazırlık adımlarını ve gerekli belgeleri tamamla.');return;}
+               if(!confirm('Hazırlık dosyasını tamamlandı olarak işaretlemek istiyor musun?\\n\\nBu işlem resmî satış/tescil anlamına gelmez; yalnızca hazırlık dosyasını kapatır.'))return;
+               try{
+                const updated=await supabaseAuthRequest('PATCH','hallet_cases?id=eq.'+encodeURIComponent(H.dbId),{status:'completed',updated_at:new Date().toISOString()});
+                if(!Array.isArray(updated)||!updated.length)throw new Error('Dosya durumu güncellenemedi.');
+                H.status='completed';
+                showActiveResult(true);
+               }catch(e){
+                console.error('Hazırlık dosyası tamamlanamadı:',e);
+                alert('Hazırlık dosyası tamamlanamadı. Lütfen tekrar deneyin.');
+               }
+              }
+
+          '''
+              s = s.replace(anchor, fn + anchor, 1)
+          else:
+              raise SystemExit('markCaseCompleted already exists; refusing duplicate patch')
+
+          p.write_text(s, encoding='utf-8')
+          PY
+
+      - name: Validate JavaScript
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+          s=Path('index.html').read_text(encoding='utf-8')
+          scripts=re.findall(r'<script(?:\\s[^>]*)?>(.*?)</script>',s,re.S|re.I)
+          if not scripts:
+              raise SystemExit('No script blocks found')
+          Path('/tmp/index-js-check.js').write_text('\n'.join(scripts),encoding='utf-8')
+          print(f'checked {len(scripts)} script block(s)')
+          PY
+          node --check /tmp/index-js-check.js
+
+      - name: Commit patch and remove one-off workflow
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git rm .github/workflows/one-off-preparation-button-fix.yml
+          git commit -m "fix: make preparation completion button functional"
+          git push origin HEAD:fix/preparation-completion-button
