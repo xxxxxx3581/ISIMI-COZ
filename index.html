@@ -151,16 +151,16 @@ async function testSupabase(){
 async function loadRequestsFromSupabase(opts={}){
  const mineOnly=!!opts.mineOnly;
  try{
-  let path="talepler?select=*&order=olusturulma_tarihi.desc&limit=200";
+  let path="requests?select=*&order=created_at.desc&limit=200";
   if(mineOnly){
    const session=getAuthSession();
    const uid=session?.user?.id;
    if(!uid){
     // Giriş yok: sunucudan kişisel talep çekme; yalnızca cihazdaki kendi yedekleri (user_id yok/local)
-    return getRequests().filter(r=>!r.user_id&&!r.customer_id);
+    return getRequests().filter(r=>!r.user_id);
    }
    // Kendi kayıtları: user_id (tercih) — kolon yoksa sorgu hata verir, catch local fallback
-   path="talepler?select=*&user_id=eq."+encodeURIComponent(uid)+"&order=olusturulma_tarihi.desc&limit=200";
+   path="requests?select=*&user_id=eq."+encodeURIComponent(uid)+"&order=created_at.desc&limit=200";
   }
   const data=await supabaseRequest("GET",path);
   if(Array.isArray(data)){
@@ -168,7 +168,7 @@ async function loadRequestsFromSupabase(opts={}){
    if(mineOnly){
     const session=getAuthSession();
     const uid=session?.user?.id;
-    if(uid)mapped=mapped.filter(r=>!r.user_id&&!r.customer_id||r.user_id===uid||r.customer_id===uid);
+    if(uid)mapped=mapped.filter(r=>!r.user_id||r.user_id===uid);
     write(KEYS.requests,mapped);
    }else{
     // Sağlayıcı eşleştirme için gelen liste — RLS asıl koruma; istemci yine de saklar
@@ -182,33 +182,78 @@ async function loadRequestsFromSupabase(opts={}){
   if(mineOnly){
    const session=getAuthSession();
    const uid=session?.user?.id;
-   if(!uid)return getRequests().filter(r=>!r.user_id&&!r.customer_id);
-   return getRequests().filter(r=>r.user_id===uid||r.customer_id===uid||(!r.user_id&&!r.customer_id));
+   if(!uid)return getRequests().filter(r=>!r.user_id);
+   return getRequests().filter(r=>!r.user_id||r.user_id===uid);
   }
  }
  return mineOnly?[]:getRequests();
 }
+
+function statusToUI(st){
+  const s=String(st||'pending').toLowerCase();
+  if(s==='pending')return 'Beklemede';
+  if(s==='accepted')return 'Devam ediyor';
+  if(s==='completed')return 'Tamamlandı';
+  if(s==='cancelled'||s==='canceled')return 'İptal';
+  return st||'Beklemede';
+}
+function statusToDB(st){
+  const s=String(st||'').toLowerCase();
+  if(s.indexOf('bekle')>=0||s==='pending')return 'pending';
+  if(s.indexOf('devam')>=0||s==='accepted')return 'accepted';
+  if(s.indexOf('tamam')>=0||s==='completed')return 'completed';
+  if(s.indexOf('iptal')>=0)return 'cancelled';
+  return 'pending';
+}
+function encodeRequestDescription(talepNo,name,phone,city,text){
+  return '§'+String(talepNo||'')+'§'+String(name||'')+'§'+String(phone||'')+'§'+String(city||'İzmir')+'§\n'+String(text||'');
+}
+function parseRequestDescription(raw){
+  const s=String(raw||'');
+  if(s.charAt(0)==='§'){
+    const parts=s.split('§');
+    if(parts.length>=6){
+      return {talep_no:parts[1],ad_soyad:parts[2],telefon:parts[3],il:parts[4],aciklama:parts.slice(5).join('§').replace(/^\n/,'').trim()};
+    }
+  }
+  return {talep_no:'',ad_soyad:'',telefon:'',il:'İzmir',aciklama:s};
+}
+
 function mapRequest(r){
+ if(r&&(r.category_id!=null||(r.district!=null&&r.description!=null&&r.kategori==null))){
+  const meta=parseRequestDescription(r.description);
+  const kategori=r.category_id||'';
+  const ui=statusToUI(r.status);
+  return {
+   id:r.id||'',
+   talep_no:meta.talep_no||String(r.id||'').slice(0,8),
+   service:serviceKeyFromValue(kategori),kategori:kategori,
+   description:meta.aciklama||'',aciklama:meta.aciklama||'',
+   il:meta.il||'İzmir',district:r.district||'',ilce:r.district||'',
+   neighborhood:r.neighborhood||'',mahalle:r.neighborhood||'',
+   urgency:r.urgency||'',aciliyet:r.urgency||'',
+   name:meta.ad_soyad||'',ad_soyad:meta.ad_soyad||'',
+   phone:meta.telefon||'',telefon:meta.telefon||'',
+   status:ui,durum:ui,createdAt:r.created_at||'',user_id:r.user_id||null,_table:'requests'
+  };
+ }
  const kategori=pick(r,["kategori","category","service"],"");
  return {
   id:pick(r,["id"],""),
-  talep_no:pick(r,["talep_no","request_no","id"],""),
+  talep_no:pick(r,["talep_no","request_no"],""),
   service:serviceKeyFromValue(kategori),kategori:kategori,
-  description:pick(r,["aciklama","description"],""),
-  aciklama:pick(r,["aciklama","description"],""),
-  il:pick(r,["il","city"],"İzmir"),
-  district:pick(r,["ilce","district"],""),ilce:pick(r,["ilce","district"],""),
+  description:pick(r,["aciklama","description"],""),aciklama:pick(r,["aciklama","description"],""),
+  il:pick(r,["il","city"],"İzmir"),district:pick(r,["ilce","district"],""),ilce:pick(r,["ilce","district"],""),
   neighborhood:pick(r,["mahalle","neighborhood"],""),mahalle:pick(r,["mahalle","neighborhood"],""),
-  urgency:pick(r,["aciliyet","urgency"],""),
-  aciliyet:pick(r,["aciliyet","urgency"],""),
+  urgency:pick(r,["aciliyet","urgency"],""),aciliyet:pick(r,["aciliyet","urgency"],""),
   name:pick(r,["ad_soyad","name"],""),ad_soyad:pick(r,["ad_soyad","name"],""),
   phone:pick(r,["telefon","phone"],""),telefon:pick(r,["telefon","phone"],""),
   status:pick(r,["durum","status"],"Beklemede"),durum:pick(r,["durum","status"],"Beklemede"),
   createdAt:pick(r,["olusturulma_tarihi","tarih","created_at","createdAt"],""),
-  user_id:pick(r,["user_id","owner_id"],null),
-  customer_id:pick(r,["customer_id"],null)
+  user_id:pick(r,["user_id","owner_id"],null),_table:'talepler'
  };
 }
+
 
 /* ---------------- PROVIDER DATA: SUPABASE ---------------- */
 
@@ -408,11 +453,30 @@ async function createRequest(){
  const b=document.getElementById("createRequestButton");b.disabled=true;b.textContent="TALEP KAYDEDİLİYOR...";
  const talep_no=makeRequestNumber();
  const session=getAuthSession();
- const item={talep_no,kategori:service,aciklama:description,il:city,ilce:district,mahalle:neighborhood,aciliyet:urgency,ad_soyad:name,telefon:phone,durum:"Beklemede"};
- if(session?.user?.id){item.user_id=session.user.id;item.customer_id=session.user.id;}
- try{await supabaseRequest("POST","talepler",item);setConnection(true,"Supabase bağlı ✓");write(KEYS.requests,[{...mapRequest(item),createdAt:new Date().toISOString()},...getRequests()]);alert("Talebiniz başarıyla oluşturuldu.\n\nTalep No: "+talep_no)}catch(e){console.error(e);write(KEYS.requests,[{...mapRequest(item),createdAt:new Date().toISOString()},...getRequests()]);alert("Sunucu kaydı başarısız oldu; cihazdaki yedek kaydedildi.\n\n"+e.message)}
+ const item={
+  category_id:service,
+  description:encodeRequestDescription(talep_no,name,phone,city,description),
+  district:district,
+  neighborhood:neighborhood||null,
+  urgency:urgency||"Bugün",
+  status:"pending"
+ };
+ if(session?.user?.id)item.user_id=session.user.id;
+ try{
+  const rows=await supabaseRequest("POST","requests",item);
+  const row=Array.isArray(rows)?rows[0]:rows;
+  setConnection(true,"Supabase bağlı ✓");
+  const mapped=mapRequest(row||item);
+  if(!mapped.talep_no)mapped.talep_no=talep_no;
+  write(KEYS.requests,[mapped,...getRequests()]);
+  alert("Talebiniz başarıyla oluşturuldu.\n\nTalep No: "+talep_no);
+ }catch(e){
+  console.error(e);
+  alert("Talep kaydedilemedi.\n\n"+(e.message||e));
+ }
  b.disabled=false;b.textContent="TALEBİ OLUŞTUR";showRequests();
 }
+
 
 /* ---------------- REQUEST LIST ---------------- */
 
@@ -448,32 +512,25 @@ function telHref(phone){
   if(!n)return '';
   return 'tel:+'+n;
 }
-async function updateRequestStatus(talepNo,newStatus,extra){
+async function updateRequestStatus(talepNo,newStatus){
   if(!talepNo||!newStatus)return false;
-  const body=Object.assign({durum:newStatus},extra||{});
+  const dbStatus=statusToDB(newStatus);
+  const r=await findRequestByNo(talepNo);
+  if(!r||!r.id)throw new Error('Talep bulunamadı: '+talepNo);
+  await supabaseRequest('PATCH','requests?id=eq.'+encodeURIComponent(String(r.id)),{status:dbStatus});
   try{
-    const session=getAuthSession();
-    if(session&&session.access_token){
-      await supabaseAuthRequest('PATCH','talepler?talep_no=eq.'+encodeURIComponent(String(talepNo)),body);
-    }else{
-      await supabaseRequest('PATCH','talepler?talep_no=eq.'+encodeURIComponent(String(talepNo)),body);
-    }
-  }catch(e){
-    console.error('Talep durum güncellenemedi:',e);
-    throw e;
-  }
-  try{
-    const list=(getRequests()||[]).map(function(r){
-      if(String(r.talep_no||r.id)===String(talepNo)){
-        r.status=newStatus;r.durum=newStatus;
-        if(extra){Object.keys(extra).forEach(function(k){r[k]=extra[k];});}
+    const list=(getRequests()||[]).map(function(x){
+      if(String(x.talep_no||'')===String(talepNo)||String(x.id)===String(r.id)){
+        x.status=statusToUI(dbStatus);x.durum=statusToUI(dbStatus);
       }
-      return r;
+      return x;
     });
     write(KEYS.requests,list);
   }catch(e){}
   return true;
 }
+
+
 async function loadOffersForRequest(talepNo){
   if(!talepNo)return [];
   try{
@@ -677,28 +734,42 @@ async function showProviderRequestDetail(talepNo){
   if(!r){alert('Talep bulunamadı.');return;}
   const k=serviceKeyFromValue(r.service||r.kategori);
   const s=SERVICES[k]||{name:r.kategori||'Hizmet',emoji:'🛠️'};
-  const st=r.status||r.durum||'Beklemede';
-  const no=String(r.talep_no||r.id||'');
+  const st=String(r.status||r.durum||'Beklemede');
+  const stNorm=st.toLowerCase();
+  const no=String(r.talep_no||'');
   const phone=r.telefon||r.phone||'';
   const wa=whatsappHref(phone);
   const tel=telHref(phone);
   let actions='';
-  if(st==='Beklemede'){
-    actions=`<button type="button" class="btn primary" style="width:100%;margin-top:8px" onclick='acceptRequest(${JSON.stringify(no)})'>✅ Talebi Kabul Et</button>
-    <div class="card" style="margin-top:12px">
-      <strong>Fiyat teklifi ver</strong>
-      <label style="display:block;margin-top:8px">Fiyat (TL)</label>
-      <input id="offerPrice" type="number" inputmode="numeric" placeholder="Örn. 2500" style="width:100%;box-sizing:border-box;padding:12px;border-radius:12px;border:1px solid var(--line)">
+  let contact='';
+  if(stNorm==='beklemede'){
+    actions=`<div class="card" style="margin-top:12px"><strong>Fiyat teklifi ver</strong>
+      <label style="display:block;margin-top:8px">Fiyat (TL) *</label>
+      <input id="offerPrice" type="number" inputmode="decimal" placeholder="Örn. 2500" style="width:100%;box-sizing:border-box;padding:12px;border-radius:12px;border:1px solid var(--line)">
       <label style="display:block;margin-top:8px">Ne zaman gelebilirsiniz? *</label>
       <input id="offerTime" type="text" placeholder="Örn. Bugün 15:00" value="Bugün" style="width:100%;box-sizing:border-box;padding:12px;border-radius:12px;border:1px solid var(--line)">
       <label style="display:block;margin-top:8px">Not (isteğe bağlı)</label>
       <textarea id="offerNote" maxlength="500" placeholder="İş kapsamı, malzeme vb." style="width:100%;box-sizing:border-box;min-height:80px;padding:12px;border-radius:12px;border:1px solid var(--line)"></textarea>
-      <button type="button" class="btn secondary" style="width:100%;margin-top:10px" onclick='submitOffer(${JSON.stringify(no)})'>Teklif Gönder</button>
-    </div>`;
-  }else if(st==='Devam ediyor'){
+      <button type="button" class="btn primary" style="width:100%;margin-top:10px" onclick='submitOffer(${JSON.stringify(no)})'>Teklif Gönder</button></div>`;
+  }else if(stNorm.indexOf('devam')>=0){
+    contact=phone?`<div class="card" style="margin-top:12px"><strong>👤 Müşteri iletişim</strong>
+      <div class="meta" style="margin-top:8px"><span>${escapeHTML(r.ad_soyad||r.name||'')}</span><span>📞 ${escapeHTML(phone)}</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+        ${tel?`<a class="btn secondary" style="text-align:center;text-decoration:none" href="${tel}">📞 Ara</a>`:''}
+        ${wa?`<a class="btn secondary" style="text-align:center;text-decoration:none;background:#128C7E;border-color:#128C7E;color:#fff" href="${wa}" target="_blank" rel="noopener noreferrer">💬 WhatsApp</a>`:''}
+      </div></div>`:`<div class="warning">Müşteri telefonu yok.</div>`;
     actions=`<button type="button" class="btn primary" style="width:100%;margin-top:8px" onclick='completeRequest(${JSON.stringify(no)})'>🏁 İşi Tamamlandı</button>`;
-  }else if(st==='Tamamlandı'){
-    actions=`<div class="notice" style="margin-top:8px">Bu iş tamamlandı.</div>`;
+  }else if(stNorm.indexOf('tamam')>=0){
+    actions=`<div class="notice" style="margin-top:8px">✅ Bu iş tamamlandı.</div>`;
+  }else{
+    actions=`<div class="card" style="margin-top:12px"><strong>Fiyat teklifi ver</strong>
+      <label style="display:block;margin-top:8px">Fiyat (TL) *</label>
+      <input id="offerPrice" type="number" inputmode="decimal" placeholder="2500" style="width:100%;box-sizing:border-box;padding:12px;border-radius:12px;border:1px solid var(--line)">
+      <label style="display:block;margin-top:8px">Ne zaman?</label>
+      <input id="offerTime" type="text" value="Bugün" style="width:100%;box-sizing:border-box;padding:12px;border-radius:12px;border:1px solid var(--line)">
+      <label style="display:block;margin-top:8px">Not</label>
+      <textarea id="offerNote" style="width:100%;box-sizing:border-box;min-height:80px;padding:12px;border-radius:12px;border:1px solid var(--line)"></textarea>
+      <button type="button" class="btn primary" style="width:100%;margin-top:10px" onclick='submitOffer(${JSON.stringify(no)})'>Teklif Gönder</button></div>`;
   }
   app(`<div class="back"><button type="button" class="btn secondary smallBtn" onclick="showProviderEntry()">← Sağlayıcı paneline dön</button></div>
   <span class="badge">🛠️ TALEP</span>
@@ -710,16 +781,11 @@ async function showProviderRequestDetail(talepNo){
     <div class="meta" style="margin-top:12px">
       <span>📍 ${escapeHTML(r.ilce||r.district||'')}</span>
       ${r.mahalle?`<span>🏘️ ${escapeHTML(r.mahalle)}</span>`:''}
-      <span>👤 ${escapeHTML(r.ad_soyad||r.name||'')}</span>
       <span>⏱️ ${escapeHTML(r.aciliyet||'')}</span>
     </div>
-    ${phone?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px">
-      ${tel?`<a class="btn secondary" style="text-align:center;text-decoration:none" href="${tel}">📞 Ara</a>`:''}
-      ${wa?`<a class="btn secondary" style="text-align:center;text-decoration:none;background:#128C7E;border-color:#128C7E;color:#fff" href="${wa}" target="_blank" rel="noopener noreferrer">💬 WhatsApp</a>`:''}
-    </div>`:''}
-    ${actions}
-  </div>`);
+  </div>${contact}${actions}`);
 }
+
 
 function startVoiceInput(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
