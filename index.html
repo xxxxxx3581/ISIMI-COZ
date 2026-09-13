@@ -777,12 +777,18 @@ async function showRequestDetailData(r){
     const odurum=o.durum||o.status||'Beklemede';
     const wa=whatsappHref(pphone);
     const tel=telHref(pphone);
-    let acts='';
-    if(st!=='Tamamlandı'&&(odurum==='Beklemede'||odurum==='beklemede')){
-      acts=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
-        <button type="button" class="btn primary" onclick='acceptOffer(${JSON.stringify(no)},${JSON.stringify(String(oid))},${JSON.stringify(String(pname))},${JSON.stringify(String(fiyat))})'>Teklifi Kabul Et</button>
-        <button type="button" class="btn secondary" onclick='rejectOffer(${JSON.stringify(String(oid))},${JSON.stringify(no)})'>Reddet</button>
+        let acts='';
+    const oStatus=String(o.status||'').toLowerCase();
+    const reqDone=String(st||'').toLowerCase().indexOf('tamam')>=0||String(st||'').toLowerCase()==='completed';
+    if(!reqDone&&(oStatus==='pending'||odurum==='Teklif bekliyor'||odurum==='Beklemede'||odurum==='beklemede')){
+      acts=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+        <button type="button" class="btn primary" style="width:100%" onclick='acceptOffer(${JSON.stringify(no)},${JSON.stringify(String(oid))},${JSON.stringify(String(pname))},${JSON.stringify(String(fiyat))})'>✅ Teklifi Kabul Et</button>
+        <button type="button" class="btn secondary" style="width:100%" onclick='rejectOffer(${JSON.stringify(String(oid))},${JSON.stringify(no)})'>❌ Teklifi Reddet</button>
       </div>`;
+    }else if(oStatus==='accepted'||odurum==='Kabul edildi'){
+      acts=`<div class="notice" style="margin-top:8px">✅ Teklif kabul edildi</div>`;
+    }else if(oStatus==='rejected'||odurum==='Reddedildi'){
+      acts=`<div class="small muted" style="margin-top:8px">Teklif reddedildi</div>`;
     }else{
       acts=`<div class="small muted" style="margin-top:8px">Teklif durumu: ${escapeHTML(odurum)}</div>`;
     }
