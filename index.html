@@ -47,7 +47,7 @@ h1{font-size:30px;line-height:1.08;margin:16px 0 10px}h2{font-size:22px;margin:0
 label{display:block;font-size:13px;font-weight:700;margin:14px 0 7px}input,select,textarea{width:100%;background:#081523;color:var(--text);border:1px solid #29415d;border-radius:12px;padding:13px;outline:none}input:focus,select:focus,textarea:focus{border-color:var(--primary)}
 textarea{min-height:120px;resize:vertical}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.checks{display:grid;grid-template-columns:1fr 1fr;gap:8px}.check{display:flex;align-items:center;gap:8px;background:#091827;border:1px solid var(--line);padding:10px;border-radius:12px;font-size:13px}.check input{width:auto}
 .notice,.success,.warning,.error{padding:12px;border-radius:13px;font-size:13px;line-height:1.5;margin:12px 0}.notice{background:#0b2030;border:1px solid #1e4c66;color:#b9ddf2}.success{background:#0b2b20;border:1px solid #185d43;color:#8bf1c4}.warning{background:#30260e;border:1px solid #65501a;color:#f5d77c}.error{background:#35181b;border:1px solid #70272d;color:#ffb6b8}
-.request{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:11px}.requestTop{display:flex;justify-content:space-between;gap:10px}.status{padding:5px 9px;border-radius:99px;background:rgba(245,185,66,.12);color:#ffd76b;font-size:11px;font-weight:800;height:max-content}
+.request{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:11px}.requestClickable{cursor:pointer;-webkit-tap-highlight-color:transparent}.requestClickable:active{opacity:.92;transform:scale(0.997)}.requestTop{display:flex;justify-content:space-between;gap:10px}.status{padding:5px 9px;border-radius:99px;background:rgba(245,185,66,.12);color:#ffd76b;font-size:11px;font-weight:800;height:max-content}
 .meta{display:flex;flex-wrap:wrap;gap:8px;color:var(--muted);font-size:12px;margin:10px 0}.meta span{background:#091827;padding:6px 8px;border-radius:8px}.description{background:#091827;border-radius:12px;padding:11px;font-size:13px;line-height:1.5;margin:10px 0}
 .profileHeader{display:flex;align-items:center;gap:13px;padding:16px;background:var(--card);border:1px solid var(--line);border-radius:18px}.avatar{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:#17334d;font-weight:900;font-size:18px}
 .activeDot{width:9px;height:9px;background:var(--primary);border-radius:50%;display:inline-block;margin-right:5px}.empty{text-align:center;padding:28px 15px;color:var(--muted)}
@@ -427,9 +427,114 @@ async function showRequests(){
  const requests=await loadRequestsFromSupabase({mineOnly:true}),area=document.getElementById("requestsLoading");if(!area)return;
  area.outerHTML=requests.length?requests.map(renderRequest).join(""):`<div class="card empty">📋<h3>Henüz talep yok</h3><p>İhtiyacını anlat, ilk talebini oluştur.</p><button class="btn primary" onclick="showRequest()">＋ Talep oluştur</button></div>`;
 }
+
+function normalizeWhatsAppPhone(phone){
+  let d=String(phone||'').replace(/\D+/g,'');
+  if(!d)return '';
+  if(d.startsWith('00'))d=d.slice(2);
+  if(d.length===10&&d.startsWith('5'))d='90'+d;
+  if(d.length===11&&d.startsWith('0'))d='90'+d.slice(1);
+  if(d.startsWith('90')&&d.length>=12)return d;
+  if(d.length>=10)return d;
+  return '';
+}
+function whatsappHref(phone){
+  const n=normalizeWhatsAppPhone(phone);
+  return n?('https://wa.me/'+n):'';
+}
+async function updateRequestStatus(talepNo,newStatus){
+  if(!talepNo||!newStatus)return false;
+  const body={durum:newStatus};
+  try{
+    // Prefer auth session if available (RLS)
+    const session=getAuthSession();
+    if(session&&session.access_token){
+      await supabaseAuthRequest('PATCH','talepler?talep_no=eq.'+encodeURIComponent(String(talepNo)),body);
+    }else{
+      await supabaseRequest('PATCH','talepler?talep_no=eq.'+encodeURIComponent(String(talepNo)),body);
+    }
+  }catch(e){
+    console.error('Talep durum güncellenemedi:',e);
+    // Local fallback update
+    try{
+      const list=getRequests().map(r=>{
+        if(String(r.talep_no||r.id)===String(talepNo)){r.status=newStatus;r.durum=newStatus;}
+        return r;
+      });
+      write(KEYS.requests,list);
+    }catch(e2){}
+    throw e;
+  }
+  try{
+    const list=getRequests().map(r=>{
+      if(String(r.talep_no||r.id)===String(talepNo)){r.status=newStatus;r.durum=newStatus;}
+      return r;
+    });
+    write(KEYS.requests,list);
+  }catch(e){}
+  return true;
+}
+async function acceptRequest(talepNo){
+  try{
+    await updateRequestStatus(talepNo,'Devam ediyor');
+    alert('Talep kabul edildi. Durum: Devam ediyor');
+    const local=getProvider();
+    if(local&&providerLogged())showProviderPanel(local);
+    else showProviderEntry();
+  }catch(e){alert('Talep kabul edilemedi.\n\n'+(e.message||e));}
+}
+async function completeRequest(talepNo){
+  try{
+    await updateRequestStatus(talepNo,'Tamamlandı');
+    alert('İş tamamlandı olarak işaretlendi.');
+    const local=getProvider();
+    if(local&&providerLogged())showProviderPanel(local);
+    else showProviderEntry();
+  }catch(e){alert('Tamamlama kaydedilemedi.\n\n'+(e.message||e));}
+}
+function showRequestDetail(talepNo){
+  const list=getRequests()||[];
+  let r=list.find(x=>String(x.talep_no||x.id)===String(talepNo));
+  if(!r){
+    // try reload async
+    loadRequestsFromSupabase({mineOnly:true}).then(rows=>{
+      const found=(rows||[]).find(x=>String(x.talep_no||x.id)===String(talepNo));
+      if(found)showRequestDetailData(found);
+      else alert('Talep detayı bulunamadı.');
+    });
+    return;
+  }
+  showRequestDetailData(r);
+}
+function showRequestDetailData(r){
+  const k=serviceKeyFromValue(r.service||r.kategori);
+  const s=SERVICES[k]||{name:r.kategori||'Hizmet',emoji:'🛠️'};
+  const st=r.status||r.durum||'Beklemede';
+  app(`<div class="back"><button class="btn secondary smallBtn" onclick="showRequests()">← Taleplerime dön</button></div>
+  <span class="badge">▣ TALEP DETAYI</span>
+  <h1>${s.emoji} ${escapeHTML(s.name)}</h1>
+  <div class="card">
+    <div class="requestTop"><strong>Durum</strong><span class="status">${escapeHTML(st)}</span></div>
+    <div class="meta" style="margin-top:10px">
+      <span>🔢 ${escapeHTML(r.talep_no||'')}</span>
+      <span>📅 ${escapeHTML(r.createdAt||'')}</span>
+    </div>
+    <div class="description" style="margin-top:12px">${escapeHTML(r.description||r.aciklama||'')}</div>
+    <div class="meta" style="margin-top:12px">
+      <span>📍 ${escapeHTML(r.il||'İzmir')} / ${escapeHTML(r.ilce||r.district||'')}</span>
+      ${r.mahalle?`<span>🏘️ ${escapeHTML(r.mahalle)}</span>`:''}
+      <span>⏱️ ${escapeHTML(r.aciliyet||r.urgency||'')}</span>
+    </div>
+    <div class="meta" style="margin-top:12px">
+      <span>👤 ${escapeHTML(r.ad_soyad||r.name||'')}</span>
+      ${(r.telefon||r.phone)?`<span>📞 ${escapeHTML(r.telefon||r.phone)}</span>`:''}
+    </div>
+  </div>`);
+}
 function renderRequest(r){
  const k=serviceKeyFromValue(r.service||r.kategori),s=SERVICES[k]||{name:r.kategori||"Hizmet",emoji:"🛠️"};
- return `<article class="request"><div class="requestTop"><div><h3>${s.emoji} ${escapeHTML(s.name)}</h3><div class="small muted">${escapeHTML(r.createdAt||"")}</div></div><span class="status">${escapeHTML(r.status||r.durum||"Beklemede")}</span></div><div class="description">“${escapeHTML(r.description||r.aciklama||"")}”</div><div class="meta"><span>📍 ${escapeHTML(r.ilce||"")}</span>${r.mahalle?`<span>🏘️ ${escapeHTML(r.mahalle)}</span>`:""}<span>⏱️ ${escapeHTML(r.aciliyet||"")}</span></div><div class="small muted">Talep No: <strong>${escapeHTML(r.talep_no||"")}</strong></div></article>`;
+ const no=String(r.talep_no||r.id||"");
+ return `<article class="request requestClickable" role="button" tabindex="0" onclick='showRequestDetail(${JSON.stringify(no)})'><div class="requestTop"><div><h3>${s.emoji} ${escapeHTML(s.name)}</h3><div class="small muted">${escapeHTML(r.createdAt||"")}</div></div><span class="status">${escapeHTML(r.status||r.durum||"Beklemede")}</span></div><div class="description">“${escapeHTML(r.description||r.aciklama||"")}”</div><div class="meta"><span>📍 ${escapeHTML(r.ilce||"")}</span>${r.mahalle?`<span>🏘️ ${escapeHTML(r.mahalle)}</span>`:""}<span>⏱️ ${escapeHTML(r.aciliyet||"")}</span></div><div class="small muted">Talep No: <strong>${escapeHTML(r.talep_no||"")}</strong> · Detay için dokun</div></article>`;
 }
 
 /* ---------------- PROVIDER ---------------- */
@@ -452,7 +557,16 @@ async function loadProviderDirectory(){
 
 function renderProviderCard(p){
  const cats=(p.services||[]).map(k=>SERVICES[k]?.name||k).filter(Boolean).join(", ")||"Kategori bilgisi yok";
- return `<article class="request"><div class="requestTop"><div><h3>🛠️ ${escapeHTML(p.name)}</h3><div class="small muted">${escapeHTML(p.city)} • ${escapeHTML(p.district)}</div></div><span class="status">${p.active?"Aktif":"Pasif"}</span></div><div class="meta"><span>🔧 ${escapeHTML(cats)}</span>${p.neighborhood?`<span>🏘️ ${escapeHTML(p.neighborhood)}</span>`:""}</div>${p.description?`<div class="description">${escapeHTML(p.description)}</div>`:""}${p.phone?`<a class="btn primary" style="display:block;text-align:center" href="tel:${escapeHTML(p.phone)}">📞 HİZMET SAĞLAYICIYI ARA</a>`:"<div class=\"warning\">Bu sağlayıcının telefon numarası kayıtlı değil.</div>"}<br><button class="btn secondary" onclick='openProviderById(${JSON.stringify(String(p.id))})'>📋 UYGUN TALEPLERİ GÖR</button></article>`;
+ const phone=p.phone||"";
+ const wa=whatsappHref(phone);
+ const phoneBlock=phone
+  ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+      <a class="btn primary" style="display:block;text-align:center;text-decoration:none" href="tel:${escapeHTML(phone)}">📞 Ara</a>
+      ${wa?`<a class="btn secondary" style="display:block;text-align:center;text-decoration:none;background:#128C7E;border-color:#128C7E;color:#fff" href="${wa}" target="_blank" rel="noopener noreferrer">💬 WhatsApp</a>`:`<span class="warning" style="display:flex;align-items:center;justify-content:center;padding:8px">WhatsApp yok</span>`}
+     </div>
+     <div class="small muted" style="margin-top:6px">📞 ${escapeHTML(phone)}</div>`
+  : `<div class="warning">Bu sağlayıcının telefon numarası kayıtlı değil.</div>`;
+ return `<article class="request"><div class="requestTop"><div><h3>🛠️ ${escapeHTML(p.name)}</h3><div class="small muted">${escapeHTML(p.city)} • ${escapeHTML(p.district)}</div></div><span class="status">${p.active?"Aktif":"Pasif"}</span></div><div class="meta"><span>🔧 ${escapeHTML(cats)}</span>${p.neighborhood?`<span>🏘️ ${escapeHTML(p.neighborhood)}</span>`:""}</div>${p.description?`<div class="description">${escapeHTML(p.description)}</div>`:""}${phoneBlock}<br><button class="btn secondary" onclick='openProviderById(${JSON.stringify(String(p.id))})'>📋 UYGUN TALEPLERİ GÖR</button></article>`;
 }
 
 async function openProviderById(id){
@@ -474,7 +588,26 @@ async function showProviderPanel(p){
 function renderProviderRequest(r){
  const k=serviceKeyFromValue(r.service||r.kategori),s=SERVICES[k]||{name:r.kategori||"Hizmet",emoji:"🛠️"};
  const phone=r.telefon||r.phone||"";
- return `<article class="request"><div class="requestTop"><div><h3>${s.emoji} ${escapeHTML(s.name)}</h3><div class="small muted">Talep No: ${escapeHTML(r.talep_no||"")}</div></div><span class="status">${escapeHTML(r.aciliyet||"Beklemede")}</span></div><div class="description">${escapeHTML(r.aciklama||r.description||"")}</div><div class="meta"><span>📍 ${escapeHTML(r.ilce||r.district||"")}</span>${r.mahalle?`<span>🏘️ ${escapeHTML(r.mahalle)}</span>`:""}<span>👤 ${escapeHTML(r.ad_soyad||r.name||"")}</span></div>${phone?`<a class="btn primary" style="display:block;text-align:center" href="tel:${escapeHTML(phone)}">📞 MÜŞTERİYLE İLETİŞİME GEÇ</a>`:`<div class="warning">Bu talepte telefon numarası bulunmuyor.</div>`}</article>`;
+ const st=r.status||r.durum||"Beklemede";
+ const no=String(r.talep_no||r.id||"");
+ const wa=whatsappHref(phone);
+ let actions="";
+ if(st==="Beklemede"||st==="beklemede"){
+  actions=`<button class="btn primary" style="width:100%;margin-top:8px" onclick='event.stopPropagation();acceptRequest(${JSON.stringify(no)})'>✅ Talebi Kabul Et</button>`;
+ }else if(st==="Devam ediyor"||st==="Devam Ediyor"||st==="İşlemde"){
+  actions=`<button class="btn primary" style="width:100%;margin-top:8px" onclick='event.stopPropagation();completeRequest(${JSON.stringify(no)})'>🏁 İşi Tamamlandı</button>`;
+ }else if(st==="Tamamlandı"){
+  actions=`<div class="small muted" style="margin-top:8px">Bu iş tamamlandı. Yeni aksiyon yok.</div>`;
+ }else{
+  actions=`<button class="btn primary" style="width:100%;margin-top:8px" onclick='event.stopPropagation();acceptRequest(${JSON.stringify(no)})'>✅ Talebi Kabul Et</button>`;
+ }
+ const contact=phone
+  ? `<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
+      <a class="btn secondary" style="display:block;text-align:center;text-decoration:none" href="tel:${escapeHTML(phone)}" onclick="event.stopPropagation()">📞 Ara</a>
+      ${wa?`<a class="btn secondary" style="display:block;text-align:center;text-decoration:none;background:#128C7E;border-color:#128C7E;color:#fff" href="${wa}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">💬 WhatsApp</a>`:""}
+     </div>`
+  : `<div class="warning">Bu talepte telefon numarası bulunmuyor.</div>`;
+ return `<article class="request"><div class="requestTop"><div><h3>${s.emoji} ${escapeHTML(s.name)}</h3><div class="small muted">Talep No: ${escapeHTML(r.talep_no||"")}</div></div><span class="status">${escapeHTML(st)}</span></div><div class="description">${escapeHTML(r.aciklama||r.description||"")}</div><div class="meta"><span>📍 ${escapeHTML(r.ilce||r.district||"")}</span>${r.mahalle?`<span>🏘️ ${escapeHTML(r.mahalle)}</span>`:""}<span>👤 ${escapeHTML(r.ad_soyad||r.name||"")}</span><span>⏱️ ${escapeHTML(r.aciliyet||"")}</span></div>${contact}${actions}</article>`;
 }
 
 /* ---------------- OPTIONAL LOCAL PROVIDER ---------------- */
