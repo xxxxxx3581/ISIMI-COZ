@@ -703,28 +703,58 @@ async function acceptRequest(talepNo){
 }
 async function completeRequest(talepNo){
   try{
-    await updateRequestStatus(talepNo,'Tamamlandı');
+    const r=await findRequestByNo(talepNo);
+    if(!r||!r.id)throw new Error('Talep bulunamadı');
+    // Direct Supabase write: requests.status = completed
+    await supabaseRequest('PATCH','requests?id=eq.'+encodeURIComponent(String(r.id)),{status:'completed'});
+    try{
+      const list=(getRequests()||[]).map(function(x){
+        if(String(x.talep_no||'')===String(talepNo)||String(x.id)===String(r.id)){
+          x.status='Tamamlandı';x.durum='Tamamlandı';
+        }
+        return x;
+      });
+      write(KEYS.requests,list);
+    }catch(e){}
     alert('İş tamamlandı olarak işaretlendi.');
     const local=getProvider();
-    if(local&&providerLogged())showProviderPanel(local);
-    else showProviderRequestDetail(talepNo);
-  }catch(e){alert('Tamamlama kaydedilemedi.\n\n'+(e.message||e));}
+    if(local&&typeof providerLogged==='function'&&providerLogged()){
+      if(typeof showProviderPanel==='function')showProviderPanel(local);
+      else showProviderRequestDetail(talepNo);
+    }else{
+      showProviderRequestDetail(talepNo);
+    }
+  }catch(e){
+    alert('Tamamlama kaydedilemedi.\n\n'+(e.message||e));
+  }
 }
+
 async function findRequestByNo(talepNo){
+  if(!talepNo)return null;
+  const key=String(talepNo);
   let list=getRequests()||[];
-  let r=list.find(function(x){return String(x.talep_no||x.id)===String(talepNo);});
-  if(r)return r;
+  let r=list.find(function(x){return String(x.talep_no||'')===key||String(x.id)===key;});
+  // Always try fresh from Supabase requests (source of truth for status)
   try{
-    const rows=await loadRequestsFromSupabase({mineOnly:false});
-    r=(rows||[]).find(function(x){return String(x.talep_no||x.id)===String(talepNo);});
-    if(r)return r;
-  }catch(e){}
-  try{
-    const rows=await loadRequestsFromSupabase({mineOnly:true});
-    r=(rows||[]).find(function(x){return String(x.talep_no||x.id)===String(talepNo);});
-  }catch(e){}
+    const rows=await supabaseRequest('GET','requests?select=*&order=created_at.desc&limit=150');
+    if(Array.isArray(rows)){
+      for(let i=0;i<rows.length;i++){
+        const mapped=mapRequest(rows[i]);
+        if(String(mapped.talep_no||'')===key||String(mapped.id)===key||String(rows[i].id)===key){
+          r=mapped;
+          // refresh local cache entry
+          try{
+            const others=(getRequests()||[]).filter(function(x){return String(x.id)!==String(r.id)&&String(x.talep_no||'')!==String(r.talep_no||'');});
+            write(KEYS.requests,[r].concat(others));
+          }catch(e){}
+          return r;
+        }
+      }
+    }
+  }catch(e){console.warn('findRequestByNo refresh',e);}
   return r||null;
 }
+
 async function showRequestDetail(talepNo){
   try{
     const r=await findRequestByNo(talepNo);
@@ -811,13 +841,17 @@ async function showProviderRequestDetail(talepNo){
   const s=SERVICES[k]||{name:r.kategori||'Hizmet',emoji:'🛠️'};
   const st=String(r.status||r.durum||'Beklemede');
   const stNorm=st.toLowerCase();
-  const no=String(r.talep_no||'');
+  const no=String(r.talep_no||r.id||'');
   const phone=r.telefon||r.phone||'';
   const wa=whatsappHref(phone);
   const tel=telHref(phone);
+  // Normalize: pending/beklemede | accepted/devam | completed/tamam
+  const isPending=stNorm==='pending'||stNorm==='beklemede'||stNorm.indexOf('bekle')>=0;
+  const isAccepted=stNorm==='accepted'||stNorm.indexOf('devam')>=0;
+  const isCompleted=stNorm==='completed'||stNorm.indexOf('tamam')>=0;
   let actions='';
   let contact='';
-  if(stNorm==='beklemede'){
+  if(isPending){
     actions=`<div class="card" style="margin-top:12px"><strong>Fiyat teklifi ver</strong>
       <label style="display:block;margin-top:8px">Fiyat (TL) *</label>
       <input id="offerPrice" type="number" inputmode="decimal" placeholder="Örn. 2500" style="width:100%;box-sizing:border-box;padding:12px;border-radius:12px;border:1px solid var(--line)">
@@ -826,25 +860,19 @@ async function showProviderRequestDetail(talepNo){
       <label style="display:block;margin-top:8px">Not (isteğe bağlı)</label>
       <textarea id="offerNote" maxlength="500" placeholder="İş kapsamı, malzeme vb." style="width:100%;box-sizing:border-box;min-height:80px;padding:12px;border-radius:12px;border:1px solid var(--line)"></textarea>
       <button type="button" class="btn primary" style="width:100%;margin-top:10px" onclick='submitOffer(${JSON.stringify(no)})'>Teklif Gönder</button></div>`;
-  }else if(stNorm.indexOf('devam')>=0){
+  }else if(isAccepted){
     contact=phone?`<div class="card" style="margin-top:12px"><strong>👤 Müşteri iletişim</strong>
       <div class="meta" style="margin-top:8px"><span>${escapeHTML(r.ad_soyad||r.name||'')}</span><span>📞 ${escapeHTML(phone)}</span></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
         ${tel?`<a class="btn secondary" style="text-align:center;text-decoration:none" href="${tel}">📞 Ara</a>`:''}
         ${wa?`<a class="btn secondary" style="text-align:center;text-decoration:none;background:#128C7E;border-color:#128C7E;color:#fff" href="${wa}" target="_blank" rel="noopener noreferrer">💬 WhatsApp</a>`:''}
-      </div></div>`:`<div class="warning">Müşteri telefonu yok.</div>`;
-    actions=`<button type="button" class="btn primary" style="width:100%;margin-top:8px" onclick='completeRequest(${JSON.stringify(no)})'>🏁 İşi Tamamlandı</button>`;
-  }else if(stNorm.indexOf('tamam')>=0){
-    actions=`<div class="notice" style="margin-top:8px">✅ Bu iş tamamlandı.</div>`;
+      </div></div>`:`<div class="warning" style="margin-top:12px">Müşteri telefonu yok.</div>`;
+    actions=`<button type="button" class="btn primary" style="width:100%;margin-top:12px" onclick='completeRequest(${JSON.stringify(no)})'>🏁 İşi Tamamlandı</button>`;
+  }else if(isCompleted){
+    actions=`<div class="notice" style="margin-top:12px">✅ Bu iş tamamlandı.</div>`;
   }else{
-    actions=`<div class="card" style="margin-top:12px"><strong>Fiyat teklifi ver</strong>
-      <label style="display:block;margin-top:8px">Fiyat (TL) *</label>
-      <input id="offerPrice" type="number" inputmode="decimal" placeholder="2500" style="width:100%;box-sizing:border-box;padding:12px;border-radius:12px;border:1px solid var(--line)">
-      <label style="display:block;margin-top:8px">Ne zaman?</label>
-      <input id="offerTime" type="text" value="Bugün" style="width:100%;box-sizing:border-box;padding:12px;border-radius:12px;border:1px solid var(--line)">
-      <label style="display:block;margin-top:8px">Not</label>
-      <textarea id="offerNote" style="width:100%;box-sizing:border-box;min-height:80px;padding:12px;border-radius:12px;border:1px solid var(--line)"></textarea>
-      <button type="button" class="btn primary" style="width:100%;margin-top:10px" onclick='submitOffer(${JSON.stringify(no)})'>Teklif Gönder</button></div>`;
+    // fallback: allow complete if not pending
+    actions=`<button type="button" class="btn primary" style="width:100%;margin-top:12px" onclick='completeRequest(${JSON.stringify(no)})'>🏁 İşi Tamamlandı</button>`;
   }
   app(`<div class="back"><button type="button" class="btn secondary smallBtn" onclick="showProviderEntry()">← Sağlayıcı paneline dön</button></div>
   <span class="badge">🛠️ TALEP</span>
@@ -856,10 +884,11 @@ async function showProviderRequestDetail(talepNo){
     <div class="meta" style="margin-top:12px">
       <span>📍 ${escapeHTML(r.ilce||r.district||'')}</span>
       ${r.mahalle?`<span>🏘️ ${escapeHTML(r.mahalle)}</span>`:''}
-      <span>⏱️ ${escapeHTML(r.aciliyet||'')}</span>
+      <span>⏱️ ${escapeHTML(r.aciliyet||r.urgency||'')}</span>
     </div>
   </div>${contact}${actions}`);
 }
+
 
 
 function startVoiceInput(){
