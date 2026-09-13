@@ -1129,7 +1129,7 @@ async function showProviderRequestDetail(talepNo){
 
 
 
-function startVoiceInput(){
+async function startVoiceInput(){
   const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
   const ta=document.getElementById('reqDescription');
   if(!ta)return;
@@ -1137,32 +1137,69 @@ function startVoiceInput(){
     alert('Bu tarayıcı sesli girişi desteklemiyor. Lütfen metni elle yazın.');
     return;
   }
+  const btn=document.getElementById('voiceBtn');
+  const resetBtn=function(){if(btn){btn.disabled=false;btn.textContent='🎤 Sesli anlat';}};
   try{
+    if(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia){
+      try{
+        const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+        try{stream.getTracks().forEach(function(tr){tr.stop();});}catch(e){}
+      }catch(permErr){
+        resetBtn();
+        alert('Mikrofon izni gerekli. Tarayıcı ayarlarından mikrofona izin verip tekrar deneyin.');
+        return;
+      }
+    }
     const rec=new SR();
     rec.lang='tr-TR';
     rec.interimResults=false;
+    rec.continuous=false;
     rec.maxAlternatives=1;
-    const btn=document.getElementById('voiceBtn');
     if(btn){btn.disabled=true;btn.textContent='Dinleniyor…';}
     rec.onresult=function(ev){
-      const text=(ev.results&&ev.results[0]&&ev.results[0][0]&&ev.results[0][0].transcript)||'';
+      let text='';
+      try{
+        if(ev.results){
+          for(let i=0;i<ev.results.length;i++){
+            if(ev.results[i]&&ev.results[i][0]&&ev.results[i][0].transcript){
+              text+=(text?' ':'')+ev.results[i][0].transcript;
+            }
+          }
+        }
+      }catch(e){}
+      text=(text||'').trim();
       if(text){
         ta.value=(ta.value?ta.value+' ':'')+text;
         const cc=document.getElementById('charCount');
         if(cc)cc.textContent=ta.value.length+'/1000';
+        try{ta.dispatchEvent(new Event('input',{bubbles:true}));}catch(e){}
       }
     };
-    rec.onerror=function(){
-      alert('Ses algılanamadı. Lütfen tekrar deneyin veya metni yazın.');
+    rec.onerror=function(ev){
+      const code=(ev&&ev.error)?String(ev.error):'';
+      if(code==='aborted')return;
+      if(code==='not-allowed'||code==='service-not-allowed'){
+        alert('Mikrofon izni reddedildi. Tarayıcı adres çubuğundan mikrofona izin verin.');
+      }else if(code==='no-speech'){
+        alert('Ses algılanamadı. Lütfen tekrar deneyin veya metni yazın.');
+      }else if(code==='network'){
+        alert('Ses tanıma ağına ulaşılamadı. Bağlantınızı kontrol edip tekrar deneyin.');
+      }else if(code==='audio-capture'){
+        alert('Mikrofona erişilemedi. Cihaz mikrofonunu kontrol edin.');
+      }else{
+        alert('Sesli giriş hatası ('+code+'). Lütfen metni yazın veya tekrar deneyin.');
+      }
     };
     rec.onend=function(){
-      if(btn){btn.disabled=false;btn.textContent='🎤 Sesli anlat';}
+      resetBtn();
     };
     rec.start();
   }catch(e){
+    resetBtn();
     alert('Sesli giriş başlatılamadı. Lütfen metni yazın.');
   }
 }
+
 
 function renderRequest(r){
  const k=serviceKeyFromValue(r.service||r.kategori),s=SERVICES[k]||{name:r.kategori||"Hizmet",emoji:"🛠️"};
