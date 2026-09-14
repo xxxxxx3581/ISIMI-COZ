@@ -15,5 +15,6 @@
     if(!document.querySelector('script[data-a354-owner-actions]')){const s=document.createElement('script');s.src='./a35-listing-owner-actions.js';s.dataset.a354OwnerActions='1';s.defer=true;document.head.appendChild(s)}
     if(!document.querySelector('script[data-a355-my-listings]')){const s2=document.createElement('script');s2.src='./a35-my-listings.js';s2.dataset.a355MyListings='1';s2.defer=true;document.head.appendChild(s2)}
     if(!document.querySelector('script[data-a3510-detail-cleanup]')){const s3=document.createElement('script');s3.src='./a35-detail-photo-ui-cleanup.js';s3.dataset.a3510DetailCleanup='1';s3.defer=true;document.head.appendChild(s3)}
+    if(!document.querySelector('script[data-a3512-photo-viewer]')){const s4=document.createElement('script');s4.src='./a35-listing-photo-viewer.js';s4.dataset.a3512PhotoViewer='1';s4.defer=true;document.head.appendChild(s4)}
   },0);
 })();
