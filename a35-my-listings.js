@@ -1,5 +1,5 @@
-/* A3.5.5 — İlanlarım management bridge
- * Test branch only. Owner-only listing management; no Hallet changes.
+/* A3.5.7 — İlanlarım management bridge
+ * Test branch only. Compact cards + visible listing details; no Hallet changes.
  */
 (()=>{
   if(window.__A355_MY_LISTINGS__) return;
@@ -14,65 +14,23 @@
     if(typeof supabaseRequest==='function') return await supabaseRequest('GET',path);
     return [];
   };
-  async function rows(){
-    const me=uid();
-    if(!me) return [];
-    try{return await authGet('listings?select=id,owner_id,listing_type,category,title,description,price,currency,city,district,status,created_at,updated_at&owner_id=eq.'+encodeURIComponent(me)+'&order=updated_at.desc&limit=100')||[]}catch(e){console.warn('A3.5.5 listings:',e);return []}
-  }
-  async function setStatus(id,status){
-    const me=uid(); if(!me||!id||!['published','archived'].includes(status)) return false;
-    try{
-      const l=(await authGet('listings?select=id,owner_id,status&owner_id=eq.'+encodeURIComponent(me)+'&id=eq.'+encodeURIComponent(id)+'&limit=1'))?.[0];
-      if(!l||l.owner_id!==me||!['published','archived'].includes(l.status)) return false;
-      if(typeof listingsAuthWrite!=='function') throw new Error('Yetkili ilan yazma yardımcısı bulunamadı.');
-      const out=await listingsAuthWrite('PATCH','listings?id=eq.'+encodeURIComponent(id)+'&owner_id=eq.'+encodeURIComponent(me),{status});
-      const updated=Array.isArray(out?.data)?out.data:[];
-      return updated.length>0 && updated[0].status===status && updated[0].owner_id===me;
-    }catch(e){console.warn('A3.5.5 status:',e);return false}
-  }
-  function card(l){
-    const loc=[l.district,l.city].filter(Boolean).map(E).join(' · ');
-    const price=l.price!=null?`${E(Number(l.price).toLocaleString('tr-TR'))} ${E(l.currency||'TRY')}`:'';
-    const action=l.status==='published'?'<button type="button" data-a355="archive">Yayından kaldır</button>':l.status==='archived'?'<button type="button" data-a355="publish">Yeniden yayınla</button>':'';
-    const view=l.status==='published'?'<button type="button" data-a355="view">İlanı aç</button>':'';
-    return `<article class="card" data-listing-id="${E(l.id)}" style="margin-top:10px"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><strong>${E(l.title||'Başlıksız ilan')}</strong><div class="small muted" style="margin-top:4px">${typeLabel(l.listing_type)}${loc?' · 📍 '+loc:''}</div></div><span class="small muted">${E(statusLabel(l.status))}</span></div>${price?`<div style="font-size:18px;font-weight:800;margin-top:8px">${price}</div>`:''}<div class="small muted" style="margin-top:6px">Güncelleme: ${l.updated_at?new Date(l.updated_at).toLocaleString('tr-TR'):''}</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">${view}${action}</div></article>`;
-  }
-  async function show(){
-    const me=uid(); if(!me){alert('İlanlarınızı görmek için giriş yapmalısınız.');return;}
-    const host=document.getElementById('app'); if(!host)return;
-    const list=await rows();
-    host.innerHTML=`<section class="section"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><h2 style="margin:0">📋 İlanlarım</h2><div class="small muted" style="margin-top:5px">Tüm ilanlarınız ve yayın durumları</div></div><button type="button" data-a355="back">← Marketplace</button></div><div class="small muted" style="margin-top:12px">${list.length} ilan</div><div class="a355List">${list.length?list.map(card).join(''):'<div class="card" style="margin-top:12px">Henüz ilanınız bulunmuyor.</div>'}</div></section>`;
-    host.querySelector('[data-a355="back"]')?.addEventListener('click',()=>typeof showListingsHub==='function'?showListingsHub():location.reload());
-    host.querySelector('.a355List')?.addEventListener('click',async ev=>{
-      const b=ev.target.closest('button[data-a355]'); if(!b)return;
-      const article=b.closest('article[data-listing-id]');
-      const id=article?.getAttribute('data-listing-id');
-      const item=list.find(x=>String(x.id)===String(id));
-      if(!item||!id)return;
-      if(b.dataset.a355==='view'){
-        if(item.listing_type==='gayrimenkul'&&typeof showGayrimenkulDetail==='function') return showGayrimenkulDetail(item.id);
-        if(item.listing_type==='otomobil'&&typeof showOtomobilDetail==='function') return showOtomobilDetail(item.id);
-        return;
-      }
-      if(b.dataset.a355==='archive'||b.dataset.a355==='publish'){
-        const next=b.dataset.a355==='archive'?'archived':'published';
-        b.disabled=true;
-        const ok=await setStatus(item.id,next);
-        if(ok) show(); else {b.disabled=false;alert('İlan durumu değiştirilemedi. Lütfen tekrar deneyin.');}
-      }
-    });
-    setTimeout(()=>window.__A356_ADD_EDIT__?.(),80);
-  }
-  function addEntry(){
-    const host=document.getElementById('app'); if(!host||host.querySelector('.a355Entry'))return;
-    const section=document.createElement('section'); section.className='section card a355Entry';
-    section.innerHTML='<div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><strong>📋 İlanlarım</strong><div class="small muted" style="margin-top:4px">İlanlarınızı yönetin, yayından kaldırın veya yeniden yayınlayın.</div></div><button type="button" data-a355="open">Aç</button></div>';
-    host.appendChild(section); section.querySelector('button')?.addEventListener('click',show);
-  }
-  function loadEditBridge(){
-    if(document.querySelector('script[data-a356-edit-bridge]')) return;
-    const s=document.createElement('script');s.src='./a35-listing-edit.js';s.dataset.a356EditBridge='1';s.defer=true;document.head.appendChild(s);
-  }
+  const metaDefs={
+    gayrimenkul:[['property_kind','Tür'],['rooms','Oda / salon'],['net_m2','Net m²'],['gross_m2','Brüt m²'],['building_age','Bina yaşı'],['floor','Kat'],['total_floors','Toplam kat'],['bathrooms','Banyo'],['balcony','Balkon'],['heating','Isıtma'],['furnished','Eşyalı'],['usage_status','Kullanım durumu'],['loan_eligible','Krediye uygunluk'],['deed_status','Tapu durumu'],['facade','Cephe']],
+    otomobil:[['brand','Marka'],['model','Model'],['year','Yıl'],['km','KM'],['fuel','Yakıt'],['gear','Vites'],['body','Kasa'],['vehicle_type','Araç tipi'],['drive','Çekiş'],['color','Renk'],['condition','Durum'],['version','Versiyon'],['engine_cc','Motor'],['power_hp','Güç'],['paint','Boya'],['damage','Hasar'],['changed_parts','Değişen'],['service_history','Servis geçmişi'],['inspection','Ekspertiz / muayene'],['warranty','Garanti'],['seller_type','Satıcı tipi']]
+  };
+  const photoUrl=p=>p?'https://zvffspbowdzvrrzefhkr.supabase.co/storage/v1/object/public/listing-photos/'+String(p).split('/').map(encodeURIComponent).join('/') : '';
+  function styles(){if(document.getElementById('a357-style'))return;const s=document.createElement('style');s.id='a357-style';s.textContent=`
+    .a357List{display:grid;gap:12px;margin-top:12px}.a357Card{overflow:hidden}.a357Top{display:flex;gap:12px;align-items:stretch}.a357Cover{width:108px;height:108px;flex:0 0 108px;border-radius:12px;object-fit:cover;background:var(--card2,#0d1b2a)}.a357NoCover{display:flex;align-items:center;justify-content:center;font-size:28px}.a357Main{min-width:0;flex:1}.a357Title{font-size:18px;font-weight:800;line-height:1.2}.a357Price{font-size:17px;font-weight:800;margin-top:6px}.a357Meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}.a357Pill{display:inline-flex;align-items:center;padding:4px 8px;border-radius:999px;background:rgba(40,120,95,.12);font-size:12px}.a357Status{white-space:nowrap}.a357Details{margin-top:12px;padding-top:11px;border-top:1px solid rgba(127,157,190,.2)}.a357DetailGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 14px}.a357Detail{font-size:13px}.a357Detail b{font-weight:600}.a357Missing{margin-top:10px;padding:8px 10px;border-radius:9px;background:rgba(220,160,40,.12);font-size:12px}.a357Actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:13px}.a357Actions button{min-height:38px}.a357Gallery{display:flex;gap:5px;margin-top:9px;overflow:hidden}.a357Thumb{width:38px;height:38px;border-radius:7px;object-fit:cover}.a357More{font-size:12px;align-self:center}.a357Empty{padding:16px}@media(max-width:560px){.a357Cover{width:88px;height:88px;flex-basis:88px}.a357Title{font-size:16px}.a357DetailGrid{grid-template-columns:1fr 1fr}.a357Status{font-size:11px}}
+  `;document.head.appendChild(s)}
+  async function rows(){const me=uid();if(!me)return[];try{return await authGet('listings?select=id,owner_id,listing_type,category,title,description,price,currency,city,district,status,created_at,updated_at,metadata&owner_id=eq.'+encodeURIComponent(me)+'&order=updated_at.desc&limit=100')||[]}catch(e){console.warn('A3.5.7 listings:',e);return[]}}
+  async function setStatus(id,status){const me=uid();if(!me||!id||!['published','archived'].includes(status))return false;try{const l=(await authGet('listings?select=id,owner_id,status&owner_id=eq.'+encodeURIComponent(me)+'&id=eq.'+encodeURIComponent(id)+'&limit=1'))?.[0];if(!l||l.owner_id!==me||!['published','archived'].includes(l.status))return false;if(typeof listingsAuthWrite!=='function')throw Error('Yetkili ilan yazma yardımcısı bulunamadı.');const out=await listingsAuthWrite('PATCH','listings?id=eq.'+encodeURIComponent(id)+'&owner_id=eq.'+encodeURIComponent(me),{status});const updated=Array.isArray(out?.data)?out.data:[];return updated.length>0&&updated[0].status===status&&updated[0].owner_id===me}catch(e){console.warn('A3.5.7 status:',e);return false}}
+  const value=(m,k)=>{const v=m?.[k];return v===null||v===undefined||v===''?null:String(v)};
+  function details(l){const defs=metaDefs[l.listing_type]||[];const m=l.metadata||{};const items=[];let missing=0;for(const [k,label] of defs){const v=value(m,k);if(v)items.push(`<div class="a357Detail"><b>${E(label)}:</b> ${E(v)}</div>`);else missing++}if(l.listing_type==='gayrimenkul'&&m.neighborhood)items.push(`<div class="a357Detail"><b>Mahalle:</b> ${E(m.neighborhood)}</div>`);if(!items.length)return '';return `<div class="a357Details"><div class="small muted" style="margin-bottom:7px"><strong>${l.listing_type==='otomobil'?'Araç bilgileri':'Gayrimenkul bilgileri'}</strong></div><div class="a357DetailGrid">${items.join('')}</div>${missing?`<div class="a357Missing">⚠️ ${missing} bilgi eksik — <button type="button" data-a355="edit" style="padding:0;border:0;background:none;text-decoration:underline">Düzenle ve tamamla</button></div>`:''}</div>`}
+  function gallery(l){const ps=Array.isArray(l.metadata?.photos)?l.metadata.photos:[];if(!ps.length)return '';const shown=ps.slice(0,5).map(p=>`<img class="a357Thumb" src="${E(photoUrl(p.path))}" alt="" loading="lazy">`).join('');return `<div class="a357Gallery">${shown}${ps.length>5?`<span class="a357More">+${ps.length-5} fotoğraf</span>`:''}</div>`}
+  function card(l){const loc=[l.district,l.city].filter(Boolean).map(E).join(' · ');const price=l.price!=null?`${E(Number(l.price).toLocaleString('tr-TR'))} ${E(l.currency||'TRY')}`:'';const action=l.status==='published'?'<button type="button" data-a355="archive">Yayından kaldır</button>':l.status==='archived'?'<button type="button" data-a355="publish">Yeniden yayınla</button>':'';const view=l.status==='published'?'<button type="button" data-a355="view">İlanı aç</button>':'';const edit='<button type="button" data-a355="edit">Düzenle</button>';const ps=Array.isArray(l.metadata?.photos)?l.metadata.photos:[];const cover=ps[0]?.path?`<img class="a357Cover" src="${E(photoUrl(ps[0].path))}" alt="${E(l.title||'İlan')}" loading="lazy">`:`<div class="a357Cover a357NoCover">🏠</div>`;return `<article class="card a357Card" data-listing-id="${E(l.id)}"><div class="a357Top">${cover}<div class="a357Main"><div style="display:flex;justify-content:space-between;gap:8px"><div class="a357Title">${E(l.title||'Başlıksız ilan')}</div><span class="small muted a357Status">${E(statusLabel(l.status))}</span></div>${price?`<div class="a357Price">${price}</div>`:''}<div class="a357Meta"><span class="a357Pill">${typeLabel(l.listing_type)}</span>${loc?`<span class="small muted">📍 ${loc}</span>`:''}</div>${gallery(l)}</div></div>${details(l)}<div class="a357Actions">${view}${edit}${action}</div></article>`}
+  async function show(){const me=uid();if(!me){alert('İlanlarınızı görmek için giriş yapmalısınız.');return}const host=document.getElementById('app');if(!host)return;styles();const list=await rows();host.innerHTML=`<section class="section"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><h2 style="margin:0">📋 İlanlarım</h2><div class="small muted" style="margin-top:5px">İlanlarınızı tek ekrandan yönetin ve eksik bilgileri tamamlayın.</div></div><button type="button" data-a355="back">← Marketplace</button></div><div class="small muted" style="margin-top:12px">${list.length} ilan</div><div class="a357List">${list.length?list.map(card).join(''):'<div class="card a357Empty">Henüz ilanınız bulunmuyor.</div>'}</div></section>`;host.querySelector('[data-a355="back"]')?.addEventListener('click',()=>typeof showListingsHub==='function'?showListingsHub():location.reload());host.querySelector('.a357List')?.addEventListener('click',async ev=>{const b=ev.target.closest('button[data-a355]');if(!b)return;const article=b.closest('article[data-listing-id]');const id=article?.getAttribute('data-listing-id');const item=list.find(x=>String(x.id)===String(id));if(!item||!id)return;if(b.dataset.a355==='edit'){return window.__A356_EDIT_LISTING__?.(item.id)||(location.href='./marketplace-listing-edit.html?id='+encodeURIComponent(item.id))}if(b.dataset.a355==='view'){if(item.listing_type==='gayrimenkul'&&typeof showGayrimenkulDetail==='function')return showGayrimenkulDetail(item.id);if(item.listing_type==='otomobil'&&typeof showOtomobilDetail==='function')return showOtomobilDetail(item.id);return}if(b.dataset.a355==='archive'||b.dataset.a355==='publish'){const next=b.dataset.a355==='archive'?'archived':'published';b.disabled=true;const ok=await setStatus(item.id,next);if(ok)show();else{b.disabled=false;alert('İlan durumu değiştirilemedi. Lütfen tekrar deneyin.')}}});setTimeout(()=>window.__A356_ADD_EDIT__?.(),80)}
+  function addEntry(){const host=document.getElementById('app');if(!host||host.querySelector('.a355Entry'))return;const section=document.createElement('section');section.className='section card a355Entry';section.innerHTML='<div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><strong>📋 İlanlarım</strong><div class="small muted" style="margin-top:4px">İlanlarınızı yönetin, yayından kaldırın veya yeniden yayınlayın.</div></div><button type="button" data-a355="open">Aç</button></div>';host.appendChild(section);section.querySelector('button')?.addEventListener('click',show)}
+  function loadEditBridge(){if(document.querySelector('script[data-a356-edit-bridge]'))return;const s=document.createElement('script');s.src='./a35-listing-edit.js';s.dataset.a356EditBridge='1';s.defer=true;document.head.appendChild(s)}
   function hook(name){const f=window[name];if(typeof f!=='function'||f.__a355)return;const w=function(){const out=f.apply(this,arguments);setTimeout(addEntry,120);return out};w.__a355=true;window[name]=w}
   setTimeout(()=>{['showListingsHub','showGayrimenkulHub','showOtomobilHub'].forEach(hook);loadEditBridge();addEntry()},0);
   window.__A355_SHOW_MY_LISTINGS__=show;
