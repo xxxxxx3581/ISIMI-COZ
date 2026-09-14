@@ -544,7 +544,7 @@ function showListingsHub(){
   <div class="section">
     <span class="badge">Marketplace 2.0</span>
     <h1>İlan kategorileri</h1>
-    <p class="muted small">Gayrimenkul ilanları aktif. Otomobil yakında. Hizmetler mevcut talep akışına bağlanır.</p>
+    <p class="muted small">Gayrimenkul ve otomobil ilanları aktif. Hizmetler mevcut talep akışına bağlanır.</p>
     <div class="actionGrid homeMenuGrid" style="margin-top:12px">
       <button class="actionCard homeMenuCard" type="button" onclick="showListingsCategory('gayrimenkul')">
         <div class="emoji">🏠</div>
@@ -575,14 +575,14 @@ function showListingsCategory(type){
   if(t==='gayrimenkul'){
     return showGayrimenkulHub();
   }
-  const labels={otomobil:'Otomobil'};
-  const title=labels[t]||'Kategori';
+  if(t==='otomobil'){
+    return showOtomobilHub();
+  }
   app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showListingsHub()">← Marketplace 2.0</button></div>
   <div class="formCard">
     <span class="badge">Marketplace 2.0</span>
-    <h1>${title}</h1>
-    <p class="muted">İlan sistemi yakında.</p>
-    <p class="muted small">Bu kategoride ilan listeleme ve oluşturma bir sonraki aşamada eklenecek.</p>
+    <h1>Kategori</h1>
+    <p class="muted">Bu kategori henüz aktif değil.</p>
     <div class="splitActions" style="margin-top:12px">
       <button class="btn secondary" type="button" onclick="showListingsHub()">Kategorilere dön</button>
       <button class="btn secondary" type="button" onclick="listingsHubBack()">Ana sayfa</button>
@@ -1203,6 +1203,452 @@ window.showGayrimenkulCreateForm=showGayrimenkulCreateForm;
 window.listingsAuthWrite=listingsAuthWrite;
 window.createGayrimenkulListing=createGayrimenkulListing;
 window.publishGayrimenkulListing=publishGayrimenkulListing;
+
+// === MARKETPLACE 2.0 A3.4 OTOMOBİL START ===
+var __otoW={step:0, data:{}, files:[]};
+
+function showOtomobilHub(){
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showListingsHub()">← Marketplace 2.0</button></div>
+  <div class="section">
+    <span class="badge">🚗 Otomobil</span>
+    <h1>Otomobil ilanları</h1>
+    <p class="muted small">Yayındaki araç ilanlarına bak veya giriş yaparak ilan ver.</p>
+    <div class="actionGrid homeMenuGrid" style="margin-top:12px">
+      <button class="actionCard homeMenuCard" type="button" onclick="showOtomobilBrowse()">
+        <div class="emoji">🔍</div>
+        <strong>İlanlara Bak</strong>
+        <span>Yayındaki otomobil ilanlarını listele</span>
+      </button>
+      <button class="actionCard homeMenuCard" type="button" onclick="startOtomobilWizard()">
+        <div class="emoji">➕</div>
+        <strong>İlan Ver</strong>
+        <span>Adım adım araç ilanı oluştur</span>
+      </button>
+    </div>
+  </div>`);
+}
+
+function otoVal(id){const el=document.getElementById(id);return el?(el.value||'').trim():'';}
+function otoSaveStepFields(){
+  const d=__otoW.data;
+  const map=[
+    ['otoVehicleType','vehicle_type'],['otoBrand','brand'],['otoModel','model'],['otoVersion','version'],
+    ['otoYear','year'],['otoKm','km'],['otoFuel','fuel'],['otoGear','gear'],['otoEngine','engine_cc'],
+    ['otoPower','power_hp'],['otoDrive','drive'],['otoBody','body'],['otoColor','color'],
+    ['otoCondition','condition'],['otoDamage','damage'],['otoPaint','paint'],['otoParts','changed_parts'],
+    ['otoService','service_history'],['otoInspection','inspection'],['otoWarranty','warranty'],
+    ['otoPrice','price'],['otoCurrency','currency'],['otoCity','city'],['otoDistrict','district'],
+    ['otoNeighborhood','neighborhood'],['otoTitle','title'],['otoDesc','description'],['otoSellerType','seller_type']
+  ];
+  map.forEach(function(pair){
+    const el=document.getElementById(pair[0]);
+    if(el) d[pair[1]]=(el.value||'').trim();
+  });
+  const fi=document.getElementById('otoPhotos');
+  if(fi&&fi.files&&fi.files.length){ __otoW.files=Array.from(fi.files); }
+}
+
+function startOtomobilWizard(){
+  const session=typeof getAuthSession==='function'?getAuthSession():null;
+  if(!session||!session.user||!(session.user.id||session.user.user_id)){
+    app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showOtomobilHub()">← Otomobil</button></div>
+    <div class="formCard"><span class="badge">🚗 İlan Ver</span><h1>Giriş gerekli</h1>
+    <p class="muted">İlan vermek için giriş yapmalısın.</p>
+    <button class="btn primary" type="button" onclick="openAuthModal('login')">Giriş yap</button></div>`);
+    return;
+  }
+  __otoW={step:0, data:{currency:'TRY',city:'İzmir',seller_type:'individual',vehicle_type:'Otomobil'}, files:[]};
+  renderOtomobilWizard();
+}
+
+function renderOtomobilWizard(){
+  const step=__otoW.step|0;
+  const d=__otoW.data||{};
+  const total=8;
+  const districts=typeof districtOptions==='function'?districtOptions(d.district||''):'<option value="">İlçe seç</option>';
+  const sel=function(cur,val){return cur===val?' selected':'';};
+  let body='';
+  if(step===0){
+    body=`<label>Araç tipi</label><select id="otoVehicleType">
+      ${['Otomobil','SUV','Sedan','Hatchback','Station Wagon','Coupe','Cabrio','Pickup','Diğer'].map(function(v){
+        return '<option value="'+v+'"'+sel(d.vehicle_type,v)+'>'+v+'</option>';
+      }).join('')}
+    </select>
+    <label>Satıcı tipi</label><select id="otoSellerType">
+      <option value="individual"${sel(d.seller_type,'individual')}>Bireysel</option>
+      <option value="professional"${sel(d.seller_type,'professional')}>Profesyonel / galeri</option>
+    </select>
+    <p class="small muted">Resmî galeri doğrulaması bu sürümde yoktur.</p>`;
+  }else if(step===1){
+    body=`<label>Marka *</label><input id="otoBrand" value="${escapeHTML(d.brand||'')}" placeholder="Örn: Volkswagen">
+    <label>Model *</label><input id="otoModel" value="${escapeHTML(d.model||'')}" placeholder="Örn: Golf">
+    <label>Versiyon</label><input id="otoVersion" value="${escapeHTML(d.version||'')}" placeholder="Örn: 1.5 TSI">
+    <div class="row"><div><label>Model yılı *</label><input id="otoYear" type="number" min="1950" max="2030" value="${escapeHTML(d.year||'')}"></div>
+    <div><label>Kilometre *</label><input id="otoKm" type="number" min="0" step="1" value="${escapeHTML(d.km||'')}"></div></div>`;
+  }else if(step===2){
+    body=`<label>Yakıt</label><select id="otoFuel">
+      ${['','Benzin','Dizel','LPG','Hibrit','Elektrik','Diğer'].map(function(v){return '<option value="'+v+'"'+sel(d.fuel,v)+'>'+(v||'Seç')+'</option>';}).join('')}
+    </select>
+    <label>Vites</label><select id="otoGear">
+      ${['','Manuel','Otomatik','Yarı otomatik'].map(function(v){return '<option value="'+v+'"'+sel(d.gear,v)+'>'+(v||'Seç')+'</option>';}).join('')}
+    </select>
+    <div class="row"><div><label>Motor hacmi (cc)</label><input id="otoEngine" value="${escapeHTML(d.engine_cc||'')}"></div>
+    <div><label>Güç (hp)</label><input id="otoPower" value="${escapeHTML(d.power_hp||'')}"></div></div>
+    <label>Çekiş</label><select id="otoDrive">
+      ${['','Önden','Arkadan','4x4','AWD'].map(function(v){return '<option value="'+v+'"'+sel(d.drive,v)+'>'+(v||'Seç')+'</option>';}).join('')}
+    </select>
+    <label>Kasa</label><input id="otoBody" value="${escapeHTML(d.body||'')}" placeholder="Sedan, hatchback…">
+    <label>Renk</label><input id="otoColor" value="${escapeHTML(d.color||'')}" placeholder="Beyaz">`;
+  }else if(step===3){
+    body=`<label>Kondisyon</label><select id="otoCondition">
+      ${['','İkinci el','Sıfır'].map(function(v){return '<option value="'+v+'"'+sel(d.condition,v)+'>'+(v||'Seç')+'</option>';}).join('')}
+    </select>
+    <label>Hasar durumu</label><input id="otoDamage" value="${escapeHTML(d.damage||'')}" placeholder="Hasarsız / boyasız…">
+    <label>Boya durumu</label><input id="otoPaint" value="${escapeHTML(d.paint||'')}" placeholder="Orijinal / lokal boyalı">
+    <label>Değişen parça</label><input id="otoParts" value="${escapeHTML(d.changed_parts||'')}" placeholder="Yok / …">
+    <label>Servis geçmişi</label><input id="otoService" value="${escapeHTML(d.service_history||'')}" placeholder="Yetkili servis">
+    <label>Muayene</label><input id="otoInspection" value="${escapeHTML(d.inspection||'')}" placeholder="Geçerli / …">
+    <label>Garanti</label><input id="otoWarranty" value="${escapeHTML(d.warranty||'')}" placeholder="Var / yok">`;
+  }else if(step===4){
+    body=`<div class="row"><div><label>Fiyat *</label><input id="otoPrice" type="number" min="0" step="1" value="${escapeHTML(d.price||'')}"></div>
+    <div><label>Para birimi</label><select id="otoCurrency">
+      <option value="TRY"${sel(d.currency||'TRY','TRY')}>TRY</option>
+      <option value="USD"${sel(d.currency,'USD')}>USD</option>
+      <option value="EUR"${sel(d.currency,'EUR')}>EUR</option>
+    </select></div></div>
+    <label>İl *</label><select id="otoCity"><option value="İzmir" selected>İzmir</option></select>
+    <label>İlçe *</label><select id="otoDistrict">${districts}</select>
+    <label>Mahalle</label><input id="otoNeighborhood" value="${escapeHTML(d.neighborhood||'')}" placeholder="Mahalle">`;
+  }else if(step===5){
+    const autoTitle=((d.brand||'')+' '+(d.model||'')+' '+(d.year||'')).trim();
+    body=`<label>İlan başlığı *</label><input id="otoTitle" maxlength="120" value="${escapeHTML(d.title||autoTitle)}" placeholder="Marka model yıl">
+    <label>Açıklama *</label><textarea id="otoDesc" maxlength="3000" placeholder="Araç durumu, tramer, bakımlar…">${escapeHTML(d.description||'')}</textarea>`;
+  }else if(step===6){
+    body=`<label>Fotoğraflar * (en az 1)</label>
+    <input id="otoPhotos" type="file" accept="image/*" multiple>
+    <p class="small muted">En fazla 12 görsel, her biri max 5 MB. Kapak = ilk fotoğraf.</p>
+    <p class="small muted">Seçili dosya: ${(__otoW.files&&__otoW.files.length)?(__otoW.files.length+' dosya'):'henüz yok'}</p>`;
+  }else{
+    // preview step 7
+    const t=escapeHTML(d.title||'—');
+    const price=escapeHTML(formatListingPrice(d.price, d.currency||'TRY'));
+    body=`<div class="card" style="text-align:left">
+      <strong>${t}</strong>
+      <div class="small" style="margin-top:6px"><b>${price}</b></div>
+      <div class="small muted">${escapeHTML([d.year,d.km?Number(d.km).toLocaleString('tr-TR')+' km':'',d.fuel,d.gear].filter(Boolean).join(' · '))}</div>
+      <div class="small muted">${escapeHTML([d.city,d.district].filter(Boolean).join(' / '))}</div>
+      <div class="small muted">Fotoğraf: ${(__otoW.files&&__otoW.files.length)||0}</div>
+      <div class="small muted">Satıcı: ${d.seller_type==='professional'?'Profesyonel / galeri':'Bireysel'}</div>
+    </div>
+    <p class="muted small">Kaydettiğinde ilan taslak olur; ardından yayınlayabilirsin.</p>`;
+  }
+  const labels=['Tip','Araç','Teknik','Durum','Fiyat','Metin','Foto','Önizle'];
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showOtomobilHub()">← Otomobil</button></div>
+  <div class="formCard">
+    <span class="badge">🚗 İlan Ver · Adım ${step+1}/${total}</span>
+    <h1>${labels[step]||'İlan'}</h1>
+    <p class="small muted">${labels.map(function(l,i){return i===step?'<b>'+l+'</b>':l;}).join(' → ')}</p>
+    ${body}
+    <div class="splitActions" style="margin-top:14px">
+      ${step>0?'<button class="btn secondary" type="button" onclick="otoWizardBack()">Geri</button>':''}
+      ${step<total-1?'<button class="btn primary" type="button" onclick="otoWizardNext()">Devam</button>':
+        '<button class="btn primary" type="button" id="otoSaveBtn" onclick="createOtomobilListing()">Taslak olarak kaydet</button>'}
+    </div>
+  </div>`);
+}
+
+function otoWizardBack(){
+  otoSaveStepFields();
+  __otoW.step=Math.max(0,(__otoW.step|0)-1);
+  renderOtomobilWizard();
+}
+function otoWizardNext(){
+  otoSaveStepFields();
+  const d=__otoW.data;
+  const step=__otoW.step|0;
+  if(step===1){
+    if(!d.brand||!d.model||!d.year||d.km===''){ alert('Marka, model, yıl ve kilometre zorunlu.'); return; }
+  }
+  if(step===4){
+    if(d.price===''||d.price===undefined||!d.city||!d.district){ alert('Fiyat, il ve ilçe zorunlu.'); return; }
+  }
+  if(step===5){
+    if(!d.title||!d.description){ alert('Başlık ve açıklama zorunlu.'); return; }
+  }
+  if(step===6){
+    if(!(__otoW.files&&__otoW.files.length)){ alert('En az bir fotoğraf seçmelisin.'); return; }
+  }
+  __otoW.step=Math.min(7,step+1);
+  renderOtomobilWizard();
+}
+
+async function createOtomobilListing(){
+  otoSaveStepFields();
+  const session=typeof getAuthSession==='function'?getAuthSession():null;
+  const uid=session&&session.user&&(session.user.id||session.user.user_id);
+  const token=session&&(session.access_token||session.accessToken);
+  if(!uid||!token){ alert('Giriş gerekli.'); return startOtomobilWizard(); }
+  const d=__otoW.data||{};
+  if(!d.brand||!d.model||!d.year||d.km===''||!d.price||!d.city||!d.district||!d.title||!d.description){
+    alert('Zorunlu alanlar eksik. Adımları kontrol et.');
+    return;
+  }
+  if(!(__otoW.files&&__otoW.files.length)){ alert('En az bir fotoğraf gerekli.'); return; }
+  const btn=document.getElementById('otoSaveBtn');
+  if(btn){ btn.disabled=true; btn.textContent='Kaydediliyor…'; }
+  try{
+    const year=Number(d.year); const km=Number(d.km); const price=Number(d.price);
+    const metadata={
+      source:'a3.4',
+      vehicle_type:d.vehicle_type||'',
+      brand:d.brand||'',
+      model:d.model||'',
+      version:d.version||'',
+      year:isFinite(year)?year:null,
+      km:isFinite(km)?km:null,
+      fuel:d.fuel||'',
+      gear:d.gear||'',
+      engine_cc:d.engine_cc||'',
+      power_hp:d.power_hp||'',
+      drive:d.drive||'',
+      body:d.body||'',
+      color:d.color||'',
+      condition:d.condition||'',
+      damage:d.damage||'',
+      paint:d.paint||'',
+      changed_parts:d.changed_parts||'',
+      service_history:d.service_history||'',
+      inspection:d.inspection||'',
+      warranty:d.warranty||'',
+      seller_type:d.seller_type==='professional'?'professional':'individual',
+      // future official verification hooks (empty)
+      official_verification_status:null,
+      verification_source:null,
+      verification_reference:null,
+      verified_at:null,
+      photos:[]
+    };
+    const body={
+      owner_id:uid,
+      listing_type:'otomobil',
+      category:d.vehicle_type||'Otomobil',
+      title:d.title,
+      description:d.description,
+      price:isFinite(price)?price:null,
+      currency:d.currency||'TRY',
+      city:d.city,
+      district:d.district,
+      neighborhood:d.neighborhood||null,
+      status:'draft',
+      metadata:metadata
+    };
+    const out=await listingsAuthWrite('POST','listings',body);
+    const row=Array.isArray(out.data)?out.data[0]:out.data;
+    if(!row||!row.id) throw new Error('Kayıt oluşturulamadı.');
+    const uploaded=[]; const failed=[];
+    if(btn) btn.textContent='Fotoğraflar yükleniyor…';
+    const files=__otoW.files.slice(0,12);
+    for(let i=0;i<files.length;i++){
+      try{ uploaded.push(await uploadListingPhoto(uid, row.id, files[i], token)); }
+      catch(pe){ failed.push((files[i].name||'foto')+': '+(pe.message||String(pe))); }
+    }
+    if(uploaded.length){
+      metadata.photos=uploaded;
+      try{
+        const patch=await listingsAuthWrite('PATCH','listings?id=eq.'+encodeURIComponent(row.id),{metadata:metadata});
+        const patched=Array.isArray(patch.data)?patch.data[0]:patch.data;
+        if(patched) Object.assign(row,patched); else row.metadata=metadata;
+      }catch(me){ failed.push('metadata: '+(me.message||String(me))); }
+    }
+    showOtomobilDraftResult(row,{uploaded:uploaded.length,failed:failed});
+  }catch(err){
+    alert(err&&err.message?err.message:String(err));
+    if(btn){ btn.disabled=false; btn.textContent='Taslak olarak kaydet'; }
+  }
+}
+
+function showOtomobilDraftResult(row, photoInfo){
+  const id=row&&row.id?String(row.id).replace(/[^a-zA-Z0-9-]/g,''):'';
+  const title=escapeHTML(row&&row.title?row.title:'İlan');
+  let photoNote='';
+  if(photoInfo){
+    if(photoInfo.uploaded) photoNote+=`<p class="small" style="color:var(--ok,#19c37d)">✓ ${photoInfo.uploaded} fotoğraf yüklendi.</p>`;
+    if(photoInfo.failed&&photoInfo.failed.length){
+      photoNote+=`<p class="small muted">Bazı fotoğraflar yüklenemedi:</p><ul class="small muted">`+
+        photoInfo.failed.map(function(f){return `<li>${escapeHTML(f)}</li>`;}).join('')+`</ul>`;
+    }
+  }
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showOtomobilHub()">← Otomobil</button></div>
+  <div class="formCard">
+    <span class="badge">Taslak</span>
+    <h1>İlan taslağın oluşturuldu</h1>
+    <p class="muted">Yayınlayana kadar yalnızca sen görürsün.</p>
+    <div class="card" style="text-align:left;margin:12px 0"><strong>${title}</strong><div class="small muted">Durum: draft</div>${photoNote}</div>
+    <div class="splitActions">
+      <button class="btn primary" type="button" onclick="publishOtomobilListing('${id}')">İlanı Yayınla</button>
+      <button class="btn secondary" type="button" onclick="showOtomobilHub()">Daha sonra</button>
+    </div>
+  </div>`);
+}
+
+async function publishOtomobilListing(id){
+  const listingId=String(id||'').replace(/[^a-zA-Z0-9-]/g,'');
+  if(!listingId){ alert('İlan bulunamadı.'); return; }
+  const session=typeof getAuthSession==='function'?getAuthSession():null;
+  const token=session&&(session.access_token||session.accessToken);
+  if(!token){ alert('Giriş gerekli.'); return openAuthModal('login'); }
+  try{
+    const out=await listingsAuthWrite('PATCH','listings?id=eq.'+encodeURIComponent(listingId),{status:'published'});
+    const rows=Array.isArray(out.data)?out.data:[];
+    if(!rows.length) throw new Error('İlan yayınlanamadı (yetki veya oturum).');
+    app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showOtomobilHub()">← Otomobil</button></div>
+    <div class="formCard"><span class="badge">Yayında</span><h1>İlan yayınlandı</h1>
+    <p class="muted">İlan “İlanlara Bak” listesinde görünebilir.</p>
+    <div class="splitActions">
+      <button class="btn primary" type="button" onclick="showOtomobilBrowse()">İlanlara Bak</button>
+      <button class="btn secondary" type="button" onclick="showOtomobilHub()">Otomobil</button>
+    </div></div>`);
+  }catch(err){ alert(err&&err.message?err.message:String(err)); }
+}
+
+async function showOtomobilBrowse(){
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showOtomobilHub()">← Otomobil</button></div>
+  <div class="section"><span class="badge">🚗 Otomobil</span><h1>Yayındaki ilanlar</h1>
+  <p class="muted small">Yalnızca yayınlanmış otomobil ilanları. Detay için dokun.</p>
+  <div id="otoListArea" class="muted small">Yükleniyor…</div></div>`);
+  const box=document.getElementById('otoListArea');
+  try{
+    const path="listings?listing_type=eq.otomobil&status=eq.published&order=created_at.desc&select=id,title,price,currency,city,district,category,metadata,created_at";
+    const rows=await supabaseRequest('GET',path);
+    const list=Array.isArray(rows)?rows:[];
+    if(!list.length){
+      box.innerHTML=`<div class="card empty"><h3>Henüz yayınlanmış otomobil ilanı yok</h3>
+        <button class="btn primary" type="button" onclick="startOtomobilWizard()">İlan Ver</button></div>`;
+      return;
+    }
+    box.innerHTML=`<div class="actionGrid" style="grid-template-columns:1fr;gap:10px">`+list.map(function(row){
+      const id=String(row.id||'').replace(/[^a-zA-Z0-9-]/g,'');
+      const md=row.metadata||{};
+      const title=escapeHTML(row.title||'İlan');
+      const price=escapeHTML(formatListingPrice(row.price,row.currency));
+      const year=md.year!=null?escapeHTML(String(md.year)):'—';
+      const km=md.km!=null?escapeHTML(Number(md.km).toLocaleString('tr-TR')+' km'):'—';
+      const fuel=escapeHTML(md.fuel||'—');
+      const gear=escapeHTML(md.gear||'—');
+      const loc=escapeHTML([row.city,row.district].filter(Boolean).join(' / ')||'—');
+      const photos=listingPhotosFromRow(row);
+      let cover='';
+      if(photos.length){
+        const p0=photos[0]; const pth=typeof p0==='string'?p0:(p0.path||'');
+        if(pth){
+          const src=escapeHTML(listingPhotoPublicUrl(pth));
+          cover=`<div style="margin-bottom:8px;border-radius:12px;overflow:hidden;background:#0b1727;aspect-ratio:16/10"><img src="${src}" alt="" style="width:100%;height:100%;object-fit:cover;display:block" loading="lazy"></div>`;
+        }
+      }
+      return `<button type="button" class="card" style="text-align:left;width:100%;cursor:pointer;font:inherit;color:inherit;background:var(--card)" onclick="showOtomobilDetail('${id}')">
+        ${cover}<strong style="display:block;font-size:16px;margin-bottom:6px">${title}</strong>
+        <div class="small"><b>${price}</b></div>
+        <div class="small muted">${year} · ${km} · ${fuel} · ${gear}</div>
+        <div class="small muted">${loc}</div>
+        <div class="small muted" style="margin-top:8px">Detayı gör →</div>
+      </button>`;
+    }).join('')+`</div>`;
+  }catch(err){
+    box.innerHTML=`<div class="card empty"><h3>İlanlar yüklenemedi</h3><p class="small muted">${escapeHTML(err.message||String(err))}</p>
+      <button class="btn secondary" type="button" onclick="showOtomobilBrowse()">Tekrar dene</button></div>`;
+  }
+}
+
+async function showOtomobilDetail(listingId){
+  const id=String(listingId||'').replace(/[^a-zA-Z0-9-]/g,'');
+  if(!id){ alert('İlan bulunamadı.'); return showOtomobilBrowse(); }
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showOtomobilBrowse()">← Otomobil ilanlarına dön</button></div>
+  <div class="formCard"><span class="badge">🚗 İlan detayı</span><div id="otoDetailArea" class="muted small">Yükleniyor…</div></div>`);
+  const box=document.getElementById('otoDetailArea');
+  try{
+    const path="listings?id=eq."+encodeURIComponent(id)+"&listing_type=eq.otomobil&status=eq.published&select=id,title,price,currency,city,district,neighborhood,category,description,metadata,created_at&limit=1";
+    const rows=await supabaseRequest('GET',path);
+    const row=Array.isArray(rows)&&rows[0]?rows[0]:null;
+    if(!row){
+      box.innerHTML=`<h1>İlan bulunamadı</h1><p class="muted">Yayında değil veya kaldırılmış.</p>
+        <button class="btn secondary" type="button" onclick="showOtomobilBrowse()">Listeye dön</button>`;
+      return;
+    }
+    const md=row.metadata||{};
+    const title=escapeHTML(row.title||'İlan');
+    const price=escapeHTML(formatListingPrice(row.price,row.currency));
+    const desc=escapeHTML(row.description||'');
+    const photos=listingPhotosFromRow(row);
+    const urls=[];
+    for(let i=0;i<photos.length;i++){
+      const p=photos[i]; const pth=typeof p==='string'?p:(p&&p.path)||'';
+      if(pth) urls.push(listingPhotoPublicUrl(pth));
+    }
+    try{ window.__gmDetailPhotoUrls=urls; }catch(e){}
+    let gallery='';
+    if(urls.length){
+      gallery=`<div style="display:grid;grid-template-columns:1fr;gap:8px;margin:12px 0">`+urls.map(function(u,idx){
+        return `<button type="button" data-oto-photo-idx="${idx}" style="border:0;padding:0;border-radius:12px;overflow:hidden;background:#0b1727;aspect-ratio:16/10;cursor:zoom-in;width:100%;display:block">
+          <img src="${escapeHTML(u)}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;pointer-events:none" loading="lazy"></button>`;
+      }).join('')+`</div><p class="small muted">Fotoğrafa dokunarak büyüt</p>`;
+    }
+    function cell(label,val){
+      return `<div style="margin-top:10px"><div class="small muted">${escapeHTML(label)}</div><div>${escapeHTML(val==null||val===''?'—':String(val))}</div></div>`;
+    }
+    const seller=md.seller_type==='professional'?'Profesyonel / galeri (doğrulanmamış)':'Bireysel satıcı';
+    box.innerHTML=`<h1 style="margin-top:8px">${title}</h1>
+      <p style="font-size:20px;font-weight:700;margin:8px 0">${price}</p>
+      ${gallery}
+      <div class="card" style="text-align:left;margin:12px 0">
+        <strong>Araç özeti</strong>
+        ${cell('Marka',md.brand)}${cell('Model',md.model)}${cell('Versiyon',md.version)}
+        ${cell('Yıl',md.year)}${cell('Km',md.km!=null?Number(md.km).toLocaleString('tr-TR'):'')}
+        ${cell('Yakıt',md.fuel)}${cell('Vites',md.gear)}${cell('Motor (cc)',md.engine_cc)}${cell('Güç (hp)',md.power_hp)}
+        ${cell('Çekiş',md.drive)}${cell('Kasa',md.body||row.category)}${cell('Renk',md.color)}
+        ${cell('Konum',[row.city,row.district,row.neighborhood].filter(Boolean).join(' / '))}
+      </div>
+      <div class="sectionTitle"><h2 style="font-size:16px">Açıklama</h2></div>
+      <p class="muted" style="white-space:pre-wrap;line-height:1.5">${desc||'—'}</p>
+      <div class="card" style="text-align:left;margin:12px 0">
+        <strong>Araç durumu</strong>
+        ${cell('Kondisyon',md.condition)}${cell('Hasar',md.damage)}${cell('Boya',md.paint)}
+        ${cell('Değişen',md.changed_parts)}${cell('Servis',md.service_history)}
+        ${cell('Muayene',md.inspection)}${cell('Garanti',md.warranty)}
+      </div>
+      <div class="card" style="text-align:left;margin:12px 0">
+        <strong>Satıcı</strong>
+        ${cell('Tip',seller)}
+        <p class="small muted" style="margin-top:8px">Mesajlaşma sonraki sürümde. Resmî EİDS/kurum doğrulaması yok.</p>
+      </div>
+      <div class="splitActions">
+        <button class="btn secondary" type="button" onclick="showOtomobilBrowse()">← İlanlara dön</button>
+        <button class="btn secondary" type="button" onclick="showOtomobilHub()">Otomobil menü</button>
+      </div>`;
+    const nodes=box.querySelectorAll('[data-oto-photo-idx]');
+    for(let i=0;i<nodes.length;i++){
+      nodes[i].addEventListener('click',function(ev){
+        ev.preventDefault();
+        const idx=Number(this.getAttribute('data-oto-photo-idx')||0);
+        if(typeof openGmPhotoViewer==='function') openGmPhotoViewer(window.__gmDetailPhotoUrls||urls, idx);
+      });
+    }
+  }catch(err){
+    box.innerHTML=`<h1>Detay yüklenemedi</h1><p class="small muted">${escapeHTML(err.message||String(err))}</p>
+      <button class="btn secondary" type="button" onclick="showOtomobilBrowse()">Listeye dön</button>`;
+  }
+}
+
+window.showOtomobilHub=showOtomobilHub;
+window.startOtomobilWizard=startOtomobilWizard;
+window.renderOtomobilWizard=renderOtomobilWizard;
+window.otoWizardNext=otoWizardNext;
+window.otoWizardBack=otoWizardBack;
+window.createOtomobilListing=createOtomobilListing;
+window.publishOtomobilListing=publishOtomobilListing;
+window.showOtomobilBrowse=showOtomobilBrowse;
+window.showOtomobilDetail=showOtomobilDetail;
+// === MARKETPLACE 2.0 A3.4 OTOMOBİL END ===
+
 // === MARKETPLACE 2.0 A2 HUB END ===
 
 
