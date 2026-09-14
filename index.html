@@ -696,46 +696,100 @@ function clearListingFilters(type){
     __listingFilters.otomobil={q:'',brand:'',model:'',minYear:'',maxYear:'',minKm:'',maxKm:'',minPrice:'',maxPrice:'',fuel:'',gear:'',body:'',drive:'',city:'',district:'',seller_type:'',sort:'new'};
   }
 }
+
+function normalizeListingText(v){
+  try{
+    return String(v==null?'':v)
+      .toLocaleLowerCase('tr-TR')
+      .replace(/\s+/g,' ')
+      .trim();
+  }catch(e){
+    return String(v==null?'':v).toLowerCase().replace(/\s+/g,' ').trim();
+  }
+}
 function listingMatchesSearch(row,q){
-  if(!q) return true;
-  const s=String(q).toLowerCase().trim();
+  const s=normalizeListingText(q);
   if(!s) return true;
-  const md=row.metadata||{};
-  const bag=[row.title,row.description,row.category,row.city,row.district,row.neighborhood,
-    md.brand,md.model,md.version,md.fuel,md.gear,md.body,md.color,md.vehicle_type,md.property_kind].join(' ').toLowerCase();
+  const md=(row&&row.metadata)||{};
+  const bag=normalizeListingText([
+    row&&row.title,
+    row&&row.description,
+    row&&row.category,
+    row&&row.city,
+    row&&row.district,
+    row&&row.neighborhood,
+    md.brand, md.model, md.version, md.fuel, md.gear, md.body, md.color,
+    md.vehicle_type, md.property_kind, md.drive, md.condition
+  ].join(' '));
   return bag.indexOf(s)>=0;
 }
 function applyListingFiltersLocal(type, rows){
   const f=getListingFilterState(type)||{};
   let list=(rows||[]).slice();
   list=list.filter(function(row){
-    if(!listingMatchesSearch(row,f.q)) return false;
-    const md=row.metadata||{};
-    const price=row.price!=null?Number(row.price):null;
-    if(f.minPrice!==''&&f.minPrice!=null&&price!=null&&price<Number(f.minPrice)) return false;
-    if(f.maxPrice!==''&&f.maxPrice!=null&&price!=null&&price>Number(f.maxPrice)) return false;
-    if(f.city&&row.city&&String(row.city)!==String(f.city)) return false;
-    if(f.city&&!row.city) return false;
-    if(f.district&&row.district&&String(row.district)!==String(f.district)) return false;
-    if(f.district&&!row.district) return false;
+    if(!listingMatchesSearch(row, f.q)) return false;
+    const md=(row&&row.metadata)||{};
+    const price=row.price!=null&&row.price!==''?Number(row.price):null;
+    const minP=f.minPrice!==''&&f.minPrice!=null?Number(f.minPrice):null;
+    const maxP=f.maxPrice!==''&&f.maxPrice!=null?Number(f.maxPrice):null;
+    if(minP!=null&&!isNaN(minP)){
+      if(price==null||isNaN(price)||price<minP) return false;
+    }
+    if(maxP!=null&&!isNaN(maxP)){
+      if(price==null||isNaN(price)||price>maxP) return false;
+    }
+    if(f.city){
+      if(normalizeListingText(row.city)!==normalizeListingText(f.city)) return false;
+    }
+    if(f.district){
+      if(normalizeListingText(row.district)!==normalizeListingText(f.district)) return false;
+    }
     if(type==='gayrimenkul'){
-      if(f.category&&row.category&&String(row.category)!==String(f.category)) return false;
-      if(f.category&&!row.category) return false;
+      if(f.category){
+        if(normalizeListingText(row.category)!==normalizeListingText(f.category)) return false;
+      }
     }
     if(type==='otomobil'){
-      if(f.brand&&String(md.brand||'').toLowerCase().indexOf(String(f.brand).toLowerCase())<0) return false;
-      if(f.model&&String(md.model||'').toLowerCase().indexOf(String(f.model).toLowerCase())<0) return false;
-      const year=md.year!=null?Number(md.year):null;
-      const km=md.km!=null?Number(md.km):null;
-      if(f.minYear!==''&&year!=null&&year<Number(f.minYear)) return false;
-      if(f.maxYear!==''&&year!=null&&year>Number(f.maxYear)) return false;
-      if(f.minKm!==''&&km!=null&&km<Number(f.minKm)) return false;
-      if(f.maxKm!==''&&km!=null&&km>Number(f.maxKm)) return false;
-      if(f.fuel&&md.fuel&&String(md.fuel)!==String(f.fuel)) return false;
-      if(f.gear&&md.gear&&String(md.gear)!==String(f.gear)) return false;
-      if(f.body&&String(md.body||md.vehicle_type||'').toLowerCase().indexOf(String(f.body).toLowerCase())<0) return false;
-      if(f.drive&&md.drive&&String(md.drive)!==String(f.drive)) return false;
-      if(f.seller_type&&md.seller_type&&String(md.seller_type)!==String(f.seller_type)) return false;
+      if(f.brand){
+        if(normalizeListingText(md.brand).indexOf(normalizeListingText(f.brand))<0) return false;
+      }
+      if(f.model){
+        if(normalizeListingText(md.model).indexOf(normalizeListingText(f.model))<0) return false;
+      }
+      const year=md.year!=null&&md.year!==''?Number(md.year):null;
+      const km=md.km!=null&&md.km!==''?Number(md.km):null;
+      const minY=f.minYear!==''&&f.minYear!=null?Number(f.minYear):null;
+      const maxY=f.maxYear!==''&&f.maxYear!=null?Number(f.maxYear):null;
+      const minK=f.minKm!==''&&f.minKm!=null?Number(f.minKm):null;
+      const maxK=f.maxKm!==''&&f.maxKm!=null?Number(f.maxKm):null;
+      if(minY!=null&&!isNaN(minY)){
+        if(year==null||isNaN(year)||year<minY) return false;
+      }
+      if(maxY!=null&&!isNaN(maxY)){
+        if(year==null||isNaN(year)||year>maxY) return false;
+      }
+      if(minK!=null&&!isNaN(minK)){
+        if(km==null||isNaN(km)||km<minK) return false;
+      }
+      if(maxK!=null&&!isNaN(maxK)){
+        if(km==null||isNaN(km)||km>maxK) return false;
+      }
+      if(f.fuel){
+        if(normalizeListingText(md.fuel)!==normalizeListingText(f.fuel)) return false;
+      }
+      if(f.gear){
+        if(normalizeListingText(md.gear)!==normalizeListingText(f.gear)) return false;
+      }
+      if(f.body){
+        const bodyBag=normalizeListingText([md.body, md.vehicle_type, row.category].filter(Boolean).join(' '));
+        if(bodyBag.indexOf(normalizeListingText(f.body))<0) return false;
+      }
+      if(f.drive){
+        if(normalizeListingText(md.drive)!==normalizeListingText(f.drive)) return false;
+      }
+      if(f.seller_type){
+        if(normalizeListingText(md.seller_type)!==normalizeListingText(f.seller_type)) return false;
+      }
     }
     return true;
   });
@@ -745,10 +799,17 @@ function applyListingFiltersLocal(type, rows){
     if(sort==='price_desc') return (Number(b.price)||0)-(Number(a.price)||0);
     if(sort==='year_desc'&&type==='otomobil') return (Number((b.metadata||{}).year)||0)-(Number((a.metadata||{}).year)||0);
     if(sort==='km_asc'&&type==='otomobil') return (Number((a.metadata||{}).km)||0)-(Number((b.metadata||{}).km)||0);
-    // new
     return String(b.created_at||'').localeCompare(String(a.created_at||''));
   });
   return list;
+}
+function applyListingSearch(type){
+  const st=getListingFilterState(type);
+  if(!st) return;
+  const input=document.getElementById('listingSearchQ');
+  st.q=input?(String(input.value||'').trim()):'';
+  if(type==='otomobil') return showOtomobilBrowse(true);
+  return showGayrimenkulBrowse(true);
 }
 function closeListingFilterPanel(){
   const el=document.getElementById('listingFilterPanel');
@@ -858,8 +919,8 @@ async function showGayrimenkulBrowse(keepCache){
     <span class="badge">🏠 Gayrimenkul</span>
     <h1>Yayındaki ilanlar</h1>
     <div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap">
-      <input id="listingSearchQ" type="search" placeholder="🔎 İlanlarda ara" value="${escapeHTML(f.q||'')}" style="flex:1;min-width:160px">
-      <button type="button" class="btn secondary smallBtn" onclick="(function(){var st=getListingFilterState('gayrimenkul');st.q=(document.getElementById('listingSearchQ')||{}).value||'';showGayrimenkulBrowse(true);})()">Ara</button>
+      <input id="listingSearchQ" type="search" placeholder="🔎 İlanlarda ara" value="${escapeHTML(f.q||'')}" style="flex:1;min-width:160px" onkeydown="if(event.key==='Enter'){event.preventDefault();applyListingSearch('gayrimenkul');}">
+      <button type="button" class="btn secondary smallBtn" onclick="applyListingSearch('gayrimenkul')">Ara</button>
       <button type="button" class="btn secondary smallBtn" onclick="openListingFilterPanel('gayrimenkul')">⚙ Filtrele${active?(' ('+active+')'):''}</button>
     </div>
     <div id="gmListMeta" class="small muted"></div>
@@ -1393,6 +1454,8 @@ window.uploadListingPhoto=uploadListingPhoto;
 window.listingPhotoPublicUrl=listingPhotoPublicUrl;
 window.showGayrimenkulBrowse=showGayrimenkulBrowse;
 window.openListingFilterPanel=openListingFilterPanel;
+window.applyListingSearch=applyListingSearch;
+window.applyListingFiltersLocal=applyListingFiltersLocal;
 window.clearListingFilters=clearListingFilters;
 window.getListingFilterState=getListingFilterState;
 window.showGayrimenkulDetail=showGayrimenkulDetail;
@@ -1717,8 +1780,8 @@ async function showOtomobilBrowse(keepCache){
   app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showOtomobilHub()">← Otomobil</button></div>
   <div class="section"><span class="badge">🚗 Otomobil</span><h1>Yayındaki ilanlar</h1>
   <div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap">
-    <input id="listingSearchQ" type="search" placeholder="🔎 İlanlarda ara" value="${escapeHTML(f.q||'')}" style="flex:1;min-width:160px">
-    <button type="button" class="btn secondary smallBtn" onclick="(function(){var st=getListingFilterState('otomobil');st.q=(document.getElementById('listingSearchQ')||{}).value||'';showOtomobilBrowse(true);})()">Ara</button>
+    <input id="listingSearchQ" type="search" placeholder="🔎 İlanlarda ara" value="${escapeHTML(f.q||'')}" style="flex:1;min-width:160px" onkeydown="if(event.key==='Enter'){event.preventDefault();applyListingSearch('otomobil');}">
+    <button type="button" class="btn secondary smallBtn" onclick="applyListingSearch('otomobil')">Ara</button>
     <button type="button" class="btn secondary smallBtn" onclick="openListingFilterPanel('otomobil')">⚙ Filtrele${active?(' ('+active+')'):''}</button>
   </div>
   <div id="otoListMeta" class="small muted"></div>
