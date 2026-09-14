@@ -5,7 +5,7 @@
   if(window.__A354_OWNER_ACTIONS__) return;
   window.__A354_OWNER_ACTIONS__=1;
 
-  const E=v=>typeof esc==='function'?esc(v):String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]||c));
+  const E=v=>typeof esc==='function'?esc(v):String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]||c));
   const session=()=>{try{return JSON.parse(localStorage.getItem('isimi_coz_auth_session')||'null')}catch(_){return null}};
   const uid=()=>session()?.user?.id||session()?.user_id||null;
 
@@ -19,13 +19,14 @@
 
   async function setStatus(id,status){
     const me=uid();
-    if(!me||!id) return false;
+    if(!me||!id||!['published','archived'].includes(status)) return false;
     const l=await listing(id);
     if(!l||l.owner_id!==me) return false;
-    if(!['published','archived'].includes(status)) return false;
     try{
-      await supabaseRequest('PATCH','listings?id=eq.'+encodeURIComponent(id)+'&owner_id=eq.'+encodeURIComponent(me),{status});
-      return true;
+      if(typeof listingsAuthWrite!=='function') throw new Error('Yetkili ilan yazma yardımcısı bulunamadı.');
+      const out=await listingsAuthWrite('PATCH','listings?id=eq.'+encodeURIComponent(id)+'&owner_id=eq.'+encodeURIComponent(me),{status});
+      const rows=Array.isArray(out?.data)?out.data:[];
+      return rows.length>0 && rows[0].status===status && rows[0].owner_id===me;
     }catch(e){console.warn('A3.5.4 status update:',e);return false}
   }
 
@@ -61,7 +62,7 @@
       b.disabled=true;
       const next=b.dataset.a354==='archive'?'archived':'published';
       const ok=await setStatus(id,next);
-      if(ok){section.remove();}
+      if(ok){section.remove(); if(typeof window.__A355_SHOW_MY_LISTINGS__==='function') window.__A355_SHOW_MY_LISTINGS__();}
       else{b.disabled=false;alert('İlan durumu değiştirilemedi. Lütfen tekrar deneyin.');}
     });
   }
