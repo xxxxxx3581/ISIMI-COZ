@@ -16,5 +16,6 @@
     if(!document.querySelector('script[data-a3512-photo-viewer]')){const s4=document.createElement('script');s4.src='./a35-listing-photo-viewer.js';s4.dataset.a3512PhotoViewer='1';s4.defer=true;document.head.appendChild(s4)}
     if(!document.querySelector('script[data-a3513-ux-polish]')){const s5=document.createElement('script');s5.src='./a35-listing-ux-polish.js';s5.dataset.a3513UxPolish='1';s5.defer=true;document.head.appendChild(s5)}
     if(!document.querySelector('script[data-a3514-social]')){const s6=document.createElement('script');s6.src='./a35-marketplace-social.js';s6.dataset.a3514Social='1';s6.defer=true;document.head.appendChild(s6)}
+    if(!document.querySelector('script[data-a3515-nav]')){const s7=document.createElement('script');s7.src='./a35-navigation-polish.js';s7.dataset.a3515Nav='1';s7.defer=true;document.head.appendChild(s7)}
   },0);
 })();
