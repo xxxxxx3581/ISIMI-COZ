@@ -12,6 +12,12 @@
       return rows?.[0]||null;
     }catch(e){ console.warn('A3.5.3 profile lookup:',e); return null; }
   }
+  function polishLowerSellerCard(){
+    const card=document.querySelector('.a35SellerCard');
+    if(!card) return;
+    const label=[...card.querySelectorAll('.small.muted')].find(x=>String(x.textContent||'').trim()==='İlan sahibi');
+    if(label) label.textContent='Satıcı';
+  }
   async function apply(listingId){
     if(!listingId) return;
     try{
@@ -23,12 +29,11 @@
       const type=E(p.seller_type==='professional'?'Profesyonel satıcı':'Bireysel satıcı');
       const loc=[p.district,p.city].filter(Boolean).map(E).join(' · ');
 
-      // Only target the existing detail-page seller block; do not touch the A3.5 lower card.
+      // Only target the existing detail-page seller block; do not touch the A3.5 lower card content.
       const blocks=[...document.querySelectorAll('#gmDetailArea .card,#otoDetailArea .card')];
       for(const block of blocks){
         const text=String(block.textContent||'');
         if(!text.includes('İlan sahibi')) continue;
-        // The upper seller block has a direct "İlan sahibi" label and a following generic value.
         const labels=[...block.querySelectorAll('.small.muted')].filter(x=>String(x.textContent||'').trim()==='İlan sahibi');
         if(!labels.length) continue;
         const label=labels[0];
@@ -57,6 +62,7 @@
         }
         break;
       }
+      polishLowerSellerCard();
     }catch(e){ console.warn('A3.5.3 identity bridge:',e); }
   }
   function hook(name){
