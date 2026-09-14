@@ -14,6 +14,6 @@
   setTimeout(()=>{
     if(!document.querySelector('script[data-a354-owner-actions]')){const s=document.createElement('script');s.src='./a35-listing-owner-actions.js';s.dataset.a354OwnerActions='1';s.defer=true;document.head.appendChild(s)}
     if(!document.querySelector('script[data-a355-my-listings]')){const s2=document.createElement('script');s2.src='./a35-my-listings.js';s2.dataset.a355MyListings='1';s2.defer=true;document.head.appendChild(s2)}
-    if(!document.querySelector('script[data-a3510-photo-fix]')){const s3=document.createElement('script');s3.src='./a35-photo-actions-fix.js';s3.dataset.a3510PhotoFix='1';s3.defer=true;document.head.appendChild(s3)}
+    if(!document.querySelector('script[data-a3510-detail-cleanup]')){const s3=document.createElement('script');s3.src='./a35-detail-photo-ui-cleanup.js';s3.dataset.a3510DetailCleanup='1';s3.defer=true;document.head.appendChild(s3)}
   },0);
 })();
