@@ -1,25 +1,28 @@
-/* A3.5.19 — Marketplace compact action integration
- * Test branch only. Hallet untouched.
+/* A3.5.20 — Tiny home Marketplace access icons
+ * Test branch only. Main home visual kept intact. Hallet untouched.
  */
 (()=>{
-  if(window.__A3519_GLOBAL__)return; window.__A3519_GLOBAL__=1;
+  if(window.__A3520_HOME__)return;window.__A3520_HOME__=1;
   const app=()=>document.getElementById('app');
-  const isM=()=>{const a=app();if(!a)return false;return /Marketplace|Gayrimenkul|Otomobil|İlan detayı|İlanlarım|Favorilerim|Mesajlarım/.test(String(a.textContent||''));};
-  function css(){if(document.getElementById('a3519-style'))return;const s=document.createElement('style');s.id='a3519-style';s.textContent=`
-    .a3518Quick{display:none!important}.a3518HiddenSource{display:none!important}
-    .a3519Floating{display:flex;align-items:center;justify-content:center;gap:8px;position:absolute;right:12px;top:12px;z-index:20}
-    .a3519Icon{width:42px!important;height:42px!important;min-width:42px!important;padding:0!important;border:0!important;border-radius:50%!important;background:rgba(15,24,22,.62)!important;color:#fff!important;box-shadow:0 5px 18px rgba(0,0,0,.24);backdrop-filter:blur(6px);font-size:23px!important;line-height:1!important;display:flex!important;align-items:center!important;justify-content:center!important}
-    .a3519Icon.on{color:#e3263f!important;background:rgba(255,255,255,.92)!important}.a3519Icon:active{transform:scale(.94)}
-    .a3519Msg{margin-top:10px!important;min-height:44px!important;border-radius:11px!important;font-weight:900!important;width:100%!important}
+  const text=()=>String(app()?.textContent||'');
+  const isHome=()=>{const t=text();return /İşini Hallet Menüsü/.test(t)&&!(/Marketplace 2\.0|Marketplace|Gayrimenkul|Otomobil|İlan detayı|İlanlarım|Favorilerim|Mesajlarım/.test(t));};
+  function css(){if(document.getElementById('a3520-style'))return;const s=document.createElement('style');s.id='a3520-style';s.textContent=`
+    .a3518Quick,.a3519Floating{display:none!important}
+    .a3520HomeIcons{position:absolute;top:10px;right:10px;z-index:50;display:flex;align-items:center;gap:7px}
+    .a3520HomeIcon{width:30px!important;height:30px!important;min-width:30px!important;padding:0!important;margin:0!important;border:0!important;background:transparent!important;box-shadow:none!important;border-radius:50%!important;color:rgba(255,255,255,.92)!important;font-size:21px!important;line-height:1!important;display:flex!important;align-items:center!important;justify-content:center!important;cursor:pointer!important}
+    .a3520HomeIcon:active{transform:scale(.88)}
+    .a3520MsgIcon{font-size:17px!important;width:30px!important;height:30px!important;border:1.5px solid currentColor!important;position:relative}
+    .a3520MsgIcon::after{content:'';position:absolute;right:3px;bottom:2px;width:5px;height:5px;border-left:1.5px solid currentColor;transform:skew(-25deg)}
+    .a3520MsgDots{font-size:12px!important;letter-spacing:1px;transform:translateY(-1px)}
+    @media(max-width:520px){.a3520HomeIcons{top:8px;right:8px;gap:5px}.a3520HomeIcon{width:28px!important;height:28px!important;min-width:28px!important;font-size:20px!important}.a3520MsgIcon{width:28px!important;height:28px!important}}
   `;document.head.appendChild(s)}
-  function source(text){return [...document.querySelectorAll('.a3514Tool')].find(b=>String(b.textContent||'').includes(text));}
-  function hideLegacy(){document.querySelectorAll('.a3518Quick').forEach(x=>x.remove());document.querySelectorAll('.a3514Tool').forEach(b=>{const t=String(b.textContent||'');if(/^(Favorilerim|Mesajlarım|İlanlarım)$/.test(t.trim()))b.classList.add('a3518HiddenSource');if(/Kayıtlı aramalar|Bildirimler/.test(t))b.remove()});document.querySelectorAll('.a3514Section').forEach(s=>{if(!s.querySelector('.a3514Tool'))s.remove()})}
-  function detailIcons(){const a=app();if(!a||!isM())return;const detail=a.querySelector('.a359DetailPage');if(!detail||detail.querySelector('[data-a3519-icons]'))return;const fav=source('Favorilerim'),msg=source('Mesajlarım');if(!fav&&!msg)return;const hero=detail.querySelector('.a3511Carousel,.a359HeroCover');if(!hero)return;hero.style.position='relative';const box=document.createElement('div');box.className='a3519Floating';box.dataset.a3519Icons='1';
-    if(fav){const b=document.createElement('button');b.type='button';b.className='a3519Icon';b.textContent='♡';b.title='Favorilerim';b.setAttribute('aria-label','Favorilerim');b.onclick=()=>fav.click();box.appendChild(b)}
-    if(msg){const b=document.createElement('button');b.type='button';b.className='a3519Icon';b.textContent='⋯';b.title='Mesajlarım';b.setAttribute('aria-label','Mesajlarım');b.onclick=()=>msg.click();box.appendChild(b)}
-    hero.appendChild(box);
+  function homeIcons(){const a=app();if(!a||!isHome())return;if(a.querySelector('[data-a3520-home-icons]'))return;
+    const box=document.createElement('div');box.className='a3520HomeIcons';box.dataset.a3520HomeIcons='1';
+    const fav=document.createElement('button');fav.type='button';fav.className='a3520HomeIcon';fav.textContent='♡';fav.title='Favorilerim';fav.setAttribute('aria-label','Favorilerim');
+    const msg=document.createElement('button');msg.type='button';msg.className='a3520HomeIcon a3520MsgIcon';msg.innerHTML='<span class="a3520MsgDots">•••</span>';msg.title='Mesajlarım';msg.setAttribute('aria-label','Mesajlarım');
+    const open=(label)=>{if(typeof window.showListingsHub==='function')window.showListingsHub();setTimeout(()=>{const b=[...document.querySelectorAll('.a3514Tool')].find(x=>String(x.textContent||'').includes(label));if(b)b.click()},350)};
+    fav.onclick=()=>open('Favorilerim');msg.onclick=()=>open('Mesajlarım');box.append(fav,msg);a.appendChild(box);
   }
-  function sellerMsg(){const a=app();if(!a||!isM())return;const seller=a.querySelector('.a35SellerCard');if(!seller||seller.querySelector('[data-a3519-msg]'))return;const src=[...document.querySelectorAll('.a3514Social button')].find(b=>/Mesaj gönder/.test(String(b.textContent||'')));if(!src)return;const b=src.cloneNode(true);b.dataset.a3519Msg='1';b.className='a3519Msg';b.textContent='💬 Mesaj gönder';b.onclick=()=>src.click();seller.appendChild(b)}
-  function run(){css();hideLegacy();detailIcons();sellerMsg()}
-  const ob=new MutationObserver(run);ob.observe(document.body,{childList:true,subtree:true});setTimeout(run,80);setTimeout(run,400);setTimeout(run,1000);
+  function run(){css();document.querySelectorAll('.a3520HomeIcons').forEach(x=>{if(!isHome())x.remove()});homeIcons()}
+  const ob=new MutationObserver(run);ob.observe(document.body,{childList:true,subtree:true});setTimeout(run,100);setTimeout(run,500);setTimeout(run,1200);
 })();
