@@ -716,6 +716,145 @@ async function showGayrimenkulBrowse(){
   }
 }
 
+
+// A3.3.1 listing photo lightbox (pinch-zoom, no window.open, no lib)
+var __gmViewer={open:false,urls:[],index:0,scale:1,tx:0,ty:0,baseScale:1};
+
+function closeGmPhotoViewer(){
+  const el=document.getElementById('gmPhotoViewer');
+  if(el) el.remove();
+  try{ document.body.style.overflow=''; }catch(e){}
+  __gmViewer.open=false;
+  __gmViewer.scale=1; __gmViewer.tx=0; __gmViewer.ty=0;
+}
+
+function gmViewerApplyTransform(){
+  const img=document.getElementById('gmViewerImg');
+  if(!img) return;
+  img.style.transform='translate('+__gmViewer.tx+'px,'+__gmViewer.ty+'px) scale('+__gmViewer.scale+')';
+}
+
+function gmViewerShowIndex(i){
+  const urls=__gmViewer.urls||[];
+  if(!urls.length) return;
+  __gmViewer.index=((i%urls.length)+urls.length)%urls.length;
+  __gmViewer.scale=1; __gmViewer.tx=0; __gmViewer.ty=0;
+  const img=document.getElementById('gmViewerImg');
+  const counter=document.getElementById('gmViewerCounter');
+  if(img){
+    img.src=urls[__gmViewer.index];
+    img.style.transform='translate(0px,0px) scale(1)';
+  }
+  if(counter) counter.textContent=(__gmViewer.index+1)+' / '+urls.length;
+}
+
+function gmViewerNav(delta){
+  gmViewerShowIndex(__gmViewer.index+delta);
+}
+
+function openGmPhotoViewer(urls, startIndex){
+  const list=(urls||[]).filter(Boolean).map(String);
+  if(!list.length) return;
+  closeGmPhotoViewer();
+  __gmViewer.urls=list;
+  __gmViewer.index=Math.max(0, Math.min(Number(startIndex)||0, list.length-1));
+  __gmViewer.open=true;
+  __gmViewer.scale=1; __gmViewer.tx=0; __gmViewer.ty=0;
+  try{ document.body.style.overflow='hidden'; }catch(e){}
+  const wrap=document.createElement('div');
+  wrap.id='gmPhotoViewer';
+  wrap.setAttribute('role','dialog');
+  wrap.setAttribute('aria-modal','true');
+  wrap.style.cssText='position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,.94);display:flex;flex-direction:column;touch-action:none;';
+  wrap.innerHTML=
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;color:#fff;flex-shrink:0">'+
+      '<span id="gmViewerCounter" style="font-size:14px;opacity:.9"></span>'+
+      '<button type="button" id="gmViewerClose" style="border:0;background:rgba(255,255,255,.15);color:#fff;border-radius:999px;width:40px;height:40px;font-size:20px;cursor:pointer">×</button>'+
+    '</div>'+
+    '<div id="gmViewerStage" style="flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;touch-action:none">'+
+      '<img id="gmViewerImg" alt="" draggable="false" style="max-width:100%;max-height:100%;object-fit:contain;transform-origin:center center;will-change:transform;user-select:none;-webkit-user-drag:none;"/>'+
+    '</div>'+
+    '<div style="display:flex;gap:10px;justify-content:center;padding:12px;flex-shrink:0">'+
+      '<button type="button" id="gmViewerPrev" class="btn secondary smallBtn" style="min-width:44px">‹</button>'+
+      '<button type="button" id="gmViewerNext" class="btn secondary smallBtn" style="min-width:44px">›</button>'+
+    '</div>';
+  document.body.appendChild(wrap);
+  document.getElementById('gmViewerClose').onclick=function(e){ e.preventDefault(); e.stopPropagation(); closeGmPhotoViewer(); };
+  document.getElementById('gmViewerPrev').onclick=function(e){ e.preventDefault(); e.stopPropagation(); gmViewerNav(-1); };
+  document.getElementById('gmViewerNext').onclick=function(e){ e.preventDefault(); e.stopPropagation(); gmViewerNav(1); };
+  wrap.addEventListener('click', function(e){ if(e.target===wrap||e.target.id==='gmViewerStage') closeGmPhotoViewer(); });
+  gmViewerShowIndex(__gmViewer.index);
+
+  const stage=document.getElementById('gmViewerStage');
+  let pointers=new Map();
+  let lastDist=0;
+  let panX=0, panY=0, startTx=0, startTy=0, startScale=1;
+  let mode='none';
+
+  function dist(a,b){
+    const dx=a.clientX-b.clientX, dy=a.clientY-b.clientY;
+    return Math.sqrt(dx*dx+dy*dy);
+  }
+
+  stage.addEventListener('pointerdown', function(e){
+    stage.setPointerCapture(e.pointerId);
+    pointers.set(e.pointerId, e);
+    if(pointers.size===1){
+      mode='pan';
+      panX=e.clientX; panY=e.clientY;
+      startTx=__gmViewer.tx; startTy=__gmViewer.ty; startScale=__gmViewer.scale;
+    }else if(pointers.size===2){
+      mode='pinch';
+      const pts=Array.from(pointers.values());
+      lastDist=dist(pts[0], pts[1]);
+      startScale=__gmViewer.scale;
+    }
+  });
+  stage.addEventListener('pointermove', function(e){
+    if(!pointers.has(e.pointerId)) return;
+    pointers.set(e.pointerId, e);
+    if(mode==='pinch' && pointers.size>=2){
+      const pts=Array.from(pointers.values());
+      const d=dist(pts[0], pts[1]);
+      if(lastDist>0){
+        let s=startScale*(d/lastDist);
+        s=Math.max(1, Math.min(4, s));
+        __gmViewer.scale=s;
+        if(s===1){ __gmViewer.tx=0; __gmViewer.ty=0; }
+        gmViewerApplyTransform();
+      }
+    }else if(mode==='pan' && pointers.size===1 && __gmViewer.scale>1){
+      const dx=e.clientX-panX, dy=e.clientY-panY;
+      __gmViewer.tx=startTx+dx;
+      __gmViewer.ty=startTy+dy;
+      gmViewerApplyTransform();
+    }
+  });
+  function endPtr(e){
+    pointers.delete(e.pointerId);
+    if(pointers.size<2) lastDist=0;
+    if(pointers.size===0){
+      mode='none';
+      if(__gmViewer.scale<=1.05){ __gmViewer.scale=1; __gmViewer.tx=0; __gmViewer.ty=0; gmViewerApplyTransform(); }
+    }else if(pointers.size===1){
+      mode='pan';
+      const p=Array.from(pointers.values())[0];
+      panX=p.clientX; panY=p.clientY;
+      startTx=__gmViewer.tx; startTy=__gmViewer.ty; startScale=__gmViewer.scale;
+    }
+  }
+  stage.addEventListener('pointerup', endPtr);
+  stage.addEventListener('pointercancel', endPtr);
+  stage.addEventListener('wheel', function(e){
+    e.preventDefault();
+    const delta=e.deltaY>0?-0.15:0.15;
+    __gmViewer.scale=Math.max(1, Math.min(4, __gmViewer.scale+delta));
+    if(__gmViewer.scale===1){ __gmViewer.tx=0; __gmViewer.ty=0; }
+    gmViewerApplyTransform();
+  }, {passive:false});
+}
+
+
 async function showGayrimenkulDetail(listingId){
   const id=String(listingId||'').replace(/[^a-zA-Z0-9-]/g,'');
   if(!id){
@@ -750,14 +889,23 @@ async function showGayrimenkulDetail(listingId){
     }catch(e){}
     dateStr=escapeHTML(dateStr);
     const photos=listingPhotosFromRow(row);
+    const urls=[];
+    for(let i=0;i<photos.length;i++){
+      const p=photos[i];
+      const pth=typeof p==='string'?p:(p&&p.path)||'';
+      if(pth) urls.push(listingPhotoPublicUrl(pth));
+    }
+    // stash for click handlers without inline huge JS
+    try{ window.__gmDetailPhotoUrls=urls; }catch(e){}
     let gallery='';
-    if(photos.length){
-      gallery=`<div style="display:grid;grid-template-columns:1fr;gap:8px;margin:12px 0">`+photos.map(function(p){
-        const pth=typeof p==='string'?p:(p&&p.path)||'';
-        if(!pth)return '';
-        const src=escapeHTML(listingPhotoPublicUrl(pth));
-        return `<div style="border-radius:12px;overflow:hidden;background:#0b1727;aspect-ratio:16/10"><img src="${src}" alt="" style="width:100%;height:100%;object-fit:cover;display:block" loading="lazy"></div>`;
-      }).join('')+`</div>`;
+    if(urls.length){
+      gallery=`<div style="display:grid;grid-template-columns:1fr;gap:8px;margin:12px 0">`+urls.map(function(u,idx){
+        const src=escapeHTML(u);
+        return `<button type="button" data-gm-photo-idx="${idx}" style="border:0;padding:0;border-radius:12px;overflow:hidden;background:#0b1727;aspect-ratio:16/10;cursor:zoom-in;width:100%;display:block">`+
+          `<img src="${src}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;pointer-events:none" loading="lazy">`+
+          `</button>`;
+      }).join('')+`</div>
+      <p class="small muted">Fotoğrafa dokunarak büyüt · iki parmakla yakınlaştır</p>`;
     }
     box.innerHTML=`<h1 style="margin-top:8px">${title}</h1>
       <p style="font-size:20px;font-weight:700;margin:8px 0">${price}</p>
@@ -778,11 +926,21 @@ async function showGayrimenkulDetail(listingId){
         <button class="btn secondary" type="button" onclick="showGayrimenkulBrowse()">← İlanlara dön</button>
         <button class="btn secondary" type="button" onclick="showGayrimenkulHub()">Gayrimenkul menü</button>
       </div>`;
+    // bind photo openers
+    const nodes=box.querySelectorAll('[data-gm-photo-idx]');
+    for(let i=0;i<nodes.length;i++){
+      nodes[i].addEventListener('click', function(ev){
+        ev.preventDefault();
+        const idx=Number(this.getAttribute('data-gm-photo-idx')||0);
+        openGmPhotoViewer(window.__gmDetailPhotoUrls||urls, idx);
+      });
+    }
   }catch(err){
     box.innerHTML=`<h1>Detay yüklenemedi</h1><p class="small muted">${escapeHTML(err&&err.message?err.message:String(err))}</p>
       <button class="btn secondary" type="button" onclick="showGayrimenkulBrowse()">Listeye dön</button>`;
   }
 }
+
 
 
 
@@ -1039,6 +1197,8 @@ window.uploadListingPhoto=uploadListingPhoto;
 window.listingPhotoPublicUrl=listingPhotoPublicUrl;
 window.showGayrimenkulBrowse=showGayrimenkulBrowse;
 window.showGayrimenkulDetail=showGayrimenkulDetail;
+window.openGmPhotoViewer=openGmPhotoViewer;
+window.closeGmPhotoViewer=closeGmPhotoViewer;
 window.showGayrimenkulCreateForm=showGayrimenkulCreateForm;
 window.listingsAuthWrite=listingsAuthWrite;
 window.createGayrimenkulListing=createGayrimenkulListing;
