@@ -462,6 +462,11 @@ function showHome(){
         <strong>Hizmet Ver</strong>
         <span>Kayıtlı sağlayıcı paneli — teklif ver, işi tamamla</span>
       </button>
+      <button class="actionCard homeMenuCard" type="button" onclick="showListingsHub()">
+        <div class="emoji">🏪</div>
+        <strong>Marketplace 2.0</strong>
+        <span>Gayrimenkul, otomobil ve hizmet ilanları</span>
+      </button>
       <button class="actionCard homeMenuCard" type="button" onclick="openHalletAction('showCases')">
         <div class="emoji">📁</div>
         <strong>İşlem Dosyalarım</strong>
@@ -529,6 +534,1400 @@ function openHalletAction(fnName){
 function serviceOptions(selected=""){return `<option value="">Kategori seç</option>`+Object.entries(SERVICES).map(([k,s])=>`<option value="${k}" ${k===selected?"selected":""}>${s.emoji} ${s.name}</option>`).join("")}
 function districtOptions(selected=""){return `<option value="">İlçe seç</option>`+DISTRICTS.map(d=>`<option value="${escapeHTML(d)}" ${d===selected?"selected":""}>${escapeHTML(d)}</option>`).join("")}
 function makeRequestNumber(){const d=new Date();return `IC-${d.getFullYear()}${String(d.getMonth()+1).padStart(2,"0")}${String(d.getDate()).padStart(2,"0")}-${Math.floor(1000+Math.random()*9000)}`}
+
+
+// === MARKETPLACE 2.0 A2 HUB START ===
+// Isolated Marketplace 2.0 hub. A3.1: gayrimenkul browse/create via public.listings only.
+function showListingsHub(){
+  try{ if(typeof setNav==='function') setNav('navHome'); }catch(e){}
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="listingsHubBack()">← Ana sayfaya dön</button></div>
+  <div class="section">
+    <span class="badge">Marketplace 2.0</span>
+    <h1>İlan kategorileri</h1>
+    <p class="muted small">Gayrimenkul ve otomobil ilanları aktif. Hizmetler mevcut talep akışına bağlanır.</p>
+    <div class="actionGrid homeMenuGrid" style="margin-top:12px">
+      <button class="actionCard homeMenuCard" type="button" onclick="showListingsCategory('gayrimenkul')">
+        <div class="emoji">🏠</div>
+        <strong>Gayrimenkul</strong>
+        <span>Konut, iş yeri ve arsa ilanları</span>
+      </button>
+      <button class="actionCard homeMenuCard" type="button" onclick="showListingsCategory('otomobil')">
+        <div class="emoji">🚗</div>
+        <strong>Otomobil</strong>
+        <span>Araç alım-satım ilanları</span>
+      </button>
+      <button class="actionCard homeMenuCard" type="button" onclick="showListingsCategory('hizmet')">
+        <div class="emoji">🛠️</div>
+        <strong>Hizmetler</strong>
+        <span>Mevcut hizmet talebi ve usta eşleştirme</span>
+      </button>
+    </div>
+  </div>`);
+}
+
+function showListingsCategory(type){
+  const t=String(type||'');
+  if(t==='hizmet'){
+    if(typeof showRequest==='function') return showRequest();
+    alert('Hizmet talebi ekranı yüklenemedi.');
+    return;
+  }
+  if(t==='gayrimenkul'){
+    return showGayrimenkulHub();
+  }
+  if(t==='otomobil'){
+    return showOtomobilHub();
+  }
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showListingsHub()">← Marketplace 2.0</button></div>
+  <div class="formCard">
+    <span class="badge">Marketplace 2.0</span>
+    <h1>Kategori</h1>
+    <p class="muted">Bu kategori henüz aktif değil.</p>
+    <div class="splitActions" style="margin-top:12px">
+      <button class="btn secondary" type="button" onclick="showListingsHub()">Kategorilere dön</button>
+      <button class="btn secondary" type="button" onclick="listingsHubBack()">Ana sayfa</button>
+    </div>
+  </div>`);
+}
+
+function listingsHubBack(){
+  if(typeof showHome==='function') return showHome();
+}
+
+function showGayrimenkulHub(){
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showListingsHub()">← Marketplace 2.0</button></div>
+  <div class="section">
+    <span class="badge">🏠 Gayrimenkul</span>
+    <h1>Gayrimenkul ilanları</h1>
+    <p class="muted small">Yayınlanmış ilanlara bak veya giriş yaparak ilan ver.</p>
+    <div class="actionGrid homeMenuGrid" style="margin-top:12px">
+      <button class="actionCard homeMenuCard" type="button" onclick="showGayrimenkulBrowse()">
+        <div class="emoji">🔍</div>
+        <strong>İlanlara Bak</strong>
+        <span>Yayındaki gayrimenkul ilanlarını listele</span>
+      </button>
+      <button class="actionCard homeMenuCard" type="button" onclick="showGayrimenkulCreateForm()">
+        <div class="emoji">➕</div>
+        <strong>İlan Ver</strong>
+        <span>Taslak oluştur, sonra yayınla</span>
+      </button>
+    </div>
+  </div>`);
+}
+
+function formatListingPrice(price, currency){
+  if(price===null||price===undefined||price==='') return 'Fiyat belirtilmedi';
+  const n=Number(price);
+  if(!isFinite(n)) return 'Fiyat belirtilmedi';
+  try{
+    return new Intl.NumberFormat('tr-TR').format(n)+' '+(currency||'TRY');
+  }catch(e){
+    return n+' '+(currency||'TRY');
+  }
+}
+
+// A3.3 listing photos (bucket: listing-photos) — does not touch Hallet storage
+function listingPhotoPublicUrl(path){
+  if(!path)return '';
+  const safe=String(path).split('/').filter(Boolean).map(encodeURIComponent).join('/');
+  return SUPABASE_URL+'/storage/v1/object/public/listing-photos/'+safe;
+}
+function listingPhotosFromRow(row){
+  try{
+    const m=row&&row.metadata;
+    if(!m)return [];
+    const photos=m.photos;
+    if(Array.isArray(photos))return photos.filter(function(p){return p&&(p.path||typeof p==='string');});
+  }catch(e){}
+  return [];
+}
+async function uploadListingPhoto(ownerId, listingId, file, token){
+  if(!file||!token)throw new Error('Fotoğraf yükleme için giriş gerekli.');
+  if(!(file.type&&file.type.indexOf('image/')===0))throw new Error('Sadece görsel dosyaları yüklenebilir.');
+  if(file.size>5*1024*1024)throw new Error('Her fotoğraf en fazla 5 MB olabilir.');
+  const safeName=String(file.name||'photo.jpg').replace(/[^a-zA-Z0-9._-]/g,'_').slice(0,80)||'photo.jpg';
+  const path=ownerId+'/'+listingId+'/'+Date.now()+'-'+safeName;
+  const safePath=path.split('/').filter(Boolean).map(encodeURIComponent).join('/');
+  const url=SUPABASE_URL+'/storage/v1/object/listing-photos/'+safePath;
+  const res=await fetch(url,{
+    method:'POST',
+    headers:{
+      'Authorization':'Bearer '+token,
+      'apikey':SUPABASE_KEY,
+      'Content-Type':file.type||'image/jpeg',
+      'x-upsert':'false'
+    },
+    body:file
+  });
+  const text=await res.text();
+  if(!res.ok){
+    let d=null;try{d=text?JSON.parse(text):null;}catch(e){}
+    throw new Error((d&&(d.message||d.error))||('Fotoğraf yüklenemedi (HTTP '+res.status+')'));
+  }
+  return {path:path, name:safeName, size:file.size, type:file.type||'image/jpeg'};
+}
+
+
+
+
+// === MARKETPLACE 2.0 A3.4.1 SEARCH/FILTER START ===
+var __listingFilters={
+  gayrimenkul:{q:'',category:'',minPrice:'',maxPrice:'',city:'',district:'',sort:'new'},
+  otomobil:{q:'',brand:'',model:'',minYear:'',maxYear:'',minKm:'',maxKm:'',minPrice:'',maxPrice:'',fuel:'',gear:'',body:'',drive:'',city:'',district:'',seller_type:'',sort:'new'}
+};
+var __listingCache={gayrimenkul:[],otomobil:[]};
+
+function getListingFilterState(type){
+  return __listingFilters[type]||{};
+}
+function countActiveListingFilters(type){
+  const f=getListingFilterState(type)||{};
+  let n=0;
+  Object.keys(f).forEach(function(k){
+    if(k==='sort') return;
+    if(f[k]!==''&&f[k]!=null) n++;
+  });
+  return n;
+}
+function clearListingFilters(type){
+  if(type==='gayrimenkul'){
+    __listingFilters.gayrimenkul={q:'',category:'',minPrice:'',maxPrice:'',city:'',district:'',sort:'new'};
+  }else if(type==='otomobil'){
+    __listingFilters.otomobil={q:'',brand:'',model:'',minYear:'',maxYear:'',minKm:'',maxKm:'',minPrice:'',maxPrice:'',fuel:'',gear:'',body:'',drive:'',city:'',district:'',seller_type:'',sort:'new'};
+  }
+}
+
+function normalizeListingText(v){
+  try{
+    return String(v==null?'':v)
+      .toLocaleLowerCase('tr-TR')
+      .replace(/\s+/g,' ')
+      .trim();
+  }catch(e){
+    return String(v==null?'':v).toLowerCase().replace(/\s+/g,' ').trim();
+  }
+}
+function listingMatchesSearch(row,q){
+  const s=normalizeListingText(q);
+  if(!s) return true;
+  const md=(row&&row.metadata)||{};
+  const bag=normalizeListingText([
+    row&&row.title,
+    row&&row.description,
+    row&&row.category,
+    row&&row.city,
+    row&&row.district,
+    row&&row.neighborhood,
+    md.brand, md.model, md.version, md.fuel, md.gear, md.body, md.color,
+    md.vehicle_type, md.property_kind, md.drive, md.condition
+  ].join(' '));
+  return bag.indexOf(s)>=0;
+}
+function applyListingFiltersLocal(type, rows){
+  const f=getListingFilterState(type)||{};
+  let list=(rows||[]).slice();
+  list=list.filter(function(row){
+    if(!listingMatchesSearch(row, f.q)) return false;
+    const md=(row&&row.metadata)||{};
+    const price=row.price!=null&&row.price!==''?Number(row.price):null;
+    const minP=f.minPrice!==''&&f.minPrice!=null?Number(f.minPrice):null;
+    const maxP=f.maxPrice!==''&&f.maxPrice!=null?Number(f.maxPrice):null;
+    if(minP!=null&&!isNaN(minP)){
+      if(price==null||isNaN(price)||price<minP) return false;
+    }
+    if(maxP!=null&&!isNaN(maxP)){
+      if(price==null||isNaN(price)||price>maxP) return false;
+    }
+    if(f.city){
+      if(normalizeListingText(row.city)!==normalizeListingText(f.city)) return false;
+    }
+    if(f.district){
+      if(normalizeListingText(row.district)!==normalizeListingText(f.district)) return false;
+    }
+    if(type==='gayrimenkul'){
+      if(f.category){
+        if(normalizeListingText(row.category)!==normalizeListingText(f.category)) return false;
+      }
+    }
+    if(type==='otomobil'){
+      if(f.brand){
+        if(normalizeListingText(md.brand).indexOf(normalizeListingText(f.brand))<0) return false;
+      }
+      if(f.model){
+        if(normalizeListingText(md.model).indexOf(normalizeListingText(f.model))<0) return false;
+      }
+      const year=md.year!=null&&md.year!==''?Number(md.year):null;
+      const km=md.km!=null&&md.km!==''?Number(md.km):null;
+      const minY=f.minYear!==''&&f.minYear!=null?Number(f.minYear):null;
+      const maxY=f.maxYear!==''&&f.maxYear!=null?Number(f.maxYear):null;
+      const minK=f.minKm!==''&&f.minKm!=null?Number(f.minKm):null;
+      const maxK=f.maxKm!==''&&f.maxKm!=null?Number(f.maxKm):null;
+      if(minY!=null&&!isNaN(minY)){
+        if(year==null||isNaN(year)||year<minY) return false;
+      }
+      if(maxY!=null&&!isNaN(maxY)){
+        if(year==null||isNaN(year)||year>maxY) return false;
+      }
+      if(minK!=null&&!isNaN(minK)){
+        if(km==null||isNaN(km)||km<minK) return false;
+      }
+      if(maxK!=null&&!isNaN(maxK)){
+        if(km==null||isNaN(km)||km>maxK) return false;
+      }
+      if(f.fuel){
+        if(normalizeListingText(md.fuel)!==normalizeListingText(f.fuel)) return false;
+      }
+      if(f.gear){
+        if(normalizeListingText(md.gear)!==normalizeListingText(f.gear)) return false;
+      }
+      if(f.body){
+        const bodyBag=normalizeListingText([md.body, md.vehicle_type, row.category].filter(Boolean).join(' '));
+        if(bodyBag.indexOf(normalizeListingText(f.body))<0) return false;
+      }
+      if(f.drive){
+        if(normalizeListingText(md.drive)!==normalizeListingText(f.drive)) return false;
+      }
+      if(f.seller_type){
+        if(normalizeListingText(md.seller_type)!==normalizeListingText(f.seller_type)) return false;
+      }
+    }
+    return true;
+  });
+  const sort=f.sort||'new';
+  list.sort(function(a,b){
+    if(sort==='price_asc') return (Number(a.price)||0)-(Number(b.price)||0);
+    if(sort==='price_desc') return (Number(b.price)||0)-(Number(a.price)||0);
+    if(sort==='year_desc'&&type==='otomobil') return (Number((b.metadata||{}).year)||0)-(Number((a.metadata||{}).year)||0);
+    if(sort==='km_asc'&&type==='otomobil') return (Number((a.metadata||{}).km)||0)-(Number((b.metadata||{}).km)||0);
+    return String(b.created_at||'').localeCompare(String(a.created_at||''));
+  });
+  return list;
+}
+function applyListingSearch(type){
+  const st=getListingFilterState(type);
+  if(!st) return;
+  const input=document.getElementById('listingSearchQ');
+  st.q=input?(String(input.value||'').trim()):'';
+  if(type==='otomobil') return showOtomobilBrowse(true);
+  return showGayrimenkulBrowse(true);
+}
+function closeListingFilterPanel(){
+  const el=document.getElementById('listingFilterPanel');
+  if(el) el.remove();
+}
+function openListingFilterPanel(type){
+  closeListingFilterPanel();
+  const f=getListingFilterState(type)||{};
+  const isCar=type==='otomobil';
+  const districts=typeof districtOptions==='function'?districtOptions(f.district||''):'<option value="">İlçe</option>';
+  const wrap=document.createElement('div');
+  wrap.id='listingFilterPanel';
+  wrap.style.cssText='position:fixed;inset:0;z-index:2147482000;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center';
+  let fields='';
+  if(isCar){
+    fields=`
+      <label>Marka</label><input id="lfBrand" value="${escapeHTML(f.brand||'')}" placeholder="Marka">
+      <label>Model</label><input id="lfModel" value="${escapeHTML(f.model||'')}" placeholder="Model">
+      <div class="row"><div><label>Min yıl</label><input id="lfMinYear" type="number" value="${escapeHTML(f.minYear||'')}"></div>
+      <div><label>Max yıl</label><input id="lfMaxYear" type="number" value="${escapeHTML(f.maxYear||'')}"></div></div>
+      <div class="row"><div><label>Min KM</label><input id="lfMinKm" type="number" value="${escapeHTML(f.minKm||'')}"></div>
+      <div><label>Max KM</label><input id="lfMaxKm" type="number" value="${escapeHTML(f.maxKm||'')}"></div></div>
+      <div class="row"><div><label>Min fiyat</label><input id="lfMinPrice" type="number" value="${escapeHTML(f.minPrice||'')}"></div>
+      <div><label>Max fiyat</label><input id="lfMaxPrice" type="number" value="${escapeHTML(f.maxPrice||'')}"></div></div>
+      <label>Yakıt</label><select id="lfFuel"><option value="">Tümü</option>${['Benzin','Dizel','LPG','Hibrit','Elektrik','Diğer'].map(function(v){return '<option value="'+v+'"'+(f.fuel===v?' selected':'')+'>'+v+'</option>';}).join('')}</select>
+      <label>Vites</label><select id="lfGear"><option value="">Tümü</option>${['Manuel','Otomatik','Yarı otomatik'].map(function(v){return '<option value="'+v+'"'+(f.gear===v?' selected':'')+'>'+v+'</option>';}).join('')}</select>
+      <label>Kasa / tip</label><input id="lfBody" value="${escapeHTML(f.body||'')}" placeholder="SUV, Sedan…">
+      <label>Çekiş</label><select id="lfDrive"><option value="">Tümü</option>${['Önden','Arkadan','4x4','AWD'].map(function(v){return '<option value="'+v+'"'+(f.drive===v?' selected':'')+'>'+v+'</option>';}).join('')}</select>
+      <label>İl</label><select id="lfCity"><option value="">Tümü</option><option value="İzmir"'+(f.city==='İzmir'?' selected':'')+'>İzmir</option></select>
+      <label>İlçe</label><select id="lfDistrict">${districts}</select>
+      <label>Satıcı tipi</label><select id="lfSeller"><option value="">Tümü</option><option value="individual"'+(f.seller_type==='individual'?' selected':'')+'>Bireysel</option><option value="professional"'+(f.seller_type==='professional'?' selected':'')+'>Profesyonel</option></select>
+      <label>Sıralama</label><select id="lfSort">
+        <option value="new"'+(f.sort==='new'?' selected':'')+'>Yeni ilanlar</option>
+        <option value="price_asc"'+(f.sort==='price_asc'?' selected':'')+'>Fiyat: düşük → yüksek</option>
+        <option value="price_desc"'+(f.sort==='price_desc'?' selected':'')+'>Fiyat: yüksek → düşük</option>
+        <option value="year_desc"'+(f.sort==='year_desc'?' selected':'')+'>Yıl: yeni → eski</option>
+        <option value="km_asc"'+(f.sort==='km_asc'?' selected':'')+'>KM: düşük → yüksek</option>
+      </select>`;
+  }else{
+    fields=`
+      <label>Kategori</label><select id="lfCategory"><option value="">Tümü</option>${['Konut','Arsa','İş Yeri'].map(function(v){return '<option value="'+v+'"'+(f.category===v?' selected':'')+'>'+v+'</option>';}).join('')}</select>
+      <div class="row"><div><label>Min fiyat</label><input id="lfMinPrice" type="number" value="${escapeHTML(f.minPrice||'')}"></div>
+      <div><label>Max fiyat</label><input id="lfMaxPrice" type="number" value="${escapeHTML(f.maxPrice||'')}"></div></div>
+      <label>İl</label><select id="lfCity"><option value="">Tümü</option><option value="İzmir"'+(f.city==='İzmir'?' selected':'')+'>İzmir</option></select>
+      <label>İlçe</label><select id="lfDistrict">${districts}</select>
+      <label>Sıralama</label><select id="lfSort">
+        <option value="new"'+(f.sort==='new'?' selected':'')+'>Yeni ilanlar</option>
+        <option value="price_asc"'+(f.sort==='price_asc'?' selected':'')+'>Fiyat: düşük → yüksek</option>
+        <option value="price_desc"'+(f.sort==='price_desc'?' selected':'')+'>Fiyat: yüksek → düşük</option>
+      </select>
+      <p class="small muted">Satılık/kiralık, oda ve m² filtreleri mevcut ilan verisinde yok; eklendiğinde buraya bağlanacak.</p>`;
+  }
+  wrap.innerHTML=`<div class="formCard" style="width:100%;max-width:560px;max-height:85vh;overflow:auto;margin:0;border-radius:18px 18px 0 0">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <strong>Filtrele</strong>
+      <button type="button" class="btn secondary smallBtn" id="lfClose">Kapat</button>
+    </div>
+    ${fields}
+    <div class="splitActions" style="margin-top:14px">
+      <button type="button" class="btn secondary" id="lfClear">Temizle</button>
+      <button type="button" class="btn primary" id="lfApply">Uygula</button>
+    </div>
+  </div>`;
+  document.body.appendChild(wrap);
+  wrap.addEventListener('click',function(e){ if(e.target===wrap) closeListingFilterPanel(); });
+  document.getElementById('lfClose').onclick=function(){ closeListingFilterPanel(); };
+  document.getElementById('lfClear').onclick=function(){
+    clearListingFilters(type);
+    closeListingFilterPanel();
+    if(type==='otomobil') showOtomobilBrowse(true);
+    else showGayrimenkulBrowse(true);
+  };
+  document.getElementById('lfApply').onclick=function(){
+    const st=getListingFilterState(type);
+    st.minPrice=(document.getElementById('lfMinPrice')||{}).value||'';
+    st.maxPrice=(document.getElementById('lfMaxPrice')||{}).value||'';
+    st.city=(document.getElementById('lfCity')||{}).value||'';
+    st.district=(document.getElementById('lfDistrict')||{}).value||'';
+    st.sort=(document.getElementById('lfSort')||{}).value||'new';
+    if(isCar){
+      st.brand=(document.getElementById('lfBrand')||{}).value||'';
+      st.model=(document.getElementById('lfModel')||{}).value||'';
+      st.minYear=(document.getElementById('lfMinYear')||{}).value||'';
+      st.maxYear=(document.getElementById('lfMaxYear')||{}).value||'';
+      st.minKm=(document.getElementById('lfMinKm')||{}).value||'';
+      st.maxKm=(document.getElementById('lfMaxKm')||{}).value||'';
+      st.fuel=(document.getElementById('lfFuel')||{}).value||'';
+      st.gear=(document.getElementById('lfGear')||{}).value||'';
+      st.body=(document.getElementById('lfBody')||{}).value||'';
+      st.drive=(document.getElementById('lfDrive')||{}).value||'';
+      st.seller_type=(document.getElementById('lfSeller')||{}).value||'';
+    }else{
+      st.category=(document.getElementById('lfCategory')||{}).value||'';
+    }
+    closeListingFilterPanel();
+    if(type==='otomobil') showOtomobilBrowse(true);
+    else showGayrimenkulBrowse(true);
+  };
+}
+// === MARKETPLACE 2.0 A3.4.1 SEARCH/FILTER END ===
+async function showGayrimenkulBrowse(keepCache){
+  const type='gayrimenkul';
+  const f=getListingFilterState(type);
+  const active=countActiveListingFilters(type);
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showGayrimenkulHub()">← Gayrimenkul</button></div>
+  <div class="section">
+    <span class="badge">🏠 Gayrimenkul</span>
+    <h1>Yayındaki ilanlar</h1>
+    <div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap">
+      <input id="listingSearchQ" type="search" placeholder="🔎 İlanlarda ara" value="${escapeHTML(f.q||'')}" style="flex:1;min-width:160px" onkeydown="if(event.key==='Enter'){event.preventDefault();applyListingSearch('gayrimenkul');}">
+      <button type="button" class="btn secondary smallBtn" onclick="applyListingSearch('gayrimenkul')">Ara</button>
+      <button type="button" class="btn secondary smallBtn" onclick="openListingFilterPanel('gayrimenkul')">⚙ Filtrele${active?(' ('+active+')'):''}</button>
+    </div>
+    <div id="gmListMeta" class="small muted"></div>
+    <div id="gmListArea" class="muted small">Yükleniyor…</div>
+  </div>`);
+  const box=document.getElementById('gmListArea');
+  const meta=document.getElementById('gmListMeta');
+  try{
+    if(!keepCache||!__listingCache.gayrimenkul.length){
+      const path="listings?listing_type=eq.gayrimenkul&status=eq.published&order=created_at.desc&select=id,title,price,currency,city,district,neighborhood,category,description,status,created_at,metadata";
+      const rows=await supabaseRequest('GET', path);
+      __listingCache.gayrimenkul=Array.isArray(rows)?rows:[];
+    }
+    const list=applyListingFiltersLocal(type, __listingCache.gayrimenkul);
+    if(meta) meta.textContent=list.length+' ilan';
+    if(!list.length){
+      box.innerHTML=`<div class="card empty"><h3>Bu kriterlere uygun ilan bulunamadı.</h3>
+        <button class="btn secondary" type="button" onclick="clearListingFilters('gayrimenkul');showGayrimenkulBrowse(true)">Filtreleri temizle</button>
+        <button class="btn primary" type="button" onclick="showGayrimenkulCreateForm()">İlan Ver</button></div>`;
+      return;
+    }
+    box.innerHTML=`<div class="actionGrid" style="grid-template-columns:1fr;gap:10px">`+list.map(function(row){
+      const id=String(row.id||'').replace(/[^a-zA-Z0-9-]/g,'');
+      const title=escapeHTML(row.title||'İlan');
+      const price=escapeHTML(formatListingPrice(row.price, row.currency));
+      const loc=[row.city,row.district,row.neighborhood].filter(Boolean).map(escapeHTML).join(' / ')||'Konum belirtilmedi';
+      const cat=escapeHTML(row.category||'—');
+      const photos=listingPhotosFromRow(row);
+      let cover='';
+      if(photos.length){
+        const p0=photos[0];
+        const pth=typeof p0==='string'?p0:(p0.path||'');
+        if(pth){
+          const src=escapeHTML(listingPhotoPublicUrl(pth));
+          cover=`<div style="margin-bottom:8px;border-radius:12px;overflow:hidden;background:#0b1727;aspect-ratio:16/10"><img src="${src}" alt="" style="width:100%;height:100%;object-fit:cover;display:block" loading="lazy"></div>`;
+        }
+      }
+      return `<button type="button" class="card" style="text-align:left;width:100%;cursor:pointer;font:inherit;color:inherit;background:var(--card)" onclick="showGayrimenkulDetail('${id}')">
+        ${cover}
+        <strong style="display:block;font-size:16px;margin-bottom:6px">${title}</strong>
+        <div class="small" style="margin-bottom:4px"><b>${price}</b></div>
+        <div class="small muted">${loc}</div>
+        <div class="small muted">Tür: ${cat}</div>
+        <div class="small muted" style="margin-top:8px">Detayı gör →</div>
+      </button>`;
+    }).join('')+`</div>`;
+  }catch(err){
+    box.innerHTML=`<div class="card empty"><h3>İlanlar yüklenemedi</h3><p class="small muted">${escapeHTML(err&&err.message?err.message:String(err))}</p><button class="btn secondary" type="button" onclick="showGayrimenkulBrowse()">Tekrar dene</button></div>`;
+  }
+}
+
+
+
+// A3.3.1 listing photo lightbox (pinch-zoom, no window.open, no lib)
+var __gmViewer={open:false,urls:[],index:0,scale:1,tx:0,ty:0,baseScale:1};
+
+function closeGmPhotoViewer(){
+  const el=document.getElementById('gmPhotoViewer');
+  if(el) el.remove();
+  try{ document.body.style.overflow=''; }catch(e){}
+  __gmViewer.open=false;
+  __gmViewer.scale=1; __gmViewer.tx=0; __gmViewer.ty=0;
+}
+
+function gmViewerApplyTransform(){
+  const img=document.getElementById('gmViewerImg');
+  if(!img) return;
+  img.style.transform='translate('+__gmViewer.tx+'px,'+__gmViewer.ty+'px) scale('+__gmViewer.scale+')';
+}
+
+function gmViewerShowIndex(i){
+  const urls=__gmViewer.urls||[];
+  if(!urls.length) return;
+  __gmViewer.index=((i%urls.length)+urls.length)%urls.length;
+  __gmViewer.scale=1; __gmViewer.tx=0; __gmViewer.ty=0;
+  const img=document.getElementById('gmViewerImg');
+  const counter=document.getElementById('gmViewerCounter');
+  if(img){
+    img.src=urls[__gmViewer.index];
+    img.style.transform='translate(0px,0px) scale(1)';
+  }
+  if(counter) counter.textContent=(__gmViewer.index+1)+' / '+urls.length;
+}
+
+function gmViewerNav(delta){
+  gmViewerShowIndex(__gmViewer.index+delta);
+}
+
+function openGmPhotoViewer(urls, startIndex){
+  const list=(urls||[]).filter(Boolean).map(String);
+  if(!list.length) return;
+  closeGmPhotoViewer();
+  __gmViewer.urls=list;
+  __gmViewer.index=Math.max(0, Math.min(Number(startIndex)||0, list.length-1));
+  __gmViewer.open=true;
+  __gmViewer.scale=1; __gmViewer.tx=0; __gmViewer.ty=0;
+  try{ document.body.style.overflow='hidden'; }catch(e){}
+  const wrap=document.createElement('div');
+  wrap.id='gmPhotoViewer';
+  wrap.setAttribute('role','dialog');
+  wrap.setAttribute('aria-modal','true');
+  wrap.style.cssText='position:fixed;inset:0;z-index:2147483000;background:rgba(0,0,0,.94);display:flex;flex-direction:column;touch-action:none;';
+  wrap.innerHTML=
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;color:#fff;flex-shrink:0">'+
+      '<span id="gmViewerCounter" style="font-size:14px;opacity:.9"></span>'+
+      '<button type="button" id="gmViewerClose" style="border:0;background:rgba(255,255,255,.15);color:#fff;border-radius:999px;width:40px;height:40px;font-size:20px;cursor:pointer">×</button>'+
+    '</div>'+
+    '<div id="gmViewerStage" style="flex:1;position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;touch-action:none">'+
+      '<img id="gmViewerImg" alt="" draggable="false" style="max-width:100%;max-height:100%;object-fit:contain;transform-origin:center center;will-change:transform;user-select:none;-webkit-user-drag:none;"/>'+
+    '</div>'+
+    '<div style="display:flex;gap:10px;justify-content:center;padding:12px;flex-shrink:0">'+
+      '<button type="button" id="gmViewerPrev" class="btn secondary smallBtn" style="min-width:44px">‹</button>'+
+      '<button type="button" id="gmViewerNext" class="btn secondary smallBtn" style="min-width:44px">›</button>'+
+    '</div>';
+  document.body.appendChild(wrap);
+  document.getElementById('gmViewerClose').onclick=function(e){ e.preventDefault(); e.stopPropagation(); closeGmPhotoViewer(); };
+  document.getElementById('gmViewerPrev').onclick=function(e){ e.preventDefault(); e.stopPropagation(); gmViewerNav(-1); };
+  document.getElementById('gmViewerNext').onclick=function(e){ e.preventDefault(); e.stopPropagation(); gmViewerNav(1); };
+  wrap.addEventListener('click', function(e){ if(e.target===wrap||e.target.id==='gmViewerStage') closeGmPhotoViewer(); });
+  gmViewerShowIndex(__gmViewer.index);
+
+  const stage=document.getElementById('gmViewerStage');
+  let pointers=new Map();
+  let lastDist=0;
+  let panX=0, panY=0, startTx=0, startTy=0, startScale=1;
+  let mode='none';
+
+  function dist(a,b){
+    const dx=a.clientX-b.clientX, dy=a.clientY-b.clientY;
+    return Math.sqrt(dx*dx+dy*dy);
+  }
+
+  stage.addEventListener('pointerdown', function(e){
+    stage.setPointerCapture(e.pointerId);
+    pointers.set(e.pointerId, e);
+    if(pointers.size===1){
+      mode='pan';
+      panX=e.clientX; panY=e.clientY;
+      startTx=__gmViewer.tx; startTy=__gmViewer.ty; startScale=__gmViewer.scale;
+    }else if(pointers.size===2){
+      mode='pinch';
+      const pts=Array.from(pointers.values());
+      lastDist=dist(pts[0], pts[1]);
+      startScale=__gmViewer.scale;
+    }
+  });
+  stage.addEventListener('pointermove', function(e){
+    if(!pointers.has(e.pointerId)) return;
+    pointers.set(e.pointerId, e);
+    if(mode==='pinch' && pointers.size>=2){
+      const pts=Array.from(pointers.values());
+      const d=dist(pts[0], pts[1]);
+      if(lastDist>0){
+        let s=startScale*(d/lastDist);
+        s=Math.max(1, Math.min(4, s));
+        __gmViewer.scale=s;
+        if(s===1){ __gmViewer.tx=0; __gmViewer.ty=0; }
+        gmViewerApplyTransform();
+      }
+    }else if(mode==='pan' && pointers.size===1 && __gmViewer.scale>1){
+      const dx=e.clientX-panX, dy=e.clientY-panY;
+      __gmViewer.tx=startTx+dx;
+      __gmViewer.ty=startTy+dy;
+      gmViewerApplyTransform();
+    }
+  });
+  function endPtr(e){
+    pointers.delete(e.pointerId);
+    if(pointers.size<2) lastDist=0;
+    if(pointers.size===0){
+      mode='none';
+      if(__gmViewer.scale<=1.05){ __gmViewer.scale=1; __gmViewer.tx=0; __gmViewer.ty=0; gmViewerApplyTransform(); }
+    }else if(pointers.size===1){
+      mode='pan';
+      const p=Array.from(pointers.values())[0];
+      panX=p.clientX; panY=p.clientY;
+      startTx=__gmViewer.tx; startTy=__gmViewer.ty; startScale=__gmViewer.scale;
+    }
+  }
+  stage.addEventListener('pointerup', endPtr);
+  stage.addEventListener('pointercancel', endPtr);
+  stage.addEventListener('wheel', function(e){
+    e.preventDefault();
+    const delta=e.deltaY>0?-0.15:0.15;
+    __gmViewer.scale=Math.max(1, Math.min(4, __gmViewer.scale+delta));
+    if(__gmViewer.scale===1){ __gmViewer.tx=0; __gmViewer.ty=0; }
+    gmViewerApplyTransform();
+  }, {passive:false});
+}
+
+
+async function showGayrimenkulDetail(listingId){
+  const id=String(listingId||'').replace(/[^a-zA-Z0-9-]/g,'');
+  if(!id){
+    alert('İlan bulunamadı.');
+    return showGayrimenkulBrowse();
+  }
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showGayrimenkulBrowse()">← Gayrimenkul ilanlarına dön</button></div>
+  <div class="formCard">
+    <span class="badge">🏠 İlan detayı</span>
+    <div id="gmDetailArea" class="muted small">Yükleniyor…</div>
+  </div>`);
+  const box=document.getElementById('gmDetailArea');
+  try{
+    const path="listings?id=eq."+encodeURIComponent(id)+"&listing_type=eq.gayrimenkul&status=eq.published&select=id,title,price,currency,city,district,neighborhood,category,description,status,created_at,metadata&limit=1";
+    const rows=await supabaseRequest('GET', path);
+    const row=Array.isArray(rows)&&rows[0]?rows[0]:null;
+    if(!row){
+      box.innerHTML=`<h1>İlan bulunamadı</h1><p class="muted">Bu ilan yayında değil veya kaldırılmış olabilir.</p>
+        <button class="btn secondary" type="button" onclick="showGayrimenkulBrowse()">Listeye dön</button>`;
+      return;
+    }
+    const title=escapeHTML(row.title||'İlan');
+    const price=escapeHTML(formatListingPrice(row.price, row.currency));
+    const cat=escapeHTML(row.category||'—');
+    const desc=escapeHTML(row.description||'Açıklama eklenmemiş.');
+    const city=escapeHTML(row.city||'—');
+    const district=escapeHTML(row.district||'—');
+    const neighborhood=escapeHTML(row.neighborhood||'—');
+    let dateStr='—';
+    try{
+      if(row.created_at) dateStr=new Date(row.created_at).toLocaleString('tr-TR');
+    }catch(e){}
+    dateStr=escapeHTML(dateStr);
+    const photos=listingPhotosFromRow(row);
+    const urls=[];
+    for(let i=0;i<photos.length;i++){
+      const p=photos[i];
+      const pth=typeof p==='string'?p:(p&&p.path)||'';
+      if(pth) urls.push(listingPhotoPublicUrl(pth));
+    }
+    // stash for click handlers without inline huge JS
+    try{ window.__gmDetailPhotoUrls=urls; }catch(e){}
+    let gallery='';
+    if(urls.length){
+      gallery=`<div style="display:grid;grid-template-columns:1fr;gap:8px;margin:12px 0">`+urls.map(function(u,idx){
+        const src=escapeHTML(u);
+        return `<button type="button" data-gm-photo-idx="${idx}" style="border:0;padding:0;border-radius:12px;overflow:hidden;background:#0b1727;aspect-ratio:16/10;cursor:zoom-in;width:100%;display:block">`+
+          `<img src="${src}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;pointer-events:none" loading="lazy">`+
+          `</button>`;
+      }).join('')+`</div>
+      <p class="small muted">Fotoğrafa dokunarak büyüt · iki parmakla yakınlaştır</p>`;
+    }
+    box.innerHTML=`<h1 style="margin-top:8px">${title}</h1>
+      <p style="font-size:20px;font-weight:700;margin:8px 0">${price}</p>
+      ${gallery}
+      <div class="card" style="text-align:left;margin:12px 0">
+        <div class="small muted">Gayrimenkul türü</div>
+        <div><strong>${cat}</strong></div>
+        <div class="small muted" style="margin-top:10px">Konum</div>
+        <div>${city} / ${district} / ${neighborhood}</div>
+        <div class="small muted" style="margin-top:10px">İlan tarihi</div>
+        <div>${dateStr}</div>
+        <div class="small muted" style="margin-top:10px">İlan sahibi</div>
+        <div>İlan sahibi</div>
+      </div>
+      <div class="sectionTitle"><h2 style="font-size:16px">Açıklama</h2></div>
+      <p class="muted" style="white-space:pre-wrap;line-height:1.5">${desc}</p>
+      <div class="splitActions" style="margin-top:16px">
+        <button class="btn secondary" type="button" onclick="showGayrimenkulBrowse()">← İlanlara dön</button>
+        <button class="btn secondary" type="button" onclick="showGayrimenkulHub()">Gayrimenkul menü</button>
+      </div>`;
+    // bind photo openers
+    const nodes=box.querySelectorAll('[data-gm-photo-idx]');
+    for(let i=0;i<nodes.length;i++){
+      nodes[i].addEventListener('click', function(ev){
+        ev.preventDefault();
+        const idx=Number(this.getAttribute('data-gm-photo-idx')||0);
+        openGmPhotoViewer(window.__gmDetailPhotoUrls||urls, idx);
+      });
+    }
+  }catch(err){
+    box.innerHTML=`<h1>Detay yüklenemedi</h1><p class="small muted">${escapeHTML(err&&err.message?err.message:String(err))}</p>
+      <button class="btn secondary" type="button" onclick="showGayrimenkulBrowse()">Listeye dön</button>`;
+  }
+}
+
+
+
+
+
+function showGayrimenkulCreateForm(){
+  const session=typeof getAuthSession==='function'?getAuthSession():null;
+  if(!session||!session.user||!session.user.id){
+    app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showGayrimenkulHub()">← Gayrimenkul</button></div>
+    <div class="formCard">
+      <span class="badge">🏠 İlan Ver</span>
+      <h1>Giriş gerekli</h1>
+      <p class="muted">İlan vermek için giriş yapmalısın. Mevcut hesap sistemin kullanılır.</p>
+      <button class="btn primary" type="button" onclick="openAuthModal('login')">Giriş yap</button>
+    </div>`);
+    return;
+  }
+  const districts=typeof districtOptions==='function'?districtOptions():'<option value="">İlçe seç</option>';
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showGayrimenkulHub()">← Gayrimenkul</button></div>
+  <div class="formCard">
+    <span class="badge">🏠 İlan Ver</span>
+    <h1>Gayrimenkul ilanı</h1>
+    <p class="muted small">İlan önce taslak olarak kaydedilir. İstersen ardından yayınlayabilirsin.</p>
+    <label>İlan başlığı *</label>
+    <input id="gmTitle" maxlength="120" placeholder="Örn: Karşıyaka 3+1 daire">
+    <label>Açıklama</label>
+    <textarea id="gmDesc" maxlength="2000" placeholder="Özellikler, konum avantajları…"></textarea>
+    <label>Gayrimenkul türü *</label>
+    <select id="gmCategory">
+      <option value="Konut">Konut</option>
+      <option value="Arsa">Arsa</option>
+      <option value="İş Yeri">İş Yeri</option>
+    </select>
+    <div class="row">
+      <div><label>Fiyat</label><input id="gmPrice" type="number" min="0" step="1" placeholder="Opsiyonel"></div>
+      <div><label>Para birimi</label><select id="gmCurrency"><option value="TRY" selected>TRY</option><option value="USD">USD</option><option value="EUR">EUR</option></select></div>
+    </div>
+    <label>İl *</label>
+    <select id="gmCity"><option value="İzmir" selected>İzmir</option></select>
+    <label>İlçe *</label>
+    <select id="gmDistrict">${districts}</select>
+    <label>Mahalle</label>
+    <input id="gmNeighborhood" maxlength="80" placeholder="Mahalle">
+    <label>Fotoğraflar</label>
+    <input id="gmPhotos" type="file" accept="image/*" multiple>
+    <p class="small muted">İsteğe bağlı. Birden fazla görsel seçebilirsin (her biri en fazla 5 MB). Android galeri / kamera desteklenir.</p>
+    <div class="notice">🔒 İlan sahibi olarak sen görünürsün. Taslak yalnızca sende kalır; yayınlayana kadar başkaları görmez.</div>
+    <button class="btn primary" type="button" id="gmSaveBtn" onclick="createGayrimenkulListing()">Taslak olarak kaydet</button>
+  </div>`);
+}
+
+
+
+// A3.1-only write helper (does not modify global supabaseWrite)
+async function listingsAuthWrite(method, path, body){
+  const session=typeof getAuthSession==='function'?getAuthSession():null;
+  const token=session&&(session.access_token||session.accessToken);
+  const uid=session&&session.user&&(session.user.id||session.user.user_id);
+  if(!token){
+    throw new Error('Oturum token bulunamadı. Çıkış yapıp tekrar giriş yapın.');
+  }
+  if(!uid){
+    throw new Error('Kullanıcı kimliği bulunamadı. Çıkış yapıp tekrar giriş yapın.');
+  }
+  const headers={
+    "apikey":SUPABASE_KEY,
+    "Authorization":"Bearer "+token,
+    "Content-Type":"application/json",
+    "Accept":"application/json",
+    "Prefer":"return=representation"
+  };
+  const r=await fetch(SUPABASE_URL+"/rest/v1/"+path,{
+    method:method,
+    headers:headers,
+    body:(body!==null&&body!==undefined)?JSON.stringify(body):undefined
+  });
+  const txt=await r.text();
+  let d=null; try{d=txt?JSON.parse(txt):null;}catch(e){d=txt;}
+  if(!r.ok){
+    const msg=(d&&(d.message||d.error_description||d.details||d.hint))||("Supabase "+method+" başarısız ("+r.status+")");
+    throw new Error(msg);
+  }
+  if((method==="POST"||method==="PATCH")&&Array.isArray(d)&&d.length===0){
+    throw new Error("Kayıt yazılamadı (0 satır döndü). JWT ile owner_id eşleşmesini kontrol edin.");
+  }
+  return {data:d, uid:uid, token:token};
+}
+
+async function createGayrimenkulListing(){
+  const session=typeof getAuthSession==='function'?getAuthSession():null;
+  const uid=session&&session.user&&(session.user.id||session.user.user_id);
+  const token=session&&(session.access_token||session.accessToken);
+  if(!session||!uid||!token){
+    alert('Giriş gerekli. Oturum veya token eksik; çıkış yapıp tekrar giriş yapın.');
+    return showGayrimenkulCreateForm();
+  }
+  const title=(document.getElementById('gmTitle')?.value||'').trim();
+  const description=(document.getElementById('gmDesc')?.value||'').trim();
+  const category=(document.getElementById('gmCategory')?.value||'').trim();
+  const priceRaw=(document.getElementById('gmPrice')?.value||'').trim();
+  const currency=(document.getElementById('gmCurrency')?.value||'TRY').trim()||'TRY';
+  const city=(document.getElementById('gmCity')?.value||'').trim();
+  const district=(document.getElementById('gmDistrict')?.value||'').trim();
+  const neighborhood=(document.getElementById('gmNeighborhood')?.value||'').trim();
+  const fileInput=document.getElementById('gmPhotos');
+  const files=fileInput&&fileInput.files?Array.from(fileInput.files):[];
+  if(!title){ alert('Başlık zorunlu.'); return; }
+  if(!category){ alert('Tür seçin.'); return; }
+  if(!city){ alert('İl seçin.'); return; }
+  if(!district){ alert('İlçe seçin.'); return; }
+  if(files.length>8){ alert('En fazla 8 fotoğraf yükleyebilirsin.'); return; }
+  let price=null;
+  if(priceRaw!==''){
+    price=Number(priceRaw);
+    if(!isFinite(price)||price<0){ alert('Geçerli bir fiyat girin.'); return; }
+  }
+  const btn=document.getElementById('gmSaveBtn');
+  if(btn){ btn.disabled=true; btn.textContent='Kaydediliyor…'; }
+  try{
+    const body={
+      owner_id: uid,
+      listing_type: 'gayrimenkul',
+      category: category,
+      title: title,
+      description: description||null,
+      price: price,
+      currency: currency,
+      city: city,
+      district: district,
+      neighborhood: neighborhood||null,
+      status: 'draft',
+      metadata: { source: 'a3.1', property_kind: category, photos: [] }
+    };
+    const out=await listingsAuthWrite('POST','listings',body);
+    const res=out.data;
+    const row=Array.isArray(res)?res[0]:res;
+    if(!row||!row.id) throw new Error('Kayıt oluşturulamadı.');
+
+    // Photos after listing exists (path isolated by owner_id/listing_id)
+    const uploaded=[];
+    const failed=[];
+    if(files.length){
+      if(btn) btn.textContent='Fotoğraflar yükleniyor…';
+      for(let i=0;i<files.length;i++){
+        try{
+          const meta=await uploadListingPhoto(uid, row.id, files[i], token);
+          uploaded.push(meta);
+        }catch(pe){
+          failed.push((files[i]&&files[i].name?files[i].name:'foto')+': '+(pe&&pe.message?pe.message:String(pe)));
+        }
+      }
+      if(uploaded.length){
+        try{
+          const md=Object.assign({}, row.metadata||{}, {
+            source: 'a3.1',
+            property_kind: category,
+            photos: uploaded
+          });
+          const patch=await listingsAuthWrite(
+            'PATCH',
+            'listings?id=eq.'+encodeURIComponent(row.id),
+            { metadata: md }
+          );
+          const patched=Array.isArray(patch.data)?patch.data[0]:patch.data;
+          if(patched) Object.assign(row, patched);
+          else row.metadata=md;
+        }catch(me){
+          failed.push('Fotoğraf kaydı güncellenemedi: '+(me&&me.message?me.message:String(me)));
+        }
+      }
+    }
+    showGayrimenkulDraftResult(row, {uploaded:uploaded.length, failed:failed});
+  }catch(err){
+    alert(err&&err.message?err.message:String(err));
+    if(btn){ btn.disabled=false; btn.textContent='Taslak olarak kaydet'; }
+  }
+}
+
+
+
+function showGayrimenkulDraftResult(row, photoInfo){
+  const id=row&&row.id?String(row.id):'';
+  const title=escapeHTML(row&&row.title?row.title:'İlan');
+  const photos=listingPhotosFromRow(row);
+  let photoNote='';
+  if(photoInfo){
+    if(photoInfo.uploaded) photoNote+=`<p class="small" style="color:var(--ok,#19c37d)">✓ ${photoInfo.uploaded} fotoğraf yüklendi.</p>`;
+    if(photoInfo.failed&&photoInfo.failed.length){
+      photoNote+=`<p class="small muted">Bazı fotoğraflar yüklenemedi (ilan kaydı korundu):</p><ul class="small muted">`+
+        photoInfo.failed.map(function(f){return `<li>${escapeHTML(f)}</li>`;}).join('')+`</ul>`;
+    }
+  }else if(photos.length){
+    photoNote=`<p class="small muted">${photos.length} fotoğraf bağlı.</p>`;
+  }
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showGayrimenkulHub()">← Gayrimenkul</button></div>
+  <div class="formCard">
+    <span class="badge">Taslak</span>
+    <h1>İlan taslağın oluşturuldu</h1>
+    <p class="muted">Yayınlamak için devam et. Yayınlanana kadar yalnızca sen görürsün.</p>
+    <div class="card" style="text-align:left;margin:12px 0">
+      <strong>${title}</strong>
+      <div class="small muted">Durum: draft</div>
+      ${photoNote}
+    </div>
+    <div class="splitActions">
+      <button class="btn primary" type="button" onclick="publishGayrimenkulListing('${id.replace(/'/g,"")}')">İlanı Yayınla</button>
+      <button class="btn secondary" type="button" onclick="showGayrimenkulHub()">Daha sonra</button>
+    </div>
+  </div>`);
+}
+
+
+async function publishGayrimenkulListing(id){
+  const listingId=String(id||'').trim();
+  if(!listingId){ alert('İlan bulunamadı.'); return; }
+  const session=typeof getAuthSession==='function'?getAuthSession():null;
+  const uid=session&&session.user&&(session.user.id||session.user.user_id);
+  const token=session&&(session.access_token||session.accessToken);
+  if(!uid||!token){
+    alert('Giriş gerekli.');
+    return openAuthModal('login');
+  }
+  try{
+    const out=await listingsAuthWrite(
+      'PATCH',
+      'listings?id=eq.'+encodeURIComponent(listingId),
+      { status: 'published' }
+    );
+    const rows=Array.isArray(out.data)?out.data:[];
+    if(rows.length===0){
+      throw new Error('İlan yayınlanamadı. Bu ilanın sahibi olduğunuzdan ve giriş yaptığınızdan emin olun.');
+    }
+    app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showGayrimenkulHub()">← Gayrimenkul</button></div>
+    <div class="formCard">
+      <span class="badge">Yayında</span>
+      <h1>İlan yayınlandı</h1>
+      <p class="muted">İlan artık “İlanlara Bak” listesinde görünebilir.</p>
+      <div class="splitActions">
+        <button class="btn primary" type="button" onclick="showGayrimenkulBrowse()">İlanlara Bak</button>
+        <button class="btn secondary" type="button" onclick="showGayrimenkulHub()">Gayrimenkul</button>
+      </div>
+    </div>`);
+  }catch(err){
+    alert(err&&err.message?err.message:String(err));
+  }
+}
+
+
+window.showListingsHub=showListingsHub;
+window.showListingsCategory=showListingsCategory;
+window.listingsHubBack=listingsHubBack;
+window.showGayrimenkulHub=showGayrimenkulHub;
+window.listingPhotosFromRow=listingPhotosFromRow;
+window.uploadListingPhoto=uploadListingPhoto;
+window.listingPhotoPublicUrl=listingPhotoPublicUrl;
+window.showGayrimenkulBrowse=showGayrimenkulBrowse;
+window.openListingFilterPanel=openListingFilterPanel;
+window.applyListingSearch=applyListingSearch;
+window.applyListingFiltersLocal=applyListingFiltersLocal;
+window.clearListingFilters=clearListingFilters;
+window.getListingFilterState=getListingFilterState;
+window.showGayrimenkulDetail=showGayrimenkulDetail;
+window.openGmPhotoViewer=openGmPhotoViewer;
+window.closeGmPhotoViewer=closeGmPhotoViewer;
+window.showGayrimenkulCreateForm=showGayrimenkulCreateForm;
+window.listingsAuthWrite=listingsAuthWrite;
+window.createGayrimenkulListing=createGayrimenkulListing;
+window.publishGayrimenkulListing=publishGayrimenkulListing;
+
+// === MARKETPLACE 2.0 A3.4 OTOMOBİL START ===
+var __otoW={step:0, data:{}, files:[]};
+
+function showOtomobilHub(){
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showListingsHub()">← Marketplace 2.0</button></div>
+  <div class="section">
+    <span class="badge">🚗 Otomobil</span>
+    <h1>Otomobil ilanları</h1>
+    <p class="muted small">Yayındaki araç ilanlarına bak veya giriş yaparak ilan ver.</p>
+    <div class="actionGrid homeMenuGrid" style="margin-top:12px">
+      <button class="actionCard homeMenuCard" type="button" onclick="showOtomobilBrowse()">
+        <div class="emoji">🔍</div>
+        <strong>İlanlara Bak</strong>
+        <span>Yayındaki otomobil ilanlarını listele</span>
+      </button>
+      <button class="actionCard homeMenuCard" type="button" onclick="startOtomobilWizard()">
+        <div class="emoji">➕</div>
+        <strong>İlan Ver</strong>
+        <span>Adım adım araç ilanı oluştur</span>
+      </button>
+    </div>
+  </div>`);
+}
+
+function otoVal(id){const el=document.getElementById(id);return el?(el.value||'').trim():'';}
+function otoSaveStepFields(){
+  const d=__otoW.data;
+  const map=[
+    ['otoVehicleType','vehicle_type'],['otoBrand','brand'],['otoModel','model'],['otoVersion','version'],
+    ['otoYear','year'],['otoKm','km'],['otoFuel','fuel'],['otoGear','gear'],['otoEngine','engine_cc'],
+    ['otoPower','power_hp'],['otoDrive','drive'],['otoBody','body'],['otoColor','color'],
+    ['otoCondition','condition'],['otoDamage','damage'],['otoPaint','paint'],['otoParts','changed_parts'],
+    ['otoService','service_history'],['otoInspection','inspection'],['otoWarranty','warranty'],
+    ['otoPrice','price'],['otoCurrency','currency'],['otoCity','city'],['otoDistrict','district'],
+    ['otoNeighborhood','neighborhood'],['otoTitle','title'],['otoDesc','description'],['otoSellerType','seller_type']
+  ];
+  map.forEach(function(pair){
+    const el=document.getElementById(pair[0]);
+    if(el) d[pair[1]]=(el.value||'').trim();
+  });
+  const fi=document.getElementById('otoPhotos');
+  if(fi&&fi.files&&fi.files.length){ __otoW.files=Array.from(fi.files); }
+}
+
+function startOtomobilWizard(){
+  const session=typeof getAuthSession==='function'?getAuthSession():null;
+  if(!session||!session.user||!(session.user.id||session.user.user_id)){
+    app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showOtomobilHub()">← Otomobil</button></div>
+    <div class="formCard"><span class="badge">🚗 İlan Ver</span><h1>Giriş gerekli</h1>
+    <p class="muted">İlan vermek için giriş yapmalısın.</p>
+    <button class="btn primary" type="button" onclick="openAuthModal('login')">Giriş yap</button></div>`);
+    return;
+  }
+  __otoW={step:0, data:{currency:'TRY',city:'İzmir',seller_type:'individual',vehicle_type:'Otomobil'}, files:[]};
+  renderOtomobilWizard();
+}
+
+function renderOtomobilWizard(){
+  const step=__otoW.step|0;
+  const d=__otoW.data||{};
+  const total=8;
+  const districts=typeof districtOptions==='function'?districtOptions(d.district||''):'<option value="">İlçe seç</option>';
+  const sel=function(cur,val){return cur===val?' selected':'';};
+  let body='';
+  if(step===0){
+    body=`<label>Araç tipi</label><select id="otoVehicleType">
+      ${['Otomobil','SUV','Sedan','Hatchback','Station Wagon','Coupe','Cabrio','Pickup','Diğer'].map(function(v){
+        return '<option value="'+v+'"'+sel(d.vehicle_type,v)+'>'+v+'</option>';
+      }).join('')}
+    </select>
+    <label>Satıcı tipi</label><select id="otoSellerType">
+      <option value="individual"${sel(d.seller_type,'individual')}>Bireysel</option>
+      <option value="professional"${sel(d.seller_type,'professional')}>Profesyonel / galeri</option>
+    </select>
+    <p class="small muted">Resmî galeri doğrulaması bu sürümde yoktur.</p>`;
+  }else if(step===1){
+    body=`<label>Marka *</label><input id="otoBrand" value="${escapeHTML(d.brand||'')}" placeholder="Örn: Volkswagen">
+    <label>Model *</label><input id="otoModel" value="${escapeHTML(d.model||'')}" placeholder="Örn: Golf">
+    <label>Versiyon</label><input id="otoVersion" value="${escapeHTML(d.version||'')}" placeholder="Örn: 1.5 TSI">
+    <div class="row"><div><label>Model yılı *</label><input id="otoYear" type="number" min="1950" max="2030" value="${escapeHTML(d.year||'')}"></div>
+    <div><label>Kilometre *</label><input id="otoKm" type="number" min="0" step="1" value="${escapeHTML(d.km||'')}"></div></div>`;
+  }else if(step===2){
+    body=`<label>Yakıt</label><select id="otoFuel">
+      ${['','Benzin','Dizel','LPG','Hibrit','Elektrik','Diğer'].map(function(v){return '<option value="'+v+'"'+sel(d.fuel,v)+'>'+(v||'Seç')+'</option>';}).join('')}
+    </select>
+    <label>Vites</label><select id="otoGear">
+      ${['','Manuel','Otomatik','Yarı otomatik'].map(function(v){return '<option value="'+v+'"'+sel(d.gear,v)+'>'+(v||'Seç')+'</option>';}).join('')}
+    </select>
+    <div class="row"><div><label>Motor hacmi (cc)</label><input id="otoEngine" value="${escapeHTML(d.engine_cc||'')}"></div>
+    <div><label>Güç (hp)</label><input id="otoPower" value="${escapeHTML(d.power_hp||'')}"></div></div>
+    <label>Çekiş</label><select id="otoDrive">
+      ${['','Önden','Arkadan','4x4','AWD'].map(function(v){return '<option value="'+v+'"'+sel(d.drive,v)+'>'+(v||'Seç')+'</option>';}).join('')}
+    </select>
+    <label>Kasa</label><input id="otoBody" value="${escapeHTML(d.body||'')}" placeholder="Sedan, hatchback…">
+    <label>Renk</label><input id="otoColor" value="${escapeHTML(d.color||'')}" placeholder="Beyaz">`;
+  }else if(step===3){
+    body=`<label>Kondisyon</label><select id="otoCondition">
+      ${['','İkinci el','Sıfır'].map(function(v){return '<option value="'+v+'"'+sel(d.condition,v)+'>'+(v||'Seç')+'</option>';}).join('')}
+    </select>
+    <label>Hasar durumu</label><input id="otoDamage" value="${escapeHTML(d.damage||'')}" placeholder="Hasarsız / boyasız…">
+    <label>Boya durumu</label><input id="otoPaint" value="${escapeHTML(d.paint||'')}" placeholder="Orijinal / lokal boyalı">
+    <label>Değişen parça</label><input id="otoParts" value="${escapeHTML(d.changed_parts||'')}" placeholder="Yok / …">
+    <label>Servis geçmişi</label><input id="otoService" value="${escapeHTML(d.service_history||'')}" placeholder="Yetkili servis">
+    <label>Muayene</label><input id="otoInspection" value="${escapeHTML(d.inspection||'')}" placeholder="Geçerli / …">
+    <label>Garanti</label><input id="otoWarranty" value="${escapeHTML(d.warranty||'')}" placeholder="Var / yok">`;
+  }else if(step===4){
+    body=`<div class="row"><div><label>Fiyat *</label><input id="otoPrice" type="number" min="0" step="1" value="${escapeHTML(d.price||'')}"></div>
+    <div><label>Para birimi</label><select id="otoCurrency">
+      <option value="TRY"${sel(d.currency||'TRY','TRY')}>TRY</option>
+      <option value="USD"${sel(d.currency,'USD')}>USD</option>
+      <option value="EUR"${sel(d.currency,'EUR')}>EUR</option>
+    </select></div></div>
+    <label>İl *</label><select id="otoCity"><option value="İzmir" selected>İzmir</option></select>
+    <label>İlçe *</label><select id="otoDistrict">${districts}</select>
+    <label>Mahalle</label><input id="otoNeighborhood" value="${escapeHTML(d.neighborhood||'')}" placeholder="Mahalle">`;
+  }else if(step===5){
+    const autoTitle=((d.brand||'')+' '+(d.model||'')+' '+(d.year||'')).trim();
+    body=`<label>İlan başlığı *</label><input id="otoTitle" maxlength="120" value="${escapeHTML(d.title||autoTitle)}" placeholder="Marka model yıl">
+    <label>Açıklama *</label><textarea id="otoDesc" maxlength="3000" placeholder="Araç durumu, tramer, bakımlar…">${escapeHTML(d.description||'')}</textarea>`;
+  }else if(step===6){
+    body=`<label>Fotoğraflar * (en az 1)</label>
+    <input id="otoPhotos" type="file" accept="image/*" multiple>
+    <p class="small muted">En fazla 12 görsel, her biri max 5 MB. Kapak = ilk fotoğraf.</p>
+    <p class="small muted">Seçili dosya: ${(__otoW.files&&__otoW.files.length)?(__otoW.files.length+' dosya'):'henüz yok'}</p>`;
+  }else{
+    // preview step 7
+    const t=escapeHTML(d.title||'—');
+    const price=escapeHTML(formatListingPrice(d.price, d.currency||'TRY'));
+    body=`<div class="card" style="text-align:left">
+      <strong>${t}</strong>
+      <div class="small" style="margin-top:6px"><b>${price}</b></div>
+      <div class="small muted">${escapeHTML([d.year,d.km?Number(d.km).toLocaleString('tr-TR')+' km':'',d.fuel,d.gear].filter(Boolean).join(' · '))}</div>
+      <div class="small muted">${escapeHTML([d.city,d.district].filter(Boolean).join(' / '))}</div>
+      <div class="small muted">Fotoğraf: ${(__otoW.files&&__otoW.files.length)||0}</div>
+      <div class="small muted">Satıcı: ${d.seller_type==='professional'?'Profesyonel / galeri':'Bireysel'}</div>
+    </div>
+    <p class="muted small">Kaydettiğinde ilan taslak olur; ardından yayınlayabilirsin.</p>`;
+  }
+  const labels=['Tip','Araç','Teknik','Durum','Fiyat','Metin','Foto','Önizle'];
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showOtomobilHub()">← Otomobil</button></div>
+  <div class="formCard">
+    <span class="badge">🚗 İlan Ver · Adım ${step+1}/${total}</span>
+    <h1>${labels[step]||'İlan'}</h1>
+    <p class="small muted">${labels.map(function(l,i){return i===step?'<b>'+l+'</b>':l;}).join(' → ')}</p>
+    ${body}
+    <div class="splitActions" style="margin-top:14px">
+      ${step>0?'<button class="btn secondary" type="button" onclick="otoWizardBack()">Geri</button>':''}
+      ${step<total-1?'<button class="btn primary" type="button" onclick="otoWizardNext()">Devam</button>':
+        '<button class="btn primary" type="button" id="otoSaveBtn" onclick="createOtomobilListing()">Taslak olarak kaydet</button>'}
+    </div>
+  </div>`);
+}
+
+function otoWizardBack(){
+  otoSaveStepFields();
+  __otoW.step=Math.max(0,(__otoW.step|0)-1);
+  renderOtomobilWizard();
+}
+function otoWizardNext(){
+  otoSaveStepFields();
+  const d=__otoW.data;
+  const step=__otoW.step|0;
+  if(step===1){
+    if(!d.brand||!d.model||!d.year||d.km===''){ alert('Marka, model, yıl ve kilometre zorunlu.'); return; }
+  }
+  if(step===4){
+    if(d.price===''||d.price===undefined||!d.city||!d.district){ alert('Fiyat, il ve ilçe zorunlu.'); return; }
+  }
+  if(step===5){
+    if(!d.title||!d.description){ alert('Başlık ve açıklama zorunlu.'); return; }
+  }
+  if(step===6){
+    if(!(__otoW.files&&__otoW.files.length)){ alert('En az bir fotoğraf seçmelisin.'); return; }
+  }
+  __otoW.step=Math.min(7,step+1);
+  renderOtomobilWizard();
+}
+
+async function createOtomobilListing(){
+  otoSaveStepFields();
+  const session=typeof getAuthSession==='function'?getAuthSession():null;
+  const uid=session&&session.user&&(session.user.id||session.user.user_id);
+  const token=session&&(session.access_token||session.accessToken);
+  if(!uid||!token){ alert('Giriş gerekli.'); return startOtomobilWizard(); }
+  const d=__otoW.data||{};
+  if(!d.brand||!d.model||!d.year||d.km===''||!d.price||!d.city||!d.district||!d.title||!d.description){
+    alert('Zorunlu alanlar eksik. Adımları kontrol et.');
+    return;
+  }
+  if(!(__otoW.files&&__otoW.files.length)){ alert('En az bir fotoğraf gerekli.'); return; }
+  const btn=document.getElementById('otoSaveBtn');
+  if(btn){ btn.disabled=true; btn.textContent='Kaydediliyor…'; }
+  try{
+    const year=Number(d.year); const km=Number(d.km); const price=Number(d.price);
+    const metadata={
+      source:'a3.4',
+      vehicle_type:d.vehicle_type||'',
+      brand:d.brand||'',
+      model:d.model||'',
+      version:d.version||'',
+      year:isFinite(year)?year:null,
+      km:isFinite(km)?km:null,
+      fuel:d.fuel||'',
+      gear:d.gear||'',
+      engine_cc:d.engine_cc||'',
+      power_hp:d.power_hp||'',
+      drive:d.drive||'',
+      body:d.body||'',
+      color:d.color||'',
+      condition:d.condition||'',
+      damage:d.damage||'',
+      paint:d.paint||'',
+      changed_parts:d.changed_parts||'',
+      service_history:d.service_history||'',
+      inspection:d.inspection||'',
+      warranty:d.warranty||'',
+      seller_type:d.seller_type==='professional'?'professional':'individual',
+      // future official verification hooks (empty)
+      official_verification_status:null,
+      verification_source:null,
+      verification_reference:null,
+      verified_at:null,
+      photos:[]
+    };
+    const body={
+      owner_id:uid,
+      listing_type:'otomobil',
+      category:d.vehicle_type||'Otomobil',
+      title:d.title,
+      description:d.description,
+      price:isFinite(price)?price:null,
+      currency:d.currency||'TRY',
+      city:d.city,
+      district:d.district,
+      neighborhood:d.neighborhood||null,
+      status:'draft',
+      metadata:metadata
+    };
+    const out=await listingsAuthWrite('POST','listings',body);
+    const row=Array.isArray(out.data)?out.data[0]:out.data;
+    if(!row||!row.id) throw new Error('Kayıt oluşturulamadı.');
+    const uploaded=[]; const failed=[];
+    if(btn) btn.textContent='Fotoğraflar yükleniyor…';
+    const files=__otoW.files.slice(0,12);
+    for(let i=0;i<files.length;i++){
+      try{ uploaded.push(await uploadListingPhoto(uid, row.id, files[i], token)); }
+      catch(pe){ failed.push((files[i].name||'foto')+': '+(pe.message||String(pe))); }
+    }
+    if(uploaded.length){
+      metadata.photos=uploaded;
+      try{
+        const patch=await listingsAuthWrite('PATCH','listings?id=eq.'+encodeURIComponent(row.id),{metadata:metadata});
+        const patched=Array.isArray(patch.data)?patch.data[0]:patch.data;
+        if(patched) Object.assign(row,patched); else row.metadata=metadata;
+      }catch(me){ failed.push('metadata: '+(me.message||String(me))); }
+    }
+    showOtomobilDraftResult(row,{uploaded:uploaded.length,failed:failed});
+  }catch(err){
+    alert(err&&err.message?err.message:String(err));
+    if(btn){ btn.disabled=false; btn.textContent='Taslak olarak kaydet'; }
+  }
+}
+
+function showOtomobilDraftResult(row, photoInfo){
+  const id=row&&row.id?String(row.id).replace(/[^a-zA-Z0-9-]/g,''):'';
+  const title=escapeHTML(row&&row.title?row.title:'İlan');
+  let photoNote='';
+  if(photoInfo){
+    if(photoInfo.uploaded) photoNote+=`<p class="small" style="color:var(--ok,#19c37d)">✓ ${photoInfo.uploaded} fotoğraf yüklendi.</p>`;
+    if(photoInfo.failed&&photoInfo.failed.length){
+      photoNote+=`<p class="small muted">Bazı fotoğraflar yüklenemedi:</p><ul class="small muted">`+
+        photoInfo.failed.map(function(f){return `<li>${escapeHTML(f)}</li>`;}).join('')+`</ul>`;
+    }
+  }
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showOtomobilHub()">← Otomobil</button></div>
+  <div class="formCard">
+    <span class="badge">Taslak</span>
+    <h1>İlan taslağın oluşturuldu</h1>
+    <p class="muted">Yayınlayana kadar yalnızca sen görürsün.</p>
+    <div class="card" style="text-align:left;margin:12px 0"><strong>${title}</strong><div class="small muted">Durum: draft</div>${photoNote}</div>
+    <div class="splitActions">
+      <button class="btn primary" type="button" onclick="publishOtomobilListing('${id}')">İlanı Yayınla</button>
+      <button class="btn secondary" type="button" onclick="showOtomobilHub()">Daha sonra</button>
+    </div>
+  </div>`);
+}
+
+async function publishOtomobilListing(id){
+  const listingId=String(id||'').replace(/[^a-zA-Z0-9-]/g,'');
+  if(!listingId){ alert('İlan bulunamadı.'); return; }
+  const session=typeof getAuthSession==='function'?getAuthSession():null;
+  const token=session&&(session.access_token||session.accessToken);
+  if(!token){ alert('Giriş gerekli.'); return openAuthModal('login'); }
+  try{
+    const out=await listingsAuthWrite('PATCH','listings?id=eq.'+encodeURIComponent(listingId),{status:'published'});
+    const rows=Array.isArray(out.data)?out.data:[];
+    if(!rows.length) throw new Error('İlan yayınlanamadı (yetki veya oturum).');
+    app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showOtomobilHub()">← Otomobil</button></div>
+    <div class="formCard"><span class="badge">Yayında</span><h1>İlan yayınlandı</h1>
+    <p class="muted">İlan “İlanlara Bak” listesinde görünebilir.</p>
+    <div class="splitActions">
+      <button class="btn primary" type="button" onclick="showOtomobilBrowse()">İlanlara Bak</button>
+      <button class="btn secondary" type="button" onclick="showOtomobilHub()">Otomobil</button>
+    </div></div>`);
+  }catch(err){ alert(err&&err.message?err.message:String(err)); }
+}
+
+async function showOtomobilBrowse(keepCache){
+  const type='otomobil';
+  const f=getListingFilterState(type);
+  const active=countActiveListingFilters(type);
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showOtomobilHub()">← Otomobil</button></div>
+  <div class="section"><span class="badge">🚗 Otomobil</span><h1>Yayındaki ilanlar</h1>
+  <div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap">
+    <input id="listingSearchQ" type="search" placeholder="🔎 İlanlarda ara" value="${escapeHTML(f.q||'')}" style="flex:1;min-width:160px" onkeydown="if(event.key==='Enter'){event.preventDefault();applyListingSearch('otomobil');}">
+    <button type="button" class="btn secondary smallBtn" onclick="applyListingSearch('otomobil')">Ara</button>
+    <button type="button" class="btn secondary smallBtn" onclick="openListingFilterPanel('otomobil')">⚙ Filtrele${active?(' ('+active+')'):''}</button>
+  </div>
+  <div id="otoListMeta" class="small muted"></div>
+  <div id="otoListArea" class="muted small">Yükleniyor…</div></div>`);
+  const box=document.getElementById('otoListArea');
+  const meta=document.getElementById('otoListMeta');
+  try{
+    if(!keepCache||!__listingCache.otomobil.length){
+      const path="listings?listing_type=eq.otomobil&status=eq.published&order=created_at.desc&select=id,title,price,currency,city,district,category,description,metadata,created_at";
+      const rows=await supabaseRequest('GET',path);
+      __listingCache.otomobil=Array.isArray(rows)?rows:[];
+    }
+    const list=applyListingFiltersLocal(type, __listingCache.otomobil);
+    if(meta) meta.textContent=list.length+' ilan';
+    if(!list.length){
+      box.innerHTML=`<div class="card empty"><h3>Bu kriterlere uygun ilan bulunamadı.</h3>
+        <button class="btn secondary" type="button" onclick="clearListingFilters('otomobil');showOtomobilBrowse(true)">Filtreleri temizle</button>
+        <button class="btn primary" type="button" onclick="startOtomobilWizard()">İlan Ver</button></div>`;
+      return;
+    }
+    box.innerHTML=`<div class="actionGrid" style="grid-template-columns:1fr;gap:10px">`+list.map(function(row){
+      const id=String(row.id||'').replace(/[^a-zA-Z0-9-]/g,'');
+      const md=row.metadata||{};
+      const title=escapeHTML(row.title||'İlan');
+      const price=escapeHTML(formatListingPrice(row.price,row.currency));
+      const year=md.year!=null?escapeHTML(String(md.year)):'—';
+      const km=md.km!=null?escapeHTML(Number(md.km).toLocaleString('tr-TR')+' km'):'—';
+      const fuel=escapeHTML(md.fuel||'—');
+      const gear=escapeHTML(md.gear||'—');
+      const loc=escapeHTML([row.city,row.district].filter(Boolean).join(' / ')||'—');
+      const photos=listingPhotosFromRow(row);
+      let cover='';
+      if(photos.length){
+        const p0=photos[0]; const pth=typeof p0==='string'?p0:(p0.path||'');
+        if(pth){
+          const src=escapeHTML(listingPhotoPublicUrl(pth));
+          cover=`<div style="margin-bottom:8px;border-radius:12px;overflow:hidden;background:#0b1727;aspect-ratio:16/10"><img src="${src}" alt="" style="width:100%;height:100%;object-fit:cover;display:block" loading="lazy"></div>`;
+        }
+      }
+      return `<button type="button" class="card" style="text-align:left;width:100%;cursor:pointer;font:inherit;color:inherit;background:var(--card)" onclick="showOtomobilDetail('${id}')">
+        ${cover}<strong style="display:block;font-size:16px;margin-bottom:6px">${title}</strong>
+        <div class="small"><b>${price}</b></div>
+        <div class="small muted">${year} · ${km} · ${fuel} · ${gear}</div>
+        <div class="small muted">${loc}</div>
+        <div class="small muted" style="margin-top:8px">Detayı gör →</div>
+      </button>`;
+    }).join('')+`</div>`;
+  }catch(err){
+    box.innerHTML=`<div class="card empty"><h3>İlanlar yüklenemedi</h3><p class="small muted">${escapeHTML(err.message||String(err))}</p>
+      <button class="btn secondary" type="button" onclick="showOtomobilBrowse()">Tekrar dene</button></div>`;
+  }
+}
+
+
+async function showOtomobilDetail(listingId){
+  const id=String(listingId||'').replace(/[^a-zA-Z0-9-]/g,'');
+  if(!id){ alert('İlan bulunamadı.'); return showOtomobilBrowse(); }
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showOtomobilBrowse()">← Otomobil ilanlarına dön</button></div>
+  <div class="formCard"><span class="badge">🚗 İlan detayı</span><div id="otoDetailArea" class="muted small">Yükleniyor…</div></div>`);
+  const box=document.getElementById('otoDetailArea');
+  try{
+    const path="listings?id=eq."+encodeURIComponent(id)+"&listing_type=eq.otomobil&status=eq.published&select=id,title,price,currency,city,district,neighborhood,category,description,metadata,created_at&limit=1";
+    const rows=await supabaseRequest('GET',path);
+    const row=Array.isArray(rows)&&rows[0]?rows[0]:null;
+    if(!row){
+      box.innerHTML=`<h1>İlan bulunamadı</h1><p class="muted">Yayında değil veya kaldırılmış.</p>
+        <button class="btn secondary" type="button" onclick="showOtomobilBrowse()">Listeye dön</button>`;
+      return;
+    }
+    const md=row.metadata||{};
+    const title=escapeHTML(row.title||'İlan');
+    const price=escapeHTML(formatListingPrice(row.price,row.currency));
+    const desc=escapeHTML(row.description||'');
+    const photos=listingPhotosFromRow(row);
+    const urls=[];
+    for(let i=0;i<photos.length;i++){
+      const p=photos[i]; const pth=typeof p==='string'?p:(p&&p.path)||'';
+      if(pth) urls.push(listingPhotoPublicUrl(pth));
+    }
+    try{ window.__gmDetailPhotoUrls=urls; }catch(e){}
+    let gallery='';
+    if(urls.length){
+      gallery=`<div style="display:grid;grid-template-columns:1fr;gap:8px;margin:12px 0">`+urls.map(function(u,idx){
+        return `<button type="button" data-oto-photo-idx="${idx}" style="border:0;padding:0;border-radius:12px;overflow:hidden;background:#0b1727;aspect-ratio:16/10;cursor:zoom-in;width:100%;display:block">
+          <img src="${escapeHTML(u)}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;pointer-events:none" loading="lazy"></button>`;
+      }).join('')+`</div><p class="small muted">Fotoğrafa dokunarak büyüt</p>`;
+    }
+    function cell(label,val){
+      return `<div style="margin-top:10px"><div class="small muted">${escapeHTML(label)}</div><div>${escapeHTML(val==null||val===''?'—':String(val))}</div></div>`;
+    }
+    const seller=md.seller_type==='professional'?'Profesyonel / galeri (doğrulanmamış)':'Bireysel satıcı';
+    box.innerHTML=`<h1 style="margin-top:8px">${title}</h1>
+      <p style="font-size:20px;font-weight:700;margin:8px 0">${price}</p>
+      ${gallery}
+      <div class="card" style="text-align:left;margin:12px 0">
+        <strong>Araç özeti</strong>
+        ${cell('Marka',md.brand)}${cell('Model',md.model)}${cell('Versiyon',md.version)}
+        ${cell('Yıl',md.year)}${cell('Km',md.km!=null?Number(md.km).toLocaleString('tr-TR'):'')}
+        ${cell('Yakıt',md.fuel)}${cell('Vites',md.gear)}${cell('Motor (cc)',md.engine_cc)}${cell('Güç (hp)',md.power_hp)}
+        ${cell('Çekiş',md.drive)}${cell('Kasa',md.body||row.category)}${cell('Renk',md.color)}
+        ${cell('Konum',[row.city,row.district,row.neighborhood].filter(Boolean).join(' / '))}
+      </div>
+      <div class="sectionTitle"><h2 style="font-size:16px">Açıklama</h2></div>
+      <p class="muted" style="white-space:pre-wrap;line-height:1.5">${desc||'—'}</p>
+      <div class="card" style="text-align:left;margin:12px 0">
+        <strong>Araç durumu</strong>
+        ${cell('Kondisyon',md.condition)}${cell('Hasar',md.damage)}${cell('Boya',md.paint)}
+        ${cell('Değişen',md.changed_parts)}${cell('Servis',md.service_history)}
+        ${cell('Muayene',md.inspection)}${cell('Garanti',md.warranty)}
+      </div>
+      <div class="card" style="text-align:left;margin:12px 0">
+        <strong>Satıcı</strong>
+        ${cell('Tip',seller)}
+        <p class="small muted" style="margin-top:8px">Mesajlaşma sonraki sürümde. Resmî EİDS/kurum doğrulaması yok.</p>
+      </div>
+      <div class="splitActions">
+        <button class="btn secondary" type="button" onclick="showOtomobilBrowse()">← İlanlara dön</button>
+        <button class="btn secondary" type="button" onclick="showOtomobilHub()">Otomobil menü</button>
+      </div>`;
+    const nodes=box.querySelectorAll('[data-oto-photo-idx]');
+    for(let i=0;i<nodes.length;i++){
+      nodes[i].addEventListener('click',function(ev){
+        ev.preventDefault();
+        const idx=Number(this.getAttribute('data-oto-photo-idx')||0);
+        if(typeof openGmPhotoViewer==='function') openGmPhotoViewer(window.__gmDetailPhotoUrls||urls, idx);
+      });
+    }
+  }catch(err){
+    box.innerHTML=`<h1>Detay yüklenemedi</h1><p class="small muted">${escapeHTML(err.message||String(err))}</p>
+      <button class="btn secondary" type="button" onclick="showOtomobilBrowse()">Listeye dön</button>`;
+  }
+}
+
+window.showOtomobilHub=showOtomobilHub;
+window.startOtomobilWizard=startOtomobilWizard;
+window.renderOtomobilWizard=renderOtomobilWizard;
+window.otoWizardNext=otoWizardNext;
+window.otoWizardBack=otoWizardBack;
+window.createOtomobilListing=createOtomobilListing;
+window.publishOtomobilListing=publishOtomobilListing;
+window.showOtomobilBrowse=showOtomobilBrowse;
+window.showOtomobilDetail=showOtomobilDetail;
+// === MARKETPLACE 2.0 A3.4 OTOMOBİL END ===
+
+// === MARKETPLACE 2.0 A2 HUB END ===
+
 
 function showRequest(preselected=""){
  setNav("navRequest");
