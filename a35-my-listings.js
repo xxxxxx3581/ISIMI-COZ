@@ -9,15 +9,20 @@
   const uid=()=>session()?.user?.id||session()?.user_id||null;
   const typeLabel=t=>t==='gayrimenkul'?'Gayrimenkul':t==='otomobil'?'Otomobil':t==='hizmet'?'Hizmet':E(t||'İlan');
   const statusLabel=s=>({draft:'Taslak',published:'Yayında',reserved:'Rezerve',sold:'Satıldı',archived:'Arşivde'}[s]||s);
+  const authGet=async path=>{
+    if(typeof supabaseAuthRequest==='function') return await supabaseAuthRequest('GET',path);
+    if(typeof supabaseRequest==='function') return await supabaseRequest('GET',path);
+    return [];
+  };
   async function rows(){
     const me=uid();
-    if(!me||typeof supabaseRequest!=='function') return [];
-    try{return await supabaseRequest('GET','listings?select=id,owner_id,listing_type,category,title,description,price,currency,city,district,status,created_at,updated_at&owner_id=eq.'+encodeURIComponent(me)+'&order=updated_at.desc&limit=100')||[]}catch(e){console.warn('A3.5.5 listings:',e);return []}
+    if(!me) return [];
+    try{return await authGet('listings?select=id,owner_id,listing_type,category,title,description,price,currency,city,district,status,created_at,updated_at&owner_id=eq.'+encodeURIComponent(me)+'&order=updated_at.desc&limit=100')||[]}catch(e){console.warn('A3.5.5 listings:',e);return []}
   }
   async function setStatus(id,status){
     const me=uid(); if(!me||!id||!['published','archived'].includes(status)) return false;
     try{
-      const l=(await supabaseRequest('GET','listings?select=id,owner_id,status&owner_id=eq.'+encodeURIComponent(me)+'&id=eq.'+encodeURIComponent(id)+'&limit=1'))?.[0];
+      const l=(await authGet('listings?select=id,owner_id,status&owner_id=eq.'+encodeURIComponent(me)+'&id=eq.'+encodeURIComponent(id)+'&limit=1'))?.[0];
       if(!l||l.owner_id!==me||!['published','archived'].includes(l.status)) return false;
       if(typeof listingsAuthWrite!=='function') throw new Error('Yetkili ilan yazma yardımcısı bulunamadı.');
       const out=await listingsAuthWrite('PATCH','listings?id=eq.'+encodeURIComponent(id)+'&owner_id=eq.'+encodeURIComponent(me),{status});
