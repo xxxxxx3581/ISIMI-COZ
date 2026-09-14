@@ -4,7 +4,7 @@
 (()=>{
   if(window.__A353_SELLER_IDENTITY__) return;
   window.__A353_SELLER_IDENTITY__=1;
-  const E=v=>typeof esc==='function'?esc(v):String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));
+  const E=v=>typeof esc==='function'?esc(v):String(v??'').replace(/[&<>'\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[c]||c));
   async function profile(ownerId){
     if(!ownerId) return null;
     try{
@@ -28,8 +28,6 @@
       const name=E(p.display_name);
       const type=E(p.seller_type==='professional'?'Profesyonel satıcı':'Bireysel satıcı');
       const loc=[p.district,p.city].filter(Boolean).map(E).join(' · ');
-
-      // Only target the existing detail-page seller block; do not touch the A3.5 lower card content.
       const blocks=[...document.querySelectorAll('#gmDetailArea .card,#otoDetailArea .card')];
       for(const block of blocks){
         const text=String(block.textContent||'');
@@ -78,4 +76,14 @@
   }
   setTimeout(()=>{hook('showGayrimenkulDetail');hook('showOtomobilDetail');},0);
   window.__A353_APPLY_SELLER_IDENTITY__=apply;
+
+  // A3.5.4 owner-actions bridge. Loaded only after the existing seller bridge is active.
+  setTimeout(()=>{
+    if(document.querySelector('script[data-a354-owner-actions]')) return;
+    const s=document.createElement('script');
+    s.src='./a35-listing-owner-actions.js';
+    s.dataset.a354OwnerActions='1';
+    s.defer=true;
+    document.head.appendChild(s);
+  },0);
 })();
