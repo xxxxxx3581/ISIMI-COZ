@@ -26,6 +26,12 @@ create index if not exists marketplace_profiles_seller_type_idx
 
 alter table public.marketplace_profiles enable row level security;
 
+-- API table privileges are separate from RLS policies.
+grant select on public.marketplace_profiles to anon;
+grant select, insert, update, delete
+on public.marketplace_profiles
+to authenticated;
+
 -- Public profile presentation is opt-in through is_public.
 drop policy if exists "marketplace_profiles_public_read" on public.marketplace_profiles;
 create policy "marketplace_profiles_public_read"
