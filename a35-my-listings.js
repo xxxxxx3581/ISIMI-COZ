@@ -19,8 +19,10 @@
     try{
       const l=(await supabaseRequest('GET','listings?select=id,owner_id,status&owner_id=eq.'+encodeURIComponent(me)+'&id=eq.'+encodeURIComponent(id)+'&limit=1'))?.[0];
       if(!l||l.owner_id!==me||!['published','archived'].includes(l.status)) return false;
-      await supabaseRequest('PATCH','listings?id=eq.'+encodeURIComponent(id)+'&owner_id=eq.'+encodeURIComponent(me),{status});
-      return true;
+      if(typeof listingsAuthWrite!=='function') throw new Error('Yetkili ilan yazma yardımcısı bulunamadı.');
+      const out=await listingsAuthWrite('PATCH','listings?id=eq.'+encodeURIComponent(id)+'&owner_id=eq.'+encodeURIComponent(me),{status});
+      const updated=Array.isArray(out?.data)?out.data:[];
+      return updated.length>0 && updated[0].status===status && updated[0].owner_id===me;
     }catch(e){console.warn('A3.5.5 status:',e);return false}
   }
   function card(l){
@@ -28,7 +30,7 @@
     const price=l.price!=null?`${E(Number(l.price).toLocaleString('tr-TR'))} ${E(l.currency||'TRY')}`:'';
     const action=l.status==='published'?'<button type="button" data-a355="archive">Yayından kaldır</button>':l.status==='archived'?'<button type="button" data-a355="publish">Yeniden yayınla</button>':'';
     const view=l.status==='published'?'<button type="button" data-a355="view">İlanı aç</button>':'';
-    return `<article class="card" style="margin-top:10px"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><strong>${E(l.title||'Başlıksız ilan')}</strong><div class="small muted" style="margin-top:4px">${typeLabel(l.listing_type)}${loc?' · 📍 '+loc:''}</div></div><span class="small muted">${E(statusLabel(l.status))}</span></div>${price?`<div style="font-size:18px;font-weight:800;margin-top:8px">${price}</div>`:''}<div class="small muted" style="margin-top:6px">Güncelleme: ${l.updated_at?new Date(l.updated_at).toLocaleString('tr-TR'):''}</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">${view}${action}</div></article>`;
+    return `<article class="card" data-listing-id="${E(l.id)}" style="margin-top:10px"><div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start"><div><strong>${E(l.title||'Başlıksız ilan')}</strong><div class="small muted" style="margin-top:4px">${typeLabel(l.listing_type)}${loc?' · 📍 '+loc:''}</div></div><span class="small muted">${E(statusLabel(l.status))}</span></div>${price?`<div style="font-size:18px;font-weight:800;margin-top:8px">${price}</div>`:''}<div class="small muted" style="margin-top:6px">Güncelleme: ${l.updated_at?new Date(l.updated_at).toLocaleString('tr-TR'):''}</div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">${view}${action}</div></article>`;
   }
   async function show(){
     const me=uid(); if(!me){alert('İlanlarınızı görmek için giriş yapmalısınız.');return;}
@@ -36,12 +38,12 @@
     const list=await rows();
     host.innerHTML=`<section class="section"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><h2 style="margin:0">📋 İlanlarım</h2><div class="small muted" style="margin-top:5px">Tüm ilanlarınız ve yayın durumları</div></div><button type="button" data-a355="back">← Marketplace</button></div><div class="small muted" style="margin-top:12px">${list.length} ilan</div><div class="a355List">${list.length?list.map(card).join(''):'<div class="card" style="margin-top:12px">Henüz ilanınız bulunmuyor.</div>'}</div></section>`;
     host.querySelector('[data-a355="back"]')?.addEventListener('click',()=>typeof showListingsHub==='function'?showListingsHub():location.reload());
-    host.addEventListener('click',async ev=>{
+    host.querySelector('.a355List')?.addEventListener('click',async ev=>{
       const b=ev.target.closest('button[data-a355]'); if(!b)return;
-      const article=b.closest('article');
-      const title=article?.querySelector('strong')?.textContent||'';
-      const item=list.find(x=>x.title===title&&article);
-      if(!item)return;
+      const article=b.closest('article[data-listing-id]');
+      const id=article?.getAttribute('data-listing-id');
+      const item=list.find(x=>String(x.id)===String(id));
+      if(!item||!id)return;
       if(b.dataset.a355==='view'){
         if(item.listing_type==='gayrimenkul'&&typeof showGayrimenkulDetail==='function') return showGayrimenkulDetail(item.id);
         if(item.listing_type==='otomobil'&&typeof showOtomobilDetail==='function') return showOtomobilDetail(item.id);
