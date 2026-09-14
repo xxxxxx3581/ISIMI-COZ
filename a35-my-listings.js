@@ -61,6 +61,7 @@
         if(ok) show(); else {b.disabled=false;alert('İlan durumu değiştirilemedi. Lütfen tekrar deneyin.');}
       }
     });
+    setTimeout(()=>window.__A356_ADD_EDIT__?.(),80);
   }
   function addEntry(){
     const host=document.getElementById('app'); if(!host||host.querySelector('.a355Entry'))return;
@@ -68,7 +69,11 @@
     section.innerHTML='<div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><div><strong>📋 İlanlarım</strong><div class="small muted" style="margin-top:4px">İlanlarınızı yönetin, yayından kaldırın veya yeniden yayınlayın.</div></div><button type="button" data-a355="open">Aç</button></div>';
     host.appendChild(section); section.querySelector('button')?.addEventListener('click',show);
   }
+  function loadEditBridge(){
+    if(document.querySelector('script[data-a356-edit-bridge]')) return;
+    const s=document.createElement('script');s.src='./a35-listing-edit.js';s.dataset.a356EditBridge='1';s.defer=true;document.head.appendChild(s);
+  }
   function hook(name){const f=window[name];if(typeof f!=='function'||f.__a355)return;const w=function(){const out=f.apply(this,arguments);setTimeout(addEntry,120);return out};w.__a355=true;window[name]=w}
-  setTimeout(()=>{['showListingsHub','showGayrimenkulHub','showOtomobilHub'].forEach(hook);addEntry()},0);
+  setTimeout(()=>{['showListingsHub','showGayrimenkulHub','showOtomobilHub'].forEach(hook);loadEditBridge();addEntry()},0);
   window.__A355_SHOW_MY_LISTINGS__=show;
 })();
