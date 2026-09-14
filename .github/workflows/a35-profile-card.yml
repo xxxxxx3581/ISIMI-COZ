@@ -12,8 +12,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Patch index.html
-        env:
-          PATCH_B64: "UEhP"
         run: |
           python - <<'PY'
           import base64
@@ -24,7 +22,7 @@ jobs:
           if marker in s:
               print('A3.5 profile patch already present')
               raise SystemExit(0)
-          patch=base64.b64decode('PATCH_B64_PLACEHOLDER').decode('utf-8')
+          patch=base64.b64decode('Ci8qIEEzLjUg4oCUIG1hcmtldHBsYWNlIHNlbGxlci9wcm9maWxlIHByZXNlbnRhdGlvbiBsYXllcgogICBPbmUtdGltZSBmb3VuZGF0aW9uIHBhdGNoLiBVc2VzIHRoZSBleGlzdGluZyBsaXN0aW5ncyBvd25lcl9pZCBhbmQgcHVibGljLm1hcmtldHBsYWNlX3Byb2ZpbGVzIHRhYmxlLiBObyBjaGFuZ2VzIHRvIEhhbGxldCBmbG93cy4KKw==').decode('utf-8')
           i=s.rfind('</body>')
           if i < 0:
               raise SystemExit('index.html: </body> not found')
