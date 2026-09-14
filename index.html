@@ -669,21 +669,216 @@ async function uploadListingPhoto(ownerId, listingId, file, token){
 
 
 
-async function showGayrimenkulBrowse(){
+
+// === MARKETPLACE 2.0 A3.4.1 SEARCH/FILTER START ===
+var __listingFilters={
+  gayrimenkul:{q:'',category:'',minPrice:'',maxPrice:'',city:'',district:'',sort:'new'},
+  otomobil:{q:'',brand:'',model:'',minYear:'',maxYear:'',minKm:'',maxKm:'',minPrice:'',maxPrice:'',fuel:'',gear:'',body:'',drive:'',city:'',district:'',seller_type:'',sort:'new'}
+};
+var __listingCache={gayrimenkul:[],otomobil:[]};
+
+function getListingFilterState(type){
+  return __listingFilters[type]||{};
+}
+function countActiveListingFilters(type){
+  const f=getListingFilterState(type)||{};
+  let n=0;
+  Object.keys(f).forEach(function(k){
+    if(k==='sort') return;
+    if(f[k]!==''&&f[k]!=null) n++;
+  });
+  return n;
+}
+function clearListingFilters(type){
+  if(type==='gayrimenkul'){
+    __listingFilters.gayrimenkul={q:'',category:'',minPrice:'',maxPrice:'',city:'',district:'',sort:'new'};
+  }else if(type==='otomobil'){
+    __listingFilters.otomobil={q:'',brand:'',model:'',minYear:'',maxYear:'',minKm:'',maxKm:'',minPrice:'',maxPrice:'',fuel:'',gear:'',body:'',drive:'',city:'',district:'',seller_type:'',sort:'new'};
+  }
+}
+function listingMatchesSearch(row,q){
+  if(!q) return true;
+  const s=String(q).toLowerCase().trim();
+  if(!s) return true;
+  const md=row.metadata||{};
+  const bag=[row.title,row.description,row.category,row.city,row.district,row.neighborhood,
+    md.brand,md.model,md.version,md.fuel,md.gear,md.body,md.color,md.vehicle_type,md.property_kind].join(' ').toLowerCase();
+  return bag.indexOf(s)>=0;
+}
+function applyListingFiltersLocal(type, rows){
+  const f=getListingFilterState(type)||{};
+  let list=(rows||[]).slice();
+  list=list.filter(function(row){
+    if(!listingMatchesSearch(row,f.q)) return false;
+    const md=row.metadata||{};
+    const price=row.price!=null?Number(row.price):null;
+    if(f.minPrice!==''&&f.minPrice!=null&&price!=null&&price<Number(f.minPrice)) return false;
+    if(f.maxPrice!==''&&f.maxPrice!=null&&price!=null&&price>Number(f.maxPrice)) return false;
+    if(f.city&&row.city&&String(row.city)!==String(f.city)) return false;
+    if(f.city&&!row.city) return false;
+    if(f.district&&row.district&&String(row.district)!==String(f.district)) return false;
+    if(f.district&&!row.district) return false;
+    if(type==='gayrimenkul'){
+      if(f.category&&row.category&&String(row.category)!==String(f.category)) return false;
+      if(f.category&&!row.category) return false;
+    }
+    if(type==='otomobil'){
+      if(f.brand&&String(md.brand||'').toLowerCase().indexOf(String(f.brand).toLowerCase())<0) return false;
+      if(f.model&&String(md.model||'').toLowerCase().indexOf(String(f.model).toLowerCase())<0) return false;
+      const year=md.year!=null?Number(md.year):null;
+      const km=md.km!=null?Number(md.km):null;
+      if(f.minYear!==''&&year!=null&&year<Number(f.minYear)) return false;
+      if(f.maxYear!==''&&year!=null&&year>Number(f.maxYear)) return false;
+      if(f.minKm!==''&&km!=null&&km<Number(f.minKm)) return false;
+      if(f.maxKm!==''&&km!=null&&km>Number(f.maxKm)) return false;
+      if(f.fuel&&md.fuel&&String(md.fuel)!==String(f.fuel)) return false;
+      if(f.gear&&md.gear&&String(md.gear)!==String(f.gear)) return false;
+      if(f.body&&String(md.body||md.vehicle_type||'').toLowerCase().indexOf(String(f.body).toLowerCase())<0) return false;
+      if(f.drive&&md.drive&&String(md.drive)!==String(f.drive)) return false;
+      if(f.seller_type&&md.seller_type&&String(md.seller_type)!==String(f.seller_type)) return false;
+    }
+    return true;
+  });
+  const sort=f.sort||'new';
+  list.sort(function(a,b){
+    if(sort==='price_asc') return (Number(a.price)||0)-(Number(b.price)||0);
+    if(sort==='price_desc') return (Number(b.price)||0)-(Number(a.price)||0);
+    if(sort==='year_desc'&&type==='otomobil') return (Number((b.metadata||{}).year)||0)-(Number((a.metadata||{}).year)||0);
+    if(sort==='km_asc'&&type==='otomobil') return (Number((a.metadata||{}).km)||0)-(Number((b.metadata||{}).km)||0);
+    // new
+    return String(b.created_at||'').localeCompare(String(a.created_at||''));
+  });
+  return list;
+}
+function closeListingFilterPanel(){
+  const el=document.getElementById('listingFilterPanel');
+  if(el) el.remove();
+}
+function openListingFilterPanel(type){
+  closeListingFilterPanel();
+  const f=getListingFilterState(type)||{};
+  const isCar=type==='otomobil';
+  const districts=typeof districtOptions==='function'?districtOptions(f.district||''):'<option value="">İlçe</option>';
+  const wrap=document.createElement('div');
+  wrap.id='listingFilterPanel';
+  wrap.style.cssText='position:fixed;inset:0;z-index:2147482000;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center';
+  let fields='';
+  if(isCar){
+    fields=`
+      <label>Marka</label><input id="lfBrand" value="${escapeHTML(f.brand||'')}" placeholder="Marka">
+      <label>Model</label><input id="lfModel" value="${escapeHTML(f.model||'')}" placeholder="Model">
+      <div class="row"><div><label>Min yıl</label><input id="lfMinYear" type="number" value="${escapeHTML(f.minYear||'')}"></div>
+      <div><label>Max yıl</label><input id="lfMaxYear" type="number" value="${escapeHTML(f.maxYear||'')}"></div></div>
+      <div class="row"><div><label>Min KM</label><input id="lfMinKm" type="number" value="${escapeHTML(f.minKm||'')}"></div>
+      <div><label>Max KM</label><input id="lfMaxKm" type="number" value="${escapeHTML(f.maxKm||'')}"></div></div>
+      <div class="row"><div><label>Min fiyat</label><input id="lfMinPrice" type="number" value="${escapeHTML(f.minPrice||'')}"></div>
+      <div><label>Max fiyat</label><input id="lfMaxPrice" type="number" value="${escapeHTML(f.maxPrice||'')}"></div></div>
+      <label>Yakıt</label><select id="lfFuel"><option value="">Tümü</option>${['Benzin','Dizel','LPG','Hibrit','Elektrik','Diğer'].map(function(v){return '<option value="'+v+'"'+(f.fuel===v?' selected':'')+'>'+v+'</option>';}).join('')}</select>
+      <label>Vites</label><select id="lfGear"><option value="">Tümü</option>${['Manuel','Otomatik','Yarı otomatik'].map(function(v){return '<option value="'+v+'"'+(f.gear===v?' selected':'')+'>'+v+'</option>';}).join('')}</select>
+      <label>Kasa / tip</label><input id="lfBody" value="${escapeHTML(f.body||'')}" placeholder="SUV, Sedan…">
+      <label>Çekiş</label><select id="lfDrive"><option value="">Tümü</option>${['Önden','Arkadan','4x4','AWD'].map(function(v){return '<option value="'+v+'"'+(f.drive===v?' selected':'')+'>'+v+'</option>';}).join('')}</select>
+      <label>İl</label><select id="lfCity"><option value="">Tümü</option><option value="İzmir"'+(f.city==='İzmir'?' selected':'')+'>İzmir</option></select>
+      <label>İlçe</label><select id="lfDistrict">${districts}</select>
+      <label>Satıcı tipi</label><select id="lfSeller"><option value="">Tümü</option><option value="individual"'+(f.seller_type==='individual'?' selected':'')+'>Bireysel</option><option value="professional"'+(f.seller_type==='professional'?' selected':'')+'>Profesyonel</option></select>
+      <label>Sıralama</label><select id="lfSort">
+        <option value="new"'+(f.sort==='new'?' selected':'')+'>Yeni ilanlar</option>
+        <option value="price_asc"'+(f.sort==='price_asc'?' selected':'')+'>Fiyat: düşük → yüksek</option>
+        <option value="price_desc"'+(f.sort==='price_desc'?' selected':'')+'>Fiyat: yüksek → düşük</option>
+        <option value="year_desc"'+(f.sort==='year_desc'?' selected':'')+'>Yıl: yeni → eski</option>
+        <option value="km_asc"'+(f.sort==='km_asc'?' selected':'')+'>KM: düşük → yüksek</option>
+      </select>`;
+  }else{
+    fields=`
+      <label>Kategori</label><select id="lfCategory"><option value="">Tümü</option>${['Konut','Arsa','İş Yeri'].map(function(v){return '<option value="'+v+'"'+(f.category===v?' selected':'')+'>'+v+'</option>';}).join('')}</select>
+      <div class="row"><div><label>Min fiyat</label><input id="lfMinPrice" type="number" value="${escapeHTML(f.minPrice||'')}"></div>
+      <div><label>Max fiyat</label><input id="lfMaxPrice" type="number" value="${escapeHTML(f.maxPrice||'')}"></div></div>
+      <label>İl</label><select id="lfCity"><option value="">Tümü</option><option value="İzmir"'+(f.city==='İzmir'?' selected':'')+'>İzmir</option></select>
+      <label>İlçe</label><select id="lfDistrict">${districts}</select>
+      <label>Sıralama</label><select id="lfSort">
+        <option value="new"'+(f.sort==='new'?' selected':'')+'>Yeni ilanlar</option>
+        <option value="price_asc"'+(f.sort==='price_asc'?' selected':'')+'>Fiyat: düşük → yüksek</option>
+        <option value="price_desc"'+(f.sort==='price_desc'?' selected':'')+'>Fiyat: yüksek → düşük</option>
+      </select>
+      <p class="small muted">Satılık/kiralık, oda ve m² filtreleri mevcut ilan verisinde yok; eklendiğinde buraya bağlanacak.</p>`;
+  }
+  wrap.innerHTML=`<div class="formCard" style="width:100%;max-width:560px;max-height:85vh;overflow:auto;margin:0;border-radius:18px 18px 0 0">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <strong>Filtrele</strong>
+      <button type="button" class="btn secondary smallBtn" id="lfClose">Kapat</button>
+    </div>
+    ${fields}
+    <div class="splitActions" style="margin-top:14px">
+      <button type="button" class="btn secondary" id="lfClear">Temizle</button>
+      <button type="button" class="btn primary" id="lfApply">Uygula</button>
+    </div>
+  </div>`;
+  document.body.appendChild(wrap);
+  wrap.addEventListener('click',function(e){ if(e.target===wrap) closeListingFilterPanel(); });
+  document.getElementById('lfClose').onclick=function(){ closeListingFilterPanel(); };
+  document.getElementById('lfClear').onclick=function(){
+    clearListingFilters(type);
+    closeListingFilterPanel();
+    if(type==='otomobil') showOtomobilBrowse(true);
+    else showGayrimenkulBrowse(true);
+  };
+  document.getElementById('lfApply').onclick=function(){
+    const st=getListingFilterState(type);
+    st.minPrice=(document.getElementById('lfMinPrice')||{}).value||'';
+    st.maxPrice=(document.getElementById('lfMaxPrice')||{}).value||'';
+    st.city=(document.getElementById('lfCity')||{}).value||'';
+    st.district=(document.getElementById('lfDistrict')||{}).value||'';
+    st.sort=(document.getElementById('lfSort')||{}).value||'new';
+    if(isCar){
+      st.brand=(document.getElementById('lfBrand')||{}).value||'';
+      st.model=(document.getElementById('lfModel')||{}).value||'';
+      st.minYear=(document.getElementById('lfMinYear')||{}).value||'';
+      st.maxYear=(document.getElementById('lfMaxYear')||{}).value||'';
+      st.minKm=(document.getElementById('lfMinKm')||{}).value||'';
+      st.maxKm=(document.getElementById('lfMaxKm')||{}).value||'';
+      st.fuel=(document.getElementById('lfFuel')||{}).value||'';
+      st.gear=(document.getElementById('lfGear')||{}).value||'';
+      st.body=(document.getElementById('lfBody')||{}).value||'';
+      st.drive=(document.getElementById('lfDrive')||{}).value||'';
+      st.seller_type=(document.getElementById('lfSeller')||{}).value||'';
+    }else{
+      st.category=(document.getElementById('lfCategory')||{}).value||'';
+    }
+    closeListingFilterPanel();
+    if(type==='otomobil') showOtomobilBrowse(true);
+    else showGayrimenkulBrowse(true);
+  };
+}
+// === MARKETPLACE 2.0 A3.4.1 SEARCH/FILTER END ===
+async function showGayrimenkulBrowse(keepCache){
+  const type='gayrimenkul';
+  const f=getListingFilterState(type);
+  const active=countActiveListingFilters(type);
   app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showGayrimenkulHub()">← Gayrimenkul</button></div>
   <div class="section">
     <span class="badge">🏠 Gayrimenkul</span>
     <h1>Yayındaki ilanlar</h1>
-    <p class="muted small">Yalnızca yayınlanmış gayrimenkul ilanları gösterilir. Detay için ilana dokun.</p>
+    <div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap">
+      <input id="listingSearchQ" type="search" placeholder="🔎 İlanlarda ara" value="${escapeHTML(f.q||'')}" style="flex:1;min-width:160px">
+      <button type="button" class="btn secondary smallBtn" onclick="(function(){var st=getListingFilterState('gayrimenkul');st.q=(document.getElementById('listingSearchQ')||{}).value||'';showGayrimenkulBrowse(true);})()">Ara</button>
+      <button type="button" class="btn secondary smallBtn" onclick="openListingFilterPanel('gayrimenkul')">⚙ Filtrele${active?(' ('+active+')'):''}</button>
+    </div>
+    <div id="gmListMeta" class="small muted"></div>
     <div id="gmListArea" class="muted small">Yükleniyor…</div>
   </div>`);
   const box=document.getElementById('gmListArea');
+  const meta=document.getElementById('gmListMeta');
   try{
-    const path="listings?listing_type=eq.gayrimenkul&status=eq.published&order=created_at.desc&select=id,title,price,currency,city,district,neighborhood,category,description,status,created_at,metadata";
-    const rows=await supabaseRequest('GET', path);
-    const list=Array.isArray(rows)?rows:[];
+    if(!keepCache||!__listingCache.gayrimenkul.length){
+      const path="listings?listing_type=eq.gayrimenkul&status=eq.published&order=created_at.desc&select=id,title,price,currency,city,district,neighborhood,category,description,status,created_at,metadata";
+      const rows=await supabaseRequest('GET', path);
+      __listingCache.gayrimenkul=Array.isArray(rows)?rows:[];
+    }
+    const list=applyListingFiltersLocal(type, __listingCache.gayrimenkul);
+    if(meta) meta.textContent=list.length+' ilan';
     if(!list.length){
-      box.innerHTML=`<div class="card empty"><h3>Henüz yayınlanmış gayrimenkul ilanı yok</h3><p>İlk ilanı sen verebilirsin.</p><button class="btn primary" type="button" onclick="showGayrimenkulCreateForm()">İlan Ver</button></div>`;
+      box.innerHTML=`<div class="card empty"><h3>Bu kriterlere uygun ilan bulunamadı.</h3>
+        <button class="btn secondary" type="button" onclick="clearListingFilters('gayrimenkul');showGayrimenkulBrowse(true)">Filtreleri temizle</button>
+        <button class="btn primary" type="button" onclick="showGayrimenkulCreateForm()">İlan Ver</button></div>`;
       return;
     }
     box.innerHTML=`<div class="actionGrid" style="grid-template-columns:1fr;gap:10px">`+list.map(function(row){
@@ -715,6 +910,7 @@ async function showGayrimenkulBrowse(){
     box.innerHTML=`<div class="card empty"><h3>İlanlar yüklenemedi</h3><p class="small muted">${escapeHTML(err&&err.message?err.message:String(err))}</p><button class="btn secondary" type="button" onclick="showGayrimenkulBrowse()">Tekrar dene</button></div>`;
   }
 }
+
 
 
 // A3.3.1 listing photo lightbox (pinch-zoom, no window.open, no lib)
@@ -1196,6 +1392,9 @@ window.listingPhotosFromRow=listingPhotosFromRow;
 window.uploadListingPhoto=uploadListingPhoto;
 window.listingPhotoPublicUrl=listingPhotoPublicUrl;
 window.showGayrimenkulBrowse=showGayrimenkulBrowse;
+window.openListingFilterPanel=openListingFilterPanel;
+window.clearListingFilters=clearListingFilters;
+window.getListingFilterState=getListingFilterState;
 window.showGayrimenkulDetail=showGayrimenkulDetail;
 window.openGmPhotoViewer=openGmPhotoViewer;
 window.closeGmPhotoViewer=closeGmPhotoViewer;
@@ -1511,18 +1710,32 @@ async function publishOtomobilListing(id){
   }catch(err){ alert(err&&err.message?err.message:String(err)); }
 }
 
-async function showOtomobilBrowse(){
+async function showOtomobilBrowse(keepCache){
+  const type='otomobil';
+  const f=getListingFilterState(type);
+  const active=countActiveListingFilters(type);
   app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showOtomobilHub()">← Otomobil</button></div>
   <div class="section"><span class="badge">🚗 Otomobil</span><h1>Yayındaki ilanlar</h1>
-  <p class="muted small">Yalnızca yayınlanmış otomobil ilanları. Detay için dokun.</p>
+  <div style="display:flex;gap:8px;margin:10px 0;flex-wrap:wrap">
+    <input id="listingSearchQ" type="search" placeholder="🔎 İlanlarda ara" value="${escapeHTML(f.q||'')}" style="flex:1;min-width:160px">
+    <button type="button" class="btn secondary smallBtn" onclick="(function(){var st=getListingFilterState('otomobil');st.q=(document.getElementById('listingSearchQ')||{}).value||'';showOtomobilBrowse(true);})()">Ara</button>
+    <button type="button" class="btn secondary smallBtn" onclick="openListingFilterPanel('otomobil')">⚙ Filtrele${active?(' ('+active+')'):''}</button>
+  </div>
+  <div id="otoListMeta" class="small muted"></div>
   <div id="otoListArea" class="muted small">Yükleniyor…</div></div>`);
   const box=document.getElementById('otoListArea');
+  const meta=document.getElementById('otoListMeta');
   try{
-    const path="listings?listing_type=eq.otomobil&status=eq.published&order=created_at.desc&select=id,title,price,currency,city,district,category,metadata,created_at";
-    const rows=await supabaseRequest('GET',path);
-    const list=Array.isArray(rows)?rows:[];
+    if(!keepCache||!__listingCache.otomobil.length){
+      const path="listings?listing_type=eq.otomobil&status=eq.published&order=created_at.desc&select=id,title,price,currency,city,district,category,description,metadata,created_at";
+      const rows=await supabaseRequest('GET',path);
+      __listingCache.otomobil=Array.isArray(rows)?rows:[];
+    }
+    const list=applyListingFiltersLocal(type, __listingCache.otomobil);
+    if(meta) meta.textContent=list.length+' ilan';
     if(!list.length){
-      box.innerHTML=`<div class="card empty"><h3>Henüz yayınlanmış otomobil ilanı yok</h3>
+      box.innerHTML=`<div class="card empty"><h3>Bu kriterlere uygun ilan bulunamadı.</h3>
+        <button class="btn secondary" type="button" onclick="clearListingFilters('otomobil');showOtomobilBrowse(true)">Filtreleri temizle</button>
         <button class="btn primary" type="button" onclick="startOtomobilWizard()">İlan Ver</button></div>`;
       return;
     }
@@ -1558,6 +1771,7 @@ async function showOtomobilBrowse(){
       <button class="btn secondary" type="button" onclick="showOtomobilBrowse()">Tekrar dene</button></div>`;
   }
 }
+
 
 async function showOtomobilDetail(listingId){
   const id=String(listingId||'').replace(/[^a-zA-Z0-9-]/g,'');
