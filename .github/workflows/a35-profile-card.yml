@@ -1,0 +1,41 @@
+name: A3.5 seller profile card
+on:
+  push:
+    branches:
+      - test/marketplace-a3.5
+permissions:
+  contents: write
+jobs:
+  patch-profile-card:
+    if: ${{ !contains(github.event.head_commit.message, 'A3.5 seller profile card patch') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch index.html
+        env:
+          PATCH_B64: "UEhP"
+        run: |
+          python - <<'PY'
+          import base64
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          marker='<!-- A3.5_PROFILE_CARD_V1 -->'
+          if marker in s:
+              print('A3.5 profile patch already present')
+              raise SystemExit(0)
+          patch=base64.b64decode('PATCH_B64_PLACEHOLDER').decode('utf-8')
+          i=s.rfind('</body>')
+          if i < 0:
+              raise SystemExit('index.html: </body> not found')
+          s=s[:i]+marker+'\n<script>\n'+patch+'\n</script>\n'+s[i:]
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m "feat: A3.5 seller profile card patch"
+          git push
