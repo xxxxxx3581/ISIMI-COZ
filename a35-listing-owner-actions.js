@@ -37,12 +37,6 @@
     }catch(_){return null}
   }
 
-  function findListingId(){
-    const candidates=[window.currentListingId,window.selectedListingId,window.__listingId,idFromUrl()];
-    for(const x of candidates) if(x) return x;
-    return null;
-  }
-
   async function render(id){
     const me=uid();
     if(!me||!id) return;
@@ -79,6 +73,15 @@
     window[name]=w;
   }
 
-  setTimeout(()=>{hook('showGayrimenkulDetail');hook('showOtomobilDetail');},0);
+  function loadEditBridge(){
+    if(document.querySelector('script[data-a356-edit-bridge]')) return;
+    const s=document.createElement('script');
+    s.src='./a35-listing-edit.js';
+    s.dataset.a356EditBridge='1';
+    s.defer=true;
+    document.head.appendChild(s);
+  }
+
+  setTimeout(()=>{hook('showGayrimenkulDetail');hook('showOtomobilDetail');loadEditBridge();},0);
   window.__A354_RENDER_OWNER_ACTIONS__=render;
 })();
