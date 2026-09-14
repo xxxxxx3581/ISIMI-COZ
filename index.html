@@ -4419,5 +4419,12 @@ window.Hallet={showGate:gate,showIslemMenu:islem,showTasinmazMenu:tasinmaz,showK
 /* Hallet başlatıcısı — ana sayfaya dokunmadan çalışır. */
 document.addEventListener('click',function(e){const b=e.target.closest&&e.target.closest('#openHalletButton');if(!b)return;e.preventDefault();e.stopPropagation();if(window.Hallet)window.Hallet.showGate();},true);
 </script>
+<!-- A3.5_PROFILE_CARD_V1 -->
+<script>
+
+/* A3.5 — marketplace seller/profile presentation layer
+   One-time foundation patch. Uses the existing listings owner_id and public.marketplace_profiles table. No changes to Hallet flows.
++
+</script>
 </body>
 </html>
