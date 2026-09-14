@@ -15,5 +15,6 @@
     if(!document.querySelector('script[data-a3510-detail-cleanup]')){const s3=document.createElement('script');s3.src='./a35-detail-photo-ui-cleanup.js';s3.dataset.a3510DetailCleanup='1';s3.defer=true;document.head.appendChild(s3)}
     if(!document.querySelector('script[data-a3512-photo-viewer]')){const s4=document.createElement('script');s4.src='./a35-listing-photo-viewer.js';s4.dataset.a3512PhotoViewer='1';s4.defer=true;document.head.appendChild(s4)}
     if(!document.querySelector('script[data-a3513-ux-polish]')){const s5=document.createElement('script');s5.src='./a35-listing-ux-polish.js';s5.dataset.a3513UxPolish='1';s5.defer=true;document.head.appendChild(s5)}
+    if(!document.querySelector('script[data-a3514-social]')){const s6=document.createElement('script');s6.src='./a35-marketplace-social.js';s6.dataset.a3514Social='1';s6.defer=true;document.head.appendChild(s6)}
   },0);
 })();
