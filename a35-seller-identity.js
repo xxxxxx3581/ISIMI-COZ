@@ -93,5 +93,12 @@
       s2.defer=true;
       document.head.appendChild(s2);
     }
+    if(!document.querySelector('script[data-a3510-photo-fix]')){
+      const s3=document.createElement('script');
+      s3.src='./a35-listing-detail-photo-actions-fix.js';
+      s3.dataset.a3510PhotoFix='1';
+      s3.defer=true;
+      document.head.appendChild(s3);
+    }
   },0);
 })();
