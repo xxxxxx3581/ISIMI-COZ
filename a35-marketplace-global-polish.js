@@ -1,24 +1,25 @@
-/* A3.5.18 — Marketplace global UX polish
+/* A3.5.19 — Marketplace compact action integration
  * Test branch only. Hallet untouched.
  */
 (()=>{
-  if(window.__A3518_GLOBAL__)return; window.__A3518_GLOBAL__=1;
+  if(window.__A3519_GLOBAL__)return; window.__A3519_GLOBAL__=1;
   const app=()=>document.getElementById('app');
   const isM=()=>{const a=app();if(!a)return false;return /Marketplace|Gayrimenkul|Otomobil|İlan detayı|İlanlarım|Favorilerim|Mesajlarım/.test(String(a.textContent||''));};
-  function css(){if(document.getElementById('a3518-style'))return;const s=document.createElement('style');s.id='a3518-style';s.textContent=`
-    .a3518Quick{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px!important;padding:8px!important;border:1px solid rgba(127,157,190,.16);border-radius:14px;background:rgba(127,157,190,.045)}
-    .a3518Quick button{flex:1 1 145px;min-height:40px;border-radius:10px!important;font-weight:800;font-size:13px!important}
-    .a3518Quick .iconOnly{flex:0 0 42px;min-width:42px;padding:0;font-size:22px!important}
-    .a3518Title{font-weight:900;font-size:12px;opacity:.7;padding:2px 3px;display:flex;align-items:center}
-    .a3518HiddenSource{display:none!important}
-    @media(max-width:520px){.a3518Quick{display:grid;grid-template-columns:1fr 1fr}.a3518Quick button{width:100%;flex:none}.a3518Quick .iconOnly{grid-column:auto}}
+  function css(){if(document.getElementById('a3519-style'))return;const s=document.createElement('style');s.id='a3519-style';s.textContent=`
+    .a3518Quick{display:none!important}.a3518HiddenSource{display:none!important}
+    .a3519Floating{display:flex;align-items:center;justify-content:center;gap:8px;position:absolute;right:12px;top:12px;z-index:20}
+    .a3519Icon{width:42px!important;height:42px!important;min-width:42px!important;padding:0!important;border:0!important;border-radius:50%!important;background:rgba(15,24,22,.62)!important;color:#fff!important;box-shadow:0 5px 18px rgba(0,0,0,.24);backdrop-filter:blur(6px);font-size:23px!important;line-height:1!important;display:flex!important;align-items:center!important;justify-content:center!important}
+    .a3519Icon.on{color:#e3263f!important;background:rgba(255,255,255,.92)!important}.a3519Icon:active{transform:scale(.94)}
+    .a3519Msg{margin-top:10px!important;min-height:44px!important;border-radius:11px!important;font-weight:900!important;width:100%!important}
   `;document.head.appendChild(s)}
   function source(text){return [...document.querySelectorAll('.a3514Tool')].find(b=>String(b.textContent||'').includes(text));}
-  function quick(){const a=app();if(!a||!isM())return;if(a.querySelector('[data-a3518-quick]'))return;const fav=source('Favorilerim'),msg=source('Mesajlarım'),mine=source('İlanlarım');if(!fav&&!msg&&!mine)return;[fav,msg,mine].filter(Boolean).forEach(x=>x.classList.add('a3518HiddenSource'));const q=document.createElement('div');q.className='a3518Quick';q.dataset.a3518Quick='1';const title=document.createElement('div');title.className='a3518Title';title.textContent='Hızlı erişim';q.appendChild(title);if(fav){const b=document.createElement('button');b.type='button';b.className='iconOnly';b.textContent='♡';b.title='Favorilerim';b.setAttribute('aria-label','Favorilerim');b.onclick=()=>fav.click();q.appendChild(b)}if(msg){const b=document.createElement('button');b.type='button';b.textContent='💬 Mesajlarım';b.onclick=()=>msg.click();q.appendChild(b)}if(mine){const b=document.createElement('button');b.type='button';b.textContent='📋 İlanlarım';b.onclick=()=>mine.click();q.appendChild(b)}const first=a.firstElementChild;a.insertBefore(q,first)}
-  function detailMessage(){const a=app();if(!a||!isM())return;const seller=a.querySelector('.a35SellerCard');if(!seller)return;if(seller.querySelector('[data-a3518-msg-access]'))return;const source=[...document.querySelectorAll('.a3514Social button')].find(b=>String(b.textContent||'').includes('Mesaj gönder'));if(!source)return;const b=document.createElement('button');b.type='button';b.dataset.a3518MsgAccess='1';b.textContent='💬 Mesaj gönder';b.style.cssText='width:100%;margin-top:10px;min-height:44px;border-radius:11px;font-weight:900';b.onclick=()=>source.click();seller.appendChild(b)}
-  function back(){const a=app();if(!a||!isM())return;const t=String(a.textContent||'');let target='showListingsHub';if(/Favorilerim|Mesajlarım|İlanlarım/.test(t))target='showListingsCategory';if(/İlan detayı/.test(t)){if(/Otomobil/.test(t))target='showOtomobilBrowse';else if(/Gayrimenkul/.test(t))target='showGayrimenkulBrowse'}if(typeof window[target]==='function'){try{window[target]();return}catch(_){}}if(typeof window.showListingsHub==='function')window.showListingsHub()}
-  let armed=false;
-  function armBack(){if(armed)return;armed=true;history.pushState({a3518:true},'',location.href);window.addEventListener('popstate',e=>{if(!isM())return;e.stopImmediatePropagation();armed=false;back();setTimeout(()=>armBack(),80)},{capture:true})}
-  function run(){css();quick();detailMessage();if(isM())armBack()}
+  function hideLegacy(){document.querySelectorAll('.a3518Quick').forEach(x=>x.remove());document.querySelectorAll('.a3514Tool').forEach(b=>{const t=String(b.textContent||'');if(/^(Favorilerim|Mesajlarım|İlanlarım)$/.test(t.trim()))b.classList.add('a3518HiddenSource');if(/Kayıtlı aramalar|Bildirimler/.test(t))b.remove()});document.querySelectorAll('.a3514Section').forEach(s=>{if(!s.querySelector('.a3514Tool'))s.remove()})}
+  function detailIcons(){const a=app();if(!a||!isM())return;const detail=a.querySelector('.a359DetailPage');if(!detail||detail.querySelector('[data-a3519-icons]'))return;const fav=source('Favorilerim'),msg=source('Mesajlarım');if(!fav&&!msg)return;const hero=detail.querySelector('.a3511Carousel,.a359HeroCover');if(!hero)return;hero.style.position='relative';const box=document.createElement('div');box.className='a3519Floating';box.dataset.a3519Icons='1';
+    if(fav){const b=document.createElement('button');b.type='button';b.className='a3519Icon';b.textContent='♡';b.title='Favorilerim';b.setAttribute('aria-label','Favorilerim');b.onclick=()=>fav.click();box.appendChild(b)}
+    if(msg){const b=document.createElement('button');b.type='button';b.className='a3519Icon';b.textContent='⋯';b.title='Mesajlarım';b.setAttribute('aria-label','Mesajlarım');b.onclick=()=>msg.click();box.appendChild(b)}
+    hero.appendChild(box);
+  }
+  function sellerMsg(){const a=app();if(!a||!isM())return;const seller=a.querySelector('.a35SellerCard');if(!seller||seller.querySelector('[data-a3519-msg]'))return;const src=[...document.querySelectorAll('.a3514Social button')].find(b=>/Mesaj gönder/.test(String(b.textContent||'')));if(!src)return;const b=src.cloneNode(true);b.dataset.a3519Msg='1';b.className='a3519Msg';b.textContent='💬 Mesaj gönder';b.onclick=()=>src.click();seller.appendChild(b)}
+  function run(){css();hideLegacy();detailIcons();sellerMsg()}
   const ob=new MutationObserver(run);ob.observe(document.body,{childList:true,subtree:true});setTimeout(run,80);setTimeout(run,400);setTimeout(run,1000);
 })();
