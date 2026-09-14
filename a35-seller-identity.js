@@ -1,6 +1,4 @@
-/* A3.5.3 — dynamic seller identity bridge
- * Test branch only. Does not alter Hallet, listing data, photos, search or filters.
- */
+/* A3.5.3 — dynamic seller identity bridge */
 (()=>{
   if(window.__A353_SELLER_IDENTITY__) return;
   window.__A353_SELLER_IDENTITY__=1;
@@ -16,5 +14,6 @@
     if(!document.querySelector('script[data-a355-my-listings]')){const s2=document.createElement('script');s2.src='./a35-my-listings.js';s2.dataset.a355MyListings='1';s2.defer=true;document.head.appendChild(s2)}
     if(!document.querySelector('script[data-a3510-detail-cleanup]')){const s3=document.createElement('script');s3.src='./a35-detail-photo-ui-cleanup.js';s3.dataset.a3510DetailCleanup='1';s3.defer=true;document.head.appendChild(s3)}
     if(!document.querySelector('script[data-a3512-photo-viewer]')){const s4=document.createElement('script');s4.src='./a35-listing-photo-viewer.js';s4.dataset.a3512PhotoViewer='1';s4.defer=true;document.head.appendChild(s4)}
+    if(!document.querySelector('script[data-a3513-ux-polish]')){const s5=document.createElement('script');s5.src='./a35-listing-ux-polish.js';s5.dataset.a3513UxPolish='1';s5.defer=true;document.head.appendChild(s5)}
   },0);
 })();
