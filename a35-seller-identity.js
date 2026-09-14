@@ -77,13 +77,21 @@
   setTimeout(()=>{hook('showGayrimenkulDetail');hook('showOtomobilDetail');},0);
   window.__A353_APPLY_SELLER_IDENTITY__=apply;
 
-  // A3.5.4 owner-actions bridge. Loaded only after the existing seller bridge is active.
+  // A3.5.4 owner-actions bridge.
   setTimeout(()=>{
-    if(document.querySelector('script[data-a354-owner-actions]')) return;
-    const s=document.createElement('script');
-    s.src='./a35-listing-owner-actions.js';
-    s.dataset.a354OwnerActions='1';
-    s.defer=true;
-    document.head.appendChild(s);
+    if(!document.querySelector('script[data-a354-owner-actions]')){
+      const s=document.createElement('script');
+      s.src='./a35-listing-owner-actions.js';
+      s.dataset.a354OwnerActions='1';
+      s.defer=true;
+      document.head.appendChild(s);
+    }
+    if(!document.querySelector('script[data-a355-my-listings]')){
+      const s2=document.createElement('script');
+      s2.src='./a35-my-listings.js';
+      s2.dataset.a355MyListings='1';
+      s2.defer=true;
+      document.head.appendChild(s2);
+    }
   },0);
 })();
