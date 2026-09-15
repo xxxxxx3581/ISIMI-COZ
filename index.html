@@ -76,6 +76,47 @@ textarea{min-height:120px;resize:vertical}.row{display:grid;grid-template-column
 /* V2 home shell only */
 .homeHero h1{letter-spacing:-0.02em}
 .homeMenuGrid{grid-template-columns:1fr 1fr;gap:12px}
+/* ===== HOME V2 UX ===== */
+.homeShell{padding:0 0 8px}
+.homeHeroV2{padding:18px 16px 16px;border-radius:22px;border:1px solid var(--line);background:linear-gradient(160deg,rgba(22,163,74,.14),rgba(15,23,42,.55) 42%,rgba(7,17,31,.9));margin:12px 0 8px}
+html[data-theme="light"] .homeHeroV2{background:linear-gradient(160deg,#e8f8ef,#f7fafc)}
+.homeHeroV2 .homeEyebrow{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.homeHeroV2 h1{margin:0 0 8px;font-size:clamp(22px,5.5vw,30px);line-height:1.15;letter-spacing:-.02em}
+.homeHeroV2 .homeLead{margin:0 0 14px;color:var(--muted);font-size:14px;line-height:1.45;max-width:36em}
+.homePrimaryRow{display:grid;grid-template-columns:1fr;gap:10px}
+@media (min-width:560px){.homePrimaryRow{grid-template-columns:1fr 1fr}}
+.homePrimaryBtn{display:flex;align-items:flex-start;gap:12px;width:100%;text-align:left;padding:14px 14px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:inherit;font:inherit;cursor:pointer;min-height:72px;transition:.15s border-color,.15s transform}
+.homePrimaryBtn:active{transform:scale(.99)}
+.homePrimaryBtn.primary{background:linear-gradient(135deg,#16a34a,#0d9488);border-color:transparent;color:#fff;box-shadow:0 8px 24px rgba(13,148,136,.28)}
+.homePrimaryBtn.primary .homeBtnSub{color:rgba(255,255,255,.88)}
+.homePrimaryBtn .homeBtnIcon{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:20px;flex:none;background:rgba(0,0,0,.18)}
+.homePrimaryBtn.primary .homeBtnIcon{background:rgba(255,255,255,.18)}
+.homePrimaryBtn .homeBtnTitle{display:block;font-weight:800;font-size:15px;margin-bottom:3px}
+.homePrimaryBtn .homeBtnSub{display:block;font-size:12px;color:var(--muted);line-height:1.35}
+.homeSection{margin-top:18px}
+.homeSectionHead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px}
+.homeSectionHead h2{margin:0;font-size:15px;font-weight:800;letter-spacing:-.01em}
+.homeSectionHead span{font-size:11px;color:var(--muted);font-weight:600}
+.homeGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (min-width:720px){.homeGrid.homeGrid3{grid-template-columns:repeat(3,1fr)}}
+.homeCard{display:flex;flex-direction:column;align-items:flex-start;gap:6px;min-height:112px;text-align:left;padding:14px;border-radius:16px;border:1px solid var(--line);background:var(--card);color:inherit;font:inherit;cursor:pointer;transition:.15s border-color}
+.homeCard:active{opacity:.95}
+.homeCard .emoji{font-size:22px;line-height:1}
+.homeCard strong{font-size:14px;font-weight:800;line-height:1.25}
+.homeCard span{font-size:12px;color:var(--muted);line-height:1.35}
+.homeCard.homeCardWide{grid-column:1/-1;min-height:0;flex-direction:row;align-items:center;gap:12px}
+.homeList{display:flex;flex-direction:column;gap:8px}
+.homeListBtn{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:inherit;font:inherit;cursor:pointer}
+.homeListBtn .homeListIcon{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:rgba(22,163,74,.12);flex:none;font-size:16px}
+.homeListBtn b{display:block;font-size:13px;font-weight:800}
+.homeListBtn small{display:block;font-size:11px;color:var(--muted);margin-top:2px}
+.homeListBtn .homeListChev{margin-left:auto;color:var(--muted);font-size:16px}
+.homeFooterNote{margin-top:20px;padding:12px 4px 4px;font-size:11px;line-height:1.45;color:var(--muted);opacity:.9}
+@media (max-width:420px){
+  .homeCard{min-height:104px;padding:12px}
+  .homePrimaryBtn{padding:12px}
+}
+
 .homeMenuCard{min-height:132px}
 .homeQuickRow{margin-top:0}
 .homeHow{margin-top:4px}
@@ -95,10 +136,10 @@ textarea{min-height:120px;resize:vertical}.row{display:grid;grid-template-column
 <header class="top"><div class="brand"><div class="logo">✓</div><div><strong>İŞİMİ ÇÖZ</strong><small>İşini Hallet · İzmir pilot</small></div></div><div class="headerTools"><div class="headerToolsRow"><button type="button" class="iconBtn" id="themeToggleBtn" onclick="toggleAppTheme()" aria-label="Tema">🌙 Koyu</button><button type="button" class="iconBtn" id="shareSiteBtn" onclick="shareAppSite()" aria-label="Paylaş">↗ Paylaş</button></div><div id="authArea" class="headerAuthRow" aria-live="polite"></div></div></header>
 <main id="app"></main></div>
 <nav class="bottom"><div class="bottomInner">
-<button class="navBtn" id="navHome" onclick="showHome()"><b>⌂</b>ANA</button>
-<button class="navBtn" id="navRequest" onclick="showRequest()"><b>＋</b>TALEP</button>
-<button class="navBtn" id="navRequests" onclick="showRequests()"><b>▣</b>TALEPLER</button>
-<button class="navBtn" id="navProvider" onclick="showProviderEntry()"><b>🛠️</b>HİZMET VER</button>
+<button class="navBtn" id="navHome" onclick="showHome()"><b>⌂</b>Ana</button>
+<button class="navBtn" id="navRequest" onclick="showRequest()"><b>＋</b>Usta</button>
+<button class="navBtn" id="navRequests" onclick="showRequests()"><b>▣</b>Talepler</button>
+<button class="navBtn" id="navProvider" onclick="showListingsHub()"><b>🏪</b>İlanlar</button>
 </div></nav>
 
 <script>
@@ -442,77 +483,65 @@ function providerMatchesRequest(p,r){
 
 function showHome(){
   setNav("navHome");
-  app(`<section class="hero homeHero">
-    <span class="badge">🇹🇷 Türkiye · İzmir pilot</span>
-    <h1>İşini Hallet</h1>
-    <p class="muted">Resmî işlem hazırlığı, belge takibi ve yerel hizmet talepleri tek yerde. Başvuruyu sen kurumda tamamlarsın; biz adımları netleştiririz.</p>
-    <div class="splitActions">
-      <button id="openHalletButton" class="btn primary hallet-launch" type="button">İşini Hallet menüsü</button>
-      <button class="btn secondary" type="button" onclick="openHalletAction('showCases')">📁 İşlem dosyalarım</button>
+  const session=(typeof getAuthSession==='function'?getAuthSession():null);
+  const logged=!!(session&&session.user);
+  const accountBtn=logged
+    ?`<button class="homeListBtn" type="button" onclick="location.href='./marketplace-profile.html'"><span class="homeListIcon">👤</span><span><b>Profilim</b><small>Satıcı profili ve hesap</small></span><span class="homeListChev">›</span></button>`
+    :`<button class="homeListBtn" type="button" onclick="openAuthModal('login')"><span class="homeListIcon">👤</span><span><b>Giriş / Kayıt</b><small>Taleplerini ve ilanlarını yönet</small></span><span class="homeListChev">›</span></button>`;
+
+  app(`<div class="homeShell">
+  <section class="homeHeroV2">
+    <div class="homeEyebrow">🇹🇷 İzmir pilot</div>
+    <h1>Ne yapmak istiyorsun?</h1>
+    <p class="homeLead">Resmî işlem hazırlığı, yerel usta talebi veya alım-satım ilanı — hepsi tek yerden, net adımlarla.</p>
+    <div class="homePrimaryRow">
+      <button id="openHalletButton" class="homePrimaryBtn primary" type="button" onclick="openHallet()">
+        <span class="homeBtnIcon" aria-hidden="true">🏛️</span>
+        <span><span class="homeBtnTitle">İşini Hallet</span><span class="homeBtnSub">Tapu, evrak, kurum başvurusu — adım adım hazırlık</span></span>
+      </button>
+      <button class="homePrimaryBtn" type="button" onclick="showListingsHub()">
+        <span class="homeBtnIcon" aria-hidden="true">🏪</span>
+        <span><span class="homeBtnTitle">İlanlara göz at</span><span class="homeBtnSub">Gayrimenkul, otomobil ve hizmet ilanları</span></span>
+      </button>
     </div>
   </section>
 
-  <div class="section">
-    <div class="sectionTitle"><h2>Ne yapmak istiyorsun?</h2><span class="small muted">Mobil uyumlu menü</span></div>
-    <div class="actionGrid homeMenuGrid">
-      <button class="actionCard homeMenuCard" type="button" onclick="openHallet()">
-        <div class="emoji">🏛️</div>
-        <strong>İşini Hallet</strong>
-        <span>Hazırlık, belge, kurum rehberi ve işlem adımları</span>
-      </button>
-      <button class="actionCard homeMenuCard" type="button" onclick="showRequest()">
+  <div class="homeSection">
+    <div class="homeSectionHead"><h2>Hizmet</h2><span>Yerel usta &amp; talep</span></div>
+    <div class="homeGrid">
+      <button class="homeCard" type="button" onclick="showRequest()">
         <div class="emoji">🛠️</div>
-        <strong>Hizmet Bul / Talep Oluştur</strong>
-        <span>Klima, elektrik, tesisat — ihtiyacını anlat, teklif al</span>
+        <strong>Usta bul</strong>
+        <span>İhtiyacını yaz, teklif al</span>
       </button>
-      <button class="actionCard homeMenuCard" type="button" onclick="showRequests()">
-        <div class="emoji">📋</div>
-        <strong>Taleplerim</strong>
-        <span>Oluşturduğun talepleri ve gelen teklifleri gör</span>
-      </button>
-      <button class="actionCard homeMenuCard" type="button" onclick="showProviderEntry()">
+      <button class="homeCard" type="button" onclick="showProviderEntry()">
         <div class="emoji">🔧</div>
-        <strong>Hizmet Ver</strong>
-        <span>Kayıtlı sağlayıcı paneli — teklif ver, işi tamamla</span>
-      </button>
-      <button class="actionCard homeMenuCard" type="button" onclick="showListingsHub()">
-        <div class="emoji">🏪</div>
-        <strong>Marketplace 2.0</strong>
-        <span>Gayrimenkul, otomobil ve hizmet ilanları</span>
-      </button>
-      <button class="actionCard homeMenuCard" type="button" onclick="openHalletAction('showCases')">
-        <div class="emoji">📁</div>
-        <strong>İşlem Dosyalarım</strong>
-        <span>Kaydet, devam et, belge yükle, tamamla</span>
-      </button>
-      <button class="actionCard homeMenuCard" type="button" onclick="openAuthModal('login')">
-        <div class="emoji">👤</div>
-        <strong>Profil / Hesap</strong>
-        <span>Giriş yap veya hesabını yönet</span>
+        <strong>Hizmet ver</strong>
+        <span>Teklif ver, işi tamamla</span>
       </button>
     </div>
   </div>
 
-  <div class="section">
-    <div class="sectionTitle"><h2>Hızlı kısayollar</h2><span class="small muted">İşini Hallet</span></div>
-    <div class="trustRow homeQuickRow">
-      <button type="button" class="trustItem" style="cursor:pointer;text-align:left;width:100%;font:inherit" onclick="openHalletAction('showIslemMenu')"><b>Bir işlem yap</b>Taşınmaz ve işlem dosyası</button>
-      <button type="button" class="trustItem" style="cursor:pointer;text-align:left;width:100%;font:inherit" onclick="openHalletAction('showEvrak')"><b>Evrak hazırla</b>Konut satış bilgi formu</button>
-      <button type="button" class="trustItem" style="cursor:pointer;text-align:left;width:100%;font:inherit" onclick="openHalletAction('showKurum')"><b>Kuruma başvur</b>NVİ adres / kimlik randevu</button>
-      <button type="button" class="trustItem" style="cursor:pointer;text-align:left;width:100%;font:inherit" onclick="showRequest()"><b>Usta bul</b>İzmir’de hizmet talebi</button>
+  <div class="homeSection">
+    <div class="homeSectionHead"><h2>İşlerim</h2><span>Takip</span></div>
+    <div class="homeList">
+      <button class="homeListBtn" type="button" onclick="openHalletAction('showCases')"><span class="homeListIcon">📁</span><span><b>İşlem dosyalarım</b><small>Hallet kayıtları, belgeler, adımlar</small></span><span class="homeListChev">›</span></button>
+      <button class="homeListBtn" type="button" onclick="showRequests()"><span class="homeListIcon">📋</span><span><b>Taleplerim</b><small>Oluşturduğun talepler ve gelen teklifler</small></span><span class="homeListChev">›</span></button>
+      ${accountBtn}
     </div>
   </div>
 
-  <div class="section homeHow">
-    <div class="sectionTitle"><h2>Nasıl çalışır?</h2></div>
-    <p class="muted small" style="margin:0 0 12px">1. İhtiyacını seç · 2. Belgeleri ve adımları hazırla · 3. Resmî kanala git veya hizmet talebi oluştur · 4. Dosyanda / taleplerinde takip et.</p>
-    <div class="splitActions">
-      <button class="btn secondary" type="button" onclick="showProviderEntry()">Hizmet ver olarak katıl</button>
-      <button class="btn secondary" type="button" onclick="showRequests()">Taleplerim</button>
+  <div class="homeSection">
+    <div class="homeSectionHead"><h2>Hızlı işlem</h2><span>İşini Hallet</span></div>
+    <div class="homeList">
+      <button class="homeListBtn" type="button" onclick="openHalletAction('showIslemMenu')"><span class="homeListIcon">📝</span><span><b>Yeni işlem başlat</b><small>Konut, kurum, araç ve diğerleri</small></span><span class="homeListChev">›</span></button>
+      <button class="homeListBtn" type="button" onclick="openHalletAction('showEvrak')"><span class="homeListIcon">📄</span><span><b>Evrak hazırla</b><small>Konut satış bilgi formu</small></span><span class="homeListChev">›</span></button>
+      <button class="homeListBtn" type="button" onclick="openHalletAction('showKurum')"><span class="homeListIcon">🏢</span><span><b>Kuruma başvur</b><small>NVİ adres / kimlik randevu</small></span><span class="homeListChev">›</span></button>
     </div>
   </div>
 
-  <div class="homeFooterNote">İşimi Çöz / İşini Hallet resmî kurum değildir; başvuru sonucu garantisi vermez. Resmî işlemler ilgili kurumun kendi sisteminde tamamlanır. Kişisel verilerini yalnızca ihtiyacın kadar paylaş.</div>`);
+  <div class="homeFooterNote">İşimi Çöz resmî bir kurum değildir; başvuru sonucu garantisi vermez. Resmî işlemler ilgili kurumun kendi sisteminde tamamlanır.</div>
+</div>`);
 }
 
 
