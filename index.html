@@ -6,20 +6,55 @@
 <meta name="theme-color" content="#07111f">
 <title>İşimi Çöz — İzmir</title>
 <style>
-*{box-sizing:border-box}html,body{margin:0;padding:0;background:#07111f;color:#eef4fb;font-family:Arial,Helvetica,sans-serif}
+*{box-sizing:border-box}html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased}
 body{min-height:100vh}button,input,select,textarea{font:inherit}button{cursor:pointer}a{text-decoration:none;color:inherit}
-:root{--bg:#07111f;--card:#0d1a2b;--card2:#102238;--line:#20344d;--text:#eef4fb;--muted:#9eb0c5;--primary:#19c37d;--danger:#ef5350;--warning:#f5b942}
-html[data-theme="light"]{--bg:#f4f7fb;--card:#ffffff;--card2:#eef3f8;--line:#d5dee8;--text:#122033;--muted:#5a6b7d;--primary:#0f9f63;--danger:#d32f2f;--warning:#c48a00}
+:root{
+  --bg:#070f1a;
+  --card:#0c1828;
+  --card2:#122338;
+  --line:#243b55;
+  --text:#f1f5f9;
+  --muted:#94a8bd;
+  --primary:#14b87a;
+  --primary-2:#0d9488;
+  --accent:#38bdf8;
+  --danger:#f87171;
+  --warning:#fbbf24;
+  --logo-ink:#042f2e;
+  --top-bg:rgba(7,15,26,.92);
+  --shadow:0 10px 30px rgba(0,0,0,.28);
+}
+html[data-theme="light"]{
+  --bg:#f3f6f9;
+  --card:#ffffff;
+  --card2:#eef3f7;
+  --line:#d0dbe6;
+  --text:#0f1c2a;
+  --muted:#5b6d7f;
+  --primary:#0d9f68;
+  --primary-2:#0f766e;
+  --accent:#0284c7;
+  --danger:#dc2626;
+  --warning:#d97706;
+  --logo-ink:#042f2e;
+  --top-bg:rgba(255,255,255,.94);
+  --shadow:0 10px 28px rgba(15,28,42,.08);
+}
 html[data-theme="light"] body{background:var(--bg);color:var(--text)}
-html[data-theme="light"] .top{background:rgba(255,255,255,.96)}
+html[data-theme="light"] .top{background:var(--top-bg);backdrop-filter:blur(12px)}
 html[data-theme="light"] .hero{background:linear-gradient(145deg,#e8f5ef,#f4f7fb);border-color:var(--line)}
 html[data-theme="light"] .card,html[data-theme="light"] .actionCard,html[data-theme="light"] .trustItem{background:var(--card);color:var(--text)}
 .headerTools{display:flex;flex-direction:column;align-items:flex-end;justify-content:flex-start;gap:6px;margin-left:auto;margin-top:0;flex-shrink:0}.headerToolsRow,.headerAuthRow{display:flex;align-items:center;gap:5px;justify-content:flex-end;position:static!important;bottom:auto!important;right:auto!important}
 .iconBtn{border:1px solid var(--line);background:var(--card2);color:var(--text);border-radius:11px;padding:8px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;line-height:1.1;min-height:36px;display:inline-flex;align-items:center;gap:4px}
 .iconBtn:hover{border-color:rgba(25,195,125,.45)}
 @media(max-width:420px){.brand small{display:none}.iconBtn{padding:7px 8px;font-size:11px}.authUser{max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block}}
-.app{max-width:880px;margin:auto;min-height:100vh;padding-bottom:90px}.top{display:flex;align-items:flex-start;gap:8px;padding:10px 12px 12px;border-bottom:1px solid var(--line);background:rgba(7,17,31,.97);position:sticky;top:0;z-index:20}
-.brand{display:flex;align-items:center;gap:10px}.logo{width:40px;height:40px;border-radius:13px;background:linear-gradient(135deg,var(--primary),#36a3ff);display:grid;place-items:center;font-size:21px;font-weight:900;color:#03120d}
+.app{max-width:880px;margin:auto;min-height:100vh;padding-bottom:90px}.top{display:flex;align-items:flex-start;gap:8px;padding:10px 12px 12px;border-bottom:1px solid var(--line);background:var(--top-bg);backdrop-filter:blur(14px);position:sticky;top:0;z-index:20}
+.brand{display:flex;align-items:center;gap:10px}.logo{width:42px;height:42px;border-radius:14px;background:linear-gradient(145deg,var(--primary),var(--primary-2) 55%,var(--accent));display:grid;place-items:center;flex:none;box-shadow:0 6px 16px rgba(20,184,122,.28),inset 0 1px 0 rgba(255,255,255,.25);overflow:hidden}
+.logo svg{width:26px;height:26px;display:block}
+.brand{display:flex;align-items:center;gap:11px;min-width:0}
+.brand .brandText{min-width:0}
+.brand strong{font-size:17px;font-weight:900;letter-spacing:-.03em;line-height:1.1;color:var(--text)}
+.brand small{display:block;color:var(--muted);font-size:11px;margin-top:3px;font-weight:600;letter-spacing:.01em}
 .brand strong{font-size:18px}.brand small{display:block;color:var(--muted);font-size:11px;margin-top:2px}main{padding:16px}
 .hero{background:linear-gradient(145deg,#10243a,#0b1727);border:1px solid var(--line);border-radius:24px;padding:24px 20px;margin-bottom:16px}
 .badge{display:inline-flex;align-items:center;gap:6px;padding:7px 10px;border-radius:99px;background:rgba(25,195,125,.12);border:1px solid rgba(25,195,125,.28);color:#6df0b5;font-size:12px;font-weight:700}
@@ -84,8 +119,8 @@ textarea{min-height:120px;resize:vertical}.row{display:grid;grid-template-column
 #app:has(.homeShell) .a3517Mine{display:none!important}
 
 .homeShell{padding:0 0 8px}
-.homeHeroV2{padding:18px 16px 16px;border-radius:22px;border:1px solid var(--line);background:linear-gradient(160deg,rgba(22,163,74,.14),rgba(15,23,42,.55) 42%,rgba(7,17,31,.9));margin:12px 0 8px}
-html[data-theme="light"] .homeHeroV2{background:linear-gradient(160deg,#e8f8ef,#f7fafc)}
+.homeHeroV2{padding:18px 16px 16px;border-radius:22px;border:1px solid var(--line);background:linear-gradient(160deg,rgba(20,184,122,.16),rgba(12,24,40,.72) 48%,var(--card));margin:12px 0 8px;box-shadow:var(--shadow)}
+html[data-theme="light"] .homeHeroV2{background:linear-gradient(160deg,#e7f7ef,#ffffff 55%,#f3f7fa);box-shadow:var(--shadow)}
 .homeHeroV2 .homeEyebrow{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
 .homeHeroV2 h1{margin:0 0 8px;font-size:clamp(22px,5.5vw,30px);line-height:1.15;letter-spacing:-.02em}
 .homeHeroV2 .homeLead{margin:0 0 14px;color:var(--muted);font-size:14px;line-height:1.45;max-width:36em}
@@ -93,7 +128,7 @@ html[data-theme="light"] .homeHeroV2{background:linear-gradient(160deg,#e8f8ef,#
 @media (min-width:560px){.homePrimaryRow{grid-template-columns:1fr 1fr}}
 .homePrimaryBtn{display:flex;align-items:flex-start;gap:12px;width:100%;text-align:left;padding:14px 14px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:inherit;font:inherit;cursor:pointer;min-height:72px;transition:.15s border-color,.15s transform}
 .homePrimaryBtn:active{transform:scale(.99)}
-.homePrimaryBtn.primary{background:linear-gradient(135deg,#16a34a,#0d9488);border-color:transparent;color:#fff;box-shadow:0 8px 24px rgba(13,148,136,.28)}
+.homePrimaryBtn.primary{background:linear-gradient(135deg,var(--primary),var(--primary-2));border-color:transparent;color:#fff;box-shadow:0 8px 24px rgba(20,184,122,.28)}
 .homePrimaryBtn.primary .homeBtnSub{color:rgba(255,255,255,.88)}
 .homePrimaryBtn .homeBtnIcon{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;font-size:20px;flex:none;background:rgba(0,0,0,.18)}
 .homePrimaryBtn.primary .homeBtnIcon{background:rgba(255,255,255,.18)}
@@ -139,7 +174,7 @@ html[data-theme="light"] .homeHeroV2{background:linear-gradient(160deg,#e8f8ef,#
 <body>
 <div id="connectionStatus" class="connection offline" title="Supabase">SB…</div>
 <div class="app">
-<header class="top"><div class="brand"><div class="logo">✓</div><div><strong>İŞİMİ ÇÖZ</strong><small>İşini Hallet · İzmir pilot</small></div></div><div class="headerTools"><div class="headerToolsRow"><button type="button" class="iconBtn" id="themeToggleBtn" onclick="toggleAppTheme()" aria-label="Tema">🌙 Koyu</button><button type="button" class="iconBtn" id="shareSiteBtn" onclick="shareAppSite()" aria-label="Paylaş">↗ Paylaş</button></div><div id="authArea" class="headerAuthRow" aria-live="polite"></div></div></header>
+<header class="top"><div class="brand"><div class="logo" role="img" aria-label="İşimi Çöz"><svg class="logoMark" viewBox="0 0 32 32" aria-hidden="true" focusable="false"><rect width="32" height="32" rx="9" fill="url(#icGrad)"></rect><defs><linearGradient id="icGrad" x1="4" y1="2" x2="28" y2="30" gradientUnits="userSpaceOnUse"><stop stop-color="#34d399"/><stop offset=".55" stop-color="#14b8a6"/><stop offset="1" stop-color="#38bdf8"/></linearGradient></defs><path d="M9.2 16.6l4.1 4.2 9.5-10.2" fill="none" stroke="#042f2e" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><div class="brandText"><strong>İşimi Çöz</strong><small>İşini Hallet · İzmir pilot</small></div></div><div class="headerTools"><div class="headerToolsRow"><button type="button" class="iconBtn" id="themeToggleBtn" onclick="toggleAppTheme()" aria-label="Tema">🌙 Koyu</button><button type="button" class="iconBtn" id="shareSiteBtn" onclick="shareAppSite()" aria-label="Paylaş">↗ Paylaş</button></div><div id="authArea" class="headerAuthRow" aria-live="polite"></div></div></header>
 <main id="app"></main></div>
 <nav class="bottom"><div class="bottomInner">
 <button class="navBtn" id="navHome" onclick="showHome()"><b>⌂</b>Ana</button>
