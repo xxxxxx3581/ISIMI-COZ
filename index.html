@@ -14,11 +14,11 @@ html[data-theme="light"] body{background:var(--bg);color:var(--text)}
 html[data-theme="light"] .top{background:rgba(255,255,255,.96)}
 html[data-theme="light"] .hero{background:linear-gradient(145deg,#e8f5ef,#f4f7fb);border-color:var(--line)}
 html[data-theme="light"] .card,html[data-theme="light"] .actionCard,html[data-theme="light"] .trustItem{background:var(--card);color:var(--text)}
-.headerTools{display:flex;flex-direction:column;align-items:flex-end;gap:5px;margin-left:auto;margin-top:0;flex-wrap:nowrap;justify-content:flex-start;max-width:100%}.headerToolsRow,.headerAuthRow{display:flex;align-items:center;gap:5px;justify-content:flex-end}
+.headerTools{display:flex;flex-direction:column;align-items:flex-end;justify-content:flex-start;gap:6px;margin-left:auto;margin-top:0;flex-shrink:0}.headerToolsRow,.headerAuthRow{display:flex;align-items:center;gap:5px;justify-content:flex-end;position:static!important;bottom:auto!important;right:auto!important}
 .iconBtn{border:1px solid var(--line);background:var(--card2);color:var(--text);border-radius:11px;padding:8px 10px;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;line-height:1.1;min-height:36px;display:inline-flex;align-items:center;gap:4px}
 .iconBtn:hover{border-color:rgba(25,195,125,.45)}
 @media(max-width:420px){.brand small{display:none}.iconBtn{padding:7px 8px;font-size:11px}.authUser{max-width:90px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block}}
-.app{max-width:880px;margin:auto;min-height:100vh;padding-bottom:90px}.top{display:flex;align-items:flex-start;gap:8px;padding:8px 12px 10px;border-bottom:1px solid var(--line);background:rgba(7,17,31,.97);position:sticky;top:0;z-index:20}
+.app{max-width:880px;margin:auto;min-height:100vh;padding-bottom:90px}.top{display:flex;align-items:flex-start;gap:8px;padding:10px 12px 12px;border-bottom:1px solid var(--line);background:rgba(7,17,31,.97);position:sticky;top:0;z-index:20}
 .brand{display:flex;align-items:center;gap:10px}.logo{width:40px;height:40px;border-radius:13px;background:linear-gradient(135deg,var(--primary),#36a3ff);display:grid;place-items:center;font-size:21px;font-weight:900;color:#03120d}
 .brand strong{font-size:18px}.brand small{display:block;color:var(--muted);font-size:11px;margin-top:2px}main{padding:16px}
 .hero{background:linear-gradient(145deg,#10243a,#0b1727);border:1px solid var(--line);border-radius:24px;padding:24px 20px;margin-bottom:16px}
