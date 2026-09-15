@@ -4419,5 +4419,15 @@ window.Hallet={showGate:gate,showIslemMenu:islem,showTasinmazMenu:tasinmaz,showK
 /* Hallet başlatıcısı — ana sayfaya dokunmadan çalışır. */
 document.addEventListener('click',function(e){const b=e.target.closest&&e.target.closest('#openHalletButton');if(!b)return;e.preventDefault();e.stopPropagation();if(window.Hallet)window.Hallet.showGate();},true);
 </script>
+<!-- A3.5_PROFILE_CARD_V1 -->
+<script>
+/* A3.5 seller profile card */
+(()=>{if(window.__A35_PROFILE_CARD__)return;window.__A35_PROFILE_CARD__=1;
+const E=v=>typeof esc==="function"?esc(v):String(v??"").replace(/[&<>'"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[c]));
+async function P(id){if(!id)return null;try{let r=await supabaseRequest("GET","marketplace_profiles?select=display_name,bio,avatar_url,seller_type,city,district,is_public&user_id=eq."+encodeURIComponent(id)+"&limit=1");return r?.[0]||null}catch(e){console.warn("A3.5 profile:",e);return null}}
+async function A(id){try{let r=await supabaseRequest("GET","listings?select=id,owner_id&status=eq.published&id=eq."+encodeURIComponent(id)+"&limit=1"),l=r?.[0];if(!l?.owner_id||document.querySelector(".a35SellerCard"))return;let p=await P(l.owner_id);if(!p)return;let n=E(p.display_name||"İlan sahibi"),t=p.seller_type==="professional"?"Profesyonel satıcı":"Bireysel satıcı",loc=[p.district,p.city].filter(Boolean).map(E).join(" · "),av=p.avatar_url?`<img src="${E(p.avatar_url)}" alt="${n}" style="width:52px;height:52px;border-radius:50%;object-fit:cover">`:`<div class="avatar">${E((p.display_name||"İ").trim().charAt(0).toUpperCase())}</div>`,bio=p.bio?`<div class="small muted" style="margin-top:5px">${E(p.bio)}</div>`:"";document.getElementById("app")?.insertAdjacentHTML("beforeend",`<section class="section card a35SellerCard"><div style="display:flex;align-items:center;gap:13px">${av}<div style="min-width:0"><div class="small muted">İlan sahibi</div><strong>${n}</strong><div class="small muted" style="margin-top:4px"><span class="activeDot"></span>${t}</div>${loc?`<div class="small muted" style="margin-top:5px">📍 ${loc}</div>`:""}${bio}</div></div></section>`)}catch(e){console.warn("A3.5 card:",e)}}
+for(const k of ["showGayrimenkulDetail","showOtomobilDetail"]){const f=window[k];if(typeof f!=="function"||f.__a35)return;const w=async function(id){let x=await f.apply(this,arguments);setTimeout(()=>A(id),0);return x};w.__a35=1;window[k]=w}})();
+</script>
 </body>
+<script src="./a35-seller-identity.js"></script>
 </html>

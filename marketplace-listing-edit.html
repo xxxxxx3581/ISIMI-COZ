@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>İlan Düzenle — İşimi Çöz</title>
+<style>
+:root{--bg:#07111f;--card:#0d1a2b;--line:#20344d;--text:#eef4fb;--muted:#9eb0c5;--primary:#19c37d;--danger:#ef5350}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}.wrap{max-width:720px;margin:auto;padding:18px 14px 50px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;margin-top:12px}h1{font-size:23px;margin:0 0 6px}.muted{color:var(--muted)}.small{font-size:12px;line-height:1.45}label{display:block;font-size:13px;font-weight:700;margin:15px 0 7px}input,textarea,select{width:100%;background:#081523;color:var(--text);border:1px solid #29415d;border-radius:12px;padding:13px;outline:none;font:inherit}textarea{min-height:150px;resize:vertical}input:focus,textarea:focus,select:focus{border-color:var(--primary)}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:16px}.btn{border:1px solid var(--line);background:#14263b;color:var(--text);border-radius:12px;padding:12px 14px;font-weight:800}.btn.primary{background:var(--primary);color:#03130d;border-color:var(--primary)}.btn:disabled{opacity:.55;cursor:not-allowed}.error{background:#35181b;border:1px solid #70272d;color:#ffb6b8;padding:11px;border-radius:12px;margin-top:12px}.success{background:#0b2b20;border:1px solid #185d43;color:#8bf1c4;padding:11px;border-radius:12px;margin-top:12px}.hidden{display:none!important}@media(max-width:520px){.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body><div class="wrap">
+<div class="card"><div class="small muted">Marketplace 2.0 · A3.5.6b</div><h1>İlanı düzenle</h1><div id="sub" class="small muted">İlan yükleniyor...</div></div>
+<form id="form" class="card hidden">
+<label for="title">İlan başlığı</label><input id="title" maxlength="160" required>
+<label for="description">Açıklama</label><textarea id="description" maxlength="10000"></textarea>
+<div class="row"><div><label for="price">Fiyat</label><input id="price" inputmode="decimal" type="number" min="0" step="0.01"></div><div><label for="currency">Para birimi</label><select id="currency"><option value="TRY">TRY</option><option value="USD">USD</option><option value="EUR">EUR</option><option value="GBP">GBP</option></select></div></div>
+<div class="row"><div><label for="city">Şehir</label><input id="city" maxlength="100"></div><div><label for="district">İlçe</label><input id="district" maxlength="100"></div></div>
+<label for="category">Kategori</label><input id="category" maxlength="120">
+<div id="neighborhoodWrap" class="hidden"><label for="neighborhood">Mahalle</label><input id="neighborhood" maxlength="160"></div>
+<div class="small muted" style="margin-top:12px">Detayları açarak ilan türüne özel teknik bilgileri düzenleyebilirsin. Fotoğrafları ayrıca ekleyebilir, kapak yapabilir veya tek tek silebilirsin.</div>
+<div id="msg"></div><div class="actions"><button class="btn" type="button" id="back">← Geri</button><button class="btn primary" type="submit" id="save">Değişiklikleri kaydet</button></div>
+</form>
+<div id="fatal" class="card error hidden"></div>
+</div>
+<script src="./a35-listing-edit-plus.js"></script>
+<script>
+const URL='https://zvffspbowdzvrrzefhkr.supabase.co';
+const KEY='sb_publishable_L_qb9Q4fHktE51PEqEhTAg_O4R0eDiW';
+const S=()=>{try{return JSON.parse(localStorage.getItem('isimi_coz_auth_session')||'null')}catch(_){return null}};
+const token=()=>S()?.access_token||S()?.accessToken||null;
+const uid=()=>S()?.user?.id||S()?.user_id||null;
+const esc=v=>String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]||c));
+async function req(method,path,body){const t=token();if(!t)throw new Error('Oturum bulunamadı.');const o={method,headers:{apikey:KEY,Authorization:'Bearer '+t,Accept:'application/json','Content-Type':'application/json',Prefer:'return=representation'}};if(body!==undefined)o.body=JSON.stringify(body);const r=await fetch(URL+'/rest/v1/'+path,o);const text=await r.text();let data=null;try{data=text?JSON.parse(text):null}catch(_){data=text}if(!r.ok)throw new Error((data&&data.message)||('HTTP '+r.status));return data}
+const params=new URLSearchParams(location.search);const id=params.get('id');
+let current=null;
+function showFatal(msg){document.getElementById('fatal').classList.remove('hidden');document.getElementById('fatal').textContent=msg;document.getElementById('form').classList.add('hidden')}
+function back(){history.length>1?history.back():location.href='./index.html'}
+async function load(){if(!uid()){showFatal('İlanı düzenlemek için giriş yapmalısınız.');return}if(!id){showFatal('İlan kimliği bulunamadı.');return}try{const rows=await req('GET','listings?select=id,owner_id,listing_type,category,title,description,price,currency,city,district,status,metadata&id=eq.'+encodeURIComponent(id)+'&owner_id=eq.'+encodeURIComponent(uid())+'&limit=1');current=rows?.[0];if(!current)throw new Error('İlan bulunamadı veya bu ilan size ait değil.');document.getElementById('sub').textContent=(current.listing_type==='otomobil'?'Otomobil':current.listing_type==='gayrimenkul'?'Gayrimenkul':'İlan')+' · '+(current.status==='archived'?'Arşivde':'Yayında');for(const k of ['title','description','price','currency','city','district','category']){const el=document.getElementById(k);if(el)el.value=current[k]??''}const m=current.metadata||{};if(current.listing_type==='gayrimenkul' && (m.neighborhood||m.mahalle)){document.getElementById('neighborhoodWrap').classList.remove('hidden');document.getElementById('neighborhood').value=m.neighborhood||m.mahalle||''}document.getElementById('form').classList.remove('hidden')}catch(e){showFatal(e.message||'İlan yüklenemedi.')}}
+document.getElementById('back').onclick=back;
+load();
+</script></body></html>
