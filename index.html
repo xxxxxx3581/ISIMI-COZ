@@ -77,6 +77,12 @@ textarea{min-height:120px;resize:vertical}.row{display:grid;grid-template-column
 .homeHero h1{letter-spacing:-0.02em}
 .homeMenuGrid{grid-template-columns:1fr 1fr;gap:12px}
 /* ===== HOME V2 UX ===== */
+/* Home: hide injected marketplace widgets (Favorilerim/Mesajlarım/İlanlarım entry) */
+#app:has(.homeShell) .a3514Section,
+#app:has(.homeShell) [data-a3514-center],
+#app:has(.homeShell) .a355Entry,
+#app:has(.homeShell) .a3517Mine{display:none!important}
+
 .homeShell{padding:0 0 8px}
 .homeHeroV2{padding:18px 16px 16px;border-radius:22px;border:1px solid var(--line);background:linear-gradient(160deg,rgba(22,163,74,.14),rgba(15,23,42,.55) 42%,rgba(7,17,31,.9));margin:12px 0 8px}
 html[data-theme="light"] .homeHeroV2{background:linear-gradient(160deg,#e8f8ef,#f7fafc)}
@@ -483,12 +489,6 @@ function providerMatchesRequest(p,r){
 
 function showHome(){
   setNav("navHome");
-  const session=(typeof getAuthSession==='function'?getAuthSession():null);
-  const logged=!!(session&&session.user);
-  const accountBtn=logged
-    ?`<button class="homeListBtn" type="button" onclick="location.href='./marketplace-profile.html'"><span class="homeListIcon">👤</span><span><b>Profilim</b><small>Satıcı profili ve hesap</small></span><span class="homeListChev">›</span></button>`
-    :`<button class="homeListBtn" type="button" onclick="openAuthModal('login')"><span class="homeListIcon">👤</span><span><b>Giriş / Kayıt</b><small>Taleplerini ve ilanlarını yönet</small></span><span class="homeListChev">›</span></button>`;
-
   app(`<div class="homeShell">
   <section class="homeHeroV2">
     <div class="homeEyebrow">🇹🇷 İzmir pilot</div>
@@ -527,7 +527,6 @@ function showHome(){
     <div class="homeList">
       <button class="homeListBtn" type="button" onclick="openHalletAction('showCases')"><span class="homeListIcon">📁</span><span><b>İşlem dosyalarım</b><small>Hallet kayıtları, belgeler, adımlar</small></span><span class="homeListChev">›</span></button>
       <button class="homeListBtn" type="button" onclick="showRequests()"><span class="homeListIcon">📋</span><span><b>Taleplerim</b><small>Oluşturduğun talepler ve gelen teklifler</small></span><span class="homeListChev">›</span></button>
-      ${accountBtn}
     </div>
   </div>
 
