@@ -291,7 +291,7 @@ html[data-theme="light"] .homeHeroV2{background:linear-gradient(160deg,#e7f7ef,#
     if(document.querySelector('[data-a7-smart-modal]')) return;
     const modal=document.createElement('div'); modal.className='a7SmartModal'; modal.setAttribute('data-a7-smart-modal','1');
     modal.innerHTML=`<div class="a7SmartCard" role="dialog" aria-modal="true" aria-label="Akıllı talep oluşturma">
-      <div class="a7SmartHead"><h2>✨ Akıllı Talep Oluştur</h2><button type="button" class="a7Close" data-a7-close>×</button></div>
+      <div class="a7SmartHead"><h2><span class="a7SmartHeaderIcon" aria-hidden="true">✨</span><span>Akıllı Talep Oluştur</span></h2><button type="button" class="a7Close" data-a7-close>×</button></div>
       <div class="a7SmartHint">Sorunu nasıl biliyorsan öyle yaz. Teknik terim kullanmana gerek yok. Önce talebini anlaşılır bir taslağa dönüştürelim.</div>
       <label for="a7SmartText">Ne yapılmasını istiyorsun?</label>
       <textarea id="a7SmartText" class="a7SmartTextarea" maxlength="1200" placeholder="Örn: Mutfaktaki musluk damlatıyor, altından da biraz su geliyor. Mümkünse bu hafta içinde bakılsın."></textarea>
@@ -355,7 +355,7 @@ html[data-theme="light"] .homeHeroV2{background:linear-gradient(160deg,#e7f7ef,#
     if(!existing){
       existing=document.createElement('div');
       existing.className='a7SmartHeaderSlot';
-      existing.innerHTML='<button type="button" class="a7SmartHeaderBtn"><span class="a7SmartSpark">✨</span><span>Akıllı Talep Oluştur</span><span class="a7SmartSub">İhtiyacını anlat, talebin hazırlansın</span></button>';
+      existing.innerHTML='<button type="button" class="a7SmartHeaderBtn"><span class="a7SmartSpark">✨</span><span>Akıllı Talep Oluştur</span><span class="a7SmartSub"></span></button>';
       top.insertAdjacentElement('afterend',existing);
       existing.querySelector('button').addEventListener('click',function(){
         if(original && typeof original.click==='function') original.click();
