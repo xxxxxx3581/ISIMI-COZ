@@ -1,0 +1,51 @@
+name: A7 Smart Intake Header Layout Hardening
+on:
+  push:
+    branches:
+      - test/marketplace-a7
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: test/marketplace-a7
+          fetch-depth: 0
+      - name: Harden selector
+        shell: python
+        run: |
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          old="var nodes=document.querySelectorAll('button,a,[role=\"button\"],div');"
+          new="var nodes=document.querySelectorAll('button,a,[role=\"button\"]');"
+          if old not in s:
+              raise SystemExit('Expected selector not found')
+          s=s.replace(old,new,1)
+          old2="if(parent && (parent.classList.contains('actionCard') || parent.classList.contains('card') || parent.classList.contains('smart-intake-card') || parent.children.length===1)) hideTarget=parent;"
+          new2="if(parent && (parent.classList.contains('actionCard') || parent.classList.contains('card') || parent.classList.contains('smart-intake-card'))) hideTarget=parent;"
+          if old2 not in s:
+              raise SystemExit('Expected hide-target rule not found')
+          s=s.replace(old2,new2,1)
+          p.write_text(s,encoding='utf-8')
+      - name: Commit patch
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "A7: harden smart intake header selector"
+          git push origin test/marketplace-a7
+      - name: Remove temporary workflow
+        if: always()
+        shell: bash
+        run: |
+          git rm -f .github/workflows/a7-smart-intake-header-layout-hardening.yml || true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "Remove temporary A7 header hardening workflow"
+          git push origin test/marketplace-a7
