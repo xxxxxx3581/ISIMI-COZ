@@ -54,8 +54,21 @@
     if(!btn)return;
     const modal=btn.closest('[data-a7-smart-modal]');if(!modal)return;
     const ta=modal.querySelector('#a7SmartText');const text=(ta&&ta.value||'').trim();if(!text)return;
-    const t=norm(text);const isService=RULES.find(r=>r.key==='service')&&has(t,RULES.find(r=>r.key==='service').words);
-    if(isService){localStorage.setItem('a7_ai_last_text',text);localStorage.setItem('a7_ai_request_handoff_at',String(Date.now()));}
+    const t=norm(text);const serviceRule=RULES.find(r=>r.key==='service');const isService=!!serviceRule&&has(t,serviceRule.words);
+    if(isService){
+      localStorage.setItem('a7_ai_last_text',text);
+      localStorage.setItem('a7_ai_last_intent','service');
+      localStorage.setItem('a7_ai_request_handoff_at',String(Date.now()));
+      /* The old Smart Intake button was responsible for opening the existing request form.
+         V2 now calls that same existing entry point explicitly, so the AI button cannot get
+         stuck waiting for a handler that may have been replaced by another UI layer. */
+      if(typeof window.showRequest==='function'){
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        if(modal.parentNode)modal.remove();
+        window.showRequest();
+      }
+    }
   },true);
   loadRequestHandoffHelper();
   setTimeout(loadRequestHandoffHelper,500);
