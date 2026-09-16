@@ -322,7 +322,61 @@ html[data-theme="light"] .homeHeroV2{background:linear-gradient(160deg,#e7f7ef,#
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
   const mo=new MutationObserver(()=>mount()); mo.observe(document.documentElement,{childList:true,subtree:true});
 })();
-</script></head>
+</script><style>
+/* A7 SMART INTAKE HEADER LAYOUT */
+.a7SmartHeaderSlot{display:none;padding:0 12px 7px;background:var(--top-bg);border-bottom:1px solid var(--line)}
+.a7SmartHeaderSlot.isVisible{display:block}
+.a7SmartHeaderBtn{display:flex;align-items:center;justify-content:flex-start;gap:8px;width:min(100%,420px);min-height:40px;padding:9px 13px;border:1px solid rgba(25,195,125,.34);border-radius:12px;background:linear-gradient(145deg,rgba(20,184,122,.13),rgba(13,148,136,.10));color:var(--text);font-size:12px;font-weight:850;line-height:1.2;box-shadow:0 4px 14px rgba(0,0,0,.12);transition:.15s transform,.15s border-color,.15s background}
+.a7SmartHeaderBtn:hover{border-color:rgba(25,195,125,.55);background:linear-gradient(145deg,rgba(20,184,122,.18),rgba(13,148,136,.14))}
+.a7SmartHeaderBtn:active{transform:scale(.99)}
+.a7SmartHeaderBtn .a7SmartSpark{font-size:16px;line-height:1}
+.a7SmartHeaderBtn .a7SmartSub{color:var(--muted);font-size:10px;font-weight:650;margin-left:2px}
+.a7SmartOriginalHidden{display:none!important}
+@media(max-width:430px){.a7SmartHeaderSlot{padding-left:12px;padding-right:12px;padding-bottom:6px}.a7SmartHeaderBtn{width:100%;min-height:38px;padding:8px 11px}.a7SmartHeaderBtn .a7SmartSub{font-size:9px}}
+</style>
+<script>
+(function(){
+  function setupA7SmartHeader(){
+    var top=document.querySelector('.top');
+    if(!top) return;
+    var original=null;
+    var nodes=document.querySelectorAll('button,a,[role="button"],div');
+    for(var i=0;i<nodes.length;i++){
+      var el=nodes[i];
+      var txt=(el.textContent||'').replace(/\\s+/g,' ').trim();
+      if(txt.indexOf('Akıllı Talep Oluştur')!==-1 && el.closest('.a7SmartHeaderSlot')===null){
+        original=el;
+        break;
+      }
+    }
+    if(!original) return;
+
+    var existing=document.querySelector('.a7SmartHeaderSlot');
+    if(!existing){
+      existing=document.createElement('div');
+      existing.className='a7SmartHeaderSlot';
+      existing.innerHTML='<button type="button" class="a7SmartHeaderBtn"><span class="a7SmartSpark">✨</span><span>Akıllı Talep Oluştur</span><span class="a7SmartSub">İhtiyacını anlat, talebin hazırlansın</span></button>';
+      top.insertAdjacentElement('afterend',existing);
+      existing.querySelector('button').addEventListener('click',function(){
+        if(original && typeof original.click==='function') original.click();
+      });
+    }
+
+    existing.classList.add('isVisible');
+    var hideTarget=original;
+    var parent=original.parentElement;
+    if(parent && (parent.classList.contains('actionCard') || parent.classList.contains('card') || parent.classList.contains('smart-intake-card') || parent.children.length===1)) hideTarget=parent;
+    hideTarget.classList.add('a7SmartOriginalHidden');
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',setupA7SmartHeader);
+  else setupA7SmartHeader();
+  var observer=new MutationObserver(function(){setupA7SmartHeader();});
+  observer.observe(document.documentElement,{childList:true,subtree:true});
+  setTimeout(function(){try{observer.disconnect();}catch(e){}},5000);
+})();
+</script>
+</head>
 <body>
 <div id="connectionStatus" class="connection offline" title="Supabase">SB…</div>
 <div class="app">
