@@ -231,6 +231,15 @@ html[data-theme="light"] .homeHeroV2{background:linear-gradient(160deg,#e7f7ef,#
 }
 
 .homeBrandMark{display:none!important}
+
+/* Service review stars (customer → provider) */
+.svcReviewCard{margin-top:12px;padding:14px;border-radius:16px;border:1px solid var(--line);background:var(--card)}
+.svcStars{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
+.svcStarBtn{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--card2,#102238);font-size:22px;cursor:pointer;line-height:1}
+.svcStarBtn.on{border-color:var(--warning,#f5b942);background:rgba(245,185,66,.15)}
+.svcReviewCard textarea{width:100%;min-height:72px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--text);padding:10px;font:inherit;resize:vertical}
+.svcRatingBadge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--warning,#f5b942)}
+
 </style>
 </head>
 <body>
@@ -2395,6 +2404,99 @@ async function acceptRequest(talepNo){
     else showProviderRequestDetail(talepNo);
   }catch(e){alert('Talep kabul edilemedi.\n\n'+(e.message||e));}
 }
+
+/* === Service reviews V1 — uses existing public.reviews === */
+async function fetchServiceReviewForRequest(requestId){
+  if(!requestId)return null;
+  try{
+    const rows=await supabaseRequest('GET','reviews?select=id,rating,comment,provider_id,created_at&request_id=eq.'+encodeURIComponent(String(requestId))+'&limit=1');
+    return rows&&rows[0]?rows[0]:null;
+  }catch(e){console.warn('reviews read:',e);return null}
+}
+async function fetchProviderReviewStats(providerId){
+  if(!providerId)return {avg:null,count:0};
+  try{
+    const rows=await supabaseRequest('GET','reviews?select=rating&provider_id=eq.'+encodeURIComponent(String(providerId))+'&limit=500');
+    if(!rows||!rows.length)return {avg:null,count:0};
+    let sum=0;rows.forEach(function(x){sum+=Number(x.rating)||0});
+    const avg=Math.round((sum/rows.length)*10)/10;
+    return {avg:avg,count:rows.length};
+  }catch(e){console.warn('provider review stats:',e);return {avg:null,count:0}}
+}
+function starsLabel(avg,count){
+  if(avg==null||!count)return '';
+  return '★ '+avg+' ('+count+')';
+}
+window.__svcReviewStar=function(n){
+  window.__svcSelectedRating=n;
+  const box=document.getElementById('svcStars');
+  if(!box)return;
+  box.querySelectorAll('.svcStarBtn').forEach(function(b){
+    const v=Number(b.getAttribute('data-v'));
+    b.classList.toggle('on',v<=n);
+    b.setAttribute('aria-pressed',v<=n?'true':'false');
+  });
+};
+async function submitServiceReview(talepNo){
+  try{
+    const session=typeof getAuthSession==='function'?getAuthSession():null;
+    if(!session||!session.access_token||!session.user||!session.user.id){
+      alert('Değerlendirme için giriş yapmalısınız.');return;
+    }
+    const rating=Number(window.__svcSelectedRating||0);
+    if(rating<1||rating>5){alert('Lütfen 1–5 arası yıldız seçin.');return;}
+    const commentEl=document.getElementById('svcReviewComment');
+    const comment=(commentEl&&commentEl.value?String(commentEl.value).trim():'').slice(0,400);
+    const r=await findRequestByNo(talepNo);
+    if(!r||!r.id){alert('Talep bulunamadı.');return;}
+    const st=String(r.status||r.durum||'').toLowerCase();
+    if(st.indexOf('tamam')<0&&st!=='completed'){alert('Yalnızca tamamlanan işler değerlendirilebilir.');return;}
+    // accepted offer → provider_id
+    let providerId=null,offerId=null;
+    try{
+      const offs=await loadOffersForRequest(String(r.talep_no||r.id||talepNo));
+      const acc=(offs||[]).find(function(o){return String(o.status||'').toLowerCase()==='accepted';})||(offs||[])[0];
+      if(acc){providerId=acc.provider_id||null;offerId=acc.id||null;}
+    }catch(e){}
+    if(!providerId){alert('Değerlendirilecek usta/teklif bulunamadı.');return;}
+    const existing=await fetchServiceReviewForRequest(r.id);
+    if(existing){alert('Bu iş için zaten değerlendirme yapılmış.');await showRequestDetail(talepNo);return;}
+    const body={
+      request_id:r.id,
+      provider_id:providerId,
+      customer_id:session.user.id,
+      rating:rating,
+      comment:comment||null
+    };
+    await supabaseWrite('POST','reviews',body,{requireAuth:true});
+    alert('Teşekkürler! Değerlendirmen kaydedildi.');
+    await showRequestDetail(talepNo);
+  }catch(e){
+    console.error(e);
+    alert('Değerlendirme kaydedilemedi.\n\n'+(e.message||e)+'\n\nMevcut reviews tablosuna yazılamadı. Oturum ve RLS izinlerini kontrol edin.');
+  }
+}
+async function renderCustomerReviewBlock(r,talepNo,jobBox,inlineSlot){
+  try{
+    const existing=await fetchServiceReviewForRequest(r.id);
+    let html='';
+    if(existing){
+      const stars='★'.repeat(Number(existing.rating)||0)+'☆'.repeat(Math.max(0,5-(Number(existing.rating)||0)));
+      html='<div class="svcReviewCard"><div class="notice">✅ İş tamamlandı</div><div style="margin-top:8px"><strong>Değerlendirmen</strong></div><div class="svcRatingBadge" style="margin-top:6px">'+stars+' · '+escapeHTML(String(existing.rating))+'/5</div>'+(existing.comment?'<div class="small muted" style="margin-top:8px">'+escapeHTML(existing.comment)+'</div>':'')+'</div>';
+    }else{
+      window.__svcSelectedRating=0;
+      const starBtns=[1,2,3,4,5].map(function(n){return '<button type="button" class="svcStarBtn" data-v="'+n+'" aria-label="'+n+' yıldız" aria-pressed="false" onclick="__svcReviewStar('+n+')">★</button>';}).join('');
+      html='<div class="svcReviewCard"><div class="notice">✅ İş tamamlandı</div><div style="margin-top:10px"><strong>Ustayı değerlendir</strong><div class="small muted">1–5 yıldız · yorum isteğe bağlı</div></div><div class="svcStars" id="svcStars">'+starBtns+'</div><textarea id="svcReviewComment" maxlength="400" placeholder="Kısa yorum (isteğe bağlı)"></textarea><button type="button" class="btn primary" style="width:100%;margin-top:10px" onclick="submitServiceReview('+JSON.stringify(String(talepNo))+')">Değerlendirmeyi gönder</button></div>';
+    }
+    if(jobBox)jobBox.innerHTML=html;
+    if(inlineSlot)inlineSlot.innerHTML=html;
+  }catch(e){
+    console.warn(e);
+    if(jobBox)jobBox.innerHTML='<div class="notice">✅ İş tamamlandı.</div>';
+    if(inlineSlot)inlineSlot.innerHTML='<div class="notice" style="margin-top:12px">✅ İş tamamlandı.</div>';
+  }
+}
+
 async function completeRequest(talepNo){
   try{
     const session=getAuthSession();
@@ -2544,16 +2646,25 @@ async function showRequestDetailData(r){
   const inlineSlot=document.getElementById('inlineCompleteSlot');
   let offers=[];
   try{offers=await loadOffersForRequest(no);}catch(e){console.warn(e);offers=[];}
+  try{
+    for(let i=0;i<(offers||[]).length;i++){
+      const pid=offers[i].provider_id;
+      if(!pid)continue;
+      const st=await fetchProviderReviewStats(pid);
+      offers[i]._ratingAvg=st.avg;offers[i]._ratingCount=st.count;
+    }
+  }catch(e){}
   const hasAcceptedOffer=(offers||[]).some(function(o){return String(o.status||'').toLowerCase()==='accepted';});
   const loc=readLocalJobState(r.id,no);
   if(hasAcceptedOffer||(loc&&(String(loc.status||'').toLowerCase().indexOf('devam')>=0||String(loc.status||'').toLowerCase()==='accepted')))isAccepted=true;
   if(loc&&(String(loc.status||'').toLowerCase().indexOf('tamam')>=0||String(loc.status||'')==='completed'))isCompleted=true;
   function renderCompleteUI(){
     if(isCompleted){
-      if(jobBox)jobBox.innerHTML='<div class="notice">✅ İş tamamlandı.</div>';
-      if(inlineSlot)inlineSlot.innerHTML='<div class="notice" style="margin-top:12px">✅ İş tamamlandı.</div>';
       const badge=document.getElementById('requestStatusBadge');
       if(badge)badge.textContent='Tamamlandı';
+      if(jobBox)jobBox.innerHTML='<div class="notice">✅ İş tamamlandı.</div>';
+      if(inlineSlot)inlineSlot.innerHTML='<div class="notice" style="margin-top:12px">✅ İş tamamlandı.</div>';
+      if(typeof renderCustomerReviewBlock==='function')renderCustomerReviewBlock(r,no,jobBox,inlineSlot);
       return;
     }
     if(isAccepted||r._forceComplete||hasAcceptedOffer){
@@ -2572,7 +2683,7 @@ async function showRequestDetailData(r){
   box.outerHTML=offers.map(function(o){
     const oid=o.id||'';
     const fiyat=o.fiyat||o.price||'';
-    const pname=o.provider_name||o.name||'Sağlayıcı';
+    const pname=o.provider_name||o.name||'Sağlayıcı';const ratingTxt=(o._ratingCount?starsLabel(o._ratingAvg,o._ratingCount):'');
     const pphone=o.provider_phone||o.phone||'';
     const odurum=o.durum||o.status||'Beklemede';
     const oStatus=String(o.status||'').toLowerCase();
@@ -2595,7 +2706,7 @@ async function showRequestDetailData(r){
       acts=`<div class="small muted" style="margin-top:8px">Teklif durumu: ${escapeHTML(String(odurum))}</div>`;
     }
     return `<article class="request">
-      <div class="requestTop"><div><h3>🛠️ ${escapeHTML(pname)}</h3><div class="small muted">${escapeHTML(o.created_at||'')}</div></div><span class="status">${escapeHTML(treatAccepted?'Kabul edildi':String(odurum))}</span></div>
+      <div class="requestTop"><div><h3>🛠️ ${escapeHTML(pname)}${ratingTxt?` <span class="svcRatingBadge">${escapeHTML(ratingTxt)}</span>`:''}</h3><div class="small muted">${escapeHTML(o.created_at||'')}</div></div><span class="status">${escapeHTML(treatAccepted?'Kabul edildi':String(odurum))}</span></div>
       <div class="description"><strong>${escapeHTML(String(fiyat))} TL</strong>${o.aciklama?` — ${escapeHTML(o.aciklama)}`:''}${o.available_time?`<div class="small muted" style="margin-top:4px">Ne zaman: ${escapeHTML(o.available_time)}</div>`:''}</div>
       ${pphone?`<div class="meta"><span>📞 ${escapeHTML(pphone)}</span></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
@@ -2790,7 +2901,12 @@ async function openProviderById(id){
 
 async function showProviderPanel(p){if(p){write(KEYS.provider,p);write(KEYS.providerLogged,true);}
  setNav("navProvider");
- app(`<div class="back"><button class="btn secondary smallBtn" onclick="showProviderEntry()">← Hizmet sağlayıcılara dön</button></div><div class="profileHeader"><div class="avatar">${escapeHTML((p.name||"U").charAt(0).toUpperCase())}</div><div style="flex:1"><strong>${escapeHTML(p.name)}</strong><div class="small muted"><span class="activeDot"></span>${p.active?"Aktif":"Pasif"} • ${escapeHTML(p.district)}</div></div></div><div class="grid section"><div class="card"><div style="font-size:24px">📋</div><strong id="matchCount">...</strong><div class="small muted">Uygun İş</div></div><div class="card"><div style="font-size:24px">🛠️</div><strong>${p.services.length}</strong><div class="small muted">Kategori</div></div></div><div class="section"><h2>📋 Sana Uygun Talepler</h2><div id="matchedRequests" class="card" style="text-align:center">⏳ Eşleşmeler aranıyor...</div></div>`);
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick="showProviderEntry()">← Hizmet sağlayıcılara dön</button></div><div class="profileHeader"><div class="avatar">${escapeHTML((p.name||"U").charAt(0).toUpperCase())}</div><div style="flex:1"><strong>${escapeHTML(p.name)}</strong><div class="small muted"><span class="activeDot"></span>${p.active?"Aktif":"Pasif"} • ${escapeHTML(p.district)}</div><div class="svcRatingBadge" id="providerRatingBadge" style="margin-top:6px">★ —</div></div></div><div class="grid section"><div class="card"><div style="font-size:24px">📋</div><strong id="matchCount">...</strong><div class="small muted">Uygun İş</div></div><div class="card"><div style="font-size:24px">🛠️</div><strong>${p.services.length}</strong><div class="small muted">Kategori</div></div></div><div class="section"><h2>📋 Sana Uygun Talepler</h2><div id="matchedRequests" class="card" style="text-align:center">⏳ Eşleşmeler aranıyor...</div></div>`);
+ try{
+   const st=await fetchProviderReviewStats(p.id);
+   const badge=document.getElementById('providerRatingBadge');
+   if(badge)badge.textContent=st.count?starsLabel(st.avg,st.count):'Henüz değerlendirme yok';
+ }catch(e){}
  const requests=await loadRequestsFromSupabase();
  const suitable=requests.filter(r=>providerMatchesRequest(p,r));
  document.getElementById("matchCount").textContent=suitable.length;
@@ -2847,6 +2963,8 @@ window.showRequestDetail=showRequestDetail;
 window.showProviderRequestDetail=showProviderRequestDetail;
 window.acceptRequest=acceptRequest;
 window.completeRequest=completeRequest;
+window.submitServiceReview=submitServiceReview;
+window.__svcReviewStar=__svcReviewStar;
 window.submitOffer=submitOffer;
 window.acceptOffer=acceptOffer;
 window.rejectOffer=rejectOffer;
