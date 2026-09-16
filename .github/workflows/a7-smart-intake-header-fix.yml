@@ -6,52 +6,14 @@ on:
 permissions:
   contents: write
 jobs:
-  patch:
+  inspect:
     if: github.event.head_commit.message != 'A7: compact Smart Intake header under logo'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Patch Smart Intake directly below brand text
+      - name: Locate Smart Intake source
         run: |
-          python - <<'PY'
-          from pathlib import Path
-          import re
-          p=Path('index.html')
-          s=p.read_text(encoding='utf-8')
-          marker='Akıllı Talep Oluştur'
-          pos=s.find(marker)
-          if pos<0:
-              raise SystemExit('Smart Intake marker not found')
-          # Work on the nearest enclosing opening tag so the existing click handler/data attributes stay untouched.
-          tag_start=s.rfind('<',0,pos)
-          tag_end=s.find('>',tag_start)
-          if tag_start<0 or tag_end<0:
-              raise SystemExit('Smart Intake opening tag not found')
-          tag=s[tag_start:tag_end+1]
-          if 'a7SmartHeaderBtn' not in tag:
-              if re.search(r'\bclass="[^"]*"',tag):
-                  tag=re.sub(r'\bclass="([^"]*)"',lambda m:'class="'+m.group(1)+' a7SmartHeaderBtn"',tag,count=1)
-              else:
-                  tag=tag[:-1]+' class="a7SmartHeaderBtn">'
-              s=s[:tag_start]+tag+s[tag_end+1:]
-          # Replace only the visible explanatory subtitle, never the functional button label.
-          s=s.replace('İhtiyacını anlat, talebin hazırlansın ›','')
-          s=s.replace('İhtiyacını anlat, talebin hazırlansın','')
-          # Add a compact, polished visual treatment once.
-          if '.a7SmartHeaderBtn{' not in s:
-              css='''\n/* A7: compact Smart Intake immediately below İşimi Çöz brand text */\n.a7SmartHeaderBtn{display:inline-flex;align-items:center;justify-content:center;gap:6px;margin-top:5px;padding:5px 9px;border:1px solid rgba(20,184,122,.42);border-radius:10px;background:linear-gradient(145deg,rgba(20,184,122,.13),rgba(56,189,248,.06));color:var(--text);font-size:10.5px;font-weight:850;line-height:1;white-space:nowrap;min-height:28px;box-shadow:0 3px 10px rgba(0,0,0,.10)}\n.a7SmartHeaderBtn:hover{border-color:rgba(20,184,122,.68);background:linear-gradient(145deg,rgba(20,184,122,.18),rgba(56,189,248,.09))}\n.a7SmartHeaderBtn::first-letter{font-size:12px}\n@media(max-width:420px){.a7SmartHeaderBtn{font-size:10px;padding:5px 8px;min-height:27px;gap:5px}}\n'''
-              s=s.replace('</style>',css+'</style>',1)
-          p.write_text(s,encoding='utf-8')
-          PY
-      - name: Verify
-        run: |
-          grep -q 'a7SmartHeaderBtn' index.html
-          grep -q 'Akıllı Talep Oluştur' index.html
-          if grep -q 'İhtiyacını anlat, talebin hazırlansın' index.html; then exit 1; fi
-      - name: Commit and push
-        run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add index.html
-          git commit -m 'A7: compact Smart Intake header under logo'
-          git push
+          echo '--- Akıllı occurrences ---'
+          grep -n -i -E 'akıllı|smart|talep' index.html | head -80 || true
+          echo '--- header-ish occurrences ---'
+          grep -n -i -E 'header|top|brand' index.html | head -80 || true
