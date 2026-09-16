@@ -295,44 +295,42 @@ html[data-theme="light"] .homeHeroV2{background:linear-gradient(160deg,#e7f7ef,#
 
 
 
-/* Featured Band V2 — premium visual layer only */
-.homeFeatured{position:relative;margin:6px 0 18px;border-radius:20px;overflow:hidden;border:1px solid rgba(255,255,255,.08);background:#0a1524;min-height:168px;box-shadow:0 12px 40px rgba(0,0,0,.28)}
+/* Featured Band V3 — light premium showcase */
+.homeFeatured{position:relative;margin:8px 0 18px;border-radius:22px;overflow:hidden;border:1px solid rgba(15,40,35,.08);background:#f4f7f5;min-height:176px;box-shadow:0 10px 36px rgba(8,24,20,.10)}
 .homeFeaturedTrack{display:flex;transition:transform .5s cubic-bezier(.22,.61,.36,1);will-change:transform;touch-action:pan-y}
-.homeFeaturedSlide{flex:0 0 100%;min-width:100%;padding:0;box-sizing:border-box;display:grid;grid-template-columns:1fr 1.15fr;min-height:168px;position:relative}
-.homeFeaturedArt{position:relative;display:flex;align-items:flex-end;justify-content:center;padding:12px 8px 8px;overflow:hidden}
-.homeFeaturedArt svg{width:100%;max-width:150px;height:auto;display:block;filter:drop-shadow(0 10px 24px rgba(0,0,0,.35))}
-.homeFeaturedGlow{position:absolute;inset:auto -20% -30% -20%;height:70%;border-radius:50%;opacity:.45;pointer-events:none;filter:blur(28px)}
-.homeFeaturedSlide[data-s="0"] .homeFeaturedGlow{background:#14b87a}
-.homeFeaturedSlide[data-s="1"] .homeFeaturedGlow{background:#38bdf8}
-.homeFeaturedSlide[data-s="2"] .homeFeaturedGlow{background:#a78bfa}
-.homeFeaturedSlide[data-s="3"] .homeFeaturedGlow{background:#fbbf24}
-.homeFeaturedSlide[data-s="0"]{background:linear-gradient(135deg,#0b1f1a 0%,#0c1a2e 48%,#0a1628 100%)}
-.homeFeaturedSlide[data-s="1"]{background:linear-gradient(135deg,#0a1c2e 0%,#0c1a2e 50%,#0e2035 100%)}
-.homeFeaturedSlide[data-s="2"]{background:linear-gradient(135deg,#12102a 0%,#0c1a2e 55%,#0a1628 100%)}
-.homeFeaturedSlide[data-s="3"]{background:linear-gradient(135deg,#1a170c 0%,#0c1a2e 55%,#0a1628 100%)}
-.homeFeaturedBody{display:flex;flex-direction:column;justify-content:center;padding:18px 16px 34px 4px;z-index:1}
-.homeFeaturedBody h2{margin:0 0 6px;font-size:clamp(17px,4.6vw,20px);font-weight:900;letter-spacing:-.03em;color:#f8fafc;line-height:1.15}
-.homeFeaturedBody p{margin:0 0 14px;font-size:12.5px;line-height:1.45;color:#94a3b8;max-width:22em}
-.homeFeaturedCta{display:inline-flex;align-items:center;justify-content:center;align-self:flex-start;padding:11px 18px;border-radius:12px;border:0;font:inherit;font-size:13px;font-weight:800;cursor:pointer;background:linear-gradient(180deg,#1ad08a,#0f9f6a);color:#03140d;box-shadow:0 6px 18px rgba(20,184,122,.28)}
+.homeFeaturedSlide{flex:0 0 100%;min-width:100%;padding:0;box-sizing:border-box;display:grid;grid-template-columns:1.05fr .95fr;min-height:176px;position:relative}
+.homeFeaturedSlide[data-s="0"]{background:linear-gradient(145deg,#eef8f3 0%,#f7faf9 55%,#e8f4ef 100%)}
+.homeFeaturedSlide[data-s="1"]{background:linear-gradient(145deg,#eef4fb 0%,#f7f9fc 55%,#e8eef8 100%)}
+.homeFeaturedSlide[data-s="2"]{background:linear-gradient(145deg,#f3eefb 0%,#faf8fc 55%,#eee8f6 100%)}
+.homeFeaturedSlide[data-s="3"]{background:linear-gradient(145deg,#f8f4ea 0%,#fbfaf6 55%,#f3efe4 100%)}
+.homeFeaturedArt{position:relative;display:flex;align-items:flex-end;justify-content:center;padding:10px 4px 6px;overflow:hidden}
+.homeFeaturedArt svg{width:100%;max-width:168px;height:auto;display:block}
+.homeFeaturedGlow{display:none!important}
+.homeFeaturedBody{display:flex;flex-direction:column;justify-content:center;padding:18px 16px 36px 6px;z-index:1}
+.homeFeaturedBody h2{margin:0 0 6px;font-size:clamp(18px,4.8vw,22px);font-weight:900;letter-spacing:-.03em;color:#0f1f2a;line-height:1.12}
+.homeFeaturedBody p{margin:0 0 14px;font-size:12.5px;line-height:1.45;color:#4b5c66;max-width:20em}
+.homeFeaturedCta{display:inline-flex;align-items:center;justify-content:center;align-self:flex-start;padding:11px 18px;border-radius:12px;border:0;font:inherit;font-size:13px;font-weight:800;cursor:pointer;background:linear-gradient(180deg,#1ad08a,#0f9f6a);color:#03140d;box-shadow:0 8px 20px rgba(15,159,106,.28)}
 .homeFeaturedCta:active{transform:scale(.98)}
-.homeFeaturedDots{position:absolute;left:0;right:0;bottom:11px;display:flex;justify-content:center;gap:6px;z-index:3}
-.homeFeaturedDots button{width:7px;height:7px;border-radius:99px;border:0;padding:0;background:rgba(255,255,255,.22);cursor:pointer}
-.homeFeaturedDots button.on{background:#14b87a;width:18px}
-.homeFeaturedNav{display:none;position:absolute;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:99px;border:1px solid rgba(255,255,255,.12);background:rgba(8,16,28,.72);color:#e2e8f0;cursor:pointer;font-size:17px;line-height:1;z-index:3;backdrop-filter:blur(6px)}
+.homeFeaturedDots{position:absolute;left:0;right:0;bottom:12px;display:flex;justify-content:center;gap:6px;z-index:3}
+.homeFeaturedDots button{width:7px;height:7px;border-radius:99px;border:0;padding:0;background:rgba(15,40,35,.18);cursor:pointer}
+.homeFeaturedDots button.on{background:#0f9f6a;width:18px}
+.homeFeaturedNav{display:none;position:absolute;top:50%;transform:translateY(-50%);width:34px;height:34px;border-radius:99px;border:1px solid rgba(15,40,35,.12);background:rgba(255,255,255,.85);color:#0f1f2a;cursor:pointer;font-size:17px;line-height:1;z-index:3;box-shadow:0 4px 14px rgba(0,0,0,.08)}
 .homeFeaturedNav.prev{left:10px}
 .homeFeaturedNav.next{right:10px}
 @media (min-width:720px){
-  .homeFeatured{min-height:210px;border-radius:22px}
-  .homeFeaturedSlide{min-height:210px;grid-template-columns:1fr 1.35fr}
-  .homeFeaturedArt{padding:18px 12px 16px}
-  .homeFeaturedArt svg{max-width:190px}
-  .homeFeaturedBody{padding:28px 40px 40px 8px}
-  .homeFeaturedBody h2{font-size:24px}
+  .homeFeatured{min-height:220px;border-radius:24px}
+  .homeFeaturedSlide{min-height:220px;grid-template-columns:1.1fr 1fr}
+  .homeFeaturedArt svg{max-width:210px}
+  .homeFeaturedBody{padding:28px 44px 44px 10px}
+  .homeFeaturedBody h2{font-size:26px}
   .homeFeaturedBody p{font-size:14px}
   .homeFeaturedNav{display:grid;place-items:center}
 }
 @media (max-width:380px){
-  .homeFeaturedSlide{grid-template-columns:.9fr 1.2fr}
+  .homeFeaturedArt svg{max-width:132px}
+  .homeFeaturedBody h2{font-size:16px}
+}
+
   .homeFeaturedArt svg{max-width:120px}
 }
 
@@ -797,12 +795,12 @@ function showHome(){
     <button type="button" class="homeFeaturedNav prev" onclick="homeFeaturedNext(-1)" aria-label="Önceki">‹</button>
     <button type="button" class="homeFeaturedNav next" onclick="homeFeaturedNext(1)" aria-label="Sonraki">›</button>
     <div class="homeFeaturedTrack" id="homeFeaturedTrack">
-      <div class="homeFeaturedSlide" data-s="0"><div class="homeFeaturedArt"><span class="homeFeaturedGlow"></span><svg viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="80" cy="88" r="52" fill="#0f2a24"/><circle cx="80" cy="88" r="52" stroke="#14b87a" stroke-opacity=".25"/><ellipse cx="80" cy="128" rx="36" ry="10" fill="#000" opacity=".2"/><circle cx="80" cy="58" r="22" fill="#1ec98a"/><path d="M58 92c0-12 10-22 22-22s22 10 22 22v28H58V92z" fill="#e2e8f0"/><path d="M58 100h44v8H58z" fill="#14b87a" opacity=".35"/><rect x="48" y="108" width="28" height="20" rx="4" fill="#0d9488"/><path d="M52 112h8v4h-8zm12 0h8v4h-8zm-12 6h20v3H52z" fill="#99f6e4"/><circle cx="118" cy="48" r="14" fill="#12263a" stroke="#38bdf8" stroke-width="2"/><path d="M112 48h12M118 42v12" stroke="#38bdf8" stroke-width="2" stroke-linecap="round"/><rect x="108" y="70" width="20" height="14" rx="3" fill="#334155"/><circle cx="118" cy="77" r="3" fill="#22c55e"/></svg></div><div class="homeFeaturedBody"><h2>Hizmet Al</h2><p>Yerel usta, net teklif</p><button type="button" class="homeFeaturedCta" onclick="homeFeaturedCta()">Keşfet</button></div></div>
-      <div class="homeFeaturedSlide" data-s="1"><div class="homeFeaturedArt"><span class="homeFeaturedGlow"></span><svg viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="80" cy="88" r="52" fill="#0c2238"/><circle cx="80" cy="88" r="52" stroke="#38bdf8" stroke-opacity=".22"/><path d="M40 118V78l40-28 40 28v40H40z" fill="#1e3a5f"/><path d="M40 78l40-28 40 28" stroke="#38bdf8" stroke-width="2" stroke-linejoin="round"/><rect x="68" y="92" width="24" height="26" rx="3" fill="#0ea5e9"/><circle cx="80" cy="52" r="16" fill="#7dd3fc"/><path d="M64 78c0-9 7-16 16-16s16 7 16 16v14H64V78z" fill="#e2e8f0"/><rect x="100" y="96" width="22" height="28" rx="3" fill="#f8fafc"/><path d="M104 102h14M104 108h14M104 114h10" stroke="#0f172a" stroke-width="1.5"/><circle cx="111" cy="122" r="2" fill="#14b87a"/></svg></div><div class="homeFeaturedBody"><h2>Ev &amp; Tapu</h2><p>Alım, satım, resmi hazırlık</p><button type="button" class="homeFeaturedCta" onclick="homeFeaturedCta()">Keşfet</button></div></div>
-      <div class="homeFeaturedSlide" data-s="2"><div class="homeFeaturedArt"><span class="homeFeaturedGlow"></span><svg viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="80" cy="88" r="52" fill="#1a1430"/><circle cx="80" cy="88" r="52" stroke="#a78bfa" stroke-opacity=".25"/><ellipse cx="80" cy="118" rx="40" ry="12" fill="#000" opacity=".18"/><path d="M36 100c8-16 28-24 44-24s36 8 44 24v8H36v-8z" fill="#334155"/><path d="M48 100h64" stroke="#a78bfa" stroke-width="2"/><circle cx="52" cy="108" r="8" fill="#1e293b" stroke="#94a3b8"/><circle cx="108" cy="108" r="8" fill="#1e293b" stroke="#94a3b8"/><rect x="70" y="88" width="20" height="10" rx="2" fill="#c4b5fd"/><circle cx="80" cy="48" r="18" fill="#c4b5fd"/><path d="M62 78c0-10 8-18 18-18s18 8 18 18v16H62V78z" fill="#f1f5f9"/><rect x="118" y="56" width="18" height="28" rx="4" fill="#0f172a" stroke="#22c55e"/><circle cx="127" cy="64" r="3" fill="#22c55e"/></svg></div><div class="homeFeaturedBody"><h2>Araç</h2><p>Al, sat, işlemleri sadeleştir</p><button type="button" class="homeFeaturedCta" onclick="homeFeaturedCta()">Keşfet</button></div></div>
-      <div class="homeFeaturedSlide" data-s="3"><div class="homeFeaturedArt"><span class="homeFeaturedGlow"></span><svg viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><circle cx="80" cy="88" r="52" fill="#1c180c"/><circle cx="80" cy="88" r="52" stroke="#fbbf24" stroke-opacity=".22"/><rect x="42" y="70" width="46" height="56" rx="6" fill="#f8fafc"/><path d="M50 82h30M50 92h30M50 102h22" stroke="#0f172a" stroke-width="2"/><circle cx="108" cy="56" r="16" fill="#fde68a"/><path d="M92 84c0-9 7-16 16-16s16 7 16 16v20H92V84z" fill="#e2e8f0"/><circle cx="124" cy="100" r="18" fill="#12263a" stroke="#14b87a" stroke-width="2"/><path d="M124 92v10l6 4" stroke="#14b87a" stroke-width="2" stroke-linecap="round"/><circle cx="124" cy="100" r="3" fill="#22c55e"/><path d="M58 56l8-10h16l8 10" stroke="#fbbf24" stroke-width="2" fill="none"/></svg></div><div class="homeFeaturedBody"><h2>Evrak &amp; Resmî</h2><p>Belge ve başvuru adımları</p><button type="button" class="homeFeaturedCta" onclick="homeFeaturedCta()">Keşfet</button></div></div>
+      <div class="homeFeaturedSlide" data-s="0"><div class="homeFeaturedArt"><svg viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><ellipse cx="100" cy="205" rx="62" ry="10" fill="#0f172a" opacity=".08"/><path d="M68 198c0-42 14-70 32-70s32 28 32 70" fill="#0f766e"/><circle cx="100" cy="78" r="28" fill="#f1c4a8"/><path d="M78 72c6-22 18-30 22-30 8 0 14 6 20 18 2 4-2 8-6 6-8-4-14-2-18 2-4 4-12 6-18 4z" fill="#1e293b"/><circle cx="90" cy="78" r="2.2" fill="#0f172a"/><circle cx="112" cy="78" r="2.2" fill="#0f172a"/><path d="M96 86c3 3 8 3 11 0" stroke="#c4785a" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M100 106v22" stroke="#f1c4a8" stroke-width="8" stroke-linecap="round"/><path d="M78 128c8 18 36 22 48 8" fill="#0f766e"/><rect x="118" y="118" width="52" height="36" rx="8" fill="#fff"/><rect x="126" y="126" width="20" height="8" rx="2" fill="#14b87a"/><rect x="126" y="138" width="36" height="4" rx="2" fill="#cbd5e1"/><rect x="52" y="140" width="28" height="18" rx="4" fill="#0f172a"/><path d="M56 144h8v3H56zm12 0h8v3h-8zm-12 6h20v2.5H56z" fill="#5eead4"/></svg></div><div class="homeFeaturedBody"><h2>Hizmet Al</h2><p>Yerel ustayı bul, teklifini al.</p><button type="button" class="homeFeaturedCta" onclick="homeFeaturedCta()">Keşfet</button></div></div>
+      <div class="homeFeaturedSlide" data-s="1"><div class="homeFeaturedArt"><svg viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><ellipse cx="100" cy="205" rx="62" ry="10" fill="#0f172a" opacity=".08"/><path d="M70 198c2-48 12-78 30-78s28 30 30 78" fill="#1d4ed8"/><circle cx="100" cy="76" r="28" fill="#e8b89a"/><path d="M74 70c10-24 22-28 28-26 10 2 18 12 22 22 2 6-4 8-8 5-10-6-16-4-22 0s-16 4-20-1z" fill="#78350f"/><circle cx="90" cy="76" r="2.2" fill="#0f172a"/><circle cx="112" cy="76" r="2.2" fill="#0f172a"/><path d="M96 85c3 3 8 3 11 0" stroke="#c4785a" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M100 104v20" stroke="#e8b89a" stroke-width="8" stroke-linecap="round"/><path d="M128 100l24-18 24 18v40H128V100z" fill="#fff" stroke="#38bdf8" stroke-width="2"/><path d="M140 122h24v28h-10v-16h-4v16h-10V122z" fill="#0ea5e9"/><rect x="40" y="130" width="40" height="50" rx="6" fill="#fff" stroke="#94a3b8"/><path d="M48 142h24M48 152h24M48 162h16" stroke="#0f172a" stroke-width="2"/></svg></div><div class="homeFeaturedBody"><h2>Ev &amp; Tapu</h2><p>Alım, satım ve resmi hazırlık.</p><button type="button" class="homeFeaturedCta" onclick="homeFeaturedCta()">Keşfet</button></div></div>
+      <div class="homeFeaturedSlide" data-s="2"><div class="homeFeaturedArt"><svg viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><ellipse cx="100" cy="205" rx="62" ry="10" fill="#0f172a" opacity=".08"/><path d="M72 198c0-46 12-74 28-74s28 28 28 74" fill="#5b21b6"/><circle cx="100" cy="78" r="28" fill="#f0c4ae"/><path d="M76 68c8-20 20-26 28-24 12 4 18 14 20 24 1 6-6 7-10 3-8-8-16-6-22-2-6 4-14 2-16-1z" fill="#111827"/><circle cx="90" cy="78" r="2.2" fill="#0f172a"/><circle cx="112" cy="78" r="2.2" fill="#0f172a"/><path d="M96 86c3 3 8 3 11 0" stroke="#c4785a" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M100 106v18" stroke="#f0c4ae" stroke-width="8" stroke-linecap="round"/><rect x="118" y="108" width="34" height="58" rx="8" fill="#0f172a"/><rect x="123" y="116" width="24" height="38" rx="3" fill="#e0e7ff"/><path d="M128 124h14M128 132h14M128 140h10" stroke="#6366f1" stroke-width="1.8"/><path d="M36 150c10-18 30-26 44-20l8 20c-16 10-36 12-52 6z" fill="#334155"/><circle cx="48" cy="156" r="7" fill="#1e293b" stroke="#a78bfa"/><circle cx="72" cy="158" r="7" fill="#1e293b" stroke="#a78bfa"/></svg></div><div class="homeFeaturedBody"><h2>Araç</h2><p>Al, sat, işlemleri kolaylaştır.</p><button type="button" class="homeFeaturedCta" onclick="homeFeaturedCta()">Keşfet</button></div></div>
+      <div class="homeFeaturedSlide" data-s="3"><div class="homeFeaturedArt"><svg viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><ellipse cx="100" cy="205" rx="62" ry="10" fill="#0f172a" opacity=".08"/><path d="M70 198c2-48 14-76 30-76s28 28 30 76" fill="#0f766e"/><circle cx="100" cy="76" r="28" fill="#e8c4a8"/><path d="M74 72c8-24 20-30 30-28 10 2 16 12 18 22 2 6-4 9-9 5-8-6-14-4-20 0-6 4-14 6-19 1z" fill="#44403c"/><circle cx="90" cy="76" r="2.2" fill="#0f172a"/><circle cx="112" cy="76" r="2.2" fill="#0f172a"/><path d="M96 85c3 3 8 3 11 0" stroke="#c4785a" stroke-width="1.6" fill="none" stroke-linecap="round"/><path d="M100 104v20" stroke="#e8c4a8" stroke-width="8" stroke-linecap="round"/><rect x="42" y="120" width="44" height="56" rx="6" fill="#fffbeb" stroke="#d6d3d1"/><path d="M50 134h28M50 144h28M50 154h18" stroke="#78716c" stroke-width="2"/><circle cx="148" cy="128" r="22" fill="#0f172a"/><circle cx="148" cy="128" r="16" fill="#134e4a"/><circle cx="142" cy="124" r="2" fill="#5eead4"/><circle cx="154" cy="124" r="2" fill="#5eead4"/><path d="M142 136c4 4 10 4 14 0" stroke="#5eead4" stroke-width="2" fill="none" stroke-linecap="round"/></svg></div><div class="homeFeaturedBody"><h2>Evrak &amp; Resmî</h2><p>Belge ve başvuru adımlarını kolaylaştır.</p><button type="button" class="homeFeaturedCta" onclick="homeFeaturedCta()">Keşfet</button></div></div>
     </div>
-    <div class="homeFeaturedDots"<div class="homeFeaturedDots" role="tablist" aria-label="Slaytlar">
+    <div class="homeFeaturedDots" role="tablist" aria-label="Slaytlar">
       <button type="button" class="on" onclick="homeFeaturedPause();homeFeaturedGo(0)" aria-label="1"></button>
       <button type="button" onclick="homeFeaturedPause();homeFeaturedGo(1)" aria-label="2"></button>
       <button type="button" onclick="homeFeaturedPause();homeFeaturedGo(2)" aria-label="3"></button>
