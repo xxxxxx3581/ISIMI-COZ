@@ -242,6 +242,14 @@ html[data-theme="light"] .homeHeroV2{background:linear-gradient(160deg,#e7f7ef,#
 .svcReviewSubmit{position:relative;z-index:5;touch-action:manipulation;cursor:pointer}
 .svcRatingBadge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--warning,#f5b942)}
 
+
+/* A7 FINAL: compact Smart Intake under İşimi Çöz brand text */
+.a7SmartHeaderSlot{display:none!important;margin-top:4px!important;padding:0!important;background:transparent!important;border:0!important;width:auto!important}
+.a7SmartHeaderSlot.isVisible{display:block!important}
+.a7SmartHeaderBtn{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:5px!important;width:auto!important;min-height:27px!important;height:27px!important;padding:5px 9px!important;border:1px solid rgba(20,184,122,.42)!important;border-radius:9px!important;background:linear-gradient(145deg,rgba(20,184,122,.13),rgba(56,189,248,.06))!important;color:var(--text)!important;font-size:10.5px!important;font-weight:850!important;line-height:1!important;white-space:nowrap!important;box-shadow:none!important}
+.a7SmartHeaderBtn:hover{border-color:rgba(20,184,122,.68)!important;background:linear-gradient(145deg,rgba(20,184,122,.18),rgba(56,189,248,.09))!important}
+.a7SmartHeaderBtn .a7SmartSpark{font-size:12px!important;line-height:1!important}
+@media(max-width:430px){.a7SmartHeaderSlot{margin-top:3px!important}.a7SmartHeaderBtn{min-height:26px!important;height:26px!important;padding:5px 8px!important;font-size:10px!important}}
 </style>
 <style>
 /* A7_SMART_INTAKE_V1 */
@@ -355,8 +363,8 @@ html[data-theme="light"] .homeHeroV2{background:linear-gradient(160deg,#e7f7ef,#
     if(!existing){
       existing=document.createElement('div');
       existing.className='a7SmartHeaderSlot';
-      existing.innerHTML='<button type="button" class="a7SmartHeaderBtn"><span class="a7SmartSpark">✨</span><span>Akıllı Talep Oluştur</span><span class="a7SmartSub"></span></button>';
-      top.insertAdjacentElement('afterend',existing);
+      existing.innerHTML='<button type="button" class="a7SmartHeaderBtn"><span class="a7SmartSpark">✨</span><span>Akıllı Talep Oluştur</span></button>';
+      var brandText=top.querySelector('.brandText'); if(brandText) brandText.appendChild(existing); else top.insertAdjacentElement('afterend',existing);
       existing.querySelector('button').addEventListener('click',function(){
         if(original && typeof original.click==='function') original.click();
       });
