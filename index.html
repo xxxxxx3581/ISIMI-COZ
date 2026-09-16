@@ -243,14 +243,16 @@ html[data-theme="light"] .homeHeroV2{background:linear-gradient(160deg,#e7f7ef,#
 .svcRatingBadge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--warning,#f5b942)}
 
 
-/* A7 FINAL: compact Smart Intake under İşimi Çöz brand text */
-.a7SmartHeaderSlot{display:none!important;margin-top:4px!important;padding:0!important;background:transparent!important;border:0!important;width:auto!important}
+/* A7 FINAL: visual Smart Intake robot launcher */
+.a7SmartHeaderSlot{display:none!important;margin-top:5px!important;padding:0!important;background:transparent!important;border:0!important;width:auto!important}
 .a7SmartHeaderSlot.isVisible{display:block!important}
-.a7SmartHeaderBtn{display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:5px!important;width:auto!important;min-height:27px!important;height:27px!important;padding:5px 9px!important;border:1px solid rgba(20,184,122,.42)!important;border-radius:9px!important;background:linear-gradient(145deg,rgba(20,184,122,.13),rgba(56,189,248,.06))!important;color:var(--text)!important;font-size:10.5px!important;font-weight:850!important;line-height:1!important;white-space:nowrap!important;box-shadow:none!important}
-.a7SmartHeaderBtn:hover{border-color:rgba(20,184,122,.68)!important;background:linear-gradient(145deg,rgba(20,184,122,.18),rgba(56,189,248,.09))!important}
-.a7SmartHeaderBtn .a7SmartSpark{font-size:12px!important;line-height:1!important}
-@media(max-width:430px){.a7SmartHeaderSlot{margin-top:3px!important}.a7SmartHeaderBtn{min-height:26px!important;height:26px!important;padding:5px 8px!important;font-size:10px!important}}
-</style>
+.a7SmartHeaderBtn{display:inline-flex!important;align-items:center!important;justify-content:flex-start!important;gap:5px!important;width:auto!important;min-height:30px!important;height:30px!important;padding:3px 7px 3px 4px!important;border:1px solid rgba(20,184,122,.48)!important;border-radius:10px!important;background:linear-gradient(145deg,rgba(20,184,122,.18),rgba(13,148,136,.10) 58%,rgba(251,191,36,.08))!important;color:var(--text)!important;line-height:1!important;white-space:nowrap!important;box-shadow:0 3px 12px rgba(20,184,122,.14)!important;transition:.15s transform,.15s border-color,.15s filter!important}
+.a7SmartHeaderBtn:hover{border-color:rgba(251,191,36,.72)!important;filter:brightness(1.08)!important}
+.a7SmartHeaderBtn:active{transform:scale(.96)!important}
+.a7SmartRobot{width:23px!important;height:23px!important;border-radius:7px!important;display:grid!important;place-items:center!important;background:linear-gradient(145deg,#16b87a,#0d9488 62%,#0b7285)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.28),0 2px 7px rgba(13,148,136,.28)!important;flex:none!important}
+.a7SmartRobot svg{width:19px!important;height:19px!important;display:block!important}
+.a7SmartAi{font-size:9px!important;font-weight:950!important;letter-spacing:.08em!important;color:#fbbf24!important;line-height:1!important}
+@media(max-width:430px){.a7SmartHeaderSlot{margin-top:4px!important}.a7SmartHeaderBtn{min-height:29px!important;height:29px!important;padding:3px 6px 3px 4px!important}.a7SmartRobot{width:22px!important;height:22px!important}.a7SmartAi{font-size:8.5px!important}}</style>
 <style>
 /* A7_SMART_INTAKE_V1 */
 .a7SmartLauncher{display:flex;align-items:center;gap:12px;width:100%;margin:0 0 14px;padding:15px 16px;border:1px solid rgba(20,184,122,.35);border-radius:18px;background:linear-gradient(135deg,rgba(20,184,122,.12),rgba(56,189,248,.07));color:var(--text);text-align:left;box-shadow:0 8px 24px rgba(0,0,0,.12)}
@@ -363,7 +365,7 @@ html[data-theme="light"] .homeHeroV2{background:linear-gradient(160deg,#e7f7ef,#
     if(!existing){
       existing=document.createElement('div');
       existing.className='a7SmartHeaderSlot';
-      existing.innerHTML='<button type="button" class="a7SmartHeaderBtn"><span class="a7SmartSpark">✨</span><span>Akıllı Talep Oluştur</span></button>';
+      existing.innerHTML='<button type="button" class="a7SmartHeaderBtn" aria-label="Akıllı Talep Oluştur" title="Akıllı Talep Oluştur"><span class="a7SmartRobot" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><rect x="5" y="6" width="14" height="13" rx="4" fill="#d1fae5" stroke="#064e3b" stroke-width="1.4"/><path d="M12 3v3" stroke="#fbbf24" stroke-width="1.7" stroke-linecap="round"/><circle cx="12" cy="2.5" r="1.2" fill="#fbbf24"/><circle cx="9.5" cy="12" r="1.35" fill="#0f766e"/><circle cx="14.5" cy="12" r="1.35" fill="#0f766e"/><path d="M9 15.5c1.8 1.2 4.2 1.2 6 0" stroke="#0f766e" stroke-width="1.3" stroke-linecap="round"/></svg></span><span class="a7SmartAi">AI</span></button>';
       var brandText=top.querySelector('.brandText'); if(brandText) brandText.appendChild(existing); else top.insertAdjacentElement('afterend',existing);
       existing.querySelector('button').addEventListener('click',function(){
         if(original && typeof original.click==='function') original.click();
