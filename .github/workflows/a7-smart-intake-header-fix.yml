@@ -1,12 +1,12 @@
 name: A7 Smart Intake Header Fix
 on:
   push:
-    branches: [test/marketplace-a7]
+    branches:
+      - test/marketplace-a7
 permissions:
   contents: write
 jobs:
   patch:
-    if: github.event.head_commit.message != 'A7: compact Smart Intake header under logo'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,36 +15,47 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           import re
-          p=Path('index.html')
-          s=p.read_text(encoding='utf-8')
-          # Target the existing Smart Intake text block only; preserve its click handler/data attributes.
-          pat=re.compile(r'(<[^>]*)(>\s*✨\s*Akıllı Talep Oluştur)(.*?)(</[^>]+>)', re.S)
-          m=pat.search(s)
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          pat = re.compile(r'(<[^>]*>\s*)✨\s*Akıllı Talep Oluştur.*?(</[^>]+>)', re.S)
+          m = pat.search(s)
           if not m:
               raise SystemExit('Smart Intake visible entry not found')
-          opening=m.group(1)
-          # Remove old visual-only class/style so the compact button controls its own appearance.
-          opening=re.sub(r'\sclass="[^"]*"', '', opening, count=1)
-          opening=re.sub(r'\sstyle="[^"]*"', '', opening)
-          # Preserve data-/onclick attributes already on the element.
-          new=(opening + ' class="a7SmartHeaderBtn" type="button">'
-               '<span class="a7SmartHeaderIcon" aria-hidden="true">✨</span>'
-               '<span>Akıllı Talep Oluştur</span></button>')
-          s=s[:m.start()]+new+s[m.end():]
-          css='''\n/* A7: compact Smart Intake directly below the brand text */\n.a7SmartHeaderBtn{display:inline-flex;align-items:center;justify-content:center;gap:6px;margin:5px 0 0;padding:5px 9px;border:1px solid rgba(20,184,122,.40);border-radius:10px;background:rgba(20,184,122,.08);color:var(--text);font-size:10.5px;font-weight:850;line-height:1;white-space:nowrap;min-height:28px;box-shadow:none}\n.a7SmartHeaderBtn:hover{border-color:rgba(20,184,122,.65);background:rgba(20,184,122,.13)}\n.a7SmartHeaderIcon{font-size:12px;line-height:1}\n@media(max-width:420px){.a7SmartHeaderBtn{font-size:10px;padding:5px 8px;min-height:27px;gap:5px}.a7SmartHeaderIcon{font-size:11px}}\n'''
-          if '.a7SmartHeaderBtn{' not in s:
-              s=s.replace('</style>',css+'</style>',1)
-          p.write_text(s,encoding='utf-8')
+          start_tag = m.group(1)
+          # Replace the visible content only; keep the original opening tag and its click/data attributes.
+          new_inner = '<span class="a7SmartHeaderIcon" aria-hidden="true">✨</span><span>Akıllı Talep Oluştur</span>'
+          s = s[:m.start()] + start_tag + new_inner + m.group(2) + s[m.end():]
+          css = '''\n/* A7: compact Smart Intake directly below the brand text */\n.a7SmartHeaderBtn{display:inline-flex;align-items:center;justify-content:center;gap:6px;margin:5px 0 0;padding:5px 9px;border:1px solid rgba(20,184,122,.40);border-radius:10px;background:rgba(20,184,122,.08);color:var(--text);font-size:10.5px;font-weight:850;line-height:1;white-space:nowrap;min-height:28px;box-shadow:none}\n.a7SmartHeaderBtn:hover{border-color:rgba(20,184,122,.65);background:rgba(20,184,122,.13)}\n.a7SmartHeaderIcon{font-size:12px;line-height:1}\n@media(max-width:420px){.a7SmartHeaderBtn{font-size:10px;padding:5px 8px;min-height:27px;gap:5px}.a7SmartHeaderIcon{font-size:11px}}\n'''
+          # Ensure the target element has the compact class without disturbing its handler attributes.
+          if 'a7SmartHeaderBtn' not in s:
+              pos = s.find('✨</span><span>Akıllı Talep Oluştur')
+              if pos == -1:
+                  pos = s.find('✨Akıllı Talep Oluştur')
+              if pos == -1:
+                  raise SystemExit('Smart Intake text marker not found')
+              tag_start = s.rfind('<', 0, pos)
+              tag_end = s.find('>', tag_start)
+              tag = s[tag_start:tag_end]
+              if 'class=' in tag:
+                  tag = re.sub(r'class="([^"]*)"', lambda x: 'class="'+x.group(1)+' a7SmartHeaderBtn"', tag, count=1)
+              else:
+                  tag = tag[:-1] + ' class="a7SmartHeaderBtn">'
+              s = s[:tag_start] + tag + s[tag_end+1:]
+              s = s.replace('</style>', css + '</style>', 1)
+          if 'İhtiyacını anlat, talebin hazırlansın' in s:
+              s = s.replace('İhtiyacını anlat, talebin hazırlansın ›', '')
+              s = s.replace('İhtiyacını anlat, talebin hazırlansın', '')
+          p.write_text(s, encoding='utf-8')
           PY
       - name: Verify
         run: |
-          grep -q 'class="a7SmartHeaderBtn"' index.html
+          grep -q 'a7SmartHeaderBtn' index.html
           grep -q 'Akıllı Talep Oluştur' index.html
-          if grep -q 'İhtiyacını anlat, talebin hazırlansın' index.html; then echo 'Old Smart Intake subtitle still present'; exit 1; fi
+          if grep -q 'İhtiyacını anlat, talebin hazırlansın' index.html; then exit 1; fi
       - name: Commit and push
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add index.html
+          git add index.html .github/workflows/a7-smart-intake-header-fix.yml
           git commit -m 'A7: compact Smart Intake header under logo'
           git push
