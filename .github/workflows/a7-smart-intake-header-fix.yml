@@ -7,13 +7,12 @@ permissions:
   contents: write
 jobs:
   inspect:
-    if: github.event.head_commit.message != 'A7: compact Smart Intake header under logo'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Locate Smart Intake source
         run: |
-          echo '--- Akıllı occurrences ---'
-          grep -n -i -E 'akıllı|smart|talep' index.html | head -80 || true
-          echo '--- header-ish occurrences ---'
-          grep -n -i -E 'header|top|brand' index.html | head -80 || true
+          echo '--- exact Akıllı matches ---'
+          grep -n -i -E 'akıllı|smart' index.html | head -100 || true
+          echo '--- relevant source context ---'
+          grep -n -i -E 'talep|header|brand|home' index.html | head -140 || true
