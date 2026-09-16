@@ -1,6 +1,9 @@
 name: A7 Smart Intake Fix 3
 
 on:
+  push:
+    branches:
+      - test/marketplace-a7
   workflow_dispatch:
 
 permissions:
@@ -20,7 +23,7 @@ jobs:
           from pathlib import Path
           p=Path('index.html')
           s=p.read_text(encoding='utf-8')
-          marker='A7_SMART_INTAKE_FIX3'
+          marker='A7_SMART_INTAKE_FIX3_CSS'
           if marker in s:
               print('already patched')
               raise SystemExit(0)
@@ -98,7 +101,6 @@ jobs:
               for(var i=0;i<directFns.length;i++){
                 try{if(typeof window[directFns[i]]==='function'){window[directFns[i]]();break}}catch(e){}
               }
-              /* Prefer the real Usta navigation/action over the previous generic text match. */
               var clicked=clickCandidate(['usta bul']);
               if(!clicked)clicked=clickCandidate(['usta']);
               if(!clicked)clicked=clickCandidate(['hizmet bul','hizmet al','servis bul','marketplace','market']);
