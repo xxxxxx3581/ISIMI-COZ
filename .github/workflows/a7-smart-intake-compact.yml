@@ -1,0 +1,60 @@
+name: A7 Smart Intake Compact Header
+on:
+  push:
+    branches:
+      - test/marketplace-a7
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Compact Smart Intake entry
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          # Replace only the visible Smart Intake entry near the header.
+          # Keep its existing click/data attributes and handlers intact.
+          pattern=re.compile(r'<[^>]*>\s*✨\s*Akıllı Talep Oluştur.*?</[^>]+>', re.S)
+          m=pattern.search(s)
+          if not m:
+              raise SystemExit('Smart Intake header entry not found')
+          old=m.group(0)
+          # Preserve any existing handler/data attributes from the opening tag.
+          opening=re.match(r'<[^>]+>', old).group(0)
+          attrs=opening[1:-1]
+          # Remove any previous visual text/size classes from the opening tag only when they are inline.
+          attrs=re.sub(r'\sstyle="[^"]*"','',attrs)
+          new=(f'<button {attrs} class="a7SmartHeaderBtn" type="button">'
+               f'<span class="a7SmartHeaderIcon">✨</span><span>Akıllı Talep Oluştur</span></button>')
+          # If regex consumed a larger wrapper, retain the wrapper only when it is not itself the button.
+          if old.lstrip().startswith('<button'):
+              s=s[:m.start()]+new+s[m.end():]
+          else:
+              # Fall back to a narrowly scoped replacement of the text-bearing element.
+              s=s[:m.start()]+new+s[m.end():]
+          css='''\n/* A7 compact Smart Intake entry directly under the logo */\n.a7SmartHeaderBtn{display:inline-flex;align-items:center;justify-content:center;gap:6px;margin:4px 0 0;padding:6px 10px;border:1px solid rgba(20,184,122,.38);border-radius:10px;background:rgba(20,184,122,.09);color:var(--text);font-size:11px;font-weight:800;line-height:1;white-space:nowrap;min-height:30px;box-shadow:none}\n.a7SmartHeaderBtn:hover{border-color:rgba(20,184,122,.62);background:rgba(20,184,122,.14)}\n.a7SmartHeaderIcon{font-size:13px;line-height:1}\n@media(max-width:420px){.a7SmartHeaderBtn{font-size:10px;padding:5px 8px;min-height:28px;gap:5px}.a7SmartHeaderIcon{font-size:12px}}\n'''
+          if '.a7SmartHeaderBtn{' not in s:
+              s=s.replace('</style>',css+'</style>',1)
+          p.write_text(s,encoding='utf-8')
+      - name: Verify
+        run: |
+          grep -q 'class="a7SmartHeaderBtn"' index.html
+          grep -q 'Akıllı Talep Oluştur' index.html
+      - name: Commit
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'A7: make smart intake header compact' || exit 0
+          git push
+      - name: Remove temporary workflow
+        if: always()
+        run: |
+          rm -f .github/workflows/a7-smart-intake-compact.yml
+          git add .github/workflows/a7-smart-intake-compact.yml || true
+          git commit -m 'Remove temporary A7 smart intake compact workflow' || true
+          git push || true
