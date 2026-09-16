@@ -1,0 +1,98 @@
+name: A7 Smart Intake V2
+
+on:
+  push:
+    branches: ["test/marketplace-a7"]
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: test/marketplace-a7
+          fetch-depth: 0
+      - name: Wire smart intake
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          marker='A7_SMART_INTAKE_V2'
+          if marker in s:
+              print('Already patched')
+              raise SystemExit(0)
+          js=r'''<script>/* A7_SMART_INTAKE_V2 */
+          (function(){
+            function setNative(el,value){
+              if(!el)return false;
+              const proto=el.tagName==='TEXTAREA'?HTMLTextAreaElement.prototype:HTMLInputElement.prototype;
+              const setter=Object.getOwnPropertyDescriptor(proto,'value')?.set;
+              if(setter)setter.call(el,value);else el.value=value;
+              el.dispatchEvent(new Event('input',{bubbles:true}));
+              el.dispatchEvent(new Event('change',{bubbles:true}));
+              return true;
+            }
+            function findServiceLauncher(){
+              const els=[...document.querySelectorAll('button,a,[role="button"]')];
+              return els.find(el=>/usta bul/i.test((el.innerText||el.textContent||'').trim()));
+            }
+            function fillRequest(draft){
+              const selectors='textarea,input[type="text"],input:not([type]),select';
+              const els=[...document.querySelectorAll(selectors)].filter(el=>{const r=el.getBoundingClientRect();return r.width>0&&r.height>0&&!el.disabled;});
+              const ta=els.find(el=>el.tagName==='TEXTAREA');
+              if(ta)setNative(ta,draft.text);
+              const sel=els.find(el=>el.tagName==='SELECT');
+              if(sel){
+                const opts=[...sel.options];
+                const wanted=draft.category.toLocaleLowerCase('tr-TR');
+                const hit=opts.find(o=>o.textContent.toLocaleLowerCase('tr-TR').includes(wanted.split(' ')[0]));
+                if(hit){sel.value=hit.value;sel.dispatchEvent(new Event('change',{bubbles:true}));}
+              }
+              const note=document.createElement('div');
+              note.className='success';
+              note.setAttribute('data-a7-smart-import-note','1');
+              note.textContent='✨ Akıllı Talep taslağın forma aktarıldı. Bilgileri kontrol edip talebini oluşturabilirsin.';
+              const host=ta?.closest('.formCard,.card,.section')||ta?.parentElement||document.querySelector('main');
+              if(host&&!host.querySelector('[data-a7-smart-import-note]'))host.insertBefore(note,host.firstChild);
+              ta?.scrollIntoView({behavior:'smooth',block:'center'});
+            }
+            function importDraft(modal){
+              let raw=localStorage.getItem('a7_smart_request_draft');
+              if(!raw){alert('Önce talebini hazırlayalım.');return;}
+              let draft;try{draft=JSON.parse(raw)}catch(e){draft=null}
+              if(!draft?.text){alert('Taslak bulunamadı.');return;}
+              modal.remove();
+              const launcher=findServiceLauncher();
+              if(!launcher){alert('Talep ekranını bulamadım. Taslağın kaybolmadı; Usta Bul bölümünü açtığında yeniden aktarabiliriz.');return;}
+              launcher.click();
+              let tries=0;
+              const timer=setInterval(()=>{
+                tries++;
+                if(fillRequest(draft)||tries>20)clearInterval(timer);
+              },250);
+            }
+            document.addEventListener('click',function(e){
+              const btn=e.target?.closest?.('[data-a7-smart-modal] [data-b]');
+              if(!btn)return;
+              const modal=btn.closest('[data-a7-smart-modal]');
+              if(!modal)return;
+              if(btn.textContent.trim()!=='Taslağı Güncelle')return;
+              e.preventDefault();e.stopImmediatePropagation();
+              importDraft(modal);
+            },true);
+            window.addEventListener('storage',()=>{});
+          })();</script>'''
+          s=s.replace('</body>',js+'</body>',1) if '</body>' in s else s+js
+          p.write_text(s,encoding='utf-8')
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git diff --cached --quiet && exit 0
+          git commit -m "A7: wire smart intake into request flow"
+          git push origin test/marketplace-a7
