@@ -292,6 +292,30 @@ html[data-theme="light"] .homeHeroV2{background:linear-gradient(160deg,#e7f7ef,#
 .a7SmartChip{border:1px solid var(--line);background:var(--card2,#102238);color:var(--text);border-radius:10px;padding:8px;font-size:12px;cursor:pointer;text-align:left}
 .a7SmartHidden{display:none}
 
+
+/* Featured Band V1 — home only */
+.homeFeatured{position:relative;margin:4px 0 16px;border-radius:18px;overflow:hidden;border:1px solid var(--line);background:linear-gradient(145deg,#0c1a2e 0%,#0f2438 55%,#0d2a28 100%);min-height:160px}
+.homeFeaturedTrack{display:flex;transition:transform .45s ease;will-change:transform;touch-action:pan-y}
+.homeFeaturedSlide{flex:0 0 100%;min-width:100%;padding:18px 16px 28px;box-sizing:border-box;display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center}
+.homeFeaturedIcon{width:56px;height:56px;border-radius:16px;display:grid;place-items:center;font-size:26px;background:rgba(20,184,122,.12);border:1px solid rgba(20,184,122,.28)}
+.homeFeaturedBody h2{margin:0 0 6px;font-size:18px;font-weight:900;letter-spacing:-.02em;color:var(--text)}
+.homeFeaturedBody p{margin:0 0 12px;font-size:13px;line-height:1.4;color:var(--muted)}
+.homeFeaturedCta{display:inline-flex;align-items:center;justify-content:center;padding:10px 16px;border-radius:12px;border:0;font:inherit;font-size:13px;font-weight:800;cursor:pointer;background:var(--primary,#14b87a);color:#04140f}
+.homeFeaturedDots{position:absolute;left:0;right:0;bottom:10px;display:flex;justify-content:center;gap:6px;pointer-events:auto}
+.homeFeaturedDots button{width:7px;height:7px;border-radius:99px;border:0;padding:0;background:rgba(255,255,255,.28);cursor:pointer}
+.homeFeaturedDots button.on{background:var(--primary,#14b87a);width:16px}
+.homeFeaturedNav{display:none;position:absolute;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:99px;border:1px solid var(--line);background:rgba(8,16,28,.75);color:var(--text);cursor:pointer;font-size:16px;line-height:1;z-index:2}
+.homeFeaturedNav.prev{left:8px}
+.homeFeaturedNav.next{right:8px}
+@media (min-width:720px){
+  .homeFeatured{min-height:200px}
+  .homeFeaturedSlide{padding:24px 48px 32px;gap:20px}
+  .homeFeaturedIcon{width:72px;height:72px;font-size:32px;border-radius:20px}
+  .homeFeaturedBody h2{font-size:22px}
+  .homeFeaturedBody p{font-size:14px;max-width:36em}
+  .homeFeaturedNav{display:grid;place-items:center}
+}
+
 </style>
 </head>
 <body>
@@ -688,9 +712,83 @@ function homeMicAsk(){
   }catch(e){alert('Mikrofon başlatılamadı.');}
 }
 
+
+/* Featured Band V1 */
+window.__homeFeaturedIdx=0;
+window.__homeFeaturedTimer=null;
+window.__homeFeaturedPaused=false;
+function homeFeaturedSlides(){
+  return [
+    {icon:'🔧',title:'Hizmet Al',desc:'Yerel usta, net teklif',go:function(){if(typeof showRequest==='function')showRequest();}},
+    {icon:'🏠',title:'Ev & Tapu',desc:'Alım, satım, resmi hazırlık',go:function(){if(typeof openHallet==='function')openHallet();}},
+    {icon:'🚗',title:'Araç',desc:'Al, sat, işlemleri sadeleştir',go:function(){if(typeof showListingsCategory==='function')showListingsCategory('otomobil');else if(typeof showListingsHub==='function')showListingsHub();}},
+    {icon:'📄',title:'Evrak & Resmî',desc:'Belge ve başvuru adımları',go:function(){if(typeof openHalletAction==='function')openHalletAction('showKurum');else if(typeof openHallet==='function')openHallet();}}
+  ];
+}
+function homeFeaturedGo(i){
+  var n=homeFeaturedSlides().length;
+  if(n<1)return;
+  window.__homeFeaturedIdx=((i%n)+n)%n;
+  var track=document.getElementById('homeFeaturedTrack');
+  if(track)track.style.transform='translateX(-'+(window.__homeFeaturedIdx*100)+'%)';
+  document.querySelectorAll('.homeFeaturedDots button').forEach(function(b,k){b.classList.toggle('on',k===window.__homeFeaturedIdx);});
+}
+function homeFeaturedNext(dir){homeFeaturedPause();homeFeaturedGo(window.__homeFeaturedIdx+(dir||1));}
+function homeFeaturedPause(){window.__homeFeaturedPaused=true;if(window.__homeFeaturedTimer){clearInterval(window.__homeFeaturedTimer);window.__homeFeaturedTimer=null;}}
+function homeFeaturedStartAuto(){
+  if(window.__homeFeaturedTimer)clearInterval(window.__homeFeaturedTimer);
+  window.__homeFeaturedTimer=setInterval(function(){
+    if(window.__homeFeaturedPaused)return;
+    if(!document.getElementById('homeFeaturedTrack')){homeFeaturedPause();return;}
+    homeFeaturedGo(window.__homeFeaturedIdx+1);
+  },7000);
+}
+function homeFeaturedCta(){
+  homeFeaturedPause();
+  var s=homeFeaturedSlides()[window.__homeFeaturedIdx];
+  if(s&&s.go)s.go();
+}
+function homeFeaturedBindSwipe(){
+  var el=document.getElementById('homeFeatured');
+  if(!el||el.dataset.swipeBound==='1')return;
+  el.dataset.swipeBound='1';
+  var x0=null;
+  el.addEventListener('touchstart',function(e){if(e.touches&&e.touches[0])x0=e.touches[0].clientX;}, {passive:true});
+  el.addEventListener('touchend',function(e){
+    if(x0==null)return;
+    var x1=(e.changedTouches&&e.changedTouches[0])?e.changedTouches[0].clientX:x0;
+    var d=x1-x0;x0=null;
+    if(Math.abs(d)<40)return;
+    homeFeaturedNext(d<0?1:-1);
+  }, {passive:true});
+}
+function homeFeaturedInit(){
+  window.__homeFeaturedIdx=0;
+  window.__homeFeaturedPaused=false;
+  homeFeaturedGo(0);
+  homeFeaturedBindSwipe();
+  homeFeaturedStartAuto();
+}
+
 function showHome(){
   setNav("navHome");
   app(`<div class="homeShell homeShellV3">
+  <div class="homeFeatured" id="homeFeatured" aria-roledescription="carousel" aria-label="Öne çıkanlar">
+    <button type="button" class="homeFeaturedNav prev" onclick="homeFeaturedNext(-1)" aria-label="Önceki">‹</button>
+    <button type="button" class="homeFeaturedNav next" onclick="homeFeaturedNext(1)" aria-label="Sonraki">›</button>
+    <div class="homeFeaturedTrack" id="homeFeaturedTrack">
+      <div class="homeFeaturedSlide"><div class="homeFeaturedIcon" aria-hidden="true">🔧</div><div class="homeFeaturedBody"><h2>Hizmet Al</h2><p>Yerel usta, net teklif</p><button type="button" class="homeFeaturedCta" onclick="homeFeaturedCta()">Keşfet</button></div></div>
+      <div class="homeFeaturedSlide"><div class="homeFeaturedIcon" aria-hidden="true">🏠</div><div class="homeFeaturedBody"><h2>Ev &amp; Tapu</h2><p>Alım, satım, resmi hazırlık</p><button type="button" class="homeFeaturedCta" onclick="homeFeaturedCta()">Keşfet</button></div></div>
+      <div class="homeFeaturedSlide"><div class="homeFeaturedIcon" aria-hidden="true">🚗</div><div class="homeFeaturedBody"><h2>Araç</h2><p>Al, sat, işlemleri sadeleştir</p><button type="button" class="homeFeaturedCta" onclick="homeFeaturedCta()">Keşfet</button></div></div>
+      <div class="homeFeaturedSlide"><div class="homeFeaturedIcon" aria-hidden="true">📄</div><div class="homeFeaturedBody"><h2>Evrak &amp; Resmî</h2><p>Belge ve başvuru adımları</p><button type="button" class="homeFeaturedCta" onclick="homeFeaturedCta()">Keşfet</button></div></div>
+    </div>
+    <div class="homeFeaturedDots" role="tablist" aria-label="Slaytlar">
+      <button type="button" class="on" onclick="homeFeaturedPause();homeFeaturedGo(0)" aria-label="1"></button>
+      <button type="button" onclick="homeFeaturedPause();homeFeaturedGo(1)" aria-label="2"></button>
+      <button type="button" onclick="homeFeaturedPause();homeFeaturedGo(2)" aria-label="3"></button>
+      <button type="button" onclick="homeFeaturedPause();homeFeaturedGo(3)" aria-label="4"></button>
+    </div>
+  </div>
   <div class="homeSec">
     <div class="homeSecHead">Keşfet</div>
     <div class="homeWorlds">
@@ -709,6 +807,8 @@ function showHome(){
   </div>
   <button type="button" class="homeListingsLink" onclick="showListingsHub()">İlanlara göz at →</button>
 </div>`);
+  try{homeFeaturedInit();}catch(e){}
+
 }
 
 
@@ -3026,6 +3126,11 @@ window.showProviderRequestDetail=showProviderRequestDetail;
 window.acceptRequest=acceptRequest;
 window.completeRequest=completeRequest;
 window.openA7SmartAI=openA7SmartAI;
+window.homeFeaturedInit=homeFeaturedInit;
+window.homeFeaturedNext=homeFeaturedNext;
+window.homeFeaturedGo=homeFeaturedGo;
+window.homeFeaturedCta=homeFeaturedCta;
+window.homeFeaturedPause=homeFeaturedPause;
 window.submitHomeAsk=submitHomeAsk;
 window.homeMicAsk=homeMicAsk;
 window.submitServiceReview=submitServiceReview;
