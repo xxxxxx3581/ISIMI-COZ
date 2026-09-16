@@ -277,7 +277,7 @@ html[data-theme="light"] .homeHeroV2{background:linear-gradient(160deg,#e7f7ef,#
     for(const [name,words] of groups) if(words.some(w=>t.includes(w))) return name;
     return 'Genel hizmet';
   }
-  function urgency(text){const t=(text||'').toLocaleLowerCase('tr-TR');if(/acil|hemen|şimdi|su bas|kıvılcım|duman|yangın|gaz kok/.test(t))return 'Acil';return 'Normal';}
+  function urgency(text){const t=(text||'').toLocaleLowerCase('tr-TR');if(/acil\s+değil|acil\s+olm/.test(t))return 'Normal';if(/acil|hemen|şimdi|su bas|kıvılcım|duman|yangın|gaz kok/.test(t))return 'Acil';return 'Normal';}
   function mount(){
     if(document.querySelector('[data-a7-smart-launcher]')) return;
     const main=document.querySelector('main'); if(!main) return;
@@ -311,7 +311,7 @@ html[data-theme="light"] .homeHeroV2{background:linear-gradient(160deg,#e7f7ef,#
       const text=ta.value.trim(); if(!text){ta.focus();return;}
       const cat=infer(text), urg=urgency(text);
       const draft=`İş: ${cat}\nÖncelik: ${urg}\n\n${text}`;
-      localStorage.setItem('a7_smart_request_draft',draft);
+      localStorage.setItem('a7_smart_request_draft',JSON.stringify({text:text,category:cat,urgency:urg}));
       result.classList.remove('a7SmartHidden');
       result.innerHTML='<b>Talep taslağın hazır</b><div class="a7SmartLine"><span class="a7SmartLabel">Kategori</span><strong>'+esc(cat)+'</strong></div><div class="a7SmartLine"><span class="a7SmartLabel">Öncelik</span><strong>'+esc(urg)+'</strong></div><div style="margin-top:10px;font-size:12px;line-height:1.5">'+esc(text)+'</div><div class="small muted" style="margin-top:9px">Bu ilk sürüm taslağı hazırlar; sonraki adımda bunu mevcut talep akışına doğrudan bağlayacağız.</div>';
       modal.querySelector('[data-a7-build]').textContent='Taslağı Güncelle';
@@ -4889,6 +4889,13 @@ for(const k of ["showGayrimenkulDetail","showOtomobilDetail"]){const f=window[k]
       return /talep|ne yapıl|ihtiyaç|açıkla|açıklama|sorun|istek|detay/.test(meta);
     })[0] || fields.find(function(el){return el.tagName==='TEXTAREA'}) || null;
     if(ta)setNative(ta,draft.text||'');
+    var urgencySelect=D.getElementById('reqUrgency');
+    if(urgencySelect && draft.urgency){
+      var urgencyMap={'Acil':'Acil','Bugün':'Bugün','Normal':'Uygun zamanda','Uygun zamanda':'Uygun zamanda'};
+      var urgencyValue=urgencyMap[draft.urgency]||'Bugün';
+      var urgencyOpt=Array.from(urgencySelect.options).find(function(o){return o.value===urgencyValue || (o.textContent||'').toLowerCase().indexOf(urgencyValue.toLowerCase())>=0});
+      if(urgencyOpt){urgencySelect.value=urgencyOpt.value;urgencySelect.dispatchEvent(new Event('change',{bubbles:true}));}
+    }
     var selects=fields.filter(function(el){return el.tagName==='SELECT'});
     selects.forEach(function(sel){
       var wanted=(draft.category||'').toLowerCase();
@@ -4911,7 +4918,7 @@ for(const k of ["showGayrimenkulDetail","showOtomobilDetail"]){const f=window[k]
     if(!draft||!draft.text){alert('Taslak bulunamadı. Lütfen talebi yeniden hazırlayın.');return}
     var modal=D.querySelector('[data-a7-smart-modal]');
     if(modal)modal.remove();
-    var directFns=['showMarketplace','openMarketplace','showServices','openServices','goMarketplace','openUsta'];
+    var directFns=['showRequest','showMarketplace','openMarketplace','showServices','openServices','goMarketplace','openUsta'];
     for(var i=0;i<directFns.length;i++){
       try{if(typeof window[directFns[i]]==='function'){window[directFns[i]]();break}}catch(e){}
     }
