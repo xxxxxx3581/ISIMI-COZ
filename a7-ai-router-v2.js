@@ -35,6 +35,10 @@
     box.innerHTML='<div class="a7V2NeedsHead">AI bu istekte birden fazla ihtiyacı ayırdı</div><div class="a7V2NeedList">'+needs.map(n=>'<span class="a7V2Need">'+n.icon+' '+escText(n.label)+'</span>').join('')+'</div><div class="a7V2Note">İlk akış mevcut İşimi Çöz yönlendirmesiyle açılır; diğer ihtiyaçlar bu özetten kaybolmaz.</div>';
     result.appendChild(box);
   }
+  function loadRequestHandoffHelper(){
+    if(document.querySelector('script[data-a7-smart-request]'))return;
+    const s=document.createElement('script');s.src='./a7-smart-request-v1.js';s.setAttribute('data-a7-smart-request','1');s.defer=true;document.head.appendChild(s);
+  }
   function scan(){
     const modal=document.querySelector('[data-a7-smart-modal]');
     if(!modal)return;
@@ -45,5 +49,15 @@
   const observer=new MutationObserver(scan);
   observer.observe(document.documentElement,{childList:true,subtree:true,characterData:true});
   document.addEventListener('input',e=>{if(e.target&&e.target.id==='a7SmartText')setTimeout(scan,0)},true);
+  document.addEventListener('click',e=>{
+    const btn=e.target&&e.target.closest?e.target.closest('[data-a7-smart-modal] [data-a7-build]'):null;
+    if(!btn)return;
+    const modal=btn.closest('[data-a7-smart-modal]');if(!modal)return;
+    const ta=modal.querySelector('#a7SmartText');const text=(ta&&ta.value||'').trim();if(!text)return;
+    const t=norm(text);const isService=RULES.find(r=>r.key==='service')&&has(t,RULES.find(r=>r.key==='service').words);
+    if(isService){localStorage.setItem('a7_ai_last_text',text);localStorage.setItem('a7_ai_request_handoff_at',String(Date.now()));}
+  },true);
+  loadRequestHandoffHelper();
+  setTimeout(loadRequestHandoffHelper,500);
   setTimeout(scan,250);setTimeout(scan,700);
 })();
