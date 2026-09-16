@@ -233,11 +233,13 @@ html[data-theme="light"] .homeHeroV2{background:linear-gradient(160deg,#e7f7ef,#
 .homeBrandMark{display:none!important}
 
 /* Service review stars (customer → provider) */
-.svcReviewCard{margin-top:12px;padding:14px;border-radius:16px;border:1px solid var(--line);background:var(--card)}
-.svcStars{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0}
-.svcStarBtn{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--card2,#102238);font-size:22px;cursor:pointer;line-height:1}
-.svcStarBtn.on{border-color:var(--warning,#f5b942);background:rgba(245,185,66,.15)}
-.svcReviewCard textarea{width:100%;min-height:72px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--text);padding:10px;font:inherit;resize:vertical}
+.svcReviewCard{margin-top:12px;padding:16px;border-radius:18px;border:1px solid var(--line);background:linear-gradient(145deg,rgba(20,184,122,.07),var(--card));position:relative;z-index:2}
+.svcStars{display:flex;gap:7px;flex-wrap:wrap;margin:12px 0;position:relative;z-index:3}
+.svcStarBtn{width:46px;height:46px;border-radius:13px;border:1px solid var(--line);background:var(--card2,#102238);color:#71859a;font-size:24px;cursor:pointer;line-height:1;display:grid;place-items:center;transition:.15s transform,.15s border-color,.15s background,.15s color;touch-action:manipulation;position:relative;z-index:4}
+.svcStarBtn:hover,.svcStarBtn:focus-visible{border-color:rgba(251,191,36,.75);color:#fbbf24;outline:none;transform:translateY(-1px)}
+.svcStarBtn.on{border-color:#fbbf24;background:rgba(251,191,36,.16);color:#fbbf24;box-shadow:0 4px 14px rgba(251,191,36,.12)}
+.svcReviewCard textarea{width:100%;min-height:72px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--text);padding:10px;font:inherit;resize:vertical;position:relative;z-index:3}
+.svcReviewSubmit{position:relative;z-index:5;touch-action:manipulation;cursor:pointer}
 .svcRatingBadge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:700;color:var(--warning,#f5b942)}
 
 </style>
@@ -2486,7 +2488,7 @@ async function renderCustomerReviewBlock(r,talepNo,jobBox,inlineSlot){
     }else{
       window.__svcSelectedRating=0;
       const starBtns=[1,2,3,4,5].map(function(n){return '<button type="button" class="svcStarBtn" data-v="'+n+'" aria-label="'+n+' yıldız" aria-pressed="false" onclick="__svcReviewStar('+n+')">★</button>';}).join('');
-      html='<div class="svcReviewCard"><div class="notice">✅ İş tamamlandı</div><div style="margin-top:10px"><strong>Ustayı değerlendir</strong><div class="small muted">1–5 yıldız · yorum isteğe bağlı</div></div><div class="svcStars" id="svcStars">'+starBtns+'</div><textarea id="svcReviewComment" maxlength="400" placeholder="Kısa yorum (isteğe bağlı)"></textarea><button type="button" class="btn primary" style="width:100%;margin-top:10px" onclick="submitServiceReview('+JSON.stringify(String(talepNo))+')">Değerlendirmeyi gönder</button></div>';
+      html='<div class="svcReviewCard"><div class="notice">✅ İş tamamlandı</div><div style="margin-top:10px"><strong>Ustayı değerlendir</strong><div class="small muted">1–5 yıldız · yorum isteğe bağlı</div></div><div class="svcStars" id="svcStars">'+starBtns+'</div><textarea id="svcReviewComment" maxlength="400" placeholder="Kısa yorum (isteğe bağlı)"></textarea><button type="button" class="btn primary svcReviewSubmit" data-svc-review-submit="1" data-talep-no="'+escapeHTML(String(talepNo))+'" style="width:100%;margin-top:10px">Değerlendirmeyi Gönder</button></div>';
     }
     if(jobBox)jobBox.innerHTML=html;
     if(inlineSlot)inlineSlot.innerHTML=html;
@@ -2965,6 +2967,17 @@ window.acceptRequest=acceptRequest;
 window.completeRequest=completeRequest;
 window.submitServiceReview=submitServiceReview;
 window.__svcReviewStar=__svcReviewStar;
+if(!window.__svcReviewSubmitBound){
+  window.__svcReviewSubmitBound=true;
+  document.addEventListener('click',function(e){
+    const btn=e.target&&e.target.closest?e.target.closest('[data-svc-review-submit="1"]'):null;
+    if(!btn)return;
+    e.preventDefault();
+    e.stopPropagation();
+    const no=btn.getAttribute('data-talep-no');
+    if(no)submitServiceReview(no);
+  },true);
+}
 window.submitOffer=submitOffer;
 window.acceptOffer=acceptOffer;
 window.rejectOffer=rejectOffer;
