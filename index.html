@@ -691,17 +691,6 @@ function homeMicAsk(){
 function showHome(){
   setNav("navHome");
   app(`<div class="homeShell homeShellV3">
-  <section class="homeHeroV3">
-    <h1>Ne yapmak istiyorsun?</h1>
-    <p class="homeSub">Kısaca anlat, en uygun çözümü bulalım.</p>
-    <div class="homeAskRow">
-      <div class="homeAskField">
-        <input id="homeAskInput" type="text" autocomplete="off" placeholder="İhtiyacını kendi cümlenle yaz..." aria-label="İhtiyaç metni" />
-        <button type="button" class="homeMic" onclick="homeMicAsk()" aria-label="Sesli anlat">🎙️</button>
-      </div>
-      <button type="button" class="homeAskGo" id="openHalletButton" onclick="submitHomeAsk()">İşimi Çöz</button>
-    </div>
-  </section>
   <div class="homeSec">
     <div class="homeSecHead">Keşfet</div>
     <div class="homeWorlds">
