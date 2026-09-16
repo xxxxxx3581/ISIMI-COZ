@@ -96,3 +96,13 @@
   observer.observe(document.documentElement,{childList:true,subtree:true});
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',scan,{once:true});else scan();
 })();
+
+/* A7 — Load the safe AI Router V2 companion after the existing voice helper. */
+(()=>{
+  if(document.querySelector('script[data-a7-ai-router-v2]'))return;
+  const s=document.createElement('script');
+  s.src='./a7-ai-router-v2.js';
+  s.setAttribute('data-a7-ai-router-v2','1');
+  s.defer=true;
+  document.head.appendChild(s);
+})();
