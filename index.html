@@ -138,11 +138,13 @@ textarea{min-height:120px;resize:vertical}.row{display:grid;grid-template-column
   .brand strong{font-size:15px}
 }
 
-/* Home: hide injected marketplace widgets (Favorilerim/Mesajlarım/İlanlarım entry) */
-#app:has(.homeShell) .a3514Section,
-#app:has(.homeShell) [data-a3514-center],
-#app:has(.homeShell) .a355Entry,
-#app:has(.homeShell) .a3517Mine{display:none!important}
+/* Hide marketplace promo widgets (Favorilerim/Mesajlarım white box) — functions remain */
+#app .a3514Section,
+#app [data-a3514-center],
+#app .a355Entry,
+#app .a3517Mine,
+#app .marketplacePromo,
+#app [data-marketplace-promo]{display:none!important}
 
 .homeShell{padding:0 0 8px}
 .homeHeroV2{padding:18px 16px 16px;border-radius:22px;border:1px solid var(--line);background:linear-gradient(160deg,rgba(20,184,122,.16),rgba(12,24,40,.72) 48%,var(--card));margin:12px 0 8px;box-shadow:var(--shadow)}
@@ -2258,29 +2260,60 @@ function otoSaveStepFields(){
 
 /* İlan formu akıllı seçimler — sadece UI; kayıt alan adları aynı */
 var OTO_CATALOG={
-  "Toyota":{"Corolla":["1.5 Vision","1.6 Flame","Hybrid"],"Yaris":["1.0","1.5"],"C-HR":["1.8 Hybrid","2.0 Hybrid"],"RAV4":["2.0","2.5 Hybrid"],"Auris":["1.4 D-4D","1.6"]},
-  "Volkswagen":{"Golf":["1.0 TSI","1.5 TSI","1.6 TDI"],"Passat":["1.5 TSI","2.0 TDI"],"Polo":["1.0","1.0 TSI"],"Tiguan":["1.5 TSI","2.0 TDI"],"Caddy":["1.6 TDI","2.0 TDI"]},
-  "Renault":{"Clio":["1.0 TCe","1.5 dCi"],"Megane":["1.3 TCe","1.5 dCi"],"Symbol":["1.2","1.5 dCi"],"Talisman":["1.6 dCi"],"Kadjar":["1.5 dCi"]},
-  "Fiat":{"Egea":["1.3 Multijet","1.4","1.6 Multijet"],"Linea":["1.3 Multijet"],"Doblo":["1.3 Multijet","1.6 Multijet"],"Fiorino":["1.3 Multijet"]},
-  "Ford":{"Focus":["1.5 TDCi","1.0 EcoBoost"],"Fiesta":["1.1","1.0 EcoBoost"],"Puma":["1.0 EcoBoost"],"Courier":["1.5 TDCi","1.0 EcoBoost"],"Kuga":["1.5 EcoBoost","2.0 TDCi"]},
-  "Hyundai":{"i20":["1.2","1.4"],"i30":["1.0 T-GDI","1.6 CRDi"],"Tucson":["1.6 T-GDI","1.6 CRDi"],"Bayon":["1.0 T-GDI"],"Elantra":["1.6"]},
-  "Honda":{"Civic":["1.5 VTEC","1.6 i-DTEC"],"Jazz":["1.3","1.5"],"CR-V":["1.5 VTEC","2.0 Hybrid"]},
-  "Opel":{"Corsa":["1.2","1.5 Diesel"],"Astra":["1.2 Turbo","1.5 Diesel"],"Crossland":["1.2 Turbo"],"Mokka":["1.2 Turbo"]},
-  "Peugeot":{"208":["1.2 PureTech","1.5 BlueHDi"],"301":["1.2","1.5 BlueHDi"],"3008":["1.2 PureTech","1.5 BlueHDi"],"2008":["1.2 PureTech"]},
-  "BMW":{"3 Serisi":["318i","320i","320d"],"5 Serisi":["520i","520d"],"X1":["sDrive18i","xDrive20d"],"X3":["xDrive20i","xDrive20d"]},
-  "Mercedes-Benz":{"C Serisi":["C180","C200","C220d"],"E Serisi":["E200","E220d"],"A Serisi":["A180","A200"],"GLA":["GLA 200"]},
-  "Audi":{"A3":["30 TFSI","35 TDI"],"A4":["35 TFSI","40 TDI"],"A6":["40 TDI"],"Q3":["35 TFSI"]},
-  "Skoda":{"Octavia":["1.0 TSI","1.5 TSI","1.6 TDI"],"Superb":["1.5 TSI","2.0 TDI"],"Fabia":["1.0 TSI"]},
-  "Dacia":{"Sandero":["1.0 SCe","1.0 TCe"],"Duster":["1.3 TCe","1.5 Blue dCi"],"Logan":["1.0 SCe"]},
-  "Nissan":{"Qashqai":["1.3 DIG-T","1.5 dCi"],"Juke":["1.0 DIG-T"],"Micra":["1.0"]},
-  "Kia":{"Sportage":["1.6 T-GDI","1.6 CRDi"],"Ceed":["1.0 T-GDI","1.6 CRDi"],"Rio":["1.2","1.4"]},
-  "Togg":{"T10X":["V1 RWD","V2 AWD"]},
+  "Alfa Romeo":{"Giulia":["2.0 Turbo","2.2 Diesel"],"Stelvio":["2.0 Turbo","2.2 Diesel"],"Tonale":["1.5 Hybrid","1.6 Diesel"]},
+  "Aston Martin":{"DB11":["4.0 V8","5.2 V12"],"Vantage":["4.0 V8"],"DBX":["4.0 V8"]},
+  "Audi":{"A1":["25 TFSI","30 TFSI"],"A3":["30 TFSI","35 TFSI","35 TDI"],"A4":["35 TFSI","40 TFSI","40 TDI"],"A5":["40 TFSI","40 TDI"],"A6":["40 TDI","45 TFSI","50 TDI"],"A7":["45 TFSI","50 TDI"],"A8":["50 TDI","60 TFSI"],"Q2":["30 TFSI","35 TFSI"],"Q3":["35 TFSI","35 TDI","45 TFSI"],"Q5":["40 TDI","45 TFSI"],"Q7":["45 TDI","55 TFSI"],"Q8":["50 TDI","55 TFSI"],"e-tron":["Electric"],"RS6":["4.0 TFSI"]},
+  "BMW":{"1 Serisi":["116i","118i","120d","M135i"],"2 Serisi":["218i","220i","220d","M2"],"3 Serisi":["318i","320i","320d","330i","330e","M3"],"4 Serisi":["420i","420d","M4"],"5 Serisi":["520i","520d","530i","530e","M5"],"7 Serisi":["740i","740d","750e"],"X1":["sDrive18i","xDrive20d","xDrive25e"],"X2":["sDrive18i","xDrive20d"],"X3":["xDrive20i","xDrive20d","xDrive30e","M40i"],"X4":["xDrive20d","M40i"],"X5":["xDrive30d","xDrive40i","xDrive50e"],"X6":["xDrive30d","M60i"],"X7":["xDrive40d","M60i"],"i4":["Electric"],"iX":["Electric"]},
+  "BYD":{"Atto 3":["Electric"],"Seal":["Electric"],"Dolphin":["Electric"],"Han":["Electric"]},
+  "Bentley":{"Continental GT":["4.0 V8","6.0 W12"],"Bentayga":["4.0 V8","6.0 W12"]},
+  "Chery":{"Tiggo 7 Pro":["1.6 TGDI"],"Tiggo 8 Pro":["1.6 TGDI"],"Omoda 5":["1.5 TGDI"]},
+  "Chevrolet":{"Spark":["1.0","1.2"],"Cruze":["1.4 Turbo","1.6 Diesel"],"Captiva":["1.5 Turbo"],"Trax":["1.2 Turbo"]},
+  "Citroën":{"C3":["1.2 PureTech","1.5 BlueHDi"],"C4":["1.2 PureTech","1.5 BlueHDi","Electric"],"C5 Aircross":["1.2 PureTech","1.5 BlueHDi","Hybrid"],"Berlingo":["1.5 BlueHDi"],"C-Elysee":["1.2 PureTech","1.5 BlueHDi"],"Ami":["Electric"]},
+  "Cupra":{"Formentor":["1.5 TSI","2.0 TSI","VZ"],"Leon":["1.5 eTSI","2.0 TSI"],"Born":["Electric"],"Ateca":["2.0 TSI"]},
+  "DFSK":{"Glory 580":["1.5 Turbo"],"Fengon":["1.5 Turbo"]},
+  "Dacia":{"Sandero":["1.0 SCe","1.0 TCe"],"Logan":["1.0 SCe","1.0 TCe"],"Duster":["1.0 TCe","1.3 TCe","1.5 Blue dCi"],"Jogger":["1.0 TCe","Hybrid"],"Spring":["Electric"]},
+  "Ferrari":{"Roma":["3.9 V8"],"Portofino":["3.9 V8"],"SF90":["Hybrid"],"296 GTB":["Hybrid"]},
+  "Fiat":{"Egea":["1.3 Multijet","1.4","1.6 Multijet"],"Tipo":["1.3 Multijet","1.4","1.6 Multijet"],"Panda":["1.0","1.2"],"500":["1.0","1.2","Electric"],"Doblo":["1.3 Multijet","1.6 Multijet"],"Fiorino":["1.3 Multijet"],"Linea":["1.3 Multijet","1.4"],"Fullback":["2.4"]},
+  "Ford":{"Fiesta":["1.1","1.0 EcoBoost"],"Focus":["1.0 EcoBoost","1.5 EcoBoost","1.5 TDCi"],"Mondeo":["1.5 EcoBoost","2.0 TDCi"],"Puma":["1.0 EcoBoost"],"Kuga":["1.5 EcoBoost","2.0 TDCi","PHEV"],"Courier":["1.5 TDCi","1.0 EcoBoost"],"Transit":["2.0 EcoBlue"],"Ranger":["2.0 EcoBlue","3.2 TDCi"],"Mustang":["5.0 V8","2.3 EcoBoost"],"Explorer":["3.0 Hybrid"]},
+  "Genesis":{"G70":["2.0 Turbo","3.3 T"],"G80":["2.5 Turbo","3.5 T"],"GV70":["2.5 Turbo","Electric"],"GV80":["2.5 Turbo","3.5 T"]},
+  "Honda":{"Civic":["1.5 VTEC Turbo","1.6 i-DTEC","Type R"],"Jazz":["1.3","1.5 Hybrid"],"CR-V":["1.5 VTEC","2.0 Hybrid"],"HR-V":["1.5"],"Accord":["1.5 VTEC","2.0 Hybrid"],"City":["1.5"]},
+  "Hyundai":{"i10":["1.0","1.2"],"i20":["1.2","1.4","1.0 T-GDI"],"i30":["1.0 T-GDI","1.5 T-GDI","1.6 CRDi"],"Elantra":["1.6"],"Bayon":["1.0 T-GDI","1.4 MPI"],"Tucson":["1.6 T-GDI","1.6 CRDi","Hybrid"],"Santa Fe":["1.6 T-GDI Hybrid","2.2 CRDi"],"Kona":["1.0 T-GDI","Electric"],"Ioniq":["Hybrid","Electric"],"Staria":["2.2 CRDi"]},
+  "Infiniti":{"Q50":["2.0 Turbo","3.0 V6"],"QX50":["2.0 Turbo"],"QX70":["3.7"]},
+  "Isuzu":{"D-Max":["1.9 Ddi","3.0 Ddi"]},
+  "Jaguar":{"XE":["2.0"],"XF":["2.0"],"F-Pace":["2.0","3.0"],"E-Pace":["2.0"],"I-Pace":["Electric"]},
+  "Jeep":{"Renegade":["1.3 Turbo","1.6 Multijet"],"Compass":["1.3 Turbo","1.6 Multijet"],"Wrangler":["2.0 Turbo","3.6"],"Grand Cherokee":["3.6","2.0 PHEV"]},
+  "Kia":{"Picanto":["1.0","1.2"],"Rio":["1.2","1.4"],"Ceed":["1.0 T-GDI","1.5 T-GDI","1.6 CRDi"],"Sportage":["1.6 T-GDI","1.6 CRDi","Hybrid"],"Sorento":["1.6 T-GDI Hybrid","2.2 CRDi"],"Stonic":["1.0 T-GDI"],"Niro":["Hybrid","PHEV","Electric"],"EV6":["Electric"]},
+  "Lamborghini":{"Urus":["4.0 V8"],"Huracan":["5.2 V10"],"Revuelto":["Hybrid"]},
+  "Land Rover":{"Defender":["2.0 D200","3.0 D250"],"Discovery":["3.0 D250"],"Discovery Sport":["2.0 D165"],"Range Rover Evoque":["2.0 D165","2.0 P200"],"Range Rover Sport":["3.0 D350"],"Range Rover":["3.0 D350","4.4 P530"]},
+  "Lexus":{"UX":["250h","300e"],"NX":["250h","350h","450h+"],"RX":["350h","450h+"],"ES":["300h"],"LS":["500h"]},
+  "MG":{"ZS":["1.5","Electric"],"HS":["1.5 T-GDI"],"MG4":["Electric"],"MG5":["Electric"]},
+  "Maserati":{"Ghibli":["2.0 Hybrid","3.0 V6"],"Levante":["2.0 Hybrid","3.0 V6"],"Quattroporte":["3.0 V6"]},
+  "Mazda":{"2":["1.5"],"3":["2.0","2.0 Skyactiv-X"],"6":["2.0","2.5"],"CX-3":["2.0"],"CX-30":["2.0","2.0 Skyactiv-X"],"CX-5":["2.0","2.5"],"CX-60":["2.5","3.3 Diesel"]},
+  "McLaren":{"720S":["4.0 V8"],"Artura":["Hybrid"],"GT":["4.0 V8"]},
+  "Mercedes-Benz":{"A Serisi":["A180","A200","A220","A250"],"B Serisi":["B180","B200"],"C Serisi":["C180","C200","C220d","C300","C43 AMG"],"E Serisi":["E200","E220d","E300","E350d","E53 AMG"],"S Serisi":["S350d","S450","S500"],"CLA":["CLA 180","CLA 200","CLA 220d"],"GLA":["GLA 180","GLA 200","GLA 220d"],"GLB":["GLB 200","GLB 220d"],"GLC":["GLC 200","GLC 220d","GLC 300"],"GLE":["GLE 300d","GLE 350","GLE 450"],"GLS":["GLS 400d","GLS 450"],"G Serisi":["G 500","G 63 AMG"],"EQA":["Electric"],"EQC":["Electric"],"EQE":["Electric"]},
+  "Mini":{"Cooper":["1.5","2.0","Electric"],"Countryman":["1.5","2.0"],"Clubman":["1.5","2.0"]},
+  "Mitsubishi":{"ASX":["1.6","2.0"],"Eclipse Cross":["1.5 Turbo","PHEV"],"Outlander":["2.0","PHEV"],"L200":["2.4 DI-D"],"Space Star":["1.2"]},
+  "Nissan":{"Micra":["1.0"],"Juke":["1.0 DIG-T"],"Qashqai":["1.3 DIG-T","1.5 dCi","e-Power"],"X-Trail":["1.5 e-Power","1.7 dCi"],"Navara":["2.3 dCi"],"Leaf":["Electric"],"Ariya":["Electric"]},
+  "Opel":{"Corsa":["1.2","1.2 Turbo","1.5 Diesel"],"Astra":["1.2 Turbo","1.5 Diesel"],"Crossland":["1.2 Turbo","1.5 Diesel"],"Mokka":["1.2 Turbo"],"Grandland":["1.2 Turbo","1.5 Diesel","PHEV"],"Insignia":["1.5 Turbo","2.0 Diesel"],"Combo":["1.5 Diesel"]},
+  "Peugeot":{"208":["1.2 PureTech","1.5 BlueHDi","Electric"],"301":["1.2 PureTech","1.5 BlueHDi"],"2008":["1.2 PureTech","1.5 BlueHDi","Electric"],"3008":["1.2 PureTech","1.5 BlueHDi","Hybrid"],"5008":["1.2 PureTech","1.5 BlueHDi"],"308":["1.2 PureTech","1.5 BlueHDi"],"Partner":["1.5 BlueHDi"],"Rifter":["1.5 BlueHDi"]},
+  "Polestar":{"2":["Electric"],"3":["Electric"],"4":["Electric"]},
+  "Porsche":{"911":["Carrera","Carrera S","Turbo"],"Cayenne":["3.0 V6","E-Hybrid","Turbo"],"Macan":["2.0","GTS","Turbo"],"Panamera":["4","4S","Turbo"],"Taycan":["Electric"]},
+  "Renault":{"Clio":["1.0 SCe","1.0 TCe","1.5 dCi"],"Megane":["1.3 TCe","1.5 dCi","E-Tech Hybrid"],"Symbol":["1.2","1.5 dCi"],"Fluence":["1.5 dCi","1.6"],"Captur":["1.0 TCe","1.3 TCe","1.5 dCi"],"Kadjar":["1.5 dCi","1.3 TCe"],"Austral":["1.3 TCe","E-Tech Hybrid"],"Talisman":["1.6 dCi","1.3 TCe"],"Megane E-Tech":["Electric"],"Express":["1.5 dCi"]},
+  "Rolls-Royce":{"Ghost":["6.75 V12"],"Cullinan":["6.75 V12"],"Phantom":["6.75 V12"]},
+  "SEAT":{"Ibiza":["1.0 MPI","1.0 TSI"],"Leon":["1.0 TSI","1.5 TSI","2.0 TDI","Cupra"],"Arona":["1.0 TSI"],"Ateca":["1.0 TSI","1.5 TSI","2.0 TDI"],"Tarraco":["1.5 TSI","2.0 TDI"]},
+  "Skoda":{"Fabia":["1.0 MPI","1.0 TSI"],"Scala":["1.0 TSI","1.5 TSI"],"Octavia":["1.0 TSI","1.5 TSI","2.0 TDI","RS"],"Superb":["1.5 TSI","2.0 TDI","2.0 TSI"],"Kamiq":["1.0 TSI","1.5 TSI"],"Karoq":["1.0 TSI","1.5 TSI","2.0 TDI"],"Kodiaq":["1.5 TSI","2.0 TDI","2.0 TSI"],"Enyaq":["Electric"]},
+  "SsangYong":{"Tivoli":["1.5 Turbo","1.6 Diesel"],"Korando":["1.5 Turbo","1.6 Diesel"],"Rexton":["2.2 Diesel"],"Musso":["2.2 Diesel"]},
+  "Subaru":{"Impreza":["1.6","2.0"],"XV":["2.0 e-Boxer"],"Forester":["2.0 e-Boxer"],"Outback":["2.5"],"BRZ":["2.4"]},
+  "Suzuki":{"Swift":["1.2"],"Vitara":["1.4 Boosterjet","1.6"],"S-Cross":["1.4 Boosterjet"],"Jimny":["1.5"],"Ignis":["1.2"]},
+  "Tesla":{"Model 3":["RWD","Long Range","Performance"],"Model Y":["RWD","Long Range","Performance"],"Model S":["Long Range","Plaid"],"Model X":["Long Range","Plaid"]},
+  "Togg":{"T10X":["V1 RWD","V2 AWD","Range Extender"]},
+  "Toyota":{"Corolla":["1.5 Vision","1.6 Flame","1.8 Hybrid","Dream"],"Yaris":["1.0","1.5","Hybrid"],"C-HR":["1.8 Hybrid","2.0 Hybrid"],"RAV4":["2.0","2.5 Hybrid","Plug-in Hybrid"],"Camry":["2.5 Hybrid"],"Auris":["1.4 D-4D","1.6"],"Hilux":["2.4 D-4D","2.8 D-4D"],"Land Cruiser":["2.8 D-4D","4.0"],"Proace":["1.5 D-4D","2.0 D-4D"],"Aygo":["1.0"],"Yaris Cross":["1.5 Hybrid"]},
+  "Volkswagen":{"Polo":["1.0","1.0 TSI","1.6 TDI"],"Golf":["1.0 TSI","1.5 TSI","1.6 TDI","2.0 GTI"],"Passat":["1.5 TSI","2.0 TDI","2.0 TSI"],"Jetta":["1.4 TSI","1.6 TDI"],"T-Roc":["1.0 TSI","1.5 TSI"],"Tiguan":["1.5 TSI","2.0 TDI","2.0 TSI"],"Touareg":["3.0 TDI","3.0 TFSI"],"Caddy":["1.6 TDI","2.0 TDI"],"Transporter":["2.0 TDI"],"Crafter":["2.0 TDI"],"Arteon":["2.0 TSI","2.0 TDI"],"ID.3":["Electric"],"ID.4":["Electric"]},
+  "Volvo":{"S60":["B4","B5"],"S90":["B5","B6"],"V60":["B4","B5"],"XC40":["B3","B4","Recharge"],"XC60":["B5","B6","Recharge"],"XC90":["B5","B6","Recharge"],"C40":["Recharge Electric"]},
   "Diğer":{"Diğer":["Diğer"]}
 };
-// Fix Ford Courier accidental object - use array
-OTO_CATALOG.Ford.Courier=["1.5 TDCi","1.0 EcoBoost"];
-var OTO_ENGINE_CC=["","1000","1200","1300","1400","1500","1600","1800","2000","2200","2500","3000","Diğer"];
-var OTO_POWER_HP=["","75","90","100","110","120","130","140","150","170","190","200","250","Diğer"];
+var OTO_ENGINE_CC=["","650","800","900","1000","1100","1200","1300","1400","1500","1600","1800","2000","2200","2400","2500","2800","3000","3500","4000+","Elektrikli","Diğer"];
+var OTO_POWER_HP=["","50","60","75","90","100","110","120","130","140","150","160","180","200","220","250","300","350","400","500+","Diğer"];
 
 function otoCatalogBrands(){return Object.keys(OTO_CATALOG);}
 function otoCatalogModels(brand){
