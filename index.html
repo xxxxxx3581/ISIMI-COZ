@@ -329,6 +329,17 @@ html[data-theme="light"] .homeHeroV2{background:linear-gradient(160deg,#e7f7ef,#
   .homeFeaturedCta{padding:8px 12px;font-size:11.5px}
 }
 
+
+/* Home brand message — above Featured Band only */
+.homeBrandMsg{margin:2px 0 10px;padding:2px 2px 0;max-width:36em}
+.homeBrandMsg h1{margin:0 0 6px;font-size:clamp(1.15rem,4.6vw,1.45rem);font-weight:900;letter-spacing:-.03em;line-height:1.2;color:var(--text,#e8eef5)}
+.homeBrandMsg p{margin:0;font-size:clamp(.8rem,3.2vw,.92rem);line-height:1.45;color:var(--muted,#94a3b8);font-weight:500;max-width:28em}
+@media (min-width:720px){
+  .homeBrandMsg{margin:4px 0 12px}
+  .homeBrandMsg h1{font-size:1.55rem}
+  .homeBrandMsg p{font-size:.95rem}
+}
+
 </style>
 </head>
 <body>
@@ -786,6 +797,10 @@ function homeFeaturedInit(){
 function showHome(){
   setNav("navHome");
   app(`<div class="homeShell homeShellV3">
+  <div class="homeBrandMsg">
+    <h1>Bütün işlerin, tek yerde.</h1>
+    <p>Hizmetten tapuya, araçtan resmî işlemlere kadar ihtiyacın olan çözümler tek yerde.</p>
+  </div>
   <div class="homeFeatured" id="homeFeatured" aria-roledescription="carousel" aria-label="Öne çıkanlar">
     <button type="button" class="homeFeaturedNav prev" onclick="homeFeaturedNext(-1)" aria-label="Önceki">‹</button>
     <button type="button" class="homeFeaturedNav next" onclick="homeFeaturedNext(1)" aria-label="Sonraki">›</button>
