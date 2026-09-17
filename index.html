@@ -863,7 +863,8 @@ function showWorkAreaGayrimenkul(){
     <div class="workAreaGrid">
       <button class="btn primary" type="button" onclick="window.__kesfetCat='gayrimenkul';showKesfet(false)">İlanlara bak</button>
       <button class="btn secondary" type="button" onclick="showGayrimenkulCreateForm()">İlan ver</button>
-      <button class="btn secondary" type="button" onclick="openHallet()">Tapu / işlem hazırlığı</button>
+      <button class="btn secondary" type="button" onclick="openHalletAction('showTasinmazMenu')">Tapu / taşınmaz işlem hazırlığı</button>
+      <button class="btn secondary" type="button" onclick="openHalletAction('showKonutSatis')">Konut satışı hazırlığı</button>
     </div>
   </div>`);
 }
@@ -875,7 +876,8 @@ function showWorkAreaArac(){
     <div class="workAreaGrid">
       <button class="btn primary" type="button" onclick="window.__kesfetCat='otomobil';showKesfet(false)">İlanlara bak</button>
       <button class="btn secondary" type="button" onclick="startOtomobilWizard()">İlan ver</button>
-      <button class="btn secondary" type="button" onclick="typeof openHalletAction==='function'?openHalletAction('showArac'):openHallet()">Araç işlemleri</button>
+      <button class="btn secondary" type="button" onclick="openHalletAction('showArac')">Araç işlemleri</button>
+      <button class="btn secondary" type="button" onclick="openHalletAction('showAracSatis')">Aracımı satmak istiyorum</button>
     </div>
   </div>`);
 }
@@ -5156,7 +5158,7 @@ document.addEventListener('change',function(e){
   el.value='';
 },true);
 
-window.Hallet={showGate:gate,showIslemMenu:islem,showTasinmazMenu:tasinmaz,showKonutSatis:konut,showQuestion:question,showResult:result,showCases:cases,showEvrak:evrak,showKurum:kurumHome,close:close};
+window.Hallet={showGate:gate,showIslemMenu:islem,showTasinmazMenu:tasinmaz,showKonutSatis:konut,showQuestion:question,showResult:result,showCases:cases,showEvrak:evrak,showKurum:kurumHome,showArac:arac,showAracSatis:aracSatisStart,showTapuRehber:tapuRehber,close:close};
 })();
 
 /* Hallet başlatıcısı — ana sayfaya dokunmadan çalışır. */
