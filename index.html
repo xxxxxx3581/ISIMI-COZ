@@ -296,45 +296,31 @@ html[data-theme="light"] .homeHeroV2{background:linear-gradient(160deg,#e7f7ef,#
 
 
 
-/* Featured Band V4 — real photo showcase */
-.homeFeatured{position:relative;margin:6px 0 14px;border-radius:18px;overflow:hidden;border:1px solid rgba(15,40,35,.08);background:#eef2f0;height:165px;box-shadow:0 8px 28px rgba(8,24,20,.10)}
+
+/* Featured Band V5 — full photo cards, light stage */
+.homeFeatured{position:relative;margin:6px 0 14px;border-radius:18px;overflow:hidden;border:1px solid rgba(15,40,35,.06);background:#fff;height:168px;box-shadow:0 10px 32px rgba(8,24,20,.08)}
 .homeFeaturedTrack{display:flex;height:100%;transition:transform .55s cubic-bezier(.22,.61,.36,1);will-change:transform;touch-action:pan-y}
-.homeFeaturedSlide{flex:0 0 100%;min-width:100%;height:100%;box-sizing:border-box;display:grid;grid-template-columns:1.05fr .95fr;position:relative;overflow:hidden}
-.homeFeaturedArt{position:relative;height:100%;overflow:hidden}
-.homeFeaturedArt img{width:100%;height:100%;object-fit:cover;object-position:center 20%;display:block}
-.homeFeaturedSlide[data-s="0"] .homeFeaturedArt img{object-position:72% 28%}
-.homeFeaturedSlide[data-s="1"] .homeFeaturedArt img{object-position:70% 25%}
-.homeFeaturedSlide[data-s="2"] .homeFeaturedArt img{object-position:68% 30%}
-.homeFeaturedSlide[data-s="3"] .homeFeaturedArt img{object-position:72% 22%}
-.homeFeaturedSlide::before{content:"";position:absolute;inset:0;z-index:1;pointer-events:none;background:linear-gradient(90deg,rgba(248,250,249,.97) 0%,rgba(248,250,249,.88) 38%,rgba(248,250,249,.35) 58%,rgba(248,250,249,0) 78%)}
-.homeFeaturedBody{position:relative;z-index:2;display:flex;flex-direction:column;justify-content:center;padding:14px 12px 28px 14px;grid-column:1;grid-row:1}
-.homeFeaturedArt{grid-column:1/-1;grid-row:1}
-.homeFeaturedBody h2{margin:0 0 4px;font-size:clamp(15px,4.2vw,18px);font-weight:900;letter-spacing:-.03em;color:#0f1f2a;line-height:1.15;max-width:11em}
-.homeFeaturedBody p{margin:0 0 10px;font-size:11.5px;line-height:1.4;color:#4b5c66;max-width:16em}
-.homeFeaturedCta{display:inline-flex;align-items:center;justify-content:center;align-self:flex-start;padding:9px 14px;border-radius:11px;border:0;font:inherit;font-size:12px;font-weight:800;cursor:pointer;background:linear-gradient(180deg,#1ad08a,#0f9f6a);color:#03140d;box-shadow:0 6px 16px rgba(15,159,106,.28)}
+.homeFeaturedSlide{flex:0 0 100%;min-width:100%;height:100%;box-sizing:border-box;position:relative;overflow:hidden;cursor:pointer;background:#f7faf9}
+.homeFeaturedArt{position:absolute;inset:0}
+.homeFeaturedArt img,.homeFeaturedArt picture{width:100%;height:100%;display:block}
+.homeFeaturedArt img{object-fit:cover;object-position:center center}
+.homeFeaturedBody{position:absolute;left:0;right:0;bottom:0;top:0;z-index:2;display:flex;flex-direction:column;justify-content:flex-end;align-items:flex-start;padding:12px 14px 26px;pointer-events:none;background:linear-gradient(180deg,transparent 55%,rgba(255,255,255,.08) 100%)}
+.homeFeaturedBody h2,.homeFeaturedBody p{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+.homeFeaturedCta{pointer-events:auto;display:inline-flex;align-items:center;justify-content:center;padding:9px 14px;border-radius:999px;border:0;font:inherit;font-size:12px;font-weight:800;cursor:pointer;background:linear-gradient(180deg,#1ad08a,#0f9f6a);color:#03140d;box-shadow:0 6px 16px rgba(15,159,106,.3);opacity:.92}
 .homeFeaturedCta:active{transform:scale(.98)}
-.homeFeaturedDots{position:absolute;left:0;right:0;bottom:9px;display:flex;justify-content:center;gap:6px;z-index:3}
-.homeFeaturedDots button{width:6px;height:6px;border-radius:99px;border:0;padding:0;background:rgba(15,40,35,.22);cursor:pointer}
+.homeFeaturedDots{position:absolute;left:0;right:0;bottom:8px;display:flex;justify-content:center;gap:6px;z-index:4}
+.homeFeaturedDots button{width:6px;height:6px;border-radius:99px;border:0;padding:0;background:rgba(15,40,35,.25);cursor:pointer}
 .homeFeaturedDots button.on{background:#0f9f6a;width:16px}
-.homeFeaturedNav{display:none;position:absolute;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:99px;border:1px solid rgba(15,40,35,.12);background:rgba(255,255,255,.88);color:#0f1f2a;cursor:pointer;font-size:16px;line-height:1;z-index:3;box-shadow:0 3px 12px rgba(0,0,0,.08)}
+.homeFeaturedNav{display:none;position:absolute;top:50%;transform:translateY(-50%);width:30px;height:30px;border-radius:99px;border:1px solid rgba(15,40,35,.1);background:rgba(255,255,255,.9);color:#0f1f2a;cursor:pointer;font-size:16px;line-height:1;z-index:4;box-shadow:0 3px 12px rgba(0,0,0,.08)}
 .homeFeaturedNav.prev{left:8px}
 .homeFeaturedNav.next{right:8px}
 @media (min-width:720px){
-  .homeFeatured{height:205px;border-radius:20px}
-  .homeFeaturedBody{padding:22px 40px 34px 22px}
-  .homeFeaturedBody h2{font-size:22px;max-width:14em}
-  .homeFeaturedBody p{font-size:13px}
+  .homeFeatured{height:210px;border-radius:20px}
   .homeFeaturedCta{padding:10px 16px;font-size:13px}
   .homeFeaturedNav{display:grid;place-items:center}
-  .homeFeaturedSlide[data-s="0"] .homeFeaturedArt img{object-position:65% 25%}
-  .homeFeaturedSlide[data-s="1"] .homeFeaturedArt img{object-position:62% 22%}
-  .homeFeaturedSlide[data-s="2"] .homeFeaturedArt img{object-position:60% 28%}
-  .homeFeaturedSlide[data-s="3"] .homeFeaturedArt img{object-position:65% 20%}
 }
 @media (max-width:380px){
   .homeFeatured{height:155px}
-  .homeFeaturedBody h2{font-size:14px}
-  .homeFeaturedBody p{font-size:11px;margin-bottom:8px}
   .homeFeaturedCta{padding:8px 12px;font-size:11.5px}
 }
 
@@ -799,10 +785,10 @@ function showHome(){
     <button type="button" class="homeFeaturedNav prev" onclick="homeFeaturedNext(-1)" aria-label="Önceki">‹</button>
     <button type="button" class="homeFeaturedNav next" onclick="homeFeaturedNext(1)" aria-label="Sonraki">›</button>
     <div class="homeFeaturedTrack" id="homeFeaturedTrack">
-      <div class="homeFeaturedSlide" data-s="0"><div class="homeFeaturedArt"><picture><source type="image/webp" srcset="featured/hizmet.webp"/><img src="featured/hizmet.jpg" alt="" loading="eager" decoding="async"/></picture></div><div class="homeFeaturedBody"><h2>Hizmet Al</h2><p>Yerel ustayı bul, teklifini al.</p><button type="button" class="homeFeaturedCta" onclick="homeFeaturedCta()">Keşfet</button></div></div>
-      <div class="homeFeaturedSlide" data-s="1"><div class="homeFeaturedArt"><picture><source type="image/webp" srcset="featured/ev.webp"/><img src="featured/ev.jpg" alt="" loading="eager" decoding="async"/></picture></div><div class="homeFeaturedBody"><h2>Ev &amp; Tapu</h2><p>Alım, satım ve resmi hazırlık.</p><button type="button" class="homeFeaturedCta" onclick="homeFeaturedCta()">Keşfet</button></div></div>
-      <div class="homeFeaturedSlide" data-s="2"><div class="homeFeaturedArt"><picture><source type="image/webp" srcset="featured/arac.webp"/><img src="featured/arac.jpg" alt="" loading="eager" decoding="async"/></picture></div><div class="homeFeaturedBody"><h2>Araç</h2><p>Al, sat, işlemleri kolaylaştır.</p><button type="button" class="homeFeaturedCta" onclick="homeFeaturedCta()">Keşfet</button></div></div>
-      <div class="homeFeaturedSlide" data-s="3"><div class="homeFeaturedArt"><picture><source type="image/webp" srcset="featured/evrak.webp"/><img src="featured/evrak.jpg" alt="" loading="eager" decoding="async"/></picture></div><div class="homeFeaturedBody"><h2>Evrak &amp; Resmî</h2><p>Belge ve başvuru adımlarını kolaylaştır.</p><button type="button" class="homeFeaturedCta" onclick="homeFeaturedCta()">Keşfet</button></div></div>
+      <div class="homeFeaturedSlide" data-s="0" onclick="homeFeaturedCta()"><div class="homeFeaturedArt"><picture><source type="image/webp" srcset="featured/hizmet.webp"/><img src="featured/hizmet.jpg" alt="Hizmet Al" loading="eager" decoding="async"/></picture></div><div class="homeFeaturedBody"><h2>Hizmet Al</h2><p>Yerel ustayı bul, teklifini al.</p><button type="button" class="homeFeaturedCta" onclick="event.stopPropagation();homeFeaturedCta()">Keşfet</button></div></div>
+      <div class="homeFeaturedSlide" data-s="1" onclick="homeFeaturedCta()"><div class="homeFeaturedArt"><picture><source type="image/webp" srcset="featured/ev.webp"/><img src="featured/ev.jpg" alt="Ev &amp; Tapu" loading="eager" decoding="async"/></picture></div><div class="homeFeaturedBody"><h2>Ev &amp; Tapu</h2><p>Alım, satım ve resmi hazırlık.</p><button type="button" class="homeFeaturedCta" onclick="event.stopPropagation();homeFeaturedCta()">Keşfet</button></div></div>
+      <div class="homeFeaturedSlide" data-s="2" onclick="homeFeaturedCta()"><div class="homeFeaturedArt"><picture><source type="image/webp" srcset="featured/arac.webp"/><img src="featured/arac.jpg" alt="Araç" loading="eager" decoding="async"/></picture></div><div class="homeFeaturedBody"><h2>Araç</h2><p>Al, sat, işlemleri kolaylaştır.</p><button type="button" class="homeFeaturedCta" onclick="event.stopPropagation();homeFeaturedCta()">Keşfet</button></div></div>
+      <div class="homeFeaturedSlide" data-s="3" onclick="homeFeaturedCta()"><div class="homeFeaturedArt"><picture><source type="image/webp" srcset="featured/evrak.webp"/><img src="featured/evrak.jpg" alt="Evrak &amp; Resmî" loading="eager" decoding="async"/></picture></div><div class="homeFeaturedBody"><h2>Evrak &amp; Resmî</h2><p>Belge ve başvuru adımlarını kolaylaştır.</p><button type="button" class="homeFeaturedCta" onclick="event.stopPropagation();homeFeaturedCta()">Keşfet</button></div></div>
     </div>
     <div class="homeFeaturedDots" role="tablist" aria-label="Slaytlar">
       <button type="button" class="on" onclick="homeFeaturedPause();homeFeaturedGo(0)" aria-label="1"></button>
