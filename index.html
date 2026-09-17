@@ -2480,6 +2480,21 @@ function otoSyncOtherFields(){
   if(clo) clo.style.display=(cl==='Diğer')?'block':'none';
 }
 
+
+function otoApplyLastPrefills(){
+  try{
+    const pref=JSON.parse(localStorage.getItem('oto_last_listing_prefills')||'null');
+    if(!pref) return;
+    __otoW= __otoW||{step:0,data:{},files:[]};
+    __otoW.data=Object.assign({}, __otoW.data||{}, pref);
+    __otoW._prefAsked=true;
+    renderOtomobilWizard();
+  }catch(e){}
+}
+function otoDismissPrefills(){
+  try{ __otoW= __otoW||{step:0,data:{},files:[]}; __otoW._prefAsked=true; renderOtomobilWizard(); }catch(e){}
+}
+
 function startOtomobilWizard(){
   const session=typeof getAuthSession==='function'?getAuthSession():null;
   if(!session||!session.user||!(session.user.id||session.user.user_id)){
@@ -2501,7 +2516,20 @@ function renderOtomobilWizard(){
   const sel=function(cur,val){return cur===val?' selected':'';};
   let body='';
   if(step===0){
-    body=`<label>Araç tipi</label><select id="otoVehicleType">
+    let prefBanner='';
+    try{
+      const pref=JSON.parse(localStorage.getItem('oto_last_listing_prefills')||'null');
+      if(pref&&(pref.brand||pref.city)&&!__otoW._prefAsked){
+        prefBanner=`<div class="card" style="text-align:left;margin-bottom:12px">
+          <p class="small" style="margin:0 0 8px"><b>Daha önce kullandığın bilgileri getireyim mi?</b></p>
+          <div class="splitActions">
+            <button type="button" class="btn primary smallBtn" onclick="otoApplyLastPrefills()">Evet, getir</button>
+            <button type="button" class="btn secondary smallBtn" onclick="otoDismissPrefills()">Hayır</button>
+          </div>
+        </div>`;
+      }
+    }catch(e){}
+    body=prefBanner+`<label>Araç tipi</label><select id="otoVehicleType">
       ${['Otomobil','SUV','Sedan','Hatchback','Station Wagon','Coupe','Cabrio','Pickup','Diğer'].map(function(v){
         return '<option value="'+v+'"'+sel(d.vehicle_type,v)+'>'+v+'</option>';
       }).join('')}
@@ -2551,12 +2579,25 @@ function renderOtomobilWizard(){
     body=`<label>Kondisyon</label><select id="otoCondition">
       ${['','İkinci el','Sıfır'].map(function(v){return '<option value="'+v+'"'+sel(d.condition,v)+'>'+(v||'Seç')+'</option>';}).join('')}
     </select>
-    <label>Hasar durumu</label><input id="otoDamage" value="${escapeHTML(d.damage||'')}" placeholder="Hasarsız / boyasız…">
-    <label>Boya durumu</label><input id="otoPaint" value="${escapeHTML(d.paint||'')}" placeholder="Orijinal / lokal boyalı">
-    <label>Değişen parça</label><input id="otoParts" value="${escapeHTML(d.changed_parts||'')}" placeholder="Yok / …">
-    <label>Servis geçmişi</label><input id="otoService" value="${escapeHTML(d.service_history||'')}" placeholder="Yetkili servis">
-    <label>Muayene</label><input id="otoInspection" value="${escapeHTML(d.inspection||'')}" placeholder="Geçerli / …">
-    <label>Garanti</label><input id="otoWarranty" value="${escapeHTML(d.warranty||'')}" placeholder="Var / yok">`;
+    <label>Hasar durumu</label><select id="otoDamage">
+      ${['','Hasarsız','Hasar kaydı var','Bilinmiyor'].map(function(v){return '<option value="'+v+'"'+sel(d.damage,v)+'>'+(v||'Seç')+'</option>';}).join('')}
+    </select>
+    <label>Boya durumu</label><select id="otoPaint">
+      ${['','Boyasız','Kısmi boyalı','Tamamen boyalı','Bilinmiyor'].map(function(v){return '<option value="'+v+'"'+sel(d.paint,v)+'>'+(v||'Seç')+'</option>';}).join('')}
+    </select>
+    <label>Değişen parça</label><select id="otoParts">
+      ${['','Yok','Var','Bilinmiyor'].map(function(v){return '<option value="'+v+'"'+sel(d.changed_parts,v)+'>'+(v||'Seç')+'</option>';}).join('')}
+    </select>
+    <label>Servis geçmişi</label><select id="otoService">
+      ${['','Yetkili servis','Özel servis','Düzenli bakım','Bilinmiyor'].map(function(v){return '<option value="'+v+'"'+sel(d.service_history,v)+'>'+(v||'Seç')+'</option>';}).join('')}
+    </select>
+    <label>Muayene</label><select id="otoInspection">
+      ${['','Geçerli','Yakında bitiyor','Geçmiş','Bilinmiyor'].map(function(v){return '<option value="'+v+'"'+sel(d.inspection,v)+'>'+(v||'Seç')+'</option>';}).join('')}
+    </select>
+    <label>Garanti</label><select id="otoWarranty">
+      ${['','Var','Yok','Bilinmiyor'].map(function(v){return '<option value="'+v+'"'+sel(d.warranty,v)+'>'+(v||'Seç')+'</option>';}).join('')}
+    </select>
+    <p class="small muted">Emin değilsen “Bilinmiyor” seçebilirsin; zorunlu değildir.</p>`;
   }else if(step===4){
     body=`<div class="row"><div><label>Fiyat *</label><input id="otoPrice" type="number" min="0" step="1" value="${escapeHTML(d.price||'')}"></div>
     <div><label>Para birimi</label><select id="otoCurrency">
@@ -2574,10 +2615,22 @@ function renderOtomobilWizard(){
     <button type="button" class="btn secondary smallBtn otoAiBtn" onclick="otoBuildAiDescription()">✨ AI ile açıklama oluştur</button>
     <p class="small muted">Yalnızca formdaki bilgiler kullanılır; ekstra iddia eklenmez.</p>`;
   }else if(step===6){
+    const nPhoto=(__otoW.files&&__otoW.files.length)||0;
+    const tips=['Ön','Arka','Sol yan','Sağ yan','İç bölüm','Bagaj'];
+    let tipHtml='<ul class="otoCheckList">';
+    tips.forEach(function(label,i){
+      const ok=nPhoto>i;
+      tipHtml+='<li class="'+(ok?'ok':'')+'">'+(ok?'✓ ':'○ ')+label+'</li>';
+    });
+    tipHtml+='</ul>';
+    if(nPhoto>0&&nPhoto<4) tipHtml+='<p class="small muted">İlanını tamamlamak için birkaç fotoğraf daha ekleyebilirsin.</p>';
+    else if(nPhoto===0) tipHtml+='<p class="small muted">En az 1 fotoğraf gerekli; çeşitlilik önerilir, zorunlu değildir.</p>';
     body=`<label>Fotoğraflar * (en az 1)</label>
     <input id="otoPhotos" type="file" accept="image/*" multiple>
     <p class="small muted">En fazla 12 görsel, her biri max 5 MB. Kapak = ilk fotoğraf.</p>
-    <p class="small muted">Seçili dosya: ${(__otoW.files&&__otoW.files.length)?(__otoW.files.length+' dosya'):'henüz yok'}</p>`;
+    <p class="small muted">Seçili dosya: ${nPhoto? (nPhoto+' dosya'):'henüz yok'}</p>
+    <p class="small" style="margin-top:8px"><b>Önerilen açıları</b></p>
+    ${tipHtml}`;
   }else{
     // preview step 7
     const t=escapeHTML(d.title||'—');
@@ -2731,17 +2784,53 @@ function showOtomobilDraftResult(row, photoInfo){
         photoInfo.failed.map(function(f){return `<li>${escapeHTML(f)}</li>`;}).join('')+`</ul>`;
     }
   }
+  try{
+    if(row&&__otoW&&__otoW.data){
+      localStorage.setItem('oto_last_listing_prefills', JSON.stringify({
+        vehicle_type:__otoW.data.vehicle_type||'',
+        seller_type:__otoW.data.seller_type||'',
+        brand:__otoW.data.brand||'',
+        model:__otoW.data.model||'',
+        version:__otoW.data.version||'',
+        city:__otoW.data.city||'',
+        district:__otoW.data.district||'',
+        body:__otoW.data.body||'',
+        color:__otoW.data.color||'',
+        fuel:__otoW.data.fuel||'',
+        gear:__otoW.data.gear||''
+      }));
+    }
+  }catch(e){}
   app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showOtomobilHub()">← Otomobil</button></div>
   <div class="formCard">
-    <span class="badge">Taslak</span>
-    <h1>İlan taslağın oluşturuldu</h1>
-    <p class="muted">Yayınlayana kadar yalnızca sen görürsün.</p>
+    <span class="badge">Hazır</span>
+    <h1>İlanın hazır.</h1>
+    <p class="muted">Taslak olarak kaydedildi. İstersen şimdi yayınlayabilir veya paylaşabilirsin.</p>
     <div class="card" style="text-align:left;margin:12px 0"><strong>${title}</strong><div class="small muted">Durum: draft</div>${photoNote}</div>
     <div class="splitActions">
       <button class="btn primary" type="button" onclick="publishOtomobilListing('${id}')">İlanı Yayınla</button>
-      <button class="btn secondary" type="button" onclick="showOtomobilHub()">Daha sonra</button>
+      <button class="btn secondary" type="button" onclick="typeof showOtomobilDetail==='function'?showOtomobilDetail('${id}'):showOtomobilHub()">İlanı görüntüle</button>
+    </div>
+    <div class="splitActions" style="margin-top:8px">
+      <button class="btn secondary" type="button" onclick="shareOtomobilListing('${id}', '${title.replace(/'/g,"\'")}')">Paylaş</button>
+      <button class="btn secondary" type="button" onclick="showOtomobilHub()">Bitir</button>
     </div>
   </div>`);
+}
+function shareOtomobilListing(id, title){
+  try{
+    const url=location.origin+location.pathname+'#otomobil='+encodeURIComponent(id||'');
+    const text=(title||'İlan')+' — İşimi Çöz';
+    if(navigator.share){
+      navigator.share({title:text, text:text, url:url}).catch(function(){});
+      return;
+    }
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(url).then(function(){ alert('Bağlantı panoya kopyalandı.'); }).catch(function(){ prompt('Bağlantıyı kopyala:', url); });
+      return;
+    }
+    prompt('Bağlantıyı kopyala:', url);
+  }catch(e){ alert('Paylaşım şu an kullanılamıyor.'); }
 }
 
 async function publishOtomobilListing(id){
@@ -2878,6 +2967,9 @@ window.homeFeaturedTogglePause=homeFeaturedTogglePause;
 window.homeFeaturedSpeak=homeFeaturedSpeak;
 window.resumeOtoListingDraft=resumeOtoListingDraft;
 window.otoBuildAiDescription=otoBuildAiDescription;
+window.otoApplyLastPrefills=otoApplyLastPrefills;
+window.otoDismissPrefills=otoDismissPrefills;
+window.shareOtomobilListing=shareOtomobilListing;
 window.otoOnModelChange=otoOnModelChange;
 window.otoSyncOtherFields=otoSyncOtherFields;
 window.gmOnCategoryChange=gmOnCategoryChange;
