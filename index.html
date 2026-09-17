@@ -370,6 +370,19 @@ html[data-theme="light"] .homeHeroV2{background:linear-gradient(160deg,#e7f7ef,#
 .kesfetLoc,.kesfetFeat{font-size:11.5px;color:var(--muted);margin:0;line-height:1.35}
 .kesfetFeat{margin-top:4px}
 
+
+/* Ana çalışma alanları */
+.homeWorkAreas{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (min-width:720px){.homeWorkAreas{grid-template-columns:1fr 1fr 1fr 1fr;gap:12px}}
+.homeWorkCard{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:6px;padding:14px 12px;border-radius:16px;border:1px solid var(--line,rgba(255,255,255,.12));background:var(--card,#121c2b);color:inherit;font:inherit;cursor:pointer;min-height:96px}
+.homeWorkCard:active{transform:scale(.99)}
+.homeWorkCard .hwIcon{font-size:22px;line-height:1}
+.homeWorkCard strong{font-size:14px;font-weight:800;letter-spacing:-.01em}
+.homeWorkCard span{font-size:11.5px;color:var(--muted);line-height:1.35}
+.workAreaShell{padding:0 0 20px}
+.workAreaGrid{display:grid;gap:10px;margin-top:12px}
+.workAreaGrid .btn{width:100%;justify-content:flex-start;text-align:left}
+
 </style>
 </head>
 <body>
@@ -824,6 +837,51 @@ function homeFeaturedInit(){
   homeFeaturedStartAuto();
 }
 
+
+// === ANA ÇALIŞMA ALANLARI START ===
+function openWorkArea(area){
+  const a=String(area||'');
+  if(a==='hizmet'){
+    if(typeof showRequest==='function') return showRequest();
+    alert('Hizmet ekranı yüklenemedi.');
+    return;
+  }
+  if(a==='resmi'){
+    if(typeof openHallet==='function') return openHallet();
+    if(typeof openHalletAction==='function') return openHalletAction('showKurum');
+    alert('Resmî işlemler yüklenemedi.');
+    return;
+  }
+  if(a==='gayrimenkul') return showWorkAreaGayrimenkul();
+  if(a==='arac') return showWorkAreaArac();
+}
+function showWorkAreaGayrimenkul(){
+  app(`<div class="workAreaShell">
+    <button class="btn secondary smallBtn" type="button" onclick="showHome()">← Ana sayfa</button>
+    <h1 style="margin:12px 0 4px">🏠 Gayrimenkul</h1>
+    <p class="muted small" style="margin:0 0 8px">Al · sat · kirala · ilanlar · tapu</p>
+    <div class="workAreaGrid">
+      <button class="btn primary" type="button" onclick="window.__kesfetCat='gayrimenkul';showKesfet(false)">İlanlara bak</button>
+      <button class="btn secondary" type="button" onclick="showGayrimenkulCreateForm()">İlan ver</button>
+      <button class="btn secondary" type="button" onclick="openHallet()">Tapu / işlem hazırlığı</button>
+    </div>
+  </div>`);
+}
+function showWorkAreaArac(){
+  app(`<div class="workAreaShell">
+    <button class="btn secondary smallBtn" type="button" onclick="showHome()">← Ana sayfa</button>
+    <h1 style="margin:12px 0 4px">🚗 Araç</h1>
+    <p class="muted small" style="margin:0 0 8px">Al · sat · ara · ilanlar · işlemler</p>
+    <div class="workAreaGrid">
+      <button class="btn primary" type="button" onclick="window.__kesfetCat='otomobil';showKesfet(false)">İlanlara bak</button>
+      <button class="btn secondary" type="button" onclick="startOtomobilWizard()">İlan ver</button>
+      <button class="btn secondary" type="button" onclick="typeof openHalletAction==='function'?openHalletAction('showArac'):openHallet()">Araç işlemleri</button>
+    </div>
+  </div>`);
+}
+// === ANA ÇALIŞMA ALANLARI END ===
+
+
 function showHome(){
   setNav("navHome");
   app(`<div class="homeShell homeShellV3">
@@ -848,12 +906,12 @@ function showHome(){
     </div>
   </div>
   <div class="homeSec">
-    <div class="homeSecHead">Keşfet</div>
-    <div class="homeWorlds">
-      <button type="button" class="homeWorld" onclick="showRequest()"><div class="hwIcon">🔧</div><strong>Hizmet Al</strong><span>Usta bul · teklif al</span></button>
-      <button type="button" class="homeWorld" onclick="openHallet()"><div class="hwIcon">🏠</div><strong>Ev &amp; Tapu</strong><span>Al · sat · kirala · tapu</span></button>
-      <button type="button" class="homeWorld" onclick="typeof showListingsCategory==='function'?showListingsCategory('otomobil'):showListingsHub()"><div class="hwIcon">🚗</div><strong>Araç</strong><span>Ara · al · sat</span></button>
-      <button type="button" class="homeWorld" onclick="openHalletAction('showKurum')"><div class="hwIcon">📄</div><strong>Evrak &amp; Resmî</strong><span>Belge · başvuru · işlem</span></button>
+    <div class="homeSecHead">Çalışma alanları</div>
+    <div class="homeWorkAreas">
+      <button type="button" class="homeWorkCard" onclick="openWorkArea('gayrimenkul')"><div class="hwIcon">🏠</div><strong>Gayrimenkul</strong><span>Al · sat · kirala · ilanlar · tapu</span></button>
+      <button type="button" class="homeWorkCard" onclick="openWorkArea('arac')"><div class="hwIcon">🚗</div><strong>Araç</strong><span>Al · sat · ara · ilanlar · işlemler</span></button>
+      <button type="button" class="homeWorkCard" onclick="openWorkArea('hizmet')"><div class="hwIcon">🔧</div><strong>Usta &amp; Hizmet</strong><span>Usta bul · hizmet talep et</span></button>
+      <button type="button" class="homeWorkCard" onclick="openWorkArea('resmi')"><div class="hwIcon">📄</div><strong>Resmî İşlemler</strong><span>Evrak · başvuru · tapu · kurum</span></button>
     </div>
   </div>
   <div class="homeSec">
@@ -2037,6 +2095,9 @@ async function publishGayrimenkulListing(id){
 
 window.showListingsHub=showListingsHub;
 window.showKesfet=showKesfet;
+window.openWorkArea=openWorkArea;
+window.showWorkAreaGayrimenkul=showWorkAreaGayrimenkul;
+window.showWorkAreaArac=showWorkAreaArac;
 window.kesfetSetCat=kesfetSetCat;
 window.kesfetCreatePick=kesfetCreatePick;
 window.showListingsCategory=showListingsCategory;
