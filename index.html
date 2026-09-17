@@ -905,32 +905,175 @@ function makeRequestNumber(){const d=new Date();return `IC-${d.getFullYear()}${S
 
 // === MARKETPLACE 2.0 A2 HUB START ===
 // Isolated Marketplace 2.0 hub. A3.1: gayrimenkul browse/create via public.listings only.
-function showListingsHub(){
-  try{ if(typeof setNav==='function') setNav('navHome'); }catch(e){}
-  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="listingsHubBack()">← Ana sayfaya dön</button></div>
-  <div class="section">
-    <span class="badge">İlanlar</span>
-    <h1>Ne arıyorsun?</h1>
-    <p class="muted small">Gayrimenkul ve araç ilanlarını keşfet. Hizmet için mevcut talep akışını kullan.</p>
-    <div class="actionGrid homeMenuGrid" style="margin-top:12px">
-      <button class="actionCard homeMenuCard" type="button" onclick="showListingsCategory('gayrimenkul')">
-        <div class="emoji">🏠</div>
-        <strong>Gayrimenkul</strong>
-        <span>Konut, iş yeri ve arsa ilanları</span>
-      </button>
-      <button class="actionCard homeMenuCard" type="button" onclick="showListingsCategory('otomobil')">
-        <div class="emoji">🚗</div>
-        <strong>Otomobil</strong>
-        <span>Araç alım-satım ilanları</span>
-      </button>
-      <button class="actionCard homeMenuCard" type="button" onclick="showListingsCategory('hizmet')">
-        <div class="emoji">🛠️</div>
-        <strong>Hizmetler</strong>
-        <span>Mevcut hizmet talebi ve usta eşleştirme</span>
-      </button>
-    </div>
-  </div>`);
+
+// === BİRLEŞİK İLANLAR KEŞFET START ===
+window.__kesfetCat=window.__kesfetCat||'all';
+window.__kesfetUnified=false;
+
+function kesfetActiveType(){
+  const c=window.__kesfetCat||'all';
+  if(c==='otomobil'||c==='arac') return 'otomobil';
+  if(c==='gayrimenkul') return 'gayrimenkul';
+  return 'gayrimenkul'; // search/filter default type when all/hizmet
 }
+
+function kesfetSetCat(cat){
+  window.__kesfetCat=cat||'all';
+  if(cat==='hizmet'){
+    if(typeof showRequest==='function') return showRequest();
+    alert('Hizmet talebi ekranı yüklenemedi.');
+    return;
+  }
+  return showKesfet(true);
+}
+
+function kesfetCreatePick(){
+  const cat=window.__kesfetCat||'all';
+  if(cat==='gayrimenkul') return showGayrimenkulCreateForm();
+  if(cat==='otomobil'||cat==='arac') return startOtomobilWizard();
+  // seçim
+  const old=document.getElementById('kesfetCreateSheet');
+  if(old) old.remove();
+  const wrap=document.createElement('div');
+  wrap.id='kesfetCreateSheet';
+  wrap.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center';
+  wrap.onclick=function(e){ if(e.target===wrap) wrap.remove(); };
+  wrap.innerHTML='<div style="width:100%;max-width:480px;background:var(--card,#121c2b);border-radius:16px 16px 0 0;padding:16px;color:var(--text)" onclick="event.stopPropagation()">'+
+    '<strong style="display:block;margin-bottom:12px">Ne ilanı vereceksin?</strong>'+
+    '<button class="btn primary" style="width:100%;margin-bottom:8px" type="button" onclick="document.getElementById(\'kesfetCreateSheet\').remove();showGayrimenkulCreateForm()">🏠 Gayrimenkul</button>'+
+    '<button class="btn secondary" style="width:100%;margin-bottom:8px" type="button" onclick="document.getElementById(\'kesfetCreateSheet\').remove();startOtomobilWizard()">🚗 Araç</button>'+
+    '<button class="btn secondary" style="width:100%" type="button" onclick="document.getElementById(\'kesfetCreateSheet\').remove()">Vazgeç</button></div>';
+  document.body.appendChild(wrap);
+}
+
+function kesfetMainChipsHtml(){
+  const cat=window.__kesfetCat||'all';
+  const items=[['all','Tümü'],['gayrimenkul','Gayrimenkul'],['otomobil','Araç'],['hizmet','Hizmet']];
+  return items.map(function(it){
+    return '<button type="button" class="kesfetChip'+(cat===it[0]?' on':'')+'" onclick="kesfetSetCat(\''+it[0]+'\')">'+it[1]+'</button>';
+  }).join('');
+}
+
+function kesfetSubChipsHtml(){
+  const cat=window.__kesfetCat||'all';
+  if(cat==='gayrimenkul') return kesfetChipsHtml('gayrimenkul');
+  if(cat==='otomobil') return kesfetChipsHtml('otomobil');
+  return ''; // Tümü: alt chip yok
+}
+
+async function kesfetEnsureCache(kind, force){
+  if(kind==='gayrimenkul'){
+    if(force||!__listingCache.gayrimenkul.length){
+      const path="listings?listing_type=eq.gayrimenkul&status=eq.published&order=created_at.desc&select=id,title,price,currency,city,district,neighborhood,category,description,status,created_at,metadata";
+      const rows=await supabaseRequest('GET', path);
+      __listingCache.gayrimenkul=Array.isArray(rows)?rows:[];
+    }
+  } else if(kind==='otomobil'){
+    if(force||!__listingCache.otomobil.length){
+      const path="listings?listing_type=eq.otomobil&status=eq.published&order=created_at.desc&select=id,title,price,currency,city,district,category,description,metadata,created_at";
+      const rows=await supabaseRequest('GET', path);
+      __listingCache.otomobil=Array.isArray(rows)?rows:[];
+    }
+  }
+}
+
+function kesfetBuildList(keepCache){
+  // returns Promise of {list:[{row,type}], typeForFilter}
+  const cat=window.__kesfetCat||'all';
+  return (async function(){
+    if(cat==='gayrimenkul'){
+      await kesfetEnsureCache('gayrimenkul', !keepCache);
+      const list=applyListingFiltersLocal('gayrimenkul', __listingCache.gayrimenkul).map(function(r){ return {row:r, type:'gayrimenkul'}; });
+      return {list:list, filterType:'gayrimenkul'};
+    }
+    if(cat==='otomobil'){
+      await kesfetEnsureCache('otomobil', !keepCache);
+      const list=applyListingFiltersLocal('otomobil', __listingCache.otomobil).map(function(r){ return {row:r, type:'otomobil'}; });
+      return {list:list, filterType:'otomobil'};
+    }
+    // Tümü: her iki cache, kendi filtreleriyle, birleşik sort
+    await kesfetEnsureCache('gayrimenkul', !keepCache);
+    await kesfetEnsureCache('otomobil', !keepCache);
+    const gm=applyListingFiltersLocal('gayrimenkul', __listingCache.gayrimenkul).map(function(r){ return {row:r, type:'gayrimenkul'}; });
+    const ot=applyListingFiltersLocal('otomobil', __listingCache.otomobil).map(function(r){ return {row:r, type:'otomobil'}; });
+    let list=gm.concat(ot);
+    const sort=(getListingFilterState('gayrimenkul').sort)||(getListingFilterState('otomobil').sort)||'new';
+    list.sort(function(a,b){
+      const pa=a.row, pb=b.row;
+      if(sort==='price_asc') return (Number(pa.price)||0)-(Number(pb.price)||0);
+      if(sort==='price_desc') return (Number(pb.price)||0)-(Number(pa.price)||0);
+      return String(pb.created_at||'').localeCompare(String(pa.created_at||''));
+    });
+    return {list:list, filterType:'gayrimenkul'};
+  })();
+}
+
+async function showKesfet(keepCache){
+  window.__kesfetUnified=true;
+  try{ if(typeof setNav==='function') setNav('navHome'); }catch(e){}
+  const cat=window.__kesfetCat||'all';
+  if(cat==='hizmet'){
+    if(typeof showRequest==='function') return showRequest();
+    return;
+  }
+  const filterType=kesfetActiveType();
+  const f=getListingFilterState(filterType)||{};
+  const active=countActiveListingFilters(filterType);
+  const sort=f.sort||'new';
+  const locLabel=escapeHTML([f.city||'İzmir', f.district].filter(Boolean).join(' / ')||'İzmir');
+  const title='İlanlar';
+  app(`<div class="kesfetShell">
+    <div class="kesfetTop">
+      <div>
+        <button class="btn secondary smallBtn" type="button" onclick="showHome()">← Ana sayfa</button>
+        <h1 style="margin-top:10px">${title}</h1>
+      </div>
+      <button class="btn primary smallBtn" type="button" onclick="kesfetCreatePick()">+ İlan ver</button>
+    </div>
+    <div class="kesfetSearchRow">
+      <input id="listingSearchQ" class="kesfetQ" type="search" placeholder="🔍 Ne arıyorsun?" value="${escapeHTML(f.q||'')}" onkeydown="if(event.key==='Enter'){event.preventDefault();applyListingSearch(kesfetActiveType());}">
+      <div class="kesfetTools">
+        <button type="button" class="btn secondary smallBtn" onclick="openListingFilterPanel(kesfetActiveType())">Filtrele${active?(' · '+active):''}</button>
+        <select class="btn secondary smallBtn" style="flex:1" onchange="kesfetSetSort(kesfetActiveType(), this.value)">
+          <option value="new"${sort==='new'?' selected':''}>En yeni</option>
+          <option value="price_asc"${sort==='price_asc'?' selected':''}>Fiyat artan</option>
+          <option value="price_desc"${sort==='price_desc'?' selected':''}>Fiyat azalan</option>
+        </select>
+      </div>
+    </div>
+    <div class="small muted" style="margin:0 0 6px">📍 ${locLabel}</div>
+    <div class="kesfetChips">${kesfetMainChipsHtml()}</div>
+    <div class="kesfetChips" id="kesfetSubChips">${kesfetSubChipsHtml()}</div>
+    <div class="kesfetMeta"><span id="kesfetCount">Yükleniyor…</span></div>
+    <div id="kesfetGrid" class="muted small">Yükleniyor…</div>
+  </div>`);
+  const box=document.getElementById('kesfetGrid');
+  const meta=document.getElementById('kesfetCount');
+  try{
+    const built=await kesfetBuildList(!!keepCache);
+    const list=built.list||[];
+    if(meta) meta.textContent=list.length+' ilan';
+    if(!list.length){
+      box.innerHTML=`<div class="card empty"><h3>Bu kriterlere uygun ilan bulunamadı.</h3>
+        <button class="btn secondary" type="button" onclick="clearListingFilters('gayrimenkul');clearListingFilters('otomobil');showKesfet(true)">Filtreleri temizle</button>
+        <button class="btn primary" type="button" onclick="kesfetCreatePick()">İlan Ver</button></div>`;
+      return;
+    }
+    box.className='kesfetGrid';
+    box.innerHTML=list.map(function(item){ return kesfetCardHtml(item.row, item.type); }).join('');
+  }catch(err){
+    box.innerHTML=`<div class="card empty"><h3>İlanlar yüklenemedi</h3><p class="small muted">${escapeHTML(err&&err.message?err.message:String(err))}</p>
+      <button class="btn secondary" type="button" onclick="showKesfet()">Tekrar dene</button></div>`;
+  }
+}
+
+function showListingsHub(){
+  window.__kesfetCat=window.__kesfetCat||'all';
+  return showKesfet(false);
+}
+// === BİRLEŞİK İLANLAR KEŞFET END ===
+
+
 
 function showListingsCategory(type){
   const t=String(type||'');
@@ -1175,6 +1318,12 @@ function applyListingSearch(type){
   if(!st) return;
   const input=document.getElementById('listingSearchQ');
   st.q=input?(String(input.value||'').trim()):'';
+  // sync q to both when unified "all"
+  if(window.__kesfetUnified && (window.__kesfetCat==='all'||!window.__kesfetCat)){
+    const g=getListingFilterState('gayrimenkul'); const o=getListingFilterState('otomobil');
+    if(g) g.q=st.q; if(o) o.q=st.q;
+  }
+  if(window.__kesfetUnified && typeof showKesfet==='function') return showKesfet(true);
   if(type==='otomobil') return showOtomobilBrowse(true);
   return showGayrimenkulBrowse(true);
 }
@@ -1272,7 +1421,8 @@ function openListingFilterPanel(type){
       st.category=(document.getElementById('lfCategory')||{}).value||'';
     }
     closeListingFilterPanel();
-    if(type==='otomobil') showOtomobilBrowse(true);
+    if(window.__kesfetUnified && typeof showKesfet==='function') showKesfet(true);
+    else if(type==='otomobil') showOtomobilBrowse(true);
     else showGayrimenkulBrowse(true);
   };
 }
@@ -1282,6 +1432,12 @@ function kesfetSetSort(type, sort){
   const st=getListingFilterState(type);
   if(!st) return;
   st.sort=sort||'new';
+  // keep sorts loosely in sync for "all"
+  try{
+    const g=getListingFilterState('gayrimenkul'); const o=getListingFilterState('otomobil');
+    if(g) g.sort=st.sort; if(o) o.sort=st.sort;
+  }catch(e){}
+  if(window.__kesfetUnified && typeof showKesfet==='function') return showKesfet(true);
   if(type==='otomobil') return showOtomobilBrowse(true);
   return showGayrimenkulBrowse(true);
 }
@@ -1296,6 +1452,7 @@ function kesfetChipClick(type, chip){
     else if(chip==='Benzin'||chip==='Dizel'||chip==='Elektrik'){ st.fuel=chip; st.gear=''; }
     else if(chip==='Otomatik'||chip==='Manuel'){ st.gear=chip; st.fuel=''; }
   }
+  if(window.__kesfetUnified && typeof showKesfet==='function') return showKesfet(true);
   if(type==='otomobil') return showOtomobilBrowse(true);
   return showGayrimenkulBrowse(true);
 }
@@ -1549,9 +1706,9 @@ async function showGayrimenkulDetail(listingId){
   const id=String(listingId||'').replace(/[^a-zA-Z0-9-]/g,'');
   if(!id){
     alert('İlan bulunamadı.');
-    return showGayrimenkulBrowse();
+    return (window.__kesfetUnified&&typeof showKesfet==='function')?showKesfet(true):showGayrimenkulBrowse();
   }
-  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showGayrimenkulBrowse()">← Gayrimenkul ilanlarına dön</button></div>
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="(window.__kesfetUnified&&showKesfet)?showKesfet(true):showGayrimenkulBrowse()">← İlanlara dön</button></div>
   <div class="formCard">
     <span class="badge">🏠 İlan detayı</span>
     <div id="gmDetailArea" class="muted small">Yükleniyor…</div>
@@ -1879,6 +2036,9 @@ async function publishGayrimenkulListing(id){
 
 
 window.showListingsHub=showListingsHub;
+window.showKesfet=showKesfet;
+window.kesfetSetCat=kesfetSetCat;
+window.kesfetCreatePick=kesfetCreatePick;
 window.showListingsCategory=showListingsCategory;
 window.listingsHubBack=listingsHubBack;
 window.showGayrimenkulHub=showGayrimenkulHub;
@@ -2238,8 +2398,8 @@ async function showOtomobilBrowse(keepCache){
 
 async function showOtomobilDetail(listingId){
   const id=String(listingId||'').replace(/[^a-zA-Z0-9-]/g,'');
-  if(!id){ alert('İlan bulunamadı.'); return showOtomobilBrowse(); }
-  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showOtomobilBrowse()">← Otomobil ilanlarına dön</button></div>
+  if(!id){ alert('İlan bulunamadı.'); return (window.__kesfetUnified&&typeof showKesfet==='function')?showKesfet(true):showOtomobilBrowse(); }
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="(window.__kesfetUnified&&showKesfet)?showKesfet(true):showOtomobilBrowse()">← İlanlara dön</button></div>
   <div class="formCard"><span class="badge">🚗 İlan detayı</span><div id="otoDetailArea" class="muted small">Yükleniyor…</div></div>`);
   const box=document.getElementById('otoDetailArea');
   try{
