@@ -2066,8 +2066,9 @@ function showGayrimenkulCreateForm(){
     <input id="gmPhotos" type="file" accept="image/*" multiple>
     <p class="small muted">İsteğe bağlı. Birden fazla görsel seçebilirsin (her biri en fazla 5 MB). Android galeri / kamera desteklenir.</p>
     <div class="notice">🔒 İlan sahibi olarak sen görünürsün. Taslak yalnızca sende kalır; yayınlayana kadar başkaları görmez.</div>
-    <button class="btn primary" type="button" id="gmSaveBtn" onclick="createGayrimenkulListing()">Taslak olarak kaydet</button>
+    <button class="btn primary" type="button" id="gmSaveBtn" onclick="showGayrimenkulConfirm()">Taslak olarak kaydet</button>
   </div>`);
+  try{ if(window.__gmRestoreForm){ gmApplyFormDraft(window.__gmFormDraft); window.__gmRestoreForm=false; } }catch(e){}
 }
 
 
@@ -2106,6 +2107,98 @@ async function listingsAuthWrite(method, path, body){
   }
   return {data:d, uid:uid, token:token};
 }
+
+
+function gmCollectFormDraft(){
+  const ids=['gmTitle','gmDesc','gmDealType','gmCategory','gmRooms','gmBuildingAge','gmFloor','gmHeating','gmBaths','gmBalcony','gmElevator','gmParking','gmFurnished','gmSite','gmUsage','gmSqm','gmArsaSqm','gmZoning','gmPrice','gmCurrency','gmCity','gmDistrict','gmNeighborhood'];
+  const d={};
+  ids.forEach(function(id){
+    const el=document.getElementById(id);
+    d[id]=el?String(el.value||''):'';
+  });
+  const fi=document.getElementById('gmPhotos');
+  d._files=fi&&fi.files?Array.from(fi.files):[];
+  return d;
+}
+function gmApplyFormDraft(d){
+  if(!d) return;
+  Object.keys(d).forEach(function(id){
+    if(id==='_files') return;
+    const el=document.getElementById(id);
+    if(el&&d[id]!=null) el.value=d[id];
+  });
+  try{ if(typeof gmOnCategoryChange==='function') gmOnCategoryChange(); }catch(e){}
+  const fi=document.getElementById('gmPhotos');
+  if(fi&&d._files&&d._files.length&&typeof DataTransfer!=='undefined'){
+    try{
+      const dt=new DataTransfer();
+      d._files.forEach(function(f){ try{ dt.items.add(f); }catch(e){} });
+      fi.files=dt.files;
+    }catch(e){}
+  }
+}
+function showGayrimenkulConfirm(){
+  const d=gmCollectFormDraft();
+  window.__gmFormDraft=d;
+  const title=(d.gmTitle||'').trim();
+  const catRaw=(d.gmCategory||'').trim();
+  const catParts=catRaw.split('|');
+  const kind=catParts[0]||'';
+  const sub=catParts[1]||'';
+  const deal=d.gmDealType==='kiralik'?'Kiralık':(d.gmDealType==='satilik'?'Satılık':(d.gmDealType||''));
+  const loc=[d.gmCity,d.gmDistrict,d.gmNeighborhood].filter(Boolean).join(' / ');
+  const sqm=d.gmSqm||d.gmArsaSqm||'';
+  const price=d.gmPrice? (d.gmPrice+' '+(d.gmCurrency||'TRY')) : '';
+  const lines=[];
+  if(title) lines.push('<div><b>'+escapeHTML(title)+'</b></div>');
+  const typeLine=[deal, kind, sub].filter(Boolean).join(' · ');
+  if(typeLine) lines.push('<div class="small">'+escapeHTML(typeLine)+'</div>');
+  if(loc) lines.push('<div class="small">'+escapeHTML(loc)+'</div>');
+  if(sqm) lines.push('<div class="small">Brüt m²: '+escapeHTML(sqm)+'</div>');
+  if(d.gmRooms) lines.push('<div class="small">Oda: '+escapeHTML(d.gmRooms)+'</div>');
+  if(d.gmBuildingAge) lines.push('<div class="small">Bina yaşı: '+escapeHTML(d.gmBuildingAge)+'</div>');
+  if(d.gmFloor) lines.push('<div class="small">Kat: '+escapeHTML(d.gmFloor)+'</div>');
+  if(d.gmHeating) lines.push('<div class="small">Isıtma: '+escapeHTML(d.gmHeating)+'</div>');
+  if(price) lines.push('<div class="small"><b>'+escapeHTML(price)+'</b></div>');
+  const extras=['gmBaths','gmBalcony','gmElevator','gmParking','gmFurnished','gmSite','gmUsage','gmZoning'];
+  const labels={gmBaths:'Banyo',gmBalcony:'Balkon',gmElevator:'Asansör',gmParking:'Otopark',gmFurnished:'Eşyalı',gmSite:'Site',gmUsage:'Kullanım',gmZoning:'İmar'};
+  extras.forEach(function(k){ if(d[k]) lines.push('<div class="small muted">'+labels[k]+': '+escapeHTML(d[k])+'</div>'); });
+  if(d._files&&d._files.length) lines.push('<div class="small muted">Fotoğraf: '+d._files.length+'</div>');
+  if(!lines.length) lines.push('<div class="small muted">Özetlenecek doldurulmuş alan yok.</div>');
+  const missing=[];
+  if(!title) missing.push('Başlık');
+  if(!kind) missing.push('Gayrimenkul türü');
+  if(!(d.gmCity||'').trim()) missing.push('İl');
+  if(!(d.gmDistrict||'').trim()) missing.push('İlçe');
+  const missHtml=missing.length
+    ? '<p class="small" style="margin:10px 0 0">⚠️ Eksik önemli bilgiler: '+escapeHTML(missing.join(', '))+'</p>'
+    : '<p class="small muted" style="margin:10px 0 0">Zorunlu alanlar dolu görünüyor.</p>';
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="gmConfirmEdit()">← Düzenle</button></div>
+  <div class="formCard">
+    <span class="badge">🏠 Son kontrol</span>
+    <h1>Her şey doğru mu?</h1>
+    <p class="muted small">Yalnızca forma yazdığın bilgiler. Kaydetmeden ilan oluşmaz.</p>
+    <div class="card" style="text-align:left;margin:12px 0">${lines.join('')}${missHtml}</div>
+    <div class="splitActions">
+      <button class="btn primary" type="button" onclick="gmConfirmSave()">Kaydet</button>
+      <button class="btn secondary" type="button" onclick="gmConfirmEdit()">Düzenle</button>
+    </div>
+  </div>`);
+}
+function gmConfirmEdit(){
+  window.__gmRestoreForm=true;
+  showGayrimenkulCreateForm();
+}
+function gmConfirmSave(){
+  window.__gmRestoreForm=true;
+  showGayrimenkulCreateForm();
+  setTimeout(function(){
+    try{ createGayrimenkulListing(); }catch(e){ alert('Kayıt başlatılamadı.'); }
+  }, 0);
+}
+window.showGayrimenkulConfirm=showGayrimenkulConfirm;
+window.gmConfirmEdit=gmConfirmEdit;
+window.gmConfirmSave=gmConfirmSave;
 
 async function createGayrimenkulListing(){
   const session=typeof getAuthSession==='function'?getAuthSession():null;
