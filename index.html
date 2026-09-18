@@ -873,7 +873,27 @@ function homeResumeDraftsHtml(){
       }
     }
   }catch(e){}
+  try{
+    var graw=localStorage.getItem('gm_listing_form_draft');
+    if(graw){
+      var g=JSON.parse(graw);
+      if(g&&g.data&&(g.data.gmTitle||g.data.gmDistrict||g.data.gmCategory)){
+        var glabel=g.data.gmTitle||g.data.gmDistrict||'Gayrimenkul ilanı';
+        bits.push('<button type="button" class="homeContinue" onclick="resumeGmListingDraft()"><span><b>🏠 '+String(glabel).replace(/[<>]/g,'')+'</b><small>Yarım kalan ilana devam et</small></span><span class="chev">›</span></button>');
+      }
+    }
+  }catch(e){}
   return bits.join('');
+}
+function resumeGmListingDraft(){
+  try{
+    var raw=localStorage.getItem('gm_listing_form_draft');
+    if(!raw){ return showGayrimenkulCreateForm(); }
+    var g=JSON.parse(raw);
+    window.__gmFormDraft=Object.assign({}, g.data||{}, {_files:[]});
+    window.__gmRestoreForm=true;
+    showGayrimenkulCreateForm();
+  }catch(e){ showGayrimenkulCreateForm(); }
 }
 function resumeOtoListingDraft(){
   try{
@@ -955,11 +975,33 @@ function openWorkArea(area){
   if(a==='gayrimenkul') return showWorkAreaGayrimenkul();
   if(a==='arac') return showWorkAreaArac();
 }
+
+function gmWorkResumeHtml(){
+  try{
+    var raw=localStorage.getItem('gm_listing_form_draft');
+    if(!raw) return '';
+    var g=JSON.parse(raw);
+    if(!g||!g.data||!(g.data.gmTitle||g.data.gmDistrict||g.data.gmCategory)) return '';
+    var glabel=escapeHTML(g.data.gmTitle||g.data.gmDistrict||'Gayrimenkul ilanı');
+    return '<div class="card" style="text-align:left;margin:8px 0"><p class="small" style="margin:0 0 6px">Yarım kalan bir işlemin var.</p><button type="button" class="btn secondary smallBtn" onclick="resumeGmListingDraft()">'+glabel+' ilanına devam et →</button></div>';
+  }catch(e){ return ''; }
+}
+function otoWorkResumeHtml(){
+  try{
+    var raw=localStorage.getItem('oto_listing_draft');
+    if(!raw) return '';
+    var d=JSON.parse(raw);
+    if(!d||!d.data||!(d.data.brand||d.data.model||d.step>0)) return '';
+    var label=escapeHTML([d.data.brand,d.data.model].filter(Boolean).join(' ')||'Araç ilanı');
+    return '<div class="card" style="text-align:left;margin:8px 0"><p class="small" style="margin:0 0 6px">Yarım kalan bir işlemin var.</p><button type="button" class="btn secondary smallBtn" onclick="resumeOtoListingDraft()">'+label+' ilanına devam et →</button></div>';
+  }catch(e){ return ''; }
+}
 function showWorkAreaGayrimenkul(){
   app(`<div class="workAreaShell">
     <button class="btn secondary smallBtn" type="button" onclick="showHome()">← Ana sayfa</button>
     <h1 style="margin:12px 0 4px">🏠 Gayrimenkul</h1>
     <p class="muted small" style="margin:0 0 8px">Al · sat · kirala · ilanlar · tapu</p>
+    ${typeof gmWorkResumeHtml==='function'?gmWorkResumeHtml():''}
     <div class="workAreaGrid">
       <button class="btn primary" type="button" onclick="window.__kesfetCat='gayrimenkul';showKesfet(false)">İlanlara bak</button>
       <button class="btn secondary" type="button" onclick="showGayrimenkulCreateForm()">İlan ver</button>
@@ -2069,6 +2111,16 @@ function showGayrimenkulCreateForm(){
     <button class="btn primary" type="button" id="gmSaveBtn" onclick="showGayrimenkulConfirm()">Taslak olarak kaydet</button>
   </div>`);
   try{ if(window.__gmRestoreForm){ gmApplyFormDraft(window.__gmFormDraft); window.__gmRestoreForm=false; } }catch(e){}
+  try{
+    if(window.__gmFocusFirst){
+      window.__gmFocusFirst=false;
+      const order=['gmTitle','gmCategory','gmCity','gmDistrict'];
+      for(let i=0;i<order.length;i++){
+        const el=document.getElementById(order[i]);
+        if(el && !String(el.value||'').trim()){ el.scrollIntoView({block:'center'}); el.focus(); break; }
+      }
+    }
+  }catch(e){}
 }
 
 
@@ -2118,6 +2170,11 @@ function gmCollectFormDraft(){
   });
   const fi=document.getElementById('gmPhotos');
   d._files=fi&&fi.files?Array.from(fi.files):[];
+  try{
+    const slim=Object.assign({}, d);
+    delete slim._files;
+    localStorage.setItem('gm_listing_form_draft', JSON.stringify({data:slim, title:slim.gmTitle||'', ts:Date.now()}));
+  }catch(e){}
   return d;
 }
 function gmApplyFormDraft(d){
@@ -2170,8 +2227,9 @@ function showGayrimenkulConfirm(){
   if(!kind) missing.push('Gayrimenkul türü');
   if(!(d.gmCity||'').trim()) missing.push('İl');
   if(!(d.gmDistrict||'').trim()) missing.push('İlçe');
+  window.__gmMissingFields=missing.slice();
   const missHtml=missing.length
-    ? '<p class="small" style="margin:10px 0 0">⚠️ Eksik önemli bilgiler: '+escapeHTML(missing.join(', '))+'</p>'
+    ? '<p class="small" style="margin:10px 0 0">⚠️ '+missing.length+' eksik bilgi var: '+escapeHTML(missing.join(', '))+'</p><button type="button" class="btn secondary smallBtn" style="margin-top:8px" onclick="gmConfirmFixFirst()">Eksikleri tamamla →</button>'
     : '<p class="small muted" style="margin:10px 0 0">Zorunlu alanlar dolu görünüyor.</p>';
   app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="gmConfirmEdit()">← Düzenle</button></div>
   <div class="formCard">
@@ -2184,6 +2242,11 @@ function showGayrimenkulConfirm(){
       <button class="btn secondary" type="button" onclick="gmConfirmEdit()">Düzenle</button>
     </div>
   </div>`);
+}
+function gmConfirmFixFirst(){
+  window.__gmRestoreForm=true;
+  window.__gmFocusFirst=true;
+  showGayrimenkulCreateForm();
 }
 function gmConfirmEdit(){
   window.__gmRestoreForm=true;
@@ -2344,6 +2407,12 @@ function showGayrimenkulDraftResult(row, photoInfo){
     <div class="splitActions">
       <button class="btn primary" type="button" onclick="publishGayrimenkulListing('${id.replace(/'/g,"")}')">İlanı Yayınla</button>
       <button class="btn secondary" type="button" onclick="showGayrimenkulHub()">Daha sonra</button>
+    </div>
+    <div class="card" style="text-align:left;margin-top:12px">
+      <p class="small" style="margin:0 0 6px"><b>Şimdi sırada ne var?</b></p>
+      <button type="button" class="btn primary smallBtn" style="margin:4px 6px 0 0" onclick="publishGayrimenkulListing('${id.replace(/'/g,"")}')">İlanı yayınla</button>
+      <button type="button" class="btn secondary smallBtn" style="margin:4px 6px 0 0" onclick="typeof showWorkAreaGayrimenkul==='function'?showWorkAreaGayrimenkul():showGayrimenkulHub()">Satışa hazırlan</button>
+      <button type="button" class="btn secondary smallBtn" style="margin:4px 6px 0 0" onclick="typeof window.Hallet!=='undefined'&&window.Hallet.showTapuRehber?window.Hallet.showTapuRehber():(typeof showWorkAreaGayrimenkul==='function'?showWorkAreaGayrimenkul():showGayrimenkulHub())">Tapu işlemlerini gör</button>
     </div>
   </div>`);
 }
@@ -3195,6 +3264,11 @@ function showOtomobilDraftResult(row, photoInfo){
     <div class="splitActions" style="margin-top:8px">
       <button class="btn secondary" type="button" onclick="shareOtomobilListing('${id}', '${title.replace(/'/g,"\'")}')">Paylaş</button>
       <button class="btn secondary" type="button" onclick="showOtomobilHub()">Bitir</button>
+    </div>
+    <div class="card" style="text-align:left;margin-top:12px">
+      <p class="small" style="margin:0 0 6px"><b>Şimdi sırada ne var?</b></p>
+      <button type="button" class="btn primary smallBtn" style="margin:4px 6px 0 0" onclick="publishOtomobilListing('${id}')">İlanı yayınla</button>
+      <button type="button" class="btn secondary smallBtn" style="margin:4px 6px 0 0" onclick="typeof showWorkAreaArac==='function'?showWorkAreaArac():showOtomobilHub()">Satışa hazırlan</button>
     </div>
   </div>`);
 }
