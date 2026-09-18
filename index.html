@@ -394,6 +394,19 @@ html:not([data-theme="light"]) .authBtn{background:#1a2f45;color:#e8eef6;border-
 html:not([data-theme="light"]) .a7AiChip{background:rgba(15,40,35,.95);color:#e8eef6;border-color:rgba(34,197,94,.45)}
 html:not([data-theme="light"]) .a7AiChip span:not(.a7AiBot){color:#e8eef6}
 
+
+html[data-theme="light"] .officialPrepCard{background:rgba(13,159,104,.10);border-color:rgba(13,159,104,.40)}
+html:not([data-theme="light"]) .officialPrepCard{background:rgba(13,159,104,.10);border-color:rgba(34,197,94,.35)}
+.ldCarousel{position:relative;margin:10px 0 8px}
+.ldCarouselStage{position:relative;border-radius:12px;overflow:hidden;background:#0b1727;aspect-ratio:16/10}
+.ldCarouselStage img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.ldCarouselNav{position:absolute;top:50%;transform:translateY(-50%);width:32px;height:32px;border:0;border-radius:50%;background:rgba(0,0,0,.45);color:#fff;font-size:18px;cursor:pointer}
+.ldCarouselNav.prev{left:8px}
+.ldCarouselNav.next{right:8px}
+.ldCarouselMeta{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px}
+.ldCarouselDots{display:flex;gap:5px;align-items:center}
+.ldCarouselDots span{width:7px;height:7px;border-radius:50%;background:var(--line);display:inline-block}
+.ldCarouselDots span.on{background:var(--primary);width:8px;height:8px}
 </style>
 </head>
 <body>
@@ -1920,10 +1933,14 @@ function officialPrepKindFromListing(row){
 function officialPrepCardHtml(listingId, kind){
   const id=String(listingId||'').replace(/[^a-zA-Z0-9-]/g,'');
   const k=String(kind||'generic').replace(/[^a-z_]/g,'');
-  return '<div class="card" style="text-align:left;margin:14px 0 8px">'+
-    '<p class="small" style="margin:0 0 4px">📄 Resmî Evrak &amp; İşlem Hazırlığı</p>'+
-    '<p class="small muted" style="margin:0 0 8px">Bu ilanla ilgili tapu, satış/devir ve gerekli evrak hazırlığını adım adım tamamla.</p>'+
-    '<button type="button" class="btn secondary smallBtn" onclick="openOfficialPrepGate(\''+id+'\',\''+k+'\')">İşleme devam et →</button>'+
+  return '<div class="officialPrepCard" style="text-align:left;margin:14px 0 8px;padding:12px 12px 10px;border:1px solid rgba(13,159,104,.45);background:rgba(13,159,104,.08);border-radius:14px">'+
+    '<div style="display:flex;align-items:center;gap:8px;margin:0 0 6px">'+
+    '<span style="width:28px;height:28px;border-radius:8px;background:rgba(13,159,104,.18);display:inline-flex;align-items:center;justify-content:center;font-size:15px">📄</span>'+
+    '<span style="font-weight:800;font-size:14px">Resmî Evrak &amp; İşlem Hazırlığı</span>'+
+    '<span class="small" style="margin-left:auto;font-size:10px;font-weight:700;padding:3px 7px;border-radius:999px;border:1px solid rgba(13,159,104,.35);color:var(--text)">Ücretli işlem</span>'+
+    '</div>'+
+    '<p class="small muted" style="margin:0 0 8px">Tapu &amp; satış hazırlığını adım adım tamamla.</p>'+
+    '<button type="button" class="btn primary smallBtn" onclick="openOfficialPrepGate(\''+id+'\',\''+k+'\')">Tapu &amp; evrak hazırlığına geç →</button>'+
     '</div>';
 }
 function officialPrepState(listingId){
@@ -1964,6 +1981,67 @@ window.openOfficialPrepGate=openOfficialPrepGate;
 window.officialPrepStartCheckout=officialPrepStartCheckout;
 window.officialPrepCardHtml=officialPrepCardHtml;
 
+
+function listingDetailCarouselHtml(urls){
+  const list=(urls||[]).filter(Boolean);
+  if(!list.length) return '';
+  const first=escapeHTML(list[0]);
+  const n=list.length;
+  const arrows=n>1?('<button type="button" class="ldCarouselNav prev" data-ld-nav="-1" aria-label="Önceki">‹</button><button type="button" class="ldCarouselNav next" data-ld-nav="1" aria-label="Sonraki">›</button>'):'';
+  const dots=n>1?('<div class="ldCarouselDots">'+list.map(function(_,i){return '<span data-ld-dot="'+i+'" class="'+(i===0?'on':'')+'"></span>';}).join('')+'</div>'):'';
+  const count=n>1?('<span class="small muted" data-ld-count>1 / '+n+'</span>'):'';
+  return '<div class="ldCarousel" data-ld-carousel data-ld-index="0">'+
+    '<div class="ldCarouselStage">'+
+    '<button type="button" data-gm-photo-idx="0" style="border:0;padding:0;width:100%;height:100%;display:block;cursor:zoom-in;background:transparent">'+
+    '<img data-ld-img src="'+first+'" alt="">'+
+    '</button>'+arrows+'</div>'+
+    '<div class="ldCarouselMeta">'+count+dots+'</div>'+
+    '<p class="small muted" style="text-align:center;margin:4px 0 0">Fotoğrafa dokunarak büyüt</p>'+
+    '</div>';
+}
+function bindListingDetailCarousel(root, urls){
+  const el=root&&root.querySelector('[data-ld-carousel]');
+  const list=(urls||[]).filter(Boolean);
+  if(!el||!list.length) return;
+  function show(i){
+    const n=list.length;
+    const idx=((Number(i)||0)%n+n)%n;
+    el.setAttribute('data-ld-index', String(idx));
+    const img=el.querySelector('[data-ld-img]');
+    const openBtn=el.querySelector('[data-gm-photo-idx]');
+    if(img) img.src=list[idx];
+    if(openBtn) openBtn.setAttribute('data-gm-photo-idx', String(idx));
+    const c=el.querySelector('[data-ld-count]');
+    if(c) c.textContent=(idx+1)+' / '+n;
+    const dots=el.querySelectorAll('[data-ld-dot]');
+    for(let d=0;d<dots.length;d++) dots[d].className=d===idx?'on':'';
+  }
+  el.querySelectorAll('[data-ld-nav]').forEach(function(btn){
+    btn.addEventListener('click', function(ev){
+      ev.preventDefault(); ev.stopPropagation();
+      const cur=Number(el.getAttribute('data-ld-index')||0);
+      show(cur+Number(btn.getAttribute('data-ld-nav')||0));
+    });
+  });
+  el.querySelectorAll('[data-ld-dot]').forEach(function(dot){
+    dot.addEventListener('click', function(ev){
+      ev.preventDefault();
+      show(Number(dot.getAttribute('data-ld-dot')||0));
+    });
+  });
+  let x0=null;
+  const stage=el.querySelector('.ldCarouselStage');
+  if(stage&&list.length>1){
+    stage.addEventListener('touchstart', function(e){ if(e.touches&&e.touches[0]) x0=e.touches[0].clientX; }, {passive:true});
+    stage.addEventListener('touchend', function(e){
+      if(x0==null||!e.changedTouches||!e.changedTouches[0]) return;
+      const dx=e.changedTouches[0].clientX-x0; x0=null;
+      if(Math.abs(dx)<40) return;
+      const cur=Number(el.getAttribute('data-ld-index')||0);
+      show(cur+(dx<0?1:-1));
+    }, {passive:true});
+  }
+}
 async function showGayrimenkulDetail(listingId){
   const id=String(listingId||'').replace(/[^a-zA-Z0-9-]/g,'');
   if(!id){
@@ -2008,13 +2086,7 @@ async function showGayrimenkulDetail(listingId){
     try{ window.__gmDetailPhotoUrls=urls; }catch(e){}
     let gallery='';
     if(urls.length){
-      gallery=`<div style="display:grid;grid-template-columns:1fr;gap:8px;margin:12px 0">`+urls.map(function(u,idx){
-        const src=escapeHTML(u);
-        return `<button type="button" data-gm-photo-idx="${idx}" style="border:0;padding:0;border-radius:12px;overflow:hidden;background:#0b1727;aspect-ratio:16/10;cursor:zoom-in;width:100%;display:block">`+
-          `<img src="${src}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;pointer-events:none" loading="lazy">`+
-          `</button>`;
-      }).join('')+`</div>
-      <p class="small muted">Fotoğrafa dokunarak büyüt · iki parmakla yakınlaştır</p>`;
+      gallery=listingDetailCarouselHtml(urls);
     }
     box.innerHTML=`<h1 style="margin-top:8px">${title}</h1>
       <p style="font-size:20px;font-weight:700;margin:8px 0">${price}</p>
@@ -2037,6 +2109,7 @@ async function showGayrimenkulDetail(listingId){
         <button class="btn secondary" type="button" onclick="showGayrimenkulHub()">Gayrimenkul menü</button>
       </div>`;
     // bind photo openers
+    bindListingDetailCarousel(box, window.__gmDetailPhotoUrls||urls);
     const nodes=box.querySelectorAll('[data-gm-photo-idx]');
     for(let i=0;i<nodes.length;i++){
       nodes[i].addEventListener('click', function(ev){
