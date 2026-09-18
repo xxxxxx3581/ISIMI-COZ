@@ -359,6 +359,15 @@ html[data-theme="light"] .homeHeroV2{background:linear-gradient(160deg,#e7f7ef,#
 .kesfetChip.on{background:rgba(20,184,122,.16);border-color:rgba(20,184,122,.45);color:#5eead4}
 .kesfetMeta{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:4px 0 12px;font-size:13px;color:var(--muted)}
 .kesfetGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kesfetGrid.is-list{grid-template-columns:1fr}
+.kesfetGrid.is-list .kesfetCard{flex-direction:row;align-items:stretch;min-height:96px}
+.kesfetGrid.is-list .kesfetCover{width:112px;min-width:112px;max-width:112px;aspect-ratio:1/1;height:auto}
+.kesfetGrid.is-list .kesfetBody{padding:10px 12px;justify-content:center}
+.kesfetCtaLine{margin-top:8px;font-size:12px;font-weight:700;color:var(--primary,#0d9f68)}
+.kesfetSignal{margin-top:4px;font-size:11px;opacity:.85}
+.intentCard{text-align:left;margin:12px 0;padding:12px;border:1px solid rgba(13,159,104,.35);background:rgba(13,159,104,.07);border-radius:14px}
+.intentCard .intentTitle{font-weight:800;font-size:14px;margin:0 0 8px}
+.intentCard .intentBtn{display:block;width:100%;margin:6px 0 0;text-align:left}
 @media (min-width:720px){
   .kesfetGrid{grid-template-columns:1fr 1fr 1fr;gap:14px}
   .kesfetTop h1{font-size:1.45rem}
@@ -1242,12 +1251,29 @@ function kesfetBuildList(keepCache){
       const pa=a.row, pb=b.row;
       if(sort==='price_asc') return (Number(pa.price)||0)-(Number(pb.price)||0);
       if(sort==='price_desc') return (Number(pb.price)||0)-(Number(pa.price)||0);
+      if(sort==='km_asc'){
+        const ka=Number((pa.metadata||{}).km); const kb=Number((pb.metadata||{}).km);
+        return (isFinite(ka)?ka:1e15)-(isFinite(kb)?kb:1e15);
+      }
       return String(pb.created_at||'').localeCompare(String(pa.created_at||''));
     });
     return {list:list, filterType:'gayrimenkul'};
   })();
 }
 
+function kesfetSetView(mode){
+  window.__kesfetView=(mode==='list')?'list':'grid';
+  try{ localStorage.setItem('kesfet_view', window.__kesfetView); }catch(e){}
+  if(typeof showKesfet==='function') showKesfet(true);
+}
+function kesfetSaveSearchStub(){
+  try{
+    const type=typeof kesfetActiveType==='function'?kesfetActiveType():'all';
+    const f=typeof getListingFilterState==='function'?getListingFilterState(type):{};
+    localStorage.setItem('kesfet_saved_search', JSON.stringify({type:type, filters:f, at:Date.now()}));
+    alert('Arama bu cihaza kaydedildi. Bildirim sonraki sürümde.');
+  }catch(e){ alert('Arama kaydedilemedi.'); }
+}
 async function showKesfet(keepCache){
   window.__kesfetUnified=true;
   try{ if(typeof setNav==='function') setNav('navHome'); }catch(e){}
@@ -1272,10 +1298,14 @@ async function showKesfet(keepCache){
       <div class="kesfetTools">
         <button type="button" class="btn secondary smallBtn" onclick="openListingFilterPanel(kesfetActiveType())">Filtrele${active?(' · '+active):''}</button>
         <select class="btn secondary smallBtn" style="flex:1" onchange="kesfetSetSort(kesfetActiveType(), this.value)">
-          <option value="new"${sort==='new'?' selected':''}>En yeni</option>
+          <option value="new"${sort==='new'?' selected':''}>Önerilen / En yeni</option>
           <option value="price_asc"${sort==='price_asc'?' selected':''}>Fiyat artan</option>
           <option value="price_desc"${sort==='price_desc'?' selected':''}>Fiyat azalan</option>
+          <option value="km_asc"${sort==='km_asc'?' selected':''}>Km artan</option>
         </select>
+        <button type="button" class="btn secondary smallBtn" onclick="kesfetSetView('list')" title="Liste">☰</button>
+        <button type="button" class="btn secondary smallBtn" onclick="kesfetSetView('grid')" title="Izgara">▦</button>
+        <button type="button" class="btn secondary smallBtn" onclick="kesfetSaveSearchStub()" title="Aramayı kaydet">♡</button>
       </div>
     </div>
     <div class="small muted" style="margin:0 0 6px">📍 ${locLabel}</div>
@@ -1296,7 +1326,8 @@ async function showKesfet(keepCache){
         <button class="btn primary" type="button" onclick="kesfetCreatePick()">İlan Ver</button></div>`;
       return;
     }
-    box.className='kesfetGrid';
+    try{ if(!window.__kesfetView) window.__kesfetView=localStorage.getItem('kesfet_view')||'list'; }catch(e){ window.__kesfetView='list'; }
+    box.className='kesfetGrid'+(window.__kesfetView==='list'?' is-list':'');
     box.innerHTML=list.map(function(item){ return kesfetCardHtml(item.row, item.type); }).join('');
   }catch(err){
     box.innerHTML=`<div class="card empty"><h3>İlanlar yüklenemedi</h3><p class="small muted">${escapeHTML(err&&err.message?err.message:String(err))}</p>
@@ -1950,17 +1981,23 @@ function kesfetCardHtml(row, type){
   const loc=[row.city,row.district,row.neighborhood].filter(Boolean).map(escapeHTML).join(' · ')||'Konum belirtilmedi';
   const md=row.metadata||{};
   let feats=[];
+  let signals=[];
   if(type==='gayrimenkul'){
     if(row.category) feats.push(String(row.category));
     if(md.rooms) feats.push(String(md.rooms));
     if(md.sqm||md.m2||md.area) feats.push(String(md.sqm||md.m2||md.area)+' m²');
+    if(md.floor!=null&&md.floor!=='') feats.push(String(md.floor)+'. kat');
   } else {
     if(md.year) feats.push(String(md.year));
     if(md.km!=null&&md.km!=='') feats.push(Number(md.km).toLocaleString('tr-TR')+' km');
     if(md.fuel) feats.push(String(md.fuel));
     if(md.gear) feats.push(String(md.gear));
+    if(md.damage||md.paint||md.changed_parts) signals.push('✓ Hasar/boya bilgisi mevcut');
+    if(md.condition) signals.push(String(md.condition));
   }
-  feats=feats.filter(Boolean).slice(0,3).map(escapeHTML);
+  if(md.seller_type==='professional') signals.push('⭐ Profesyonel satıcı');
+  feats=feats.filter(Boolean).slice(0,4).map(escapeHTML);
+  signals=signals.filter(Boolean).slice(0,2).map(escapeHTML);
   const photos=listingPhotosFromRow(row);
   let cover='<div class="kesfetCover"><div class="kesfetCoverEmpty">📷</div></div>';
   if(photos.length){
@@ -1975,8 +2012,10 @@ function kesfetCardHtml(row, type){
   return '<button type="button" class="kesfetCard" onclick="'+click+'">'+cover+
     '<div class="kesfetBody"><div class="kesfetPrice">'+price+'</div>'+
     '<div class="kesfetTitle">'+title+'</div>'+
-    '<p class="kesfetLoc">'+loc+'</p>'+
+    '<p class="kesfetLoc">📍 '+loc+'</p>'+
     (feats.length?'<p class="kesfetFeat">'+feats.join(' · ')+'</p>':'')+
+    (signals.length?'<p class="kesfetSignal">'+signals.join(' · ')+'</p>':'')+
+    '<div class="kesfetCtaLine">İlanı incele →</div>'+
     '</div></button>';
 }
 function kesfetShellStart(type, backFn, createFn, title){
@@ -2359,6 +2398,12 @@ async function showGayrimenkulDetail(listingId){
       <details class="ldAcc"><summary>📝 Açıklamayı göster</summary>
         <div class="ldAccBody"><p class="muted" style="white-space:pre-wrap;line-height:1.5;margin:0">${desc}</p></div>
       </details>
+      <div class="intentCard">
+        <div class="intentTitle">Ne yapmak istiyorsun?</div>
+        <button type="button" class="btn primary intentBtn" onclick="typeof openOfficialPrepGate==='function'&&openOfficialPrepGate('${String(row.id||'').replace(/[^a-zA-Z0-9-]/g,'')}','${String(officialPrepKindFromListing(row)||'konut_satisi')}')">📄 Satın alma / tapu hazırlığı</button>
+        <button type="button" class="btn secondary intentBtn" onclick="alert('Mesajlaşma sonraki sürümde. Şimdilik satıcı bilgisine bakabilirsin.')">💬 İlan sahibine ulaş</button>
+        <button type="button" class="btn secondary intentBtn" onclick="try{document.querySelector('.ldAcc')&&document.querySelector('.ldAcc').setAttribute('open','');}catch(e){}">🔍 Gayrimenkulü incele</button>
+      </div>
       ${officialPrepCardHtml(row.id, officialPrepKindFromListing(row))}
       <div class="splitActions" style="margin-top:16px">
         <button class="btn secondary" type="button" onclick="showGayrimenkulBrowse()">← İlanlara dön</button>
@@ -3790,6 +3835,12 @@ async function showOtomobilDetail(listingId){
         <strong>Satıcı</strong>
         ${cell('Tip',seller)}
         <p class="small muted" style="margin-top:8px">Mesajlaşma sonraki sürümde. Resmî EİDS/kurum doğrulaması yok.</p>
+      </div>
+      <div class="intentCard">
+        <div class="intentTitle">Ne yapmak istiyorsun?</div>
+        <button type="button" class="btn primary intentBtn" onclick="typeof openOfficialPrepGate==='function'&&openOfficialPrepGate('${String(row.id||'').replace(/[^a-zA-Z0-9-]/g,'')}','arac_satisi')">📄 Satın alma / devir hazırlığı</button>
+        <button type="button" class="btn secondary intentBtn" onclick="alert('Mesajlaşma sonraki sürümde. Şimdilik satıcı bilgisine bakabilirsin.')">💬 Satıcıya ulaş</button>
+        <button type="button" class="btn secondary intentBtn" onclick="try{var d=document.querySelectorAll('.ldAcc');if(d[0])d[0].setAttribute('open','');}catch(e){}">🔍 Aracı daha detaylı incele</button>
       </div>
       ${officialPrepCardHtml(row.id, 'arac')}
       <div class="splitActions">
