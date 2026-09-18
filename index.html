@@ -105,7 +105,7 @@ textarea{min-height:120px;resize:vertical}.row{display:grid;grid-template-column
 @media (max-width:420px){
   
 }
-.authBtn{border:1px solid var(--line);background:#14263b;color:var(--text);border-radius:11px;padding:8px 11px;font-size:11px;font-weight:800;cursor:pointer;min-height:36px;display:inline-flex;align-items:center}.authBtn.primary{background:var(--primary);color:#03130d;border-color:var(--primary)}.authUser{max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:11px;font-weight:700}
+.authBtn{border:1px solid var(--line);background:var(--card2);color:var(--text);border-radius:11px;padding:8px 11px;font-size:11px;font-weight:800;cursor:pointer;min-height:36px;display:inline-flex;align-items:center}.authBtn.primary{background:var(--primary);color:#03130d;border-color:var(--primary)}.authUser{max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:11px;font-weight:700}
 .modal{position:fixed;inset:0;background:rgba(0,0,0,.76);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px}.modalCard{width:min(430px,100%);background:var(--card);border:1px solid var(--line);border-radius:20px;padding:20px;max-height:90vh;overflow:auto}.modalCard h2{margin-top:0}.authError{background:#35181b;border:1px solid #70272d;color:#ffb6b8;padding:10px;border-radius:10px;font-size:12px;margin-top:10px}
 
 /* V2 home shell only */
@@ -251,7 +251,7 @@ html[data-theme="light"] .homeHeroV2{background:linear-gradient(160deg,#e7f7ef,#
 .brandText{min-width:0}
 .brand strong{font-size:16px;font-weight:900;letter-spacing:-.02em;color:var(--text);display:block;line-height:1.15}
 .brand small{display:block;color:var(--muted);font-size:11px;margin-top:2px;font-weight:600}
-.a7AiChip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px 4px 6px;border-radius:999px;border:1px solid rgba(34,197,94,.35);background:rgba(15,40,35,.85);color:var(--text);font-size:12px;font-weight:800;cursor:pointer;line-height:1;box-shadow:0 0 0 1px rgba(34,197,94,.08)}
+.a7AiChip{display:inline-flex;align-items:center;gap:5px;padding:4px 10px 4px 6px;border-radius:999px;border:1px solid rgba(34,197,94,.45);background:var(--card2);color:var(--text);font-size:12px;font-weight:800;cursor:pointer;line-height:1;box-shadow:0 0 0 1px rgba(34,197,94,.08)}
 .a7AiChip .a7AiBot{width:22px;height:22px;border-radius:8px;background:linear-gradient(135deg,#14b8a6,#22c55e);display:grid;place-items:center;font-size:12px}
 .a7AiChip:active{opacity:.9}
 /* Home V3 — natural language first */
@@ -384,6 +384,15 @@ html[data-theme="light"] .homeHeroV2{background:linear-gradient(160deg,#e7f7ef,#
 .workAreaShell{padding:0 0 20px}
 .workAreaGrid{display:grid;gap:10px;margin-top:12px}
 .workAreaGrid .btn{width:100%;justify-content:flex-start;text-align:left}
+
+
+html[data-theme="light"] .authBtn{background:#ffffff;color:#0f1c2a;border-color:var(--line)}
+html[data-theme="light"] .authBtn.primary{background:var(--primary);color:#03130d;border-color:var(--primary)}
+html[data-theme="light"] .a7AiChip{background:#e8f7ef;color:#0f1c2a;border-color:rgba(13,159,104,.45)}
+html[data-theme="light"] .a7AiChip span:not(.a7AiBot){color:#0f1c2a}
+html:not([data-theme="light"]) .authBtn{background:#1a2f45;color:#e8eef6;border-color:var(--line)}
+html:not([data-theme="light"]) .a7AiChip{background:rgba(15,40,35,.95);color:#e8eef6;border-color:rgba(34,197,94,.45)}
+html:not([data-theme="light"]) .a7AiChip span:not(.a7AiBot){color:#e8eef6}
 
 </style>
 </head>
@@ -1104,7 +1113,7 @@ function kesfetCreatePick(){
 
 function kesfetMainChipsHtml(){
   const cat=window.__kesfetCat||'all';
-  const items=[['all','Tümü'],['gayrimenkul','Gayrimenkul'],['otomobil','Araç'],['hizmet','Hizmet']];
+  const items=[['all','Tümü'],['gayrimenkul','Gayrimenkul'],['otomobil','Araç']];
   return items.map(function(it){
     return '<button type="button" class="kesfetChip'+(cat===it[0]?' on':'')+'" onclick="kesfetSetCat(\''+it[0]+'\')">'+it[1]+'</button>';
   }).join('');
@@ -1167,11 +1176,8 @@ function kesfetBuildList(keepCache){
 async function showKesfet(keepCache){
   window.__kesfetUnified=true;
   try{ if(typeof setNav==='function') setNav('navHome'); }catch(e){}
+  if(window.__kesfetCat==='hizmet') window.__kesfetCat='all';
   const cat=window.__kesfetCat||'all';
-  if(cat==='hizmet'){
-    if(typeof showRequest==='function') return showRequest();
-    return;
-  }
   const filterType=kesfetActiveType();
   const f=getListingFilterState(filterType)||{};
   const active=countActiveListingFilters(filterType);
@@ -1974,11 +1980,23 @@ function showGayrimenkulCreateForm(){
     return;
   }
   const districts=typeof districtOptions==='function'?districtOptions():'<option value="">İlçe seç</option>';
+  let gmNeedHtml='';
+  try{
+    if(typeof getDocumentChecklist==='function'){
+      const docs=getDocumentChecklist({})||[];
+      if(docs.length){
+        gmNeedHtml='<div class="card" style="text-align:left;margin:0 0 12px"><p class="small" style="margin:0 0 6px"><b>Sana gerekenler</b> <span class="muted">(hazırlık bilgilendirmesi)</span></p>'+
+          docs.slice(0,5).map(function(d){return '<div class="small muted">○ '+escapeHTML(d.title||'')+'</div>';}).join('')+
+          '<p class="small muted" style="margin:6px 0 0">İlan için zorunlu değil; satış/tapu hazırlığında işine yarayabilir.</p></div>';
+      }
+    }
+  }catch(e){}
   app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showGayrimenkulHub()">← Gayrimenkul</button></div>
   <div class="formCard">
     <span class="badge">🏠 İlan Ver</span>
     <h1>Gayrimenkul ilanı</h1>
     <p class="muted small">İlan önce taslak olarak kaydedilir. İstersen ardından yayınlayabilirsin.</p>
+    ${gmNeedHtml}
     <label>İlan başlığı *</label>
     <input id="gmTitle" maxlength="120" placeholder="Örn: Karşıyaka 3+1 daire">
     <label>Açıklama</label>
