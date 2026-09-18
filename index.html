@@ -457,6 +457,21 @@ html:not([data-theme="light"]) .officialPrepCard{background:rgba(13,159,104,.10)
 .homeWorkCard{min-height:auto}
 .officialPrepCard.merged-secondary{opacity:.92;margin-top:8px}
 .officialPrepCard.merged-secondary .badge{font-size:11px}
+
+.homeSecHead.secondary{font-size:12px;opacity:.7;margin-top:4px}
+.homeWorkAreas{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.homeWorkCard{padding:10px 10px;min-height:0}
+.homeWorkCard .hwIcon{font-size:18px}
+.homeWorkCard strong{font-size:13px}
+.homeWorkCard span{font-size:11px;opacity:.75}
+.homeListingsLink{display:block;margin:10px 0 4px;text-align:center;font-size:13px;font-weight:700;color:var(--primary,#0d9f68);background:transparent;border:0;cursor:pointer}
+.bottomInner .navBtn b{font-size:16px;display:block;line-height:1.1}
+@media (min-width:900px){
+  .kesfetShell{display:grid;grid-template-columns:280px 1fr;gap:16px;align-items:start}
+  .kesfetShell .kesfetTop,.kesfetShell .kesfetSearchRow,.kesfetShell .kesfetChips,.kesfetShell .kesfetApplied,.kesfetShell .kesfetMeta{grid-column:1/-1}
+  .kesfetShell .kesfetFilterAside{grid-column:1;position:sticky;top:12px}
+  .kesfetShell #kesfetGrid{grid-column:2}
+}
 </style>
 </head>
 <body>
@@ -466,14 +481,17 @@ html:not([data-theme="light"]) .officialPrepCard{background:rgba(13,159,104,.10)
 <main id="app"></main></div>
 <nav class="bottom"><div class="bottomInner">
 <button class="navBtn" id="navHome" onclick="showHome()"><b>⌂</b>Ana</button>
-<button class="navBtn" id="navRequest" onclick="showRequest()"><b>＋</b>Usta</button>
+<button class="navBtn" id="navProvider" onclick="window.__kesfetCat=window.__kesfetCat||'all';showKesfet()"><b>🔎</b>Ara</button>
+<button class="navBtn" id="navRequest" onclick="typeof kesfetCreatePick==='function'?kesfetCreatePick():showListingsHub()"><b>＋</b>İlan</button>
 <button class="navBtn" id="navRequests" onclick="showRequests()"><b>▣</b>Talepler</button>
-<button class="navBtn" id="navProvider" onclick="showListingsHub()"><b>🏪</b>İlanlar</button>
 </div></nav>
 
 <div class="appDrawerBackdrop" id="appDrawerBackdrop" onclick="closeAppDrawer()" hidden></div>
 <aside class="appDrawer" id="appDrawer" aria-hidden="true" role="dialog" aria-label="Ana menü">
   <div class="appDrawerHead"><strong>İşimi Çöz</strong><button type="button" class="btn secondary smallBtn" onclick="closeAppDrawer()">Kapat</button></div>
+  <div class="appDrawerNav">
+    <button type="button" onclick="closeAppDrawer();showHome()">⌂ Ana Sayfa</button>
+  </div>
   <div class="appDrawerSec">Ara</div>
   <div class="appDrawerNav">
     <button type="button" onclick="closeAppDrawer();window.__kesfetCat='all';showKesfet()">🔎 Tüm ilanlar</button>
@@ -1183,7 +1201,7 @@ function showHome(){
     </div>
   </div>
   <div class="homeSec">
-    <div class="homeSecHead">Çalışma alanları</div>
+    <div class="homeSecHead secondary">Daha fazla · çalışma alanları</div>
     <div class="homeWorkAreas">
       <button type="button" class="homeWorkCard" onclick="openWorkArea('gayrimenkul')"><div class="hwIcon">🏠</div><strong>Gayrimenkul</strong><span>Al · sat · kirala · ilanlar · tapu</span></button>
       <button type="button" class="homeWorkCard" onclick="openWorkArea('arac')"><div class="hwIcon">🚗</div><strong>Araç</strong><span>Al · sat · ara · ilanlar · işlemler</span></button>
@@ -1193,7 +1211,7 @@ function showHome(){
   </div>
   ${homeResumeDraftsHtml()}
   <div class="homeSec">
-    <div class="homeSecHead">İşlerim</div>
+    <div class="homeSecHead secondary">İşlerim</div>
     <div class="homeListV3">
       <button type="button" onclick="showRequests()"><span>📋</span><span><b>Taleplerim</b><small>Devam eden ve tamamlanan talepler</small></span><span class="chev">›</span></button>
       <button type="button" onclick="openHalletAction('showCases')"><span>📁</span><span><b>İşlem dosyalarım</b><small>Taslak ve tamamlanan Hallet kayıtları · Devam et</small></span><span class="chev">›</span></button>
@@ -1452,7 +1470,7 @@ function kesfetClearFiltersAndRefresh(type){
 
 async function showKesfet(keepCache){
   window.__kesfetUnified=true;
-  try{ if(typeof setNav==='function') setNav('navHome'); }catch(e){}
+  try{ if(typeof setNav==='function') setNav('navProvider'); }catch(e){}
   if(window.__kesfetCat==='hizmet') window.__kesfetCat='all';
   const cat=window.__kesfetCat||'all';
   const filterType=kesfetActiveType();
