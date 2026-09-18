@@ -1982,11 +1982,15 @@ function showGayrimenkulCreateForm(){
   const districts=typeof districtOptions==='function'?districtOptions():'<option value="">İlçe seç</option>';
   let gmNeedHtml='';
   try{
-    if(typeof getDocumentChecklist==='function'){
-      const docs=getDocumentChecklist({})||[];
+    const checklistFn=(typeof window.getDocumentChecklist==='function')
+      ? window.getDocumentChecklist
+      : (window.Hallet && typeof window.Hallet.getDocumentChecklist==='function' ? window.Hallet.getDocumentChecklist : null);
+    if(checklistFn){
+      // Daire/Konut: mevcut checklist'in bina=yes dalı DASK başlığını da üretir (uydurma yok)
+      const docs=checklistFn({building:'yes'})||[];
       if(docs.length){
-        gmNeedHtml='<div class="card" style="text-align:left;margin:0 0 12px"><p class="small" style="margin:0 0 6px"><b>Sana gerekenler</b> <span class="muted">(hazırlık bilgilendirmesi)</span></p>'+
-          docs.slice(0,5).map(function(d){return '<div class="small muted">○ '+escapeHTML(d.title||'')+'</div>';}).join('')+
+        gmNeedHtml='<div class="card" style="text-align:left;margin:0 0 12px"><p class="small" style="margin:0 0 6px"><b>📋 Sana gerekenler</b> <span class="muted">(hazırlık bilgilendirmesi)</span></p>'+
+          docs.map(function(d){return '<div class="small muted">○ '+escapeHTML(d.title||'')+'</div>';}).join('')+
           '<p class="small muted" style="margin:6px 0 0">İlan için zorunlu değil; satış/tapu hazırlığında işine yarayabilir.</p></div>';
       }
     }
@@ -6147,7 +6151,8 @@ document.addEventListener('change',function(e){
   el.value='';
 },true);
 
-window.Hallet={showGate:gate,showIslemMenu:islem,showTasinmazMenu:tasinmaz,showKonutSatis:konut,showQuestion:question,showResult:result,showCases:cases,showEvrak:evrak,showKurum:kurumHome,showArac:arac,showAracSatis:aracSatisStart,showAracAlim:function(){return vehicleFlowStart('arac_alimi');},showAracDevir:function(){return vehicleFlowStart('arac_devri');},showTapuRehber:tapuRehber,close:close};
+window.Hallet={showGate:gate,showIslemMenu:islem,showTasinmazMenu:tasinmaz,showKonutSatis:konut,showQuestion:question,showResult:result,showCases:cases,showEvrak:evrak,showKurum:kurumHome,showArac:arac,showAracSatis:aracSatisStart,showAracAlim:function(){return vehicleFlowStart('arac_alimi');},showAracDevir:function(){return vehicleFlowStart('arac_devri');},showTapuRehber:tapuRehber,close:close,getDocumentChecklist:getDocumentChecklist};
+try{window.getDocumentChecklist=getDocumentChecklist;}catch(e){}
 })();
 
 /* Hallet başlatıcısı — ana sayfaya dokunmadan çalışır. */
