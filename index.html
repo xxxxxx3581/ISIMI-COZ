@@ -1951,11 +1951,14 @@ async function showGayrimenkulDetail(listingId){
 
 function gmOnCategoryChange(){
   const v=(document.getElementById('gmCategory')||{}).value||'';
-  const isArsa=v==='Arsa';
+  const isArsa=v==='Arsa'||v.indexOf('Arsa')===0;
+  const isIsyeri=v==='İş Yeri'||v.indexOf('İş Yeri')>=0;
   const kx=document.getElementById('gmKonutExtras');
   const ax=document.getElementById('gmArsaExtras');
+  const ix=document.getElementById('gmIsyeriNote');
   if(kx) kx.style.display=isArsa?'none':'block';
   if(ax) ax.style.display=isArsa?'block':'none';
+  if(ix) ix.style.display=isIsyeri?'block':'none';
 }
 
 function showGayrimenkulCreateForm(){
@@ -2356,6 +2359,7 @@ function otoSaveStepFields(){
   try{
     const draft={step:__otoW.step, data:Object.assign({}, __otoW.data), hasFiles:!(!((__otoW.files&&__otoW.files.length)))};
     localStorage.setItem('oto_listing_draft', JSON.stringify(draft));
+    __otoW._draftSaved=true;
   }catch(e){}
 }
 
@@ -2881,25 +2885,41 @@ function renderOtomobilWizard(){
     // preview step 7
     const t=escapeHTML(d.title||'—');
     const price=escapeHTML(formatListingPrice(d.price, d.currency||'TRY'));
+    const humanLine=escapeHTML([d.brand,d.model,d.version,d.year].filter(Boolean).join(' ')||t);
+    const humanMeta=escapeHTML([d.km?Number(d.km).toLocaleString('tr-TR')+' km':'',d.gear,d.color,d.damage,d.paint].filter(Boolean).join(' · '));
     body=`<div class="card" style="text-align:left">
-      <strong>${t}</strong>
+      <p class="small muted" style="margin:0 0 6px">Son kontrol — her şey doğru mu?</p>
+      <strong>${humanLine}</strong>
       <div class="small" style="margin-top:6px"><b>${price}</b></div>
-      <div class="small muted">${escapeHTML([d.year,d.km?Number(d.km).toLocaleString('tr-TR')+' km':'',d.fuel,d.gear].filter(Boolean).join(' · '))}</div>
+      <div class="small muted">${humanMeta||'—'}</div>
       <div class="small muted">${escapeHTML([d.city,d.district].filter(Boolean).join(' / '))}</div>
-      <div class="small muted">Fotoğraf: ${(__otoW.files&&__otoW.files.length)||0}</div>
-      <div class="small muted">Kasa / Renk: ${escapeHTML([d.body,d.color].filter(Boolean).join(' · ')||'—')}</div>
+      <div class="small muted">Fotoğraf: ${(__otoW.files&&__otoW.files.length)||0} · Kasa: ${escapeHTML(d.body||'—')}</div>
       <div class="small muted">Satıcı: ${d.seller_type==='professional'?'Profesyonel / galeri':'Bireysel'}</div>
     </div>
     ${otoPreviewChecklistHtml(d)}
-    <p class="muted small">Kaydettiğinde ilan taslak olur; ardından yayınlayabilirsin.</p>`;
+    <p class="muted small">Kaydetmeden önce özeti kontrol et. Taslak olarak kaydedilir; yayın senin onayınla olur.</p>`;
   }
   const labels=['Tip','Araç','Teknik','Durum','Fiyat','Metin','Foto','Önizle'];
+  const stepHints=[
+    'İlan tipini ve satıcı bilgisini seç.',
+    'Marka, model, yıl ve kilometreyi belirt.',
+    'Yakıt, vites, motor ve kasa bilgilerini seç.',
+    'Aracın mevcut durumunu birkaç seçimle belirt.',
+    'İlan fiyatını ve konumunu belirle.',
+    'Başlık ve açıklama yaz (istersen AI yardımcı olsun).',
+    'En az bir fotoğraf ekle; açı çeşitliliği önerilir.',
+    'Özeti kontrol et. Her şey doğruysa taslak olarak kaydet.'
+  ];
+  const nextLabel=step<total-1?('Sonraki: '+labels[step+1]):'Sonraki: Kayıt';
+  const draftNote=(__otoW&&__otoW._draftSaved)?'<p class="small" style="color:var(--ok,#19c37d);margin:8px 0 0">✓ Taslak kaydedildi. Kaldığın yerden devam edebilirsin.</p>':'';
   app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showOtomobilHub()">← Otomobil</button></div>
   <div class="formCard">
     <span class="badge">🚗 İlan Ver · Adım ${step+1}/${total}</span>
     <h1>${labels[step]||'İlan'}</h1>
     <p class="small muted">${labels.map(function(l,i){return i===step?'<b>'+l+'</b>':l;}).join(' → ')}</p>
+    <p class="small muted" style="margin:6px 0 10px">${stepHints[step]||''} <span style="opacity:.85">· ${nextLabel}</span></p>
     ${body}
+    ${draftNote}
     <div class="splitActions" style="margin-top:14px">
       ${step>0?'<button class="btn secondary" type="button" onclick="otoWizardBack()">Geri</button>':''}
       ${step<total-1?'<button class="btn primary" type="button" onclick="otoWizardNext()">Devam</button>':
@@ -3235,12 +3255,92 @@ window.showOtomobilDetail=showOtomobilDetail;
 // === MARKETPLACE 2.0 A2 HUB END ===
 
 
+
+function parseServiceFreeText(str){
+  const raw=String(str||'').trim();
+  const lower=raw.toLocaleLowerCase('tr-TR');
+  const out={category:'', urgency:'', note:raw};
+  if(!raw) return out;
+  // Kategori — SERVICES anahtarları / isimleri
+  try{
+    const map=[
+      ['tesisat',/musluk|su ka[cç]|tesisat|tuvalet|lavabo|gid[e]?r|bor[u]/],
+      ['klima',/klima|so[gğ]utm|kombi/],
+      ['elektrik',/elektrik|priz|sigorta|aydınlat/],
+      ['beyaz',/[cç]ama[sş][iı]r|bula[sş][iı]k|buzdolab[iı]|f[iı]r[iı]n|beyaz\s*e[sş]ya/],
+      ['temizlik',/temizlik|s[uü]p[uü]r/],
+      ['nakliye',/nakliye|ta[sş][iı]ma|evden eve/],
+      ['cilingir',/[cç]ilingir|kilit|anahtar/],
+      ['oto',/\boto\b|lastik|ak[uü]|yol yard[iı]m/],
+      ['boya',/badana|boya\s*ustas[iı]/],
+      ['montaj',/montaj|mobilya kur/]
+    ];
+    for(let i=0;i<map.length;i++){
+      if(map[i][1].test(lower)){ out.category=map[i][0]; break; }
+    }
+  }catch(e){}
+  // Zaman — uydurma yok; yalnızca açık ifadeler
+  if(/\byar[iı]n\b/.test(lower)) out.urgency='Yarın';
+  else if(/\bacil\b|\bacil\b/.test(lower)||/hemen/.test(lower)) out.urgency='Acil';
+  else if(/\bbug[uü]n\b/.test(lower)) out.urgency='Bugün';
+  return out;
+}
+function showServiceParseConfirm(){
+  const descEl=document.getElementById('reqDescription');
+  const raw=descEl?descEl.value:'';
+  const p=parseServiceFreeText(raw);
+  if(!p.category&&!p.urgency){
+    alert('Cümleden kategori veya zaman çıkarılamadı. Formu elle doldurabilirsin — bilgi uydurulmadı.');
+    return;
+  }
+  window.__svcParsePending=p;
+  const catName=(SERVICES[p.category]&&SERVICES[p.category].name)||p.category||'—';
+  const emoji=(SERVICES[p.category]&&SERVICES[p.category].emoji)||'🔧';
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showRequest()">← Düzenle</button></div>
+  <div class="formCard">
+    <span class="badge">Anladım</span>
+    <h1>Bunları doğru anladım mı?</h1>
+    <p class="muted small">Yalnızca yazdığından çıkarıldı. Onaylamadan talep oluşmaz.</p>
+    <div class="card" style="text-align:left;margin:12px 0">
+      <div class="small"><b>${emoji} ${escapeHTML(catName)}</b></div>
+      ${p.urgency?'<div class="small">⏰ '+escapeHTML(p.urgency)+'</div>':''}
+      <div class="small muted" style="margin-top:6px">📝 ${escapeHTML(p.note||'')}</div>
+    </div>
+    <div class="splitActions">
+      <button class="btn primary" type="button" onclick="applyServiceParseAndForm()">✓ Forma aktar</button>
+      <button class="btn secondary" type="button" onclick="showRequest()">✎ Düzenle</button>
+    </div>
+  </div>`);
+}
+function applyServiceParseAndForm(){
+  const p=window.__svcParsePending||{};
+  window.__svcParsePending=null;
+  // Formu aç ve alanları doldur — createRequest çağırma
+  showRequest(p.category||'');
+  setTimeout(function(){
+    try{
+      if(p.note){ const d=document.getElementById('reqDescription'); if(d) d.value=p.note; }
+      if(p.urgency){
+        const u=document.getElementById('reqUrgency');
+        if(u){
+          // Yarın -> Uygun zamanda if option missing
+          const opts=Array.from(u.options).map(function(o){return o.value;});
+          if(opts.indexOf(p.urgency)>=0) u.value=p.urgency;
+          else if(p.urgency==='Yarın'&&opts.indexOf('Uygun zamanda')>=0) u.value='Uygun zamanda';
+        }
+      }
+      if(p.category){ const s=document.getElementById('reqService'); if(s) s.value=p.category; }
+    }catch(e){}
+  },0);
+}
+
+window.showServiceParseConfirm=showServiceParseConfirm;window.parseServiceFreeText=parseServiceFreeText;window.applyServiceParseAndForm=applyServiceParseAndForm;
 function showRequest(preselected=""){
  setNav("navRequest");
  app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div>
  <div class="formCard"><span class="badge">📋 YENİ HİZMET TALEBİ</span><h1>İhtiyacını anlat.</h1><p class="muted small">Sorununu açıkça anlat. Böylece doğru hizmet sağlayıcısına ulaşmak kolaylaşır.</p>
  <label>Hizmet kategorisi *</label><select id="reqService">${serviceOptions(preselected)}</select>
- <label>Sorunun / ihtiyacın *</label><textarea id="reqDescription" maxlength="1000" placeholder="Örneğin: Klima çalışıyor fakat yeterince soğutmuyor."></textarea><div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap"><button type="button" class="btn secondary smallBtn" id="voiceBtn" onclick="startVoiceInput()">🎤 Sesli anlat</button><span class="small muted" id="charCount">0/1000</span></div>
+ <label>Sorunun / ihtiyacın *</label><textarea id="reqDescription" maxlength="1000" placeholder="Örneğin: Klima çalışıyor fakat yeterince soğutmuyor."></textarea><div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap"><button type="button" class="btn secondary smallBtn" id="voiceBtn" onclick="startVoiceInput()">🎤 Sesli anlat</button><button type="button" class="btn secondary smallBtn" onclick="showServiceParseConfirm()">🤖 Anla</button><span class="small muted" id="charCount">0/1000</span></div>
  <div class="row"><div><label>İl *</label><select id="reqCity"><option value="İzmir" selected>İzmir</option></select></div><div><label>İlçe *</label><select id="reqDistrict">${districtOptions()}</select></div></div>
  <label>Mahalle</label><input id="reqNeighborhood" placeholder="Mahalle adı">
  <label>Ne zaman gerekli?</label><select id="reqUrgency"><option value="Acil">🔴 Acil</option><option value="Bugün" selected>🟡 Bugün</option><option value="Uygun zamanda">🟢 Uygun zamanda</option></select>
@@ -5441,7 +5541,18 @@ async function saveAracCase(silent){
  }
 }
 
-function konut(){render(top('tasinmaz')+'<div class="hc"><div class="hk">Konut satışı</div><h2>Satış dosyasını oluşturalım</h2><p class="hm">11 kısa soruyla satış dosyasının ön kontrolünü yapacağız.</p><div class="hl"><div class="li">✓ Tapu ve mülkiyet</div><div class="li">✓ Alıcı ve satış bilgileri</div><div class="li">✓ Edinim tarihi ve vergi kontrolü</div></div><button class="hb hp" data-a="start">Satış dosyasını başlat →</button></div>')}
+function konut(){
+  let need='';
+  try{
+    if(typeof getDocumentChecklist==='function'){
+      const docs=getDocumentChecklist({});
+      need='<div class="hk" style="margin-top:10px">Sana gerekenler (hazırlık)</div><div class="hl">'+
+        (docs||[]).slice(0,6).map(function(d){return '<div class="li">○ '+(d.title||'')+'</div>';}).join('')+
+        '</div><p class="hm small">Bu liste mevcut işlem hazırlık kontrolünden gelir; resmî kurum şartı yerine geçmez.</p>';
+    }
+  }catch(e){}
+  render(top('tasinmaz')+'<div class="hc"><div class="hk">Konut satışı</div><h2>Satış dosyasını oluşturalım</h2><p class="hm">Kısa sorularla satış dosyasının ön kontrolünü yapacağız.</p><div class="hl"><div class="li">✓ Tapu ve mülkiyet</div><div class="li">✓ Alıcı ve satış bilgileri</div><div class="li">✓ Edinim tarihi ve vergi kontrolü</div></div>'+need+'<button class="hb hp" data-a="start">Satış dosyasını başlat →</button></div>');
+}
 function question(){const q=QUESTIONS[H.step];if(!q)return result();let html='<div class="pr"><span style="width:'+Math.max(7,Math.round(H.step/QUESTIONS.length*100))+'%"></span></div>'+top(H.step?'qback':'konut')+'<div class="hc"><div class="hk">Soru '+(H.step+1)+' / '+QUESTIONS.length+'</div><h2>'+esc(q.title)+'</h2>';if(q.type==='date')html+='<label>Tarih</label><input class="hi" id="qinput" type="date" value="'+esc(H.answers[q.key]||'')+'"><button class="hb hp" style="margin-top:14px" data-a="save" data-k="'+q.key+'">Devam et →</button>';else if(q.type==='number')html+='<label>Satış bedeli (TL)</label><input class="hi" id="qinput" type="number" min="0" step="1" inputmode="decimal" placeholder="'+esc(q.placeholder)+'" value="'+esc(H.answers[q.key]||'')+'"><button class="hb hp" style="margin-top:14px" data-a="save" data-k="'+q.key+'">Devam et →</button>';else html+='<div class="hg">'+q.options.map(o=>'<button class="hb" data-a="answer" data-k="'+q.key+'" data-v="'+o[0]+'">'+esc(o[1])+'</button>').join('')+'</div>';html+='</div>';render(html)}
 async function storageUpload(path,file,token){
   // POST /object/{bucket}/{path} — authenticated path is only for GET download
