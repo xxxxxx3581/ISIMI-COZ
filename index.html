@@ -430,6 +430,10 @@ html:not([data-theme="light"]) .officialPrepCard{background:rgba(13,159,104,.10)
 .ldAcc>summary::after{content:"›";margin-left:auto;opacity:.55;font-size:16px;transform:rotate(0deg);transition:transform .15s ease}
 .ldAcc[open]>summary::after{transform:rotate(90deg)}
 .ldAcc .ldAccBody{padding:0 12px 12px;text-align:left}
+
+.kesfetApplied{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px}
+.kesfetChipX,.kesfetChipClear{border:1px solid var(--line,rgba(255,255,255,.14));background:var(--card,#12202b);color:var(--text,#e8eef3);border-radius:999px;padding:6px 10px;font-size:12px;font-weight:700;cursor:pointer}
+.kesfetChipClear{border-color:rgba(13,159,104,.4);color:var(--primary,#0d9f68)}
 </style>
 </head>
 <body>
@@ -1274,6 +1278,82 @@ function kesfetSaveSearchStub(){
     alert('Arama bu cihaza kaydedildi. Bildirim sonraki sürümde.');
   }catch(e){ alert('Arama kaydedilemedi.'); }
 }
+
+function kesfetAppliedChipDefs(type){
+  const f=getListingFilterState(type)||{};
+  const chips=[];
+  function add(key, label){
+    if(label==null||label===''||label===false) return;
+    chips.push({key:key, label:String(label)});
+  }
+  if(f.q) add('q', '🔎 '+f.q);
+  if(f.city) add('city', f.city);
+  if(f.district) add('district', f.district);
+  if(f.neighborhood) add('neighborhood', f.neighborhood);
+  if(f.brand) add('brand', f.brand);
+  if(f.model) add('model', f.model);
+  if(f.body) add('body', f.body);
+  if(f.fuel) add('fuel', f.fuel);
+  if(f.gear) add('gear', f.gear);
+  if(f.drive) add('drive', f.drive);
+  if(f.seller_type==='professional') add('seller_type', 'Profesyonel');
+  if(f.seller_type==='individual') add('seller_type', 'Bireysel');
+  if(f.category) add('category', f.category);
+  if(f.rooms) add('rooms', f.rooms);
+  if(f.zoning) add('zoning', f.zoning);
+  if(f.minPrice||f.maxPrice){
+    const a=f.minPrice?Number(f.minPrice).toLocaleString('tr-TR'):'…';
+    const b=f.maxPrice?Number(f.maxPrice).toLocaleString('tr-TR'):'…';
+    add('price', a+' – '+b+' TL');
+  }
+  if(f.minKm||f.maxKm){
+    const a=f.minKm?Number(f.minKm).toLocaleString('tr-TR'):'…';
+    const b=f.maxKm?Number(f.maxKm).toLocaleString('tr-TR'):'…';
+    add('km', a+' – '+b+' km');
+  }
+  if(f.minYear||f.maxYear) add('year', (f.minYear||'…')+' – '+(f.maxYear||'…'));
+  if(f.minSqm||f.maxSqm) add('sqm', (f.minSqm||'…')+' – '+(f.maxSqm||'…')+' m²');
+  return chips;
+}
+function kesfetAppliedChipsHtml(type){
+  const chips=kesfetAppliedChipDefs(type);
+  if(!chips.length) return '';
+  let h='<div class="kesfetApplied" id="kesfetApplied">';
+  chips.forEach(function(c){
+    h+='<button type="button" class="kesfetChipX" data-fk="'+escapeHTML(c.key)+'">'+escapeHTML(c.label)+' ×</button>';
+  });
+  h+='<button type="button" class="kesfetChipClear" data-clear="1">Temizle</button>';
+  h+='</div>';
+  return h;
+}
+function kesfetBindAppliedChips(type){
+  const root=document.getElementById('kesfetApplied');
+  if(!root) return;
+  root.querySelectorAll('.kesfetChipX').forEach(function(btn){
+    btn.onclick=function(){ kesfetRemoveFilterKey(type, btn.getAttribute('data-fk')||''); };
+  });
+  const clr=root.querySelector('[data-clear]');
+  if(clr) clr.onclick=function(){ kesfetClearFiltersAndRefresh(type); };
+}
+function kesfetRemoveFilterKey(type, key){
+  const st=getListingFilterState(type);
+  if(!st) return;
+  if(key==='price'){ st.minPrice=''; st.maxPrice=''; }
+  else if(key==='km'){ st.minKm=''; st.maxKm=''; }
+  else if(key==='year'){ st.minYear=''; st.maxYear=''; }
+  else if(key==='sqm'){ st.minSqm=''; st.maxSqm=''; }
+  else st[key]='';
+  if(window.__kesfetUnified && typeof showKesfet==='function') showKesfet(true);
+  else if(type==='otomobil'&&typeof showOtomobilBrowse==='function') showOtomobilBrowse(true);
+  else if(typeof showGayrimenkulBrowse==='function') showGayrimenkulBrowse(true);
+}
+function kesfetClearFiltersAndRefresh(type){
+  clearListingFilters(type);
+  if(window.__kesfetUnified && typeof showKesfet==='function') showKesfet(true);
+  else if(type==='otomobil'&&typeof showOtomobilBrowse==='function') showOtomobilBrowse(true);
+  else if(typeof showGayrimenkulBrowse==='function') showGayrimenkulBrowse(true);
+}
+
 async function showKesfet(keepCache){
   window.__kesfetUnified=true;
   try{ if(typeof setNav==='function') setNav('navHome'); }catch(e){}
@@ -1301,16 +1381,16 @@ async function showKesfet(keepCache){
           <option value="new"${sort==='new'?' selected':''}>Önerilen / En yeni</option>
           <option value="price_asc"${sort==='price_asc'?' selected':''}>Fiyat artan</option>
           <option value="price_desc"${sort==='price_desc'?' selected':''}>Fiyat azalan</option>
-          <option value="km_asc"${sort==='km_asc'?' selected':''}>Km artan</option>
+          ${filterType==='otomobil'?`<option value="km_asc"${sort==='km_asc'?' selected':''}>Km artan</option><option value="year_desc"${sort==='year_desc'?' selected':''}>Yıl yeni → eski</option>`:''}
         </select>
         <button type="button" class="btn secondary smallBtn" onclick="kesfetSetView('list')" title="Liste">☰</button>
         <button type="button" class="btn secondary smallBtn" onclick="kesfetSetView('grid')" title="Izgara">▦</button>
         <button type="button" class="btn secondary smallBtn" onclick="kesfetSaveSearchStub()" title="Aramayı kaydet">♡</button>
       </div>
     </div>
-    <div class="small muted" style="margin:0 0 6px">📍 ${locLabel}</div>
     <div class="kesfetChips">${kesfetMainChipsHtml()}</div>
     <div class="kesfetChips" id="kesfetSubChips">${kesfetSubChipsHtml()}</div>
+    ${kesfetAppliedChipsHtml(filterType)}
     <div class="kesfetMeta"><span id="kesfetCount">Yükleniyor…</span></div>
     <div id="kesfetGrid" class="muted small">Yükleniyor…</div>
   </div>`);
@@ -1329,6 +1409,7 @@ async function showKesfet(keepCache){
     try{ if(!window.__kesfetView) window.__kesfetView=localStorage.getItem('kesfet_view')||'list'; }catch(e){ window.__kesfetView='list'; }
     box.className='kesfetGrid'+(window.__kesfetView==='list'?' is-list':'');
     box.innerHTML=list.map(function(item){ return kesfetCardHtml(item.row, item.type); }).join('');
+    try{ kesfetBindAppliedChips(filterType); }catch(e){}
   }catch(err){
     box.innerHTML=`<div class="card empty"><h3>İlanlar yüklenemedi</h3><p class="small muted">${escapeHTML(err&&err.message?err.message:String(err))}</p>
       <button class="btn secondary" type="button" onclick="showKesfet()">Tekrar dene</button></div>`;
@@ -1559,6 +1640,8 @@ async function showMyListings(filter){
     box.innerHTML='<p class="muted">İlanlar yüklenemedi: '+escapeHTML(e&&e.message?e.message:String(e))+'</p>';
   }
 }
+window.kesfetRemoveFilterKey=kesfetRemoveFilterKey;
+window.kesfetClearFiltersAndRefresh=kesfetClearFiltersAndRefresh;
 window.showMyListings=showMyListings;
 window.myListingsBack=myListingsBack;
 window.openMyListingDraft=openMyListingDraft;
@@ -2041,7 +2124,7 @@ function openListingFilterPanel(type){
     ${fields}
     <div class="splitActions" style="margin-top:14px">
       <button type="button" class="btn secondary" id="lfClear">Temizle</button>
-      <button type="button" class="btn primary" id="lfApply">Uygula</button>
+      <button type="button" class="btn primary" id="lfApply">İlanları göster</button>
     </div>
   </div>`;
   document.body.appendChild(wrap);
