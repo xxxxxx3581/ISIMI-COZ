@@ -2495,6 +2495,244 @@ function otoDismissPrefills(){
   try{ __otoW= __otoW||{step:0,data:{},files:[]}; __otoW._prefAsked=true; renderOtomobilWizard(); }catch(e){}
 }
 
+
+/* === V1 ANLAMA PAKETİ (araç ilanı, izole) === */
+function parseOtoFreeText(str){
+  const raw=String(str||'').trim();
+  const partial={};
+  const notes=[];
+  if(!raw) return {partial:partial, notes:notes, raw:raw};
+  const lower=raw.toLocaleLowerCase('tr-TR');
+
+  // Yıl
+  let ym=raw.match(/\b(19[5-9]\d|20[0-3]\d)\b/);
+  if(ym) partial.year=ym[1];
+
+  // KM: 45 bin, 45000, 45.000, 45bin
+  let km=null;
+  let m=lower.match(/(\d{1,3}(?:[.\s]\d{3})+|\d+)\s*(bin)?\s*km\b/);
+  if(m){
+    let n=m[1].replace(/[.\s]/g,'');
+    km=parseInt(n,10);
+    if(m[2]) km=km*1000;
+  }else{
+    m=lower.match(/(\d{1,3})\s*bin(?:\s*km)?\b/);
+    if(m) km=parseInt(m[1],10)*1000;
+  }
+  if(km!=null&&isFinite(km)&&km>=0) partial.km=String(km);
+
+  // Marka — katalogdan en uzun eşleşme
+  try{
+    const brands=typeof otoCatalogBrands==='function'?otoCatalogBrands():Object.keys(OTO_CATALOG||{});
+    let best='';
+    brands.forEach(function(b){
+      if(!b||b==='Diğer') return;
+      const bl=b.toLocaleLowerCase('tr-TR');
+      if(lower.indexOf(bl)>=0 && bl.length>best.length) best=b;
+    });
+    // sık kısaltmalar
+    if(!best){
+      if(/\bbmw\b/i.test(raw)) best='BMW';
+      else if(/\bvw\b|\bvolkswagen\b/i.test(raw)) best='Volkswagen';
+      else if(/\bmercedes\b|\bbenz\b/i.test(raw)) best='Mercedes-Benz';
+    }
+    if(best) partial.brand=best;
+  }catch(e){}
+
+  // Model + version — yalnızca katalog kesin eşleşmesi
+  try{
+    if(partial.brand&&OTO_CATALOG[partial.brand]){
+      const models=OTO_CATALOG[partial.brand];
+      let foundModel='', foundVer='';
+      Object.keys(models).forEach(function(mod){
+        const ml=mod.toLocaleLowerCase('tr-TR');
+        if(ml.length>=2 && lower.indexOf(ml)>=0){
+          if(mod.length>=foundModel.length){ foundModel=mod; }
+        }
+        const vers=models[mod]||[];
+        vers.forEach(function(v){
+          if(!v) return;
+          const vl=String(v).toLocaleLowerCase('tr-TR');
+          // kelime sınırı benzeri: 320i, 1.5 tsi
+          const re=new RegExp('(?:^|[^a-z0-9])'+vl.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'(?:[^a-z0-9]|$)','i');
+          if(re.test(lower) || lower.indexOf(vl)>=0){
+            if(String(v).length>=String(foundVer).length){
+              foundVer=v;
+              if(!foundModel) foundModel=mod;
+            }
+          }
+        });
+      });
+      if(foundModel) partial.model=foundModel;
+      if(foundVer) partial.version=foundVer;
+    }
+  }catch(e){}
+
+  // 320i vb. version eşleşti ama model yoksa not
+  if(!partial.model && partial.version){
+    notes.push('Versiyon: '+partial.version+' (model seçimini formdan kontrol et)');
+  }
+
+  // Renk
+  try{
+    const colors=(typeof OTO_COLORS!=='undefined'?OTO_COLORS:[]).filter(Boolean);
+    colors.forEach(function(c){
+      if(c==='Diğer') return;
+      if(lower.indexOf(c.toLocaleLowerCase('tr-TR'))>=0) partial.color=c;
+    });
+  }catch(e){}
+
+  // Vites
+  if(/\botomatik\b/.test(lower)) partial.gear='Otomatik';
+  else if(/\bmanuel\b/.test(lower)) partial.gear='Manuel';
+  else if(/yar[iı]\s*otomatik/.test(lower)) partial.gear='Yarı otomatik';
+
+  // Yakıt
+  if(/\bbenzin\b/.test(lower)) partial.fuel='Benzin';
+  else if(/\bdizel\b|\bdiesel\b/.test(lower)) partial.fuel='Dizel';
+  else if(/\blpg\b/.test(lower)) partial.fuel='LPG';
+  else if(/\bhibrit\b|\bhybrid\b/.test(lower)) partial.fuel='Hibrit';
+  else if(/\belektrik/.test(lower)) partial.fuel='Elektrik';
+
+  // Çekiş
+  if(/\b4x4\b/.test(lower)) partial.drive='4x4';
+  else if(/\bawd\b/.test(lower)) partial.drive='AWD';
+  else if(/önden|onden/.test(lower)) partial.drive='Önden';
+  else if(/arkadan/.test(lower)) partial.drive='Arkadan';
+
+  // Kasa
+  try{
+    const bodies=(typeof OTO_BODY_TYPES!=='undefined'?OTO_BODY_TYPES:[]).filter(Boolean);
+    bodies.forEach(function(b){
+      if(b==='Diğer') return;
+      if(lower.indexOf(b.toLocaleLowerCase('tr-TR'))>=0) partial.body=b;
+    });
+  }catch(e){}
+
+  // Kondisyon
+  if(/\bs[iı]f[iı]r\b/.test(lower)) partial.condition='Sıfır';
+  else if(/ikinci\s*el|2\.\s*el/.test(lower)) partial.condition='İkinci el';
+
+  // Hasar — çelişkide sessizce birini silme
+  const hasHasarsiz=/hasars[iı]z/.test(lower);
+  const hasHasarKaydi=/hasar\s*kayd[iı]/.test(lower)||(/hasarl[iı]/.test(lower)&&!hasHasarsiz);
+  if(hasHasarsiz&&hasHasarKaydi){
+    notes.push('Çelişki: hem hasarsız hem hasar ifadesi var — formdan netleştir');
+    partial.damage='Hasarsız';
+    notes.push('Hasar (alternatif): Hasar kaydı var');
+  }else if(hasHasarsiz) partial.damage='Hasarsız';
+  else if(hasHasarKaydi) partial.damage='Hasar kaydı var';
+
+  // Boya — katalog değerleri
+  if(/boyas[iı]z/.test(lower)) partial.paint='Boyasız';
+  else if(/tamamen\s*boyal[iı]/.test(lower)) partial.paint='Tamamen boyalı';
+  else if(/k[iı]smi\s*boyal[iı]|lokal\s*boyal[iı]/.test(lower)) partial.paint='Kısmi boyalı';
+  // serbest boya ifadesi (kapı vs.) — katalog dışı, not olarak
+  const paintFree=raw.match(/(sa[gğ]\s*ön\s*kap[iı][^\n,]{0,40}boya[^\n,]{0,20}|sol\s*ön\s*kap[iı][^\n,]{0,40}boya[^\n,]{0,20}|kap[iı]da\s*boya[^\n,]{0,20}|boya\s*var[^\n,]{0,30})/i);
+  if(paintFree){
+    notes.push('Boya notu: '+paintFree[0].trim());
+    if(!partial.paint) partial.paint='Kısmi boyalı'; // yumuşak eşleme: kapıda boya ≈ kısmi; kullanıcı onaylar
+  }
+
+  // Değişen parça
+  if(/de[gğ]i[sş]en\s*par[cç]a\s*yok|par[cç]a\s*de[gğ]i[sş]memi[sş]/.test(lower)) partial.changed_parts='Yok';
+  else if(/de[gğ]i[sş]en\s*par[cç]a/.test(lower)) partial.changed_parts='Var';
+
+  // Servis / muayene / garanti
+  if(/yetkili\s*servis/.test(lower)) partial.service_history='Yetkili servis';
+  else if(/[oö]zel\s*servis/.test(lower)) partial.service_history='Özel servis';
+  if(/muayene\s*ge[cç]erli|ge[cç]erli\s*muayene/.test(lower)) partial.inspection='Geçerli';
+  else if(/muayene\s*ge[cç]mi[sş]/.test(lower)) partial.inspection='Geçmiş';
+  if(/\bgaranti\s*var\b/.test(lower)) partial.warranty='Var';
+  else if(/\bgaranti\s*yok\b/.test(lower)) partial.warranty='Yok';
+
+  // Motor cc / hp kaba
+  m=lower.match(/\b(\d(?:[.,]\d)?)\s*(?:litre|l)\b/);
+  if(m){
+    const lit=parseFloat(m[1].replace(',','.'));
+    if(lit>=0.6&&lit<=8) partial.engine_cc=String(Math.round(lit*1000));
+  }
+  m=lower.match(/\b(\d{3,4})\s*cc\b/);
+  if(m) partial.engine_cc=m[1];
+  m=lower.match(/\b(\d{2,3})\s*hp\b/);
+  if(m) partial.power_hp=m[1];
+
+  return {partial:partial, notes:notes, raw:raw};
+}
+
+function showOtoParseConfirm(partial, rawText, notes){
+  partial=partial||{};
+  notes=notes||[];
+  const rows=[];
+  const labels={
+    brand:'Marka', model:'Model', version:'Versiyon', year:'Yıl', km:'Kilometre',
+    color:'Renk', gear:'Vites', fuel:'Yakıt', body:'Kasa', drive:'Çekiş',
+    engine_cc:'Motor (cc)', power_hp:'Güç (HP)', condition:'Kondisyon',
+    damage:'Hasar', paint:'Boya', changed_parts:'Değişen parça',
+    service_history:'Servis', inspection:'Muayene', warranty:'Garanti'
+  };
+  Object.keys(labels).forEach(function(k){
+    if(partial[k]!=null&&String(partial[k]).trim()!==''){
+      let val=String(partial[k]);
+      if(k==='km'){ try{ val=Number(val).toLocaleString('tr-TR')+' km'; }catch(e){} }
+      rows.push('<div class="small" style="margin:4px 0"><b>'+labels[k]+':</b> '+escapeHTML(val)+'</div>');
+    }
+  });
+  notes.forEach(function(n){
+    rows.push('<div class="small muted" style="margin:4px 0">• '+escapeHTML(n)+'</div>');
+  });
+  if(!rows.length){
+    app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="renderOtomobilWizard()">← Geri</button></div>
+    <div class="formCard"><span class="badge">🤖 Anla</span><h1>Anlaşılamadı</h1>
+    <p class="muted">Cümleden güvenli alan çıkarılamadı. Bilgi uydurulmadı — formu elle doldurabilir veya cümleyi netleştirip tekrar deneyebilirsin.</p>
+    <button class="btn primary" type="button" onclick="renderOtomobilWizard()">Forma dön</button></div>`);
+    return;
+  }
+  window.__otoParsePending={partial:partial, raw:rawText||'', notes:notes};
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="otoParseEdit()">← Düzenle</button></div>
+  <div class="formCard">
+    <span class="badge">🤖 Anla</span>
+    <h1>Bunları doğru anladım mı?</h1>
+    <p class="muted small">Yalnızca cümleden çıkarılan bilgiler. Onaylamadan ilan alanları değişmez.</p>
+    <div class="card" style="text-align:left;margin:12px 0">${rows.join('')}</div>
+    <div class="splitActions">
+      <button class="btn primary" type="button" onclick="otoParseConfirmYes()">✓ Evet, devam et</button>
+      <button class="btn secondary" type="button" onclick="otoParseEdit()">✎ Düzenle</button>
+    </div>
+  </div>`);
+}
+
+function otoParseFromWizard(){
+  const el=document.getElementById('otoFreeText');
+  const text=el?el.value:'';
+  const res=parseOtoFreeText(text);
+  showOtoParseConfirm(res.partial, res.raw, res.notes);
+}
+
+function otoParseConfirmYes(){
+  const pend=window.__otoParsePending;
+  if(!pend||!pend.partial){ renderOtomobilWizard(); return; }
+  __otoW=__otoW||{step:0,data:{},files:[]};
+  __otoW.data=Object.assign({}, __otoW.data||{}, pend.partial);
+  // Onaylandıktan sonra uygun adıma geç (kalıcı step numarası eklemeden)
+  if(__otoW.data.brand||__otoW.data.model||__otoW.data.year) __otoW.step=Math.max(__otoW.step|0, 1);
+  window.__otoParsePending=null;
+  try{
+    const draft={step:__otoW.step, data:Object.assign({}, __otoW.data), hasFiles:false};
+    localStorage.setItem('oto_listing_draft', JSON.stringify(draft));
+  }catch(e){}
+  renderOtomobilWizard();
+}
+
+function otoParseEdit(){
+  const raw=(window.__otoParsePending&&window.__otoParsePending.raw)||'';
+  window.__otoParsePending=null;
+  __otoW=__otoW||{step:0,data:{},files:[]};
+  __otoW._freeTextKeep=raw;
+  __otoW.step=0;
+  renderOtomobilWizard();
+}
+
 function startOtomobilWizard(){
   const session=typeof getAuthSession==='function'?getAuthSession():null;
   if(!session||!session.user||!(session.user.id||session.user.user_id)){
@@ -2529,7 +2767,15 @@ function renderOtomobilWizard(){
         </div>`;
       }
     }catch(e){}
-    body=prefBanner+`<label>Araç tipi</label><select id="otoVehicleType">
+    const freeKeep=(__otoW&&__otoW._freeTextKeep)||'';
+    if(__otoW) __otoW._freeTextKeep='';
+    const freeBox=`<div class="card" style="text-align:left;margin-bottom:12px">
+      <label style="margin-top:0">Kısaca anlat, formu dolduralım</label>
+      <textarea id="otoFreeText" maxlength="500" rows="3" placeholder="Örn: 2023 beyaz BMW 320i otomatik, 45 bin km, hasarsız…">${escapeHTML(freeKeep)}</textarea>
+      <button type="button" class="btn secondary smallBtn" style="margin-top:8px" onclick="otoParseFromWizard()">🤖 Anla</button>
+      <p class="small muted" style="margin:6px 0 0">Sadece yazdığın bilgiler kullanılır; uydurma yok. Onaylamadan form değişmez.</p>
+    </div>`;
+    body=prefBanner+freeBox+`<label>Araç tipi</label><select id="otoVehicleType">
       ${['Otomobil','SUV','Sedan','Hatchback','Station Wagon','Coupe','Cabrio','Pickup','Diğer'].map(function(v){
         return '<option value="'+v+'"'+sel(d.vehicle_type,v)+'>'+v+'</option>';
       }).join('')}
@@ -2967,6 +3213,10 @@ window.homeFeaturedTogglePause=homeFeaturedTogglePause;
 window.homeFeaturedSpeak=homeFeaturedSpeak;
 window.resumeOtoListingDraft=resumeOtoListingDraft;
 window.otoBuildAiDescription=otoBuildAiDescription;
+window.parseOtoFreeText=parseOtoFreeText;
+window.otoParseFromWizard=otoParseFromWizard;
+window.otoParseConfirmYes=otoParseConfirmYes;
+window.otoParseEdit=otoParseEdit;
 window.otoApplyLastPrefills=otoApplyLastPrefills;
 window.otoDismissPrefills=otoDismissPrefills;
 window.shareOtomobilListing=shareOtomobilListing;
