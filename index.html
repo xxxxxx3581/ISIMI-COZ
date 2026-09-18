@@ -1701,7 +1701,7 @@ function countActiveListingFilters(type){
 }
 function clearListingFilters(type){
   if(type==='gayrimenkul'){
-    __listingFilters.gayrimenkul={q:'',category:'',minPrice:'',maxPrice:'',city:'',district:'',sort:'new'};
+    __listingFilters.gayrimenkul={q:'',category:'',minPrice:'',maxPrice:'',city:'',district:'',neighborhood:'',rooms:'',zoning:'',minSqm:'',maxSqm:'',sort:'new'};
   }else if(type==='otomobil'){
     __listingFilters.otomobil={q:'',brand:'',model:'',minYear:'',maxYear:'',minKm:'',maxKm:'',minPrice:'',maxPrice:'',fuel:'',gear:'',body:'',drive:'',city:'',district:'',seller_type:'',sort:'new'};
   }
@@ -1757,6 +1757,25 @@ function applyListingFiltersLocal(type, rows){
     if(type==='gayrimenkul'){
       if(f.category){
         if(normalizeListingText(row.category)!==normalizeListingText(f.category)) return false;
+      }
+      if(f.neighborhood){
+        if(normalizeListingText(row.neighborhood)!==normalizeListingText(f.neighborhood)) return false;
+      }
+      if(f.rooms){
+        if(normalizeListingText((md.rooms||''))!==normalizeListingText(f.rooms)) return false;
+      }
+      if(f.zoning){
+        const z=md.zoning||md.imar||'';
+        if(normalizeListingText(z)!==normalizeListingText(f.zoning)) return false;
+      }
+      const sqm=Number(md.sqm||md.m2||md.area);
+      const minS=f.minSqm!==''&&f.minSqm!=null?Number(f.minSqm):null;
+      const maxS=f.maxSqm!==''&&f.maxSqm!=null?Number(f.maxSqm):null;
+      if(minS!=null&&!isNaN(minS)){
+        if(!isFinite(sqm)||sqm<minS) return false;
+      }
+      if(maxS!=null&&!isNaN(maxS)&&maxS!==''){
+        if(!isFinite(sqm)||sqm>maxS) return false;
       }
     }
     if(type==='otomobil'){
@@ -1831,52 +1850,188 @@ function closeListingFilterPanel(){
   const el=document.getElementById('listingFilterPanel');
   if(el) el.remove();
 }
+function listingFilterRows(type){
+  try{
+    if(type==='otomobil') return (__listingCache&&__listingCache.otomobil)||[];
+    return (__listingCache&&__listingCache.gayrimenkul)||[];
+  }catch(e){ return []; }
+}
+function listingUniqueVals(rows, getter){
+  const map={};
+  (rows||[]).forEach(function(row){
+    let v=getter(row);
+    if(v==null||v==='') return;
+    v=String(v).trim();
+    if(!v) return;
+    map[v]=1;
+  });
+  return Object.keys(map).sort(function(a,b){ return a.localeCompare(b,'tr'); });
+}
+function listingSelectOpts(values, selected, allLabel){
+  const sel=String(selected||'');
+  let h='<option value="">'+(allLabel||'Tümü')+'</option>';
+  (values||[]).forEach(function(v){
+    h+='<option value="'+escapeHTML(v)+'"'+(sel===v?' selected':'')+'>'+escapeHTML(v)+'</option>';
+  });
+  return h;
+}
+function listingPriceBucketOpts(rows, f){
+  const prices=(rows||[]).map(function(r){ return Number(r.price); }).filter(function(n){ return isFinite(n)&&n>0; }).sort(function(a,b){ return a-b; });
+  const buckets=[
+    {label:'0 – 1 M', min:0, max:1000000},
+    {label:'1 – 2 M', min:1000000, max:2000000},
+    {label:'2 – 3 M', min:2000000, max:3000000},
+    {label:'3 – 5 M', min:3000000, max:5000000},
+    {label:'5 – 10 M', min:5000000, max:10000000},
+    {label:'10 M+', min:10000000, max:''}
+  ];
+  // only show buckets that intersect data if data exists
+  let list=buckets;
+  if(prices.length){
+    const lo=prices[0], hi=prices[prices.length-1];
+    list=buckets.filter(function(b){
+      const bmax=b.max===''?Infinity:Number(b.max);
+      return bmax>=lo && Number(b.min)<=hi;
+    });
+    if(!list.length) list=buckets;
+  }
+  const curMin=String(f.minPrice||''), curMax=String(f.maxPrice||'');
+  let h='<option value="">Tümü</option>';
+  list.forEach(function(b){
+    const val=String(b.min)+'|'+String(b.max);
+    const sel=(curMin===String(b.min)&&curMax===String(b.max))?' selected':'';
+    h+='<option value="'+escapeHTML(val)+'"'+sel+'>'+escapeHTML(b.label)+'</option>';
+  });
+  h+='<option value="__custom__"'+(curMin||curMax?' selected':'')+'>Özel değer…</option>';
+  return h;
+}
+function listingKmBucketOpts(rows, f){
+  const buckets=[
+    {label:'0 – 25 bin', min:0, max:25000},
+    {label:'25 – 50 bin', min:25000, max:50000},
+    {label:'50 – 100 bin', min:50000, max:100000},
+    {label:'100 – 150 bin', min:100000, max:150000},
+    {label:'150 – 200 bin', min:150000, max:200000},
+    {label:'200 bin+', min:200000, max:''}
+  ];
+  const kms=(rows||[]).map(function(r){ return Number((r.metadata||{}).km); }).filter(function(n){ return isFinite(n)&&n>=0; });
+  let list=buckets;
+  if(kms.length){
+    const lo=Math.min.apply(null,kms), hi=Math.max.apply(null,kms);
+    list=buckets.filter(function(b){
+      const bmax=b.max===''?Infinity:Number(b.max);
+      return bmax>=lo && Number(b.min)<=hi;
+    });
+    if(!list.length) list=buckets;
+  }
+  const curMin=String(f.minKm||''), curMax=String(f.maxKm||'');
+  let h='<option value="">Tümü</option>';
+  list.forEach(function(b){
+    const val=String(b.min)+'|'+String(b.max);
+    const sel=(curMin===String(b.min)&&curMax===String(b.max))?' selected':'';
+    h+='<option value="'+escapeHTML(val)+'"'+sel+'>'+escapeHTML(b.label)+'</option>';
+  });
+  h+='<option value="__custom__">Özel değer…</option>';
+  return h;
+}
+function listingSqmBucketOpts(rows, f){
+  const buckets=[
+    {label:'0 – 50 m²', min:0, max:50},
+    {label:'50 – 100 m²', min:50, max:100},
+    {label:'100 – 150 m²', min:100, max:150},
+    {label:'150 – 250 m²', min:150, max:250},
+    {label:'250 m²+', min:250, max:''}
+  ];
+  const curMin=String(f.minSqm||''), curMax=String(f.maxSqm||'');
+  let h='<option value="">Tümü</option>';
+  buckets.forEach(function(b){
+    const val=String(b.min)+'|'+String(b.max);
+    const sel=(curMin===String(b.min)&&curMax===String(b.max))?' selected':'';
+    h+='<option value="'+escapeHTML(val)+'"'+sel+'>'+escapeHTML(b.label)+'</option>';
+  });
+  return h;
+}
 function openListingFilterPanel(type){
   closeListingFilterPanel();
   const f=getListingFilterState(type)||{};
   const isCar=type==='otomobil';
-  const districts=typeof districtOptions==='function'?districtOptions(f.district||''):'<option value="">İlçe</option>';
+  // ensure cache for dynamic options
+  try{
+    if(typeof kesfetEnsureCache==='function'){
+      // fire and forget; cache may already be warm from showKesfet
+      kesfetEnsureCache(isCar?'otomobil':'gayrimenkul', false);
+    }
+  }catch(e){}
+  const rows=listingFilterRows(type);
+  const brands=listingUniqueVals(rows, function(r){ return (r.metadata||{}).brand; });
+  const modelsAll=listingUniqueVals(rows, function(r){ return (r.metadata||{}).model; });
+  const modelsForBrand=f.brand?listingUniqueVals(rows.filter(function(r){
+    return normalizeListingText((r.metadata||{}).brand)===normalizeListingText(f.brand);
+  }), function(r){ return (r.metadata||{}).model; }):modelsAll;
+  const bodies=listingUniqueVals(rows, function(r){ return (r.metadata||{}).body || r.category; });
+  const districtsData=listingUniqueVals(rows, function(r){ return r.district; });
+  const neighborhoods=listingUniqueVals(rows.filter(function(r){
+    if(!f.district) return true;
+    return normalizeListingText(r.district)===normalizeListingText(f.district);
+  }), function(r){ return r.neighborhood; });
+  const rooms=listingUniqueVals(rows, function(r){ return (r.metadata||{}).rooms; });
+  const categories=listingUniqueVals(rows, function(r){ return r.category; });
+  const zoning=listingUniqueVals(rows, function(r){ return (r.metadata||{}).zoning || (r.metadata||{}).imar; });
+
   const wrap=document.createElement('div');
   wrap.id='listingFilterPanel';
   wrap.style.cssText='position:fixed;inset:0;z-index:2147482000;background:rgba(0,0,0,.55);display:flex;align-items:flex-end;justify-content:center';
   let fields='';
   if(isCar){
     fields=`
-      <label>Marka</label><input id="lfBrand" value="${escapeHTML(f.brand||'')}" placeholder="Marka">
-      <label>Model</label><input id="lfModel" value="${escapeHTML(f.model||'')}" placeholder="Model">
-      <div class="row"><div><label>Min yıl</label><input id="lfMinYear" type="number" value="${escapeHTML(f.minYear||'')}"></div>
-      <div><label>Max yıl</label><input id="lfMaxYear" type="number" value="${escapeHTML(f.maxYear||'')}"></div></div>
-      <div class="row"><div><label>Min KM</label><input id="lfMinKm" type="number" value="${escapeHTML(f.minKm||'')}"></div>
-      <div><label>Max KM</label><input id="lfMaxKm" type="number" value="${escapeHTML(f.maxKm||'')}"></div></div>
-      <div class="row"><div><label>Min fiyat</label><input id="lfMinPrice" type="number" value="${escapeHTML(f.minPrice||'')}"></div>
+      <label>Marka</label><select id="lfBrand">${listingSelectOpts(brands, f.brand)}</select>
+      <label>Model</label><select id="lfModel">${listingSelectOpts(modelsForBrand, f.model)}</select>
+      <label>Fiyat aralığı</label><select id="lfPriceBucket">${listingPriceBucketOpts(rows, f)}</select>
+      <div class="row" id="lfPriceCustom" style="display:none"><div><label>Min fiyat</label><input id="lfMinPrice" type="number" value="${escapeHTML(f.minPrice||'')}"></div>
       <div><label>Max fiyat</label><input id="lfMaxPrice" type="number" value="${escapeHTML(f.maxPrice||'')}"></div></div>
+      <input type="hidden" id="lfMinPriceH" value="${escapeHTML(f.minPrice||'')}"><input type="hidden" id="lfMaxPriceH" value="${escapeHTML(f.maxPrice||'')}">
+      <label>Kilometre</label><select id="lfKmBucket">${listingKmBucketOpts(rows, f)}</select>
+      <div class="row" id="lfKmCustom" style="display:none"><div><label>Min KM</label><input id="lfMinKm" type="number" value="${escapeHTML(f.minKm||'')}"></div>
+      <div><label>Max KM</label><input id="lfMaxKm" type="number" value="${escapeHTML(f.maxKm||'')}"></div></div>
+      <input type="hidden" id="lfMinKmH" value="${escapeHTML(f.minKm||'')}"><input type="hidden" id="lfMaxKmH" value="${escapeHTML(f.maxKm||'')}">
+      <div class="row"><div><label>Min yıl</label><input id="lfMinYear" type="number" value="${escapeHTML(f.minYear||'')}" placeholder="ör. 2015"></div>
+      <div><label>Max yıl</label><input id="lfMaxYear" type="number" value="${escapeHTML(f.maxYear||'')}"></div></div>
       <label>Yakıt</label><select id="lfFuel"><option value="">Tümü</option>${['Benzin','Dizel','LPG','Hibrit','Elektrik','Diğer'].map(function(v){return '<option value="'+v+'"'+(f.fuel===v?' selected':'')+'>'+v+'</option>';}).join('')}</select>
       <label>Vites</label><select id="lfGear"><option value="">Tümü</option>${['Manuel','Otomatik','Yarı otomatik'].map(function(v){return '<option value="'+v+'"'+(f.gear===v?' selected':'')+'>'+v+'</option>';}).join('')}</select>
-      <label>Kasa / tip</label><input id="lfBody" value="${escapeHTML(f.body||'')}" placeholder="SUV, Sedan…">
+      <label>Kasa / tip</label><select id="lfBody">${listingSelectOpts(bodies, f.body)}</select>
       <label>Çekiş</label><select id="lfDrive"><option value="">Tümü</option>${['Önden','Arkadan','4x4','AWD'].map(function(v){return '<option value="'+v+'"'+(f.drive===v?' selected':'')+'>'+v+'</option>';}).join('')}</select>
       <label>İl</label><select id="lfCity"><option value="">Tümü</option><option value="İzmir"'+(f.city==='İzmir'?' selected':'')+'>İzmir</option></select>
-      <label>İlçe</label><select id="lfDistrict">${districts}</select>
+      <label>İlçe</label><select id="lfDistrict">${listingSelectOpts(districtsData, f.district)}</select>
       <label>Satıcı tipi</label><select id="lfSeller"><option value="">Tümü</option><option value="individual"'+(f.seller_type==='individual'?' selected':'')+'>Bireysel</option><option value="professional"'+(f.seller_type==='professional'?' selected':'')+'>Profesyonel</option></select>
       <label>Sıralama</label><select id="lfSort">
-        <option value="new"'+(f.sort==='new'?' selected':'')+'>Yeni ilanlar</option>
-        <option value="price_asc"'+(f.sort==='price_asc'?' selected':'')+'>Fiyat: düşük → yüksek</option>
-        <option value="price_desc"'+(f.sort==='price_desc'?' selected':'')+'>Fiyat: yüksek → düşük</option>
+        <option value="new"'+(f.sort==='new'?' selected':'')+'>Önerilen / Yeni</option>
+        <option value="price_asc"'+(f.sort==='price_asc'?' selected':'')+'>Fiyat artan</option>
+        <option value="price_desc"'+(f.sort==='price_desc'?' selected':'')+'>Fiyat azalan</option>
         <option value="year_desc"'+(f.sort==='year_desc'?' selected':'')+'>Yıl: yeni → eski</option>
-        <option value="km_asc"'+(f.sort==='km_asc'?' selected':'')+'>KM: düşük → yüksek</option>
-      </select>`;
-  }else{
-    fields=`
-      <label>Kategori</label><select id="lfCategory"><option value="">Tümü</option>${['Konut','Arsa','İş Yeri'].map(function(v){return '<option value="'+v+'"'+(f.category===v?' selected':'')+'>'+v+'</option>';}).join('')}</select>
-      <div class="row"><div><label>Min fiyat</label><input id="lfMinPrice" type="number" value="${escapeHTML(f.minPrice||'')}"></div>
-      <div><label>Max fiyat</label><input id="lfMaxPrice" type="number" value="${escapeHTML(f.maxPrice||'')}"></div></div>
-      <label>İl</label><select id="lfCity"><option value="">Tümü</option><option value="İzmir"'+(f.city==='İzmir'?' selected':'')+'>İzmir</option></select>
-      <label>İlçe</label><select id="lfDistrict">${districts}</select>
-      <label>Sıralama</label><select id="lfSort">
-        <option value="new"'+(f.sort==='new'?' selected':'')+'>Yeni ilanlar</option>
-        <option value="price_asc"'+(f.sort==='price_asc'?' selected':'')+'>Fiyat: düşük → yüksek</option>
-        <option value="price_desc"'+(f.sort==='price_desc'?' selected':'')+'>Fiyat: yüksek → düşük</option>
+        <option value="km_asc"'+(f.sort==='km_asc'?' selected':'')+'>KM artan</option>
       </select>
-      <p class="small muted">Satılık/kiralık, oda ve m² filtreleri mevcut ilan verisinde yok; eklendiğinde buraya bağlanacak.</p>`;
+      <p class="small muted">Seçenekler mevcut ilanlardan üretilir. Özel değer için “Özel değer…” seç.</p>`;
+  }else{
+    const catOpts=categories.length?categories:['Konut','Arsa','İş Yeri'];
+    fields=`
+      <label>Kategori</label><select id="lfCategory">${listingSelectOpts(catOpts, f.category)}</select>
+      <label>Fiyat aralığı</label><select id="lfPriceBucket">${listingPriceBucketOpts(rows, f)}</select>
+      <div class="row" id="lfPriceCustom" style="display:none"><div><label>Min fiyat</label><input id="lfMinPrice" type="number" value="${escapeHTML(f.minPrice||'')}"></div>
+      <div><label>Max fiyat</label><input id="lfMaxPrice" type="number" value="${escapeHTML(f.maxPrice||'')}"></div></div>
+      <input type="hidden" id="lfMinPriceH" value="${escapeHTML(f.minPrice||'')}"><input type="hidden" id="lfMaxPriceH" value="${escapeHTML(f.maxPrice||'')}">
+      <label>m² aralığı</label><select id="lfSqmBucket">${listingSqmBucketOpts(rows, f)}</select>
+      <input type="hidden" id="lfMinSqm" value="${escapeHTML(f.minSqm||'')}"><input type="hidden" id="lfMaxSqm" value="${escapeHTML(f.maxSqm||'')}">
+      <label>Oda</label><select id="lfRooms">${listingSelectOpts(rooms, f.rooms)}</select>
+      <label>İl</label><select id="lfCity"><option value="">Tümü</option><option value="İzmir"'+(f.city==='İzmir'?' selected':'')+'>İzmir</option></select>
+      <label>İlçe</label><select id="lfDistrict">${listingSelectOpts(districtsData, f.district)}</select>
+      <label>Mahalle</label><select id="lfNeighborhood">${listingSelectOpts(neighborhoods, f.neighborhood)}</select>
+      ${zoning.length?('<label>İmar / durum</label><select id="lfZoning">'+listingSelectOpts(zoning, f.zoning)+'</select>'):'<input type="hidden" id="lfZoning" value="">'}
+      <label>Sıralama</label><select id="lfSort">
+        <option value="new"'+(f.sort==='new'?' selected':'')+'>Önerilen / Yeni</option>
+        <option value="price_asc"'+(f.sort==='price_asc'?' selected':'')+'>Fiyat artan</option>
+        <option value="price_desc"'+(f.sort==='price_desc'?' selected':'')+'>Fiyat azalan</option>
+      </select>
+      <p class="small muted">Seçenekler mevcut ilanlardan üretilir.</p>`;
   }
   wrap.innerHTML=`<div class="formCard" style="width:100%;max-width:560px;max-height:85vh;overflow:auto;margin:0;border-radius:18px 18px 0 0">
     <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
@@ -1892,33 +2047,139 @@ function openListingFilterPanel(type){
   document.body.appendChild(wrap);
   wrap.addEventListener('click',function(e){ if(e.target===wrap) closeListingFilterPanel(); });
   document.getElementById('lfClose').onclick=function(){ closeListingFilterPanel(); };
+
+  function syncBucket(selectId, minId, maxId, customId){
+    const sel=document.getElementById(selectId);
+    if(!sel) return;
+    const apply=function(){
+      const v=sel.value||'';
+      const custom=document.getElementById(customId);
+      if(v==='__custom__'){
+        if(custom) custom.style.display='';
+        return;
+      }
+      if(custom) custom.style.display='none';
+      if(!v){
+        const a=document.getElementById(minId); const b=document.getElementById(maxId);
+        if(a) a.value=''; if(b) b.value='';
+        return;
+      }
+      const parts=v.split('|');
+      const a=document.getElementById(minId); const b=document.getElementById(maxId);
+      if(a) a.value=parts[0]||'';
+      if(b) b.value=(parts[1]!==undefined?parts[1]:'');
+    };
+    sel.onchange=apply;
+    apply();
+  }
+  syncBucket('lfPriceBucket','lfMinPriceH','lfMaxPriceH','lfPriceCustom');
+  // mirror into visible custom inputs if present
+  const pb=document.getElementById('lfPriceBucket');
+  if(pb){
+    const prev=pb.onchange;
+    pb.onchange=function(){
+      if(prev) prev();
+      const minE=document.getElementById('lfMinPrice'); const maxE=document.getElementById('lfMaxPrice');
+      const minH=document.getElementById('lfMinPriceH'); const maxH=document.getElementById('lfMaxPriceH');
+      if(minE&&minH) minE.value=minH.value;
+      if(maxE&&maxH) maxE.value=maxH.value;
+    };
+  }
+  syncBucket('lfKmBucket','lfMinKmH','lfMaxKmH','lfKmCustom');
+  const kb=document.getElementById('lfKmBucket');
+  if(kb){
+    const prev=kb.onchange;
+    kb.onchange=function(){
+      if(prev) prev();
+      const minE=document.getElementById('lfMinKm'); const maxE=document.getElementById('lfMaxKm');
+      const minH=document.getElementById('lfMinKmH'); const maxH=document.getElementById('lfMaxKmH');
+      if(minE&&minH) minE.value=minH.value;
+      if(maxE&&maxH) maxE.value=maxH.value;
+    };
+  }
+  const sq=document.getElementById('lfSqmBucket');
+  if(sq){
+    sq.onchange=function(){
+      const v=sq.value||'';
+      const a=document.getElementById('lfMinSqm'); const b=document.getElementById('lfMaxSqm');
+      if(!v){ if(a)a.value=''; if(b)b.value=''; return; }
+      const parts=v.split('|');
+      if(a) a.value=parts[0]||''; if(b) b.value=(parts[1]!==undefined?parts[1]:'');
+    };
+  }
+  // brand -> model dependent options
+  const brandEl=document.getElementById('lfBrand');
+  if(brandEl){
+    brandEl.onchange=function(){
+      const b=brandEl.value||'';
+      const models=b?listingUniqueVals(rows.filter(function(r){
+        return normalizeListingText((r.metadata||{}).brand)===normalizeListingText(b);
+      }), function(r){ return (r.metadata||{}).model; }):listingUniqueVals(rows, function(r){ return (r.metadata||{}).model; });
+      const modelEl=document.getElementById('lfModel');
+      if(modelEl) modelEl.innerHTML=listingSelectOpts(models, '');
+    };
+  }
+  const distEl=document.getElementById('lfDistrict');
+  if(distEl&&document.getElementById('lfNeighborhood')){
+    distEl.onchange=function(){
+      const d=distEl.value||'';
+      const neigh=listingUniqueVals(rows.filter(function(r){
+        if(!d) return true;
+        return normalizeListingText(r.district)===normalizeListingText(d);
+      }), function(r){ return r.neighborhood; });
+      document.getElementById('lfNeighborhood').innerHTML=listingSelectOpts(neigh, '');
+    };
+  }
+
   document.getElementById('lfClear').onclick=function(){
     clearListingFilters(type);
     closeListingFilterPanel();
-    if(type==='otomobil') showOtomobilBrowse(true);
+    if(window.__kesfetUnified && typeof showKesfet==='function') showKesfet(true);
+    else if(type==='otomobil') showOtomobilBrowse(true);
     else showGayrimenkulBrowse(true);
   };
   document.getElementById('lfApply').onclick=function(){
     const st=getListingFilterState(type);
-    st.minPrice=(document.getElementById('lfMinPrice')||{}).value||'';
-    st.maxPrice=(document.getElementById('lfMaxPrice')||{}).value||'';
-    st.city=(document.getElementById('lfCity')||{}).value||'';
-    st.district=(document.getElementById('lfDistrict')||{}).value||'';
-    st.sort=(document.getElementById('lfSort')||{}).value||'new';
+    function val(id){ const el=document.getElementById(id); return el? (el.value||'') : ''; }
+    // price from bucket hidden or custom
+    let minP=val('lfMinPriceH')||val('lfMinPrice');
+    let maxP=val('lfMaxPriceH')||val('lfMaxPrice');
+    const pBucket=val('lfPriceBucket');
+    if(pBucket && pBucket!=='__custom__'){
+      const parts=pBucket.split('|'); minP=parts[0]||''; maxP=parts[1]!==undefined?parts[1]:'';
+    }
+    st.minPrice=minP; st.maxPrice=maxP;
+    st.city=val('lfCity');
+    st.district=val('lfDistrict');
+    st.sort=val('lfSort')||'new';
     if(isCar){
-      st.brand=(document.getElementById('lfBrand')||{}).value||'';
-      st.model=(document.getElementById('lfModel')||{}).value||'';
-      st.minYear=(document.getElementById('lfMinYear')||{}).value||'';
-      st.maxYear=(document.getElementById('lfMaxYear')||{}).value||'';
-      st.minKm=(document.getElementById('lfMinKm')||{}).value||'';
-      st.maxKm=(document.getElementById('lfMaxKm')||{}).value||'';
-      st.fuel=(document.getElementById('lfFuel')||{}).value||'';
-      st.gear=(document.getElementById('lfGear')||{}).value||'';
-      st.body=(document.getElementById('lfBody')||{}).value||'';
-      st.drive=(document.getElementById('lfDrive')||{}).value||'';
-      st.seller_type=(document.getElementById('lfSeller')||{}).value||'';
+      st.brand=val('lfBrand');
+      st.model=val('lfModel');
+      st.minYear=val('lfMinYear');
+      st.maxYear=val('lfMaxYear');
+      let minK=val('lfMinKmH')||val('lfMinKm');
+      let maxK=val('lfMaxKmH')||val('lfMaxKm');
+      const kBucket=val('lfKmBucket');
+      if(kBucket && kBucket!=='__custom__'){
+        const parts=kBucket.split('|'); minK=parts[0]||''; maxK=parts[1]!==undefined?parts[1]:'';
+      }
+      st.minKm=minK; st.maxKm=maxK;
+      st.fuel=val('lfFuel');
+      st.gear=val('lfGear');
+      st.body=val('lfBody');
+      st.drive=val('lfDrive');
+      st.seller_type=val('lfSeller');
     }else{
-      st.category=(document.getElementById('lfCategory')||{}).value||'';
+      st.category=val('lfCategory');
+      st.rooms=val('lfRooms');
+      st.neighborhood=val('lfNeighborhood');
+      st.zoning=val('lfZoning');
+      let minS=val('lfMinSqm'); let maxS=val('lfMaxSqm');
+      const sBucket=val('lfSqmBucket');
+      if(sBucket){
+        const parts=sBucket.split('|'); minS=parts[0]||''; maxS=parts[1]!==undefined?parts[1]:'';
+      }
+      st.minSqm=minS; st.maxSqm=maxS;
     }
     closeListingFilterPanel();
     if(window.__kesfetUnified && typeof showKesfet==='function') showKesfet(true);
