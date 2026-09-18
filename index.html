@@ -1035,6 +1035,7 @@ function showWorkAreaGayrimenkul(){
     ${typeof gmWorkResumeHtml==='function'?gmWorkResumeHtml():''}
     <div class="workAreaGrid">
       <button class="btn primary" type="button" onclick="window.__kesfetCat='gayrimenkul';showKesfet(false)">İlanlara bak</button>
+      <button class="btn secondary" type="button" onclick="window.__myListingsBack='work_gm';window.__myListingsFilter='gayrimenkul';showMyListings('gayrimenkul')">İlanlarım</button>
       <button class="btn secondary" type="button" onclick="showGayrimenkulCreateForm()">İlan ver</button>
       <button class="btn secondary" type="button" onclick="window.__workReturn='work_gm';openHalletAction('showTasinmazMenu')">Tapu / taşınmaz işlem hazırlığı</button>
       <button class="btn secondary" type="button" onclick="window.__workReturn='work_gm';openHalletAction('showKonutSatis')">Konut satışı hazırlığı</button>
@@ -1048,6 +1049,7 @@ function showWorkAreaArac(){
     <p class="muted small" style="margin:0 0 8px">Al · sat · ara · ilanlar · işlemler</p>
     <div class="workAreaGrid">
       <button class="btn primary" type="button" onclick="window.__kesfetCat='otomobil';showKesfet(false)">İlanlara bak</button>
+      <button class="btn secondary" type="button" onclick="window.__myListingsBack='work_arac';window.__myListingsFilter='otomobil';showMyListings('otomobil')">İlanlarım</button>
       <button class="btn secondary" type="button" onclick="startOtomobilWizard()">İlan ver</button>
       <button class="btn secondary" type="button" onclick="window.__workReturn='work_arac';openHalletAction('showArac')">Araç işlemleri</button>
       <button class="btn secondary" type="button" onclick="window.__workReturn='work_arac';openHalletAction('showAracSatis')">Aracımı satmak istiyorum</button>
@@ -1301,6 +1303,179 @@ async function showKesfet(keepCache){
       <button class="btn secondary" type="button" onclick="showKesfet()">Tekrar dene</button></div>`;
   }
 }
+
+
+/* === FAZ 1: İlanlarım 2.0 (owner listings management) === */
+function myListingsBack(){
+  const b=window.__myListingsBack||'home';
+  if(b==='work_gm'&&typeof showWorkAreaGayrimenkul==='function') return showWorkAreaGayrimenkul();
+  if(b==='work_arac'&&typeof showWorkAreaArac==='function') return showWorkAreaArac();
+  if(b==='hub'&&typeof showListingsHub==='function') return showListingsHub();
+  if(typeof showHome==='function') return showHome();
+}
+function myListingStatusMeta(status){
+  const s=String(status||'draft').toLowerCase();
+  if(s==='published') return {label:'Yayında', emoji:'🟢', key:'published'};
+  if(s==='passive'||s==='paused') return {label:'Pasif', emoji:'⏸️', key:'passive'};
+  if(s==='sold') return {label:'Satıldı', emoji:'🏷️', key:'sold'};
+  if(s==='rented') return {label:'Kiralandı', emoji:'🏷️', key:'rented'};
+  if(s==='archived') return {label:'Arşiv', emoji:'🗄️', key:'archived'};
+  return {label:'Taslak', emoji:'📝', key:'draft'};
+}
+function myListingMissingHints(row){
+  const miss=[];
+  if(!row) return miss;
+  if(!(row.title||'').trim()) miss.push('Başlık');
+  const photos=typeof listingPhotosFromRow==='function'?listingPhotosFromRow(row):[];
+  if(!photos.length) miss.push('Fotoğraf');
+  if(row.listing_type==='otomobil'){
+    const m=row.metadata||{};
+    if(!(m.brand||'').toString().trim()) miss.push('Marka');
+    if(!(m.model||'').toString().trim()) miss.push('Model');
+  }else{
+    if(!(row.city||'').trim()) miss.push('İl');
+    if(!(row.district||'').trim()) miss.push('İlçe');
+  }
+  return miss;
+}
+function myListingPrimaryAction(row){
+  const st=myListingStatusMeta(row.status);
+  const id=String(row.id||'').replace(/[^a-zA-Z0-9-]/g,'');
+  const type=row.listing_type==='otomobil'?'otomobil':'gayrimenkul';
+  if(st.key==='published'){
+    return {label:'İlanı görüntüle', onclick: type==='otomobil'
+      ? "typeof showOtomobilDetail==='function'&&showOtomobilDetail('"+id+"')"
+      : "typeof showGayrimenkulDetail==='function'&&showGayrimenkulDetail('"+id+"')"};
+  }
+  if(st.key==='passive'){
+    return {label:'Tekrar yayınla', onclick:"typeof republishMyListing==='function'&&republishMyListing('"+id+"','"+type+"')"};
+  }
+  // draft / other
+  const miss=myListingMissingHints(row);
+  return {label: miss.length?'Eksikleri tamamla':'Taslağı gör / yayınla', onclick:"typeof openMyListingDraft==='function'&&openMyListingDraft('"+id+"','"+type+"')"};
+}
+function openMyListingDraft(id, type){
+  const listingId=String(id||'').replace(/[^a-zA-Z0-9-]/g,'');
+  // Taslak yayın detayına gitmez (published filter). Özet + yayınla.
+  viewMyListingSummary(listingId, type||'gayrimenkul');
+}
+async function republishMyListing(id, type){
+  const listingId=String(id||'').replace(/[^a-zA-Z0-9-]/g,'');
+  try{
+    if(type==='otomobil'&&typeof publishOtomobilListing==='function') return publishOtomobilListing(listingId);
+    if(typeof publishGayrimenkulListing==='function') return publishGayrimenkulListing(listingId);
+  }catch(e){ alert(e&&e.message?e.message:String(e)); }
+}
+async function viewMyListingSummary(id, type){
+  const listingId=String(id||'').replace(/[^a-zA-Z0-9-]/g,'');
+  const session=typeof getAuthSession==='function'?getAuthSession():null;
+  if(!session||!(session.access_token||session.accessToken)){ openAuthModal('login'); return; }
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showMyListings()">← İlanlarım</button></div>
+    <div class="formCard"><span class="badge">Taslak</span><p class="muted small">Yükleniyor…</p></div>`);
+  try{
+    const path='listings?id=eq.'+encodeURIComponent(listingId)+'&select=id,title,price,currency,city,district,neighborhood,category,description,status,listing_type,created_at,metadata&limit=1';
+    const rows=await supabaseAuthRequest('GET', path);
+    const row=Array.isArray(rows)?rows[0]:null;
+    if(!row){ alert('İlan bulunamadı.'); return showMyListings(); }
+    const st=myListingStatusMeta(row.status);
+    const miss=myListingMissingHints(row);
+    const title=escapeHTML(row.title||'İlan');
+    const price=escapeHTML(typeof formatListingPrice==='function'?formatListingPrice(row.price,row.currency):String(row.price||''));
+    const loc=escapeHTML([row.city,row.district,row.neighborhood].filter(Boolean).join(' / ')||'—');
+    const missHtml=miss.length?('<p class="small" style="margin:8px 0 0">⚠️ '+miss.length+' eksik: '+escapeHTML(miss.join(', '))+'</p>'):'<p class="small muted">Temel alanlar dolu görünüyor.</p>';
+    const canPub=st.key!=='published';
+    app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showMyListings()">← İlanlarım</button></div>
+      <div class="formCard">
+        <span class="badge">${st.emoji} ${escapeHTML(st.label)}</span>
+        <h1 style="margin-top:8px">${title}</h1>
+        <p style="font-size:18px;font-weight:700;margin:6px 0">${price}</p>
+        <p class="small muted">${loc} · ${escapeHTML(row.listing_type||type||'')}</p>
+        ${missHtml}
+        <div class="splitActions" style="margin-top:14px">
+          ${canPub?`<button class="btn primary" type="button" onclick="${row.listing_type==='otomobil'?'publishOtomobilListing':'publishGayrimenkulListing'}('${listingId}')">İlanı yayınla</button>`:''}
+          <button class="btn secondary" type="button" onclick="showMyListings()">Listeye dön</button>
+        </div>
+        <p class="small muted" style="margin-top:10px">Taslak düzenleme sonraki adımda; şimdilik yayınla veya listeye dön.</p>
+      </div>`);
+  }catch(e){
+    alert(e&&e.message?e.message:String(e));
+    showMyListings();
+  }
+}
+async function showMyListings(filter){
+  const f=filter||window.__myListingsFilter||'all';
+  window.__myListingsFilter=f;
+  const session=typeof getAuthSession==='function'?getAuthSession():null;
+  const uid=session&&session.user&&(session.user.id||session.user.user_id);
+  const token=session&&(session.access_token||session.accessToken);
+  if(!session||!uid||!token){
+    openAuthModal('login');
+    return;
+  }
+  app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="myListingsBack()">← Geri</button></div>
+    <div class="formCard">
+      <span class="badge">İlanlarım</span>
+      <h1>İlanlarım</h1>
+      <p class="muted small">Kendi ilanlarını yönet. İlan durumu ile işlem durumu ayrı tutulur.</p>
+      <div class="splitActions" style="margin:10px 0;flex-wrap:wrap">
+        <button type="button" class="btn ${f==='all'?'primary':'secondary'} smallBtn" onclick="showMyListings('all')">Tümü</button>
+        <button type="button" class="btn ${f==='otomobil'?'primary':'secondary'} smallBtn" onclick="showMyListings('otomobil')">Araç</button>
+        <button type="button" class="btn ${f==='gayrimenkul'?'primary':'secondary'} smallBtn" onclick="showMyListings('gayrimenkul')">Gayrimenkul</button>
+      </div>
+      <div id="myListingsBox" class="muted small">Yükleniyor…</div>
+    </div>`);
+  const box=document.getElementById('myListingsBox');
+  try{
+    let path='listings?owner_id=eq.'+encodeURIComponent(uid)+'&order=created_at.desc&select=id,title,price,currency,city,district,neighborhood,category,description,status,listing_type,created_at,metadata';
+    if(f==='otomobil') path+='&listing_type=eq.otomobil';
+    if(f==='gayrimenkul') path+='&listing_type=eq.gayrimenkul';
+    const rows=await supabaseAuthRequest('GET', path);
+    const list=Array.isArray(rows)?rows:[];
+    if(!list.length){
+      box.innerHTML='<p class="muted">Henüz ilanın yok.</p><div class="splitActions" style="margin-top:10px">'+
+        (f!=='gayrimenkul'?'<button class="btn secondary smallBtn" type="button" onclick="startOtomobilWizard()">Araç ilanı ver</button>':'')+
+        (f!=='otomobil'?'<button class="btn secondary smallBtn" type="button" onclick="showGayrimenkulCreateForm()">Gayrimenkul ilanı ver</button>':'')+
+        '</div>';
+      return;
+    }
+    box.innerHTML=list.map(function(row){
+      const st=myListingStatusMeta(row.status);
+      const miss=myListingMissingHints(row);
+      const act=myListingPrimaryAction(row);
+      const title=escapeHTML(row.title||'İlan');
+      const price=escapeHTML(typeof formatListingPrice==='function'?formatListingPrice(row.price,row.currency):'');
+      const loc=escapeHTML([row.city,row.district].filter(Boolean).join(' / ')||'—');
+      const kind=row.listing_type==='otomobil'?'🚗 Araç':'🏠 Gayrimenkul';
+      const photos=typeof listingPhotosFromRow==='function'?listingPhotosFromRow(row):[];
+      let thumb='';
+      if(photos.length){
+        const p0=photos[0];
+        const pth=typeof p0==='string'?p0:(p0&&p0.path)||'';
+        if(pth&&typeof listingPhotoPublicUrl==='function'){
+          thumb='<div style="width:72px;height:56px;border-radius:10px;overflow:hidden;background:#0b1727;flex-shrink:0"><img src="'+escapeHTML(listingPhotoPublicUrl(pth))+'" alt="" style="width:100%;height:100%;object-fit:cover;display:block" loading="lazy"></div>';
+        }
+      }
+      const missLine=miss.length?'<div class="small" style="margin-top:4px">'+miss.length+' bilgi eksik</div>':'';
+      return '<div class="card" style="text-align:left;margin:0 0 10px;padding:12px">'+
+        '<div style="display:flex;gap:10px;align-items:flex-start">'+thumb+
+        '<div style="min-width:0;flex:1">'+
+        '<div class="small">'+st.emoji+' '+escapeHTML(st.label)+' · '+kind+'</div>'+
+        '<div style="font-weight:800;margin-top:2px">'+title+'</div>'+
+        '<div class="small muted">'+price+'</div>'+
+        '<div class="small muted">'+loc+'</div>'+missLine+
+        '</div></div>'+
+        '<button type="button" class="btn '+(st.key==='draft'?'secondary':'primary')+' smallBtn" style="margin-top:10px;width:100%" onclick="'+act.onclick+'">'+escapeHTML(act.label)+'</button>'+
+        '</div>';
+    }).join('');
+  }catch(e){
+    box.innerHTML='<p class="muted">İlanlar yüklenemedi: '+escapeHTML(e&&e.message?e.message:String(e))+'</p>';
+  }
+}
+window.showMyListings=showMyListings;
+window.myListingsBack=myListingsBack;
+window.openMyListingDraft=openMyListingDraft;
+window.viewMyListingSummary=viewMyListingSummary;
+window.republishMyListing=republishMyListing;
 
 function showListingsHub(){
   window.__kesfetCat=window.__kesfetCat||'all';
