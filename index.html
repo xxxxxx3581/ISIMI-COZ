@@ -1338,21 +1338,65 @@ function myListingMissingHints(row){
   }
   return miss;
 }
-function myListingPrimaryAction(row){
+function myListingTxnHint(row){
+  /* İşlem durumu — ilan statusünden ayrı; V0'da metadata/cases yoksa varsayılan metin */
+  const st=myListingStatusMeta(row&&row.status);
+  if(st.key==='draft') return {emoji:'📋', label:'İlan tamamlanmadı'};
+  if(st.key==='passive') return {emoji:'📋', label:'İşlem beklemede'};
+  if(st.key==='published') return {emoji:'📋', label:'Satış hazırlığı başlamadı'};
+  return {emoji:'📋', label:'İşlem başlamadı'};
+}
+function myListingNextStep(row){
   const st=myListingStatusMeta(row.status);
   const id=String(row.id||'').replace(/[^a-zA-Z0-9-]/g,'');
   const type=row.listing_type==='otomobil'?'otomobil':'gayrimenkul';
+  const miss=myListingMissingHints(row);
+  const viewOn=type==='otomobil'
+    ? "typeof showOtomobilDetail==='function'&&showOtomobilDetail('"+id+"')"
+    : "typeof showGayrimenkulDetail==='function'&&showGayrimenkulDetail('"+id+"')";
+  const prepOn="typeof openOfficialPrepGate==='function'&&openOfficialPrepGate('"+id+"','"+(type==='otomobil'?'arac_satisi':'konut_satisi')+"')";
+  const draftOn="typeof openMyListingDraft==='function'&&openMyListingDraft('"+id+"','"+type+"')";
+  const repubOn="typeof republishMyListing==='function'&&republishMyListing('"+id+"','"+type+"')";
+  let more=[];
   if(st.key==='published'){
-    return {label:'İlanı görüntüle', onclick: type==='otomobil'
-      ? "typeof showOtomobilDetail==='function'&&showOtomobilDetail('"+id+"')"
-      : "typeof showGayrimenkulDetail==='function'&&showGayrimenkulDetail('"+id+"')"};
+    const primary=type==='otomobil'
+      ? {hint:'Satış / devir hazırlığına geçebilirsin.', label:'Satış / devir hazırlığı', onclick:prepOn}
+      : {hint:'Tapu ve evrak hazırlığına geçebilirsin.', label:'Satışa hazırlan', onclick:prepOn};
+    more=[
+      {label:'İlanı görüntüle', onclick:viewOn},
+      {label:'Resmî evrak kapısı', onclick:prepOn}
+    ];
+    return Object.assign({more:more}, primary);
   }
   if(st.key==='passive'){
-    return {label:'Tekrar yayınla', onclick:"typeof republishMyListing==='function'&&republishMyListing('"+id+"','"+type+"')"};
+    return {
+      hint:'İlan yayında değil. Tekrar yayınlayabilirsin.',
+      label:'Tekrar yayınla',
+      onclick:repubOn,
+      more:[{label:'İlan özeti', onclick:draftOn}]
+    };
   }
-  // draft / other
-  const miss=myListingMissingHints(row);
-  return {label: miss.length?'Eksikleri tamamla':'Taslağı gör / yayınla', onclick:"typeof openMyListingDraft==='function'&&openMyListingDraft('"+id+"','"+type+"')"};
+  /* draft */
+  return {
+    hint: miss.length?(miss.length+' bilgi eksik — tamamla ve yayınla.'):'Taslak hazır görünüyor; yayınlayabilirsin.',
+    label: miss.length?'Eksikleri tamamla':'Taslağı gör / yayınla',
+    onclick:draftOn,
+    more:[]
+  };
+}
+function myListingPrimaryAction(row){
+  /* Geriye uyumluluk */
+  const n=myListingNextStep(row);
+  return {label:n.label, onclick:n.onclick};
+}
+function myListingMoreToggle(btn){
+  try{
+    const panel=btn&&btn.parentElement&&btn.parentElement.querySelector('[data-my-more-panel]');
+    if(!panel) return;
+    const open=panel.style.display==='block';
+    panel.style.display=open?'none':'block';
+    btn.setAttribute('aria-expanded', open?'false':'true');
+  }catch(e){}
 }
 function openMyListingDraft(id, type){
   const listingId=String(id||'').replace(/[^a-zA-Z0-9-]/g,'');
@@ -1441,7 +1485,6 @@ async function showMyListings(filter){
     box.innerHTML=list.map(function(row){
       const st=myListingStatusMeta(row.status);
       const miss=myListingMissingHints(row);
-      const act=myListingPrimaryAction(row);
       const title=escapeHTML(row.title||'İlan');
       const price=escapeHTML(typeof formatListingPrice==='function'?formatListingPrice(row.price,row.currency):'');
       const loc=escapeHTML([row.city,row.district].filter(Boolean).join(' / ')||'—');
@@ -1455,16 +1498,30 @@ async function showMyListings(filter){
           thumb='<div style="width:72px;height:56px;border-radius:10px;overflow:hidden;background:#0b1727;flex-shrink:0"><img src="'+escapeHTML(listingPhotoPublicUrl(pth))+'" alt="" style="width:100%;height:100%;object-fit:cover;display:block" loading="lazy"></div>';
         }
       }
-      const missLine=miss.length?'<div class="small" style="margin-top:4px">'+miss.length+' bilgi eksik</div>':'';
+      const next=myListingNextStep(row);
+      const txn=myListingTxnHint(row);
+      const missLine=miss.length?'<div class="small" style="margin-top:4px">⚠ '+miss.length+' bilgi eksik</div>':'';
+      const moreBtns=(next.more||[]).map(function(m){
+        return '<button type="button" class="btn secondary smallBtn" style="width:100%;margin-top:6px" onclick="'+m.onclick+'">'+escapeHTML(m.label)+'</button>';
+      }).join('');
+      const moreHtml=moreBtns
+        ? ('<div style="margin-top:8px"><button type="button" class="btn secondary smallBtn" style="width:100%" onclick="myListingMoreToggle(this)" aria-expanded="false">⋯ Daha fazla</button>'+
+           '<div data-my-more-panel style="display:none">'+moreBtns+'</div></div>')
+        : '';
       return '<div class="card" style="text-align:left;margin:0 0 10px;padding:12px">'+
         '<div style="display:flex;gap:10px;align-items:flex-start">'+thumb+
         '<div style="min-width:0;flex:1">'+
         '<div class="small">'+st.emoji+' '+escapeHTML(st.label)+' · '+kind+'</div>'+
-        '<div style="font-weight:800;margin-top:2px">'+title+'</div>'+
+        '<div class="small muted" style="margin-top:2px">'+txn.emoji+' '+escapeHTML(txn.label)+'</div>'+
+        '<div style="font-weight:800;margin-top:4px">'+title+'</div>'+
         '<div class="small muted">'+price+'</div>'+
         '<div class="small muted">'+loc+'</div>'+missLine+
         '</div></div>'+
-        '<button type="button" class="btn '+(st.key==='draft'?'secondary':'primary')+' smallBtn" style="margin-top:10px;width:100%" onclick="'+act.onclick+'">'+escapeHTML(act.label)+'</button>'+
+        '<div style="margin-top:10px;padding:10px;border-radius:12px;border:1px solid rgba(13,159,104,.28);background:rgba(13,159,104,.07)">'+
+        '<div class="small" style="font-weight:700">⭐ Şimdi sırada ne var?</div>'+
+        '<div class="small muted" style="margin-top:4px">'+escapeHTML(next.hint||'')+'</div>'+
+        '<button type="button" class="btn primary smallBtn" style="margin-top:8px;width:100%" onclick="'+next.onclick+'">'+escapeHTML(next.label)+' →</button>'+
+        '</div>'+moreHtml+
         '</div>';
     }).join('');
   }catch(e){
@@ -1476,6 +1533,8 @@ window.myListingsBack=myListingsBack;
 window.openMyListingDraft=openMyListingDraft;
 window.viewMyListingSummary=viewMyListingSummary;
 window.republishMyListing=republishMyListing;
+window.myListingNextStep=myListingNextStep;
+window.myListingMoreToggle=myListingMoreToggle;
 
 function showListingsHub(){
   window.__kesfetCat=window.__kesfetCat||'all';
