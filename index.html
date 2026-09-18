@@ -345,8 +345,10 @@ html[data-theme="light"] .homeHeroV2{background:linear-gradient(160deg,#e7f7ef,#
 
 /* İlanlar Keşfet V1 */
 .kesfetShell{padding:0 0 24px}
-.kesfetTop{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
-.kesfetTop h1{margin:0;font-size:1.25rem;font-weight:900;letter-spacing:-.02em}
+.kesfetTop{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.kesfetTop h1{margin:0;font-size:1.25rem;font-weight:900;letter-spacing:-.02em;line-height:1.15}
+.kesfetBackBtn{padding:10px 14px;font-size:14px;font-weight:700;line-height:1.2;min-height:40px;border-radius:12px;white-space:nowrap}
+.kesfetCreateBtn{padding:9px 13px;font-size:13px;font-weight:800;line-height:1.2;min-height:40px;border-radius:12px;white-space:nowrap}
 .kesfetSearchRow{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
 .kesfetSearchRow .kesfetQ{width:100%;box-sizing:border-box;border-radius:12px;border:1px solid var(--line,rgba(255,255,255,.12));background:var(--card,#121c2b);color:var(--text);padding:12px 14px;font:inherit;font-size:15px}
 .kesfetTools{display:flex;gap:8px;flex-wrap:wrap}
@@ -1251,10 +1253,10 @@ async function showKesfet(keepCache){
   app(`<div class="kesfetShell">
     <div class="kesfetTop">
       <div>
-        <button class="btn secondary" type="button" onclick="showHome()" style="padding:8px 12px;font-size:13px;font-weight:700;line-height:1.2;min-height:40px;border-radius:12px">← Ana sayfa</button>
-        <h1 style="margin-top:10px">${title}</h1>
+        <button class="btn secondary kesfetBackBtn" type="button" onclick="showHome()">← Ana sayfa</button>
+        <h1>${title}</h1>
       </div>
-      <button class="btn primary" type="button" onclick="kesfetCreatePick()" style="padding:8px 12px;font-size:13px;font-weight:700;line-height:1.2;min-height:40px;border-radius:12px">+ İlan ver</button>
+      <button class="btn primary kesfetCreateBtn" type="button" onclick="kesfetCreatePick()">+ İlan ver</button>
     </div>
     <div class="kesfetSearchRow">
       <input id="listingSearchQ" class="kesfetQ" type="search" placeholder="🔍 Ne arıyorsun?" value="${escapeHTML(f.q||'')}" onkeydown="if(event.key==='Enter'){event.preventDefault();applyListingSearch(kesfetActiveType());}">
