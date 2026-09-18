@@ -3510,10 +3510,7 @@ async function showOtomobilDetail(listingId){
     try{ window.__gmDetailPhotoUrls=urls; }catch(e){}
     let gallery='';
     if(urls.length){
-      gallery=`<div style="display:grid;grid-template-columns:1fr;gap:8px;margin:12px 0">`+urls.map(function(u,idx){
-        return `<button type="button" data-oto-photo-idx="${idx}" style="border:0;padding:0;border-radius:12px;overflow:hidden;background:#0b1727;aspect-ratio:16/10;cursor:zoom-in;width:100%;display:block">
-          <img src="${escapeHTML(u)}" alt="" style="width:100%;height:100%;object-fit:cover;display:block;pointer-events:none" loading="lazy"></button>`;
-      }).join('')+`</div><p class="small muted">Fotoğrafa dokunarak büyüt</p>`;
+      gallery=listingDetailCarouselHtml(urls);
     }
     function cell(label,val){
       return `<div style="margin-top:10px"><div class="small muted">${escapeHTML(label)}</div><div>${escapeHTML(val==null||val===''?'—':String(val))}</div></div>`;
@@ -3548,11 +3545,12 @@ async function showOtomobilDetail(listingId){
         <button class="btn secondary" type="button" onclick="showOtomobilBrowse()">← İlanlara dön</button>
         <button class="btn secondary" type="button" onclick="showOtomobilHub()">Otomobil menü</button>
       </div>`;
-    const nodes=box.querySelectorAll('[data-oto-photo-idx]');
+    if(typeof bindListingDetailCarousel==='function') bindListingDetailCarousel(box, window.__gmDetailPhotoUrls||urls);
+    const nodes=box.querySelectorAll('[data-gm-photo-idx], [data-oto-photo-idx]');
     for(let i=0;i<nodes.length;i++){
       nodes[i].addEventListener('click',function(ev){
         ev.preventDefault();
-        const idx=Number(this.getAttribute('data-oto-photo-idx')||0);
+        const idx=Number(this.getAttribute('data-gm-photo-idx')||this.getAttribute('data-oto-photo-idx')||0);
         if(typeof openGmPhotoViewer==='function') openGmPhotoViewer(window.__gmDetailPhotoUrls||urls, idx);
       });
     }
