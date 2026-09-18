@@ -414,6 +414,13 @@ html:not([data-theme="light"]) .officialPrepCard{background:rgba(13,159,104,.10)
 .homeContinue b{display:block;font-size:14px}
 .homeContinue small{display:block;margin-top:2px;color:var(--muted);font-size:12px}
 .homeContinue .chev{font-size:18px;color:var(--muted)}
+
+.ldAcc{margin:8px 0;border:1px solid var(--line);border-radius:12px;background:var(--card);overflow:hidden}
+.ldAcc>summary{list-style:none;cursor:pointer;padding:11px 14px;font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px;user-select:none}
+.ldAcc>summary::-webkit-details-marker{display:none}
+.ldAcc>summary::after{content:"›";margin-left:auto;opacity:.55;font-size:16px;transform:rotate(0deg);transition:transform .15s ease}
+.ldAcc[open]>summary::after{transform:rotate(90deg)}
+.ldAcc .ldAccBody{padding:0 12px 12px;text-align:left}
 </style>
 </head>
 <body>
@@ -2102,18 +2109,22 @@ async function showGayrimenkulDetail(listingId){
     box.innerHTML=`<h1 style="margin-top:8px">${title}</h1>
       <p style="font-size:20px;font-weight:700;margin:8px 0">${price}</p>
       ${gallery}
-      <div class="card" style="text-align:left;margin:12px 0">
-        <div class="small muted">Gayrimenkul türü</div>
-        <div><strong>${cat}</strong></div>
-        <div class="small muted" style="margin-top:10px">Konum</div>
-        <div>${city} / ${district} / ${neighborhood}</div>
-        <div class="small muted" style="margin-top:10px">İlan tarihi</div>
-        <div>${dateStr}</div>
-        <div class="small muted" style="margin-top:10px">İlan sahibi</div>
-        <div>İlan sahibi</div>
-      </div>
-      <div class="sectionTitle"><h2 style="font-size:16px">Açıklama</h2></div>
-      <p class="muted" style="white-space:pre-wrap;line-height:1.5">${desc}</p>
+      <p class="small muted" style="margin:8px 0 4px">${city} / ${district}${neighborhood&&neighborhood!=='—'?' / '+neighborhood:''} · ${cat}</p>
+      <details class="ldAcc"><summary>🏠 Gayrimenkul bilgilerini göster</summary>
+        <div class="ldAccBody">
+          <div class="small muted">Gayrimenkul türü</div>
+          <div><strong>${cat}</strong></div>
+          <div class="small muted" style="margin-top:10px">Konum</div>
+          <div>${city} / ${district} / ${neighborhood}</div>
+          <div class="small muted" style="margin-top:10px">İlan tarihi</div>
+          <div>${dateStr}</div>
+          <div class="small muted" style="margin-top:10px">İlan sahibi</div>
+          <div>İlan sahibi</div>
+        </div>
+      </details>
+      <details class="ldAcc"><summary>📝 Açıklamayı göster</summary>
+        <div class="ldAccBody"><p class="muted" style="white-space:pre-wrap;line-height:1.5;margin:0">${desc}</p></div>
+      </details>
       ${officialPrepCardHtml(row.id, officialPrepKindFromListing(row))}
       <div class="splitActions" style="margin-top:16px">
         <button class="btn secondary" type="button" onclick="showGayrimenkulBrowse()">← İlanlara dön</button>
@@ -3516,25 +3527,31 @@ async function showOtomobilDetail(listingId){
       return `<div style="margin-top:10px"><div class="small muted">${escapeHTML(label)}</div><div>${escapeHTML(val==null||val===''?'—':String(val))}</div></div>`;
     }
     const seller=md.seller_type==='professional'?'Profesyonel / galeri (doğrulanmamış)':'Bireysel satıcı';
+    const otoLoc=[row.city,row.district,row.neighborhood].filter(Boolean).join(' / ');
+    const otoHint=[md.brand,md.model,md.year,md.km!=null?(Number(md.km).toLocaleString('tr-TR')+' km'):''].filter(Boolean).join(' · ');
     box.innerHTML=`<h1 style="margin-top:8px">${title}</h1>
       <p style="font-size:20px;font-weight:700;margin:8px 0">${price}</p>
       ${gallery}
-      <div class="card" style="text-align:left;margin:12px 0">
-        <strong>Araç özeti</strong>
-        ${cell('Marka',md.brand)}${cell('Model',md.model)}${cell('Versiyon',md.version)}
-        ${cell('Yıl',md.year)}${cell('Km',md.km!=null?Number(md.km).toLocaleString('tr-TR'):'')}
-        ${cell('Yakıt',md.fuel)}${cell('Vites',md.gear)}${cell('Motor (cc)',md.engine_cc)}${cell('Güç (hp)',md.power_hp)}
-        ${cell('Çekiş',md.drive)}${cell('Kasa',md.body||row.category)}${cell('Renk',md.color)}
-        ${cell('Konum',[row.city,row.district,row.neighborhood].filter(Boolean).join(' / '))}
-      </div>
-      <div class="sectionTitle"><h2 style="font-size:16px">Açıklama</h2></div>
-      <p class="muted" style="white-space:pre-wrap;line-height:1.5">${desc||'—'}</p>
-      <div class="card" style="text-align:left;margin:12px 0">
-        <strong>Araç durumu</strong>
-        ${cell('Kondisyon',md.condition)}${cell('Hasar',md.damage)}${cell('Boya',md.paint)}
-        ${cell('Değişen',md.changed_parts)}${cell('Servis',md.service_history)}
-        ${cell('Muayene',md.inspection)}${cell('Garanti',md.warranty)}
-      </div>
+      <p class="small muted" style="margin:8px 0 4px">${escapeHTML(otoHint||'Araç ilanı')}${otoLoc?' · '+escapeHTML(otoLoc):''}</p>
+      <details class="ldAcc"><summary>📋 Araç bilgilerini göster</summary>
+        <div class="ldAccBody">
+          ${cell('Marka',md.brand)}${cell('Model',md.model)}${cell('Versiyon',md.version)}
+          ${cell('Yıl',md.year)}${cell('Km',md.km!=null?Number(md.km).toLocaleString('tr-TR'):'')}
+          ${cell('Yakıt',md.fuel)}${cell('Vites',md.gear)}${cell('Motor (cc)',md.engine_cc)}${cell('Güç (hp)',md.power_hp)}
+          ${cell('Çekiş',md.drive)}${cell('Kasa',md.body||row.category)}${cell('Renk',md.color)}
+          ${cell('Konum',otoLoc)}
+        </div>
+      </details>
+      <details class="ldAcc"><summary>📝 Açıklamayı göster</summary>
+        <div class="ldAccBody"><p class="muted" style="white-space:pre-wrap;line-height:1.5;margin:0">${desc||'—'}</p></div>
+      </details>
+      <details class="ldAcc"><summary>🔎 Araç durumunu göster</summary>
+        <div class="ldAccBody">
+          ${cell('Kondisyon',md.condition)}${cell('Hasar',md.damage)}${cell('Boya',md.paint)}
+          ${cell('Değişen',md.changed_parts)}${cell('Servis',md.service_history)}
+          ${cell('Muayene',md.inspection)}${cell('Garanti',md.warranty)}
+        </div>
+      </details>
       <div class="card" style="text-align:left;margin:12px 0">
         <strong>Satıcı</strong>
         ${cell('Tip',seller)}
