@@ -571,6 +571,35 @@ html[data-theme="light"] .kesfetGrid.is-list .kesfetCard{background:#fff}
 .intentTitle{font-size:13px!important}
 .intentBtn.btn.primary{background:var(--card2)!important;color:var(--text)!important;border:1px solid var(--line)!important}
 html[data-theme="light"] .intentBtn.btn.primary{background:#f3f6f9!important;color:#0f1c2a!important}
+
+.kesfetCover{position:relative}
+.favHeart{
+  position:absolute;top:8px;right:8px;z-index:3;
+  width:36px;height:36px;border-radius:999px;border:0;
+  background:rgba(0,0,0,.45);color:#fff;font-size:18px;line-height:36px;
+  padding:0;cursor:pointer;backdrop-filter:blur(4px);
+}
+.favHeart.is-fav{color:#ff4d6d;background:rgba(255,255,255,.92)}
+html[data-theme="light"] .favHeart{background:rgba(255,255,255,.9);color:#334}
+html[data-theme="light"] .favHeart.is-fav{color:#e11d48}
+.ldGalleryWrap{position:relative;margin:8px 0}
+.favHeartDetail{top:10px;right:10px}
+.ldTitle{margin:8px 0 4px;font-size:1.25rem;line-height:1.25}
+.ldPrice{font-size:1.35rem;font-weight:900;color:var(--primary);margin:0 0 8px}
+.ldMeta{font-size:13px;opacity:.8;margin:0 0 8px}
+.ldKeyFacts{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}
+.ldKeyFacts span{
+  font-size:12px;font-weight:700;padding:6px 10px;border-radius:999px;
+  border:1px solid var(--line);background:var(--card2);color:var(--text);
+}
+.ldContact{margin:4px 0 10px}
+.ldIconRow{display:flex;gap:8px;margin:0 0 14px}
+.ldIconBtn{
+  flex:0 0 auto;border:1px solid var(--line);background:var(--card);color:var(--text);
+  border-radius:12px;padding:8px 14px;font-weight:700;font-size:13px;cursor:pointer;
+}
+.ldDesc{margin:0 0 14px;padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--card)}
+
 </style>
 </head>
 <body>
@@ -2544,13 +2573,15 @@ function kesfetCardHtml(row, type){
   feats=feats.filter(Boolean).slice(0,4).map(escapeHTML);
   signals=signals.filter(Boolean).slice(0,2).map(escapeHTML);
   const photos=listingPhotosFromRow(row);
-  let cover='<div class="kesfetCover"><div class="kesfetCoverEmpty">📷</div></div>';
+  const favOn=typeof isListingFavorite==='function'&&isListingFavorite(id);
+  const heartBtn='<button type="button" class="favHeart'+(favOn?' is-fav':'')+'" data-fav-id="'+id+'" aria-label="Favori" aria-pressed="'+(favOn?'true':'false')+'" onclick="return toggleListingFavorite(\''+id+'\',event)">'+(favOn?'♥':'♡')+'</button>';
+  let cover='<div class="kesfetCover"><div class="kesfetCoverEmpty">📷</div>'+heartBtn+'</div>';
   if(photos.length){
     const p0=photos[0];
     const pth=typeof p0==='string'?p0:(p0.path||'');
     if(pth){
       const src=escapeHTML(listingPhotoPublicUrl(pth));
-      cover='<div class="kesfetCover"><img src="'+src+'" alt="" loading="lazy"></div>';
+      cover='<div class="kesfetCover"><img src="'+src+'" alt="" loading="lazy">'+heartBtn+'</div>';
     }
   }
   const click=type==='otomobil'?"showOtomobilDetail('"+id+"')":"showGayrimenkulDetail('"+id+"')";
@@ -2904,11 +2935,8 @@ async function showGayrimenkulDetail(listingId){
       <p style="font-size:20px;font-weight:700;margin:8px 0">${price}</p>
       ${gallery}
       <p class="small muted" style="margin:8px 0 4px">${city} / ${district}${neighborhood&&neighborhood!=='—'?' / '+neighborhood:''} · ${cat}</p>
-      <button type="button" class="btn primary" style="margin:10px 0 8px" onclick="contactListingSeller(window.__activeListingRow)">Satıcıya ulaş →</button>
-      <div class="splitActions" style="margin:0 0 12px;gap:8px">
-        <button type="button" class="btn secondary smallBtn" onclick="typeof toggleListingFavorite==='function'?toggleListingFavorite(String(row.id)):(alert('Favori sonraki sürümde.'))">♡ Favoriye ekle</button>
-        <button type="button" class="btn secondary smallBtn" onclick="try{navigator.share?navigator.share({title:document.title,url:location.href}):navigator.clipboard.writeText(location.href).then(function(){alert('Bağlantı kopyalandı');})}catch(e){alert('Paylaşım desteklenmiyor');}">↗ Paylaş</button>
-      </div>
+      <button type="button" class="btn primary ldContact" onclick="contactListingSeller(window.__activeListingRow)">Satıcıya ulaş →</button>
+      <div class="ldIconRow"><button type="button" class="ldIconBtn" onclick="return shareListingLink(event)">↗ Paylaş</button></div>
       <details class="ldAcc"><summary>🏠 Gayrimenkul bilgilerini göster</summary>
         <div class="ldAccBody">
           <div class="small muted">Gayrimenkul türü</div>
@@ -4260,24 +4288,73 @@ async function showOtomobilBrowse(keepCache){
 }
 
 
+
+function getListingFavIds(){
+  try{ return JSON.parse(localStorage.getItem('listing_favs')||'[]')||[]; }catch(e){ return []; }
+}
+function isListingFavorite(id){
+  return getListingFavIds().indexOf(String(id||''))>=0;
+}
+function toggleListingFavorite(id,ev){
+  try{
+    if(ev){ try{ev.preventDefault();ev.stopPropagation();}catch(_){ } }
+    id=String(id||'');
+    if(!id) return false;
+    var a=getListingFavIds().slice();
+    var ix=a.indexOf(id);
+    if(ix>=0) a.splice(ix,1); else a.unshift(id);
+    if(a.length>200) a=a.slice(0,200);
+    localStorage.setItem('listing_favs', JSON.stringify(a));
+    var on=isListingFavorite(id);
+    document.querySelectorAll('[data-fav-id="'+id+'"]').forEach(function(el){
+      el.classList.toggle('is-fav', on);
+      el.setAttribute('aria-pressed', on?'true':'false');
+      el.textContent=on?'♥':'♡';
+    });
+  }catch(e){}
+  return false;
+}
+function shareListingLink(ev){
+  try{
+    if(ev){ try{ev.preventDefault();ev.stopPropagation();}catch(_){}}
+    var u=location.href;
+    if(navigator.share){ navigator.share({title:document.title||'İlan',url:u}).catch(function(){}); }
+    else if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(u).then(function(){ alert('Bağlantı kopyalandı'); }); }
+    else { prompt('Bağlantıyı kopyala:', u); }
+  }catch(e){ alert('Paylaşım desteklenmiyor'); }
+  return false;
+}
+
 function contactListingSeller(row){
   try{
-    const md=(row&&row.metadata)||{};
-    const phone=md.phone||md.contact_phone||md.tel||md.mobile||'';
-    const wa=md.whatsapp||md.wa||'';
-    if(phone){
-      window.location.href='tel:'+String(phone).replace(/[^0-9+]/g,'');
+    row=row||window.__activeListingRow||{};
+    const md=(row.metadata&&typeof row.metadata==='object')?row.metadata:{};
+    const phone=String(md.phone||md.contact_phone||md.tel||md.mobile||row.phone||row.contact_phone||'').trim();
+    const wa=String(md.whatsapp||md.wa||md.whatsApp||row.whatsapp||'').trim();
+    if(phone&&wa){
+      const dig=phone.replace(/[^0-9+]/g,'');
+      const wn=wa.replace(/[^0-9]/g,'');
+      if(confirm('Satıcıya nasıl ulaşmak istersin?\n\nTamam = Telefon ara\nİptal = WhatsApp')){
+        window.location.href='tel:'+dig;
+      } else {
+        window.open('https://wa.me/'+wn,'_blank','noopener');
+      }
       return;
     }
-    if(wa){
-      const n=String(wa).replace(/[^0-9]/g,'');
-      window.open('https://wa.me/'+n,'_blank','noopener');
-      return;
-    }
+    if(phone){ window.location.href='tel:'+phone.replace(/[^0-9+]/g,''); return; }
+    if(wa){ window.open('https://wa.me/'+wa.replace(/[^0-9]/g,''),'_blank','noopener'); return; }
     const el=document.getElementById('listingSellerCard');
-    if(el){ el.scrollIntoView({behavior:'smooth',block:'center'}); el.classList.add('pulseHint'); setTimeout(function(){el.classList.remove('pulseHint');},1200); return; }
-    alert('Satıcı iletişim bilgisi bu ilanda paylaşılmamış. Mesajlaşma sonraki sürümde.');
-  }catch(e){ alert('İletişim şu an açılamadı.'); }
+    if(el){
+      el.scrollIntoView({behavior:'smooth',block:'center'});
+      el.classList.add('pulseHint');
+      setTimeout(function(){ el.classList.remove('pulseHint'); },1400);
+      return;
+    }
+    alert('Satıcı iletişim bilgisi bu ilanda paylaşılmamış.\nİlan sahibi telefon veya WhatsApp eklemedi.');
+  }catch(e){
+    try{ console.error(e); }catch(_){}
+    alert('İletişim şu an açılamadı.');
+  }
 }
 
 async function showOtomobilDetail(listingId){
@@ -4317,16 +4394,19 @@ async function showOtomobilDetail(listingId){
     const otoLoc=[row.city,row.district,row.neighborhood].filter(Boolean).join(' / ');
     const otoHint=[md.brand,md.model,md.year,md.km!=null?(Number(md.km).toLocaleString('tr-TR')+' km'):''].filter(Boolean).join(' · ');
     window.__activeListingRow=row;
-    box.innerHTML=`<h1 style="margin-top:8px">${title}</h1>
-      <p style="font-size:20px;font-weight:700;margin:8px 0">${price}</p>
-      ${gallery}
-      <p class="small muted" style="margin:8px 0 4px">${escapeHTML(otoHint||'Araç ilanı')}${otoLoc?' · '+escapeHTML(otoLoc):''}</p>
-      <button type="button" class="btn primary" style="margin:10px 0 8px" onclick="contactListingSeller(window.__activeListingRow)">Satıcıya ulaş →</button>
-      <div class="splitActions" style="margin:0 0 12px;gap:8px">
-        <button type="button" class="btn secondary smallBtn" onclick="typeof toggleListingFavorite==='function'?toggleListingFavorite('${id}'):alert('Favori sonraki sürümde.')">♡ Favoriye ekle</button>
-        <button type="button" class="btn secondary smallBtn" onclick="try{navigator.share?navigator.share({title:document.title,url:location.href}):navigator.clipboard.writeText(location.href).then(function(){alert('Bağlantı kopyalandı');})}catch(e){alert('Paylaşım desteklenmiyor');}">↗ Paylaş</button>
+    const favOn=typeof isListingFavorite==='function'&&isListingFavorite(id);
+    const keyFacts=[md.year, md.km!=null&&md.km!==''?(Number(md.km).toLocaleString('tr-TR')+' km'):'', md.fuel, md.gear, md.body||row.category, md.color].filter(Boolean);
+    box.innerHTML=`<h1 class="ldTitle">${title}</h1>
+      <p class="ldPrice">${price}</p>
+      <div class="ldGalleryWrap">${gallery}
+        <button type="button" class="favHeart favHeartDetail${favOn?' is-fav':''}" data-fav-id="${id}" aria-label="Favori" aria-pressed="${favOn?'true':'false'}" onclick="return toggleListingFavorite('${id}',event)">${favOn?'♥':'♡'}</button>
       </div>
-      <details class="ldAcc"><summary>📋 Araç bilgilerini göster</summary>
+      <p class="ldMeta">${escapeHTML(otoHint||'Araç ilanı')}${otoLoc?' · '+escapeHTML(otoLoc):''}</p>
+      ${keyFacts.length?('<div class="ldKeyFacts">'+keyFacts.map(function(x){return '<span>'+escapeHTML(String(x))+'</span>';}).join('')+'</div>'):''}
+      <button type="button" class="btn primary ldContact" onclick="contactListingSeller(window.__activeListingRow)">Satıcıya ulaş →</button>
+      <div class="ldIconRow"><button type="button" class="ldIconBtn" onclick="return shareListingLink(event)">↗ Paylaş</button></div>
+      ${desc?('<div class="ldDesc"><div class="small muted">Açıklama</div><p style="white-space:pre-wrap;margin:6px 0 0;line-height:1.45">'+desc+'</p></div>'):''}
+      <details class="ldAcc"><summary>📋 Tüm araç özellikleri</summary>
         <div class="ldAccBody">
           ${cell('Marka',md.brand)}${cell('Model',md.model)}${cell('Versiyon',md.version)}
           ${cell('Yıl',md.year)}${cell('Km',md.km!=null?Number(md.km).toLocaleString('tr-TR'):'')}
@@ -4335,10 +4415,7 @@ async function showOtomobilDetail(listingId){
           ${cell('Konum',otoLoc)}
         </div>
       </details>
-      <details class="ldAcc"><summary>📝 Açıklamayı göster</summary>
-        <div class="ldAccBody"><p class="muted" style="white-space:pre-wrap;line-height:1.5;margin:0">${desc||'—'}</p></div>
-      </details>
-      <details class="ldAcc"><summary>🔎 Araç durumunu göster</summary>
+      <details class="ldAcc"><summary>🔎 Araç durumu</summary>
         <div class="ldAccBody">
           ${cell('Kondisyon',md.condition)}${cell('Hasar',md.damage)}${cell('Boya',md.paint)}
           ${cell('Değişen',md.changed_parts)}${cell('Servis',md.service_history)}
@@ -4348,13 +4425,11 @@ async function showOtomobilDetail(listingId){
       <div class="card" id="listingSellerCard" style="text-align:left;margin:12px 0">
         <strong>Satıcı</strong>
         ${cell('Tip',seller)}
-        <p class="small muted" style="margin-top:8px">Mesajlaşma sonraki sürümde. Resmî EİDS/kurum doğrulaması yok.</p>
+        <p class="small muted" style="margin-top:8px">Telefon/WhatsApp ilan metadata’sında varsa “Satıcıya ulaş” ile açılır.</p>
       </div>
       <div class="intentCard">
         <div class="intentTitle">Bu ilanla ne yapmak istiyorsun?</div>
-        <button type="button" class="btn primary intentBtn" onclick="typeof openOfficialPrepGate==='function'&&openOfficialPrepGate('${String(row.id||'').replace(/[^a-zA-Z0-9-]/g,'')}','arac_satisi')">📄 Satın alma / devir hazırlığı</button>
-        <button type="button" class="btn secondary intentBtn" onclick="alert('Mesajlaşma sonraki sürümde. Şimdilik satıcı bilgisine bakabilirsin.')">💬 Satıcıya ulaş</button>
-        <button type="button" class="btn secondary intentBtn" onclick="try{var d=document.querySelectorAll('.ldAcc');if(d[0])d[0].setAttribute('open','');}catch(e){}">🔍 Aracı daha detaylı incele</button>
+        <button type="button" class="btn secondary intentBtn" onclick="typeof openOfficialPrepGate==='function'&&openOfficialPrepGate('${String(row.id||'').replace(/[^a-zA-Z0-9-]/g,'')}','arac_satisi')">📄 Satın alma / devir hazırlığı</button>
       </div>
       ${officialPrepCardHtml(row.id, 'arac')}
       <div class="splitActions">
