@@ -514,6 +514,30 @@ html[data-theme="light"] .homeQuickBtn{background:#fff}
 
 header.top{align-items:flex-start;padding-top:10px}
 header.top .menuBtnAra{margin-top:2px;margin-right:6px;flex:0 0 auto}
+
+.homeSecQuick{margin:8px 0 12px}
+.homeSecHeadQuiet{font-size:12px;font-weight:700;opacity:.65;margin:0 0 8px;letter-spacing:.02em}
+.homeQuickStrip{display:flex;flex-wrap:wrap;gap:8px}
+.homePill{
+  flex:1 1 calc(50% - 8px);min-width:140px;max-width:100%;
+  border:1px solid var(--line);background:var(--card);color:var(--text);
+  border-radius:999px;padding:10px 14px;font-size:13px;font-weight:800;
+  cursor:pointer;text-align:center;white-space:nowrap;
+}
+html[data-theme="light"] .homePill{background:#fff}
+.homePill:active{transform:scale(.98);border-color:var(--primary)}
+.kesfetSub{margin:2px 0 0;font-size:12px}
+.kesfetEmpty{text-align:left;padding:20px 16px}
+.kesfetEmpty h3{margin:0 0 6px;font-size:1.05rem}
+.kesfetCard{position:relative}
+.kesfetBody .kesfetTitle{font-size:14px;font-weight:800;line-height:1.25;margin:0 0 4px}
+.kesfetBody .kesfetPrice{font-size:16px;font-weight:900;color:var(--primary);margin:4px 0}
+.kesfetBody .kesfetFeat{font-size:12px;opacity:.85;margin:0 0 2px}
+.kesfetBody .kesfetLoc{font-size:12px;opacity:.75;margin:2px 0}
+.kesfetGrid.is-list .kesfetCard{gap:0}
+.kesfetGrid.is-list .kesfetTitle{font-size:15px}
+.kesfetGrid.is-list .kesfetPrice{font-size:17px}
+
 </style>
 </head>
 <body>
@@ -1213,13 +1237,13 @@ function showHome(){
     <h1>Bütün işlerin, tek yerde.</h1>
     <p>Hizmetten tapuya, araçtan resmî işlemlere kadar ihtiyacın olan çözümler tek yerde.</p>
   </div>
-  <div class="homeSec">
-    <div class="homeSecHead">Ne yapmak istiyorsun?</div>
-    <div class="homeQuick">
-      <button type="button" class="homeQuickBtn" onclick="window.__kesfetCat='all';showKesfet()"><span class="hqIco">🔎</span><span class="hqTxt"><b>İlan ara</b><small>Keşfet</small></span></button>
-      <button type="button" class="homeQuickBtn" onclick="typeof kesfetCreatePick==='function'?kesfetCreatePick():showListingsHub()"><span class="hqIco">＋</span><span class="hqTxt"><b>İlan ver</b><small>Taslak veya yayın</small></span></button>
-      <button type="button" class="homeQuickBtn" onclick="openWorkArea('hizmet')"><span class="hqIco">🔧</span><span class="hqTxt"><b>İşimi çözdür</b><small>Usta &amp; hizmet</small></span></button>
-      <button type="button" class="homeQuickBtn" onclick="openWorkArea('resmi')"><span class="hqIco">📄</span><span class="hqTxt"><b>Resmî işlem</b><small>Evrak · tapu</small></span></button>
+  <div class="homeSec homeSecQuick">
+    <div class="homeSecHead homeSecHeadQuiet">Hızlı işlem</div>
+    <div class="homeQuickStrip" role="group" aria-label="Hızlı işlemler">
+      <button type="button" class="homePill" onclick="window.__kesfetCat='all';showKesfet()">🔎 İlan ara</button>
+      <button type="button" class="homePill" onclick="typeof kesfetCreatePick==='function'?kesfetCreatePick():showListingsHub()">＋ İlan ver</button>
+      <button type="button" class="homePill" onclick="openWorkArea('hizmet')">🔧 İşimi çözdür</button>
+      <button type="button" class="homePill" onclick="openWorkArea('resmi')">📄 Resmî işlem</button>
     </div>
   </div>
   
@@ -1521,12 +1545,14 @@ async function showKesfet(keepCache){
   const active=countActiveListingFilters(filterType);
   const sort=f.sort||'new';
   const locLabel=escapeHTML([f.city||'İzmir', f.district].filter(Boolean).join(' / ')||'İzmir');
-  const title='İlanlar';
+  const title='İlan keşfet';
+  const catLabel=({all:'Tüm ilanlar',otomobil:'Araç',konut:'Konut',isyeri:'İş Yeri',arsa:'Arsa',gayrimenkul:'Gayrimenkul'})[cat]||'Tüm ilanlar';
   app(`<div class="kesfetShell">
     <div class="kesfetTop">
       <div>
         <button class="btn secondary kesfetBackBtn" type="button" onclick="showHome()">← Ana sayfa</button>
         <h1>${title}</h1>
+        <p class="small muted kesfetSub">${escapeHTML(catLabel)} · filtrele, sırala, incele</p>
       </div>
       <button class="btn primary kesfetCreateBtn" type="button" onclick="kesfetCreatePick()">+ İlan ver</button>
     </div>
@@ -1556,7 +1582,7 @@ async function showKesfet(keepCache){
   try{
     const built=await kesfetBuildList(!!keepCache);
     const list=built.list||[];
-    if(meta) meta.textContent=list.length+' ilan';
+    if(meta) meta.textContent=list.length+' ilan bulundu';
     if(!list.length){
       box.innerHTML=`<div class="card empty"><h3>Bu kriterlere uygun ilan bulunamadı.</h3>
         <button class="btn secondary" type="button" onclick="clearListingFilters('gayrimenkul');clearListingFilters('otomobil');showKesfet(true)">Filtreleri temizle</button>
@@ -2495,11 +2521,13 @@ function kesfetCardHtml(row, type){
     }
   }
   const click=type==='otomobil'?"showOtomobilDetail('"+id+"')":"showGayrimenkulDetail('"+id+"')";
+  const metaLine=feats.length?feats.join(' · '):'';
   return '<button type="button" class="kesfetCard" onclick="'+click+'">'+cover+
-    '<div class="kesfetBody"><div class="kesfetPrice">'+price+'</div>'+
+    '<div class="kesfetBody">'+
     '<div class="kesfetTitle">'+title+'</div>'+
+    (metaLine?'<p class="kesfetFeat">'+metaLine+'</p>':'')+
+    '<div class="kesfetPrice">'+price+'</div>'+
     '<p class="kesfetLoc">📍 '+loc+'</p>'+
-    (feats.length?'<p class="kesfetFeat">'+feats.join(' · ')+'</p>':'')+
     (signals.length?'<p class="kesfetSignal">'+signals.join(' · ')+'</p>':'')+
     '<div class="kesfetCtaLine">İlanı incele →</div>'+
     '</div></button>';
