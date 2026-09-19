@@ -380,8 +380,7 @@ html[data-theme="light"] .homeHeroV2{background:linear-gradient(160deg,#e7f7ef,#
 .kesfetMeta{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:4px 0 12px;font-size:13px;color:var(--muted)}
 .kesfetGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .kesfetGrid.is-list{grid-template-columns:1fr}
-.kesfetGrid.is-list .kesfetCard{flex-direction:row;align-items:stretch;min-height:96px}
-.kesfetGrid.is-list .kesfetCover{width:112px;min-width:112px;max-width:112px;aspect-ratio:1/1;height:auto}
+.kesfetCover{aspect-ratio:4/3;background:var(--card2,#0b1522);overflow:hidden;position:relative}
 .kesfetGrid.is-list .kesfetBody{padding:10px 12px;justify-content:center}
 .kesfetCtaLine{margin-top:8px;font-size:12px;font-weight:700;color:var(--primary,#0d9f68)}
 .kesfetSignal{margin-top:4px;font-size:11px;opacity:.85}
@@ -545,9 +544,9 @@ html[data-theme="light"] .homePill{background:#fff}
   padding:0;overflow:hidden;text-align:left;
   border:1px solid var(--line);border-radius:14px;background:var(--card);
 }
-.kesfetGrid.is-list .kesfetCover{
+.kesfetGrid.is-list .kesfetGrid.is-list .kesfetCover{
   width:118px;min-width:118px;max-width:118px;height:118px;aspect-ratio:auto;
-  border-radius:0;background:var(--card2);
+  border-radius:0;background:var(--card2);flex-shrink:0;
 }
 .kesfetGrid.is-list .kesfetCover img{width:100%;height:100%;object-fit:cover}
 .kesfetGrid.is-list .kesfetBody{
@@ -667,6 +666,82 @@ html[data-theme="light"] .myListingsCard{background:#ffffff!important;color:#0f1
 html[data-theme="light"] .myListingsCard table,
 html[data-theme="light"] .myListingsCard td{color:#0f1c2a!important}
 html[data-theme="light"] .myListingsBox{color:#0f1c2a}
+
+/* Keşfet list row — force photo|body side-by-side (fixes empty-right / text-below bug) */
+.kesfetGrid.is-list .kesfetCard{
+  display:flex!important;
+  flex-direction:row!important;
+  flex-wrap:nowrap!important;
+  align-items:stretch!important;
+  gap:0!important;
+  padding:0!important;
+  overflow:hidden;
+  width:100%;
+  text-align:left;
+  background:var(--card);
+  color:var(--text);
+  border:1px solid var(--line);
+  border-radius:14px;
+}
+.kesfetGrid.is-list .kesfetCover{
+  width:118px!important;
+  min-width:118px!important;
+  max-width:118px!important;
+  height:118px!important;
+  flex:0 0 118px!important;
+  position:relative;
+  overflow:hidden;
+  background:var(--card2);
+}
+.kesfetGrid.is-list .kesfetCover img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover;
+  display:block;
+}
+.kesfetGrid.is-list .kesfetBody{
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  flex:1 1 auto!important;
+  min-width:0!important;
+  max-width:none!important;
+  padding:10px 12px!important;
+  color:var(--text)!important;
+  visibility:visible!important;
+  opacity:1!important;
+  overflow:hidden;
+}
+.kesfetGrid.is-list .kesfetTitle{
+  display:block!important;
+  color:var(--text)!important;
+  font-size:14px!important;
+  font-weight:800!important;
+  line-height:1.25;
+  margin:0 0 4px!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+.kesfetGrid.is-list .kesfetFeat,
+.kesfetGrid.is-list .kesfetLoc,
+.kesfetGrid.is-list .kesfetSignal{
+  display:block!important;
+  color:var(--muted)!important;
+  visibility:visible!important;
+  opacity:1!important;
+  margin:0 0 2px!important;
+  font-size:12px!important;
+}
+.kesfetGrid.is-list .kesfetPrice{
+  display:block!important;
+  color:var(--primary)!important;
+  font-size:16px!important;
+  font-weight:900!important;
+  margin:4px 0!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+
 </style>
 </head>
 <body>
@@ -2711,14 +2786,14 @@ function kesfetCardHtml(row, type){
   }
   const click=type==='otomobil'?"showOtomobilDetail('"+id+"')":"showGayrimenkulDetail('"+id+"')";
   const metaLine=feats.length?feats.join(' · '):'';
-  return '<button type="button" class="kesfetCard" onclick="'+click+'">'+cover+
+  return '<div class="kesfetCard" role="button" tabindex="0" onclick="'+click+'">'+cover+
     '<div class="kesfetBody">'+
     '<div class="kesfetTitle">'+title+'</div>'+
     (metaLine?'<p class="kesfetFeat">'+metaLine+'</p>':'')+
     '<div class="kesfetPrice">'+price+'</div>'+
     '<p class="kesfetLoc">📍 '+loc+'</p>'+
     (signals.length?'<p class="kesfetSignal">'+signals.join(' · ')+'</p>':'')+
-    '</div></button>';
+    '</div></div>';
 }
 function kesfetShellStart(type, backFn, createFn, title){
   const f=getListingFilterState(type)||{};
