@@ -538,6 +538,39 @@ html[data-theme="light"] .homePill{background:#fff}
 .kesfetGrid.is-list .kesfetTitle{font-size:15px}
 .kesfetGrid.is-list .kesfetPrice{font-size:17px}
 
+
+/* Marketplace list — scannable rows */
+.kesfetGrid.is-list .kesfetCard{
+  display:flex;flex-direction:row;align-items:stretch;gap:0;
+  padding:0;overflow:hidden;text-align:left;
+  border:1px solid var(--line);border-radius:14px;background:var(--card);
+}
+.kesfetGrid.is-list .kesfetCover{
+  width:118px;min-width:118px;max-width:118px;height:118px;aspect-ratio:auto;
+  border-radius:0;background:var(--card2);
+}
+.kesfetGrid.is-list .kesfetCover img{width:100%;height:100%;object-fit:cover}
+.kesfetGrid.is-list .kesfetBody{
+  flex:1;min-width:0;padding:10px 12px;display:flex;flex-direction:column;justify-content:center;gap:2px;
+}
+.kesfetGrid.is-list .kesfetTitle{
+  font-size:14px;font-weight:800;line-height:1.25;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.kesfetGrid.is-list .kesfetFeat{font-size:12px;opacity:.8;margin:0}
+.kesfetGrid.is-list .kesfetPrice{font-size:16px;font-weight:900;color:var(--primary);margin:0}
+.kesfetGrid.is-list .kesfetPriceRow{margin-top:2px}
+.kesfetGrid.is-list .kesfetLoc{font-size:12px;opacity:.7;margin:0}
+.kesfetGrid.is-list .kesfetSignal{font-size:11px;opacity:.75;margin:0}
+.kesfetToolbarHint{display:flex;gap:0;border-bottom:1px solid var(--line);margin:0 0 8px;padding:0}
+.kesfetToolbarHint span{flex:1;text-align:center;font-size:11px;font-weight:700;padding:8px 4px;opacity:.55}
+html[data-theme="light"] .kesfetGrid.is-list .kesfetCard{background:#fff}
+
+
+.intentCard{opacity:.95;border-style:dashed}
+.intentTitle{font-size:13px!important}
+.intentBtn.btn.primary{background:var(--card2)!important;color:var(--text)!important;border:1px solid var(--line)!important}
+html[data-theme="light"] .intentBtn.btn.primary{background:#f3f6f9!important;color:#0f1c2a!important}
 </style>
 </head>
 <body>
@@ -2866,10 +2899,16 @@ async function showGayrimenkulDetail(listingId){
     if(urls.length){
       gallery=listingDetailCarouselHtml(urls);
     }
+    window.__activeListingRow=row;
     box.innerHTML=`<h1 style="margin-top:8px">${title}</h1>
       <p style="font-size:20px;font-weight:700;margin:8px 0">${price}</p>
       ${gallery}
       <p class="small muted" style="margin:8px 0 4px">${city} / ${district}${neighborhood&&neighborhood!=='—'?' / '+neighborhood:''} · ${cat}</p>
+      <button type="button" class="btn primary" style="margin:10px 0 8px" onclick="contactListingSeller(window.__activeListingRow)">Satıcıya ulaş →</button>
+      <div class="splitActions" style="margin:0 0 12px;gap:8px">
+        <button type="button" class="btn secondary smallBtn" onclick="typeof toggleListingFavorite==='function'?toggleListingFavorite(String(row.id)):(alert('Favori sonraki sürümde.'))">♡ Favoriye ekle</button>
+        <button type="button" class="btn secondary smallBtn" onclick="try{navigator.share?navigator.share({title:document.title,url:location.href}):navigator.clipboard.writeText(location.href).then(function(){alert('Bağlantı kopyalandı');})}catch(e){alert('Paylaşım desteklenmiyor');}">↗ Paylaş</button>
+      </div>
       <details class="ldAcc"><summary>🏠 Gayrimenkul bilgilerini göster</summary>
         <div class="ldAccBody">
           <div class="small muted">Gayrimenkul türü</div>
