@@ -564,7 +564,10 @@ html[data-theme="light"] .homePill{background:#fff}
 .kesfetGrid.is-list .kesfetSignal{font-size:11px;opacity:.75;margin:0}
 .kesfetToolbarHint{display:flex;gap:0;border-bottom:1px solid var(--line);margin:0 0 8px;padding:0}
 .kesfetToolbarHint span{flex:1;text-align:center;font-size:11px;font-weight:700;padding:8px 4px;opacity:.55}
-html[data-theme="light"] .kesfetGrid.is-list .kesfetCard{background:#fff}
+html[data-theme="light"] .kesfetGrid.is-list .kesfetCard{background:var(--card);color:var(--text)}
+.kesfetGrid.is-list .kesfetBody,.kesfetGrid.is-list .kesfetTitle,.kesfetGrid.is-list .kesfetFeat,.kesfetGrid.is-list .kesfetLoc,.kesfetGrid.is-list .kesfetSignal{color:var(--text)}
+.kesfetGrid.is-list .kesfetPrice{color:var(--primary)}
+.kesfetGrid.is-list .kesfetCtaLine{display:none!important}
 
 
 .intentCard{opacity:.95;border-style:dashed}
@@ -600,6 +603,65 @@ html[data-theme="light"] .favHeart.is-fav{color:#e11d48}
 }
 .ldDesc{margin:0 0 14px;padding:12px;border-radius:14px;border:1px solid var(--line);background:var(--card)}
 
+
+/* A7 V2 radical UX — list contrast + my listings + contact sheet */
+.myListCard{text-align:left;margin:0 0 12px;padding:12px;cursor:pointer;color:var(--text);background:var(--card);border:1px solid var(--line)}
+.myListCard:active{transform:scale(.995)}
+.myListRow{display:flex;gap:12px;align-items:flex-start}
+.myListThumb{width:88px;min-width:88px;height:88px;border-radius:12px;overflow:hidden;background:var(--card2);flex-shrink:0;display:grid;place-items:center}
+.myListThumb img{width:100%;height:100%;object-fit:cover;display:block}
+.myListThumb.empty{color:var(--muted);font-size:22px}
+.myListBody{min-width:0;flex:1;color:var(--text)}
+.myListStatus{font-size:12px;font-weight:700;color:var(--text);opacity:.92}
+.myListTxn{font-size:11px;color:var(--muted);margin-top:2px}
+.myListTitle{font-size:15px;font-weight:800;margin-top:4px;line-height:1.25;color:var(--text)}
+.myListPrice{font-size:16px;font-weight:900;color:var(--primary);margin-top:2px}
+.myListFeat{font-size:12px;color:var(--muted);margin-top:2px}
+.myListLoc{font-size:12px;color:var(--muted);margin-top:2px}
+.myListMiss{font-size:12px;margin-top:4px;color:var(--warning,#d97706)}
+.myListNext{margin-top:10px;padding:10px;border-radius:12px;border:1px solid rgba(13,159,104,.28);background:rgba(13,159,104,.07)}
+.myListNextTitle{font-size:12px;font-weight:700;color:var(--text)}
+.myListNextHint{font-size:12px;color:var(--muted);margin-top:4px}
+.myListMoreWrap{margin-top:8px}
+.myListMoreBtn{width:100%;margin-top:6px}
+.sellerSheetBackdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9998}
+.sellerSheetPanel{position:fixed;left:12px;right:12px;bottom:18px;max-width:420px;margin:0 auto;z-index:9999;background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 16px 40px rgba(0,0,0,.35)}
+.sellerSheetTitle{font-weight:800;font-size:16px;margin:0 0 12px;color:var(--text)}
+.sellerSheetBtn{width:100%;margin:6px 0;min-height:44px;font-weight:700}
+.menuBtnAra{background:rgba(13,159,104,.14)!important;color:var(--text)!important;border-color:rgba(13,159,104,.45)!important}
+html[data-theme="light"] .menuBtnAra{background:rgba(13,159,104,.12)!important;color:#0f1c2a!important;border-color:rgba(13,159,104,.4)!important}
+.homePillPrimary{background:rgba(13,159,104,.16)!important;border-color:rgba(13,159,104,.45)!important;font-weight:800}
+.favHeart{position:absolute;top:8px;right:8px;z-index:3;width:36px;height:36px;border-radius:999px;border:1px solid rgba(255,255,255,.35);background:rgba(0,0,0,.45);color:#fff;font-size:18px;line-height:1;display:grid;place-items:center;cursor:pointer;padding:0}
+.favHeart.is-fav{color:#ff4d6d;background:rgba(255,255,255,.92);border-color:rgba(255,77,109,.5)}
+html[data-theme="light"] .favHeart{background:rgba(255,255,255,.9);color:#334155;border-color:rgba(15,28,42,.12)}
+html[data-theme="light"] .favHeart.is-fav{color:#e11d48;background:#fff}
+.favHeartDetail{top:12px;right:12px}
+
+/* A7 V2 home discovery hierarchy */
+.homeDiscoverBtn{
+  display:flex;align-items:center;gap:12px;width:100%;text-align:left;
+  padding:14px 16px;border-radius:16px;border:1px solid rgba(13,159,104,.4);
+  background:rgba(13,159,104,.12);color:var(--text);cursor:pointer;margin:0 0 12px;
+  box-shadow:0 6px 18px rgba(13,159,104,.08);
+}
+.homeDiscoverBtn:active{transform:scale(.99)}
+.homeDiscoverIcon{font-size:22px;line-height:1}
+.homeDiscoverText{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.homeDiscoverText b{font-size:15px;font-weight:800}
+.homeDiscoverText small{font-size:12px;color:var(--muted);font-weight:500}
+.homeDiscoverGo{font-size:13px;font-weight:800;color:var(--primary);white-space:nowrap}
+html[data-theme="light"] .homeDiscoverBtn{background:rgba(13,159,104,.10);border-color:rgba(13,159,104,.35);color:#0f1c2a}
+.homeCatStrip{display:flex;gap:8px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 0 10px;scrollbar-width:none;margin:0 0 4px}
+.homeCatStrip::-webkit-scrollbar{display:none}
+.homeCatChip{
+  flex:0 0 auto;border-radius:999px;border:1px solid var(--line);background:var(--card);
+  color:var(--text);padding:10px 14px;font:inherit;font-size:13px;font-weight:700;cursor:pointer;
+}
+.homeCatChip:active{border-color:var(--primary);color:var(--primary)}
+html[data-theme="light"] .homeCatChip{background:#fff;color:#0f1c2a;border-color:#d0dbe6}
+.homeQuickSecondary{opacity:.95}
+.homeQuickSecondary .homePill{font-size:12px;padding:8px 12px}
+.homeSecHead.secondary{font-size:12px;opacity:.7;margin-bottom:8px}
 </style>
 </head>
 <body>
@@ -1236,8 +1298,15 @@ function openWorkArea(area){
     alert('Resmî işlemler yüklenemedi.');
     return;
   }
-  if(a==='gayrimenkul') return showWorkAreaGayrimenkul();
-  if(a==='arac') return showWorkAreaArac();
+  /* Marketplace: doğrudan sonuç ekranı — ara hub atlanır (1 dokunuş az) */
+  if(a==='gayrimenkul'){
+    window.__kesfetCat='gayrimenkul';
+    return (typeof showKesfet==='function')?showKesfet(false):showWorkAreaGayrimenkul();
+  }
+  if(a==='arac'){
+    window.__kesfetCat='otomobil';
+    return (typeof showKesfet==='function')?showKesfet(false):showWorkAreaArac();
+  }
 }
 
 function gmWorkResumeHtml(){
@@ -1300,9 +1369,18 @@ function showHome(){
     <p>Hizmetten tapuya, araçtan resmî işlemlere kadar ihtiyacın olan çözümler tek yerde.</p>
   </div>
   <div class="homeSec homeSecQuick">
-    <div class="homeSecHead homeSecHeadQuiet">Hızlı işlem</div>
-    <div class="homeQuickStrip" role="group" aria-label="Hızlı işlemler">
-      <button type="button" class="homePill" onclick="window.__kesfetCat='all';showKesfet()">🔎 İlan ara</button>
+    <button type="button" class="homeDiscoverBtn" onclick="window.__kesfetCat='all';showKesfet()" aria-label="İlan ara">
+      <span class="homeDiscoverIcon">🔎</span>
+      <span class="homeDiscoverText"><b>Ne arıyorsun?</b><small>Konut, araç, iş yeri, arsa…</small></span>
+      <span class="homeDiscoverGo">Ara →</span>
+    </button>
+    <div class="homeCatStrip" role="group" aria-label="Kategoriler">
+      <button type="button" class="homeCatChip" onclick="window.__kesfetCat='gayrimenkul';typeof kesfetSetCat==='function'?kesfetSetCat('konut'):showKesfet()">🏠 Konut</button>
+      <button type="button" class="homeCatChip" onclick="window.__kesfetCat='otomobil';showKesfet()">🚗 Araç</button>
+      <button type="button" class="homeCatChip" onclick="window.__kesfetCat='gayrimenkul';typeof kesfetSetCat==='function'?kesfetSetCat('isyeri'):showKesfet()">🏢 İş Yeri</button>
+      <button type="button" class="homeCatChip" onclick="window.__kesfetCat='gayrimenkul';typeof kesfetSetCat==='function'?kesfetSetCat('arsa'):showKesfet()">🌳 Arsa</button>
+    </div>
+    <div class="homeQuickStrip homeQuickSecondary" role="group" aria-label="Diğer işlemler">
       <button type="button" class="homePill" onclick="typeof kesfetCreatePick==='function'?kesfetCreatePick():showListingsHub()">＋ İlan ver</button>
       <button type="button" class="homePill" onclick="openWorkArea('hizmet')">🔧 İşimi çözdür</button>
       <button type="button" class="homePill" onclick="openWorkArea('resmi')">📄 Resmî işlem</button>
@@ -1329,15 +1407,7 @@ function showHome(){
       <button type="button" class="homeFeaturedToolBtn" onclick="event.stopPropagation();homeFeaturedSpeak()" title="Dinle">🔊 Dinle</button>
     </div>
   </div>
-  <div class="homeSec">
-    <div class="homeSecHead secondary">Daha fazla · çalışma alanları</div>
-    <div class="homeWorkAreas">
-      <button type="button" class="homeWorkCard" onclick="openWorkArea('gayrimenkul')"><div class="hwIcon">🏠</div><strong>Gayrimenkul</strong><span>Al · sat · kirala · ilanlar · tapu</span></button>
-      <button type="button" class="homeWorkCard" onclick="openWorkArea('arac')"><div class="hwIcon">🚗</div><strong>Araç</strong><span>Al · sat · ara · ilanlar · işlemler</span></button>
-      <button type="button" class="homeWorkCard" onclick="openWorkArea('hizmet')"><div class="hwIcon">🔧</div><strong>Usta &amp; Hizmet</strong><span>Usta bul · hizmet talep et</span></button>
-      <button type="button" class="homeWorkCard" onclick="openWorkArea('resmi')"><div class="hwIcon">📄</div><strong>Resmî İşlemler</strong><span>Evrak · başvuru · tapu · kurum</span></button>
-    </div>
-  </div>
+
   ${homeResumeDraftsHtml()}
   <div class="homeSec">
     <div class="homeSecHead secondary">İşlerim</div>
@@ -1346,7 +1416,7 @@ function showHome(){
       <button type="button" onclick="openHalletAction('showCases')"><span>📁</span><span><b>İşlem dosyalarım</b><small>Taslak ve tamamlanan Hallet kayıtları · Devam et</small></span><span class="chev">›</span></button>
     </div>
   </div>
-  <button type="button" class="homeListingsLink" onclick="showListingsHub()">İlanlara göz at →</button>
+
 </div>`);
   try{homeFeaturedInit();}catch(e){}
 
@@ -1843,41 +1913,62 @@ async function showMyListings(filter){
       const st=myListingStatusMeta(row.status);
       const miss=myListingMissingHints(row);
       const title=escapeHTML(row.title||'İlan');
-      const price=escapeHTML(typeof formatListingPrice==='function'?formatListingPrice(row.price,row.currency):'');
-      const loc=escapeHTML([row.city,row.district].filter(Boolean).join(' / ')||'—');
+      const price=escapeHTML(typeof formatListingPrice==='function'?formatListingPrice(row.price,row.currency):(row.price!=null?String(row.price):'—'));
+      const loc=escapeHTML([row.city,row.district,row.neighborhood].filter(Boolean).join(' · ')||'Konum belirtilmedi');
       const kind=row.listing_type==='otomobil'?'🚗 Araç':'🏠 Gayrimenkul';
+      const md=row.metadata||{};
+      let feats=[];
+      if(row.listing_type==='otomobil'){
+        if(md.year) feats.push(String(md.year));
+        if(md.km!=null&&md.km!=='') feats.push(Number(md.km).toLocaleString('tr-TR')+' km');
+        if(md.fuel) feats.push(String(md.fuel));
+        if(md.gear) feats.push(String(md.gear));
+      } else {
+        if(row.category) feats.push(String(row.category));
+        if(md.rooms) feats.push(String(md.rooms));
+        if(md.sqm||md.m2||md.area) feats.push(String(md.sqm||md.m2||md.area)+' m²');
+        if(md.floor!=null&&md.floor!=='') feats.push(String(md.floor)+'. kat');
+      }
+      feats=feats.filter(Boolean).slice(0,4).map(escapeHTML);
       const photos=typeof listingPhotosFromRow==='function'?listingPhotosFromRow(row):[];
-      let thumb='';
+      let thumb='<div class="myListThumb empty" aria-hidden="true">📷</div>';
       if(photos.length){
         const p0=photos[0];
         const pth=typeof p0==='string'?p0:(p0&&p0.path)||'';
         if(pth&&typeof listingPhotoPublicUrl==='function'){
-          thumb='<div style="width:72px;height:56px;border-radius:10px;overflow:hidden;background:#0b1727;flex-shrink:0"><img src="'+escapeHTML(listingPhotoPublicUrl(pth))+'" alt="" style="width:100%;height:100%;object-fit:cover;display:block" loading="lazy"></div>';
+          thumb='<div class="myListThumb"><img src="'+escapeHTML(listingPhotoPublicUrl(pth))+'" alt="" loading="lazy"></div>';
         }
       }
       const next=myListingNextStep(row);
       const txn=myListingTxnHint(row);
-      const missLine=miss.length?'<div class="small" style="margin-top:4px">⚠ '+miss.length+' bilgi eksik</div>':'';
+      const missLine=miss.length?'<div class="myListMiss">⚠ '+miss.length+' bilgi eksik</div>':'';
       const moreBtns=(next.more||[]).map(function(m){
-        return '<button type="button" class="btn secondary smallBtn" style="width:100%;margin-top:6px" onclick="'+m.onclick+'">'+escapeHTML(m.label)+'</button>';
+        return '<button type="button" class="btn secondary smallBtn myListMoreBtn" onclick="'+m.onclick+'">'+escapeHTML(m.label)+'</button>';
       }).join('');
       const moreHtml=moreBtns
-        ? ('<div style="margin-top:8px"><button type="button" class="btn secondary smallBtn" style="width:100%" onclick="myListingMoreToggle(this)" aria-expanded="false">⋯ Daha fazla</button>'+
+        ? ('<div class="myListMoreWrap" onclick="event.stopPropagation()"><button type="button" class="btn secondary smallBtn" style="width:100%" onclick="myListingMoreToggle(this)" aria-expanded="false">⋯ Daha fazla</button>'+
            '<div data-my-more-panel style="display:none">'+moreBtns+'</div></div>')
         : '';
-      return '<div class="card" style="text-align:left;margin:0 0 10px;padding:12px">'+
-        '<div style="display:flex;gap:10px;align-items:flex-start">'+thumb+
-        '<div style="min-width:0;flex:1">'+
-        '<div class="small">'+st.emoji+' '+escapeHTML(st.label)+' · '+kind+'</div>'+
-        '<div class="small muted" style="margin-top:2px">'+txn.emoji+' '+escapeHTML(txn.label)+'</div>'+
-        '<div style="font-weight:800;margin-top:4px">'+title+'</div>'+
-        '<div class="small muted">'+price+'</div>'+
-        '<div class="small muted">'+loc+'</div>'+missLine+
-        '</div></div>'+
-        '<div style="margin-top:10px;padding:10px;border-radius:12px;border:1px solid rgba(13,159,104,.28);background:rgba(13,159,104,.07)">'+
-        '<div class="small" style="font-weight:700">⭐ Şimdi sırada ne var?</div>'+
-        '<div class="small muted" style="margin-top:4px">'+escapeHTML(next.hint||'')+'</div>'+
-        '<button type="button" class="btn primary smallBtn" style="margin-top:8px;width:100%" onclick="'+next.onclick+'">'+escapeHTML(next.label)+' →</button>'+
+      const rid=String(row.id||'').replace(/[^a-zA-Z0-9-]/g,'');
+      const viewOn=row.listing_type==='otomobil'
+        ? "typeof showOtomobilDetail==='function'&&showOtomobilDetail('"+rid+"')"
+        : "typeof showGayrimenkulDetail==='function'&&showGayrimenkulDetail('"+rid+"')";
+      return '<div class="card myListCard" role="button" tabindex="0" onclick="'+viewOn+'">'+
+        '<div class="myListRow">'+
+          thumb+
+          '<div class="myListBody">'+
+            '<div class="myListStatus">'+st.emoji+' '+escapeHTML(st.label)+' · '+kind+'</div>'+
+            '<div class="myListTxn">'+txn.emoji+' '+escapeHTML(txn.label)+'</div>'+
+            '<div class="myListTitle">'+title+'</div>'+
+            '<div class="myListPrice">'+price+'</div>'+
+            (feats.length?'<div class="myListFeat">'+feats.join(' · ')+'</div>':'')+
+            '<div class="myListLoc">📍 '+loc+'</div>'+missLine+
+          '</div>'+
+        '</div>'+
+        '<div class="myListNext" onclick="event.stopPropagation()">'+
+          '<div class="myListNextTitle">⭐ Şimdi sırada ne var?</div>'+
+          '<div class="myListNextHint">'+escapeHTML(next.hint||'')+'</div>'+
+          '<button type="button" class="btn primary smallBtn" style="margin-top:8px;width:100%" onclick="'+next.onclick+'">'+escapeHTML(next.label)+' →</button>'+
         '</div>'+moreHtml+
         '</div>';
     }).join('');
@@ -2593,7 +2684,6 @@ function kesfetCardHtml(row, type){
     '<div class="kesfetPrice">'+price+'</div>'+
     '<p class="kesfetLoc">📍 '+loc+'</p>'+
     (signals.length?'<p class="kesfetSignal">'+signals.join(' · ')+'</p>':'')+
-    '<div class="kesfetCtaLine">İlanı incele →</div>'+
     '</div></button>';
 }
 function kesfetShellStart(type, backFn, createFn, title){
@@ -4331,29 +4421,42 @@ function contactListingSeller(row){
     const md=(row.metadata&&typeof row.metadata==='object')?row.metadata:{};
     const phone=String(md.phone||md.contact_phone||md.tel||md.mobile||row.phone||row.contact_phone||'').trim();
     const wa=String(md.whatsapp||md.wa||md.whatsApp||row.whatsapp||'').trim();
-    if(phone&&wa){
-      const dig=phone.replace(/[^0-9+]/g,'');
-      const wn=wa.replace(/[^0-9]/g,'');
-      if(confirm('Satıcıya nasıl ulaşmak istersin?\n\nTamam = Telefon ara\nİptal = WhatsApp')){
-        window.location.href='tel:'+dig;
-      } else {
-        window.open('https://wa.me/'+wn,'_blank','noopener');
+    const dig=phone?phone.replace(/[^0-9+]/g,''):'';
+    const wn=wa?wa.replace(/[^0-9]/g,''):'';
+    if(!dig&&!wn){
+      const el=document.getElementById('listingSellerCard');
+      if(el){
+        try{el.scrollIntoView({behavior:'smooth',block:'center'});el.classList.add('pulseHint');setTimeout(function(){el.classList.remove('pulseHint');},1400);}catch(_){}
       }
+      alert('Bu ilanda doğrudan iletişim bilgisi bulunmuyor.');
       return;
     }
-    if(phone){ window.location.href='tel:'+phone.replace(/[^0-9+]/g,''); return; }
-    if(wa){ window.open('https://wa.me/'+wa.replace(/[^0-9]/g,''),'_blank','noopener'); return; }
-    const el=document.getElementById('listingSellerCard');
-    if(el){
-      el.scrollIntoView({behavior:'smooth',block:'center'});
-      el.classList.add('pulseHint');
-      setTimeout(function(){ el.classList.remove('pulseHint'); },1400);
-      return;
-    }
-    alert('Satıcı iletişim bilgisi bu ilanda paylaşılmamış.\nİlan sahibi telefon veya WhatsApp eklemedi.');
+    if(dig&&!wn){ window.location.href='tel:'+dig; return; }
+    if(wn&&!dig){ window.open('https://wa.me/'+wn,'_blank','noopener'); return; }
+    var existing=document.getElementById('sellerContactSheet');
+    if(existing) existing.remove();
+    var sheet=document.createElement('div');
+    sheet.id='sellerContactSheet';
+    sheet.setAttribute('role','dialog');
+    sheet.innerHTML='<div class="sellerSheetBackdrop" data-close="1"></div>'+
+      '<div class="sellerSheetPanel">'+
+      '<div class="sellerSheetTitle">Satıcıya ulaş</div>'+
+      '<button type="button" class="btn primary sellerSheetBtn" data-act="tel">📞 Ara</button>'+
+      '<button type="button" class="btn secondary sellerSheetBtn" data-act="wa">💬 WhatsApp</button>'+
+      '<button type="button" class="btn secondary sellerSheetBtn" data-act="close">Kapat</button>'+
+      '</div>';
+    document.body.appendChild(sheet);
+    function closeSheet(){ try{sheet.remove();}catch(_){} }
+    sheet.addEventListener('click',function(ev){
+      var el=ev.target;
+      if(!el) return;
+      if(el.getAttribute('data-close')==='1'||el.getAttribute('data-act')==='close'){ closeSheet(); return; }
+      var act=el.getAttribute('data-act');
+      if(act==='tel'){ closeSheet(); window.location.href='tel:'+dig; }
+      else if(act==='wa'){ closeSheet(); window.open('https://wa.me/'+wn,'_blank','noopener'); }
+    });
   }catch(e){
-    try{ console.error(e); }catch(_){}
-    alert('İletişim şu an açılamadı.');
+    alert('İletişim açılamadı: '+(e&&e.message?e.message:String(e)));
   }
 }
 
