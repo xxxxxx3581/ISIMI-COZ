@@ -611,7 +611,7 @@ html[data-theme="light"] .favHeart.is-fav{color:#e11d48}
 .myListThumb{width:88px;min-width:88px;height:88px;border-radius:12px;overflow:hidden;background:var(--card2);flex-shrink:0;display:grid;place-items:center}
 .myListThumb img{width:100%;height:100%;object-fit:cover;display:block}
 .myListThumb.empty{color:var(--muted);font-size:22px}
-.myListBody{min-width:0;flex:1;color:var(--text)}
+.myListBody{min-width:140px;flex:1 1 auto;color:var(--text)!important}
 .myListStatus{font-size:12px;font-weight:700;color:var(--text);opacity:.92}
 .myListTxn{font-size:11px;color:var(--muted);margin-top:2px}
 .myListTitle{font-size:15px;font-weight:800;margin-top:4px;line-height:1.25;color:var(--text)}
@@ -1909,68 +1909,85 @@ async function showMyListings(filter){
         '</div>';
       return;
     }
+    box.className='';
+    box.style.color='var(--text)';
     box.innerHTML=list.map(function(row){
-      const st=myListingStatusMeta(row.status);
-      const miss=myListingMissingHints(row);
-      const title=escapeHTML(row.title||'İlan');
-      const price=escapeHTML(typeof formatListingPrice==='function'?formatListingPrice(row.price,row.currency):(row.price!=null?String(row.price):'—'));
-      const loc=escapeHTML([row.city,row.district,row.neighborhood].filter(Boolean).join(' · ')||'Konum belirtilmedi');
-      const kind=row.listing_type==='otomobil'?'🚗 Araç':'🏠 Gayrimenkul';
-      const md=row.metadata||{};
+      const st=myListingStatusMeta(row.status)||{emoji:'•',label:String(row.status||'—')};
+      const miss=typeof myListingMissingHints==='function'?myListingMissingHints(row):[];
+      const titleRaw=(row.title&&String(row.title).trim())?String(row.title):'İlan';
+      const title=escapeHTML(titleRaw);
+      let priceRaw='—';
+      try{
+        if(typeof formatListingPrice==='function') priceRaw=formatListingPrice(row.price,row.currency);
+        else if(row.price!=null&&row.price!=='') priceRaw=String(row.price)+(row.currency?(' '+row.currency):'');
+      }catch(_p){ priceRaw=row.price!=null?String(row.price):'—'; }
+      const price=escapeHTML(priceRaw);
+      const locRaw=[row.city,row.district,row.neighborhood].filter(Boolean).join(' · ')||'Konum belirtilmedi';
+      const loc=escapeHTML(locRaw);
+      const isOto=row.listing_type==='otomobil';
+      const kind=isOto?'🚗 Araç':'🏠 Gayrimenkul';
+      const md=(row.metadata&&typeof row.metadata==='object')?row.metadata:{};
       let feats=[];
-      if(row.listing_type==='otomobil'){
+      if(isOto){
         if(md.year) feats.push(String(md.year));
-        if(md.km!=null&&md.km!=='') feats.push(Number(md.km).toLocaleString('tr-TR')+' km');
+        if(md.km!=null&&md.km!==''){ try{ feats.push(Number(md.km).toLocaleString('tr-TR')+' km'); }catch(_){ feats.push(String(md.km)+' km'); } }
         if(md.fuel) feats.push(String(md.fuel));
-        if(md.gear) feats.push(String(md.gear));
+        if(md.gear||md.transmission) feats.push(String(md.gear||md.transmission));
+        if(md.brand||md.model) feats.unshift([md.brand,md.model].filter(Boolean).join(' '));
       } else {
         if(row.category) feats.push(String(row.category));
-        if(md.rooms) feats.push(String(md.rooms));
+        if(md.rooms||md.room_count) feats.push(String(md.rooms||md.room_count));
         if(md.sqm||md.m2||md.area) feats.push(String(md.sqm||md.m2||md.area)+' m²');
         if(md.floor!=null&&md.floor!=='') feats.push(String(md.floor)+'. kat');
       }
       feats=feats.filter(Boolean).slice(0,4).map(escapeHTML);
       const photos=typeof listingPhotosFromRow==='function'?listingPhotosFromRow(row):[];
-      let thumb='<div class="myListThumb empty" aria-hidden="true">📷</div>';
+      let thumbHtml='<div style="width:92px;min-width:92px;height:92px;border-radius:12px;overflow:hidden;background:var(--card2,#122338);flex-shrink:0;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:22px">📷</div>';
       if(photos.length){
         const p0=photos[0];
-        const pth=typeof p0==='string'?p0:(p0&&p0.path)||'';
-        if(pth&&typeof listingPhotoPublicUrl==='function'){
-          thumb='<div class="myListThumb"><img src="'+escapeHTML(listingPhotoPublicUrl(pth))+'" alt="" loading="lazy"></div>';
+        const pth=typeof p0==='string'?p0:(p0&&(p0.path||p0.url))||'';
+        if(pth){
+          let src=pth;
+          try{
+            if(typeof listingPhotoPublicUrl==='function'&&pth.indexOf('http')!==0) src=listingPhotoPublicUrl(pth);
+          }catch(_u){}
+          thumbHtml='<div style="width:92px;min-width:92px;height:92px;border-radius:12px;overflow:hidden;background:var(--card2,#122338);flex-shrink:0"><img src="'+escapeHTML(src)+'" alt="" style="width:100%;height:100%;object-fit:cover;display:block" loading="lazy"></div>';
         }
       }
-      const next=myListingNextStep(row);
-      const txn=myListingTxnHint(row);
-      const missLine=miss.length?'<div class="myListMiss">⚠ '+miss.length+' bilgi eksik</div>':'';
-      const moreBtns=(next.more||[]).map(function(m){
-        return '<button type="button" class="btn secondary smallBtn myListMoreBtn" onclick="'+m.onclick+'">'+escapeHTML(m.label)+'</button>';
+      const next=(typeof myListingNextStep==='function'?myListingNextStep(row):null)||{hint:'',label:'İncele',onclick:''};
+      const txn=(typeof myListingTxnHint==='function'?myListingTxnHint(row):null)||{emoji:'📋',label:''};
+      const missLine=miss.length?'<div style="font-size:12px;margin-top:4px;color:var(--warning,#d97706)">⚠ '+miss.length+' bilgi eksik</div>':'';
+      const moreBtns=((next.more)||[]).map(function(m){
+        return '<button type="button" class="btn secondary smallBtn" style="width:100%;margin-top:6px" onclick="event.stopPropagation();'+m.onclick+'">'+escapeHTML(m.label)+'</button>';
       }).join('');
       const moreHtml=moreBtns
-        ? ('<div class="myListMoreWrap" onclick="event.stopPropagation()"><button type="button" class="btn secondary smallBtn" style="width:100%" onclick="myListingMoreToggle(this)" aria-expanded="false">⋯ Daha fazla</button>'+
-           '<div data-my-more-panel style="display:none">'+moreBtns+'</div></div>')
+        ? ('<div style="margin-top:8px" onclick="event.stopPropagation()"><button type="button" class="btn secondary smallBtn" style="width:100%" onclick="myListingMoreToggle(this)" aria-expanded="false">⋯ Daha fazla</button><div data-my-more-panel style="display:none">'+moreBtns+'</div></div>')
         : '';
       const rid=String(row.id||'').replace(/[^a-zA-Z0-9-]/g,'');
-      const viewOn=row.listing_type==='otomobil'
+      const viewOn=isOto
         ? "typeof showOtomobilDetail==='function'&&showOtomobilDetail('"+rid+"')"
         : "typeof showGayrimenkulDetail==='function'&&showGayrimenkulDetail('"+rid+"')";
-      return '<div class="card myListCard" role="button" tabindex="0" onclick="'+viewOn+'">'+
-        '<div class="myListRow">'+
-          thumb+
-          '<div class="myListBody">'+
-            '<div class="myListStatus">'+st.emoji+' '+escapeHTML(st.label)+' · '+kind+'</div>'+
-            '<div class="myListTxn">'+txn.emoji+' '+escapeHTML(txn.label)+'</div>'+
-            '<div class="myListTitle">'+title+'</div>'+
-            '<div class="myListPrice">'+price+'</div>'+
-            (feats.length?'<div class="myListFeat">'+feats.join(' · ')+'</div>':'')+
-            '<div class="myListLoc">📍 '+loc+'</div>'+missLine+
+      const nextOnclick=next.onclick?('event.stopPropagation();'+next.onclick):'event.stopPropagation()';
+      /* Inline styles: CSS theme/flex cannot hide the right column */
+      return '<div class="card" role="button" tabindex="0" onclick="'+viewOn+'" style="text-align:left;margin:0 0 12px;padding:12px;cursor:pointer;color:var(--text,#f1f5f9);background:var(--card,#0c1828);border:1px solid var(--line,#243b55);border-radius:16px">'+
+        '<div style="display:flex;flex-direction:row;align-items:flex-start;gap:12px;width:100%">'+
+          thumbHtml+
+          '<div style="flex:1 1 auto;min-width:140px;max-width:100%;color:var(--text,#f1f5f9);overflow:visible">'+
+            '<div style="font-size:12px;font-weight:700;color:var(--text,#f1f5f9);opacity:.95">'+st.emoji+' '+escapeHTML(st.label)+' · '+kind+'</div>'+
+            (txn.label?('<div style="font-size:11px;color:var(--muted,#94a8bd);margin-top:2px">'+txn.emoji+' '+escapeHTML(txn.label)+'</div>'):'')+
+            '<div style="font-size:15px;font-weight:800;margin-top:4px;line-height:1.3;color:var(--text,#f1f5f9);word-break:break-word">'+title+'</div>'+
+            '<div style="font-size:16px;font-weight:900;margin-top:4px;color:var(--primary,#14b87a)">'+price+'</div>'+
+            (feats.length?('<div style="font-size:12px;margin-top:3px;color:var(--muted,#94a8bd)">'+feats.join(' · ')+'</div>'):'')+
+            '<div style="font-size:12px;margin-top:3px;color:var(--muted,#94a8bd)">📍 '+loc+'</div>'+
+            missLine+
           '</div>'+
         '</div>'+
-        '<div class="myListNext" onclick="event.stopPropagation()">'+
-          '<div class="myListNextTitle">⭐ Şimdi sırada ne var?</div>'+
-          '<div class="myListNextHint">'+escapeHTML(next.hint||'')+'</div>'+
-          '<button type="button" class="btn primary smallBtn" style="margin-top:8px;width:100%" onclick="'+next.onclick+'">'+escapeHTML(next.label)+' →</button>'+
+        '<div style="margin-top:10px;padding:10px;border-radius:12px;border:1px solid rgba(13,159,104,.28);background:rgba(13,159,104,.07)" onclick="event.stopPropagation()">'+
+          '<div style="font-size:12px;font-weight:700;color:var(--text,#f1f5f9)">⭐ Şimdi sırada ne var?</div>'+
+          '<div style="font-size:12px;color:var(--muted,#94a8bd);margin-top:4px">'+escapeHTML(next.hint||'')+'</div>'+
+          '<button type="button" class="btn primary smallBtn" style="margin-top:8px;width:100%" onclick="'+nextOnclick+'">'+escapeHTML(next.label||'Devam')+' →</button>'+
         '</div>'+moreHtml+
-        '</div>';
+      '</div>';
     }).join('');
   }catch(e){
     box.innerHTML='<p class="muted">İlanlar yüklenemedi: '+escapeHTML(e&&e.message?e.message:String(e))+'</p>';
