@@ -493,16 +493,38 @@ html:not([data-theme="light"]) .officialPrepCard{background:rgba(13,159,104,.10)
   .kesfetShell #kesfetGrid{grid-column:2}
 }
 .pulseHint{outline:2px solid var(--primary);outline-offset:2px}
+
+.bottomInner{display:flex;gap:2px;justify-content:space-between;align-items:stretch}
+.bottomInner .navBtn{flex:1;min-width:0;padding:8px 2px 6px;font-size:10px;line-height:1.15;font-weight:700;border:0;background:transparent;color:var(--muted);border-radius:12px}
+.bottomInner .navBtn b{font-size:18px;display:block;line-height:1.15;margin-bottom:2px;font-weight:700}
+.bottomInner .navBtn.active{color:var(--primary)}
+.menuBtnAra{display:inline-flex;align-items:center;gap:6px;margin:8px 0 4px 2px;padding:8px 12px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--text);font-size:13px;font-weight:800;cursor:pointer}
+.menuBtnAra .menuBtnIcon{font-size:16px;line-height:1}
+.menuBtnAra .menuBtnLabel{font-size:13px;letter-spacing:.02em}
+html[data-theme="light"] .menuBtnAra{background:#fff;color:#0f1c2a;border-color:var(--line)}
+.homeQuick{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 10px}
+.homeQuickBtn{display:flex;align-items:center;gap:10px;text-align:left;padding:11px 12px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--text);cursor:pointer;min-height:52px}
+.homeQuickBtn .hqIco{font-size:18px;width:28px;text-align:center;flex:0 0 auto}
+.homeQuickBtn .hqTxt{display:flex;flex-direction:column;gap:1px;min-width:0}
+.homeQuickBtn .hqTxt b{font-size:13px;font-weight:800}
+.homeQuickBtn .hqTxt small{font-size:11px;opacity:.72;font-weight:600}
+html[data-theme="light"] .homeQuickBtn{background:#fff}
+.a7AiChip{display:none!important}
+
+
+header.top{align-items:flex-start;padding-top:10px}
+header.top .menuBtnAra{margin-top:2px;margin-right:6px;flex:0 0 auto}
 </style>
 </head>
 <body>
 <div id="connectionStatus" class="connection offline" title="Supabase">SB…</div>
 <div class="app">
-<header class="top"><button type="button" class="menuBtn" id="appMenuBtn" onclick="openAppDrawer()" aria-label="Menü">☰</button><div class="brand"><div class="brandCol"><div class="brandRow"><div class="logo" aria-hidden="true">✓</div><div class="brandText"><strong>İşimi Çöz</strong><small>İşini Hallet · İzmir pilot</small></div></div><button type="button" class="a7AiChip" id="a7AiChipBtn" onclick="openA7SmartAI()" aria-label="İşimi Çöz AI"><span class="a7AiBot" aria-hidden="true">🤖</span> AI</button></div></div><div class="headerTools"><div class="headerToolsRow"><button type="button" class="iconBtn" id="themeToggleBtn" onclick="toggleAppTheme()" aria-label="Tema">🌙 Koyu</button><button type="button" class="iconBtn" id="shareSiteBtn" onclick="shareAppSite()" aria-label="Paylaş">↗ Paylaş</button></div><div id="authArea" class="headerAuthRow" aria-live="polite"></div></div></header>
+<header class="top"><button type="button" class="menuBtn menuBtnAra" id="appMenuBtn" onclick="openAppDrawer()" aria-label="Menü ve ara"><span class="menuBtnIcon" aria-hidden="true">☰</span><span class="menuBtnLabel">Ara</span></button><div class="brand"><div class="brandCol"><div class="brandRow"><div class="logo" aria-hidden="true">✓</div><div class="brandText"><strong>İşimi Çöz</strong><small>İşini Hallet · İzmir pilot</small></div></div></div></div><div class="headerTools"><div class="headerToolsRow"><button type="button" class="iconBtn" id="themeToggleBtn" onclick="toggleAppTheme()" aria-label="Tema">🌙 Koyu</button><button type="button" class="iconBtn" id="shareSiteBtn" onclick="shareAppSite()" aria-label="Paylaş">↗ Paylaş</button></div><div id="authArea" class="headerAuthRow" aria-live="polite"></div></div></header>
 <main id="app"></main></div>
 <nav class="bottom"><div class="bottomInner">
 <button class="navBtn" id="navHome" onclick="showHome()"><b>⌂</b>Ana</button>
 <button class="navBtn" id="navProvider" onclick="window.__kesfetCat=window.__kesfetCat||'all';showKesfet()"><b>🔎</b>Ara</button>
+<button class="navBtn" id="navAI" onclick="typeof openA7SmartAI==='function'&&openA7SmartAI()"><b>🤖</b>AI</button>
 <button class="navBtn" id="navRequest" onclick="typeof kesfetCreatePick==='function'?kesfetCreatePick():showListingsHub()"><b>＋</b>İlan</button>
 <button class="navBtn" id="navRequests" onclick="showRequests()"><b>▣</b>Talepler</button>
 </div></nav>
@@ -592,7 +614,7 @@ document.addEventListener('keydown',function(e){
   if(e.key==='Escape') closeAppDrawer();
 });
 
-function setNav(a){["navHome","navRequest","navRequests","navProvider"].forEach(id=>document.getElementById(id)?.classList.remove("active"));if(a)document.getElementById(a)?.classList.add("active")}
+function setNav(a){["navHome","navRequest","navRequests","navProvider","navAI"].forEach(id=>document.getElementById(id)?.classList.remove("active"));if(a)document.getElementById(a)?.classList.add("active")}
 function setConnection(ok,text){const e=document.getElementById("connectionStatus");if(!e)return;e.className="connection "+(ok?"online":"offline");e.textContent=text||(ok?"SB":"SB…");e.title=ok?"Supabase bağlı":"Supabase bağlantısı yok"}
 
 async function supabaseRequest(method,path,body=null){
@@ -1193,11 +1215,11 @@ function showHome(){
   </div>
   <div class="homeSec">
     <div class="homeSecHead">Ne yapmak istiyorsun?</div>
-    <div class="homePrimary">
-      <button type="button" onclick="window.__kesfetCat='all';showKesfet()"><b>🔎 Bir şey ara</b><span>Araç, konut, ilan keşfet</span></button>
-      <button type="button" onclick="typeof kesfetCreatePick==='function'?kesfetCreatePick():showListingsHub()"><b>＋ İlan ver</b><span>Hızlı yayınla veya taslak</span></button>
-      <button type="button" onclick="openWorkArea('hizmet')"><b>🔧 İşimi çözdür</b><span>Usta ve hizmet talebi</span></button>
-      <button type="button" onclick="openWorkArea('resmi')"><b>📄 Resmî işlem</b><span>Evrak, tapu, kurum</span></button>
+    <div class="homeQuick">
+      <button type="button" class="homeQuickBtn" onclick="window.__kesfetCat='all';showKesfet()"><span class="hqIco">🔎</span><span class="hqTxt"><b>İlan ara</b><small>Keşfet</small></span></button>
+      <button type="button" class="homeQuickBtn" onclick="typeof kesfetCreatePick==='function'?kesfetCreatePick():showListingsHub()"><span class="hqIco">＋</span><span class="hqTxt"><b>İlan ver</b><small>Taslak veya yayın</small></span></button>
+      <button type="button" class="homeQuickBtn" onclick="openWorkArea('hizmet')"><span class="hqIco">🔧</span><span class="hqTxt"><b>İşimi çözdür</b><small>Usta &amp; hizmet</small></span></button>
+      <button type="button" class="homeQuickBtn" onclick="openWorkArea('resmi')"><span class="hqIco">📄</span><span class="hqTxt"><b>Resmî işlem</b><small>Evrak · tapu</small></span></button>
     </div>
   </div>
   
