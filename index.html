@@ -905,6 +905,94 @@ html[data-theme="light"]{--v2-p-orig:#cfd9e4;--v2-glass:#b9c8d8;--v2-wheel:#5b6d
 .v2Facts{display:none}
 @media(min-width:720px){.v2Facts2{grid-template-columns:repeat(6,1fr)}}
 .v2DActions .v2Btn{white-space:nowrap}
+
+/* ===== Tema düzeltmeleri: eski CSS'teki sabit koyu renkler ===== */
+:root{--v2-in:#081523;--v2-in-line:#29415d;--v2-sub:#091827}
+html[data-theme="light"]{--v2-in:#ffffff;--v2-in-line:#b3c3d3;--v2-sub:#eaf0f6}
+input,select,textarea{background:var(--v2-in);border-color:var(--v2-in-line);color:var(--text)}
+input::placeholder,textarea::placeholder{color:var(--muted);opacity:.85}
+select option{background:var(--v2-in);color:var(--text)}
+.check,.meta span,.description{background:var(--v2-sub)}
+html[data-theme="light"] .badge{color:#0a6b47;background:rgba(11,127,84,.10);border-color:rgba(11,127,84,.32)}
+html[data-theme="light"] .status{color:#7a4f00;background:rgba(245,185,66,.22)}
+html[data-theme="light"] .notice{background:#e8f3fb;border-color:#b4d5ea;color:#0f4360}
+html[data-theme="light"] .success{background:#e6f6ee;border-color:#a5dbc1;color:#0a5c3a}
+html[data-theme="light"] .warning{background:#fff5dc;border-color:#f0d287;color:#6b4a00}
+html[data-theme="light"] .error{background:#fdeaea;border-color:#f1b5b5;color:#8a1f1f}
+html[data-theme="light"] .description{color:var(--text)}
+
+/* Geri butonu */
+.v2Back{display:inline-flex;align-items:center;gap:4px;min-height:42px;padding:0 14px 0 10px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--text);font-weight:800;font-size:14.5px;cursor:pointer}
+.v2Back:active{transform:scale(.97)}
+.v2KTop .v2Back+h1{margin-left:2px}
+
+/* Belirgin sekmeler / çipler */
+.v2Chip{border-width:1.5px;border-color:var(--v2-soft-line);background:var(--v2-soft);color:var(--text)}
+.v2Chip.on{background:var(--v2-pri);border-color:var(--v2-pri);color:var(--v2-pri-ink)}
+.v2Chip.on .v2Chip{color:inherit}
+.v2Jump button{border-width:1.5px;border-color:var(--v2-soft-line);background:var(--v2-soft);color:var(--text);font-weight:800;transition:background .15s}
+.v2Jump button.on{background:var(--v2-pri);border-color:var(--v2-pri);color:var(--v2-pri-ink)}
+.v2Cats .v2Cat span{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:24px}
+.v2Cat:nth-child(1) span{background:rgba(59,130,246,.16)}.v2Cat:nth-child(2) span{background:rgba(249,115,22,.18)}.v2Cat:nth-child(3) span{background:rgba(139,92,246,.18)}.v2Cat:nth-child(4) span{background:rgba(34,160,107,.20)}
+.v2Cat{border-width:1.5px}
+.v2Pill{border-width:1.5px;font-weight:800}
+.v2Pills .v2Pill:nth-child(1){background:var(--v2-pri);border-color:var(--v2-pri);color:var(--v2-pri-ink)}
+.v2Pills .v2Pill:nth-child(2){background:rgba(249,115,22,.14);border-color:rgba(249,115,22,.5)}
+.v2Pills .v2Pill:nth-child(3){background:rgba(59,130,246,.14);border-color:rgba(59,130,246,.5)}
+
+/* Sonraki adım / yardımcı işlemler */
+.v2Pill2{border-width:1.5px;padding:0 13px 0 7px;font-weight:800}
+.v2Pill2 i{font-style:normal;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-size:16px}
+.v2Pill2 .ic-b{background:rgba(59,130,246,.2)}.v2Pill2 .ic-o{background:rgba(249,115,22,.22)}.v2Pill2 .ic-p{background:rgba(139,92,246,.22)}.v2Pill2 .ic-g{background:rgba(34,160,107,.24)}
+.v2Sum{font-size:14px;font-weight:700;margin:2px 0 10px;color:var(--text)}
+.v2Steps{margin:10px 0}
+
+/* Özellikler (açılır) */
+.v2Acc{border:1.5px solid var(--v2-soft-line);border-radius:14px;background:var(--card);overflow:hidden}
+.v2Acc>summary{list-style:none;cursor:pointer;padding:14px;font-weight:800;font-size:14.5px;display:flex;align-items:center;gap:10px;background:var(--v2-soft)}
+.v2Acc>summary::-webkit-details-marker{display:none}
+.v2Acc>summary::after{content:"›";margin-left:auto;font-size:22px;opacity:.7;transition:transform .15s}
+.v2Acc[open]>summary::after{transform:rotate(90deg)}
+.v2AccIn{padding:6px 14px 12px}
+.v2AccIn .v2Facts2{margin:8px 0 6px}
+
+/* İlan sahibi araç çubuğu */
+.v2Own{border:1.5px solid var(--v2-soft-line);background:var(--v2-soft);border-radius:16px;padding:12px;margin:10px 0}
+.v2OwnT{font-size:13px;font-weight:800;margin:0 0 10px}
+.v2OwnBtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.v2OwnBtns .v2Btn{min-height:44px;font-size:13.5px}
+.v2Hints{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px;font-size:12.5px;color:var(--muted)}
+.v2Hints button{border:1px dashed var(--v2-pri);background:transparent;color:var(--v2-pri);border-radius:999px;padding:6px 11px;font-size:12.5px;font-weight:800;cursor:pointer}
+
+/* Açıklama düzenleme */
+.v2DescEmpty{width:100%;text-align:left;border:1.5px dashed var(--v2-soft-line);background:var(--v2-soft);color:var(--text);border-radius:14px;padding:16px;font-weight:800;font-size:15px;cursor:pointer}
+.v2DescEmpty small{display:block;font-weight:600;color:var(--muted);margin-top:4px}
+.v2DescTa{width:100%;box-sizing:border-box;min-height:150px;border-radius:12px;border:1.5px solid var(--v2-pri);background:var(--v2-in);color:var(--text);padding:12px;font-size:15px;line-height:1.5}
+.v2DescBtns{display:flex;gap:8px;margin-top:8px}.v2DescBtns .v2Btn{flex:1}
+
+/* İletişim çubuğu */
+.v2Btn.msg{background:#2b6cb0;border-color:#2b6cb0;color:#fff}
+.v2Btn.nophone{background:var(--card);color:var(--muted);border-style:dashed;font-size:14px}
+html[data-theme="light"] .v2Btn.msg{background:#1f5fa8}
+
+/* Parça haritası: palet + gösterge (Sahibinden benzeri, kendi tasarımımız) */
+.v2P-lokal{fill:#ff9a3c}.v2P-boyali{fill:#3f82d6}.v2P-degisen{fill:#f0484f}
+.v2T-lokal{fill:#1a1206}.v2T-boyali,.v2T-degisen{fill:#fff}
+.v2Gl2{fill:#fff;opacity:.16;pointer-events:none}
+.v2Pal{display:flex;flex-wrap:wrap;gap:6px}
+.v2PalB{display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:0 12px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--text);font-weight:800;font-size:13px;cursor:pointer}
+.v2PalB.on{border-color:var(--v2-pri);background:var(--v2-soft)}
+.v2PalB.p-lokal.on{border-color:#ff9a3c}.v2PalB.p-boyali.on{border-color:#3f82d6}.v2PalB.p-degisen.on{border-color:#f0484f}
+.v2Lg{display:grid;grid-template-columns:18px 1fr;column-gap:8px;align-items:start}
+.v2Lg .v2Sq{grid-row:1/3;width:16px;height:16px;border-radius:4px;margin-top:2px;background:var(--v2-p-orig);border:1px solid var(--line)}
+.v2Sq.s-lokal{background:#ff9a3c}.v2Sq.s-boyali{background:#3f82d6}.v2Sq.s-degisen{background:#f0484f}
+.v2Lg b{font-size:14px}.v2Lg ul{margin:3px 0 0;padding-left:16px;font-size:13px;line-height:1.5;color:var(--text)}
+.v2PClear{margin-top:6px}
+.v2ChkRow{margin:0 0 8px}
+@media(max-width:380px){.v2CarWrap{flex-direction:column}.v2Car{max-width:170px}}
+.v2SvgHost{flex:0 0 46%;max-width:200px;min-width:120px}
+.v2SvgHost .v2Car{display:block;width:100%;max-width:none;height:auto}
+.v2PEd .v2Legend{min-width:0}
 </style>
 </head>
 <body>
@@ -998,8 +1086,8 @@ var V2_PARTS=[
   ['sol_on_camurluk','Sol ön çamurluk',18,40,34,70,10],['sol_on_kapi','Sol ön kapı',18,114,34,64,6],['sol_arka_kapi','Sol arka kapı',18,182,34,64,6],['sol_arka_camurluk','Sol arka çamurluk',18,250,34,76,10],
   ['sag_on_camurluk','Sağ ön çamurluk',148,40,34,70,10],['sag_on_kapi','Sağ ön kapı',148,114,34,64,6],['sag_arka_kapi','Sağ arka kapı',148,182,34,64,6],['sag_arka_camurluk','Sağ arka çamurluk',148,250,34,76,10]
 ];
-var V2_PSTATE={orijinal:{l:'Orijinal',i:'⚪',t:''},boyali:{l:'Boyalı',i:'🟡',t:'B'},degisen:{l:'Değişen',i:'🔵',t:'D'},hasarli:{l:'Hasarlı',i:'🔴',t:'H'}};
-var V2_PCYCLE=['orijinal','boyali','degisen','hasarli'];
+var V2_PSTATE={orijinal:{l:'Orijinal',i:'⚪',t:''},lokal:{l:'Lokal boyalı',i:'🟠',t:'L'},boyali:{l:'Boyalı',i:'🔵',t:'B'},degisen:{l:'Değişen',i:'🔴',t:'D'}};
+var V2_PTOOLS=['lokal','boyali','degisen','orijinal'];
 
 var V2_FEATURED=`<div class="homeFeatured" id="homeFeatured" aria-roledescription="carousel" aria-label="Öne çıkanlar">
     <button type="button" class="homeFeaturedNav prev" onclick="homeFeaturedNext(-1)" aria-label="Önceki">‹</button>
@@ -1874,7 +1962,7 @@ async function showKesfet(keepCache){
   var t=v2FType(), q=(getListingFilterState(t)||{}).q||'', sort=(getListingFilterState('gayrimenkul')||{}).sort||'new';
   if(cat==='otomobil') sort=(getListingFilterState('otomobil')||{}).sort||'new';
   var view=v2ViewMode();
-  app('<div class="v2K"><div class="v2KTop"><button type="button" class="v2Ico" onclick="showHome()" aria-label="Ana sayfa">←</button><h1>'+escapeHTML(titles[cat]||'İlanlar')+'</h1>'+
+  app('<div class="v2K"><div class="v2KTop"><button type="button" class="v2Back" onclick="showHome()">← Geri</button><h1>'+escapeHTML(titles[cat]||'İlanlar')+'</h1>'+
     '<button type="button" class="v2Btn sm pri" onclick="v2StartSheet()">＋ İlan ver</button></div>'+
     '<div class="v2KSearch"><span class="ic" aria-hidden="true">🔎</span><input id="listingSearchQ" type="search" enterkeyhint="search" autocomplete="off" aria-label="İlan ara" placeholder="Ne arıyorsun?" value="'+escapeHTML(q)+'"></div>'+
     '<div class="v2Chips" role="group" aria-label="Kategori">'+kesfetMainChipsHtml()+'</div>'+
@@ -3602,6 +3690,7 @@ function renderOtomobilWizard(){
     <label>Değişen parça</label><select id="otoParts">
       ${['','Yok','Var','Bilinmiyor'].map(function(v){return '<option value="'+v+'"'+sel(d.changed_parts,v)+'>'+(v||'Seç')+'</option>';}).join('')}
     </select>
+    <div class="v2Fld" id="otoPartsHost"><label class="v2ChkRow"><input type="checkbox" id="otoPartsOn"${d.parts_set?' checked':''}> Parça haritasını ilana ekle (isteğe bağlı)</label><div id="otoPartsWrap" style="${d.parts_set?'':'display:none'}">${v2PartsEditorHtml(d.parts||{})}</div></div>
     <label>Servis geçmişi</label><select id="otoService">
       ${['','Yetkili servis','Özel servis','Düzenli bakım','Bilinmiyor'].map(function(v){return '<option value="'+v+'"'+sel(d.service_history,v)+'>'+(v||'Seç')+'</option>';}).join('')}
     </select>
@@ -3693,6 +3782,7 @@ function renderOtomobilWizard(){
         '<button class="btn primary" type="button" id="otoSaveBtn" onclick="createOtomobilListing()">Taslak olarak kaydet</button>'}
     </div>
   </div>`);
+  try{ v2BindWizardParts(); }catch(e){ console.error('parça haritası',e); }
 }
 
 function otoWizardBack(){
@@ -3762,6 +3852,7 @@ async function createOtomobilListing(){
       seller_type:d.seller_type==='professional'?'professional':'individual',
       phone:(d.phone||'').trim()||null,
       whatsapp:((d.phone||'').trim()&&d.wa==='1')?(d.phone||'').trim():null,
+      ...(d.parts_set?{parts_set:true,parts:(d.parts&&typeof d.parts==='object')?d.parts:{}}:{}),
       // future official verification hooks (empty)
       official_verification_status:null,
       verification_source:null,
@@ -5330,7 +5421,7 @@ function v2SavedRemove(id){ window.SavedSearchAdapter.remove(id); showSavedSearc
 function showSavedSearches(){
   setNav('navProvider');
   var list=window.SavedSearchAdapter.list(), lb={all:'Tüm ilanlar',otomobil:'Araç',konut:'Konut',isyeri:'İş Yeri',arsa:'Arsa',gayrimenkul:'Gayrimenkul'};
-  app('<div class="v2K"><div class="v2KTop"><button type="button" class="v2Ico" onclick="showHome()" aria-label="Ana sayfa">←</button><h1>Kayıtlı aramalar</h1></div>'+
+  app('<div class="v2K"><div class="v2KTop"><button type="button" class="v2Back" onclick="showHome()">← Geri</button><h1>Kayıtlı aramalar</h1></div>'+
     (list.length?list.map(function(r){ return '<div class="v2MC"><div class="v2MInfo"><div class="t">'+escapeHTML(r.name||'Arama')+'</div><div class="m">'+escapeHTML(lb[r.cat]||'İlanlar')+' · '+new Date(r.at).toLocaleDateString(V2_MARKET.locale)+'</div></div>'+
       '<div class="v2Ctl" style="margin-top:10px"><button type="button" class="v2Btn pri sm" onclick="v2SavedApply(\''+escapeHTML(r.id)+'\')">Sonuçları göster</button><button type="button" class="v2Btn sm" onclick="v2SavedRemove(\''+escapeHTML(r.id)+'\')">Sil</button></div></div>'; }).join('')+
       '<p class="small muted">Yeni ilan ve fiyat düşüşü bildirimleri için altyapı hazır; şimdilik arama bu cihazda saklanır.</p>':
@@ -5340,7 +5431,7 @@ function showSavedSearches(){
 async function showFavorites(){
   setNav('navHome');
   var ids=getListingFavIds().filter(Boolean);
-  app('<div class="v2K"><div class="v2KTop"><button type="button" class="v2Ico" onclick="showHome()" aria-label="Ana sayfa">←</button><h1>Favorilerim</h1></div><div id="v2FavBox"><div class="v2Grid is-list"><div class="v2Skel"></div><div class="v2Skel"></div></div></div></div>');
+  app('<div class="v2K"><div class="v2KTop"><button type="button" class="v2Back" onclick="showHome()">← Geri</button><h1>Favorilerim</h1></div><div id="v2FavBox"><div class="v2Grid is-list"><div class="v2Skel"></div><div class="v2Skel"></div></div></div></div>');
   var box=document.getElementById('v2FavBox');
   if(!ids.length){ box.innerHTML='<div class="v2Empty"><h3>Henüz favorin yok</h3><div class="small">İlanlardaki ♡ simgesine dokunarak favori ekleyebilirsin.</div><div class="row"><button type="button" class="v2Btn pri sm" onclick="kesfetOpen(\'all\',true)">İlanlara bak</button></div></div>'; return; }
   try{
@@ -5370,14 +5461,35 @@ function v2IsOwner(row){
 function v2SvgPartsHtml(parts,interactive){
   var s='<svg class="v2Car" viewBox="0 -14 200 388" role="img" aria-label="Araç üstten görünüm: parça durumları" xmlns="http://www.w3.org/2000/svg">';
   [[4,56],[4,268],[185,56],[185,268]].forEach(function(w){ s+='<rect x="'+w[0]+'" y="'+w[1]+'" width="11" height="32" rx="4" class="v2Wh"/>'; });
+  s+='<rect x="8" y="120" width="11" height="15" rx="5" class="v2Wh"/><rect x="181" y="120" width="11" height="15" rx="5" class="v2Wh"/>';
   s+='<polygon points="60,120 140,120 132,142 68,142" class="v2Gl"/><polygon points="68,240 132,240 140,258 60,258" class="v2Gl"/>';
   V2_PARTS.forEach(function(p){
-    var st=(parts&&parts[p[0]])||'orijinal', d=V2_PSTATE[st]||V2_PSTATE.orijinal, cx=p[2]+p[4]/2, cy=p[3]+p[5]/2;
+    var st=(parts&&V2_PSTATE[parts[p[0]]]&&parts[p[0]])||'orijinal', d=V2_PSTATE[st], cx=p[2]+p[4]/2, cy=p[3]+p[5]/2;
     s+='<g'+(interactive?' class="v2PtG" data-part="'+p[0]+'" tabindex="0" role="button" aria-label="'+p[1]+': '+d.l+'"':'')+'><rect x="'+p[2]+'" y="'+p[3]+'" width="'+p[4]+'" height="'+p[5]+'" rx="'+p[6]+'" class="v2Pt v2P-'+st+'"/>'+
-      (d.t?'<text x="'+cx+'" y="'+(cy+4)+'" text-anchor="middle" class="v2PtT">'+d.t+'</text>':'')+'</g>';
+      (/kapi$/.test(p[0])?'<rect x="'+(p[2]+8)+'" y="'+(p[3]+8)+'" width="'+(p[4]-16)+'" height="'+(p[5]-24)+'" rx="4" class="v2Gl2"/>':'')+
+      (d.t?'<text x="'+cx+'" y="'+(cy+4)+'" text-anchor="middle" class="v2PtT v2T-'+st+'">'+d.t+'</text>':'')+'</g>';
   });
   s+='<text x="100" y="-2" text-anchor="middle" class="v2CarLb">ÖN</text><text x="100" y="372" text-anchor="middle" class="v2CarLb">ARKA</text></svg>';
   return s;
+}
+
+function v2PartsGroups(parts){
+  var g={lokal:[],boyali:[],degisen:[]};
+  V2_PARTS.forEach(function(p){ var st=parts&&parts[p[0]]; if(g[st]) g[st].push(p[1]); });
+  return g;
+}
+
+function v2PartsLegendHtml(parts,mode){
+  if(mode==='allOriginal') return '<div class="v2Lg"><span class="v2Sq s-orijinal"></span><b>Orijinal</b><small>İlan sahibine göre tüm parçalar orijinal.</small></div>';
+  if(mode==='allPainted') return '<div class="v2Lg"><span class="v2Sq s-boyali"></span><b>Boyalı</b><small>İlan sahibi aracın tamamının boyalı olduğunu belirtmiş.</small></div>';
+  var g=v2PartsGroups(parts), h='', n=0;
+  ['lokal','boyali','degisen'].forEach(function(k){
+    if(!g[k].length) return; n+=g[k].length;
+    h+='<div class="v2Lg"><span class="v2Sq s-'+k+'"></span><b>'+V2_PSTATE[k].l+'</b><ul>'+g[k].map(function(x){return '<li>'+escapeHTML(x)+'</li>';}).join('')+'</ul></div>';
+  });
+  if(!n) h='<div class="v2Lg"><span class="v2Sq s-orijinal"></span><b>Orijinal</b><small>İşaretli parça yok.</small></div>';
+  else if(V2_PARTS.length-n>0) h+='<div class="v2Lg"><span class="v2Sq s-orijinal"></span><b>Orijinal</b><small>Diğer '+(V2_PARTS.length-n)+' parça</small></div>';
+  return h;
 }
 
 function v2DamageModel(md){
@@ -5394,22 +5506,39 @@ function v2DamageModel(md){
 
 function v2DamageSectionHtml(md){
   var m=v2DamageModel(md); if(!m.show) return '';
-  var h='<div class="v2Tiles">'+m.tiles.map(function(t){ return '<div class="v2Tile t-'+t.tone+'"><small>'+escapeHTML(t.label)+'</small><b>'+escapeHTML(t.value)+'</b></div>'; }).join('')+'</div>';
-  if(m.parts){
-    var groups={boyali:[],degisen:[],hasarli:[]};
-    V2_PARTS.forEach(function(p){ var st=m.parts[p[0]]; if(groups[st]) groups[st].push(p[1]); });
-    var lines='';
-    if(m.mode==='allOriginal') lines='<div class="v2Lg"><span>⚪</span><b>Orijinal</b><small>İlan sahibine göre tüm parçalar orijinal; boyalı, değişen ya da hasarlı parça yok.</small></div>';
-    else if(m.mode==='allPainted') lines='<div class="v2Lg"><span>🟡</span><b>Tamamen boyalı</b><small>İlan sahibi aracın tamamının boyalı olduğunu belirtmiş.</small></div>';
-    else{
-      ['boyali','degisen','hasarli'].forEach(function(k){ if(groups[k].length) lines+='<div class="v2Lg"><span>'+V2_PSTATE[k].i+'</span><b>'+V2_PSTATE[k].l+'</b><small>'+groups[k].map(escapeHTML).join(', ')+'</small></div>'; });
-      var rest=V2_PARTS.length-groups.boyali.length-groups.degisen.length-groups.hasarli.length;
-      if(rest>0) lines+='<div class="v2Lg"><span>⚪</span><b>Orijinal</b><small>Diğer '+rest+' parça</small></div>';
-    }
-    h+='<div class="v2CarWrap">'+v2SvgPartsHtml(m.parts,false)+'<div class="v2Legend">'+lines+'</div></div>';
-  }
+  var h=m.tiles.length?'<div class="v2Tiles">'+m.tiles.map(function(t){ return '<div class="v2Tile t-'+t.tone+'"><small>'+escapeHTML(t.label)+'</small><b>'+escapeHTML(t.value)+'</b></div>'; }).join('')+'</div>':'';
+  if(m.parts) h+='<div class="v2CarWrap">'+v2SvgPartsHtml(m.parts,false)+'<div class="v2Legend">'+v2PartsLegendHtml(m.parts,m.mode)+'</div></div>';
   h+='<p class="small muted" style="margin:8px 0 0">Bu bilgiler ilan sahibinin beyanıdır; ekspertiz raporu yerine geçmez.'+(m.parts?'':' Parça bazlı bilgi girilmemiş.')+'</p>';
   return h;
+}
+
+function v2PartsEditorHtml(parts){
+  var tools={lokal:['🟠','Lokal boyalı'],boyali:['🔵','Boyalı'],degisen:['🔴','Değişen'],orijinal:['⚪','Orijinal (sil)']};
+  return '<div class="v2PEd" data-tool="lokal"><div class="v2Pal" role="radiogroup" aria-label="Durum seç">'+V2_PTOOLS.map(function(k,i){ return '<button type="button" role="radio" aria-checked="'+(i===0)+'" class="v2PalB p-'+k+(i===0?' on':'')+'" data-tool="'+k+'"><span>'+tools[k][0]+'</span>'+tools[k][1]+'</button>'; }).join('')+'</div>'+
+    '<p class="small muted" style="margin:6px 0">Önce durumu seç, sonra araçtaki parçaya dokun. Aynı durumla tekrar dokunursan işaret kalkar.</p>'+
+    '<div class="v2CarWrap"><div class="v2SvgHost">'+v2SvgPartsHtml(parts||{},true)+'</div><div class="v2Legend v2LgHost">'+v2PartsLegendHtml(parts||{},'')+'</div></div>'+
+    '<button type="button" class="v2DescMore v2PClear">Tümünü temizle</button></div>';
+}
+
+function v2BindPartsEditor(root,parts,onChange){
+  if(!root||root.__pbound) return; root.__pbound=true;
+  function redraw(){
+    var host=root.querySelector('.v2SvgHost'); if(host) host.innerHTML=v2SvgPartsHtml(parts,true);
+    var lg=root.querySelector('.v2LgHost'); if(lg) lg.innerHTML=v2PartsLegendHtml(parts,'');
+    if(onChange) onChange(parts);
+  }
+  function tap(g){
+    var k=g.getAttribute('data-part'); if(!k) return; var tool=root.getAttribute('data-tool')||'lokal';
+    if(tool==='orijinal'||parts[k]===tool) delete parts[k]; else parts[k]=tool;
+    redraw(); var again=root.querySelector('[data-part="'+k+'"]'); if(again) again.focus();
+  }
+  root.addEventListener('click',function(e){
+    var pb=e.target.closest('.v2PalB');
+    if(pb){ root.setAttribute('data-tool',pb.getAttribute('data-tool')); root.querySelectorAll('.v2PalB').forEach(function(x){ var on=x===pb; x.classList.toggle('on',on); x.setAttribute('aria-checked',String(on)); }); return; }
+    if(e.target.closest('.v2PClear')){ Object.keys(parts).forEach(function(k){ delete parts[k]; }); redraw(); return; }
+    var g=e.target.closest('[data-part]'); if(g) tap(g);
+  });
+  root.addEventListener('keydown',function(e){ if((e.key==='Enter'||e.key===' ')&&e.target.getAttribute&&e.target.getAttribute('data-part')){ e.preventDefault(); tap(e.target); } });
 }
 
 function v2FactsGrid(row,type){
@@ -5448,29 +5577,24 @@ function v2PrepSale(id,type){ return openHalletAction(type==='otomobil'?'showAra
 
 function v2DetailSteps(row,type,owner){
   var id=v2Id(row.id), car=type==='otomobil', kind=car?'arac':(typeof officialPrepKindFromListing==='function'?officialPrepKindFromListing(row):'konut');
-  var st=myListingStatusMeta(row.status), pills=[], main=null, title='';
+  var st=myListingStatusMeta(row.status), pills=[], title='';
   if(owner){
-    if(st.key==='published'){
-      title=car?'Bu araç satılık. Sonraki adım':'Bu mülk satılık. Sonraki adım';
-      main={label:'Satışa hazırlan →',js:"v2PrepSale('"+id+"','"+type+"')"};
-      if(car) pills=[['🔧','Usta / Servis desteği',"showRequest()"],['📄','Resmî işlem',"openOfficialPrepGate('"+id+"','"+kind+"')"]];
-      else pills=[['📄','Tapu &amp; Evrak',"openHalletAction('showTapuRehber')"],['🔧','Usta / Tadilat desteği',"showRequest()"],['🏛️','Resmî işlem',"openOfficialPrepGate('"+id+"','"+kind+"')"]];
-    }else{
-      title='Bu ilan henüz yayında değil';
-      main={label:st.key==='draft'?'İlanı yayınla →':'Tekrar yayınla →',js:"v2SetListingStatus('"+id+"','"+type+"','published','detail')"};
-    }
+    if(st.key!=='published') return {title:'',pills:[]};
+    title=car?'Satış için yardımcı işlemler':'Satış için yardımcı işlemler';
+    if(car) pills=[['🔧','Usta / Servis desteği',"showRequest()",'o'],['📄','Resmî işlem',"openOfficialPrepGate('"+id+"','"+kind+"')",'p']];
+    else pills=[['📄','Tapu &amp; Evrak',"openHalletAction('showTapuRehber')",'b'],['🔧','Usta / Tadilat desteği',"showRequest()",'o'],['🏛️','Resmî işlem',"openOfficialPrepGate('"+id+"','"+kind+"')",'p']];
   }else{
     title='Bu ilanla ilgili';
-    if(car) pills=[['🧾','Alım hazırlığı',"openHalletAction('showAracAlim')"],['🔧','Usta / Ekspertiz desteği',"showRequest()"],['📄','Devir işlemleri',"openHalletAction('showAracDevir')"]];
-    else pills=[['📄','Tapu &amp; Evrak',"openHalletAction('showTapuRehber')"],['🔧','Usta / Tadilat desteği',"showRequest()"],['🏛️','Resmî işlem',"openHalletAction('showTasinmazMenu')"]];
+    if(car) pills=[['🧾','Alım hazırlığı',"openHalletAction('showAracAlim')",'g'],['🔧','Usta / Ekspertiz desteği',"showRequest()",'o'],['📄','Devir işlemleri',"openHalletAction('showAracDevir')",'b']];
+    else pills=[['📄','Tapu &amp; Evrak',"openHalletAction('showTapuRehber')",'b'],['🔧','Usta / Tadilat desteği',"showRequest()",'o'],['🏛️','Resmî işlem',"openHalletAction('showTasinmazMenu')",'p']];
   }
-  return {title:title,main:main,pills:pills};
+  return {title:title,pills:pills};
 }
 
 function v2StepsHtml(s){
-  return '<section class="v2Steps" aria-label="Sonraki adım"><div class="v2StH">'+s.title+'</div>'+
-    (s.main?'<button type="button" class="v2Btn pri block" onclick="'+s.main.js+'">'+s.main.label+'</button>':'')+
-    (s.pills.length?'<div class="v2Pills2">'+s.pills.map(function(p,i){ return '<button type="button" class="v2Pill2'+(!s.main&&i===0?' acc':'')+'" onclick="'+p[2]+'"><span aria-hidden="true">'+p[0]+'</span>'+p[1]+'</button>'; }).join('')+'</div>':'')+'</section>';
+  if(!s.pills.length) return '';
+  return '<section class="v2Steps" aria-label="'+s.title+'"><div class="v2StH">'+s.title+'</div><div class="v2Pills2">'+
+    s.pills.map(function(p){ return '<button type="button" class="v2Pill2" onclick="'+p[2]+'"><i class="ic-'+p[3]+'" aria-hidden="true">'+p[0]+'</i>'+p[1]+'</button>'; }).join('')+'</div></section>';
 }
 
 function v2ContactBarHtml(row){
@@ -5478,28 +5602,33 @@ function v2ContactBarHtml(row){
   var phone=String(md.phone||md.contact_phone||md.tel||md.mobile||row.phone||'').trim(), wa=String(md.whatsapp||md.wa||row.whatsapp||'').trim();
   var b='', n=0, tel=phone?telHref(phone):'', wh=wa?whatsappHref(wa):'';
   var msg='Merhaba, İşimi Çöz\'deki "'+(row.title||'ilan')+'" ilanınız hakkında bilgi almak istiyorum.';
-  if(tel){ b+='<a class="v2Btn pri" href="'+escapeHTML(tel)+'" aria-label="Satıcıyı ara">📞 Ara</a>'; n++; }
-  if(wh){ b+='<a class="v2Btn wa" href="'+escapeHTML(wh+'?text='+encodeURIComponent(msg))+'" target="_blank" rel="noopener" aria-label="WhatsApp ile yaz">💬 WhatsApp</a>'; n++; }
-  if(window.ListingMessaging&&typeof window.ListingMessaging.enabled==='function'&&window.ListingMessaging.enabled()){ b+='<button type="button" class="v2Btn'+(n?'':' pri')+'" onclick="window.ListingMessaging.open(window.__activeListingRow)">✉️ Mesaj</button>'; n++; }
-  if(!n) b='<button type="button" class="v2Btn pri" onclick="var e=document.getElementById(\'v2s-seller\');if(e)e.scrollIntoView({behavior:\'smooth\',block:\'center\'});v2Toast(\'Satıcı bu ilanda iletişim bilgisi paylaşmamış.\')">Satıcıya ulaş →</button>';
+  if(tel){ b+='<a class="v2Btn pri" href="'+escapeHTML(tel)+'" aria-label="Satıcıyı ara">📞 Ara</a>'; n++;
+    b+='<a class="v2Btn msg" href="'+escapeHTML(tel.replace(/^tel:/,'sms:')+'?body='+encodeURIComponent(msg))+'" aria-label="SMS ile mesaj gönder">💬 Mesaj</a>'; n++; }
+  if(wh){ b+='<a class="v2Btn wa" href="'+escapeHTML(wh+'?text='+encodeURIComponent(msg))+'" target="_blank" rel="noopener" aria-label="WhatsApp ile yaz">🟢 WhatsApp</a>'; n++; }
+  if(window.ListingMessaging&&typeof window.ListingMessaging.enabled==='function'&&window.ListingMessaging.enabled()){ b+='<button type="button" class="v2Btn'+(n?'':' pri')+'" onclick="window.ListingMessaging.open(window.__activeListingRow)">✉️ Uygulama içi</button>'; n++; }
+  if(!n) b='<button type="button" class="v2Btn nophone" onclick="var e=document.getElementById(\'v2s-seller\');if(e)e.scrollIntoView({behavior:\'smooth\',block:\'center\'});v2Toast(\'Satıcı bu ilanda telefon numarası paylaşmamış.\')">📵 Satıcı numara paylaşmamış</button>';
   return b;
 }
 
 function v2OwnerBarHtml(row,type,owner){
   var id=v2Id(row.id), st=myListingStatusMeta(row.status);
-  if(st.key==='published') return '<button type="button" class="v2Btn pri" onclick="v2PrepSale(\''+id+'\',\''+type+'\')">Satışa hazırlan</button><button type="button" class="v2Btn" style="flex:0 0 34%" onclick="var e=document.getElementById(\'v2s-manage\');if(e)e.scrollIntoView({behavior:\'smooth\',block:\'start\'})">Yönet</button>';
-  return '<button type="button" class="v2Btn pri" onclick="v2SetListingStatus(\''+id+'\',\''+type+'\',\'published\',\'detail\')">'+(st.key==='draft'?'İlanı yayınla →':'Tekrar yayınla →')+'</button><button type="button" class="v2Btn" onclick="v2EditListing(\''+id+'\',\''+type+'\',\'detail\')">Düzenle</button>';
+  if(st.key==='published') return '<button type="button" class="v2Btn pri" onclick="v2PrepSale(\''+id+'\',\''+type+'\')">Satışa hazırlan →</button>';
+  return '<button type="button" class="v2Btn pri" onclick="v2SetListingStatus(\''+id+'\',\''+type+'\',\'published\',\'detail\')">'+(st.key==='draft'?'İlanı yayınla →':'Tekrar yayınla →')+'</button>';
 }
 
-function v2ManageHtml(row,type){
-  var id=v2Id(row.id), st=myListingStatusMeta(row.status);
-  var act=st.key==='published'?'<button type="button" class="v2Btn" onclick="v2SetListingStatus(\''+id+'\',\''+type+'\',\'passive\',\'detail\')">⏸ Yayından kaldır</button>':
-    '<button type="button" class="v2Btn pri" onclick="v2SetListingStatus(\''+id+'\',\''+type+'\',\'published\',\'detail\')">'+(st.key==='draft'?'İlanı yayınla':'Tekrar yayınla')+'</button>';
-  return '<section id="v2s-manage" class="v2Sec2 v2Manage"><h2>İlan yönetimi</h2><p class="small muted" style="margin:0 0 10px">Bu bölümü yalnızca sen görürsün.</p>'+
-    '<div class="v2St" style="margin:0 0 10px"><span><small>Durum</small> '+st.emoji+' '+st.label+'</span></div>'+
-    '<div class="v2MgBtns"><button type="button" class="v2Btn" onclick="v2EditListing(\''+id+'\',\''+type+'\',\'detail\')">✎ Düzenle</button>'+act+
-    (st.key==='published'?'<button type="button" class="v2Btn" onclick="return shareListingLink(event)">↗ Paylaş</button>':'')+
-    '<button type="button" class="v2Btn ghost" onclick="openMyListings()">📂 Tüm ilanlarım</button></div></section>';
+function v2OwnerToolbarHtml(row,type){
+  var id=v2Id(row.id), st=myListingStatusMeta(row.status), md=row.metadata||{};
+  var act=st.key==='published'?'<button type="button" class="v2Btn sm" onclick="v2SetListingStatus(\''+id+'\',\''+type+'\',\'passive\',\'detail\')">⏸ Yayından kaldır</button>':
+    '<button type="button" class="v2Btn sm pri" onclick="v2SetListingStatus(\''+id+'\',\''+type+'\',\'published\',\'detail\')">'+(st.key==='draft'?'▶ Yayınla':'▶ Tekrar yayınla')+'</button>';
+  var edit="v2EditListing('"+id+"','"+type+"','detail')", hints=[];
+  if(!String(md.phone||'').trim()) hints.push(['📞 Telefon ekle',edit]);
+  if(!String(row.description||'').trim()) hints.push(['📝 Açıklama ekle',"v2DescStart()"]);
+  if(!listingPhotosFromRow(row).length) hints.push(['📷 Fotoğraf ekle',edit]);
+  return '<section class="v2Own" aria-label="İlan yönetimi"><div class="v2OwnT">👤 Bu senin ilanın · '+st.emoji+' '+st.label+'</div>'+
+    '<div class="v2OwnBtns"><button type="button" class="v2Btn sm" onclick="'+edit+'">✎ Düzenle</button>'+act+
+    (st.key==='published'?'<button type="button" class="v2Btn sm" onclick="return shareListingLink(event)">↗ Paylaş</button>':'')+
+    '<button type="button" class="v2Btn sm ghost" onclick="openMyListings()">📂 İlanlarım</button></div>'+
+    (hints.length?'<div class="v2Hints"><span>Eksik:</span>'+hints.map(function(h){ return '<button type="button" onclick="'+h[1]+'">'+h[0]+'</button>'; }).join('')+'</div>':'')+'</section>';
 }
 
 async function v2FillSeller(row){
@@ -5553,17 +5682,17 @@ function v2RenderDetail(box,row,type){
   var loc=[row.neighborhood,row.district,row.city].filter(Boolean).map(escapeHTML).join(', ');
   var deal=(!car&&md.deal_type)?(md.deal_type==='kiralik'?'Kiralık':md.deal_type==='satilik'?'Satılık':''):'';
   var date=''; try{ if(row.created_at) date=new Date(row.created_at).toLocaleDateString(V2_MARKET.locale); }catch(e){}
-  var desc=String(row.description||'').trim(), long=desc.length>900;
+  var desc=String(row.description||'').trim();
   var specs=v2SpecRows(row,type), damage=car?v2DamageSectionHtml(md):'', steps=v2DetailSteps(row,type,owner);
+  var facts=v2FactsGrid(row,type), sumLine=v2FactsSummary(row,type);
   var tag=car?(md.seller_type==='professional'?'Profesyonel satıcı':''):deal;
   var gallery=urls.length?listingDetailCarouselHtml(urls).replace(/<p class="small muted"[^>]*>Fotoğrafa dokunarak büyüt<\/p>/,''):'<div class="v2NoPhoto"><span>'+(car?'🚗':'🏠')+'</span>Bu ilanda fotoğraf yok</div>';
   var jumps=[];
-  if(desc) jumps.push(['v2s-desc','Açıklama']); if(specs.length>1) jumps.push(['v2s-spec','Özellikler']); if(damage) jumps.push(['v2s-damage','Hasar & boya']);
-  jumps.push(['v2s-loc','Konum']); if(!owner) jumps.push(['v2s-seller','Satıcı']); jumps.push(['v2s-similar','Benzer ilanlar']);
+  if(desc||owner) jumps.push(['v2s-desc','📝 Açıklama']); if(facts||specs.length>1) jumps.push(['v2s-spec','📋 Özellikler']); if(damage) jumps.push(['v2s-damage','🎨 Hasar &amp; boya']);
+  jumps.push(['v2s-loc','📍 Konum']); if(!owner) jumps.push(['v2s-seller','👤 Satıcı']); jumps.push(['v2s-similar','🔁 Benzer ilanlar']);
   var mapQ=encodeURIComponent([row.neighborhood,row.district,row.city,'Türkiye'].filter(Boolean).join(', '));
   function sec(idn,title,inner,extra){ return '<section id="'+idn+'" class="v2Sec2"><h2>'+title+'</h2>'+inner+(extra||'')+'</section>'; }
   box.innerHTML='<div class="v2D">'+
-    (owner?'<div class="v2OwnerBar"><span>👤 Bu senin ilanın · '+st.emoji+' '+st.label+'</span><button type="button" onclick="var e=document.getElementById(\'v2s-manage\');if(e)e.scrollIntoView({behavior:\'smooth\'})">İlan yönetimi ↓</button></div>':'')+
     '<div class="v2Hero">'+gallery+
       '<div class="v2HeroBtns"><button type="button" class="v2Heart'+(fav?' is-fav':'')+'" data-fav-id="'+id+'" aria-pressed="'+fav+'" aria-label="Favorilere ekle veya çıkar" onclick="return toggleListingFavorite(\''+id+'\',event)">'+(fav?'♥':'♡')+'</button>'+
       '<button type="button" class="v2Heart" aria-label="Paylaş" onclick="return shareListingLink(event)">↗</button></div>'+
@@ -5571,29 +5700,48 @@ function v2RenderDetail(box,row,type){
     '<h1 class="v2DT">'+escapeHTML(row.title||'İlan')+'</h1>'+
     '<div class="v2DP"><span>'+escapeHTML(formatListingPrice(row.price,row.currency))+'</span>'+(deal?'<span class="dl">'+deal+'</span>':'')+'</div>'+
     '<div class="v2DL">📍 '+(loc||'Konum belirtilmedi')+(date?' · '+date:'')+'</div>'+
-    v2FactsGrid(row,type)+v2StepsHtml(steps)+
-    '<nav class="v2Jump" aria-label="Sayfa bölümleri">'+jumps.map(function(j){ return '<button type="button" data-jump="'+j[0]+'" onclick="var e=document.getElementById(\''+j[0]+'\');if(e)e.scrollIntoView({behavior:\'smooth\',block:\'start\'})">'+j[1]+'</button>'; }).join('')+'</nav>'+
-    (desc?sec('v2s-desc','Açıklama','<div class="v2Desc'+(long?' clamp':'')+'" id="v2Desc">'+escapeHTML(desc)+'</div>',long?'<button type="button" class="v2DescMore" onclick="var d=document.getElementById(\'v2Desc\');var c=d.classList.toggle(\'clamp\');this.textContent=c?\'Devamını oku\':\'Daha az göster\'">Devamını oku</button>':''):'')+
-    (specs.length>1?sec('v2s-spec',car?'Teknik özellikler':'Özellikler','<dl class="v2Spec">'+specs.map(function(r){ return '<div><dt>'+escapeHTML(r[0])+'</dt><dd>'+escapeHTML(r[1])+'</dd></div>'; }).join('')+'</dl>'):'')+
+    (sumLine?'<div class="v2Sum">'+escapeHTML(sumLine)+'</div>':'')+
+    (owner?v2OwnerToolbarHtml(row,type):'')+
+    v2StepsHtml(steps)+
+    '<nav class="v2Jump" aria-label="Sayfa bölümleri">'+jumps.map(function(j){ return '<button type="button" data-jump="'+j[0]+'" onclick="v2JumpTo(\''+j[0]+'\')">'+j[1]+'</button>'; }).join('')+'</nav>'+
+    ((desc||owner)?'<section id="v2s-desc" class="v2Sec2"><div class="v2SecH"><h2>Açıklama</h2>'+((owner&&desc)?'<button type="button" class="v2DescMore" onclick="v2DescStart()">✎ Düzenle</button>':'')+'</div><div id="v2DescBox">'+v2DescBoxHtml(row,false)+'</div></section>':'')+
+    ((facts||specs.length>1)?sec('v2s-spec','Özellikler','<details class="v2Acc" id="v2Acc"><summary><span>Tüm özellikleri göster</span></summary><div class="v2AccIn">'+facts+(specs.length>1?'<dl class="v2Spec">'+specs.map(function(r){ return '<div><dt>'+escapeHTML(r[0])+'</dt><dd>'+escapeHTML(r[1])+'</dd></div>'; }).join('')+'</dl>':'')+'</div></details>'):'')+
     (damage?sec('v2s-damage','Boya, değişen ve hasar',damage):'')+
     sec('v2s-loc','Konum','<p style="margin:0 0 8px">📍 '+(loc||'Konum belirtilmedi')+'</p>'+(loc?'<a class="v2Btn sm" href="https://www.google.com/maps/search/?api=1&query='+mapQ+'" target="_blank" rel="noopener">Haritada göster ↗</a>':''))+
     (owner?'<div class="a35SellerCard" hidden></div>':'')+
     (owner?'':('<section id="v2s-seller" class="v2Sec2"><h2>Satıcı</h2><div id="listingSellerCard"><div class="a35SellerCard v2SellerCard" id="v2Seller"><div class="v2Skel" style="aspect-ratio:16/4"></div></div></div></section>'))+
     '<section id="v2s-similar" class="v2Sec2"><div class="v2SecH"><h2>Benzer ilanlar</h2><button type="button" class="v2DescMore" onclick="v2SimilarAll(\''+type+'\',\''+id+'\')">Tümünü gör →</button></div><div class="v2Rail" id="v2Similar"><div class="v2Skel"></div><div class="v2Skel"></div></div></section>'+
-    (owner?v2ManageHtml(row,type):'')+
     '<div class="v2DActions" id="v2ActBar">'+(owner?v2OwnerBarHtml(row,type,owner):v2ContactBarHtml(row))+'</div></div>';
   bindListingDetailCarousel(box,urls);
   box.querySelectorAll('[data-gm-photo-idx]').forEach(function(n){ n.addEventListener('click',function(ev){ ev.preventDefault(); openGmPhotoViewer(window.__gmDetailPhotoUrls||urls,Number(this.getAttribute('data-gm-photo-idx')||0)); }); });
   try{ history.replaceState(null,'',v2ListingUrl(type,id).replace(location.origin,'')); }catch(e){}
   if(!owner) v2FillSeller(row);
-  v2FillSimilar(row,type);
+  v2FillSimilar(row,type); v2Spy(box);
+}
+
+function v2JumpTo(id){
+  var acc=document.getElementById('v2Acc'); if(id==='v2s-spec'&&acc) acc.open=true;
+  var e=document.getElementById(id); if(e) e.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function v2FactsSummary(row,type){
+  var md=row.metadata||{}, f=[];
+  if(type==='otomobil'){
+    if(md.year) f.push(md.year);
+    if(md.km!==undefined&&md.km!==''&&isFinite(Number(md.km))) f.push(Number(md.km).toLocaleString(V2_MARKET.locale)+' '+V2_MARKET.units.distance);
+    if(md.fuel) f.push(md.fuel); if(md.gear) f.push(md.gear);
+  }else{
+    if(md.rooms) f.push(md.rooms); var sq=md.sqm||md.m2||md.area; if(sq) f.push(sq+' '+V2_MARKET.units.area);
+    if(md.floor) f.push(md.floor+'. kat'); else if(row.category&&row.category!=='Konut') f.push(row.category);
+  }
+  return f.join(' · ');
 }
 
 async function v2LoadDetail(listingId,type){
   var id=v2Id(listingId);
   setNav('navProvider');
   if(!id){ v2Toast('İlan bulunamadı.'); return kesfetOpen('all'); }
-  app('<div class="v2K"><div class="v2KTop"><button type="button" class="v2Ico" onclick="v2ClearHash();showKesfet(true)" aria-label="İlanlara dön">←</button><h1>İlan</h1></div><div id="v2DetailBox"><div class="v2Skel" style="aspect-ratio:16/10"></div></div></div>');
+  app('<div class="v2K"><div class="v2KTop"><button type="button" class="v2Back" onclick="v2ClearHash();showKesfet(true)">← Geri</button></div><div id="v2DetailBox"><div class="v2Skel" style="aspect-ratio:16/10"></div></div></div>');
   var box=document.getElementById('v2DetailBox');
   var sel='id,owner_id,title,price,currency,city,district,neighborhood,category,description,status,created_at,metadata';
   try{
@@ -5611,6 +5759,59 @@ async function v2LoadDetail(listingId,type){
     console.error('v2LoadDetail',err);
     if(box) box.innerHTML='<div class="v2Empty"><h3>Detay yüklenemedi</h3><div class="small">'+escapeHTML(err&&err.message?err.message:String(err))+'</div><div class="row"><button type="button" class="v2Btn sm" onclick="v2LoadDetail(\''+id+'\',\''+type+'\')">Tekrar dene</button></div></div>';
   }
+}
+
+function v2DescBoxHtml(row,editing){
+  var d=String(row.description||'').trim();
+  if(editing) return '<textarea id="v2DescTa" rows="6" maxlength="3000" placeholder="İlanını anlat: durumu, özellikleri, neden bu ilanı seçmeli…" aria-label="İlan açıklaması" class="v2DescTa">'+escapeHTML(d)+'</textarea>'+
+    '<div class="v2DescBtns"><button type="button" class="v2Btn pri sm" onclick="v2DescSave()">Kaydet</button><button type="button" class="v2Btn sm" onclick="v2DescCancel()">İptal</button></div>';
+  var long=d.length>900;
+  return d?('<div class="v2Desc'+(long?' clamp':'')+'" id="v2Desc">'+escapeHTML(d)+'</div>'+(long?'<button type="button" class="v2DescMore" onclick="var x=document.getElementById(\'v2Desc\');var c=x.classList.toggle(\'clamp\');this.textContent=c?\'Devamını oku\':\'Daha az göster\'">Devamını oku</button>':'')):
+    '<button type="button" class="v2DescEmpty" onclick="v2DescStart()">✎ Açıklama ekle<small>Alıcılar açıklaması olan ilanlara daha çok güvenir.</small></button>';
+}
+
+function v2DescStart(){
+  var row=window.__activeListingRow; if(!row||!v2IsOwner(row)) return;
+  var box=document.getElementById('v2DescBox'); if(!box) return; box.innerHTML=v2DescBoxHtml(row,true);
+  var e=document.getElementById('v2s-desc'); if(e) e.scrollIntoView({behavior:'smooth',block:'center'});
+  var ta=document.getElementById('v2DescTa'); if(ta){ ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length); }
+}
+
+function v2DescCancel(){ var row=window.__activeListingRow, box=document.getElementById('v2DescBox'); if(row&&box) box.innerHTML=v2DescBoxHtml(row,false); }
+
+async function v2DescSave(){
+  var row=window.__activeListingRow, ta=document.getElementById('v2DescTa'); if(!row||!ta||window.__v2Saving) return;
+  var val=String(ta.value||'').trim(); window.__v2Saving=true;
+  var btns=document.querySelectorAll('.v2DescBtns button'); btns.forEach(function(b){ b.disabled=true; });
+  try{
+    var out=await listingsAuthWrite('PATCH','listings?id=eq.'+encodeURIComponent(row.id),{description:val||null});
+    if(!Array.isArray(out.data)||!out.data.length) throw new Error('Açıklama kaydedilemedi. Bu ilanın sahibi olduğundan emin ol.');
+    row.description=val; __listingCache.gayrimenkul=[]; __listingCache.otomobil=[];
+    var box=document.getElementById('v2DescBox'); if(box) box.innerHTML=v2DescBoxHtml(row,false);
+    v2Toast('Açıklama kaydedildi');
+  }catch(err){ console.error('v2DescSave',err); alert(err&&err.message?err.message:String(err)); btns.forEach(function(b){ b.disabled=false; }); }
+  finally{ window.__v2Saving=false; }
+}
+
+function v2Spy(root){
+  if(!('IntersectionObserver' in window)) return;
+  var chips={}; root.querySelectorAll('.v2Jump [data-jump]').forEach(function(b){ chips[b.getAttribute('data-jump')]=b; });
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(!e.isIntersecting) return; var c=chips[e.target.id]; if(!c) return;
+      Object.keys(chips).forEach(function(k){ chips[k].classList.toggle('on',chips[k]===c); });
+      try{ var nav=c.parentNode; nav.scrollTo({left:c.offsetLeft-16,behavior:'smooth'}); }catch(_){}
+    });
+  },{rootMargin:'-130px 0px -62% 0px',threshold:0});
+  Object.keys(chips).forEach(function(id){ var el=document.getElementById(id); if(el) io.observe(el); });
+  window.__v2Spy=io;
+}
+
+function v2BindWizardParts(){
+  var on=document.getElementById('otoPartsOn'), wrap=document.getElementById('otoPartsWrap'); if(!on||!wrap||!__otoW) return;
+  if(!__otoW.data) __otoW.data={};
+  if(!__otoW.data.parts||typeof __otoW.data.parts!=='object') __otoW.data.parts={};
+  on.addEventListener('change',function(){ __otoW.data.parts_set=on.checked; wrap.style.display=on.checked?'':'none'; try{ otoSaveStepFields(); }catch(e){ console.error(e); } });
+  v2BindPartsEditor(wrap.querySelector('.v2PEd'),__otoW.data.parts,function(){ try{ otoSaveStepFields(); }catch(e){ console.error(e); } });
 }
 
 function openMyListings(back,filter){
@@ -5696,7 +5897,7 @@ async function showMine(){
   var seg=window.__mineSeg||'all', st=window.__mineStatus||'all', tf=window.__myListingsFilter||'all';
   var s=getAuthSession(), uid=s&&s.user&&s.user.id;
   var segs=[['all','Tümü'],['listings','İlanlarım'],['requests','Taleplerim'],['cases','Dosyalarım'],['searches','Aramalarım']];
-  app('<div class="v2My"><div class="v2KTop"><button type="button" class="v2Ico" onclick="'+(window.__myListingsBack&&window.__myListingsBack!=='home'&&typeof window.__myListingsBack==='string'&&/^work_/.test(window.__myListingsBack)?'showHome()':'showHome()')+'" aria-label="Ana sayfa">←</button><h1>Benim İşlerim</h1><button type="button" class="v2Btn sm pri" onclick="v2StartSheet()">＋ Başlat</button></div>'+
+  app('<div class="v2My"><div class="v2KTop"><button type="button" class="v2Back" onclick="'+(window.__myListingsBack&&window.__myListingsBack!=='home'&&typeof window.__myListingsBack==='string'&&/^work_/.test(window.__myListingsBack)?'showHome()':'showHome()')+'">← Geri</button><h1>Benim İşlerim</h1><button type="button" class="v2Btn sm pri" onclick="v2StartSheet()">＋ Başlat</button></div>'+
     '<div class="v2Chips v2Tabs" id="v2MineTabs" role="group" aria-label="Bölümler">'+segs.map(function(x){return '<button type="button" class="v2Chip'+(seg===x[0]?' on':'')+'" data-seg="'+x[0]+'" aria-pressed="'+(seg===x[0])+'">'+x[1]+'</button>';}).join('')+'</div>'+
     '<div id="v2MineSub"></div><div id="v2MineBox"><div class="v2Skel" style="aspect-ratio:16/6;margin-bottom:10px"></div><div class="v2Skel" style="aspect-ratio:16/6"></div></div></div>');
   document.getElementById('v2MineTabs').addEventListener('click',function(e){ var b=e.target.closest('button[data-seg]'); if(!b) return; window.__mineSeg=b.getAttribute('data-seg'); window.__mineStatus='all'; showMine(); });
@@ -5796,7 +5997,7 @@ async function v2EditListing(id,type,from){
   window.__v2EditFrom=from||'mine'; window.__v2EditType=type;
   id=v2Id(id); var s=getAuthSession();
   if(!(s&&s.user&&(s.access_token||s.accessToken))){ openAuthModal('login'); return; }
-  app('<div class="v2K"><div class="v2KTop"><button type="button" class="v2Ico" onclick="v2EditBack(\''+id+'\')" aria-label="Geri">←</button><h1>İlanı düzenle</h1></div><div id="v2EditBox"><div class="v2Skel" style="aspect-ratio:16/10"></div></div></div>');
+  app('<div class="v2K"><div class="v2KTop"><button type="button" class="v2Back" onclick="v2EditBack(\''+id+'\')">← Geri</button><h1>İlanı düzenle</h1></div><div id="v2EditBox"><div class="v2Skel" style="aspect-ratio:16/10"></div></div></div>');
   try{
     var rows=await supabaseAuthRequest('GET','listings?id=eq.'+encodeURIComponent(id)+'&owner_id=eq.'+encodeURIComponent(s.user.id)+'&select=id,title,price,currency,city,district,neighborhood,category,description,status,listing_type,metadata&limit=1');
     var row=Array.isArray(rows)&&rows[0]; if(!row) throw new Error('İlan bulunamadı.');
@@ -5812,8 +6013,7 @@ async function v2EditListing(id,type,from){
       '<div class="v2Fld"><label for="v2eWa">WhatsApp</label><select id="v2eWa"><option value="">WhatsApp yok</option><option value="1"'+(md.whatsapp?' selected':'')+'>Bu numarada WhatsApp var</option></select></div>'+
       '<p class="small muted">Telefon ve WhatsApp, ilanı gören herkese görünür.</p>'+
       (car?('<div class="v2Fld"><div class="lb">Boya / değişen parça haritası</div><label class="v2ChkRow"><input type="checkbox" id="v2ePartsOn"'+(md.parts_set?' checked':'')+'> Haritayı ilanda göster</label>'+
-        '<div id="v2ePartsWrap" style="'+(md.parts_set?'':'display:none')+'"><p class="small muted" style="margin:6px 0">Bir parçaya dokunarak durumunu değiştir: orijinal → boyalı → değişen → hasarlı. İşaretlemediğin parçalar orijinal sayılır.</p>'+v2SvgPartsHtml(md.parts||{},true)+
-        '<div class="v2Legend" style="margin-top:8px">'+['boyali','degisen','hasarli'].map(function(k){return '<div class="v2Lg"><span>'+V2_PSTATE[k].i+'</span><b>'+V2_PSTATE[k].l+'</b></div>';}).join('')+'</div></div></div>'):'')+
+        '<div id="v2ePartsWrap" style="'+(md.parts_set?'':'display:none')+'">'+v2PartsEditorHtml(md.parts||{})+'</div></div>'):'')+
       '<div class="v2Fld"><label for="v2ePhotos">Fotoğraf ekle ('+nPh+'/'+maxPh+')</label><input id="v2ePhotos" type="file" accept="image/*" multiple></div>'+
       '<button type="button" class="v2Btn pri block" id="v2eSave">Kaydet</button></div>';
     document.getElementById('v2eSave').addEventListener('click',function(){ v2SaveEdit(row,car,maxPh); });
@@ -5821,15 +6021,7 @@ async function v2EditListing(id,type,from){
       window.__v2EditParts=Object.assign({},md.parts||{});
       var pw=document.getElementById('v2ePartsWrap'), pc=document.getElementById('v2ePartsOn');
       pc.addEventListener('change',function(){ pw.style.display=pc.checked?'':'none'; });
-      var cyc=function(g){
-        var k=g.getAttribute('data-part'); if(!k) return;
-        var cur=window.__v2EditParts[k]||'orijinal', nx=V2_PCYCLE[(V2_PCYCLE.indexOf(cur)+1)%V2_PCYCLE.length];
-        if(nx==='orijinal') delete window.__v2EditParts[k]; else window.__v2EditParts[k]=nx;
-        var wrap=pw.querySelector('svg'); var tmp=document.createElement('div'); tmp.innerHTML=v2SvgPartsHtml(window.__v2EditParts,true); wrap.replaceWith(tmp.firstChild);
-        var again=pw.querySelector('[data-part="'+k+'"]'); if(again) again.focus();
-      };
-      pw.addEventListener('click',function(e){ var g=e.target.closest('[data-part]'); if(g) cyc(g); });
-      pw.addEventListener('keydown',function(e){ if((e.key==='Enter'||e.key===' ')&&e.target.getAttribute&&e.target.getAttribute('data-part')){ e.preventDefault(); cyc(e.target); } });
+      v2BindPartsEditor(pw.querySelector('.v2PEd'),window.__v2EditParts);
     }
   }catch(err){ console.error(err); document.getElementById('v2EditBox').innerHTML='<div class="v2Empty"><h3>İlan açılamadı</h3><div class="small">'+escapeHTML(err&&err.message||'')+'</div></div>'; }
 }
@@ -5898,7 +6090,7 @@ function v2DraftResult(row,photoInfo,type){
     if(photoInfo.uploaded) note+='<p class="small" style="margin:6px 0">✓ '+photoInfo.uploaded+' fotoğraf yüklendi.</p>';
     if(photoInfo.failed&&photoInfo.failed.length) note+='<p class="small v2Warn">Bazı fotoğraflar yüklenemedi (ilan kaydı korundu):</p><ul class="small muted">'+photoInfo.failed.map(function(f){return '<li>'+escapeHTML(f)+'</li>';}).join('')+'</ul>';
   }
-  app('<div class="v2K"><div class="v2KTop"><button type="button" class="v2Ico" onclick="showHome()" aria-label="Ana sayfa">←</button><h1>İlanın hazır</h1></div>'+
+  app('<div class="v2K"><div class="v2KTop"><button type="button" class="v2Back" onclick="showHome()">← Geri</button><h1>İlanın hazır</h1></div>'+
     '<div class="v2MC"><div class="v2St"><span><small>İlan</small> 📝 Taslak</span></div><h2 style="margin:10px 0 4px">'+escapeHTML((row&&row.title)||'İlan')+'</h2>'+
     '<p class="small muted" style="margin:0">Yayınlayana kadar yalnızca sen görürsün.</p>'+note+
     '<button type="button" class="v2Btn pri block" style="margin-top:12px" onclick="'+pub+'(\''+id+'\')">İlanı yayınla →</button>'+
