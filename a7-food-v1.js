@@ -28,13 +28,57 @@ const NEXT={
   on_the_way:[['delivered','Teslim'],['cancelled','İptal']]
 };
 
+const FOOD_ICONS=[
+  [/lahmacun/i,'🫓','#fef3c7'],
+  [/iskender|i̇skender/i,'🍛','#fee2e2'],
+  [/kebap|kebab/i,'🍢','#fee2e2'],
+  [/döner|doner/i,'🌯','#ffedd5'],
+  [/köfte|kofte/i,'🍖','#fde68a'],
+  [/burger|hamburger/i,'🍔','#fef3c7'],
+  [/pizza/i,'🍕','#fee2e2'],
+  [/patates/i,'🍟','#fef9c3'],
+  [/pide/i,'🥙','#fef3c7'],
+  [/tavuk|chicken/i,'🍗','#fee2e2'],
+  [/balık|balik|fish/i,'🐟','#dbeafe'],
+  [/çorba|corba|soup/i,'🍲','#ffedd5'],
+  [/salata|salad/i,'🥗','#dcfce7'],
+  [/makarna|pasta/i,'🍝','#fef3c7'],
+  [/dondurma|ice ?cream/i,'🍨','#e0f2fe'],
+  [/baklava|künefe|kunefe|tatlı|tatli|dessert|kek|pasta ?(dilim)?/i,'🍮','#fce7f3'],
+  [/kola|cola|içecek|icecek|ayran|\bsu\b|meşrubat|mesrubat|\bçay\b|kahve/i,'🥤','#e0f2fe']
+];
+function foodIcon(name){
+  const n=String(name||'');
+  for(const [re,emoji,bg] of FOOD_ICONS){ if(re.test(n)) return {emoji:emoji,bg:bg}; }
+  return {emoji:'🍽️',bg:'var(--v2-soft,rgba(0,0,0,.05))'};
+}
+function foodMedia(row,size){
+  const s=size||48;
+  if(row&&row.image_url){
+    return '<img src="'+E(row.image_url)+'" alt="" loading="lazy" style="width:'+s+'px;height:'+s+'px;border-radius:12px;object-fit:cover;flex:0 0 auto;background:var(--v2-soft,rgba(0,0,0,.05))">';
+  }
+  const ic=foodIcon(row&&row.name);
+  return '<div style="width:'+s+'px;height:'+s+'px;border-radius:12px;flex:0 0 auto;display:grid;place-items:center;font-size:'+Math.round(s*0.5)+'px;background:'+ic.bg+'">'+ic.emoji+'</div>';
+}
+const __foodImgOk={};
+async function foodSelImg(table,cols,filter){
+  if(__foodImgOk[table]!==false){
+    try{
+      const rows=await Q('GET',table+'?select='+cols+',image_url'+filter);
+      __foodImgOk[table]=true;
+      return rows;
+    }catch(e){__foodImgOk[table]=false;}
+  }
+  return await Q('GET',table+'?select='+cols+filter);
+}
+
 function css(){
   if(document.getElementById('a7FoodCss'))return;
   const s=document.createElement('style');s.id='a7FoodCss';
   s.textContent=[
     '.foodBrand{display:flex;align-items:center;gap:9px;margin:0 0 10px;padding:7px 10px;border-radius:12px;border:1px solid rgba(245,158,11,.4);background:rgba(245,158,11,.07)}',
     '.foodBrandIcon{flex:0 0 auto;width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-size:15px;background:linear-gradient(145deg,#f59e0b,#ea580c);color:#fff}',
-    '.foodBrandText{min-width:0;line-height:1.2;display:flex;flex-direction:column;gap:1px}',
+    '.foodBrandText{min-width:0;line-height:1.3;display:flex;flex-direction:column;gap:2px}',
     '.foodBrandText .fbSub{display:block!important;font-size:14px;font-weight:900;color:#d97706;letter-spacing:.02em}',
     '.foodBrandText .fbMain{display:block!important;font-size:11px;font-weight:700;color:var(--muted)}',
     '.foodShell{padding-bottom:12px}',
@@ -46,6 +90,8 @@ function css(){
     '.foodGrid{display:grid;grid-template-columns:1fr;gap:10px}',
     '.foodVenue,.foodOrder{padding:14px;border:1px solid var(--line);border-radius:16px;background:var(--card);color:var(--text);text-align:left;width:100%;font:inherit;cursor:pointer}',
     '.foodVenue h3{margin:0 0 4px;font-size:16px}',
+    '.foodVRow{display:flex;gap:10px;align-items:flex-start}',
+    '.foodBanner{width:100%;max-height:160px;object-fit:cover;border-radius:14px;margin:10px 0;display:block}',
     '.foodMeta{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}',
     '.foodPill{display:inline-flex;align-items:center;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:700;background:var(--v2-soft,rgba(0,0,0,.05));color:var(--muted)}',
     '.foodPill.open{background:rgba(34,160,107,.14);color:#0f9f6a}',
@@ -98,7 +144,7 @@ async function showFoodHome(){
 async function foodLoad(){
   const r=document.getElementById('foodList');if(!r)return;
   try{
-    const rows=await Q('GET','food_venues?select=id,name,district,city,cuisine_type,is_open,min_order_amount,delivery_mode,address_text&is_active=eq.true&order=is_open.desc,name.asc&limit=80');
+    const rows=await foodSelImg('food_venues','id,name,district,city,cuisine_type,is_open,min_order_amount,delivery_mode,address_text','&is_active=eq.true&order=is_open.desc,name.asc&limit=80');
     const list=Array.isArray(rows)?rows:[];
     const f=window.__foodFilter||{};
     const districts=[...new Set(list.map(x=>x.district).filter(Boolean))].sort();
@@ -139,9 +185,11 @@ async function foodLoad(){
       const del=v.delivery_mode==='pickup'?'Gel-al':v.delivery_mode==='self_delivery'?'Teslimat':'Teslimat / Gel-al';
       const min=v.min_order_amount?('Min. '+M(v.min_order_amount)):'Min. yok';
       return '<button type="button" class="foodVenue" onclick="showFoodVenue(\''+E(v.id)+'\')">'+
-        '<h3>'+E(v.name)+'</h3>'+
+        '<div class="foodVRow">'+foodMedia(v,52)+
+        '<div style="min-width:0;flex:1"><h3>'+E(v.name)+'</h3>'+
         '<div class="small muted">'+E([v.cuisine_type,v.district,v.city].filter(Boolean).join(' · '))+'</div>'+
         (v.address_text?'<div class="small muted" style="margin-top:4px">📍 '+E(v.address_text)+'</div>':'')+
+        '</div></div>'+
         '<div class="foodMeta">'+
         '<span class="foodPill '+(v.is_open?'open':'closed')+'">'+(v.is_open?'🟢 Açık':'⚪ Kapalı')+'</span>'+
         '<span class="foodPill">'+E(min)+'</span>'+
@@ -158,10 +206,10 @@ async function foodLoad(){
 async function showFoodVenue(id){
   css();if(!A())return;
   try{
-    const v=(await Q('GET','food_venues?select=id,name,district,city,cuisine_type,is_open,min_order_amount,delivery_mode,address_text,working_hours,phone&id=eq.'+encodeURIComponent(id)+'&limit=1'))?.[0];
+    const v=(await foodSelImg('food_venues','id,name,district,city,cuisine_type,is_open,min_order_amount,delivery_mode,address_text,working_hours,phone','&id=eq.'+encodeURIComponent(id)+'&limit=1'))?.[0];
     if(!v)throw new Error('İşletme bulunamadı.');
     const cats=await Q('GET','food_menu_categories?select=id,name,sort_order&venue_id=eq.'+encodeURIComponent(id)+'&is_active=eq.true&order=sort_order.asc,name.asc')||[];
-    const items=await Q('GET','food_menu_items?select=id,category_id,name,description,price_kurus,is_available,sort_order&venue_id=eq.'+encodeURIComponent(id)+'&order=sort_order.asc,name.asc')||[];
+    const items=await foodSelImg('food_menu_items','id,category_id,name,description,price_kurus,is_available,sort_order','&venue_id=eq.'+encodeURIComponent(id)+'&order=sort_order.asc,name.asc')||[];
     let h='<div class="foodShell">'+foodBrandBar()+
       '<button type="button" class="v2Btn sm" onclick="showFoodHome()">← Yemek</button>'+
       '<div class="foodHero" style="margin-top:10px"><h1 style="margin:0 0 4px">'+E(v.name)+'</h1>'+
@@ -172,6 +220,7 @@ async function showFoodVenue(id){
       '<div class="small muted" style="margin-top:8px">'+E([v.address_text,v.district,v.city].filter(Boolean).join(' · '))+'</div>'+
       (v.phone?'<div class="small muted">📞 '+E(v.phone)+'</div>':'')+
       '</div>';
+    if(v.image_url) h+='<img class="foodBanner" src="'+E(v.image_url)+'" alt="" loading="lazy">';
     if(!cats.length&&!items.length){
       h+='<div class="foodEmpty">Bu restoran henüz menüsünü hazırlamadı.</div>';
     }else{
@@ -184,7 +233,7 @@ async function showFoodVenue(id){
         if(!arr.length){h+='<div class="small muted">Bu kategoride ürün yok.</div>';return;}
         arr.forEach(i=>{
           const avail=i.is_available!==false;
-          h+='<div class="foodItem"><div style="min-width:0"><b>'+E(i.name)+'</b>'+
+          h+='<div class="foodItem">'+foodMedia(i,48)+'<div style="min-width:0;flex:1"><b>'+E(i.name)+'</b>'+
             (i.description?'<div class="small muted">'+E(i.description)+'</div>':'')+
             '<div style="margin-top:4px"><b>'+M(i.price_kurus)+'</b>'+(avail?'':' · <span class="muted">Müsait değil</span>')+'</div></div>'+
             (avail?'<button type="button" class="foodAdd" aria-label="Sepete ekle" onclick="foodAdd(\''+E(v.id)+'\',\''+E(v.name)+'\',\''+E(i.id)+'\',\''+E(i.name)+'\','+(+i.price_kurus||0)+')">＋</button>':'')+
@@ -196,7 +245,7 @@ async function showFoodVenue(id){
         h+='<div class="foodSection">Diğer</div>';
         byCat['_'].forEach(i=>{
           const avail=i.is_available!==false;
-          h+='<div class="foodItem"><div><b>'+E(i.name)+'</b><div><b>'+M(i.price_kurus)+'</b></div></div>'+
+          h+='<div class="foodItem">'+foodMedia(i,48)+'<div style="flex:1"><b>'+E(i.name)+'</b><div><b>'+M(i.price_kurus)+'</b></div></div>'+
             (avail?'<button type="button" class="foodAdd" onclick="foodAdd(\''+E(v.id)+'\',\''+E(v.name)+'\',\''+E(i.id)+'\',\''+E(i.name)+'\','+(+i.price_kurus||0)+')">＋</button>':'')+'</div>';
         });
       }
@@ -269,6 +318,7 @@ async function foodOrder(){
   const pay=document.getElementById('fcPay')?.value||'cash_on_delivery';
   if(!phone)return alert('Telefon gerekli.');
   if(mode==='self_delivery'&&!addr)return alert('Teslimat için adres gerekli.');
+  const subtotal=SUM();
   try{
     const orderBody={
       venue_id:c.venue.id,
@@ -276,7 +326,8 @@ async function foodOrder(){
       phone:phone,
       address_text:mode==='pickup'?(addr||null):addr,
       note:note||null,
-      payment_method:pay
+      payment_method:pay,
+      total_kurus:subtotal
     };
     const ord=await Q('POST','food_orders',orderBody);
     const order=Array.isArray(ord)?ord[0]:ord;
@@ -285,7 +336,9 @@ async function foodOrder(){
       await Q('POST','food_order_items',{
         order_id:order.id,
         menu_item_id:it.menu_item_id,
-        quantity:it.quantity
+        name_snapshot:it.name_snapshot,
+        quantity:it.quantity,
+        line_total_kurus:it.line_total_kurus
       });
     }
     CLEAR();
@@ -293,7 +346,7 @@ async function foodOrder(){
       '<div class="foodEmpty" style="border-style:solid;border-color:rgba(15,159,106,.35)">'+
       '<div style="font-size:28px">✅</div><b>Siparişiniz alındı</b>'+
       '<div class="small muted" style="margin-top:8px">#'+E(String(order.id).slice(0,8).toUpperCase())+'</div>'+
-      '<div style="margin-top:10px">'+M(order.total_kurus||SUM())+'</div>'+
+      '<div style="margin-top:10px">'+M(order.total_kurus||subtotal)+'</div>'+
       '<button type="button" class="v2Btn pri" style="margin-top:14px" onclick="showFoodOrders()">Siparişlerim</button>'+
       '<button type="button" class="v2Btn" style="margin-top:8px" onclick="showFoodHome()">Yemeğe dön</button>'+
       '</div></div>');
@@ -312,17 +365,66 @@ async function showFoodOrders(){
         if(!list.length)return '<div class="foodEmpty">Henüz sipariş yok.</div>';
         const active=list.filter(o=>!['delivered','cancelled'].includes(o.status));
         const past=list.filter(o=>['delivered','cancelled'].includes(o.status));
+        const isPast=st=>['delivered','cancelled'].includes(st);
         const card=o=>{
           const name=o.food_venues?.name||'Restoran';
-          return '<div class="foodOrder">'+
+          return '<div class="foodOrder" onclick="showFoodOrderDetail(\''+E(o.id)+'\')">'+
             '<div style="display:flex;justify-content:space-between;gap:8px"><b>'+E(name)+'</b><span class="foodPill">'+E(ST[o.status]||o.status)+'</span></div>'+
             '<div class="small muted" style="margin-top:6px">#'+E(String(o.id).slice(0,8).toUpperCase())+' · '+new Date(o.created_at).toLocaleString('tr-TR')+'</div>'+
-            '<div style="margin-top:8px;font-weight:800">'+M(o.total_kurus)+'</div></div>';
+            '<div style="margin-top:8px;font-weight:800">'+M(o.total_kurus)+'</div>'+
+            '<div class="foodActions">'+
+            '<button type="button" onclick="event.stopPropagation();showFoodOrderDetail(\''+E(o.id)+'\')">Detay</button>'+
+            (isPast(o.status)?'<button type="button" class="pri" onclick="event.stopPropagation();foodReorder(\''+E(o.id)+'\')">🔁 Tekrar sipariş</button>':'')+
+            '</div></div>';
         };
         return (active.length?'<div class="foodSection">Aktif</div>'+active.map(card).join(''):'')+(past.length?'<div class="foodSection">Geçmiş</div>'+past.map(card).join(''):'');
       })()+
       '</div>');
   }catch(e){app('<div class="error">'+E(e.message||'Siparişler yüklenemedi.')+'</div>');}
+}
+
+async function showFoodOrderDetail(orderId){
+  css();if(!A())return;
+  try{
+    const o=(await Q('GET','food_orders?select=id,status,total_kurus,created_at,delivery_mode,phone,address_text,note,payment_method,venue_id,food_venues(name,district,city)&id=eq.'+encodeURIComponent(orderId)+'&limit=1'))?.[0];
+    if(!o)throw new Error('Sipariş bulunamadı.');
+    const items=await Q('GET','food_order_items?select=name_snapshot,quantity,line_total_kurus&order_id=eq.'+encodeURIComponent(orderId))||[];
+    const past=['delivered','cancelled'].includes(o.status);
+    const name=o.food_venues?.name||'Restoran';
+    app('<div class="foodShell">'+foodBrandBar()+
+      '<button type="button" class="v2Btn sm" onclick="showFoodOrders()">← Siparişlerim</button>'+
+      '<div class="foodHero" style="margin-top:10px"><h1 style="margin:0 0 4px">'+E(name)+'</h1>'+
+      '<div class="small muted">#'+E(String(o.id).slice(0,8).toUpperCase())+' · '+new Date(o.created_at).toLocaleString('tr-TR')+'</div>'+
+      '<div class="foodMeta"><span class="foodPill">'+E(ST[o.status]||o.status)+'</span>'+
+      '<span class="foodPill">'+E(o.delivery_mode==='pickup'?'Gel-al':'Teslimat')+'</span></div></div>'+
+      '<div class="card" style="margin-top:12px">'+
+      (o.phone?'<div class="small">📞 '+E(o.phone)+'</div>':'')+
+      (o.address_text?'<div class="small" style="margin-top:4px">📍 '+E(o.address_text)+'</div>':'')+
+      (o.note?'<div class="small muted" style="margin-top:4px">Not: '+E(o.note)+'</div>':'')+
+      '</div>'+
+      '<div class="foodSection">Sipariş içeriği</div>'+
+      items.map(it=>'<div class="foodItem"><div><b>'+E(it.quantity)+'× '+E(it.name_snapshot)+'</b></div><b>'+M(it.line_total_kurus)+'</b></div>').join('')+
+      '<div class="card" style="margin-top:10px;display:flex;justify-content:space-between;font-size:16px"><span>Toplam</span><b>'+M(o.total_kurus)+'</b></div>'+
+      (past?'<button type="button" class="v2Btn pri" style="width:100%;margin-top:12px" onclick="foodReorder(\''+E(o.id)+'\')">🔁 Tekrar sipariş</button>':'')+
+      '</div>');
+  }catch(e){app('<div class="error">'+E(e.message||'Sipariş detayı yüklenemedi.')+'</div>');}
+}
+
+async function foodReorder(orderId){
+  if(!A())return;
+  try{
+    const o=(await Q('GET','food_orders?select=id,venue_id,food_venues(name)&id=eq.'+encodeURIComponent(orderId)+'&limit=1'))?.[0];
+    if(!o)throw new Error('Sipariş bulunamadı.');
+    const items=await Q('GET','food_order_items?select=menu_item_id,name_snapshot,quantity,line_total_kurus&order_id=eq.'+encodeURIComponent(orderId))||[];
+    if(!items.length)throw new Error('Sipariş ürünleri bulunamadı.');
+    const cart={venue:{id:o.venue_id,name:o.food_venues?.name||'Restoran'},items:items.map(it=>{
+      const qty=+it.quantity||1;
+      const lineTotal=+it.line_total_kurus||0;
+      return{menu_item_id:it.menu_item_id,name_snapshot:it.name_snapshot,unit_price_kurus:Math.round(lineTotal/qty),quantity:qty,line_total_kurus:lineTotal};
+    })};
+    SAVE(cart);
+    showFoodCart();
+  }catch(e){alert(e.message||'Tekrar sipariş oluşturulamadı.');}
 }
 
 function showFoodBusiness(){
@@ -503,6 +605,8 @@ window.foodAdd=foodAdd;
 window.foodQty=foodQty;
 window.foodOrder=foodOrder;
 window.showFoodOrders=showFoodOrders;
+window.showFoodOrderDetail=showFoodOrderDetail;
+window.foodReorder=foodReorder;
 window.showFoodBusiness=showFoodBusiness;
 window.foodCreate=foodCreate;
 window.foodOpen=foodOpen;
