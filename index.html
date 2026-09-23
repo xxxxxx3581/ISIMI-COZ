@@ -1122,6 +1122,7 @@ html[data-theme="light"] .v2Btn.msg{background:#1f5fa8}
 <nav class="bottom" aria-label="Ana gezinme"><div class="bottomInner">
 <button class="navBtn" id="navHome" onclick="showHome()"><b>⌂</b>Ana</button>
 <button class="navBtn" id="navProvider" onclick="window.__kesfetCat=window.__kesfetCat||'all';window.__v2Understood=null;showKesfet(false)"><b>🔎</b>Ara</button>
+<button class="navBtn" id="navFood" onclick="showFoodHome()"><b>🍽️</b>Yemek</button>
 <button class="navBtn navPlus" id="navRequest" onclick="v2StartSheet()" aria-label="Başlat"><b>＋</b>Başlat</button>
 <button class="navBtn" id="navRequests" onclick="window.__mineSeg='all';window.__mineStatus='all';showMine()"><b>📂</b>İşlerim</button>
 </div></nav>
@@ -1297,7 +1298,7 @@ document.addEventListener('keydown',function(e){
 });
 
 function setNav(a){
-  ["navHome","navRequest","navRequests","navProvider"].forEach(function(id){
+  ["navHome","navRequest","navRequests","navProvider","navFood"].forEach(function(id){
     var e=document.getElementById(id); if(e){ e.classList.remove("active"); e.removeAttribute('aria-current'); }
   });
   if(a){ var el=document.getElementById(a); if(el){ el.classList.add("active"); el.setAttribute('aria-current','page'); } }
@@ -8522,4 +8523,5 @@ for(const k of ["showGayrimenkulDetail","showOtomobilDetail"]){const f=window[k]
 </script>
 </body>
 <script src="./a35-seller-identity.js"></script>
+<script src="./a7-food-v1.js"></script>
 </html>
