@@ -857,7 +857,7 @@ html[data-theme="light"]{--v2-p-orig:#cfd9e4;--v2-glass:#b9c8d8;--v2-wheel:#5b6d
 .v2Steps>.v2Pills2:first-of-type{margin-top:0}
 .v2Pill2{display:inline-flex;align-items:center;gap:6px;min-height:42px;padding:0 13px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--text);font-weight:700;font-size:13.5px;cursor:pointer}
 .v2Pill2.acc{border-color:var(--v2-pri);color:var(--v2-pri)}
-.v2Jump{position:sticky;top:calc(58px + env(safe-area-inset-top,0px));z-index:25;display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:8px 0;margin:6px 0 2px;background:var(--bg)}
+.v2Jump{position:sticky;top:calc(58px + env(safe-area-inset-top,0px));z-index:25;display:flex;flex-wrap:wrap;gap:8px;overflow-x:visible;padding:8px 0;margin:6px 0 2px;background:var(--bg)}
 .v2Jump::-webkit-scrollbar{display:none}
 .v2Jump button{flex:0 0 auto;min-height:36px;padding:0 13px;border-radius:999px;border:1px solid var(--line);background:var(--card);color:var(--text);font-size:13px;font-weight:700;cursor:pointer}
 .v2Sec2{padding:14px 0 6px;scroll-margin-top:112px;border-top:1px solid var(--line);margin-top:8px}
@@ -1009,7 +1009,7 @@ html[data-theme="light"] .v2Btn.msg{background:#1f5fa8}
 .v2Hero .ldCarouselDots{display:none}
 .v2Spec dd.price{color:var(--v2-pri);font-size:16px}
 .v2Spec dd.no{font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:.04em}
-.v2Steps .v2Pills2{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;margin-right:-4px;padding-bottom:2px}
+.v2Steps .v2Pills2{flex-wrap:wrap;overflow-x:visible;margin-right:0;padding-bottom:2px;gap:6px}
 .v2Pills2::-webkit-scrollbar{display:none}
 .v2Pill2{flex:0 0 auto;white-space:nowrap}
 .v2Recent{margin:16px 0 4px}
@@ -1061,11 +1061,11 @@ html[data-theme="light"] .v2Btn.msg{background:#1f5fa8}
 /* ===== Logo, bağlantı rozeti, kompakt aksiyon çubuğu, çalışma alanı, devam kartı ===== */
 .connection{display:none!important}
 .v2Brand{gap:8px}
-.v2LogoMk{flex:0 0 auto;width:32px;height:32px;border-radius:10px;display:grid;place-items:center;color:var(--logo-ink,#032b1e);background:linear-gradient(145deg,var(--primary),var(--primary-2) 55%,var(--accent));box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.v2LogoMk{flex:0 0 auto;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:#042f2e;background:linear-gradient(145deg,#14b87a 0%,#0d9488 55%,#38bdf8 120%);box-shadow:0 3px 10px rgba(20,184,122,.35),inset 0 1px 0 rgba(255,255,255,.28);overflow:visible}
 .v2LogoMk svg{display:block}
-.v2Wm{display:inline-flex;align-items:baseline;gap:3px;font-size:17px;line-height:1;letter-spacing:-.025em;white-space:nowrap}
-.v2Wm b{font-weight:900;color:var(--text)}
-.v2Wm i{font-style:normal;font-weight:900;color:var(--v2-pri)}
+.v2Wm{display:inline-flex;align-items:baseline;gap:4px;font-size:17px;line-height:1;letter-spacing:-.03em;font-weight:900}
+.v2Wm b{font-weight:900;color:var(--text);letter-spacing:-.02em}
+.v2Wm i{font-style:normal;font-weight:900;color:var(--primary);letter-spacing:-.02em}
 .v2LogoLine{display:inline-flex;align-items:center;gap:8px}
 @media(max-width:340px){.v2LogoMk{display:none}}
 
@@ -1117,7 +1117,7 @@ html[data-theme="light"] .v2Btn.msg{background:#1f5fa8}
 <body>
 <div id="connectionStatus" class="connection offline" title="Supabase">SB…</div>
 <div class="app">
-<header class="v2Top"><div class="v2TopMini" id="v2TopMini"></div><button type="button" class="v2Ico" id="appMenuBtn" onclick="openAppDrawer()" aria-label="Menüyü aç">☰</button><button type="button" class="v2Brand" onclick="showHome()" aria-label="İşimi Çöz ana sayfa"><span class="v2LogoMk" aria-hidden="true"><svg viewBox="0 0 32 32" width="30" height="30" focusable="false"><path d="M8.5 17.2l5.1 5.2 9.9-11.4" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.4" cy="8.8" r="2.3" fill="currentColor"/></svg></span><span class="v2Wm"><b>İşimi</b><i>Çöz</i></span></button><div class="v2TopR"><button type="button" class="v2AraBtn" onclick="v2GoSearch()" aria-label="Ara">🔎 Ara</button><button type="button" class="v2Ico" id="themeToggleBtn" onclick="toggleAppTheme()" aria-label="Tema değiştir">🌙</button><div id="authArea" class="headerAuthRow"></div></div></header>
+<header class="v2Top"><div class="v2TopMini" id="v2TopMini"></div><button type="button" class="v2Ico" id="appMenuBtn" onclick="openAppDrawer()" aria-label="Menüyü aç">☰</button><button type="button" class="v2Brand" onclick="showHome()" aria-label="İşimi Çöz ana sayfa"><span class="v2LogoMk" aria-hidden="true"><svg viewBox="0 0 32 32" width="28" height="28" focusable="false"><path d="M7.2 16.8l5.4 5.6 12.2-14" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="v2Wm"><b>İşimi</b><i>Çöz</i></span></button><div class="v2TopR"><button type="button" class="v2AraBtn" onclick="v2GoSearch()" aria-label="Ara">🔎 Ara</button><button type="button" class="v2Ico" id="themeToggleBtn" onclick="toggleAppTheme()" aria-label="Tema değiştir">🌙</button><div id="authArea" class="headerAuthRow"></div></div></header>
 <main id="app"></main></div>
 <nav class="bottom" aria-label="Ana gezinme"><div class="bottomInner">
 <button class="navBtn" id="navHome" onclick="showHome()"><b>⌂</b>Ana</button>
@@ -1128,7 +1128,7 @@ html[data-theme="light"] .v2Btn.msg{background:#1f5fa8}
 
 <div class="appDrawerBackdrop" id="appDrawerBackdrop" onclick="closeAppDrawer()" hidden></div>
 <aside class="appDrawer" id="appDrawer" aria-hidden="true" role="dialog" aria-label="Ana menü">
-  <div class="appDrawerHead"><span class="v2LogoLine"><span class="v2LogoMk" aria-hidden="true"><svg viewBox="0 0 32 32" width="26" height="26" focusable="false"><path d="M8.5 17.2l5.1 5.2 9.9-11.4" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9.4" cy="8.8" r="2.3" fill="currentColor"/></svg></span><span class="v2Wm"><b>İşimi</b><i>Çöz</i></span></span><button type="button" class="btn secondary smallBtn" onclick="closeAppDrawer()">Kapat</button></div>
+  <div class="appDrawerHead"><span class="v2LogoLine"><span class="v2LogoMk" aria-hidden="true"><svg viewBox="0 0 32 32" width="24" height="24" focusable="false"><path d="M7.2 16.8l5.4 5.6 12.2-14" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="v2Wm"><b>İşimi</b><i>Çöz</i></span></span><button type="button" class="btn secondary smallBtn" onclick="closeAppDrawer()">Kapat</button></div>
   <div class="appDrawerNav">
     <button type="button" onclick="closeAppDrawer();showHome()">⌂ Ana Sayfa</button>
   </div>
@@ -6393,6 +6393,7 @@ function v2WsCta(pr){
 
 function v2WsPaint(){
   var W=window.__v2Ws, box=document.getElementById('v2WsBody'); if(!W||!box) return;
+  var __wsY=window.scrollY||0;
   var row=W.row, type=W.type, id=v2Id(row.id), car=type==='otomobil', pr=v2WsProgress(row,type), lb=v2WsLabel(row,type), st=myListingStatusMeta(row.status);
   var auto=pr.items.filter(function(x){return !x.doc;}), docs=pr.items.filter(function(x){return x.doc;});
   function rowHtml(x){
@@ -6415,9 +6416,10 @@ function v2WsPaint(){
     (cta?'<div class="v2DActions v2WsBar"><button type="button" class="v2Btn pri'+(cta.idle?' idle':'')+'" '+(cta.idle?'disabled':'onclick="'+cta.js+'"')+'>'+cta.label+'</button></div>':'');
   box.onclick=function(e){
     var d=e.target.closest('[data-doc]'); if(d){ v2WsToggle(d.getAttribute('data-doc')); return; }
-    var f=e.target.closest('[data-fix]'); if(f){ v2EditListing(id,type,'ws'); return; }
+    var f=e.target.closest('[data-form]'); if(f){ v2EditListing(id,type,'ws'); return; }
     var p=e.target.closest('[data-pub]'); if(p){ v2SetListingStatus(id,type,'published','ws'); return; }
   };
+  requestAnimationFrame(function(){ try{ window.scrollTo(0,__wsY); }catch(e){} });
 }
 
 function v2WsToggle(k){
@@ -6539,8 +6541,11 @@ function v2PickContinue(state){
   (state.listings||[]).forEach(function(r){
     var type=r.listing_type==='otomobil'?'otomobil':'gayrimenkul', k=myListingStatusMeta(r.status).key;
     if(k==='sold'||k==='rented'||k==='archived') return;
-    var pr=v2WsProgress(r,type); if(pr.completed) return;
-    var score=(pr.started&&pr.pct<100)?3:(k==='draft'?2:1);
+    var pr=v2WsProgress(r,type);
+    if(pr.completed) return;
+    /* Sadece gerçekten başlanmış hazırlıklar: dokunulmamış taslak "Devam et" zinciri oluşturmasın */
+    if(!pr.started) return;
+    var score=(pr.pct<100)?3:1;
     if(!best||score>best.score) best={score:score,r:r,type:type,pr:pr,k:k};
   });
   if(best) return {kind:'listing',b:best};
@@ -7081,7 +7086,7 @@ function root(){let r=document.getElementById('hallet-root');if(!r){r=document.c
 function ensureStyle(){if(document.getElementById('hallet-inline-style'))return;const s=document.createElement('style');s.id='hallet-inline-style';s.textContent=`#hallet-root{position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;z-index:2147483647!important;display:none!important;background:#071318!important;color:#f5f7f7!important;overflow:auto!important;pointer-events:auto!important;-webkit-overflow-scrolling:touch!important}#hallet-root.hv{display:block!important}#hallet-root .ha{all:initial!important;display:block!important;min-height:100vh!important;width:100%!important;background:#071318!important;color:#f5f7f7!important;font-family:Arial,sans-serif!important;padding:20px!important;box-sizing:border-box!important}#hallet-root .ha *{box-sizing:border-box!important}#hallet-root .hw{width:min(760px,100%)!important;margin:auto!important;padding-bottom:40px!important}#hallet-root .ht{display:flex!important;justify-content:space-between!important;align-items:center!important;gap:10px!important;margin-bottom:18px!important}#hallet-root .hc{background:#10252b!important;border:1px solid #29464d!important;border-radius:20px!important;padding:22px!important;box-shadow:0 16px 40px rgba(0,0,0,.25)!important}#hallet-root h1,#hallet-root h2,#hallet-root p{margin-top:0!important}#hallet-root h1{font-size:32px!important;line-height:1.1!important}#hallet-root h2{font-size:23px!important;line-height:1.2!important}#hallet-root .hk{color:#b9812e!important;font-size:12px!important;font-weight:800!important;text-transform:uppercase!important;letter-spacing:.08em!important;margin-bottom:9px!important}#hallet-root .hm{color:#b8c8cb!important;line-height:1.55!important}#hallet-root .hg{display:grid!important;grid-template-columns:1fr!important;gap:12px!important;margin-top:18px!important}#hallet-root button{appearance:none!important;-webkit-appearance:none!important}#hallet-root .hb{width:100%!important;min-height:54px!important;border:1px solid #35535a!important;border-radius:15px!important;background:#122b31!important;color:#fff!important;padding:15px 17px!important;font:700 15px Arial,sans-serif!important;text-align:left!important;cursor:pointer!important;touch-action:manipulation!important}#hallet-root .hp{background:#0e5c53!important;border-color:#3d9a8e!important;text-align:center!important}#hallet-root .hs{text-align:center!important;background:#172b30!important}#hallet-root .topb{border:1px solid #35535a!important;background:#10252b!important;color:#fff!important;border-radius:12px!important;padding:10px 13px!important;font:700 13px Arial,sans-serif!important;cursor:pointer!important;touch-action:manipulation!important}#hallet-root .docActBtn{display:block!important;visibility:visible!important;opacity:1!important;max-width:100%!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;box-sizing:border-box!important;cursor:pointer!important;touch-action:manipulation!important;-webkit-appearance:none!important}#hallet-root .hi{width:100%!important;background:#091b20!important;color:#fff!important;border:1px solid #45636a!important;border-radius:13px!important;padding:15px!important;font:600 16px Arial,sans-serif!important}#hallet-root label{display:block!important;font:700 13px Arial,sans-serif!important;color:#dce7e8!important;margin:12px 0 7px!important}#hallet-root .hl{display:grid!important;gap:10px!important;margin:16px 0!important}#hallet-root .li{padding:12px 14px!important;border:1px solid #213d43!important;border-radius:12px!important;background:#0b1d22!important;line-height:1.45!important}#hallet-root .ok{color:#8ee1d5!important}#hallet-root .warn{color:#ffd18c!important}#hallet-root .pr{height:8px!important;background:#183238!important;border-radius:99px!important;overflow:hidden!important;margin-bottom:18px!important}#hallet-root .pr span{display:block!important;height:100%!important;background:#0e8b7d!important}#hallet-root .err{color:#ffb7a8!important;background:#3a1f1d!important;border:1px solid #7a3930!important;padding:10px!important;border-radius:10px!important;margin-top:10px!important}#hallet-root .progressTrack{height:10px!important;background:#091b20!important;border:1px solid #29464d!important;border-radius:999px!important;overflow:hidden!important;margin-top:10px!important}#hallet-root .progressTrack span{display:block!important;height:100%!important;background:#0e5c53!important;border-radius:999px!important;transition:width .2s ease!important}#hallet-root .hl,#hallet-root .li,#hallet-root .docItem{min-width:0!important;max-width:100%!important;overflow:visible!important}#hallet-root .docItem{display:flex!important;gap:12px!important;align-items:flex-start!important;padding:13px 14px!important;border:1px solid #29464d!important;border-radius:12px!important;background:#0b1d22!important;cursor:pointer!important;margin:0!important;width:100%!important;overflow:hidden!important}#hallet-root .docItem>span{min-width:0!important;flex:1 1 auto!important;max-width:100%!important;overflow:hidden!important}#hallet-root .docItem input{width:22px!important;height:22px!important;accent-color:#0e8b7d!important;flex:0 0 auto!important;margin-top:2px!important}#hallet-root .docStatus{display:inline-flex!important;align-items:center!important;visibility:visible!important;opacity:1!important;margin-top:6px!important;font-size:12px!important;font-weight:800!important;color:#8ee1d5!important;min-height:26px!important}#hallet-root .docStatus *{visibility:visible!important;opacity:1!important;color:#8ee1d5!important}@media(min-width:620px){#hallet-root .hg{grid-template-columns:1fr 1fr!important}}#hallet-root .evrakPaper{background:#fff!important;color:#172326!important;padding:28px!important;border-radius:14px!important;border:1px solid #d7e0e2!important;box-shadow:0 8px 24px rgba(0,0,0,.12)!important;margin-top:14px!important;line-height:1.55!important}#hallet-root .evrakPaper h3{color:#172326!important;margin:18px 0 8px!important;font-size:17px!important}#hallet-root .evrakPaper p{color:#26383c!important;margin:7px 0!important}#hallet-root .evrakPaper hr{border:0!important;border-top:1px solid #d7e0e2!important;margin:20px 0!important}#hallet-root .evrakPaper strong{color:#172326!important}@media print{body.printing-evrak *{visibility:hidden!important}body.printing-evrak .no-print{display:none!important}body.printing-evrak #hallet-root,body.printing-evrak #hallet-root *{visibility:visible!important}body.printing-evrak #hallet-root{position:static!important;display:block!important;background:#fff!important;color:#172326!important;width:auto!important;height:auto!important;overflow:visible!important}body.printing-evrak #hallet-root .ha{background:#fff!important;color:#172326!important;padding:0!important;min-height:0!important}body.printing-evrak #hallet-root .hw{width:100%!important;max-width:none!important;padding:0!important}body.printing-evrak #hallet-root .ht,body.printing-evrak #hallet-root .hg,body.printing-evrak #hallet-root .topb{display:none!important}body.printing-evrak #hallet-root .hc{background:#fff!important;color:#172326!important;border:0!important;box-shadow:none!important;padding:0!important;border-radius:0!important}body.printing-evrak #hallet-root .hk,body.printing-evrak #hallet-root h2,body.printing-evrak #hallet-root .hm{color:#172326!important}body.printing-evrak #hallet-root .evrakPaper{border:0!important;box-shadow:none!important;border-radius:0!important;margin:0!important;padding:12mm!important;color:#172326!important}body.printing-evrak #hallet-root .evrakPaper *{color:#172326!important}}`;document.head.appendChild(s)}
 function open(){ensureStyle();const r=root();r.classList.add('hv');r.style.display='block';document.body.dataset.halletOverflow=document.body.style.overflow||'';document.body.style.overflow='hidden';return r}
 function close(){const r=root();r.classList.remove('hv');r.style.display='none';r.innerHTML='';document.body.style.overflow=document.body.dataset.halletOverflow||''}
-function render(x){const r=open();r.innerHTML='<div class="ha"><div class="hw">'+x+'</div></div>';r.scrollTop=0}
+function render(x){const r=open();const keep=!!r.querySelector('.hw');const prev=keep?(r.scrollTop||0):0;r.innerHTML='<div class="ha"><div class="hw">'+x+'</div></div>';if(keep){requestAnimationFrame(function(){try{r.scrollTop=prev}catch(e){}})}else{r.scrollTop=0}}
 function top(back){return '<div class="ht"><strong>İşini Hallet</strong><button class="topb" data-a="'+(back||'close')+'">'+(back?'← Geri':'Kapat')+'</button></div>'}
 function gate(){H.step=0;H.answers={};H.documents={};H.documentStatuses={};H.documentFiles={};H.caseId=null;H.createdAt=null;H.dbId=null;render(top('close')+'<div class="hc"><div class="hk">Dijital işlem asistanı</div><h1>Bugün ne yapmak istiyorsun?</h1><p class="hm">İşlem, evrak, kurum veya hizmet — net seç, adım adım ilerle.</p><div class="hg"><button class="hb hp" data-a="islem">📋 Bir işlem yapmak istiyorum</button><button class="hb" data-a="cases">📁 İşlem Dosyalarım</button><button class="hb" data-a="evrak">📄 Evrak hazırlamak istiyorum</button><button class="hb" data-a="kurum">🏛️ Bir kuruma başvuracağım</button><button class="hb" data-a="isimi">🛠️ Hizmet / usta bulmam gerekiyor</button></div><div class="card" style="text-align:left;margin-top:12px;padding:12px;border:1px solid rgba(13,159,104,.4);background:rgba(13,159,104,.08);border-radius:14px"><div class="hk">🔒 Ücretli İşlem Hazırlığı <span class="small">Ücretli işlem</span></div><p class="hm">Kişiye özel evrak ve işlem takibi bu kapının arkasındadır. Şimdilik ödeme alınmaz.</p><button class="hb hp" data-a="official_prep">İşlem hazırlığına devam et →</button></div></div>')}
 async function cases(){
@@ -7565,7 +7570,9 @@ function propResult(fromSaved){
  const answerLabel=(q,val)=>{if(val==null||String(val).trim()==='')return '—';if(q&&q.options){const hit=q.options.find(o=>o[0]===val);if(hit)return hit[1];}return String(val);};
  let paper='<div class="evrakPaper" id="evrakPrintArea"><h3 style="margin-top:0;text-align:center">'+esc(f.title)+'</h3><p style="text-align:center">Hazırlık / bilgilendirme dosyası — resmî belge veya sözleşme yerine geçmez</p><h4 style="margin:14px 0 8px">İşlem bilgileri</h4>';
  (f.questions||[]).forEach(q=>{paper+='<p><strong>'+esc(q.title)+':</strong> '+esc(answerLabel(q,a[q.key]))+'</p>';});
- paper+='<h4 style="margin:14px 0 8px">Belgeler</h4>'+(docs.length?docs.map(d=>'<p><strong>'+esc(d.title)+'</strong>: '+(getDocumentFiles(d.key).length?'Yüklendi':(H.documents[d.key]===true?'Hazır olarak işaretlendi':'Eksik / bekleniyor'))+'</p>').join(''):'<p>Belge listesi yok.</p>');
+ paper+='<h4 style="margin:14px 0 8px">Belgeler</h4>';
+ if(docs.length){paper+=docs.map(d=>'<p><strong>'+esc(d.title)+'</strong>: '+(getDocumentFiles(d.key).length?'Yüklendi ('+getDocumentFiles(d.key).length+' dosya)':(H.documents[d.key]===true?'Hazır olarak işaretlendi':'Eksik / bekleniyor'))+'</p>').join('');}
+ else{const fk=Object.keys(H.documentFiles||{}).filter(k=>(H.documentFiles[k]||[]).length>0);if(fk.length){paper+=fk.map(k=>{const files=H.documentFiles[k]||[];return '<p><strong>'+esc(k)+'</strong>: Yüklendi ('+files.length+' dosya)'+(files[0]&&files[0].name?(' — '+esc(files[0].name)):'')+'</p>';}).join('');}else{paper+='<p>Belge listesi yok. Belgeler bölümünden dosya ekleyebilirsin.</p>';}}
  paper+='<p style="font-size:12px;margin-top:18px">'+esc(f.disclaimer)+'</p></div>';
  const docHtml=docs.map(d=>{
    const files=getDocumentFiles(d.key), uploaded=files.length>0, checked=!!H.documents[d.key];
