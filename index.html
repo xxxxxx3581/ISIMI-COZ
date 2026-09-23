@@ -933,7 +933,7 @@ html[data-theme="light"] .description{color:var(--text)}
 .v2Jump button{border-width:1.5px;border-color:var(--v2-soft-line);background:var(--v2-soft);color:var(--text);font-weight:800;transition:background .15s}
 .v2Jump button.on{background:var(--v2-pri);border-color:var(--v2-pri);color:var(--v2-pri-ink)}
 .v2Cats .v2Cat span{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:24px}
-.v2Cat:nth-child(1) span{background:rgba(59,130,246,.16)}.v2Cat:nth-child(2) span{background:rgba(249,115,22,.18)}.v2Cat:nth-child(3) span{background:rgba(139,92,246,.18)}.v2Cat:nth-child(4) span{background:rgba(34,160,107,.20)}
+.v2Cat:nth-child(1) span{background:rgba(59,130,246,.16)}.v2Cat:nth-child(2) span{background:rgba(249,115,22,.18)}.v2Cat:nth-child(3) span{background:rgba(139,92,246,.18)}.v2Cat:nth-child(4) span{background:rgba(34,160,107,.20)}.v2Cat:nth-child(5) span{background:rgba(245,158,11,.20)}.v2CatFood{border-color:rgba(245,158,11,.55)!important}.v2CatFood:active{border-color:rgba(245,158,11,.85)!important}
 .v2Cat{border-width:1.5px}
 .v2Pill{border-width:1.5px;font-weight:800}
 .v2Pills .v2Pill:nth-child(1){background:var(--v2-pri);border-color:var(--v2-pri);color:var(--v2-pri-ink)}
@@ -1902,7 +1902,8 @@ function showHome(){
     '<button type="button" class="v2Cat" onclick="kesfetOpen(\'konut\',true)"><span>🏠</span>Konut</button>'+
     '<button type="button" class="v2Cat" onclick="kesfetOpen(\'otomobil\',true)"><span>🚗</span>Araç</button>'+
     '<button type="button" class="v2Cat" onclick="kesfetOpen(\'isyeri\',true)"><span>🏢</span>İş Yeri</button>'+
-    '<button type="button" class="v2Cat" onclick="kesfetOpen(\'arsa\',true)"><span>🌳</span>Arsa</button></nav>'+
+    '<button type="button" class="v2Cat" onclick="kesfetOpen(\'arsa\',true)"><span>🌳</span>Arsa</button>'+
+    '<button type="button" class="v2Cat v2CatFood" onclick="showFoodHome()"><span>🍽️</span>Yemek</button></nav>'+
     '<div class="v2Pills" role="group" aria-label="Hızlı işlemler">'+
     '<button type="button" class="v2Pill" onclick="v2StartSheet()">＋ İlan ver</button>'+
     '<button type="button" class="v2Pill" onclick="showRequest()">🔧 Hizmet iste</button>'+
