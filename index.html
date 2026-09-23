@@ -661,11 +661,29 @@ body.v2NoScroll{overflow:hidden}
 .v2Search .go{flex:0 0 auto;height:44px;padding:0 18px;border-radius:12px;border:0;background:var(--v2-pri);color:var(--v2-pri-ink);font-weight:900;font-size:15px;cursor:pointer}
 .v2Eg{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 0}
 .v2Eg button{border:1px dashed var(--line);background:transparent;color:var(--muted);border-radius:999px;padding:7px 11px;font-size:12.5px;cursor:pointer}
-.v2Cats{display:flex;flex-wrap:wrap;gap:10px;padding:16px 2px 6px;margin:0 -2px}
+.v2Cats{display:flex;flex-wrap:wrap;gap:8px;padding:10px 0 4px;margin:0}
 .v2Cats::-webkit-scrollbar{display:none}
 .v2Cat{flex:1 1 calc(50% - 6px);min-width:calc(50% - 6px);max-width:calc(50% - 6px);box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:6px;padding:12px 6px 10px;border-radius:16px;border:1px solid var(--line);background:var(--card);color:var(--text);font-weight:800;font-size:13px;cursor:pointer}
 .v2Cat span{font-size:26px;line-height:1}
 .v2Cat:active{transform:scale(.97);border-color:var(--v2-pri)}
+/* kompakt ana kategori şeridi */
+.v2CompCats{display:flex;flex-wrap:wrap;gap:8px;padding:8px 0 2px}
+.v2Comp{flex:1 1 calc(50% - 6px);min-width:calc(50% - 6px);box-sizing:border-box;display:flex;align-items:center;gap:8px;min-height:44px;padding:8px 10px;border-radius:14px;border:1.5px solid var(--line);background:var(--card);color:var(--text);font:inherit;font-weight:800;font-size:13px;cursor:pointer;text-align:left}
+.v2Comp .ic{flex:0 0 32px;width:32px;height:32px;border-radius:10px;display:grid;place-items:center;font-size:16px;background:var(--v2-soft)}
+.v2Comp .tx{display:flex;flex-direction:column;min-width:0;line-height:1.15}
+.v2Comp .tx b{font-size:13px;font-weight:900}
+.v2Comp .tx small{font-size:10.5px;font-weight:600;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v2Comp:active{transform:scale(.98);border-color:var(--v2-pri)}
+.v2CompFood{border-color:rgba(245,158,11,.55)!important}
+.v2CompFood .ic{background:rgba(245,158,11,.18)}
+.v2CompSub{flex:1 1 100%;display:none;gap:6px;flex-wrap:wrap;padding:2px 0 4px}
+.v2CompSub.on{display:flex}
+.v2CompSub button{flex:1 1 calc(33.33% - 6px);min-width:88px;min-height:38px;padding:8px 8px;border-radius:12px;border:1px solid var(--line);background:var(--card2,var(--card));color:var(--text);font-weight:800;font-size:12.5px;cursor:pointer}
+.v2CompSub button:active{border-color:var(--v2-pri)}
+@media(min-width:720px){
+  .v2Comp{flex:1 1 calc(20% - 8px);min-width:140px}
+  .v2CompSub button{flex:0 1 auto;min-width:110px}
+}
 .v2Pills{display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 4px}
 .v2Pill{display:inline-flex;align-items:center;gap:6px;min-height:42px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--text);font-weight:700;font-size:13.5px;cursor:pointer}
 .v2Pill:active{border-color:var(--v2-pri)}
@@ -933,7 +951,7 @@ html[data-theme="light"] .description{color:var(--text)}
 .v2Jump button{border-width:1.5px;border-color:var(--v2-soft-line);background:var(--v2-soft);color:var(--text);font-weight:800;transition:background .15s}
 .v2Jump button.on{background:var(--v2-pri);border-color:var(--v2-pri);color:var(--v2-pri-ink)}
 .v2Cats .v2Cat span{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:24px}
-.v2Cat:nth-child(1) span{background:rgba(59,130,246,.16)}.v2Cat:nth-child(2) span{background:rgba(249,115,22,.18)}.v2Cat:nth-child(3) span{background:rgba(139,92,246,.18)}.v2Cat:nth-child(4) span{background:rgba(34,160,107,.20)}.v2Cat:nth-child(5) span{background:rgba(245,158,11,.20)}.v2CatFood{border-color:rgba(245,158,11,.55)!important}.v2CatFood:active{border-color:rgba(245,158,11,.85)!important}
+.v2Cat:nth-child(1) span{background:rgba(59,130,246,.16)}.v2Cat:nth-child(2) span{background:rgba(249,115,22,.18)}.v2Cat:nth-child(3) span{background:rgba(139,92,246,.18)}.v2Cat:nth-child(4) span{background:rgba(34,160,107,.20)}
 .v2Cat{border-width:1.5px}
 .v2Pill{border-width:1.5px;font-weight:800}
 .v2Pills .v2Pill:nth-child(1){background:var(--v2-pri);border-color:var(--v2-pri);color:var(--v2-pri-ink)}
@@ -1882,6 +1900,19 @@ function showWorkAreaArac(){
 // === ANA ÇALIŞMA ALANLARI END ===
 
 
+function v2HomeExpand(which){
+  var gm=document.getElementById('v2GmExpand');
+  var ar=document.getElementById('v2AracExpand');
+  var bg=document.getElementById('v2CompGm');
+  var ba=document.getElementById('v2CompArac');
+  if(!gm||!ar)return;
+  var openGm=which==='gm' && !gm.classList.contains('on');
+  var openAr=which==='arac' && !ar.classList.contains('on');
+  gm.classList.toggle('on', !!openGm);
+  ar.classList.toggle('on', !!openAr);
+  if(bg)bg.setAttribute('aria-expanded', openGm?'true':'false');
+  if(ba)ba.setAttribute('aria-expanded', openAr?'true':'false');
+}
 function showHome(){
   setNav("navHome");
   window.__v2Understood=null;
@@ -1898,12 +1929,20 @@ function showHome(){
     '<div id="v2FeatSlot"></div>'+
     v2ResumeCard()+
     '<div id="v2Continue"></div>'+
-    '<nav class="v2Cats" aria-label="Kategoriler">'+
-    '<button type="button" class="v2Cat" onclick="kesfetOpen(\'konut\',true)"><span>🏠</span>Konut</button>'+
-    '<button type="button" class="v2Cat" onclick="kesfetOpen(\'otomobil\',true)"><span>🚗</span>Araç</button>'+
-    '<button type="button" class="v2Cat" onclick="kesfetOpen(\'isyeri\',true)"><span>🏢</span>İş Yeri</button>'+
-    '<button type="button" class="v2Cat" onclick="kesfetOpen(\'arsa\',true)"><span>🌳</span>Arsa</button>'+
-    '<button type="button" class="v2Cat v2CatFood" onclick="showFoodHome()"><span>🍽️</span>Yemek</button></nav>'+
+    '<nav class="v2CompCats" aria-label="Kategoriler">'+
+    '<button type="button" class="v2Comp" id="v2CompGm" onclick="v2HomeExpand(\'gm\')" aria-expanded="false"><span class="ic">🏠</span><span class="tx"><b>Gayrimenkul</b><small>Konut · İş yeri · Arsa</small></span></button>'+
+    '<button type="button" class="v2Comp" id="v2CompArac" onclick="v2HomeExpand(\'arac\')" aria-expanded="false"><span class="ic">🚗</span><span class="tx"><b>Araç</b><small>Al · Sat · İlanlar</small></span></button>'+
+    '<button type="button" class="v2Comp v2CompFood" onclick="showFoodHome()"><span class="ic">🍽️</span><span class="tx"><b>Yemek</b><small>Restoran · Sipariş</small></span></button>'+
+    '<button type="button" class="v2Comp" onclick="showRequest()"><span class="ic">🔧</span><span class="tx"><b>Hizmet</b><small>Usta bul · Talep</small></span></button>'+
+    '<button type="button" class="v2Comp" onclick="openHallet()"><span class="ic">📄</span><span class="tx"><b>Resmî</b><small>Evrak · Başvuru</small></span></button>'+
+    '<div id="v2GmExpand" class="v2CompSub" role="group" aria-label="Gayrimenkul alt seçenekler">'+
+    '<button type="button" onclick="kesfetOpen(\'konut\',true)">🏠 Konut</button>'+
+    '<button type="button" onclick="kesfetOpen(\'isyeri\',true)">🏢 İş Yeri</button>'+
+    '<button type="button" onclick="kesfetOpen(\'arsa\',true)">🌳 Arsa</button></div>'+
+    '<div id="v2AracExpand" class="v2CompSub" role="group" aria-label="Araç alt seçenekler">'+
+    '<button type="button" onclick="kesfetOpen(\'otomobil\',true)">🚗 İlanlar</button>'+
+    '<button type="button" onclick="(typeof startOtomobilWizard===\'function\'?startOtomobilWizard():(typeof showListingsCategory===\'function\'&&showListingsCategory(\'otomobil\')))">＋ İlan ver</button>'+
+    '<button type="button" onclick="(typeof showListingsCategory===\'function\'&&showListingsCategory(\'otomobil\'))">Al / Sat</button></div></nav>'+
     '<div class="v2Pills" role="group" aria-label="Hızlı işlemler">'+
     '<button type="button" class="v2Pill" onclick="v2StartSheet()">＋ İlan ver</button>'+
     '<button type="button" class="v2Pill" onclick="showRequest()">🔧 Hizmet iste</button>'+
