@@ -555,7 +555,7 @@ function loadMap(){
 }
 const IZMIR=[38.4237,27.1428];
 function mapIcon(L,emoji,cls){return L.divIcon({className:'fdMapPin'+(cls?' '+cls:''),html:'<span>'+emoji+'</span>',iconSize:[40,40],iconAnchor:[20,38]})}
-function makeMap(L,el,center,zoom){const m=L.map(el,{zoomControl:false,attributionControl:true}).setView(center,zoom||15);
+function makeMap(L,el,center,zoom){const m=L.map(el,{zoomControl:true,attributionControl:true,maxZoom:19}).setView(center,zoom||15);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(m);return m}
 function distKm(a,b){if(!a||!b||a[0]==null||b[0]==null)return null;const R=6371,dLa=(b[0]-a[0])*Math.PI/180,dLo=(b[1]-a[1])*Math.PI/180;
   const x=Math.sin(dLa/2)**2+Math.cos(a[0]*Math.PI/180)*Math.cos(b[0]*Math.PI/180)*Math.sin(dLo/2)**2;return 2*R*Math.asin(Math.sqrt(x))}
@@ -608,7 +608,7 @@ function css2(){
 .fdPref .tx{flex:1}.fdPref b{display:block;font-size:14.5px}.fdPref small{display:block;color:var(--muted);font-size:12.5px}
 .fdLegal{font-size:11.5px;color:var(--muted);text-align:center;margin:8px 6px 0;line-height:1.45}
 .fdMap{height:220px;border-radius:16px;overflow:hidden;border:1px solid var(--line);margin:0 0 12px;position:relative;z-index:0;background:var(--v2-soft,rgba(127,127,127,.08))}
-.fdMap.tall{height:min(56vh,420px)}.fdMap .leaflet-control-attribution{font-size:9px}
+.fdMap.tall{height:min(56vh,420px)}.fdMap .leaflet-control-attribution{font-size:9px}.fdMap .leaflet-tooltip.fdTip{background:#fff;color:#0f172a;border:0;border-radius:8px;padding:2px 7px;font:700 11px/1.3 system-ui,sans-serif;box-shadow:0 2px 8px rgba(0,0,0,.2)}.fdMap .leaflet-tooltip.fdTip:before{display:none}.fdMap .leaflet-control-zoom a{width:34px;height:34px;line-height:34px}
 .fdMapPin{background:none;border:0}.fdMapPin span{display:grid;place-items:center;width:40px;height:40px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:#fff;box-shadow:0 4px 12px rgba(0,0,0,.3);font-size:20px}
 .fdMapPin span{line-height:1}.fdMapPin.cr span{background:var(--v2-pri,#0f9f6a)}
 .fdMapCenter{position:absolute;left:50%;top:50%;transform:translate(-50%,-100%);font-size:38px;z-index:500;pointer-events:none;filter:drop-shadow(0 3px 4px rgba(0,0,0,.35))}
@@ -784,14 +784,28 @@ async function homeAddr(){
 }
 async function homeActive(tok){
   try{
-    const r=await Q('GET','food_orders?select=id,status,delivery_mode,estimated_delivery_at,estimated_ready_at,food_venues(name)&customer_id=eq.'+UID()+'&status=not.in.('+TERMINAL.join(',')+')&order=created_at.desc&limit=3');
-    if(!alive(tok))return;const o=r&&r[0];
-    if(!o)return setHTML('fdActiveO','');
-    const st=STL[o.status]||['🍽️',o.status];const stg=stageOf(o);const eta=o.delivery_mode==='pickup'?o.estimated_ready_at:o.estimated_delivery_at;
-    setHTML('fdActiveO','<div class="fdActiveCard" role="button" tabindex="0" onclick="showFoodOrderDetail(\''+E(o.id)+'\')"><div class="hd"><span class="e">'+st[0]+'</span><div class="tx"><b>'+E(st[1])+'</b><small>'+E(o.food_venues?o.food_venues.name:'Siparişin')+(r.length>1?' · +'+(r.length-1)+' aktif sipariş':'')+'</small></div>'+
-      (eta?'<div class="eta"><small>'+(o.delivery_mode==='pickup'?'Hazır':'Tahmini')+'</small><b>'+hm(eta)+'</b></div>':'<span class="fdMuted">›</span>')+'</div>'+
-      '<div class="fdSteps">'+[0,1,2,3].map(i=>'<div class="'+(i<stg?'done':i===stg?'cur':'')+'"><i></i>.</div>').join('')+'</div></div>');
+    const since=new Date(Date.now()-3*3600e3).toISOString();
+    const r=await Q('GET','food_orders?select=id,status,delivery_mode,estimated_delivery_at,estimated_ready_at,delivered_at,total_kurus,food_venues(name,image_url),food_reviews(id)&customer_id=eq.'+UID()+
+      '&or=(status.not.in.('+TERMINAL.join(',')+'),and(status.eq.delivered,delivered_at.gt.'+since+'))&order=created_at.desc&limit=6');
+    if(!alive(tok))return;
+    const act=(r||[]).filter(o=>!TERMINAL.includes(o.status)),done=(r||[]).filter(o=>o.status==='delivered');
+    if(!act.length&&!done.length)return setHTML('fdActiveO','');
+    setHTML('fdActiveO',(act.length>1?'<div class="fdSecH" style="margin-top:0"><b>Aktif siparişlerin · '+act.length+'</b></div>':'')+act.map(activeCard).join('')+done.slice(0,2).map(doneCard).join(''));
   }catch(e){}
+}
+function activeCard(o){
+  const st=STL[o.status]||['🍽️',o.status];const stg=stageOf(o);const eta=o.delivery_mode==='pickup'?o.estimated_ready_at:o.estimated_delivery_at;const vn=o.food_venues?o.food_venues.name:'Restoran';
+  return '<div class="fdActiveCard"><div class="hd">'+pic(o.food_venues&&o.food_venues.image_url||'',vn,'sq').replace('class="fdPic sq"','class="fdPic sq" style="width:44px;border-radius:12px"')+
+    '<div class="tx"><small>'+E(vn)+' · #'+E(NO(o.id))+'</small><b>'+st[0]+' '+E(st[1])+'</b></div>'+
+    (eta?'<div class="eta"><small>'+(o.delivery_mode==='pickup'?'Hazır':'Tahmini')+'</small><b>'+hm(eta)+'</b></div>':'')+'</div>'+
+    '<div class="fdSteps">'+[0,1,2,3].map(i=>'<div class="'+(i<stg?'done':i===stg?'cur':'')+'"><i></i>.</div>').join('')+'</div>'+
+    '<button type="button" class="fb pri block" style="margin-top:12px;min-height:44px" onclick="showFoodOrderDetail(\''+E(o.id)+'\')">'+(['picked_up','on_the_way','near_customer'].includes(o.status)?'🛵 Siparişi canlı izle':'Siparişi izle')+'</button></div>';
+}
+function doneCard(o){
+  const vn=o.food_venues?o.food_venues.name:'Restoran';const reviewed=Array.isArray(o.food_reviews)&&o.food_reviews.length>0;
+  return '<div class="fdActiveCard" style="border-color:rgba(15,159,106,.35)"><div class="hd"><span class="e">✅</span><div class="tx"><small>'+E(vn)+' · #'+E(NO(o.id))+'</small><b style="color:var(--fd-ok)">Teslim edildi'+(o.delivered_at?' · '+hm(o.delivered_at):'')+'</b></div><div class="eta"><small>Toplam</small><b>'+M(o.total_kurus)+'</b></div></div>'+
+    '<div class="fdRow2" style="margin-top:12px">'+(reviewed?'<button type="button" class="fb" onclick="showFoodOrderDetail(\''+E(o.id)+'\')">Detay</button>':'<button type="button" class="fb soft" onclick="foodReview(\''+E(o.id)+'\','+(o.delivery_mode==='platform_delivery')+')">★ Değerlendir</button>')+
+    '<button type="button" class="fb" onclick="foodReorder(\''+E(o.id)+'\',this)">↻ Tekrarla</button></div></div>';
 }
 async function homePartner(tok){
   try{const w=await whoami();if(!alive(tok))return;
@@ -1263,7 +1277,7 @@ function orderCard(o){
   const st=STL[o.status]||['•',o.status];const t=tone(o.status);const its=o.food_order_items||[];const reviewed=Array.isArray(o.food_reviews)&&o.food_reviews.length>0;
   const vn=o.food_venues?o.food_venues.name:'Restoran';
   let acts='';
-  if(!TERMINAL.includes(o.status))acts='<button type="button" class="fb pri" onclick="showFoodOrderDetail(\''+E(o.id)+'\')">Siparişi takip et</button>';
+  if(!TERMINAL.includes(o.status))acts='<button type="button" class="fb pri" onclick="showFoodOrderDetail(\''+E(o.id)+'\')">'+(['picked_up','on_the_way','near_customer'].includes(o.status)?'🛵 Siparişi canlı izle':'Siparişi izle')+'</button>';
   else if(o.status==='delivered')acts='<button type="button" class="fb" onclick="foodReorder(\''+E(o.id)+'\',this)">↻ Tekrarla</button>'+(reviewed?'':'<button type="button" class="fb soft" onclick="foodReview(\''+E(o.id)+'\','+(o.delivery_mode==='platform_delivery')+')">★ Değerlendir</button>');
   else acts='<button type="button" class="fb" onclick="foodReorder(\''+E(o.id)+'\',this)">↻ Tekrarla</button>';
   return '<div class="fdOCard"><div class="hd" role="button" tabindex="0" onclick="showFoodOrderDetail(\''+E(o.id)+'\')">'+pic(o.food_venues&&o.food_venues.image_url||'',vn,'sq')+
@@ -1280,12 +1294,12 @@ function stageOf(o){
   return ['picked_up','on_the_way','near_customer'].includes(s)?2:1;
 }
 function stageLabels(m){return m==='pickup'?['Alındı','Hazırlanıyor','Hazır','Teslim alındı']:['Alındı','Hazırlanıyor','Yolda','Teslim edildi']}
-const TRK={id:null,home:null,courier:null,at:null,dst:null,venue:null,reload:null};
+const TRK={id:null,home:null,courier:null,at:null,dst:null,venue:null,reload:null,deliveredAt:null,addr:'',vname:''};
 async function showFoodOrderDetail(id){
   if(!A())return;const tok=newScreen();
   render(bar('Sipariş','showFoodOrders()')+skel('hero',1)+skel('row',2));
   if(TRK.id!==id){TRK.id=id;TRK.home=null;TRK.courier=null;TRK.at=null;TRK.dst=null}
-  try{const r=await Q('GET','food_orders?select=address_lat,address_lng&id=eq.'+encodeURIComponent(id));const x=r&&r[0];if(x&&x.address_lat!=null)TRK.home=[x.address_lat,x.address_lng]}catch(e){}
+  try{const r=await Q('GET','food_orders?select=address_lat,address_lng,delivered_at&id=eq.'+encodeURIComponent(id));const x=r&&r[0];if(x){if(x.address_lat!=null)TRK.home=[x.address_lat,x.address_lng];TRK.deliveredAt=x.delivered_at||null}}catch(e){}
   const liveLoc=async()=>{try{const r=await Q('GET','food_deliveries?select=status,courier_lat,courier_lng,courier_location_at&order_id=eq.'+encodeURIComponent(id));const d=r&&r[0];
     if(d){TRK.dst=d.status;if(d.courier_lat!=null&&['assigned','at_venue','picked_up','on_the_way','near_customer'].includes(d.status)){TRK.courier=[d.courier_lat,d.courier_lng];TRK.at=d.courier_location_at}else{TRK.courier=null}}}catch(e){}};
   const load=async()=>{
@@ -1316,18 +1330,19 @@ function trackRender(t){
   const acts=[];
   if(t.can.review)acts.push('<button type="button" class="fb pri block" onclick="foodReview(\''+E(o.id)+'\','+(t.can.review_courier?'true':'false')+')">★ Siparişi değerlendir</button>');
   if(TERMINAL.includes(st))acts.push('<button type="button" class="fb block" onclick="foodReorder(\''+E(o.id)+'\',this)">↻ Tekrar sipariş ver</button>');
+  if(done&&t.can.report)acts.push('<button type="button" class="fb block ghost" style="border:1px solid var(--line)" onclick="foodIssue(\''+E(o.id)+'\')">Sorun bildir</button>');
   const loc=d&&d.location;const vLL=t.venue.lat!=null?[t.venue.lat,t.venue.lng]:null;
   if(!TRK.courier&&loc&&TRK.id===o.id){TRK.courier=[loc.lat,loc.lng];TRK.at=loc.at}
   const courierStage=['courier_assigned','courier_at_venue','picked_up','on_the_way','near_customer'].includes(st)||(o.delivery_mode==='self_delivery'&&['on_the_way','near_customer'].includes(st));
   const showMap=!pickup&&!TERMINAL.includes(st)&&(!!TRK.courier||(courierStage&&!!(vLL||TRK.home)));
-  TRK.venue=vLL;setTimeout(()=>trackMap(vLL),0);
+  TRK.venue=vLL;TRK.vname=t.venue.name;setTimeout(()=>trackMap(vLL),0);
   (document.getElementById('fdTrack')?patch:render)(bar('#'+o.no,'showFoodOrders()','<span class="fdLive" id="fdLive"></span>',t.venue.name)+
     '<div id="fdTrack"><div class="fdTrackHero'+(bad?' bad':done?' ok':'')+'"><div class="st"><span class="e">'+info[0]+'</span><div><h2>'+E(info[1])+'</h2><p>'+E(sub)+'</p></div></div>'+
       (o.cancel_reason&&bad?'<div class="fdNote bad" style="margin:12px 0 0">Sebep: '+E(o.cancel_reason)+'</div>':'')+
       (!bad&&!done&&etaTs?'<div class="fdEta"><small>'+(pickup?'Tahmini hazır olma':'Tahmini teslimat')+'</small><b>'+hm(etaTs)+'</b></div>':'')+
-      (done?'<div class="fdEta"><small>Teslim edildi</small><b>'+hm((events.find(e=>e.to==='delivered')||{}).at||o.created_at)+'</b></div>':'')+
+      (done?'<div class="fdEta"><small>✓ Teslim edildi</small><b>'+hm(TRK.deliveredAt||(events.find(e=>e.to==='delivered')||{}).at||o.created_at)+'</b></div><p style="margin-top:6px">'+E(dt(TRK.deliveredAt||(events.find(e=>e.to==='delivered')||{}).at||o.created_at))+' · '+M(o.total_kurus)+'</p>':'')+
       (!bad?'<div class="fdSteps">'+lbl.map((l,i)=>'<div class="'+(i<stg||done?'done':i===stg?'cur':'')+'"><i></i>'+E(l)+'</div>').join('')+'</div>':'')+'</div>'+
-    (showMap?'<div class="fdMap" id="fdTMap"></div><p class="fdMuted fdSmall" id="fdTLoc" style="margin:-6px 0 12px"></p>':'')+
+    (showMap?'<div class="fdMap" id="fdTMap"></div><p class="fdMuted fdSmall" id="fdTLoc" style="margin:-6px 0 4px"></p>'+(o.address_text?'<p class="fdMuted fdSmall" style="margin:0 0 12px">🏠 '+E(o.address_text)+'</p>':''):'')+
     (showCode?'<div class="fdCodeBox"><div class="tx"><small>TESLİMAT KODUN</small><span class="fdSmall">Siparişi teslim alırken kuryeye söyle.</span></div><b>'+E(t.delivery_code)+'</b></div>':'')+
     (cr?'<div class="fdPerson"><span class="av">🛵</span><div class="tx"><b>'+E(cr.name)+'</b><small>'+E(VEH[cr.vehicle]||'Kurye')+(+cr.rating_avg?' · ★ '+(+cr.rating_avg).toFixed(1):'')+
       (d.location?' · <a href="https://www.google.com/maps?q='+d.location.lat+','+d.location.lng+'" target="_blank" rel="noopener" style="color:var(--fd-acc)">konum ('+ago(d.location.at)+')</a>':'')+'</small></div>'+
@@ -1336,16 +1351,16 @@ function trackRender(t){
     (acts.length?'<div class="fdRows" style="margin-bottom:12px">'+acts.join('')+'</div>':'')+
     (t.review?'<div class="fdNote ok">★ Değerlendirmen: restoran '+t.review.venue_rating+'/5'+(t.review.courier_rating?' · kurye '+t.review.courier_rating+'/5':'')+(t.review.comment?' — '+E(t.review.comment):'')+'</div>':'')+
     (!TERMINAL.includes(st)?'<div class="fdPerson" id="fdNoteCard" data-note="'+E(o.note||'')+'"><span class="av">📝</span><div class="tx"><b>Sipariş notun</b><small>'+(o.note?E(o.note):'Not eklemedin')+'</small></div><button type="button" class="fb sm" onclick="foodEditNote(\''+E(o.id)+'\')">'+(o.note?'Düzenle':'Not ekle')+'</button></div>':'')+
-    '<details class="fdDet"><summary>Sepetim · '+t.items.reduce((n,i)=>n+i.quantity,0)+' ürün</summary><div>'+
+    '<details class="fdDet"'+(TERMINAL.includes(st)?' open':'')+'><summary>Sepetim · '+t.items.reduce((n,i)=>n+i.quantity,0)+' ürün</summary><div>'+
       t.items.map(i=>'<div class="fdLine"><span>'+i.quantity+'× '+E(i.name)+((i.options||[]).length?'<br><small class="fdMuted">'+E(i.options.map(x=>(x.kind==='remove'?'Çıkar: ':'')+x.option).join(', '))+'</small>':'')+'</span><span>'+M(i.line_total_kurus)+'</span></div>').join('')+
-      '</div></details><details class="fdDet"><summary>Ödeme ve teslimat · '+M(o.total_kurus)+'</summary><div>'+'<div>'+sumHTML({subtotal_kurus:o.subtotal_kurus,delivery_fee_kurus:o.delivery_fee_kurus,platform_fee_kurus:o.platform_fee_kurus,discount_kurus:o.discount_kurus,total_kurus:o.total_kurus},!pickup)+'</div>'+
+      '</div></details><details class="fdDet"'+(TERMINAL.includes(st)?' open':'')+'><summary>Ödeme ve teslimat · '+M(o.total_kurus)+'</summary><div>'+'<div>'+sumHTML({subtotal_kurus:o.subtotal_kurus,delivery_fee_kurus:o.delivery_fee_kurus,platform_fee_kurus:o.platform_fee_kurus,discount_kurus:o.discount_kurus,total_kurus:o.total_kurus},!pickup)+'</div>'+
       '<div class="fdKV"><span>Ödeme</span><b>'+E(PAY[o.payment_method]||o.payment_method)+'</b>'+(o.address_text?'<span>Adres</span><b>'+E(o.address_text)+'</b>':'')+(o.phone?'<span>Telefon</span><b>'+E(o.phone)+'</b>':'')+(o.note?'<span>Not</span><b>'+E(o.note)+'</b>':'')+'<span>Sipariş</span><b>'+E(dt(o.created_at))+'</b></div>'+
       (events.length?'<ul class="fdEv">'+events.map(e=>'<li><b>'+E(STL[e.to][1])+'</b><span>'+hm(e.at)+'</span></li>').join('')+'</ul>':'')+
     '</div></details>'+
     ((t.issues||[]).length?'<details class="fdDet" open><summary>Bildirdiğin sorunlar</summary><div>'+t.issues.map(x=>'<div style="margin-bottom:8px"><b>'+E(ISSUE[x.type]||x.type)+'</b> <span class="fdPill">'+E({open:'Açık',in_review:'İnceleniyor',resolved:'Çözüldü',rejected:'Sonuçlandı'}[x.status]||x.status)+'</span>'+(x.description?'<div class="fdMuted fdSmall">'+E(x.description)+'</div>':'')+(x.resolution?'<div class="fdSmall" style="margin-top:4px">↳ '+E(x.resolution)+'</div>':'')+'</div>').join('')+'</div></details>':'')+
     '<div class="fdCenter" style="margin-top:6px">'+
       (t.can.cancel?'<button type="button" class="fb ghostBad" onclick="foodCustomerCancel(\''+E(o.id)+'\',this)">Siparişi iptal et</button>':'')+
-      (t.can.report?'<button type="button" class="fb ghost" onclick="foodIssue(\''+E(o.id)+'\')">Yardım · Sorun bildir</button>':'')+'</div>'+
+      (t.can.report&&!done?'<button type="button" class="fb ghost" onclick="foodIssue(\''+E(o.id)+'\')">Yardım · Sorun bildir</button>':'')+'</div>'+
     (!t.can.cancel&&!TERMINAL.includes(st)&&st!=='new'?'<p class="fdMuted fdSmall fdCenter">Restoran onayladıktan sonra iptal için restoranı arayabilirsin.</p>':'')+'</div>');
 }
 let TMAP=null,TMK={};
@@ -1354,14 +1369,15 @@ async function trackMap(v){
   try{const L=await loadMap();if(!document.getElementById('fdTMap'))return;
     if(TMAP){try{TMAP.remove()}catch(e){}TMAP=null}TMK={};
     const pts=[v,TRK.courier,TRK.home].filter(Boolean);TMAP=makeMap(L,'fdTMap',pts[0]||IZMIR,15);
-    if(v)TMK.v=L.marker(v,{icon:mapIcon(L,'🏪'),title:'Restoran'}).addTo(TMAP);
-    if(TRK.home)TMK.h=L.marker(TRK.home,{icon:mapIcon(L,'🏠'),title:'Teslimat adresin'}).addTo(TMAP);
-    if(TRK.courier)TMK.c=L.marker(TRK.courier,{icon:mapIcon(L,'🛵','cr'),title:'Kurye',zIndexOffset:1000}).addTo(TMAP);
+    if(v){TMK.v=L.marker(v,{icon:mapIcon(L,'🏪'),title:'Restoran'}).addTo(TMAP);TMK.v.bindTooltip&&TMK.v.bindTooltip(TRK.vname||'Restoran',{permanent:true,direction:'top',offset:[0,-36],className:'fdTip'})}
+    if(TRK.home){TMK.h=L.marker(TRK.home,{icon:mapIcon(L,'🏠'),title:'Teslimat adresin'}).addTo(TMAP);TMK.h.bindTooltip&&TMK.h.bindTooltip('Adresin',{permanent:true,direction:'top',offset:[0,-36],className:'fdTip'})}
+    if(TRK.courier){TMK.c=L.marker(TRK.courier,{icon:mapIcon(L,'🛵','cr'),title:'Kurye',zIndexOffset:1000}).addTo(TMAP);TMK.c.bindTooltip&&TMK.c.bindTooltip(courierTip(),{permanent:true,direction:'top',offset:[0,-36],className:'fdTip'})}
     TMK.line=L.polyline(pts,{color:'#0f9f6a',weight:4,opacity:.7,dashArray:'6 8'}).addTo(TMAP);
-    if(pts.length>1)TMAP.fitBounds(pts,{padding:[40,40],maxZoom:16});
+    if(pts.length>1)TMAP.fitBounds(pts,{padding:[46,46],maxZoom:17});else TMAP.setView(pts[0]||IZMIR,17);
     setTimeout(()=>TMAP&&TMAP.invalidateSize(),150);locText();
   }catch(e){el.remove();const t=document.getElementById('fdTLoc');if(t)t.remove()}
 }
+function courierTip(){const sec=TRK.at?Math.round((Date.now()-new Date(TRK.at))/1000):null;return 'Kurye'+(sec!=null?' · '+(sec<60?sec+' sn':Math.round(sec/60)+' dk'):'')}
 function locText(){
   const el=document.getElementById('fdTLoc');if(!el)return;
   if(!TRK.courier){el.textContent='🛵 Kurye konumu, kurye yola çıkınca haritada görünür.';return}
@@ -1371,9 +1387,10 @@ function locText(){
 async function moveCourier(){
   if(!TMAP||!document.getElementById('fdTMap')){if(TRK.reload)TRK.reload();return}
   try{const L=await loadMap();
-    if(TMK.c)TMK.c.setLatLng(TRK.courier);else TMK.c=L.marker(TRK.courier,{icon:mapIcon(L,'🛵','cr'),title:'Kurye',zIndexOffset:1000}).addTo(TMAP);
+    if(TMK.c)TMK.c.setLatLng(TRK.courier);else{TMK.c=L.marker(TRK.courier,{icon:mapIcon(L,'🛵','cr'),title:'Kurye',zIndexOffset:1000}).addTo(TMAP);TMK.c.bindTooltip&&TMK.c.bindTooltip(courierTip(),{permanent:true,direction:'top',offset:[0,-36],className:'fdTip'})}
+    if(TMK.c.setTooltipContent)TMK.c.setTooltipContent(courierTip());
     const pts=[TMK.v&&TMK.v.getLatLng(),TRK.courier,TRK.home].filter(Boolean);if(TMK.line)TMK.line.setLatLngs(pts);
-    if(!TMAP.getBounds().pad(-0.1).contains(TRK.courier))TMAP.fitBounds(pts,{padding:[40,40],maxZoom:16});
+    if(!TMAP.getBounds().pad(-0.1).contains(TRK.courier))TMAP.fitBounds(pts,{padding:[46,46],maxZoom:17});
   }catch(e){}
   locText();
 }
@@ -2010,11 +2027,11 @@ function liveSend(){
   LIVE.last=now;LIVE.pos=p;
   RPC('food_courier_update_location',{p_lat:p[0],p_lng:p[1]}).then(()=>gpsState('ok','Canlı konum paylaşılıyor · '+hm(new Date())+' · ekranı açık tut')).catch(e=>gpsState('wait','Konum gönderilemedi, tekrar denenecek: '+errMsg(e)));
 }
-function gpsState(kind,msg){LIVE.kind=kind;LIVE.msg=msg;setHTML('crGps','<div class="fdGps '+kind+'" role="status"><i></i><span>'+E(msg)+'</span></div>')}
+function gpsState(kind,msg){LIVE.kind=kind;LIVE.msg=msg;setHTML('crGps','<div class="fdGps '+kind+'" role="status"><i></i><span>'+E(msg)+'</span></div><p class="fdMuted fdSmall" style="margin:-6px 0 12px">ℹ️ Tarayıcı sınırı: Ekran kilitlenir veya başka uygulamaya geçersen konum paylaşımı durur; bu ekrana dönünce otomatik devam eder. Teslimat boyunca ekranı açık tut.</p>')}
 async function wakeOn(){try{if('wakeLock' in navigator&&!LIVE.wake){LIVE.wake=await navigator.wakeLock.request('screen');LIVE.wake.addEventListener('release',()=>{LIVE.wake=null})}}catch(e){}}
 function liveStop(){if(LIVE.watch!=null&&navigator.geolocation)navigator.geolocation.clearWatch(LIVE.watch);LIVE.watch=null;clearTimeout(LIVE.timer);LIVE.timer=null;clearInterval(LIVE.beat);LIVE.beat=null;LIVE.latest=null;LIVE.bound=false;try{LIVE.wake&&LIVE.wake.release()}catch(e){}LIVE.wake=null}
 function liveStart(){
-  if(!LIVE.bound){LIVE.bound=true;onCleanup(liveStop);const vis=()=>{if(document.visibilityState==='visible'&&LIVE.watch!=null)wakeOn()};document.addEventListener('visibilitychange',vis);onCleanup(()=>document.removeEventListener('visibilitychange',vis))}
+  if(!LIVE.bound){LIVE.bound=true;onCleanup(liveStop);const vis=()=>{if(document.visibilityState==='visible'&&LIVE.watch!=null){wakeOn();if(LIVE.last&&Date.now()-LIVE.last>20000){toast('📡 Konum paylaşımı yeniden başladı');LIVE.pos=null;liveSend()}}};document.addEventListener('visibilitychange',vis);onCleanup(()=>document.removeEventListener('visibilitychange',vis))}
   if(LIVE.watch!=null){if(LIVE.msg)gpsState(LIVE.kind,LIVE.msg);return}
   if(!navigator.geolocation)return gpsState('bad','Cihazın konum paylaşımını desteklemiyor. Müşteri seni haritada göremez.');
   gpsState('wait','Konum alınıyor… Konum izni istenirse "İzin ver"e dokun.');
