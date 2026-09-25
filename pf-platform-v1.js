@@ -215,7 +215,7 @@ PF.report=function(targetType,targetId,title){
   document.getElementById('pfxRepGo').onclick=function(){var b=this;act(b,async function(){await rpc('pf_submit_report',{p_target_type:targetType,p_target_id:String(targetId),p_reason:document.getElementById('pfxRepR').value,p_details:document.getElementById('pfxRepD').value||null});closeSheet();toast('Şikâyetin alındı. Teşekkürler.')})};
 };
 PF.block=function(userId,on,btn){if(!need())return;if(on&&!confirm('Bu kullanıcıyı engellersen sana mesaj gönderemez. Devam edilsin mi?'))return;act(btn,async function(){await rpc('pf_block_user',{p_user:userId,p_block:!!on});toast(on?'Kullanıcı engellendi.':'Engel kaldırıldı.');if(!on&&document.getElementById('pfxSheet'))PF.openPrivacy()})};
-PF.reportButton=function(targetType,targetId,title){if(!PF.enabled)return '';return '<button type="button" class="pfxBtn" style="font-size:12px;padding:6px 10px" onclick=\'PF.report('+JSON.stringify(targetType)+','+JSON.stringify(String(targetId))+','+JSON.stringify(title||'')+')\'>⚑ Şikâyet et</button>'};
+PF.reportButton=function(targetType,targetId,title){if(!PF.enabled)return '';var args=(JSON.stringify(targetType)+','+JSON.stringify(String(targetId))+','+JSON.stringify(title||'')).replace(/&/g,'&amp;').replace(/'/g,'&#39;');return '<button type="button" class="pfxBtn" style="font-size:12px;padding:6px 10px" onclick=\'PF.report('+args+')\'>⚑ Şikâyet et</button>'};
 
 /* ------------------------------------------------------------------ hizmet talebi iletişim bilgisi */
 PF.fillRequestContact=async function(){

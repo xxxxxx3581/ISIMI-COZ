@@ -904,6 +904,7 @@ html[data-theme="light"]{--v2-p-orig:#cfd9e4;--v2-glass:#b9c8d8;--v2-wheel:#5b6d
 .v2SellerCard{border:1px solid var(--line);background:var(--card);border-radius:16px;padding:14px}
 .v2SellerRow{display:flex;gap:12px;align-items:center}
 .v2Av{flex:0 0 52px;width:52px;height:52px;border-radius:50%;object-fit:cover;background:var(--v2-soft);display:grid;place-items:center;font-weight:900;font-size:20px;color:var(--v2-pri)}
+.v2SellerLink{display:block;color:inherit;text-decoration:none;-webkit-tap-highlight-color:transparent}.v2SellerLink:active{opacity:.85}.v2SellerGo{display:block;margin-top:10px;font-size:13px;font-weight:800;color:var(--v2-pri)}
 .v2SellerN{font-weight:900;font-size:16px}.v2SellerT{font-size:13px;color:var(--v2-pri);font-weight:700}.v2SellerM{font-size:12.5px;color:var(--muted);margin-top:2px}
 .v2SellerB{margin:10px 0 0;font-size:13.5px;line-height:1.5;color:var(--muted)}
 .v2Rail{display:flex;gap:10px;overflow-x:auto;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;padding:2px 2px 8px;margin:0 -2px}
@@ -5785,9 +5786,11 @@ async function v2FillSeller(row){
   var name=(p&&p.display_name)||'İlan sahibi', pro=(p&&p.seller_type==='professional')||(!p&&md.seller_type==='professional');
   var loc=p?[p.district,p.city].filter(Boolean).join(', '):'';
   var av=(p&&p.avatar_url)?'<img src="'+escapeHTML(p.avatar_url)+'" alt="" class="v2Av">':'<div class="v2Av ph" aria-hidden="true">'+escapeHTML(name.trim().charAt(0).toUpperCase())+'</div>';
-  box.innerHTML='<div class="v2SellerRow">'+av+'<div style="min-width:0"><div class="v2SellerN">'+escapeHTML(name)+'</div><div class="v2SellerT">'+(pro?'Profesyonel satıcı':'Bireysel satıcı')+'</div>'+
+  var prof='./marketplace-profile.html?seller='+encodeURIComponent(row.owner_id);
+  box.innerHTML='<a class="v2SellerLink" href="'+prof+'" aria-label="'+escapeHTML(name)+' satıcı profilini aç"><div class="v2SellerRow">'+av+'<div style="min-width:0"><div class="v2SellerN">'+escapeHTML(name)+'</div><div class="v2SellerT">'+(pro?'Profesyonel satıcı':'Bireysel satıcı')+'</div>'+
     '<div class="v2SellerM">'+(loc?'📍 '+escapeHTML(loc):'')+(loc&&n!=null?' · ':'')+(n!=null?n+' yayında ilan':'')+'</div></div></div>'+
-    ((p&&p.bio)?'<p class="v2SellerB">'+escapeHTML(p.bio)+'</p>':'');
+    ((p&&p.bio)?'<p class="v2SellerB">'+escapeHTML(p.bio)+'</p>':'')+
+    '<span class="v2SellerGo">Satıcı profilini ve ilanlarını gör ›</span></a>';
 }
 
 async function v2FillSimilar(row,type){
@@ -5942,11 +5945,21 @@ async function v2LoadDetail(listingId,type){
     if(!document.getElementById('v2DetailBox')) return;
     if(!row){ box.innerHTML='<div class="v2Empty"><h3>İlan bulunamadı</h3><div class="small">Bu ilan yayında değil veya kaldırılmış olabilir.</div><div class="row"><button type="button" class="v2Btn pri sm" onclick="v2ClearHash();kesfetOpen(\'all\')">İlanlara dön</button></div></div>'; return; }
     v2RenderDetail(box,row,type);
-    try{if(window.PF&&PF.enabled&&!v2IsOwner(row)){box.insertAdjacentHTML('beforeend','<div class="pfxListingActs" style="margin:14px 0;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">'+PF.reportButton('listing',row.id,row.title)+(row.owner_id?'<button type="button" class="pfxBtn" style="font-size:12px;padding:6px 10px" onclick="PF.block(\''+escapeHTML(row.owner_id)+'\',true,this)">🚫 Satıcıyı engelle</button>':'')+'</div>')}}catch(e){}
+    v2PfListingActs(box,row,0);
   }catch(err){
     console.error('v2LoadDetail',err);
     if(box) box.innerHTML='<div class="v2Empty"><h3>Detay yüklenemedi</h3><div class="small">'+escapeHTML(err&&err.message?err.message:String(err))+'</div><div class="row"><button type="button" class="v2Btn sm" onclick="v2LoadDetail(\''+id+'\',\''+type+'\')">Tekrar dene</button></div></div>';
   }
+}
+
+/* Şikâyet / engelle butonları. İlan paylaşılan bağlantıdan (#ilan=…) açıldığında platform katmanı (PF) henüz
+   hazır olmayabilir; bu durumda kısa süre beklenir. Aynı ilan hâlâ ekrandaysa ve butonlar yoksa bir kez eklenir. */
+function v2PfListingActs(box,row,tries){
+  try{
+    if(!box||!box.isConnected||window.__activeListingRow!==row||box.querySelector('.pfxListingActs')||v2IsOwner(row)) return;
+    if(!(window.PF&&PF.enabled)){ if(tries<20) setTimeout(function(){ v2PfListingActs(box,row,tries+1); },300); return; }
+    box.insertAdjacentHTML('beforeend','<div class="pfxListingActs" style="margin:14px 0;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">'+PF.reportButton('listing',row.id,row.title)+(row.owner_id?'<button type="button" class="pfxBtn" style="font-size:12px;padding:6px 10px" onclick="PF.block(\''+escapeHTML(row.owner_id)+'\',true,this)">🚫 Satıcıyı engelle</button>':'')+'</div>');
+  }catch(e){}
 }
 
 function v2DescBoxHtml(row,editing){
