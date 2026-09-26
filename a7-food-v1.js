@@ -29,6 +29,8 @@ function errMsg(e){
   return m||'Beklenmeyen bir hata oluştu.';
 }
 function isNetErr(e){return /Failed to fetch|NetworkError|Load failed/i.test((e&&e.message)||'')}
+/* food_reviews.order_id UNIQUE olduğu için PostgREST bu ilişkiyi nesne (veya null) döndürür; dizi gelirse de doğru çalışır. */
+function hasReview(o){const r=o&&o.food_reviews;return Array.isArray(r)?r.length>0:!!r}
 function debounce(fn,ms){let t;return(...a)=>{clearTimeout(t);t=setTimeout(()=>fn(...a),ms)}}
 function ago(ts){if(!ts)return'';const d=(Date.now()-new Date(ts))/1000;if(d<60)return'az önce';if(d<3600)return Math.floor(d/60)+' dk önce';if(d<86400)return Math.floor(d/3600)+' sa önce';return new Date(ts).toLocaleDateString('tr-TR',{day:'numeric',month:'short'})}
 function hm(ts){return ts?new Date(ts).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'}):''}
@@ -407,7 +409,7 @@ function css(){
 .fdCartBar .n{min-width:28px;height:28px;border-radius:9px;background:rgba(255,255,255,.22);display:grid;place-items:center;font-weight:800;font-size:14px}
 .fdCartBar .l{flex:1;font-weight:800;font-size:15px}.fdCartBar .r{font-weight:800;font-size:15px;padding:0 8px}
 .fdCta{display:flex;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:18px;background:var(--card);box-shadow:0 10px 28px rgba(0,0,0,.14)}
-.fdCta .fb{flex:1;min-height:52px;font-size:16px}
+.fdCta .fb{flex:1;min-height:52px;font-size:16px}@media (max-width:380px){.fdCta{gap:6px;padding:8px}.fdCta .fb{min-width:0;padding:0 8px;font-size:14px}}
 /* Sepet / checkout */
 .fdLine{display:flex;justify-content:space-between;gap:10px;padding:5px 0;font-size:14.5px}.fdLine.total{font-size:17px;font-weight:900;border-top:1px solid var(--line);margin-top:6px;padding-top:12px}
 .fdLine .m{color:var(--muted)}
@@ -871,7 +873,7 @@ async function homeActive(tok){
     setHTML('fdActiveO',act.length?(act.length>1?'<div class="fdSecH" style="margin-top:0"><b>Aktif siparişlerin · '+act.length+'</b></div>':'')+act.map(activeCard).join(''):'');
     /* Teslim edilen sipariş ana sayfada kart olarak kalmaz; değerlendirilmemişse BİR KEZ kısa soru gösterilir. Sipariş, Siparişlerim'de durur. */
     const recent=o=>o.delivered_at&&Date.now()-new Date(o.delivered_at)<3*3600e3;
-    const ask=done.find(o=>recent(o)&&!(Array.isArray(o.food_reviews)&&o.food_reviews.length)&&!ratePrompted(o.id));
+    const ask=done.find(o=>recent(o)&&!hasReview(o)&&!ratePrompted(o.id));
     if(ask&&!document.getElementById('fdModal'))ratePrompt(ask);
   }catch(e){}
 }
@@ -895,7 +897,7 @@ function ratePrompt(o){
   w.querySelector('[data-x=rate]').onclick=()=>{closeModal();foodReview(o.id,o.delivery_mode==='platform_delivery')};
 }
 function doneCard(o){
-  const vn=o.food_venues?o.food_venues.name:'Restoran';const reviewed=Array.isArray(o.food_reviews)&&o.food_reviews.length>0;
+  const vn=o.food_venues?o.food_venues.name:'Restoran';const reviewed=hasReview(o);
   return '<div class="fdActiveCard" style="border-color:rgba(15,159,106,.35)"><div class="hd"><span class="e">✅</span><div class="tx"><small>'+E(vn)+' · #'+E(NO(o.id))+'</small><b style="color:var(--fd-ok)">Teslim edildi'+(o.delivered_at?' · '+hm(o.delivered_at):'')+'</b></div><div class="eta"><small>Toplam</small><b>'+M(o.total_kurus)+'</b></div></div>'+
     '<div class="fdRow2" style="margin-top:12px">'+(reviewed?'<button type="button" class="fb" onclick="showFoodOrderDetail(\''+E(o.id)+'\')">Detay</button>':'<button type="button" class="fb soft" onclick="foodReview(\''+E(o.id)+'\','+(o.delivery_mode==='platform_delivery')+')">★ Değerlendir</button>')+
     '<button type="button" class="fb" onclick="foodReorder(\''+E(o.id)+'\',this)">↻ Tekrarla</button></div></div>';
@@ -1436,7 +1438,7 @@ function ordersRender(){
   setHTML('fdOMore',OL.done?'':'<button type="button" class="fb block" onclick="foodOrdersMore(this)">Daha fazla</button>');
 }
 function orderCard(o){
-  const st=STL[o.status]||['•',o.status];const t=tone(o.status);const its=o.food_order_items||[];const reviewed=Array.isArray(o.food_reviews)&&o.food_reviews.length>0;
+  const st=STL[o.status]||['•',o.status];const t=tone(o.status);const its=o.food_order_items||[];const reviewed=hasReview(o);
   const vn=o.food_venues?o.food_venues.name:'Restoran';
   let acts='';
   if(!TERMINAL.includes(o.status))acts='<button type="button" class="fb pri" onclick="showFoodOrderDetail(\''+E(o.id)+'\')">'+(['picked_up','on_the_way','near_customer'].includes(o.status)?'🛵 Siparişi canlı izle':'Siparişi izle')+'</button>';
