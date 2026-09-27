@@ -4841,7 +4841,7 @@ async function showRequestDetailData(r){
   const stNorm=st.toLowerCase();
   let isAccepted=stNorm==='accepted'||stNorm.indexOf('devam')>=0||!!r._forceComplete;
   let isCompleted=stNorm==='completed'||stNorm.indexOf('tamam')>=0;
-  const completeBtnHtml=`<button type="button" class="btn primary" style="width:100%;margin-top:10px;padding:14px;font-size:16px" onclick="completeRequestFromCustomer(${JSON.stringify(no)})">🏁 İşi Tamamlandı</button>`;
+  const completeBtnHtml=`<button type="button" class="btn primary" style="width:100%;margin-top:10px;padding:14px;font-size:16px" onclick="completeRequestFromCustomer(${escapeHTML(JSON.stringify(no))})">🏁 İşi Tamamlandı</button>`;
   app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showRequests()">← Taleplerime dön</button></div>
   <span class="badge">▣ TALEP DETAYI</span>
   <h1>${s.emoji} ${escapeHTML(s.name)}</h1>
