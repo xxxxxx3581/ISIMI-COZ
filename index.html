@@ -5098,24 +5098,26 @@ async function v2MyProviders(){
 }
 async function showProviderEntry(){
  setNav("navProvider");
- const local=getProvider();
- const mine=await v2MyProviders();
- if(mine.length){
-  const cur=local&&providerLogged()?mine.find(p=>String(p.id)===String(local.id)):null;
-  if(cur||mine.length===1){showProviderPanel(cur||mine[0]);return}
-  app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div><div class="formCard"><span class="badge">🛠️ HİZMET VEREN</span><h1>Gelen talepler</h1><p class="muted small">Hizmet veren hesabını seç; o hesabın kategorisine ve bölgesine uygun talepleri görüp teklif verebilirsin.</p><div class="section">${mine.map(p=>renderProviderCard(p)).join("")}</div></div>`);
-  return;
- }
- if(local&&providerLogged()){showProviderPanel(local);return}
- app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div><div class="formCard"><span class="badge">🛠️ HİZMET SAĞLAYICI</span><h1>Hizmet Ver</h1><p class="muted small">Supabase'deki kayıtlı hizmet sağlayıcıları ve sana uygun talepleri yükleyelim.</p><button class="btn primary" onclick="loadProviderDirectory()">KAYITLI SAĞLAYICILARI GÖSTER</button><div id="providerDirectory"></div></div>`);
+ const logged=!!(getAuthSession()&&getAuthSession().user);
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div><div class="formCard"><span class="badge">🛠️ HİZMET SAĞLAYICI</span><h1>Gelen Talepler</h1><p class="muted small">Talepler kategoriye ve ilçeye göre ilgili ustalara düşer. Hesabını seç, açık talepleri gör ve teklif ver.</p>${logged?'':'<div class="warning" style="margin-top:10px">Talepleri görmek ve teklif vermek için giriş yapmalısın. <button type="button" class="btn secondary smallBtn" onclick="openAuthModal(\'login\')">Giriş yap</button></div>'}<div id="providerDirectory"></div></div>`);
  await loadProviderDirectory();
+}
+
+/* Açık (henüz karşılanmamış) ve sağlayıcının kategori/ilçesine uyan talepler. Tamamlanan/iptal/devam eden işler listeye girmez. */
+function providerOpenRequests(p,requests){
+ const open=statusToUI('pending');
+ return (requests||[]).filter(r=>String(r.status||r.durum||'')===open&&providerMatchesRequest(p,r));
 }
 
 async function loadProviderDirectory(){
  const box=document.getElementById("providerDirectory");if(!box)return;
  box.innerHTML=`<div class="card" style="margin-top:14px;text-align:center">⏳ Hizmet sağlayıcılar yükleniyor...</div>`;
- let providers=await loadProvidersFromSupabase();providers=await enrichProviders(providers);
+ let [providers,requests]=await Promise.all([loadProvidersFromSupabase().then(enrichProviders),loadRequestsFromSupabase()]);
  if(!providers.length){box.innerHTML=`<div class="warning">Supabase'de <strong>providers</strong> tablosundan okunabilir hizmet sağlayıcı kaydı bulunamadı.</div>`;return}
+ const s=getAuthSession(), uid=s&&s.user&&s.user.id;
+ providers.forEach(p=>{p._open=providerOpenRequests(p,requests).length;p._own=!!uid&&(String(p.owner_id||"")===uid||String(p.user_id||"")===uid);});
+ /* Aktif hesaplar üstte; sonra açık talebi olanlar; sonra kendi hesapların */
+ providers.sort((a,b)=>(b.active-a.active)||(b._open-a._open)||(b._own-a._own)||String(a.name).localeCompare(String(b.name),'tr'));
  box.innerHTML=`<div class="section"><h2>Hizmet sağlayıcılar</h2>${providers.map(p=>renderProviderCard(p)).join("")}</div>`;
 }
 
@@ -5131,7 +5133,7 @@ function renderProviderCard(p){
      </div>
      <div class="small muted" style="margin-top:6px">📞 ${escapeHTML(phone)}</div>`
   : `<div class="warning">Bu sağlayıcının telefon numarası kayıtlı değil.</div>`;
- return `<article class="request"><div class="requestTop"><div><h3>🛠️ ${escapeHTML(p.name)}</h3><div class="small muted">${escapeHTML(p.city)} • ${escapeHTML(p.district)}</div></div><span class="status">${p.active?"Aktif":"Pasif"}</span></div><div class="meta"><span>🔧 ${escapeHTML(cats)}</span>${p.neighborhood?`<span>🏘️ ${escapeHTML(p.neighborhood)}</span>`:""}</div>${p.description?`<div class="description">${escapeHTML(p.description)}</div>`:""}${phoneBlock}<br><button type="button" class="btn secondary" onclick='openProviderById(${JSON.stringify(String(p.id))})'>📋 UYGUN TALEPLERİ GÖR</button></article>`;
+ return `<article class="request"><div class="requestTop"><div><h3>🛠️ ${escapeHTML(p.name)}</h3><div class="small muted">${escapeHTML(p.city)} • ${escapeHTML(p.district)}</div></div><span class="status">${p.active?"Aktif":"Pasif"}</span></div><div class="meta"><span>🔧 ${escapeHTML(cats)}</span>${p._open!=null?`<span><strong>📋 ${p._open} açık talep</strong></span>`:""}${p._own?`<span>✅ Senin hesabın</span>`:""}${p.neighborhood?`<span>🏘️ ${escapeHTML(p.neighborhood)}</span>`:""}</div>${p.description?`<div class="description">${escapeHTML(p.description)}</div>`:""}${phoneBlock}<br><button type="button" class="btn secondary" onclick='openProviderById(${JSON.stringify(String(p.id))})'>📋 UYGUN TALEPLERİ GÖR</button></article>`;
 }
 
 async function openProviderById(id){
@@ -5141,14 +5143,14 @@ async function openProviderById(id){
 
 async function showProviderPanel(p){if(p){write(KEYS.provider,p);write(KEYS.providerLogged,true);}
  setNav("navProvider");
- app(`<div class="back"><button class="btn secondary smallBtn" onclick="showProviderEntry()">← Hizmet sağlayıcılara dön</button></div><div class="profileHeader"><div class="avatar">${escapeHTML((p.name||"U").charAt(0).toUpperCase())}</div><div style="flex:1"><strong>${escapeHTML(p.name)}</strong><div class="small muted"><span class="activeDot"></span>${p.active?"Aktif":"Pasif"} • ${escapeHTML(p.district)}</div><div class="svcRatingBadge" id="providerRatingBadge" style="margin-top:6px">★ —</div></div></div><div class="grid section"><div class="card"><div style="font-size:24px">📋</div><strong id="matchCount">...</strong><div class="small muted">Uygun İş</div></div><div class="card"><div style="font-size:24px">🛠️</div><strong>${p.services.length}</strong><div class="small muted">Kategori</div></div></div><div class="section"><h2>📋 Sana Uygun Talepler</h2><div id="matchedRequests" class="card" style="text-align:center">⏳ Eşleşmeler aranıyor...</div></div>`);
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick="showProviderEntry()">← Hizmet sağlayıcılara dön</button></div><div class="profileHeader"><div class="avatar">${escapeHTML((p.name||"U").charAt(0).toUpperCase())}</div><div style="flex:1"><strong>${escapeHTML(p.name)}</strong><div class="small muted"><span class="activeDot"></span>${p.active?"Aktif":"Pasif"} • ${escapeHTML(p.district)}</div><div class="svcRatingBadge" id="providerRatingBadge" style="margin-top:6px">★ —</div></div></div><div class="grid section"><div class="card"><div style="font-size:24px">📋</div><strong id="matchCount">...</strong><div class="small muted">Açık talep</div></div><div class="card"><div style="font-size:24px">🛠️</div><strong>${p.services.length}</strong><div class="small muted">Kategori</div></div></div><div class="section"><h2>📋 Sana Uygun Talepler</h2><div id="matchedRequests" class="card" style="text-align:center">⏳ Eşleşmeler aranıyor...</div></div>`);
  try{
    const st=await fetchProviderReviewStats(p.id);
    const badge=document.getElementById('providerRatingBadge');
    if(badge)badge.textContent=st.count?starsLabel(st.avg,st.count):'Henüz değerlendirme yok';
  }catch(e){}
  const requests=await loadRequestsFromSupabase();
- const suitable=requests.filter(r=>providerMatchesRequest(p,r));
+ const suitable=providerOpenRequests(p,requests);
  document.getElementById("matchCount").textContent=suitable.length;
  const box=document.getElementById("matchedRequests");
  if(!suitable.length){box.innerHTML=`<div class="empty">🔎<h3>Şimdilik uygun talep yok.</h3><p>Sağlayıcının kategorisi ve ilçesi ile eşleşen talepler burada görünecek.</p></div>`}
@@ -6205,7 +6207,7 @@ async function showMine(){
     else html+=v2SearchCard(it.r,acts);
   });
   var prov=null; try{ prov=(getProvider&&getProvider()&&providerLogged())?getProvider():null; }catch(e){}
-  if(prov&&(seg==='all')) html='<div class="v2MC"><div class="v2MRow" role="button" tabindex="0" data-act="'+(acts.push(function(){ showProviderPanel(prov); })-1)+'"><div class="v2MThumb"><div class="v2Ph"><span>🛠️</span></div></div><div class="v2MInfo"><div class="t">Gelen talepler</div><div class="m">Hizmet veren hesabına uygun talepler · Teklif ver</div></div></div></div>'+html;
+  if(prov&&(seg==='all')) html='<div class="v2MC"><div class="v2MRow" role="button" tabindex="0" data-act="'+(acts.push(function(){ showProviderEntry(); })-1)+'"><div class="v2MThumb"><div class="v2Ph"><span>🛠️</span></div></div><div class="v2MInfo"><div class="t">Gelen talepler</div><div class="m">Hizmet veren hesabına uygun talepler · Teklif ver</div></div></div></div>'+html;
   var resume=(seg==='all')?v2ResumeCard():'';
   if(!html){
     var msg=seg==='requests'?['Henüz talebin yok','İhtiyacını anlat, teklifler gelsin.']:seg==='cases'?['Henüz işlem dosyan yok','Bir resmî işlem başlatınca burada takip edersin.']:seg==='searches'?['Kayıtlı aramaların yok','Ara ekranında filtre uygulayıp "Aramayı kaydet" diyebilirsin.']:['Henüz bir işin yok','Bir ilan ver, hizmet iste veya resmî işlem başlat.'];
