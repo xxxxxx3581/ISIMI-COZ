@@ -1146,6 +1146,7 @@ html[data-theme="light"] .v2Btn.msg{background:#1f5fa8}
 .v2WsLinks button{border:0;background:transparent;color:var(--v2-pri);font-weight:800;font-size:13px;padding:8px 4px;cursor:pointer}
 .v2WsBar .v2Btn.idle{background:var(--card);color:var(--muted);border-color:var(--line)}
 </style>
+<style id="v2HomeBtnCss">.v2HomeBtn{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:42px;min-width:42px;padding:0 12px 0 10px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;font-size:13px;font-weight:800;cursor:pointer}.v2HomeBtn:active{transform:scale(.97)}.v2HomeBtn:focus-visible{outline:2px solid var(--v2-pri);outline-offset:2px}@media(max-width:430px){.v2HomeBtn{padding:0}.v2HomeBtn span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}}.v2KTop .v2HomeBtn{margin-left:4px}@media(max-width:430px){.v2KTop:has(.v2HomeBtn) .v2Back{font-size:0;gap:0;width:42px;min-width:42px;padding:0;justify-content:center}.v2KTop:has(.v2HomeBtn) .v2Back::before{content:"←";font-size:19px;font-weight:800;line-height:1}}@media(max-width:374px){.v2KTop:has(.v2HomeBtn) h1{font-size:17.5px}}.back.v2BackRow{display:flex;align-items:center;gap:8px}.back.v2BackRow>.btn{flex:1 1 auto;min-width:0}</style>
 <style id="v2FoodBrandCss">.homeFeaturedBody{padding:0 0 14px 14px;box-sizing:border-box}.homeFeaturedCta{padding:7px 12px!important;font-size:12px!important;gap:4px;border-radius:999px;background:rgba(255,255,255,.92)!important;color:#0b3d2e!important;box-shadow:0 4px 14px rgba(0,0,0,.14)!important;opacity:1!important;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}.homeFeaturedCta span{font-size:15px;line-height:1}</style>
 </head>
 <body>
@@ -1184,7 +1185,7 @@ html[data-theme="light"] .v2Btn.msg{background:#1f5fa8}
   <div class="appDrawerNav">
     <button type="button" onclick="closeAppDrawer();showFavorites()">♡ Favorilerim</button>
     <button type="button" onclick="closeAppDrawer();showSavedSearches()">🔖 Kayıtlı aramalar</button>
-    <button type="button" onclick="closeAppDrawer();showProviderEntry()">🛠️ Hizmet vermek istiyorum</button>
+    <button type="button" onclick="closeAppDrawer();showProviderEntry()">📋 Gelen talepler (hizmet veren)</button>
   </div>
   <div class="appDrawerSec">Diğer çalışma alanları</div>
   <div class="appDrawerNav">
@@ -1311,7 +1312,15 @@ function getRequests(){return read(KEYS.requests,[])}
 function getProvider(){return read(KEYS.provider,null)}
 function providerLogged(){return read(KEYS.providerLogged,false)}
 function escapeHTML(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
-function app(h){document.getElementById("app").innerHTML=h;window.scrollTo(0,0)}
+function app(h){var el=document.getElementById("app");el.innerHTML=h;window.scrollTo(0,0);try{v2AddHomeBtn(el)}catch(e){}}
+/* Geri butonu olan ekranlara, yanına küçük bir "Ana sayfa" düğmesi ekler (ana ekranın kendisine eklemez). */
+var V2_HOME_ICO='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-6h4v6"/></svg>';
+function v2AddHomeBtn(el){
+  if(!el||el.querySelector(".v2HomeBtn")) return;
+  var btn='<button type="button" class="v2HomeBtn" onclick="showHome()" aria-label="Ana sayfa" title="Ana sayfa">'+V2_HOME_ICO+'<span>Ana sayfa</span></button>';
+  var b=el.querySelector(".v2KTop>.v2Back"); if(b){ b.insertAdjacentHTML("afterend",btn); return; }
+  var lb=el.querySelector("div.back"); if(lb&&!lb.querySelector('[onclick*="showHome"]')){ lb.classList.add("v2BackRow"); lb.insertAdjacentHTML("beforeend",btn); }
+}
 
 function openAppDrawer(){
   const d=document.getElementById('appDrawer');
@@ -1615,7 +1624,9 @@ function mapProvider(r){
   neighborhood:pick(r,["mahalle","neighborhood"],""),
   description:pick(r,["description","aciklama"],""),
   active:pick(r,["active","aktif"],true)!==false,
-  services:[]
+  owner_id:r.owner_id||null,
+  user_id:r.user_id||null,
+  services:Array.isArray(r.services)?r.services.filter(Boolean).map(serviceKeyFromValue):[]   /* providers.services kolonu kategorilerin asıl kaynağı */
  };
 }
 
@@ -5076,9 +5087,23 @@ function renderRequest(r){
 
 /* ---------------- PROVIDER ---------------- */
 
+/* Giriş yapan kullanıcının kendi hizmet veren hesapları (providers.owner_id / user_id). Veri ve RLS mevcut; yalnızca okunur. */
+async function v2MyProviders(){
+ const s=getAuthSession(), uid=s&&s.user&&s.user.id; if(!uid) return [];
+ if(window.__myProv&&window.__myProv.uid===uid&&Date.now()-window.__myProv.t<60000) return window.__myProv.list;
+ let list=[]; try{ list=(await enrichProviders(await loadProvidersFromSupabase())).filter(p=>String(p.owner_id||"")===uid||String(p.user_id||"")===uid); }catch(e){ list=[]; }
+ window.__myProv={uid:uid,t:Date.now(),list:list}; return list;
+}
 async function showProviderEntry(){
  setNav("navProvider");
  const local=getProvider();
+ const mine=await v2MyProviders();
+ if(mine.length){
+  const cur=local&&providerLogged()?mine.find(p=>String(p.id)===String(local.id)):null;
+  if(cur||mine.length===1){showProviderPanel(cur||mine[0]);return}
+  app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div><div class="formCard"><span class="badge">🛠️ HİZMET VEREN</span><h1>Gelen talepler</h1><p class="muted small">Hizmet veren hesabını seç; o hesabın kategorisine ve bölgesine uygun talepleri görüp teklif verebilirsin.</p><div class="section">${mine.map(p=>renderProviderCard(p)).join("")}</div></div>`);
+  return;
+ }
  if(local&&providerLogged()){showProviderPanel(local);return}
  app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div><div class="formCard"><span class="badge">🛠️ HİZMET SAĞLAYICI</span><h1>Hizmet Ver</h1><p class="muted small">Supabase'deki kayıtlı hizmet sağlayıcıları ve sana uygun talepleri yükleyelim.</p><button class="btn primary" onclick="loadProviderDirectory()">KAYITLI SAĞLAYICILARI GÖSTER</button><div id="providerDirectory"></div></div>`);
  await loadProviderDirectory();
@@ -6178,7 +6203,7 @@ async function showMine(){
     else html+=v2SearchCard(it.r,acts);
   });
   var prov=null; try{ prov=(getProvider&&getProvider()&&providerLogged())?getProvider():null; }catch(e){}
-  if(prov&&(seg==='all')) html='<div class="v2MC"><div class="v2MRow" role="button" tabindex="0" data-act="'+(acts.push(function(){ showProviderPanel(prov); })-1)+'"><div class="v2MThumb"><div class="v2Ph"><span>🛠️</span></div></div><div class="v2MInfo"><div class="t">Hizmet veren panelin</div><div class="m">Sana uygun talepler ve tekliflerin</div></div></div></div>'+html;
+  if(prov&&(seg==='all')) html='<div class="v2MC"><div class="v2MRow" role="button" tabindex="0" data-act="'+(acts.push(function(){ showProviderPanel(prov); })-1)+'"><div class="v2MThumb"><div class="v2Ph"><span>🛠️</span></div></div><div class="v2MInfo"><div class="t">Gelen talepler</div><div class="m">Hizmet veren hesabına uygun talepler · Teklif ver</div></div></div></div>'+html;
   var resume=(seg==='all')?v2ResumeCard():'';
   if(!html){
     var msg=seg==='requests'?['Henüz talebin yok','İhtiyacını anlat, teklifler gelsin.']:seg==='cases'?['Henüz işlem dosyan yok','Bir resmî işlem başlatınca burada takip edersin.']:seg==='searches'?['Kayıtlı aramaların yok','Ara ekranında filtre uygulayıp "Aramayı kaydet" diyebilirsin.']:['Henüz bir işin yok','Bir ilan ver, hizmet iste veya resmî işlem başlat.'];
@@ -6186,6 +6211,7 @@ async function showMine(){
   }
   if(errs.length) html='<div class="v2Warn" role="alert">⚠️ '+errs.join(', ')+' şu an yüklenemedi. Sayfayı yenileyip tekrar dene.</div>'+html;
   box.innerHTML=resume+html; window.__mineActs=acts;
+  if(seg==='all'&&!prov){ v2MyProviders().then(function(mine){ if(!mine.length||!document.body.contains(box)||box.querySelector('.v2ProvIn')) return; box.insertAdjacentHTML('afterbegin','<div class="v2MC v2ProvIn"><div class="v2MRow" role="button" tabindex="0" onclick="showProviderEntry()"><div class="v2MThumb"><div class="v2Ph"><span>📋</span></div></div><div class="v2MInfo"><div class="t">Gelen talepler</div><div class="m">Hizmet veren hesabına uygun talepler · Teklif ver</div></div></div></div>'); }); }
   v2BindMine(box);
   /* tekliflerin sayısını arka planda doldur (mevcut loadOffersForRequest) */
   reqs.filter(function(r){return v2RequestState(r)==='open';}).slice(0,6).forEach(function(r){
@@ -6345,12 +6371,17 @@ function v2NavUrl(name,args){
   return base;
 }
 
+/* Alt menü sekmeleri: aralarında geçiş yeni geçmiş kaydı açmaz; geri tuşu doğrudan Ana sayfaya döner. */
+var V2_NAV_TABS={showKesfet:1,showMine:1,showFoodHome:1};
 function v2NavPush(name,fn,args){
   if(V2_NAV.busy) return;
   try{
     var sig=v2NavSig(name,args), cur=V2_NAV.stack[V2_NAV.idx], url=v2NavUrl(name,args), rep=V2_NAV.replaceNext||name==='v2DraftResult';
     V2_NAV.replaceNext=false;
     if(cur) cur.scroll=window.scrollY||0;
+    /* Ana sayfaya gidiş yeni kayıt açmaz: tarayıcı geçmişinde ilk kayda geri sarılır (arada kalan ekranlar geri tuşunda tekrar dolaşılmaz). */
+    if(name==='showHome'&&V2_NAV.idx>0){ var n=V2_NAV.idx; V2_NAV.stack=[{sig:sig,fn:fn,scroll:0}]; V2_NAV.idx=0; V2_NAV.skip++; V2_NAV.homeUrl=url; history.go(-n); return; }
+    if(!rep&&cur&&cur.sig!==sig&&V2_NAV_TABS[name]&&V2_NAV_TABS[cur.sig]) rep=true;
     if(V2_NAV.idx<0){ V2_NAV.stack=[{sig:sig,fn:fn,scroll:0}]; V2_NAV.idx=0; history.replaceState({v2:0},'',url); }
     else if(cur&&(cur.sig===sig||rep)){ cur.sig=sig; cur.fn=fn; history.replaceState({v2:V2_NAV.idx},'',url); }
     else{ V2_NAV.stack=V2_NAV.stack.slice(0,V2_NAV.idx+1); V2_NAV.stack.push({sig:sig,fn:fn,scroll:0}); V2_NAV.idx++; history.pushState({v2:V2_NAV.idx},'',url); }
@@ -6358,7 +6389,7 @@ function v2NavPush(name,fn,args){
 }
 
 function v2NavInstall(){
-  ['showHome','showKesfet','showMine','showFavorites','showSavedSearches','v2LoadDetail','v2Workspace','v2EditListing','showRequest','showRequests','showRequestDetail','showProviderEntry','showProviderPanel','showProviderRequestDetail','showWorkAreaGayrimenkul','showWorkAreaArac','showListingsCategory','showGayrimenkulCreateForm','showGayrimenkulConfirm','showOtoParseConfirm','startOtomobilWizard','viewMyListingSummary','openOfficialPrepGate','v2DraftResult'].forEach(function(n){
+  ['showHome','showKesfet','showMine','showFavorites','showSavedSearches','v2LoadDetail','v2Workspace','v2EditListing','showRequest','showRequests','showRequestDetail','showProviderEntry','showProviderPanel','showProviderRequestDetail','showWorkAreaGayrimenkul','showWorkAreaArac','showListingsCategory','showGayrimenkulCreateForm','showGayrimenkulConfirm','showOtoParseConfirm','startOtomobilWizard','viewMyListingSummary','openOfficialPrepGate','v2DraftResult','showFoodHome'].forEach(function(n){
     var f=window[n]; if(typeof f!=='function'||f.__v2nav) return;
     var w=function(){ var self=this, args=arguments; v2NavPush(n,function(){ return f.apply(self,args); },args); return f.apply(this,args); };
     w.__v2nav=1; window[n]=w;
@@ -6657,7 +6688,7 @@ document.addEventListener('keydown',function(e){
 });
 window.addEventListener('popstate',function(e){
   var st=e.state, i=(st&&typeof st.v2==='number')?st.v2:null;
-  if(V2_NAV.skip>0){ V2_NAV.skip--; if(i!=null) V2_NAV.idx=i; return; }
+  if(V2_NAV.skip>0){ V2_NAV.skip--; if(i!=null) V2_NAV.idx=i; if(V2_NAV.homeUrl!=null&&V2_NAV.skip===0){ V2_NAV.idx=0; try{ history.replaceState({v2:0},'',V2_NAV.homeUrl); }catch(_){} V2_NAV.homeUrl=null; } return; }
   if(v2OverlaysOpen()){ v2CloseOverlays(); V2_NAV.skip=1; history.go(1); return; }   /* açık pencere varsa geri tuşu önce onu kapatır */
   if(i==null) return;
   var ent=V2_NAV.stack[i]; V2_NAV.idx=i;
@@ -6675,6 +6706,7 @@ window.addEventListener('popstate',function(e){
   }).observe(app,{childList:true,subtree:true});
 })();
 v2NavInstall();
+window.addEventListener('load',function(){ try{ v2NavInstall(); }catch(e){} });   /* Yemek modülü sonradan yüklenir; ana ekranını da geçmişe ekle */
 
 startApp();
 </script>
@@ -7165,7 +7197,7 @@ function ensureStyle(){if(document.getElementById('hallet-inline-style'))return;
 function open(){ensureStyle();const r=root();r.classList.add('hv');r.style.display='block';document.body.dataset.halletOverflow=document.body.style.overflow||'';document.body.style.overflow='hidden';return r}
 function close(){const r=root();r.classList.remove('hv');r.style.display='none';r.innerHTML='';document.body.style.overflow=document.body.dataset.halletOverflow||''}
 function render(x){const r=open();const keep=!!r.querySelector('.hw');const prev=keep?(r.scrollTop||0):0;r.innerHTML='<div class="ha"><div class="hw">'+x+'</div></div>';if(keep){requestAnimationFrame(function(){try{r.scrollTop=prev}catch(e){}})}else{r.scrollTop=0}}
-function top(back){return '<div class="ht"><strong>İşini Hallet</strong><button class="topb" data-a="'+(back||'close')+'">'+(back?'← Geri':'Kapat')+'</button></div>'}
+function top(back){return '<div class="ht"><strong>İşini Hallet</strong><span style="display:inline-flex;gap:6px"><button class="topb" data-a="home" aria-label="Ana sayfa" title="Ana sayfa">⌂ Ana sayfa</button><button class="topb" data-a="'+(back||'close')+'">'+(back?'← Geri':'Kapat')+'</button></span></div>'}
 function gate(){H.step=0;H.answers={};H.documents={};H.documentStatuses={};H.documentFiles={};H.caseId=null;H.createdAt=null;H.dbId=null;render(top('close')+'<div class="hc"><div class="hk">Dijital işlem asistanı</div><h1>Bugün ne yapmak istiyorsun?</h1><p class="hm">İşlem, evrak, kurum veya hizmet — net seç, adım adım ilerle.</p><div class="hg"><button class="hb hp" data-a="islem">📋 Bir işlem yapmak istiyorum</button><button class="hb" data-a="cases">📁 İşlem Dosyalarım</button><button class="hb" data-a="evrak">📄 Evrak hazırlamak istiyorum</button><button class="hb" data-a="kurum">🏛️ Bir kuruma başvuracağım</button><button class="hb" data-a="isimi">🛠️ Hizmet / usta bulmam gerekiyor</button></div><div class="card" style="text-align:left;margin-top:12px;padding:12px;border:1px solid rgba(13,159,104,.4);background:rgba(13,159,104,.08);border-radius:14px"><div class="hk">🔒 Ücretli İşlem Hazırlığı <span class="small">Ücretli işlem</span></div><p class="hm">Kişiye özel evrak ve işlem takibi bu kapının arkasındadır. Şimdilik ödeme alınmaz.</p><button class="hb hp" data-a="official_prep">İşlem hazırlığına devam et →</button></div></div>')}
 async function cases(){
  const session=getAuthSession();
@@ -8539,7 +8571,7 @@ async function markOfficialTransactionCompleted(){
  }
 }
 
-function dispatch(a,e){if(a==='close')return close();if(a==='gate')return gate();if(a==='cases')return cases();if(a==='caseopen')return openCase(e.dataset.id);if(a==='openDoc')return openDocument(e.dataset.k,Number(e.dataset.i||0));if(a==='deleteDoc')return deleteDocument(e.dataset.k,Number(e.dataset.i||0));if(a==='stepToggle')return updateCaseStep(e.dataset.k);if(a==='islem')return islem();if(a==='tasinmaz')return tasinmaz();if(a==='tapu_rehber')return tapuRehber();if(a==='prop_start')return propStart(e.dataset.id);if(a==='prop_qback'){H.step=Math.max(0,H.step-1);return propQuestion();}if(a==='prop_answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return propQuestion();}if(a==='prop_answer_input'){const i=document.getElementById('qinput');const f=getPropFlow(H.propFlowId);const q=f&&f.questions[H.step];if(q)H.answers[q.key]=i?i.value:'';H.step++;return propQuestion();}if(a==='prop_doc'){H.documents[e.dataset.k]=!!e.checked;if(H.dbId)return savePropCase(true);return propResult(!!H.dbId);}if(a==='prop_save')return savePropCase();if(a==='prop_print')return propPrint();if(a==='prop_whatsapp')return propShareWhatsApp();if(a==='work_arac'){try{close();}catch(e){}if(typeof showWorkAreaArac==='function')return showWorkAreaArac();return islem();}if(a==='work_gm'){try{close();}catch(e){}if(typeof showWorkAreaGayrimenkul==='function')return showWorkAreaGayrimenkul();return islem();}if(a==='arac')return arac();if(a==='arac_satis')return aracSatisStart();if(a==='arac_alim')return vehicleFlowStart('arac_alimi');if(a==='arac_devir')return vehicleFlowStart('arac_devri');if(a==='arac_qback'){H.step=Math.max(0,H.step-1);return aracQuestion();}if(a==='arac_answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return aracQuestion();}if(a==='arac_answer_input'){const i=document.getElementById('qinput');const q=ARAC_QUESTIONS[H.step];if(q)H.answers[q.key]=i?i.value:'';H.step++;return aracQuestion();}if(a==='arac_doc'){H.documents[e.dataset.k]=!!e.checked;return aracResult(!!H.dbId);}if(a==='arac_save')return saveAracCase();if(a==='arac_print')return aracPrint();if(a==='official_prep_arac'){try{close();}catch(e){} if(typeof window.openOfficialPrepGate==='function') return window.openOfficialPrepGate(String(H.dbId||H.caseId||''),'arac_satisi'); if(typeof openOfficialPrepGate==='function') return openOfficialPrepGate(String(H.dbId||H.caseId||''),'arac_satisi'); return aracResult(true);}if(a==='vf_qback'){H.step=Math.max(0,H.step-1);return vehicleFlowQuestion();}if(a==='vf_answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return vehicleFlowQuestion();}if(a==='vf_answer_input'){const i=document.getElementById('qinput');const f=getVehicleFlow(H.vehicleFlowId);const q=f&&f.questions[H.step];if(q)H.answers[q.key]=i?i.value:'';H.step++;return vehicleFlowQuestion();}if(a==='vf_doc'){H.documents[e.dataset.k]=!!e.checked;if(H.dbId)return saveVehicleFlowCase(true);return vehicleFlowResult(!!H.dbId);}if(a==='vf_save')return saveVehicleFlowCase();if(a==='vf_print')return vehicleFlowPrint();if(a==='vf_whatsapp')return vehicleFlowShareWhatsApp();if(a==='evrak_type'){if(e&&e.dataset&&e.dataset.fresh==='1'){H.dbId=null;H.evrakDraft=null;}return evrakTypeForm(e.dataset.t,H.evrakDraft);}if(a==='evrak_type_preview')return evrakTypePreview(e.dataset.t);if(a==='evrak_type_save')return evrakTypeSave(e.dataset.t);if(a==='evrak_mark_done')return evrakMarkDone();if(a==='evrak_print')return evrakPrint();if(a==='evrak_whatsapp')return evrakShareWhatsApp();if(a==='evrak_konut_edit'){const d=H.evrakDraft||{};return evrakSatisBilgiSaved({id:H.dbId,status:H.status||'draft',title:'Konut satış bilgi formu'},{document_type:'konut_satis_bilgi_formu',draft:d,case_no:H.caseId});}if(a==='yakinda')return msg((e&&e.dataset&&e.dataset.t)||'Yakında','Bu kategori menüde yer alıyor; tam akış henüz açılmadı. Uydurma hukuki süreç eklenmez. Şimdilik Konut satışı, Evrak (konut form) ve Kurum pilotlarını kullan.');if(a==='konut')return konut();if(a==='start'){H.step=0;return question()}if(a==='qback'){H.step=Math.max(0,H.step-1);return question()}if(a==='answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return question()}if(a==='docReady')return;if(a==='docToggle'){H.documents[e.dataset.k]=!!e.checked;if(H.module==='kurum_basvurusu'){kurumResult(false);if(H.dbId)return saveKurumCase();return;}result(false);if(H.dbId)return saveCase(true);return;}if(a==='savecase')return saveCase();if(a==='save'){const i=document.getElementById('qinput');if(!i||!String(i.value).trim()){const c=document.querySelector('#hallet-root .hc');if(c&&!c.querySelector('.err'))c.insertAdjacentHTML('beforeend','<div class="err">Lütfen bir değer girerek devam et.</div>');return}H.answers[e.dataset.k]=i.value.trim();H.step++;return question()}if(a==='new'){H.step=0;H.answers={};H.documents={};H.documentStatuses={};H.documentFiles={};H.caseId=null;H.dbId=null;H.status=null;H.module=null;H.kurumFlowId=null;H.vehicleFlowId=null;H.caseSteps=[];H.officialTransactionStatus='not_completed';return gate()}if(a==='official_prep'){try{close();}catch(e){}return typeof openOfficialPrepGate==='function'?openOfficialPrepGate('','hallet'):gate();}if(a==='isimi')return goIsimi();if(a==='evrak')return evrak();if(a==='evrak_satis_bilgi')return evrakSatisBilgi();if(a==='evrak_preview')return evrakPreview();if(a==='evrak_print')return evrakPrint();if(a==='evrak_savecase')return evrakSaveCase();if(a==='evrak_back')return islem();if(a==='completecase')return markCaseCompleted();if(a==='official_complete')return markOfficialTransactionCompleted();if(a==='kurum')return kurumHome();if(a==='kurum_flow')return kurumStartFlow(e.dataset.id);if(a==='kurum_q')return kurumAnswer(e.dataset.k,e.dataset.v);if(a==='kurum_save')return saveKurumCase();if(a==='kurum_result')return kurumResult(false);if(a==='kurum_edit_info'){H.step=0;return kurumQuestion();}if(a==='kurum_save_notes'){const t=document.getElementById('kurumNotes');if(t)H.answers.notes=t.value||'';return saveKurumCase();}}
+function dispatch(a,e){if(a==='close')return close();if(a==='home'){close();if(typeof window.showHome==='function')window.showHome();return;}if(a==='gate')return gate();if(a==='cases')return cases();if(a==='caseopen')return openCase(e.dataset.id);if(a==='openDoc')return openDocument(e.dataset.k,Number(e.dataset.i||0));if(a==='deleteDoc')return deleteDocument(e.dataset.k,Number(e.dataset.i||0));if(a==='stepToggle')return updateCaseStep(e.dataset.k);if(a==='islem')return islem();if(a==='tasinmaz')return tasinmaz();if(a==='tapu_rehber')return tapuRehber();if(a==='prop_start')return propStart(e.dataset.id);if(a==='prop_qback'){H.step=Math.max(0,H.step-1);return propQuestion();}if(a==='prop_answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return propQuestion();}if(a==='prop_answer_input'){const i=document.getElementById('qinput');const f=getPropFlow(H.propFlowId);const q=f&&f.questions[H.step];if(q)H.answers[q.key]=i?i.value:'';H.step++;return propQuestion();}if(a==='prop_doc'){H.documents[e.dataset.k]=!!e.checked;if(H.dbId)return savePropCase(true);return propResult(!!H.dbId);}if(a==='prop_save')return savePropCase();if(a==='prop_print')return propPrint();if(a==='prop_whatsapp')return propShareWhatsApp();if(a==='work_arac'){try{close();}catch(e){}if(typeof showWorkAreaArac==='function')return showWorkAreaArac();return islem();}if(a==='work_gm'){try{close();}catch(e){}if(typeof showWorkAreaGayrimenkul==='function')return showWorkAreaGayrimenkul();return islem();}if(a==='arac')return arac();if(a==='arac_satis')return aracSatisStart();if(a==='arac_alim')return vehicleFlowStart('arac_alimi');if(a==='arac_devir')return vehicleFlowStart('arac_devri');if(a==='arac_qback'){H.step=Math.max(0,H.step-1);return aracQuestion();}if(a==='arac_answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return aracQuestion();}if(a==='arac_answer_input'){const i=document.getElementById('qinput');const q=ARAC_QUESTIONS[H.step];if(q)H.answers[q.key]=i?i.value:'';H.step++;return aracQuestion();}if(a==='arac_doc'){H.documents[e.dataset.k]=!!e.checked;return aracResult(!!H.dbId);}if(a==='arac_save')return saveAracCase();if(a==='arac_print')return aracPrint();if(a==='official_prep_arac'){try{close();}catch(e){} if(typeof window.openOfficialPrepGate==='function') return window.openOfficialPrepGate(String(H.dbId||H.caseId||''),'arac_satisi'); if(typeof openOfficialPrepGate==='function') return openOfficialPrepGate(String(H.dbId||H.caseId||''),'arac_satisi'); return aracResult(true);}if(a==='vf_qback'){H.step=Math.max(0,H.step-1);return vehicleFlowQuestion();}if(a==='vf_answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return vehicleFlowQuestion();}if(a==='vf_answer_input'){const i=document.getElementById('qinput');const f=getVehicleFlow(H.vehicleFlowId);const q=f&&f.questions[H.step];if(q)H.answers[q.key]=i?i.value:'';H.step++;return vehicleFlowQuestion();}if(a==='vf_doc'){H.documents[e.dataset.k]=!!e.checked;if(H.dbId)return saveVehicleFlowCase(true);return vehicleFlowResult(!!H.dbId);}if(a==='vf_save')return saveVehicleFlowCase();if(a==='vf_print')return vehicleFlowPrint();if(a==='vf_whatsapp')return vehicleFlowShareWhatsApp();if(a==='evrak_type'){if(e&&e.dataset&&e.dataset.fresh==='1'){H.dbId=null;H.evrakDraft=null;}return evrakTypeForm(e.dataset.t,H.evrakDraft);}if(a==='evrak_type_preview')return evrakTypePreview(e.dataset.t);if(a==='evrak_type_save')return evrakTypeSave(e.dataset.t);if(a==='evrak_mark_done')return evrakMarkDone();if(a==='evrak_print')return evrakPrint();if(a==='evrak_whatsapp')return evrakShareWhatsApp();if(a==='evrak_konut_edit'){const d=H.evrakDraft||{};return evrakSatisBilgiSaved({id:H.dbId,status:H.status||'draft',title:'Konut satış bilgi formu'},{document_type:'konut_satis_bilgi_formu',draft:d,case_no:H.caseId});}if(a==='yakinda')return msg((e&&e.dataset&&e.dataset.t)||'Yakında','Bu kategori menüde yer alıyor; tam akış henüz açılmadı. Uydurma hukuki süreç eklenmez. Şimdilik Konut satışı, Evrak (konut form) ve Kurum pilotlarını kullan.');if(a==='konut')return konut();if(a==='start'){H.step=0;return question()}if(a==='qback'){H.step=Math.max(0,H.step-1);return question()}if(a==='answer'){H.answers[e.dataset.k]=e.dataset.v;H.step++;return question()}if(a==='docReady')return;if(a==='docToggle'){H.documents[e.dataset.k]=!!e.checked;if(H.module==='kurum_basvurusu'){kurumResult(false);if(H.dbId)return saveKurumCase();return;}result(false);if(H.dbId)return saveCase(true);return;}if(a==='savecase')return saveCase();if(a==='save'){const i=document.getElementById('qinput');if(!i||!String(i.value).trim()){const c=document.querySelector('#hallet-root .hc');if(c&&!c.querySelector('.err'))c.insertAdjacentHTML('beforeend','<div class="err">Lütfen bir değer girerek devam et.</div>');return}H.answers[e.dataset.k]=i.value.trim();H.step++;return question()}if(a==='new'){H.step=0;H.answers={};H.documents={};H.documentStatuses={};H.documentFiles={};H.caseId=null;H.dbId=null;H.status=null;H.module=null;H.kurumFlowId=null;H.vehicleFlowId=null;H.caseSteps=[];H.officialTransactionStatus='not_completed';return gate()}if(a==='official_prep'){try{close();}catch(e){}return typeof openOfficialPrepGate==='function'?openOfficialPrepGate('','hallet'):gate();}if(a==='isimi')return goIsimi();if(a==='evrak')return evrak();if(a==='evrak_satis_bilgi')return evrakSatisBilgi();if(a==='evrak_preview')return evrakPreview();if(a==='evrak_print')return evrakPrint();if(a==='evrak_savecase')return evrakSaveCase();if(a==='evrak_back')return islem();if(a==='completecase')return markCaseCompleted();if(a==='official_complete')return markOfficialTransactionCompleted();if(a==='kurum')return kurumHome();if(a==='kurum_flow')return kurumStartFlow(e.dataset.id);if(a==='kurum_q')return kurumAnswer(e.dataset.k,e.dataset.v);if(a==='kurum_save')return saveKurumCase();if(a==='kurum_result')return kurumResult(false);if(a==='kurum_edit_info'){H.step=0;return kurumQuestion();}if(a==='kurum_save_notes'){const t=document.getElementById('kurumNotes');if(t)H.answers.notes=t.value||'';return saveKurumCase();}}
 document.addEventListener('click',function(e){
   var node=e.target;
   if(node&&node.nodeType===3)node=node.parentElement;
