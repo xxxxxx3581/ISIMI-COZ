@@ -367,15 +367,16 @@ PF.enhanceMap=function(L,map){
   var layer=[],timer=null,seq=0;
   function clear(){layer.forEach(function(m){try{map.removeLayer(m)}catch(e){}});layer=[]}
   async function refresh(){
-    var my=++seq;if(map.getZoom()<17){clear();return}
+    /* Sokak adları/numaraları normal takip yakınlığında da görünsün (z≥15, ~5x4 km'ye kadar) */
+    var my=++seq;if(map.getZoom()<15){clear();return}
     var b=map.getBounds();var s=b.getSouth(),w=b.getWest(),n=b.getNorth(),e=b.getEast();
-    if((n-s)*(e-w)>0.0004){clear();return}
+    if((n-s)*(e-w)>0.003){clear();return}
     var key=[s,w,n,e].map(function(x){return x.toFixed(3)}).join(',');
     var data=LBL_CACHE[key];
     if(!data){
       try{var raw=sessionStorage.getItem('pf_lbl_'+key);if(raw)data=JSON.parse(raw)}catch(x){}
       if(!data){
-        var q='[out:json][timeout:8];way["highway"]["name"]('+[s,w,n,e].map(function(x){return x.toFixed(5)}).join(',')+');out tags center 120;';
+        var q='[out:json][timeout:8];way["highway"]["name"]('+[s,w,n,e].map(function(x){return x.toFixed(5)}).join(',')+');out tags center 300;';
         try{var r=await fetch('https://overpass-api.de/api/interpreter',{method:'POST',body:'data='+encodeURIComponent(q),headers:{'Content-Type':'application/x-www-form-urlencoded'}});if(!r.ok)return;var j=await r.json();
           data=(j.elements||[]).filter(function(x){return x.center&&x.tags&&x.tags.name}).map(function(x){return [x.center.lat,x.center.lon,x.tags.name]});
           try{sessionStorage.setItem('pf_lbl_'+key,JSON.stringify(data))}catch(x){}}catch(x){return}
@@ -383,7 +384,7 @@ PF.enhanceMap=function(L,map){
       LBL_CACHE[key]=data;
     }
     if(my!==seq)return;clear();var seen={};
-    data.forEach(function(d){if(seen[d[2]]||layer.length>=45)return;seen[d[2]]=1;
+    var cap=map.getZoom()>=17?90:60;data.forEach(function(d){if(seen[d[2]]||layer.length>=cap)return;seen[d[2]]=1;
       try{var m=L.marker([d[0],d[1]],{interactive:false,keyboard:false,icon:L.divIcon({className:'',html:'<span class="pfxStreet">'+esc(d[2])+'</span>',iconSize:[0,0]})});m.addTo(map);layer.push(m)}catch(x){}});
   }
   css();map.on('moveend zoomend',function(){clearTimeout(timer);timer=setTimeout(refresh,700)});setTimeout(refresh,900);
