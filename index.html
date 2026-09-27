@@ -4653,9 +4653,8 @@ function starsLabel(avg,count){
 }
 window.__svcReviewStar=function(n){
   window.__svcSelectedRating=n;
-  const box=document.getElementById('svcStars');
-  if(!box)return;
-  box.querySelectorAll('.svcStarBtn').forEach(function(b){
+  /* Değerlendirme kartı ekranda iki yerde çizilebiliyor; hepsindeki yıldızları güncelle */
+  document.querySelectorAll('.svcStars .svcStarBtn').forEach(function(b){
     const v=Number(b.getAttribute('data-v'));
     b.classList.toggle('on',v<=n);
     b.setAttribute('aria-pressed',v<=n?'true':'false');
@@ -4669,7 +4668,7 @@ async function submitServiceReview(talepNo){
     }
     const rating=Number(window.__svcSelectedRating||0);
     if(rating<1||rating>5){alert('Lütfen 1–5 arası yıldız seçin.');return;}
-    const commentEl=document.getElementById('svcReviewComment');
+    const commentEl=Array.from(document.querySelectorAll('textarea#svcReviewComment')).find(function(t){return String(t.value||'').trim();});
     const comment=(commentEl&&commentEl.value?String(commentEl.value).trim():'').slice(0,400);
     const r=await findRequestByNo(talepNo);
     if(!r||!r.id){alert('Talep bulunamadı.');return;}
@@ -4710,10 +4709,11 @@ async function renderCustomerReviewBlock(r,talepNo,jobBox,inlineSlot){
     }else{
       window.__svcSelectedRating=0;
       const starBtns=[1,2,3,4,5].map(function(n){return '<button type="button" class="svcStarBtn" data-v="'+n+'" aria-label="'+n+' yıldız" aria-pressed="false" onclick="__svcReviewStar('+n+')">★</button>';}).join('');
-      html='<div class="svcReviewCard"><div class="notice">✅ İş tamamlandı</div><div style="margin-top:10px"><strong>Ustayı değerlendir</strong><div class="small muted">1–5 yıldız · yorum isteğe bağlı</div></div><div class="svcStars" id="svcStars">'+starBtns+'</div><textarea id="svcReviewComment" maxlength="400" placeholder="Kısa yorum (isteğe bağlı)"></textarea><button type="button" class="btn primary" style="width:100%;margin-top:10px" onclick="submitServiceReview('+JSON.stringify(String(talepNo))+')">Değerlendirmeyi gönder</button></div>';
+      html='<div class="svcReviewCard"><div class="notice">✅ İş tamamlandı</div><div style="margin-top:10px"><strong>Ustayı değerlendir</strong><div class="small muted">1–5 yıldız · yorum isteğe bağlı</div></div><div class="svcStars" id="svcStars">'+starBtns+'</div><textarea id="svcReviewComment" maxlength="400" placeholder="Kısa yorum (isteğe bağlı)"></textarea><button type="button" class="btn primary" style="width:100%;margin-top:10px" onclick="submitServiceReview('+escapeHTML(JSON.stringify(String(talepNo)))+')">Değerlendirmeyi gönder</button></div>';
     }
-    if(jobBox)jobBox.innerHTML=html;
-    if(inlineSlot)inlineSlot.innerHTML=html;
+    /* Kart tek yerde gösterilir (iki kopya karışıklık yaratıyordu) */
+    if(jobBox){jobBox.innerHTML=html;if(inlineSlot)inlineSlot.innerHTML='';}
+    else if(inlineSlot)inlineSlot.innerHTML=html;
   }catch(e){
     console.warn(e);
     if(jobBox)jobBox.innerHTML='<div class="notice">✅ İş tamamlandı.</div>';
