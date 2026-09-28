@@ -855,7 +855,7 @@ async function showFoodHome(){
   const root=document.getElementById('fdRoot');root.dataset.sticky='1';root.insertAdjacentHTML('beforeend',stickyCart());
   bellCount();homeAddr();homeActive(tok);
   HF.rows=[];HF.offset=0;HF.done=false;HF.q='';HF.promos=[];HF.coupons=[];HF.fl='';
-  await Promise.all([homeLoad(tok),favLoad(true),promosLoad(tok),couponsLoad(tok),homeExtra(tok)]);if(alive(tok)){homeRender();heroRender(tok);flashRender();flashTick(tok)}
+  await Promise.all([homeLoad(tok),favLoad(true),promosLoad(tok),couponsLoad(tok),homeExtra(tok)]);if(alive(tok)){homeRender();heroRender(tok);flashRender();flashTick(tok);onCleanup(()=>flashLayerClose(true));flashAutoOpen()}
   watch(tok,[{table:'food_notifications',filter:'user_id=eq.'+UID()},{table:'food_orders',filter:'customer_id=eq.'+UID()}],(k,p)=>{if(!p||p.table==='food_notifications')bellCount();if(!p||p.table==='food_orders')homeActive(tok)});
 }
 async function homeAddr(){
@@ -2974,7 +2974,7 @@ window.foodReportReview=async function(id){
   catch(e){const dup=/duplicate|23505/i.test(errMsg(e));toast(dup?'Bu yorumu zaten bildirdin.':errMsg(e),dup?'ok':'err')}
 };
 /* ---------- V5 · Flash indirim katmanı (mevcut kampanya/kupon kayıtları; nihai indirim sunucuda doğrulanır) ---------- */
-const FL_MIN='isimi_food_flash_min',FL_X='isimi_food_flash_x';
+const FL_X='isimi_food_flash_x',FL_SEEN='isimi_food_flash_seen';
 let FL_OFF=0;
 function lsGet(k,st){try{return JSON.parse((st||localStorage).getItem(k)||'[]')}catch(e){return[]}}
 function lsPut(k,v,st){try{(st||localStorage).setItem(k,JSON.stringify(v.slice(-20)))}catch(e){}}
@@ -2993,21 +2993,62 @@ function flashFor(venueId){return flashGroups().filter(g=>g.all||g.vids.includes
 function flashVenue(v){return flashGroups().some(g=>!g.all&&g.vids.includes(v.id))}
 function fmtLeft(ms){if(ms<=0)return 'Sona erdi';const s=Math.floor(ms/1000),h=Math.floor(s/3600);if(h>=48)return Math.floor(h/24)+' gün '+(h%24)+' sa';const p=n=>String(n).padStart(2,'0');return p(h)+':'+p(Math.floor(s%3600/60))+':'+p(s%60)}
 function flTimer(g){return g.end==null?'':'<span class="fdwFlT" data-fl-end="'+g.end+'" role="timer" aria-label="Kalan süre">'+fmtLeft(g.end-(Date.now()+FL_OFF))+'</span>'}
+/* Ana ekranda yalnız kompakt Flash çubuğu; dokununca tam ekran Flash katmanı açılır */
 function flashHTML(g){
   if(lsGet(FL_X,sessionStorage).includes(g.id))return '';
   const act=HF.rows.filter(v=>g.vids.includes(v.id));if(!g.all&&!act.length)return '';
-  const t0=g.tiers[0];const sum=(+t0.min_subtotal_kurus?M(t0.min_subtotal_kurus)+' üzeri ':'')+tierTxt(t0)+' indirim'+(g.tiers.length>1?' · '+g.tiers.length+' kademe':'');
-  const x='<button type="button" class="x" aria-label="Flash indirimi bu oturum için kapat" onclick="foodFlashX(\''+E(g.id)+'\')">✕</button>';
-  if(lsGet(FL_MIN).includes(g.id))return '<div class="fdwFlash min" data-fl="'+E(g.id)+'"><button type="button" class="bar" aria-expanded="false" onclick="foodFlashMin(\''+E(g.id)+'\',0)"><span class="bz" aria-hidden="true">⚡</span><span class="tx"><b>Flash İndirim</b><small>'+E(sum)+'</small></span>'+flTimer(g)+'<span class="op">Aç</span></button>'+x+'</div>';
-  const vs=g.all?'<span class="vs">Tüm restoranlarda geçerli</span>':'<span class="vs"><span class="lg">'+act.slice(0,5).map(v=>'<i title="'+E(v.name)+'">'+(v.image_url||v.cover_url?'<img src="'+E(v.image_url||v.cover_url)+'" alt="" loading="lazy" onerror="this.remove()">':'')+E((v.name||'?').charAt(0))+'</i>').join('')+'</span>'+act.length+' restoran katılıyor</span>';
-  return '<section class="fdwFlash" data-fl="'+E(g.id)+'" aria-label="Flash indirim"><div class="hd"><span class="bz">⚡ Flash İndirim</span>'+flTimer(g)+'<span class="sp"></span><button type="button" class="lk" aria-expanded="true" onclick="foodFlashMin(\''+E(g.id)+'\',1)">Küçült</button>'+x+'</div>'+
-    '<b class="ttl">'+E(g.title)+'</b><div class="tiers" role="list">'+g.tiers.map(t=>'<div class="t" role="listitem"><b>'+E(tierTxt(t))+'</b><small>'+(+t.min_subtotal_kurus?M(t.min_subtotal_kurus)+' ve üzeri':'Alt limit yok')+'</small></div>').join('')+'</div>'+
-    '<div class="ft">'+vs+'<button type="button" class="fb pri sm" onclick="foodFlashGo(\''+E(g.id)+'\')">Restoranları gör</button></div>'+
-    '<p class="nt">Sepetine uyan en yüksek kademe sepette otomatik seçilir; kademeler birleşmez, son tutar ödeme adımında doğrulanır.</p></section>';
+  const t0=g.tiers[0],tl=g.tiers[g.tiers.length-1];
+  const sum=g.tiers.length>1?tierTxt(t0)+' – '+tierTxt(tl)+' indirim · '+g.tiers.length+' kademe':(+t0.min_subtotal_kurus?M(t0.min_subtotal_kurus)+' üzeri ':'')+tierTxt(t0)+' indirim';
+  return '<div class="fdwFlash min" data-fl="'+E(g.id)+'"><button type="button" class="bar" aria-haspopup="dialog" aria-expanded="false" onclick="foodFlashMin(\''+E(g.id)+'\',0)"><span class="bz" aria-hidden="true">⚡</span><span class="tx"><b>'+E(g.title)+'</b><small>'+E(sum)+'</small></span>'+flTimer(g)+'<span class="op">Aç ⌃</span></button>'+
+    '<button type="button" class="x" aria-label="Flash indirimi bu oturum için gizle" onclick="foodFlashX(\''+E(g.id)+'\')">✕</button></div>';
+}
+function flBoxes(ms){
+  if(ms<=0)return '<span class="bx"><b>00</b><small>saniye</small></span>';
+  const s=Math.floor(ms/1000),d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60),sc=s%60,p=n=>String(n).padStart(2,'0');
+  const u=d?[[d,'gün'],[h,'saat'],[m,'dakika']]:h?[[h,'saat'],[m,'dakika'],[sc,'saniye']]:[[m,'dakika'],[sc,'saniye']];
+  return u.map(x=>'<span class="bx"><b>'+p(x[0])+'</b><small>'+x[1]+'</small></span>').join('<i aria-hidden="true">:</i>');
+}
+function flashLayerHTML(g){
+  const vs=(g.all?HF.rows:HF.rows.filter(v=>g.vids.includes(v.id))).slice().sort((a,b)=>(openNow(b)?1:0)-(openNow(a)?1:0));
+  const ids=new Set(vs.filter(openNow).map(v=>v.id));
+  const its=(HF.items||[]).filter(i=>ids.has(i.venue_id)).slice(0,12);
+  const vname=id=>(HF.rows.find(v=>v.id===id)||{}).name||'';
+  const ms=g.end!=null?g.end-(Date.now()+FL_OFF):null;
+  return '<div class="flh"><div class="flt"><span class="bz">⚡ Flash İndirim</span><button type="button" class="mn" onclick="foodFlashMin(\''+E(g.id)+'\',1)" aria-label="Flash katmanını küçült">Küçült <i aria-hidden="true">⌄</i></button></div>'+
+    '<h2 class="ttl">'+E(g.title)+'</h2>'+
+    '<div class="tiers" role="list">'+g.tiers.map((t,i)=>'<div class="t'+(i===g.tiers.length-1&&g.tiers.length>1?' best':'')+'" role="listitem"><span class="lim">'+(+t.min_subtotal_kurus?M(t.min_subtotal_kurus).replace(' TL','TL')+'<small>ve üzerine</small>':'Alt limit<small>yok</small>')+'</span><span class="val"><b>'+E(tierTxt(t)).replace(' TL','TL')+'</b><small>İNDİRİM</small></span></div>').join('')+'</div>'+
+    '<p class="nt">Sepet tutarına uyan en yüksek kademe sepette otomatik seçilir. Restoranın minimum sepet tutarı geçerlidir; kademeler ve diğer kuponlar birleştirilemez. Son tutar ödeme adımında doğrulanır.</p>'+
+    (ms!=null?'<div class="cd"><span class="bxs" data-fl-box="'+g.end+'">'+flBoxes(ms)+'</span><b>içinde katılan restoranlardan sipariş ver, sepetine uyan indirimi kap!</b></div>':'<div class="cd"><b>Katılan restoranlardan sipariş ver, sepetine uyan indirimi kap!</b></div>')+'</div>'+
+    '<div class="bd">'+
+    (its.length>=2?'<div class="fdSecH"><b>Flash’ta sipariş verebileceğin ürünler</b></div><div class="fdPop fdwFlIt">'+its.map(i=>'<div role="button" tabindex="0" onclick="showFoodVenue(\''+E(i.venue_id)+'\',\''+E(i.id)+'\')" onkeydown="if(event.key===\'Enter\')this.click()">'+pic(i.image_url,i.name,'')+'<div class="bd"><b>'+E(i.name)+'</b><small>'+E(vname(i.venue_id))+'</small><div class="pr">'+M(i.price_kurus)+'</div></div></div>').join('')+'</div>':'')+
+    '<div class="fdSecH"><b>Restoranlar ('+vs.length+')</b></div>'+
+    (vs.length?'<div class="fdGrid fdwListV">'+vs.map(v=>venueRow(v)).join('')+'</div>':empty('🍽️','Şu an katılan restoran yok','Kampanyaya katılan restoranlar burada listelenir.'))+'</div>';
+}
+let FL_ESC=null;
+function flashLayerClose(instant){
+  const el=document.getElementById('fdwFlL');document.body.classList.remove('fdwFlOpen');
+  if(FL_ESC){document.removeEventListener('keydown',FL_ESC);FL_ESC=null}
+  if(!el)return;if(!document.getElementById('fdModal'))document.body.classList.remove('fdNoScroll');
+  if(instant)return el.remove();el.classList.remove('on');setTimeout(()=>el.remove(),280);
+}
+function flashLayerOpen(id){
+  const g=flashGroups().find(x=>x.id===id);if(!g)return;
+  flashLayerClose(true);
+  const el=document.createElement('div');el.id='fdwFlL';el.className='fdwFlL fd';el.setAttribute('role','dialog');el.setAttribute('aria-modal','true');el.setAttribute('aria-label',g.title);
+  el.innerHTML=flashLayerHTML(g);document.body.appendChild(el);document.body.classList.add('fdNoScroll','fdwFlOpen');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('on')));
+  FL_ESC=ev=>{if(ev.key==='Escape')foodFlashMin(id,1)};document.addEventListener('keydown',FL_ESC);
+  const l=lsGet(FL_SEEN,sessionStorage);if(!l.includes(id)){l.push(id);lsPut(FL_SEEN,l,sessionStorage)}
+  setTimeout(()=>{const b=el.querySelector('.mn');b&&b.focus({preventScroll:true})},60);
+}
+/* İlk girişte (oturum başına bir kez) katman kendiliğinden açılır */
+function flashAutoOpen(){
+  if(!cpOn()||document.getElementById('fdModal'))return;const bar=document.querySelector('#fdwFlash [data-fl]');if(!bar)return;
+  const id=bar.dataset.fl;if(!lsGet(FL_SEEN,sessionStorage).includes(id))flashLayerOpen(id);
 }
 function flashRender(){const box=document.getElementById('fdwFlash');if(!box)return;box.innerHTML=cpOn()?flashGroups().map(flashHTML).join(''):''}
-window.foodFlashMin=function(id,on){let l=lsGet(FL_MIN).filter(x=>x!==id);if(on)l.push(id);lsPut(FL_MIN,l);flashRender()};
-window.foodFlashX=function(id){const l=lsGet(FL_X,sessionStorage);if(!l.includes(id))l.push(id);lsPut(FL_X,l,sessionStorage);flashRender();toast('Flash indirim bu oturumda gizlendi. Kuponlarım’dan görebilirsin.')};
+window.foodFlashMin=function(id,on){if(on)flashLayerClose();else flashLayerOpen(id)};
+window.foodFlashX=function(id){const l=lsGet(FL_X,sessionStorage);if(!l.includes(id))l.push(id);lsPut(FL_X,l,sessionStorage);flashLayerClose();flashRender();toast('Flash indirim bu oturumda gizlendi. Kuponlarım’dan görebilirsin.')};
 window.foodFlashGo=function(id){HF.fl=id;HF.cuisine='';homeRender();const l=document.getElementById('fdList');l&&l.scrollIntoView({behavior:'smooth',block:'start'})};
 window.foodFlashOff=function(){HF.fl='';homeRender()};
 /* Tek zamanlayıcı: yalnız ekranda sayaç varsa çalışır */
@@ -3015,7 +3056,8 @@ function flashTick(tok){
   if(!qa('[data-fl-end]').length&&!document.getElementById('fdwFlash'))return;
   const t=setInterval(()=>{if(!alive(tok))return clearInterval(t);let exp=false;
     qa('[data-fl-end]').forEach(el=>{const ms=+el.dataset.flEnd-(Date.now()+FL_OFF);el.textContent=fmtLeft(ms);if(ms<=0)exp=true});
-    if(exp){flashRender();if(document.getElementById('fdList'))homeRender();refreshSticky()}},1000);
+    qa('[data-fl-box]').forEach(el=>{const ms=+el.dataset.flBox-(Date.now()+FL_OFF);el.innerHTML=flBoxes(ms);if(ms<=0)exp=true});
+    if(exp){if(document.getElementById('fdwFlL'))flashLayerClose();flashRender();if(document.getElementById('fdList'))homeRender();refreshSticky()}},1000);
   onCleanup(()=>clearInterval(t));
 }
 /* Sepet: restorana uyan flash kademeleri → en iyi uygun kod + bir sonraki kademe */
@@ -3398,6 +3440,38 @@ body.fdWorld .fdCourierAct+.fdSticky .fb{min-height:52px;font-size:15.5px}
   .fdwRail{grid-auto-columns:min(32%,340px)}
   body.fdWorld .fdHero{border-radius:20px;overflow:hidden}
 }
+
+/* ---------- V5.1 · Flash katmanı (alttan açılan tam ekran; Küçült ile ana ekrana iner) ---------- */
+.fdwFlL{position:fixed;inset:0;z-index:2147483000;background:var(--bg);color:var(--text);overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;transform:translateY(100%);transition:transform .28s cubic-bezier(.2,.8,.2,1);padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
+.fdwFlL.on{transform:none}
+.fdwFlL .flh{--fl-a:#0F4C4A;--fl-b:#0B3634;--fl-y:#F2C14E;--fl-y2:#D9A232;background:linear-gradient(165deg,var(--fl-a),var(--fl-b));color:#fff;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 18px}
+.fdwFlL .flh>*{max-width:760px;margin-left:auto;margin-right:auto}
+.fdwFlL .flh>.flt{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.fdwFlL .flt .bz{font-size:12.5px;font-weight:900;letter-spacing:.03em;padding:5px 11px;border-radius:999px;background:var(--fl-y);color:#17140E;white-space:nowrap}
+.fdwFlL .mn{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 8px 0 16px;border-radius:999px;border:0;background:#fff;color:#0F172A;font:inherit;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.2)}
+.fdwFlL .mn i{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--fl-a);color:#fff;font-style:normal;font-size:15px;line-height:1}
+.fdwFlL .mn:focus-visible{outline:3px solid var(--fl-y);outline-offset:2px}
+.fdwFlL .ttl{margin:14px 0 14px;font-size:clamp(26px,8vw,40px);line-height:1.05;font-weight:900;letter-spacing:-.02em;color:var(--fl-y);text-transform:uppercase;text-align:center;text-shadow:0 3px 0 rgba(0,0,0,.25)}
+.fdwFlL .tiers{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+@media(max-width:340px){.fdwFlL .tiers{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.fdwFlL .t{display:flex;flex-direction:column;align-items:center}
+.fdwFlL .t .lim{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;min-width:82%;padding:4px 6px 6px;border-radius:8px 8px 4px 4px;background:var(--fl-b);border:1.5px solid var(--fl-y);font-size:clamp(11px,3.3vw,14px);font-weight:900;line-height:1.1;margin-bottom:-6px}
+.fdwFlL .t .lim small{font-size:9.5px;font-weight:700;opacity:.9}
+.fdwFlL .t .val{width:100%;display:flex;flex-direction:column;align-items:center;padding:12px 4px 8px;border-radius:10px;background:#FFFBEF;color:#0F172A;border:2.5px solid var(--fl-y);box-shadow:0 4px 0 rgba(0,0,0,.22)}
+.fdwFlL .t .val b{font-size:clamp(17px,5.4vw,26px);font-weight:900;letter-spacing:-.02em;line-height:1}
+.fdwFlL .t .val small{font-size:clamp(10px,3vw,13px);font-weight:900;letter-spacing:.04em;margin-top:2px}
+.fdwFlL .t.best .val{background:var(--fl-y)}
+.fdwFlL .nt{margin:14px auto 0;font-size:11.5px;line-height:1.45;text-align:center;opacity:.88}
+.fdwFlL .cd{display:flex;align-items:center;flex-wrap:wrap;gap:10px 12px;margin-top:16px}
+.fdwFlL .cd>b{flex:1 1 160px;font-size:clamp(14px,3.9vw,17px);line-height:1.3;font-weight:800}
+.fdwFlL .bxs{display:flex;align-items:center;gap:6px;flex:0 0 auto}.fdwFlL .bxs i{font-style:normal;font-weight:900;font-size:20px}
+.fdwFlL .bx{display:flex;flex-direction:column;align-items:center;min-width:54px;padding:6px 6px 5px;border-radius:12px;background:#fff;color:#0F172A}
+.fdwFlL .bx b{font-size:24px;font-weight:900;line-height:1.1;font-variant-numeric:tabular-nums;border:2px solid #E5E7EB;border-radius:8px;padding:0 6px;min-width:44px;text-align:center}
+.fdwFlL .bx small{font-size:11px;font-weight:700;color:#475569;margin-top:2px}
+.fdwFlL>.bd{max-width:760px;margin:0 auto;padding:4px 14px 0}
+.fdwFlL .fdwFlIt>div small{display:block;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(min-width:768px){.fdwFlL .fdGrid.fdwListV{grid-template-columns:1fr 1fr!important}}
+body.fdwFlOpen .fdToasts{z-index:2147483600}
 
 /* ---------- V5 · Tek üst başlık, panel modu ---------- */
 #fdRoot > .fdBar.fdwMoved{display:none!important}
