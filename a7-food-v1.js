@@ -2883,9 +2883,17 @@ function heroRender(tok){
 }
 function promoBanner(pl){const p=promosFor(pl)[0];if(!p)return '';return '<div class="fdwMidB">'+promoSlide(p)+'</div>'}
 /* Kuponlarım şeridi (kuponlar platformda açıksa ve fonksiyon varsa) */
+let PFS_AT=0;
+/* Platform ayarları: katman henüz yüklenmediyse kısa süre bekle; yönetimden değişen kupon anahtarı için 60 sn'de bir tazele */
+async function pfSettingsFresh(){
+  if(!window.PF)return;
+  try{if(PF.ready&&!PF.settings)await Promise.race([PF.ready,sleep(4000)])}catch(e){}
+  if(!PF.enabled||Date.now()-PFS_AT<60000)return;PFS_AT=Date.now();
+  try{const st=await RPC('pf_public_settings');if(st&&typeof st==='object'&&!Array.isArray(st))PF.settings=Object.assign({},PF.settings||{},st)}catch(e){}
+}
 async function couponsLoad(tok){
   HF.coupons=[];
-  try{if(!(window.PF&&PF.settings&&PF.settings.coupons_enabled===true))return;const r=await RPC('food_public_coupons',{p_venue_id:null});if(tok!=null&&!alive(tok))return;HF.coupons=Array.isArray(r)?r:[];const sn=HF.coupons[0]&&HF.coupons[0].server_now;if(sn){const d=new Date(sn)-Date.now();if(Number.isFinite(d))FL_OFF=d}}catch(e){HF.coupons=[]}
+  try{await pfSettingsFresh();if(!(window.PF&&PF.settings&&PF.settings.coupons_enabled===true))return;const r=await RPC('food_public_coupons',{p_venue_id:null});if(tok!=null&&!alive(tok))return;HF.coupons=Array.isArray(r)?r:[];const sn=HF.coupons[0]&&HF.coupons[0].server_now;if(sn){const d=new Date(sn)-Date.now();if(Number.isFinite(d))FL_OFF=d}}catch(e){HF.coupons=[]}
   if(tok!=null&&alive(tok))setHTML('fdwCoupons',couponStrip(HF.coupons.filter(c=>!c.flash_group)));
 }
 function couponTxt(c){return c.kind==='percent'?'%'+c.value+' indirim':M(c.value)+' indirim'}
@@ -3086,7 +3094,7 @@ window.foodAdmFlash=async function(){
     '<div class="fdForm"><label for="flT">Başlık</label><input id="flT" maxlength="80" placeholder="Örn. Hafta sonu Flash indirimi">'+
     '<label for="flP">Kod ön eki</label><input id="flP" maxlength="12" placeholder="Örn. FLASH" style="text-transform:uppercase">'+
     '<label>Kademeler</label><div id="flTiers">'+tierRow(275,70)+tierRow(350,100)+tierRow(450,150)+tierRow(550,200)+'</div><button type="button" class="fb sm" id="flAdd">+ Kademe ekle</button>'+
-    '<div class="two" style="margin-top:10px"><div><label for="flS">Başlangıç</label><input id="flS" type="datetime-local"></div><div><label for="flE">Bitiş</label><input id="flE" type="datetime-local"></div></div>'+
+    '<div class="two" style="margin-top:10px"><div><label for="flS">Başlangıç (boş = hemen)</label><input id="flS" type="datetime-local"></div><div><label for="flE">Bitiş</label><input id="flE" type="datetime-local"></div></div>'+
     '<label for="flF">İndirimi karşılayan</label><select id="flF"><option value="platform">Platform</option><option value="venue">Restoran</option></select>'+
     '<label>Katılan restoranlar</label><label class="fdSw" style="font-size:13.5px"><input type="checkbox" id="flAll" checked><i></i><span>Tüm restoranlar</span></label>'+
     '<div id="flVs" class="fdwAlPick" hidden>'+vs.map(v=>'<button type="button" data-v="'+E(v.id)+'">'+E(v.name)+'</button>').join('')+'</div>'+
@@ -3112,11 +3120,17 @@ window.foodAdmFlash=async function(){
       try{
         for(const t of tiers)for(const vid of vids){
           const code=(pre+Math.round(t.val/100)+(vid?'-'+vid.replace(/-/g,'').slice(0,4).toUpperCase():'')).slice(0,30);
-          const r=await RPC('pf_admin_upsert_campaign',{p:{code,title,kind:'fixed',value:t.val,min_subtotal_kurus:t.min,venue_id:vid,funded_by:w.querySelector('#flF').value,starts_at:s?new Date(s).toISOString():'',ends_at:e?new Date(e).toISOString():'',usage_limit_total:lim||'',usage_limit_per_user:1,active:true}});
+          const body={title,kind:'fixed',value:t.val,min_subtotal_kurus:t.min,venue_id:vid,funded_by:w.querySelector('#flF').value,starts_at:s?new Date(s).toISOString():'',ends_at:e?new Date(e).toISOString():'',usage_limit_total:lim||'',usage_limit_per_user:1,active:true};
+          let r;try{r=await RPC('pf_admin_upsert_campaign',{p:Object.assign({code},body)})}
+          catch(x){if(!/duplicate|23505|code_key/i.test(errMsg(x)+' '+(x&&x.message||'')))throw x;
+            /* Aynı kod daha önce kullanılmışsa mevcut kayda dokunmadan grup ekiyle benzersiz kod üret */
+            r=await RPC('pf_admin_upsert_campaign',{p:Object.assign({code:(code.slice(0,23)+'-'+grp.slice(-6)).slice(0,30)},body)})}
           made.push(r.id);
         }
         await RPC('pf_admin_set_campaign_group',{p_ids:made,p_group:grp});
-        closeModal();toast(made.length+' kademe oluşturuldu ve yayında');
+        closeModal();
+        if(s&&new Date(s)>new Date())toast(made.length+' kademe oluşturuldu · '+dt(new Date(s).toISOString())+' itibarıyla yayında (şu an planlı)','warn');
+        else toast(made.length+' kademe oluşturuldu ve yayında');
       }catch(x){for(const id of made){try{await RPC('pf_admin_upsert_campaign',{p:{id,active:false}})}catch(y){}}fail(errMsg(x)+(made.length?' (Oluşan '+made.length+' kayıt pasife alındı.)':''))}
     });
   };
