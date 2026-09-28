@@ -1702,7 +1702,7 @@ window.foodReorder=async function(id,btn){
 /* ====================== Bildirimler ====================== */
 async function showFoodNotifications(){
   if(!A())return;const tok=newScreen();
-  render(bar('Bildirimler','showFoodHome()','<button type="button" class="fb ghost" onclick="foodReadAll(this)">Tümü okundu</button>')+pushSlot('notif')+'<div id="fdNList">'+skel('row',3)+'</div>');pushDraw();
+  render(bar('Bildirimler','showFoodHome()')+'<div class="fdwNAct"><button type="button" class="fb sm" onclick="foodReadAll(this)">✓ Tümü okundu</button><button type="button" class="fb sm ghostBad" id="fdNDel" onclick="foodDelAll(this)">🗑 Tümünü sil</button></div>'+pushSlot('notif')+'<div id="fdNList">'+skel('row',3)+'</div>');pushDraw();
   const load=async()=>{
     try{const r=await Q('GET','food_notifications?select=id,order_id,type,title,body,read_at,created_at&order=created_at.desc&limit=40');if(!alive(tok))return;
       setHTML('fdNList',r.length?'<div class="fdRows">'+r.map(n=>'<button type="button" class="fdRowBtn" style="'+(n.read_at?'opacity:.65':'border-color:var(--fd-acc)')+'" onclick="foodOpenNotif(\''+E(n.id)+'\',\''+E(n.order_id||'')+'\',\''+E(n.type)+'\')"><span class="ic">'+(n.read_at?'🔕':'🔔')+'</span><span class="tx"><small>'+E(ago(n.created_at))+'</small><b>'+E(n.title)+'</b><span class="fdMuted fdSmall" style="display:block">'+E(n.body||'')+'</span></span><span class="ch">›</span></button>').join('')+'</div>':
@@ -1711,6 +1711,10 @@ async function showFoodNotifications(){
   };
   await load();watch(tok,[{table:'food_notifications',filter:'user_id=eq.'+UID()}],()=>load());
 }
+window.foodDelAll=async function(btn){
+  if(!await confirmBox('Tüm bildirimler silinsin mi?','Bildirim listen temizlenir. Siparişlerin ve sipariş geçmişin etkilenmez.','Tümünü sil',true))return;
+  await once('delAll',btn,async()=>{try{const n=await RPC('food_delete_notifications',{p_ids:null});toast((+n||0)+' bildirim silindi');showFoodNotifications()}catch(e){toast(pfMissing(e)?'Bu özellik henüz etkin değil.':errMsg(e),'err')}});
+};
 window.foodReadAll=async function(btn){await once('readAll',btn,async()=>{try{await RPC('food_mark_notifications_read',{p_ids:null});showFoodNotifications()}catch(e){toast(errMsg(e),'err')}})};
 window.foodOpenNotif=async function(id,orderId,type){
   RPC('food_mark_notifications_read',{p_ids:[id]}).catch(()=>{});
@@ -2750,7 +2754,8 @@ function fdwSync(){
     bar.classList.add('fdwMoved');bar.setAttribute('aria-hidden','true');
   }else{top.classList.remove('pg');if(pt)pt.hidden=true}
   if(back){const home=!bar&&fdwIsHome();back.setAttribute('aria-label',home?'İşimi Çöz ana sayfasına dön':'Geri');back.title=home?'İşimi Çöz’e dön':'Geri'}
-  fdwPanelBtn();
+  if(slot&&!bar&&fdwIsHome()){const bl=document.querySelector('#fdRoot .fdwHomeTop #fdBell');if(bl)slot.appendChild(bl)}
+  fdwFlBar();fdwPanelBtn();
 }
 /* Panel erişimi: yalnız işletmesi, kurye hesabı veya yönetim yetkisi olan kullanıcıya görünür */
 let FDW_PN=null,FDW_PN_AT=0;
@@ -2999,7 +3004,9 @@ function flashHTML(g){
   const act=HF.rows.filter(v=>g.vids.includes(v.id));if(!g.all&&!act.length)return '';
   const t0=g.tiers[0],tl=g.tiers[g.tiers.length-1];
   const sum=g.tiers.length>1?tierTxt(t0)+' – '+tierTxt(tl)+' indirim · '+g.tiers.length+' kademe':(+t0.min_subtotal_kurus?M(t0.min_subtotal_kurus)+' üzeri ':'')+tierTxt(t0)+' indirim';
-  return '<div class="fdwFlash min" data-fl="'+E(g.id)+'"><button type="button" class="bar" aria-haspopup="dialog" aria-expanded="false" onclick="foodFlashMin(\''+E(g.id)+'\',0)"><span class="bz" aria-hidden="true">⚡</span><span class="tx"><b>'+E(g.title)+'</b><small>'+E(sum)+'</small></span>'+flTimer(g)+'<span class="op">Aç ⌃</span></button>'+
+  const ms=g.end!=null?g.end-(Date.now()+FL_OFF):null;
+  return '<div class="fdwFlash min" data-fl="'+E(g.id)+'"><button type="button" class="bar" aria-haspopup="dialog" aria-expanded="false" aria-label="'+E(g.title)+' · Flash indirimi aç" onclick="foodFlashMin(\''+E(g.id)+'\',0)">'+
+    (ms!=null?'<span class="bxs" data-fl-box="'+g.end+'">'+flBoxes(ms)+'</span><span class="tx"><b>içinde katılan restoranlardan sipariş ver, indirimlerden birini kap!</b><small>'+E(sum)+'</small></span>':'<span class="bz" aria-hidden="true">⚡</span><span class="tx"><b>'+E(g.title)+'</b><small>'+E(sum)+'</small></span>')+'</button>'+
     '<button type="button" class="x" aria-label="Flash indirimi bu oturum için gizle" onclick="foodFlashX(\''+E(g.id)+'\')">✕</button></div>';
 }
 function flBoxes(ms){
@@ -3046,7 +3053,8 @@ function flashAutoOpen(){
   if(!cpOn()||document.getElementById('fdModal'))return;const bar=document.querySelector('#fdwFlash [data-fl]');if(!bar)return;
   const id=bar.dataset.fl;if(!lsGet(FL_SEEN,sessionStorage).includes(id))flashLayerOpen(id);
 }
-function flashRender(){const box=document.getElementById('fdwFlash');if(!box)return;box.innerHTML=cpOn()?flashGroups().map(flashHTML).join(''):''}
+function flashRender(){const box=document.getElementById('fdwFlash');if(!box)return;box.innerHTML=cpOn()?flashGroups().map(flashHTML).join(''):'';fdwFlBar()}
+function fdwFlBar(){document.body.classList.toggle('fdwFlBarOn',!!document.querySelector('#fdRoot #fdwFlash .fdwFlash.min')&&!FDW_PANEL)}
 window.foodFlashMin=function(id,on){if(on)flashLayerClose();else flashLayerOpen(id)};
 window.foodFlashX=function(id){const l=lsGet(FL_X,sessionStorage);if(!l.includes(id))l.push(id);lsPut(FL_X,l,sessionStorage);flashLayerClose();flashRender();toast('Flash indirim bu oturumda gizlendi. Kuponlarım’dan görebilirsin.')};
 window.foodFlashGo=function(id){HF.fl=id;HF.cuisine='';homeRender();const l=document.getElementById('fdList');l&&l.scrollIntoView({behavior:'smooth',block:'start'})};
@@ -3472,6 +3480,28 @@ body.fdWorld .fdCourierAct+.fdSticky .fb{min-height:52px;font-size:15.5px}
 .fdwFlL .fdwFlIt>div small{display:block;font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(min-width:768px){.fdwFlL .fdGrid.fdwListV{grid-template-columns:1fr 1fr!important}}
 body.fdwFlOpen .fdToasts{z-index:2147483600}
+
+/* ---------- V5.2 · Alt Flash çubuğu, üst adres şeridi ---------- */
+#fdwFlash .fdwFlash.min{position:fixed;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom,0px));z-index:44;max-width:880px;margin:0 auto;border-radius:0;border:0;border-top:2px solid #F2C14E;padding:8px 10px 8px 12px;background:linear-gradient(165deg,#0F4C4A,#0B3634);color:#fff;box-shadow:0 -6px 18px rgba(0,0,0,.18)}
+#fdwFlash .fdwFlash.min .bar{color:#fff;gap:12px;min-height:52px}
+#fdwFlash .fdwFlash.min .tx b{font-size:13.5px;line-height:1.25;font-weight:800;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#fdwFlash .fdwFlash.min .tx small{color:#F2C14E;font-weight:700}
+#fdwFlash .fdwFlash.min .bxs{display:flex;align-items:center;gap:4px;flex:0 0 auto}#fdwFlash .fdwFlash.min .bxs i{font-style:normal;font-weight:900}
+#fdwFlash .fdwFlash.min .bx{display:flex;flex-direction:column;align-items:center;min-width:44px;padding:4px 4px 3px;border-radius:10px;background:#fff;color:#0F172A}
+#fdwFlash .fdwFlash.min .bx b{font-size:18px;font-weight:900;line-height:1.1;font-variant-numeric:tabular-nums}
+#fdwFlash .fdwFlash.min .bx small{font-size:10px;font-weight:700;color:#475569}
+#fdwFlash .fdwFlash.min .x{width:36px;height:36px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:15px}
+#fdwFlash .fdwFlash.min .bz{background:#F2C14E;color:#17140E}
+@media(min-width:1024px){#fdwFlash .fdwFlash.min{max-width:1120px}}
+body.fdwFlOpen #fdwFlash .fdwFlash.min{display:none}
+body.fdWorld.fdwFlBarOn .fdSticky{bottom:calc(144px + env(safe-area-inset-bottom,0px))}
+body.fdWorld.fdwFlBarOn .app{padding-bottom:calc(160px + env(safe-area-inset-bottom,0px))}
+.fdwHomeTop{margin:-6px 0 10px}
+.fdwHomeTop .fdAddr{border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;padding:6px 2px 10px;min-height:0;box-shadow:none}
+.fdwHomeTop .fdAddr small{font-size:11.5px}.fdwHomeTop .fdAddr b{font-size:14.5px}
+.fdwNAct{display:flex;justify-content:flex-end;gap:8px;margin:0 0 12px}.fdwNAct .fb{min-height:40px}
+.fdwSlot #fdBell{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);position:relative;display:grid;place-items:center}
+@media(max-width:400px){.fdwTop .fdwBrand .mk{display:none}}
 
 /* ---------- V5 · Tek üst başlık, panel modu ---------- */
 #fdRoot > .fdBar.fdwMoved{display:none!important}
