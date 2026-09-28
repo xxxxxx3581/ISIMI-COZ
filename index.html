@@ -4727,9 +4727,10 @@ async function completeRequest(talepNo){
     if(!session||!session.access_token)throw new Error('Tamamlamak için giriş yapmalısınız.');
     const r=await findRequestByNo(talepNo);
     if(!r||!r.id)throw new Error('Talep bulunamadı');
-    const req=await supabaseWrite('PATCH','requests?id=eq.'+encodeURIComponent(String(r.id)),{status:'completed'});
-    if(!req||(Array.isArray(req)&&(!req[0]||req[0].status!=='completed'))){
-      throw new Error('Talep completed olarak yazılamadı.');
+    // Usta tarafı: yalnızca teklifi kabul edilen usta, sunucudaki dar fonksiyonla tamamlar (RLS gevşetilmez).
+    const res=await supabaseWrite('POST','rpc/hz_provider_complete_request',{p_request_id:String(r.id)});
+    if(!res||res.status!=='completed'){
+      throw new Error('Talep tamamlandı olarak kaydedilemedi.');
     }
     try{
       const list=(getRequests()||[]).map(function(x){
@@ -4740,7 +4741,7 @@ async function completeRequest(talepNo){
       });
       write(KEYS.requests,list);
     }catch(e){}
-    alert('İş tamamlandı olarak işaretlendi.');
+    alert('İş tamamlandı olarak işaretlendi. Müşteri artık seni değerlendirebilir.');
     const local=getProvider();
     if(local&&typeof providerLogged==='function'&&providerLogged()&&typeof showProviderPanel==='function'){
       showProviderPanel(local);
@@ -4748,7 +4749,7 @@ async function completeRequest(talepNo){
       await showRequestDetail(talepNo);
     }
   }catch(e){
-    alert('Tamamlama kaydedilemedi.\n\n'+(e.message||e));
+    alert('Tamamlama kaydedilemedi.\n\n'+String(e.message||e).replace(/^[A-Z_]+:\s*/,''));
   }
 }
 
