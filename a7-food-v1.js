@@ -844,7 +844,7 @@ const HF={q:'',cuisine:'',rows:[],offset:0,done:false,f:{},addr:null,promos:[],c
 async function showFoodHome(){
   if(!A())return;FDW_TAB='home';const tok=newScreen();
   render('<div class="fdwHomeTop"><button type="button" class="fdAddr" id="fdAddrBar" onclick="foodAddrSheet(\'home\')"><span class="ic">'+fdIco('pin',20)+'</span><span class="tx"><small>Teslimat adresi</small><b>…</b></span><span class="fdMuted" aria-hidden="true">⌄</span></button>'+
-    '<span class="fdLive" id="fdLive"></span>'+bellBtn()+'</div><div id="fdFar"></div>'+
+    '<span class="fdLive" id="fdLive"></span><button type="button" class="fdIco fdwPanelH" id="fdwPanelH" onclick="foodPanels()" aria-label="Paneller" hidden>'+fdIco('grid',20)+'<i hidden></i></button>'+bellBtn()+'</div><div id="fdFar"></div>'+
     '<button type="button" class="fdSearchBtn" onclick="showFoodSearch()"><span class="s">'+fdIco('search',20)+'</span><span class="p">Restoran, yemek veya mutfak ara</span><span class="f">Filtrele</span></button>'+
     (pfSet().orders_enabled===false?'<div class="fdNote warn" role="status" style="margin:0 0 12px">⏸️ <b>Sipariş alımı kısa süreliğine durduruldu.</b> Menülere göz atabilirsin; birazdan tekrar dene.</div>':'')+
     '<div id="fdActiveO"></div><div id="fdRateC"></div><div id="fdwFlash"></div>'+
@@ -2754,19 +2754,18 @@ function fdwSync(){
     bar.classList.add('fdwMoved');bar.setAttribute('aria-hidden','true');
   }else{top.classList.remove('pg');if(pt)pt.hidden=true}
   if(back){const home=!bar&&fdwIsHome();back.setAttribute('aria-label',home?'İşimi Çöz ana sayfasına dön':'Geri');back.title=home?'İşimi Çöz’e dön':'Geri'}
-  if(slot&&!bar&&fdwIsHome()){const bl=document.querySelector('#fdRoot .fdwHomeTop #fdBell');if(bl)slot.appendChild(bl)}
   fdwFlBar();fdwPanelBtn();
 }
 /* Panel erişimi: yalnız işletmesi, kurye hesabı veya yönetim yetkisi olan kullanıcıya görünür */
 let FDW_PN=null,FDW_PN_AT=0;
 async function fdwPanelBtn(){
   const b=document.getElementById('fdwPanelB');if(!b)return;
-  if(FDW_PANEL){b.hidden=true;return}
+  const hb=document.getElementById('fdwPanelH');if(FDW_PANEL){b.hidden=true;if(hb)hb.hidden=true;return}
   try{
-    const w=await whoami();const has=!!(w&&((w.venues||[]).length||w.courier||w.is_admin));b.hidden=!has||!!FDW_PANEL;if(!has)return;
+    const w=await whoami();const has=!!(w&&((w.venues||[]).length||w.courier||w.is_admin));const home=!!hb;b.hidden=!has||!!FDW_PANEL||home;if(hb)hb.hidden=!has;if(!has)return;
     const v=(w.venues||[])[0];
     if(v&&Date.now()-FDW_PN_AT>60000){FDW_PN_AT=Date.now();try{const r=await RPC('food_venue_orders',{p_venue_id:v.id,p_section:'new',p_limit:1,p_offset:0});FDW_PN=+((r&&r.counts)||{}).new||0}catch(e){}}
-    const i=b.querySelector('i');const n=v?FDW_PN||0:0;i.hidden=!n;i.textContent=n>9?'9+':String(n);b.setAttribute('aria-label',n?'Paneller, '+n+' yeni sipariş onay bekliyor':'Paneller');
+    const n=v?FDW_PN||0:0;[b,hb].forEach(x=>{if(!x)return;const i=x.querySelector('i');i.hidden=!n;i.textContent=n>9?'9+':String(n)});b.setAttribute('aria-label',n?'Paneller, '+n+' yeni sipariş onay bekliyor':'Paneller');
   }catch(e){}
 }
 window.foodPanels=async function(){
@@ -3025,11 +3024,12 @@ function flashLayerHTML(g){
     '<h2 class="ttl">'+E(g.title)+'</h2>'+
     '<div class="tiers" role="list">'+g.tiers.map((t,i)=>'<div class="t'+(i===g.tiers.length-1&&g.tiers.length>1?' best':'')+'" role="listitem"><span class="lim">'+(+t.min_subtotal_kurus?M(t.min_subtotal_kurus).replace(' TL','TL')+'<small>ve üzerine</small>':'Alt limit<small>yok</small>')+'</span><span class="val"><b>'+E(tierTxt(t)).replace(' TL','TL')+'</b><small>İNDİRİM</small></span></div>').join('')+'</div>'+
     '<p class="nt">Sepet tutarına uyan en yüksek kademe sepette otomatik seçilir. Restoranın minimum sepet tutarı geçerlidir; kademeler ve diğer kuponlar birleştirilemez. Son tutar ödeme adımında doğrulanır.</p>'+
-    (ms!=null?'<div class="cd"><span class="bxs" data-fl-box="'+g.end+'">'+flBoxes(ms)+'</span><b>içinde katılan restoranlardan sipariş ver, sepetine uyan indirimi kap!</b></div>':'<div class="cd"><b>Katılan restoranlardan sipariş ver, sepetine uyan indirimi kap!</b></div>')+'</div>'+
+'</div>'+
     '<div class="bd">'+
     (its.length>=2?'<div class="fdSecH"><b>Flash’ta sipariş verebileceğin ürünler</b></div><div class="fdPop fdwFlIt">'+its.map(i=>'<div role="button" tabindex="0" onclick="showFoodVenue(\''+E(i.venue_id)+'\',\''+E(i.id)+'\')" onkeydown="if(event.key===\'Enter\')this.click()">'+pic(i.image_url,i.name,'')+'<div class="bd"><b>'+E(i.name)+'</b><small>'+E(vname(i.venue_id))+'</small><div class="pr">'+M(i.price_kurus)+'</div></div></div>').join('')+'</div>':'')+
     '<div class="fdSecH"><b>Restoranlar ('+vs.length+')</b></div>'+
-    (vs.length?'<div class="fdGrid fdwListV">'+vs.map(v=>venueRow(v)).join('')+'</div>':empty('🍽️','Şu an katılan restoran yok','Kampanyaya katılan restoranlar burada listelenir.'))+'</div>';
+    (vs.length?'<div class="fdGrid fdwListV">'+vs.map(v=>venueRow(v)).join('')+'</div>':empty('🍽️','Şu an katılan restoran yok','Kampanyaya katılan restoranlar burada listelenir.'))+'</div>'+
+(ms!=null?'<div class="cd"><span class="bxs" data-fl-box="'+g.end+'">'+flBoxes(ms)+'</span><b>içinde katılan restoranlardan sipariş ver, sepetine uyan indirimi kap!</b></div>':'<div class="cd"><b>Katılan restoranlardan sipariş ver, sepetine uyan indirimi kap!</b></div>')+'';
 }
 let FL_ESC=null;
 function flashLayerClose(instant){
@@ -3496,12 +3496,22 @@ body.fdwFlOpen .fdToasts{z-index:2147483600}
 body.fdwFlOpen #fdwFlash .fdwFlash.min{display:none}
 body.fdWorld.fdwFlBarOn .fdSticky{bottom:calc(144px + env(safe-area-inset-bottom,0px))}
 body.fdWorld.fdwFlBarOn .app{padding-bottom:calc(160px + env(safe-area-inset-bottom,0px))}
-.fdwHomeTop{margin:-6px 0 10px}
-.fdwHomeTop .fdAddr{border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;padding:6px 2px 10px;min-height:0;box-shadow:none}
-.fdwHomeTop .fdAddr small{font-size:11.5px}.fdwHomeTop .fdAddr b{font-size:14.5px}
 .fdwNAct{display:flex;justify-content:flex-end;gap:8px;margin:0 0 12px}.fdwNAct .fb{min-height:40px}
 .fdwSlot #fdBell{width:40px;height:40px;border-radius:12px;border:1px solid var(--line);background:transparent;color:var(--text);position:relative;display:grid;place-items:center}
-@media(max-width:400px){.fdwTop .fdwBrand .mk{display:none}}
+
+/* V5.3 · Flash katmanı tek yeşil yüzey, sayaç altta sabit */
+.fdwFlL{--fl-a:#0F4C4A;--fl-b:#0B3634;background:linear-gradient(180deg,#0F4C4A 0%,#0B3634 60%,#0A2F2D 100%);color:#fff;padding-bottom:0}
+.fdwFlL>.bd .fdSecH b{color:#fff}
+.fdwFlL>.bd{padding-bottom:18px;flex:1 0 auto;width:100%}
+.fdwFlL{display:flex;flex-direction:column}.fdwFlL>.flh,.fdwFlL>.cd{flex:0 0 auto}
+.fdwFlL .cd{position:sticky;bottom:0;z-index:2;margin:0;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));background:#0B3634;border-top:2px solid #F2C14E;box-shadow:0 -8px 20px rgba(0,0,0,.25)}
+.fdwFlL .cd>*{max-width:760px}
+.fdwFlL .cd .bx{min-width:48px;padding:4px 4px 3px}.fdwFlL .cd .bx b{font-size:20px;min-width:38px}
+.fdwFlL .fdVCard,.fdwFlL .fdPop>div{border-color:rgba(255,255,255,.14)}
+.fdwHomeTop .fdwPanelH{position:relative;flex:0 0 auto;width:46px;height:46px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--text);display:grid;place-items:center}
+.fdwHomeTop .fdwPanelH[hidden]{display:none}
+.fdwHomeTop .fdwPanelH i{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--fdw-hot);color:var(--fdw-hot-ink);font:800 10.5px/18px system-ui,sans-serif;font-style:normal;text-align:center}
+.fdwHomeTop .fdwPanelH i[hidden]{display:none}
 
 /* ---------- V5 · Tek üst başlık, panel modu ---------- */
 #fdRoot > .fdBar.fdwMoved{display:none!important}
