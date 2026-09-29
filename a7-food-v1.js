@@ -2754,6 +2754,7 @@ function fdwSync(){
     bar.classList.add('fdwMoved');bar.setAttribute('aria-hidden','true');
   }else{top.classList.remove('pg');if(pt)pt.hidden=true}
   if(back){const home=!bar&&fdwIsHome();back.setAttribute('aria-label',home?'İşimi Çöz ana sayfasına dön':'Geri');back.title=home?'İşimi Çöz’e dön':'Geri'}
+  document.body.classList.toggle('fdwHome',!bar&&fdwIsHome());
   fdwFlBar();fdwPanelBtn();
 }
 /* Panel erişimi: yalnız işletmesi, kurye hesabı veya yönetim yetkisi olan kullanıcıya görünür */
@@ -3016,9 +3017,6 @@ function flBoxes(ms){
 }
 function flashLayerHTML(g){
   const vs=(g.all?HF.rows:HF.rows.filter(v=>g.vids.includes(v.id))).slice().sort((a,b)=>(openNow(b)?1:0)-(openNow(a)?1:0));
-  const ids=new Set(vs.filter(openNow).map(v=>v.id));
-  const its=(HF.items||[]).filter(i=>ids.has(i.venue_id)).slice(0,12);
-  const vname=id=>(HF.rows.find(v=>v.id===id)||{}).name||'';
   const ms=g.end!=null?g.end-(Date.now()+FL_OFF):null;
   return '<div class="flh"><div class="flt"><span class="bz">⚡ Flash İndirim</span><button type="button" class="mn" onclick="foodFlashMin(\''+E(g.id)+'\',1)" aria-label="Flash katmanını küçült">Küçült <i aria-hidden="true">⌄</i></button></div>'+
     '<h2 class="ttl">'+E(g.title)+'</h2>'+
@@ -3026,7 +3024,6 @@ function flashLayerHTML(g){
     '<p class="nt">Sepet tutarına uyan en yüksek kademe sepette otomatik seçilir. Restoranın minimum sepet tutarı geçerlidir; kademeler ve diğer kuponlar birleştirilemez. Son tutar ödeme adımında doğrulanır.</p>'+
 '</div>'+
     '<div class="bd">'+
-    (its.length>=2?'<div class="fdSecH"><b>Flash’ta sipariş verebileceğin ürünler</b></div><div class="fdPop fdwFlIt">'+its.map(i=>'<div role="button" tabindex="0" onclick="showFoodVenue(\''+E(i.venue_id)+'\',\''+E(i.id)+'\')" onkeydown="if(event.key===\'Enter\')this.click()">'+pic(i.image_url,i.name,'')+'<div class="bd"><b>'+E(i.name)+'</b><small>'+E(vname(i.venue_id))+'</small><div class="pr">'+M(i.price_kurus)+'</div></div></div>').join('')+'</div>':'')+
     '<div class="fdSecH"><b>Restoranlar ('+vs.length+')</b></div>'+
     (vs.length?'<div class="fdGrid fdwListV">'+vs.map(v=>venueRow(v)).join('')+'</div>':empty('🍽️','Şu an katılan restoran yok','Kampanyaya katılan restoranlar burada listelenir.'))+'</div>'+
 (ms!=null?'<div class="cd"><span class="bxs" data-fl-box="'+g.end+'">'+flBoxes(ms)+'</span><b>içinde katılan restoranlardan sipariş ver, sepetine uyan indirimi kap!</b></div>':'<div class="cd"><b>Katılan restoranlardan sipariş ver, sepetine uyan indirimi kap!</b></div>')+'';
@@ -3512,6 +3509,46 @@ body.fdWorld.fdwFlBarOn .app{padding-bottom:calc(160px + env(safe-area-inset-bot
 .fdwHomeTop .fdwPanelH[hidden]{display:none}
 .fdwHomeTop .fdwPanelH i{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--fdw-hot);color:var(--fdw-hot-ink);font:800 10.5px/18px system-ui,sans-serif;font-style:normal;text-align:center}
 .fdwHomeTop .fdwPanelH i[hidden]{display:none}
+
+/* V5.4 · Flash: hardal zemin, beyaz restoran kartları */
+.fdwFlL{background:#D9AE45;color:#17140E}
+.fdwFlL .flh{--fl-a:#D9AE45;--fl-b:#1B1A16;--fl-y:#FFFFFF;background:#D9AE45;color:#17140E}
+.fdwFlL .ttl{color:#17140E;text-shadow:none}
+.fdwFlL .flt .bz{background:#17140E;color:#F2C14E}
+.fdwFlL .mn i{background:#17140E;color:#F2C14E}
+.fdwFlL .t .lim{background:#1B1A16;border-color:#1B1A16;color:#fff}
+.fdwFlL .t .val{background:#fff;border-color:#1B1A16;color:#17140E}
+.fdwFlL .t.best .val{background:#1B1A16;color:#F2C14E}
+.fdwFlL .nt{color:#2A2416;opacity:1}
+.fdwFlL>.bd .fdSecH b{color:#17140E}
+.fdwFlL .fdVCard{background:#fff!important;color:#17140E;border-color:rgba(0,0,0,.08)!important;box-shadow:0 4px 14px rgba(0,0,0,.10)}
+.fdwFlL .fdVCard h3,.fdwFlL .fdVCard .bd{color:#17140E}.fdwFlL .fdVCard .fdMuted,.fdwFlL .fdVCard .mt{color:#5B5446!important}
+.fdwFlL .fdVCard .fdStar{background:#F6F1E4;color:#17140E}
+.fdwFlL .fdVCard .bg em{background:#F6F1E4;color:#17140E}
+.fdwFlL .fdVCard .fdFav{border-color:rgba(0,0,0,.1)}
+.fdwFlL .cd{background:#C99A30;border-top:2px solid #17140E;color:#17140E}
+.fdwFlL .cd .bx{background:#fff;color:#17140E}.fdwFlL .cd .bx b{border-color:#E7DDC4}
+#fdwFlash .fdwFlash.min{background:#D9AE45;border-top:2px solid #17140E;color:#17140E}
+#fdwFlash .fdwFlash.min .bar{color:#17140E}
+#fdwFlash .fdwFlash.min .tx small{color:#3A2F12}
+#fdwFlash .fdwFlash.min .x{background:rgba(0,0,0,.14);color:#17140E}
+#fdwFlash .fdwFlash.min .bx b{border:0}
+
+/* V5.5 · Yemek ana ekranı: hardal zemin + beyaz kartlar, siyah yazı, mavi/kırmızı vurgular (yalnız ana ekran, iki temada) */
+body.fdWorld.fdwHome{background:#D9AE45}
+body.fdWorld.fdwHome #fdRoot{--bg:#D9AE45;--card:#FFFFFF;--card2:#FBF3DF;--line:rgba(23,20,14,.14);--text:#17140E;--muted:#5B5446;
+  --fdw-acc:#1D4ED8;--fdw-acc2:#1E3A8A;--fdw-ink:#FFFFFF;--fdw-hot:#DC2626;--fdw-hot-ink:#FFFFFF;--fdw-ok:#15803D;--fdw-soft:#E8EFFD;--fdw-hot-soft:#FDECEC;color:#17140E}
+body.fdWorld.fdwHome #fdRoot .fdSecT h2,body.fdWorld.fdwHome #fdRoot .fdSecH b,body.fdWorld.fdwHome #fdRoot .fdCuis em{color:#17140E}
+body.fdWorld.fdwHome #fdRoot .fdSecT .fdMuted,body.fdWorld.fdwHome #fdRoot .fdSecH .fdMuted{color:#3A2F12}
+body.fdWorld.fdwHome #fdRoot .fdVCard,body.fdWorld.fdwHome #fdRoot .fdActiveCard,body.fdWorld.fdwHome #fdRoot .fdAddr,body.fdWorld.fdwHome #fdRoot .fdSearchBtn,body.fdWorld.fdwHome #fdRoot .fdwHomeTop .fdIco,body.fdWorld.fdwHome #fdRoot .fdwHomeTop #fdBell{box-shadow:0 3px 12px rgba(23,20,14,.10);border-color:rgba(23,20,14,.10)}
+body.fdWorld.fdwHome #fdRoot .fdCuis button.on span{border-color:#1D4ED8;background:#E8EFFD}
+body.fdWorld.fdwHome #fdRoot .fdwChip.on{background:#17140E;border-color:#17140E;color:#fff}
+body.fdWorld.fdwHome #fdRoot .fdwView button.on{background:#17140E;color:#fff}
+body.fdWorld.fdwHome #fdwFlash .fdwFlash.min{background:#FFFFFF;border-top:3px solid #DC2626;color:#17140E;box-shadow:0 -6px 18px rgba(23,20,14,.18)}
+body.fdWorld.fdwHome #fdwFlash .fdwFlash.min .bar{color:#17140E}
+body.fdWorld.fdwHome #fdwFlash .fdwFlash.min .tx small{color:#DC2626}
+body.fdWorld.fdwHome #fdwFlash .fdwFlash.min .bx{background:#17140E;color:#fff}body.fdWorld.fdwHome #fdwFlash .fdwFlash.min .bx small{color:#F2C14E}
+body.fdWorld.fdwHome #fdwFlash .fdwFlash.min .x{background:#F1EDE3;color:#17140E}
 
 /* ---------- V5 · Tek üst başlık, panel modu ---------- */
 #fdRoot > .fdBar.fdwMoved{display:none!important}
