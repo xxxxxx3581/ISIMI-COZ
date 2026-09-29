@@ -4528,9 +4528,16 @@ async function submitOffer(talepNo){
       if(found&&found.id)requestId=found.id;
     }
     if(!requestId)throw new Error('Talep id bulunamadı: '+talepNo);
+    /* provider_id tarayıcıdaki seçime değil, oturumdaki kullanıcının kendi AKTİF sağlayıcı kaydına göre belirlenir */
+    const uidNow=session.user&&session.user.id;
+    const mine=uidNow?await supabaseReadAuth('GET','providers?select=id&active=eq.true&or=(owner_id.eq.'+encodeURIComponent(uidNow)+',user_id.eq.'+encodeURIComponent(uidNow)+')&order=created_at.asc'):[];
+    const mineIds=(Array.isArray(mine)?mine:[]).map(function(x){return String(x.id)});
+    if(!mineIds.length)throw new Error('Hesabına bağlı aktif bir hizmet sağlayıcı kaydı yok. Teklif verebilmek için önce sağlayıcı kaydını tamamla.');
+    const providerId=mineIds.indexOf(String(p.id))>=0?String(p.id):mineIds[0];
     const body={
       request_id:String(requestId),
-      provider_id:String(p.id),
+      provider_id:providerId,
+      provider_user_id:String(uidNow),
       price:fiyatNum,
       available_time:available_time,
       note:aciklama||null,
