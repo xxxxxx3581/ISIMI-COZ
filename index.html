@@ -6784,7 +6784,7 @@ async function submitAuth(mode){
  }catch(e){if(err)err.innerHTML='<div class="authError">'+escapeHTML(e.message||String(e))+'</div>';}finally{if(btn){btn.disabled=false;btn.textContent=buttonText(mode)}}
 }
 function buttonText(mode){return mode==='signup'?'KAYIT OL':'GİRİŞ YAP'}
-function logoutUser(){ saveAuthSession(null); /* Ortak cihazda bir sonraki kullanıcıya kişisel veri (telefon, adres, sepet, son yazılan talep) kalmasın */ try{ Object.keys(localStorage).filter(function(k){return /^isimi_food_|^a7_ai_/.test(k)}).forEach(function(k){localStorage.removeItem(k)}); }catch(e){} v2Toast('Çıkış yapıldı.'); try{ showHome(); }catch(e){} }
+function logoutUser(){ /* Sunucudaki oturumu (refresh token) da kapat; ağ hatası çıkışı engellemez */ try{ var _s=getAuthSession(); if(_s&&_s.access_token){ fetch(SUPABASE_URL+'/auth/v1/logout',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+_s.access_token},keepalive:true}).catch(function(){}); } }catch(e){} saveAuthSession(null); /* Ortak cihazda bir sonraki kullanıcıya kişisel veri (telefon, adres, sepet, son yazılan talep) kalmasın */ try{ Object.keys(localStorage).filter(function(k){return /^isimi_food_|^a7_ai_/.test(k)}).forEach(function(k){localStorage.removeItem(k)}); }catch(e){} v2Toast('Çıkış yapıldı.'); try{ showHome(); }catch(e){} }
 updateAuthArea();
 applyAppTheme(getAppTheme());
 
