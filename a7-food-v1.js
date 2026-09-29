@@ -1764,6 +1764,7 @@ async function showFoodBusiness(venueId){FDW_TAB='';
   const mgr=isMgr();const open=BZ.venue.is_open;
   render(bar(BZ.venue.name,'showFoodHome()','<span class="fdLive" id="fdLive"></span>'+venueSwitchBtn()+bellBtn(),{owner:'İşletme sahibi',manager:'Yönetici',staff:'Personel'}[cur.role]||'')+
     roleBar('business')+subnav(cur.id,'orders')+
+    '<button type="button" class="fb soft block" style="margin:0 0 12px;min-height:44px" onclick="foodNewVenue()">＋ Yeni restoran / işletme başvurusu</button>'+
     '<div class="fdOpen'+(open?' on':'')+'" id="fdOpenCard"><div class="tx"><b>'+(open?'Sipariş alıyorsun':'Sipariş almıyorsun')+'</b><small>'+(open&&v&&!openNow(v)&&v.is_active?'Açık ama şu an çalışma saati dışında':open?'Müşteriler sipariş verebilir':'Menün görünür, sipariş verilemez')+'</small></div>'+
       (mgr?sw('fdOpenSw',open,'foodToggleOpen(this)'):'')+'</div>'+
     (mgr&&v?'<div id="fdBusy">'+busyRow(v)+'</div>':'')+
