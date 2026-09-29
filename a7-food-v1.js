@@ -1554,7 +1554,7 @@ function trackRender(t){
   const loc=d&&d.location;const vLL=t.venue.lat!=null?[t.venue.lat,t.venue.lng]:null;
   if(!TRK.courier&&loc&&TRK.id===o.id){TRK.courier=[loc.lat,loc.lng];TRK.at=loc.at}
   const courierStage=['courier_assigned','courier_at_venue','picked_up','on_the_way','near_customer'].includes(st)||(o.delivery_mode==='self_delivery'&&['on_the_way','near_customer'].includes(st));
-  const showMap=!pickup&&!TERMINAL.includes(st)&&(!!TRK.courier||(courierStage&&!!(vLL||TRK.home)));
+  const showMap=!pickup&&!TERMINAL.includes(st)&&(!!TRK.courier||courierStage);
   TRK.venue=vLL;TRK.vname=t.venue.name;TRK.st=st;TRK.mode=o.delivery_mode;setTimeout(()=>{trackMap(vLL);pushDraw()},0);
   /* V4: kurye yoldayken harita en üstte, büyük ve 'x dakika sonra kapında' balonuyla */
   const mapTop=showMap&&['picked_up','on_the_way','near_customer'].includes(st);
@@ -1619,6 +1619,7 @@ function courierTip(){const sec=TRK.at?Math.round((Date.now()-new Date(TRK.at))/
 function locText(){
   if(TMK.c&&TMK.c.setTooltipContent)TMK.c.setTooltipContent(courierTip());
   const el=document.getElementById('fdTLoc');if(!el)return;
+  if(!TRK.courier&&!TRK.venue&&!TRK.home){el.textContent='🛵 Kurye konumu henüz alınmadı. Konum paylaşılınca haritada görünecek; sipariş durumunu yukarıdan izleyebilirsin.';return}
   if(!TRK.courier){el.textContent=TRK.mode==='self_delivery'?'🏪 Bu siparişi restoranın kendi kuryesi getiriyor. Restoran kuryeleri konum paylaşmadığı için haritada yalnızca restoran ve adresin görünür.':'🛵 Kurye konumu, kurye konum paylaşmaya başlayınca haritada görünür.';return}
   const sec=TRK.at?Math.round((Date.now()-new Date(TRK.at))/1000):null;
   el.innerHTML=sec!=null&&sec>120?'<span style="color:var(--fd-warn);font-weight:700">⚠️ Kuryenin konumu '+Math.round(sec/60)+' dk önce güncellendi (bağlantı zayıf olabilir).</span>':'🛵 Kuryeni haritadan canlı izleyebilirsin'+(sec!=null?' · '+(sec<60?sec+' sn':Math.round(sec/60)+' dk')+' önce':'');
