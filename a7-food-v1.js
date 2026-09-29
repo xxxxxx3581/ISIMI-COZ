@@ -490,7 +490,8 @@ function css(){
 .fdHours{display:grid;gap:8px;margin-top:8px}.fdHours>div{display:grid;grid-template-columns:minmax(0,1.2fr) auto minmax(0,1fr) minmax(0,1fr);gap:6px;align-items:center;font-size:13.5px;font-weight:700}
 .fdHours input[type=time]{min-height:40px!important;min-width:0;width:100%;padding:6px!important;font-size:14px!important}
 .fdSw{display:inline-flex;align-items:center;gap:10px;cursor:pointer;font-weight:700;margin:0!important}
-.fdSw input{position:absolute;opacity:0;width:1px;height:1px}.fdSw i{position:relative;width:48px;height:28px;border-radius:14px;background:var(--line);transition:background .2s;flex:0 0 auto}
+.fdSw input{position:absolute;opacity:0;width:1px;height:1px}
+.fdSw{position:relative}.fdForm label.fdSw{display:inline-flex;margin:0!important;font-size:inherit}.fdSw i{display:inline-block}.fdSw i{position:relative;width:48px;height:28px;border-radius:14px;background:var(--line);transition:background .2s;flex:0 0 auto}
 .fdSw i:after{content:'';position:absolute;left:3px;top:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.25);transition:transform .2s}
 .fdSw input:checked+i{background:var(--fd-ok)}.fdSw input:checked+i:after{transform:translateX(20px)}.fdSw input:focus-visible+i{outline:2px solid var(--fd-acc);outline-offset:2px}
 .fdUp{display:flex;gap:12px;align-items:center}.fdUp .fdPic{width:76px;border-radius:14px}.fdUp .fdPic.cover{width:136px}
