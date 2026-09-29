@@ -1753,7 +1753,7 @@ async function bizContext(venueId){
 function venueSwitchBtn(){return (BZ.venues.length>1||BZ.role==='owner')?'<button type="button" class="fdIco" aria-label="İşletme değiştir" onclick="foodVenueSwitch()">⇄</button>':''}
 window.foodVenueSwitch=function(){
   const w=modal(sheetHead('İşletmelerin')+'<div class="fdRows">'+BZ.venues.map(v=>row(v.id===BZ.venueId?'✅':'🏪',{owner:'Sahip',manager:'Yönetici',staff:'Personel'}[v.role]||'',E(v.name),'showFoodBusiness(\''+E(v.id)+'\')')).join('')+
-    row('➕','Yeni','İşletme ekle','foodNewVenue()')+'</div>',{sheet:true});bindClose(w);
+    row('➕','Yeni işletme başvurusu','＋ Yeni restoran ekle','foodNewVenue()')+'</div>',{sheet:true});bindClose(w);
 };
 async function showFoodBusiness(venueId){FDW_TAB='';
   if(!A())return;const tok=newScreen();FDW_PANEL=1;
@@ -1765,7 +1765,7 @@ async function showFoodBusiness(venueId){FDW_TAB='';
   const mgr=isMgr();const open=BZ.venue.is_open;
   render(bar(BZ.venue.name,'showFoodHome()','<span class="fdLive" id="fdLive"></span>'+venueSwitchBtn()+bellBtn(),{owner:'İşletme sahibi',manager:'Yönetici',staff:'Personel'}[cur.role]||'')+
     roleBar('business')+subnav(cur.id,'orders')+
-    '<button type="button" class="fb soft block" style="margin:0 0 12px;min-height:44px" onclick="foodNewVenue()">＋ Yeni restoran / işletme başvurusu</button>'+
+    '<button type="button" class="fb soft block" style="margin:0 0 12px;min-height:44px" onclick="foodNewVenue()">＋ Yeni restoran ekle / Yeni işletme başvurusu</button>'+
     '<div class="fdOpen'+(open?' on':'')+'" id="fdOpenCard"><div class="tx"><b>'+(open?'Sipariş alıyorsun':'Sipariş almıyorsun')+'</b><small>'+(open&&v&&!openNow(v)&&v.is_active?'Açık ama şu an çalışma saati dışında':open?'Müşteriler sipariş verebilir':'Menün görünür, sipariş verilemez')+'</small></div>'+
       (mgr?sw('fdOpenSw',open,'foodToggleOpen(this)'):'')+'</div>'+
     (mgr&&v?'<div id="fdBusy">'+busyRow(v)+'</div>':'')+
@@ -2778,6 +2778,7 @@ window.foodPanels=async function(){
   const v=(w.venues||[])[0];const n=FDW_PN||0;
   const m=modal(sheetHead('Paneller','Sipariş verme ekranından ayrı çalışır')+'<div class="fdwList">'+
     r('store','İşletmem',v?(n?n+' yeni sipariş onay bekliyor · ':'')+v.name:'Restoranını yönet veya işletmeni ekle','showFoodBusiness()')+
+    (v?r('store','＋ Yeni restoran ekle','Yeni işletme başvurusu','foodNewVenue()'):'')+
     r('bike','Kurye',w.courier?'Teslimatlar ve kazanç':'Kurye paneli veya kurye başvurusu','showFoodCourier()')+
     (w.is_admin?r('gear','Yemek yönetimi','Platform yönetim paneli','showFoodAdmin()'):'')+'</div>',{sheet:true});
   bindClose(m);
