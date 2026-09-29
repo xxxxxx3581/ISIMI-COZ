@@ -3534,21 +3534,21 @@ body.fdWorld.fdwFlBarOn .app{padding-bottom:calc(160px + env(safe-area-inset-bot
 #fdwFlash .fdwFlash.min .x{background:rgba(0,0,0,.14);color:#17140E}
 #fdwFlash .fdwFlash.min .bx b{border:0}
 
-/* V5.5 · Yemek ana ekranı: hardal zemin + beyaz kartlar, siyah yazı, mavi/kırmızı vurgular (yalnız ana ekran, iki temada) */
-body.fdWorld.fdwHome{background:#D9AE45}
-body.fdWorld.fdwHome #fdRoot{--bg:#D9AE45;--card:#FFFFFF;--card2:#FBF3DF;--line:rgba(23,20,14,.14);--text:#17140E;--muted:#5B5446;
+/* V5.5 · Yemek ana ekranı: hardal zemin + beyaz kartlar, siyah yazı, mavi/kırmızı vurgular (yalnız ana ekran, koyu temada; açık tema eskisi gibi) */
+html:not([data-theme="light"]) body.fdWorld.fdwHome{background:#D9AE45}
+html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot{--bg:#D9AE45;--card:#FFFFFF;--card2:#FBF3DF;--line:rgba(23,20,14,.14);--text:#17140E;--muted:#5B5446;
   --fdw-acc:#1D4ED8;--fdw-acc2:#1E3A8A;--fdw-ink:#FFFFFF;--fdw-hot:#DC2626;--fdw-hot-ink:#FFFFFF;--fdw-ok:#15803D;--fdw-soft:#E8EFFD;--fdw-hot-soft:#FDECEC;color:#17140E}
-body.fdWorld.fdwHome #fdRoot .fdSecT h2,body.fdWorld.fdwHome #fdRoot .fdSecH b,body.fdWorld.fdwHome #fdRoot .fdCuis em{color:#17140E}
-body.fdWorld.fdwHome #fdRoot .fdSecT .fdMuted,body.fdWorld.fdwHome #fdRoot .fdSecH .fdMuted{color:#3A2F12}
-body.fdWorld.fdwHome #fdRoot .fdVCard,body.fdWorld.fdwHome #fdRoot .fdActiveCard,body.fdWorld.fdwHome #fdRoot .fdAddr,body.fdWorld.fdwHome #fdRoot .fdSearchBtn,body.fdWorld.fdwHome #fdRoot .fdwHomeTop .fdIco,body.fdWorld.fdwHome #fdRoot .fdwHomeTop #fdBell{box-shadow:0 3px 12px rgba(23,20,14,.10);border-color:rgba(23,20,14,.10)}
-body.fdWorld.fdwHome #fdRoot .fdCuis button.on span{border-color:#1D4ED8;background:#E8EFFD}
-body.fdWorld.fdwHome #fdRoot .fdwChip.on{background:#17140E;border-color:#17140E;color:#fff}
-body.fdWorld.fdwHome #fdRoot .fdwView button.on{background:#17140E;color:#fff}
-body.fdWorld.fdwHome #fdwFlash .fdwFlash.min{background:#FFFFFF;border-top:3px solid #DC2626;color:#17140E;box-shadow:0 -6px 18px rgba(23,20,14,.18)}
-body.fdWorld.fdwHome #fdwFlash .fdwFlash.min .bar{color:#17140E}
-body.fdWorld.fdwHome #fdwFlash .fdwFlash.min .tx small{color:#DC2626}
-body.fdWorld.fdwHome #fdwFlash .fdwFlash.min .bx{background:#17140E;color:#fff}body.fdWorld.fdwHome #fdwFlash .fdwFlash.min .bx small{color:#F2C14E}
-body.fdWorld.fdwHome #fdwFlash .fdwFlash.min .x{background:#F1EDE3;color:#17140E}
+html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdSecT h2,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdSecH b,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdCuis em{color:#17140E}
+html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdSecT .fdMuted,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdSecH .fdMuted{color:#3A2F12}
+html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdVCard,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdActiveCard,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdAddr,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdSearchBtn,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdwHomeTop .fdIco,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdwHomeTop #fdBell{box-shadow:0 3px 12px rgba(23,20,14,.10);border-color:rgba(23,20,14,.10)}
+html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdCuis button.on span{border-color:#1D4ED8;background:#E8EFFD}
+html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdwChip.on{background:#17140E;border-color:#17140E;color:#fff}
+html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdwView button.on{background:#17140E;color:#fff}
+html:not([data-theme="light"]) body.fdWorld.fdwHome #fdwFlash .fdwFlash.min{background:#FFFFFF;border-top:3px solid #DC2626;color:#17140E;box-shadow:0 -6px 18px rgba(23,20,14,.18)}
+html:not([data-theme="light"]) body.fdWorld.fdwHome #fdwFlash .fdwFlash.min .bar{color:#17140E}
+html:not([data-theme="light"]) body.fdWorld.fdwHome #fdwFlash .fdwFlash.min .tx small{color:#DC2626}
+html:not([data-theme="light"]) body.fdWorld.fdwHome #fdwFlash .fdwFlash.min .bx{background:#17140E;color:#fff}html:not([data-theme="light"]) body.fdWorld.fdwHome #fdwFlash .fdwFlash.min .bx small{color:#F2C14E}
+html:not([data-theme="light"]) body.fdWorld.fdwHome #fdwFlash .fdwFlash.min .x{background:#F1EDE3;color:#17140E}
 
 /* ---------- V5 · Tek üst başlık, panel modu ---------- */
 #fdRoot > .fdBar.fdwMoved{display:none!important}
