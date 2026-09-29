@@ -4971,6 +4971,7 @@ async function showProviderRequestDetail(talepNo){
   let actions='';
   let contact='';
   if(isPending){
+    contact=phone?`<div class="card" style="margin-top:12px"><strong>👤 Müşteri iletişim</strong><div class="meta" style="margin-top:8px"><span>📞 ${escapeHTML(phone)}</span></div></div>`:((window.PF&&PF.enabled&&r.id)?`<div id="pfContactSlot" data-req="${escapeHTML(r.id)}"></div>`:'');
     actions=`<div class="card" style="margin-top:12px"><strong>Fiyat teklifi ver</strong>
       <label style="display:block;margin-top:8px">Fiyat (TL) *</label>
       <input id="offerPrice" type="number" inputmode="decimal" placeholder="Örn. 2500" style="width:100%;box-sizing:border-box;padding:12px;border-radius:12px;border:1px solid var(--line)">
@@ -5162,7 +5163,21 @@ async function showProviderPanel(p){if(p){write(KEYS.provider,p);write(KEYS.prov
  document.getElementById("matchCount").textContent=suitable.length;
  const box=document.getElementById("matchedRequests");
  if(!suitable.length){box.innerHTML=`<div class="empty">🔎<h3>Şimdilik uygun talep yok.</h3><p>Sağlayıcının kategorisi ve ilçesi ile eşleşen talepler burada görünecek.</p></div>`}
- else box.outerHTML=suitable.map(r=>renderProviderRequest(r)).join("");
+ else{box.outerHTML=suitable.map(r=>renderProviderRequest(r)).join("");hzFillCardContacts();}
+}
+/* Müşteri telefonu talep açıklamasından ayrı, korumalı tabloda tutulur; yetki sunucuda (pf_request_contact) kontrol edilir */
+async function hzFillCardContacts(){
+ const els=[...document.querySelectorAll('.hzCardContact[data-req]')];
+ for(const el of els){
+  let c=null;try{c=await supabaseWrite('POST','rpc/pf_request_contact',{p_request_id:el.getAttribute('data-req')});}catch(e){}
+  if(!document.body.contains(el))continue;
+  const ph=c&&c.visible&&c.phone?String(c.phone):'';
+  if(!ph){el.innerHTML='<div class="warning">Bu talepte telefon numarası bulunmuyor.</div>';continue;}
+  const tel=telHref(ph),wa=whatsappHref(ph);
+  el.innerHTML='<div class="meta" style="margin-top:8px"><span>📞 '+escapeHTML(ph)+'</span></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">'+
+   (tel?'<a class="btn secondary" style="text-align:center;text-decoration:none" href="'+tel+'">📞 Ara</a>':'')+
+   (wa?'<a class="btn secondary" style="text-align:center;text-decoration:none;background:#128C7E;border-color:#128C7E;color:#fff" href="'+wa+'" target="_blank" rel="noopener noreferrer">💬 WhatsApp</a>':'')+'</div>';
+ }
 }
 
 function renderProviderRequest(r){
@@ -5179,7 +5194,7 @@ function renderProviderRequest(r){
   ${phone?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
     ${tel?`<a class="btn secondary" style="text-align:center;text-decoration:none" href="${tel}">📞 Ara</a>`:""}
     ${wa?`<a class="btn secondary" style="text-align:center;text-decoration:none;background:#128C7E;border-color:#128C7E;color:#fff" href="${wa}" target="_blank" rel="noopener noreferrer">💬 WhatsApp</a>`:""}
-  </div>`:`<div class="warning">Bu talepte telefon numarası bulunmuyor.</div>`}
+  </div>`:(/^[0-9a-f-]{36}$/i.test(String(r.id||''))?`<div class="hzCardContact" data-req="${escapeHTML(r.id)}"></div>`:`<div class="warning">Bu talepte telefon numarası bulunmuyor.</div>`)}
   <button type="button" class="btn primary" style="width:100%;margin-top:10px" onclick='showProviderRequestDetail(${JSON.stringify(no)})'>Detayı gör · Teklif ver</button>
  </article>`;
 }
