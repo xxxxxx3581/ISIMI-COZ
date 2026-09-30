@@ -6,6 +6,11 @@
 <meta name="theme-color" content="#07111f">
 <title>İşimi Çöz — İzmir</title>
 <script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('isimi-theme')==='light'?'light':'dark')}catch(e){}</script>
+<script>/* Şifre sıfırlama dönüşü (Supabase recovery): token yalnız bellekte tutulur, URL'den hemen silinir */
+(function(){try{var h=String(location.hash||'');if(!/(type=recovery|error_code=|error=)/.test(h))return;var q=new URLSearchParams(h.replace(/^#/,''));
+ if(q.get('type')==='recovery'&&q.get('access_token'))window.__pwRecovery={token:q.get('access_token')};
+ else if(q.get('error')||q.get('error_code'))window.__pwRecovery={error:q.get('error_code')||q.get('error')||'invalid'};
+ else return;history.replaceState(null,'',location.pathname+location.search)}catch(e){}})();</script>
 <style>
 *{box-sizing:border-box}html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,Helvetica,sans-serif;-webkit-font-smoothing:antialiased}
 body{min-height:100vh}button,input,select,textarea{font:inherit}button{cursor:pointer}a{text-decoration:none;color:inherit}
@@ -6851,11 +6856,64 @@ function openAuthModal(mode){
  const switchText=mode==='signup'?'Zaten hesabın var mı?':'Hesabın yok mu?';
  const switchMode=mode==='signup'?'login':'signup';
  const switchLabel=mode==='signup'?'Giriş yap':'Kayıt ol';
- const html=`<div class="modal" id="authModal"><div class="modalCard"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><h2>${title}</h2><button class="authBtn" type="button" onclick="closeAuthModal()">Kapat</button></div><label>E-posta</label><input id="authEmail" type="email" autocomplete="email" placeholder="ornek@email.com"><label>Şifre</label><input id="authPassword" type="password" autocomplete="${mode==='signup'?'new-password':'current-password'}" placeholder="En az 6 karakter"><div id="authError"></div><button class="btn primary" id="authSubmit" type="button" onclick="submitAuth('${mode}')">${button}</button><p class="muted small" style="text-align:center;margin-bottom:0">${switchText} <button class="authBtn" type="button" onclick="openAuthModal('${switchMode}')">${switchLabel}</button></p></div></div>`;
+ const html=`<div class="modal" id="authModal"><div class="modalCard"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><h2>${title}</h2><button class="authBtn" type="button" onclick="closeAuthModal()">Kapat</button></div><label>E-posta</label><input id="authEmail" type="email" autocomplete="email" placeholder="ornek@email.com"><label>Şifre</label><input id="authPassword" type="password" autocomplete="${mode==='signup'?'new-password':'current-password'}" placeholder="En az 6 karakter">${mode==='signup'?'':'<div style="text-align:right;margin:8px 0 4px"><button class="authBtn" type="button" id="authForgot" onclick="openForgotPassword()">Şifremi unuttum?</button></div>'}<div id="authError"></div><button class="btn primary" id="authSubmit" type="button" onclick="submitAuth('${mode}')">${button}</button><p class="muted small" style="text-align:center;margin-bottom:0">${switchText} <button class="authBtn" type="button" onclick="openAuthModal('${switchMode}')">${switchLabel}</button></p></div></div>`;
  document.body.insertAdjacentHTML('beforeend',html);
  setTimeout(()=>document.getElementById('authEmail')?.focus(),50);
 }
 function closeAuthModal(){document.getElementById("authModal")?.remove()}
+/* ---- Şifremi unuttum: Supabase Auth standart recovery (resetPasswordForEmail → e-posta bağlantısı → updateUser({password})) ---- */
+function pwModal(inner){document.getElementById("authModal")?.remove();document.body.insertAdjacentHTML('beforeend','<div class="modal" id="authModal"><div class="modalCard">'+inner+'</div></div>');}
+function pwMsg(t,ok){const e=document.getElementById('authError');if(!e)return;e.innerHTML='';const d=document.createElement('div');d.className=ok?'notice':'authError';d.textContent=t;e.appendChild(d);}
+function openForgotPassword(note){
+ const pre=(document.getElementById('authEmail')||{}).value||'';
+ pwModal('<div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><h2>Şifremi unuttum</h2><button class="authBtn" type="button" onclick="closeAuthModal()">Kapat</button></div>'+
+  (note?'<div class="authError">'+escapeHTML(note)+'</div>':'')+
+  '<p class="muted small">Kayıtlı e-posta adresini yaz. Hesabın varsa şifre sıfırlama bağlantısı gönderilir.</p><label>E-posta</label><input id="authEmail" type="email" autocomplete="email" placeholder="ornek@email.com"><div id="authError"></div>'+
+  '<button class="btn primary" id="authSubmit" type="button" onclick="sendPasswordReset()">SIFIRLAMA BAĞLANTISI GÖNDER</button><p class="muted small" style="text-align:center;margin-bottom:0"><button class="authBtn" type="button" onclick="openAuthModal(\'login\')">← Girişe dön</button></p>');
+ const i=document.getElementById('authEmail');if(i){i.value=pre;setTimeout(()=>i.focus(),50);}
+}
+async function sendPasswordReset(){
+ const email=(document.getElementById('authEmail')?.value||'').trim(),btn=document.getElementById('authSubmit');
+ if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){pwMsg('Geçerli bir e-posta adresi yaz.');return}
+ btn.disabled=true;btn.textContent='GÖNDERİLİYOR...';
+ try{
+  const redirectTo=location.origin+location.pathname;
+  const r=await fetch(SUPABASE_URL+'/auth/v1/recover?redirect_to='+encodeURIComponent(redirectTo),{method:'POST',headers:{"apikey":SUPABASE_KEY,"Content-Type":"application/json"},body:JSON.stringify({email})});
+  if(r.status===429){pwMsg('Çok fazla deneme yapıldı. Birkaç dakika sonra tekrar dene.');btn.disabled=false;btn.textContent='SIFIRLAMA BAĞLANTISI GÖNDER';return}
+  /* Hesap var/yok bilgisi açığa çıkmasın: diğer tüm yanıtlarda aynı genel mesaj */
+  pwMsg('Bu e-posta adresi kayıtlıysa şifre sıfırlama bağlantısı gönderildi. Gelen kutunu (ve gereksiz klasörünü) kontrol et.',true);
+  btn.textContent='GÖNDERİLDİ';setTimeout(()=>{if(document.body.contains(btn)){btn.disabled=false;btn.textContent='TEKRAR GÖNDER'}},30000);
+ }catch(e){pwMsg('Bağlantı kurulamadı. İnternetini kontrol edip tekrar dene.');btn.disabled=false;btn.textContent='SIFIRLAMA BAĞLANTISI GÖNDER'}
+}
+let PW_TOKEN=null;
+function openPasswordRecovery(){
+ pwModal('<h2>Yeni şifre belirle</h2><p class="muted small">Hesabın için yeni bir şifre yaz.</p><label>Yeni şifre</label><input id="pwNew" type="password" autocomplete="new-password" placeholder="En az 6 karakter"><label>Yeni şifre tekrar</label><input id="pwNew2" type="password" autocomplete="new-password" placeholder="Yeni şifreyi tekrar yaz"><div id="authError"></div>'+
+  '<button class="btn primary" id="authSubmit" type="button" onclick="submitNewPassword()">ŞİFREYİ KAYDET</button><p class="muted small" style="text-align:center;margin-bottom:0"><button class="authBtn" type="button" onclick="PW_TOKEN=null;closeAuthModal()">Vazgeç</button></p>');
+ setTimeout(()=>document.getElementById('pwNew')?.focus(),50);
+}
+async function submitNewPassword(){
+ const a=document.getElementById('pwNew')?.value||'',b=document.getElementById('pwNew2')?.value||'',btn=document.getElementById('authSubmit');
+ if(a.length<6){pwMsg('Şifre en az 6 karakter olmalı.');return}
+ if(a!==b){pwMsg('Şifreler aynı değil.');return}
+ if(!PW_TOKEN){openForgotPassword('Sıfırlama bağlantısının süresi dolmuş. Yeni bağlantı iste.');return}
+ btn.disabled=true;btn.textContent='KAYDEDİLİYOR...';
+ try{
+  const r=await fetch(SUPABASE_URL+'/auth/v1/user',{method:'PUT',headers:{"apikey":SUPABASE_KEY,"Authorization":"Bearer "+PW_TOKEN,"Content-Type":"application/json"},body:JSON.stringify({password:a})});
+  const d=await r.json().catch(()=>({}));
+  if(!r.ok){
+   const code=String(d.error_code||d.code||'');
+   if(r.status===401||r.status===403||/expired|invalid|not_found|session/.test(code)){PW_TOKEN=null;openForgotPassword('Sıfırlama bağlantısının süresi dolmuş veya geçersiz. Yeni bağlantı iste.');return}
+   pwMsg(code==='same_password'?'Yeni şifre eski şifrenle aynı olamaz.':code==='weak_password'?'Şifre çok zayıf. Daha uzun ve harf/rakam içeren bir şifre dene.':'Şifre kaydedilemedi. Tekrar dene.');
+   btn.disabled=false;btn.textContent='ŞİFREYİ KAYDET';return;
+  }
+  /* Sıfırlama oturumunu kapat (yalnız bu oturum); token hiçbir yerde saklanmaz */
+  const t=PW_TOKEN;PW_TOKEN=null;try{fetch(SUPABASE_URL+'/auth/v1/logout?scope=local',{method:'POST',headers:{"apikey":SUPABASE_KEY,"Authorization":"Bearer "+t}}).catch(()=>{})}catch(e){}
+  pwModal('<h2>Şifren güncellendi ✅</h2><p class="muted small">Yeni şifrenle giriş yapabilirsin.</p><button class="btn primary" id="authSubmit" type="button" onclick="openAuthModal(\'login\')">GİRİŞ YAP</button>');
+ }catch(e){pwMsg('Bağlantı kurulamadı. İnternetini kontrol edip tekrar dene.');btn.disabled=false;btn.textContent='ŞİFREYİ KAYDET'}
+}
+window.addEventListener('load',function(){setTimeout(function(){const r=window.__pwRecovery;if(!r)return;window.__pwRecovery=null;
+ if(r.token){PW_TOKEN=r.token;openPasswordRecovery()}else openForgotPassword('Şifre sıfırlama bağlantısı geçersiz veya süresi dolmuş. Yeni bağlantı iste.')},700)});
+window.openForgotPassword=openForgotPassword;window.sendPasswordReset=sendPasswordReset;window.submitNewPassword=submitNewPassword;
 async function submitAuth(mode){
  const email=document.getElementById('authEmail')?.value.trim(); const password=document.getElementById('authPassword')?.value; const err=document.getElementById('authError'); const btn=document.getElementById('authSubmit');
  if(!email||!password){if(err)err.innerHTML='<div class="authError">E-posta ve şifre gerekli.</div>';return}
