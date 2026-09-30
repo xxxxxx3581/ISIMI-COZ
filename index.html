@@ -755,7 +755,7 @@ body.v2NoScroll{overflow:hidden}
 .v2Sheet{position:fixed;inset:0;z-index:2147482000;background:var(--v2-overlay);display:flex;align-items:flex-end;justify-content:center}
 .v2SheetBox{width:100%;max-width:560px;max-height:92vh;max-height:92dvh;display:flex;flex-direction:column;background:var(--card);color:var(--text);border-radius:20px 20px 0 0;border:1px solid var(--line);border-bottom:0;box-shadow:0 -10px 40px rgba(0,0,0,.35);animation:v2up .18s ease-out}
 @keyframes v2up{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
-.hzDot{display:inline-flex;align-items:center;background:#e11d48;color:#fff;font-size:11px;font-weight:800;letter-spacing:.3px;line-height:1.4;border-radius:999px;padding:1px 8px;vertical-align:middle;animation:hzBlink 1.1s ease-in-out infinite}.hzDot.g{display:none}body.hzHas .hzDot.g{display:inline-flex}.hzDot.sm{position:absolute;top:3px;right:3px;width:10px;height:10px;padding:0;font-size:0}#appMenuBtn{position:relative}.hzAlert{display:flex;flex-wrap:wrap;align-items:center;gap:8px;width:100%;box-sizing:border-box;text-align:left;margin:10px 0 0;padding:12px 14px;min-height:44px;border-radius:14px;border:2px solid #e11d48;background:rgba(225,29,72,.08);color:inherit;font:inherit;cursor:pointer}@keyframes hzBlink{50%{opacity:.35}}@media (prefers-reduced-motion:reduce){.hzDot{animation:none}}
+.hzDot{display:inline-flex;align-items:center;background:#e11d48;color:#fff;font-size:11px;font-weight:800;letter-spacing:.3px;line-height:1.4;border-radius:999px;padding:1px 8px;vertical-align:middle;animation:hzBlink 1.1s ease-in-out infinite}.hzDot.g{display:none}body.hzHas .hzDot.g{display:inline-flex}.hzDot.sm{position:absolute;top:3px;right:3px;width:10px;height:10px;padding:0;font-size:0}#appMenuBtn{position:relative}.hzDot.c{display:none}body.hzCust .hzDot.c,body.hzCust #appMenuBtn .hzDot.sm{display:inline-flex}#navRequests{position:relative}.hzAlert.ok{border-color:#16a34a;background:rgba(22,163,74,.1)}.hzSteps{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:12px 0 0}.hzSteps div{font-size:12px;font-weight:700;text-align:center;padding:8px 4px;border-radius:10px;border:1px solid var(--line);opacity:.55}.hzSteps .dn{opacity:.9}.hzSteps .cur{opacity:1;border:2px solid #e11d48}.hzAlert{display:flex;flex-wrap:wrap;align-items:center;gap:8px;width:100%;box-sizing:border-box;text-align:left;margin:10px 0 0;padding:12px 14px;min-height:44px;border-radius:14px;border:2px solid #e11d48;background:rgba(225,29,72,.08);color:inherit;font:inherit;cursor:pointer}@keyframes hzBlink{50%{opacity:.35}}@media (prefers-reduced-motion:reduce){.hzDot{animation:none}}
 @media(min-width:720px){.v2Sheet{align-items:center}.v2SheetBox{border-radius:20px;border-bottom:1px solid var(--line)}}
 .v2SH{display:flex;align-items:center;gap:8px;padding:14px 16px 10px}
 .v2SH strong{font-size:17px;flex:1}
@@ -1161,7 +1161,7 @@ html[data-theme="light"] .v2Btn.msg{background:#1f5fa8}
 <button class="navBtn" id="navProvider" onclick="window.__kesfetCat=window.__kesfetCat||'all';window.__v2Understood=null;showKesfet(false)"><b>🔎</b>Ara</button>
 <button class="navBtn" id="navFood" onclick="showFoodHome()"><b>🍽️</b>Yemek</button>
 <button class="navBtn navPlus" id="navRequest" onclick="v2StartSheet()" aria-label="Başlat"><b>＋</b>Başlat</button>
-<button class="navBtn" id="navRequests" onclick="window.__mineSeg='all';window.__mineStatus='all';showMine()"><b>📂</b>İşlerim</button>
+<button class="navBtn" id="navRequests" onclick="window.__mineSeg='all';window.__mineStatus='all';showMine()"><b>📂</b>İşlerim<span class="hzDot c sm" aria-hidden="true"></span></button>
 </div></nav>
 
 <div class="appDrawerBackdrop" id="appDrawerBackdrop" onclick="closeAppDrawer()" hidden></div>
@@ -1180,7 +1180,7 @@ html[data-theme="light"] .v2Btn.msg{background:#1f5fa8}
   </div>
   <div class="appDrawerSec">Benim İşlerim</div>
   <div class="appDrawerNav">
-    <button type="button" onclick="closeAppDrawer();window.__mineSeg='all';window.__mineStatus='all';showMine()">📂 Benim İşlerim</button>
+    <button type="button" onclick="closeAppDrawer();window.__mineSeg='all';window.__mineStatus='all';showMine()">📂 Benim İşlerim <span class="hzDot c">YENİ TEKLİF</span></button>
     <button type="button" onclick="closeAppDrawer();v2StartSheet()">＋ Başlat (ilan, hizmet, resmî işlem)</button>
   </div>
   <div class="appDrawerSec">Ben</div>
@@ -4383,6 +4383,7 @@ async function showRequests(){
  app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div><span class="badge">▣ TALEPLERİM</span><h1>Oluşturduğun talepler.</h1><p class="muted small">Yalnızca senin taleplerin yükleniyor...</p><div class="card" id="requestsLoading" style="text-align:center">⏳ Talepler yükleniyor...</div>`);
  const requests=await loadRequestsFromSupabase({mineOnly:true}),area=document.getElementById("requestsLoading");if(!area)return;
  area.outerHTML=requests.length?requests.map(renderRequest).join(""):`<div class="card empty">📋<h3>Henüz talep yok</h3><p>İhtiyacını anlat, ilk talebini oluştur.</p><button class="btn primary" onclick="showRequest()">＋ Talep oluştur</button></div>`;
+ if(requests.length)hzDecorateCustomer();
 }
 
 
@@ -4476,8 +4477,8 @@ async function loadOffersForRequest(talepNo){
       let pname='',pphone='';
       if(o.provider_id){
         try{
-          const pr=await supabaseRequest('GET','providers?select=id,name,phone&id=eq.'+encodeURIComponent(String(o.provider_id))+'&limit=1');
-          if(Array.isArray(pr)&&pr[0]){pname=pr[0].name||'';pphone=pr[0].phone||'';}
+          const pr=await supabaseRequest('GET','providers?select=id,name,phone,district&id=eq.'+encodeURIComponent(String(o.provider_id))+'&limit=1');
+          if(Array.isArray(pr)&&pr[0]){pname=pr[0].name||'';pphone=pr[0].phone||'';o._pdist=pr[0].district||'';}
         }catch(e){}
       }
       const st=o.status||'pending';
@@ -4486,7 +4487,7 @@ async function loadOffersForRequest(talepNo){
         request_id:o.request_id,
         provider_id:o.provider_id,
         provider_name:pname||'Hizmet Sağlayıcı',
-        provider_phone:pphone||'',
+        provider_phone:pphone||'',provider_district:o._pdist||'',
         fiyat:o.price,
         price:o.price,
         aciklama:o.note||'',
@@ -4909,6 +4910,14 @@ async function showRequestDetailData(r){
     }
   }
   renderCompleteUI();
+  const hzS=hzSeen(),hzOpen=!isCompleted&&!isAccepted&&!hasAcceptedOffer,hzPend=(offers||[]).filter(o=>String(o.status||'').toLowerCase()==='pending');
+  const hzNew=new Set(hzOpen?hzPend.filter(o=>!hzS['co:'+o.id]).map(o=>String(o.id)):[]);
+  try{(offers||[]).forEach(o=>{hzS['co:'+o.id]=1});localStorage.setItem(hzSeenKey(),JSON.stringify(hzS))}catch(e){}hzPing();
+  const hzCur=isCompleted?3:(isAccepted||hasAcceptedOffer)?2:hzPend.length?1:0;
+  const hzSec=box&&box.closest('.section');
+  if(hzSec)hzSec.insertAdjacentHTML('beforebegin','<div class="hzSteps" aria-label="İş adımları">'+['Teklif bekleniyor','Teklif seç','İş devam ediyor','Tamamlandı'].map((t,i)=>'<div class="'+(i<hzCur?'dn':i===hzCur?'cur':'')+'"'+(i===hzCur?' aria-current="step"':'')+'>'+(i<hzCur?'✓ ':'')+t+'</div>').join('')+'</div>'+
+   (hzNew.size?'<button type="button" class="hzAlert" onclick="var c=document.querySelector(\'.hzNewCard\');if(c)c.scrollIntoView({behavior:\'smooth\',block:\'center\'})"><span class="hzDot">YENİ</span><b>🔴 '+hzNew.size+' YENİ TEKLİF</b><span class="small muted">aşağıdan karşılaştır · kabul et veya reddet ›</span></button>':
+    (hzOpen&&hzPend.length?'<button type="button" class="hzAlert ok" onclick="var c=document.querySelector(\'#requestDetailCard ~ .section article\');if(c)c.scrollIntoView({behavior:\'smooth\',block:\'center\'})"><b>Sırada: '+hzPend.length+' teklif seni bekliyor</b><span class="small muted">birini seç ›</span></button>':'')));
   if(!box)return;
   if(!offers.length){
     box.innerHTML='<div class="empty"><h3>Henüz teklif yok</h3><p>Hizmet sağlayıcılar teklif verdiğinde burada görünür.</p></div>';
@@ -4939,8 +4948,8 @@ async function showRequestDetailData(r){
     }else{
       acts=`<div class="small muted" style="margin-top:8px">Teklif durumu: ${escapeHTML(String(odurum))}</div>`;
     }
-    return `<article class="request">
-      <div class="requestTop"><div><h3>🛠️ ${escapeHTML(pname)}${ratingTxt?` <span class="svcRatingBadge">${escapeHTML(ratingTxt)}</span>`:''}</h3><div class="small muted">${escapeHTML(o.created_at||'')}</div></div><span class="status">${escapeHTML(treatAccepted?'Kabul edildi':String(odurum))}</span></div>
+    return `<article class="request${hzNew.has(String(oid))?' hzNewCard':''}">
+      <div class="requestTop"><div><h3>${hzNew.has(String(oid))?'<span class="hzDot">YENİ</span> ':''}🛠️ ${escapeHTML(pname)}${ratingTxt?` <span class="svcRatingBadge">${escapeHTML(ratingTxt)}</span>`:''}</h3><div class="small muted">${escapeHTML(s.name)}${o.provider_district?' · 📍 '+escapeHTML(o.provider_district):''} · ${escapeHTML(o.created_at||'')}</div></div><span class="status">${escapeHTML(treatAccepted?'Kabul edildi':String(odurum))}</span></div>
       <div class="description"><strong>${escapeHTML(String(fiyat))} TL</strong>${o.aciklama?` — ${escapeHTML(o.aciklama)}`:''}${o.available_time?`<div class="small muted" style="margin-top:4px">Ne zaman: ${escapeHTML(o.available_time)}</div>`:''}</div>
       ${pphone?`<div class="meta"><span>📞 ${escapeHTML(pphone)}</span></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
@@ -5166,7 +5175,7 @@ async function showProviderPanel(p){if(p){write(KEYS.provider,p);write(KEYS.prov
  document.getElementById("matchCount").textContent=suitable.length;
  const hzA=await hzAlerts(p,requests),hzN=new Set(hzA.newReqs.map(r=>String(r.id)));suitable.forEach(r=>{r._hzNew=hzN.has(String(r.id))});hzPing();
  const hzOL={accepted:'🎉 Teklifin kabul edildi',rejected:'Teklifin kabul edilmedi'};
- document.getElementById("matchCount").closest('.grid').insertAdjacentHTML('beforebegin',(hzA.newReqs.length?`<button type="button" class="hzAlert" onclick="var c=document.querySelector('.hzNewCard');if(c)c.scrollIntoView({behavior:'smooth',block:'center'})"><span class="hzDot">YENİ</span><b>${hzA.newReqs.length} yeni talep</b><span class="small muted">sana uygun · incele ve teklif ver ›</span></button>`:'')+hzA.dev.map(x=>`<button type="button" class="hzAlert" onclick='showProviderRequestDetail(${JSON.stringify(String(x.r.talep_no||x.r.id||""))})'><span class="hzDot">YENİ</span><b>${escapeHTML(hzOL[x.o.status]||('Teklifinde yeni durum: '+x.o.status))}</b><span class="small muted">${escapeHTML((SERVICES[serviceKeyFromValue(x.r.service||x.r.kategori)]||{}).name||x.r.kategori||'Talep')} · ${escapeHTML(String(x.r.talep_no||''))} ›</span></button>`).join(''));
+ document.getElementById("matchCount").closest('.grid').insertAdjacentHTML('beforebegin',(hzA.newReqs.length?`<button type="button" class="hzAlert" onclick="var c=document.querySelector('.hzNewCard');if(c)c.scrollIntoView({behavior:'smooth',block:'center'})"><span class="hzDot">YENİ</span><b>${hzA.newReqs.length} yeni talep</b><span class="small muted">sana uygun · incele ve teklif ver ›</span></button>`:'')+hzA.dev.map(x=>`<button type="button" class="hzAlert" onclick='showProviderRequestDetail(${JSON.stringify(String(x.r.talep_no||x.r.id||""))})'><span class="hzDot">YENİ</span><b>${escapeHTML(hzOL[x.o.status]||('Teklifinde yeni durum: '+x.o.status))}</b><span class="small muted">${escapeHTML((SERVICES[serviceKeyFromValue(x.r.service||x.r.kategori)]||{}).name||x.r.kategori||'Talep')} · ${escapeHTML(String(x.r.talep_no||''))} ›</span></button>`).join('')+(hzA.active||[]).map(x=>`<button type="button" class="hzAlert ok" onclick='showProviderRequestDetail(${JSON.stringify(String(x.r.talep_no||x.r.id||""))})'><b>🛠️ Devam eden iş</b><span class="small muted">${escapeHTML((SERVICES[serviceKeyFromValue(x.r.service||x.r.kategori)]||{}).name||x.r.kategori||'Talep')} · ${escapeHTML(String(x.r.talep_no||''))} · bitince tamamla ›</span></button>`).join(''));
  const box=document.getElementById("matchedRequests");
  if(!suitable.length){box.innerHTML=`<div class="empty">🔎<h3>Şimdilik uygun talep yok.</h3><p>Sağlayıcının kategorisi ve ilçesi ile eşleşen talepler burada görünecek.</p></div>`}
  else{box.outerHTML=suitable.map(r=>renderProviderRequest(r)).join("");hzFillCardContacts();}
@@ -5214,13 +5223,37 @@ async function hzAlerts(p,reqs){
  let offers=[];try{offers=await supabaseReadAuth('GET','offers?select=id,request_id,status&provider_id=eq.'+encodeURIComponent(String(p.id))+'&order=created_at.desc&limit=50');}catch(e){}
  offers=Array.isArray(offers)?offers:[];window.__hzOff=window.__hzOff||{};offers.forEach(o=>{window.__hzOff[o.id]=o});
  const dev=offers.filter(o=>o.status&&o.status!=='pending'&&seen['o:'+o.id]!==o.status).map(o=>({o,r:(reqs||[]).find(r=>String(r.id)===String(o.request_id))})).filter(x=>x.r&&!['Tamamlandı','İptal'].includes(String(x.r.status||x.r.durum)));
- return {newReqs,dev};
+ const active=offers.filter(o=>o.status==='accepted').map(o=>({o,r:(reqs||[]).find(r=>String(r.id)===String(o.request_id))})).filter(x=>x.r&&String(x.r.status||x.r.durum)==='Devam ediyor');
+ return {newReqs,dev,active};
 }
 async function hzPing(){
  let n=0;try{const mine=(await v2MyProviders()).filter(p=>p.active);
   if(mine.length){const rows=await supabaseReadAuth('GET','requests?select=*&order=created_at.desc&limit=200');const reqs=(Array.isArray(rows)?rows:[]).map(mapRequest);
    for(const p of mine){const a=await hzAlerts(p,reqs);n+=a.newReqs.length+a.dev.length}}}catch(e){}
- document.body.classList.toggle('hzHas',n>0);return n;
+ document.body.classList.toggle('hzHas',n>0);
+ try{const c=await hzCustAlerts();document.body.classList.toggle('hzCust',c.total>0)}catch(e){}
+ return n;
+}
+/* Müşteri: kendi taleplerine gelen ve henüz görmediği bekleyen teklifler (mevcut RLS: talep sahibi kendi taleplerinin tekliflerini okur) */
+async function hzCustAlerts(){
+ const s=getAuthSession(),uid=s&&s.user&&s.user.id,out={total:0,byNo:{},active:[]};if(!uid)return out;
+ const rows=await supabaseReadAuth('GET','requests?select=*&user_id=eq.'+encodeURIComponent(uid)+'&order=created_at.desc&limit=100');
+ const reqs=(Array.isArray(rows)?rows:[]).filter(r=>['pending','accepted'].includes(String(r.status||'pending')));if(!reqs.length)return out;
+ let offers=await supabaseReadAuth('GET','offers?select=id,request_id,status&request_id=in.('+reqs.map(r=>r.id).join(',')+')&limit=500');offers=Array.isArray(offers)?offers:[];
+ const seen=hzSeen();
+ reqs.forEach(r=>{const m=mapRequest(r),no=String(m.talep_no||m.id||'');
+  if(String(r.status)==='accepted'){out.active.push(no);return}
+  const n=offers.filter(o=>String(o.request_id)===String(r.id)&&o.status==='pending'&&!seen['co:'+o.id]).length;if(n){out.byNo[no]=n;out.total+=n}});
+ return out;
+}
+async function hzDecorateCustomer(){
+ let c;try{c=await hzCustAlerts()}catch(e){return}document.body.classList.toggle('hzCust',c.total>0);
+ const card=no=>document.querySelector('[data-req="'+CSS.escape(no)+'"]')||document.querySelector('article[data-talep-no="'+CSS.escape(no)+'"]');
+ const go=no=>"showRequestDetail("+escapeHTML(JSON.stringify(no))+")";
+ Object.keys(c.byNo).forEach(no=>{const el=card(no);if(el&&!el.querySelector('.hzAlert'))el.insertAdjacentHTML('afterbegin','<button type="button" class="hzAlert" style="margin:0 0 10px" onclick="event.stopPropagation();'+go(no)+'"><span class="hzDot">YENİ</span><b>🔴 '+c.byNo[no]+' YENİ TEKLİF</b><span class="small muted">teklifleri gör ve seç ›</span></button>')});
+ c.active.forEach(no=>{const el=card(no);if(el&&!el.querySelector('.hzAlert'))el.insertAdjacentHTML('afterbegin','<button type="button" class="hzAlert ok" style="margin:0 0 10px" onclick="event.stopPropagation();'+go(no)+'"><b>🛠️ İş devam ediyor</b><span class="small muted">bitince tamamla ›</span></button>')});
+ const first=Object.keys(c.byNo)[0],top=document.getElementById('v2MineBox')||document.querySelector('#app .request');
+ if(first&&top&&!document.getElementById('hzCustTop'))top.insertAdjacentHTML('beforebegin','<button type="button" id="hzCustTop" class="hzAlert" style="margin:0 0 12px" onclick="'+go(first)+'"><span class="hzDot">YENİ</span><b>🔴 '+c.total+' YENİ TEKLİF</b><span class="small muted">'+(Object.keys(c.byNo).length>1?Object.keys(c.byNo).length+' talebinde · ':'')+'teklifleri gör ›</span></button>');
 }
 window.addEventListener('load',function(){setTimeout(hzPing,1500);setInterval(function(){if(document.visibilityState==='visible'&&getAuthSession())hzPing()},120000)});
 
@@ -6265,6 +6298,7 @@ async function showMine(){
   box.innerHTML=resume+html; window.__mineActs=acts;
   if(seg==='all'&&!prov){ v2MyProviders().then(function(mine){ if(!mine.length||!document.body.contains(box)||box.querySelector('.v2ProvIn')) return; box.insertAdjacentHTML('afterbegin','<div class="v2MC v2ProvIn"><div class="v2MRow" role="button" tabindex="0" onclick="showProviderEntry()"><div class="v2MThumb"><div class="v2Ph"><span>📋</span></div></div><div class="v2MInfo"><div class="t">Gelen talepler <span class="hzDot g">YENİ</span></div><div class="m">Hizmet veren hesabına uygun talepler · Teklif ver</div></div></div></div>'); }); }
   v2BindMine(box);
+  if(seg==='all'||seg==='requests')hzDecorateCustomer();
   /* tekliflerin sayısını arka planda doldur (mevcut loadOffersForRequest) */
   reqs.filter(function(r){return v2RequestState(r)==='open';}).slice(0,6).forEach(function(r){
     var no=String(r.talep_no||r.id||''); if(!no) return;
