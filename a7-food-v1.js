@@ -1366,7 +1366,7 @@ window.foodSetFul=function(f){CO.fulfillment=f;CO.refresh&&CO.refresh()};
 const coQuote=debounce(async tok=>{
   const btn=document.getElementById('fdPlace');if(btn)btn.disabled=true;
   try{const q=await quoteAuto();if(q===undefined||!alive(tok)||!q)return;
-    setHTML('fdSum',sumHTML(q));setHTML('fdIss',issuesHTML(q.issues));const cr=document.querySelector('#coCoupon b');if(cr&&CO.autoCp)cr.innerHTML=E(CO.coupon)+' <small class="fdMuted">· İndirim Fırsatı, otomatik</small>';
+    setHTML('fdSum',sumHTML(q));setHTML('fdIss',issuesHTML(q.issues));const cr=document.querySelector('#coCoupon b');if(cr&&CO.autoCp)cr.innerHTML=E(CO.coupon)+' <small class="fdMuted">· Yemek İndirim Fırsatı, otomatik</small>';
     const t=(+q.prep_time_min||0)+(CO.fulfillment==='delivery'?(+q.delivery_eta_min||0):0);
     setHTML('fdEtaL',CO.fulfillment==='delivery'?'Tahmini teslimat '+t+'-'+(t+10)+' dk':'Tahmini hazırlık '+t+' dk');
     if(btn){btn.disabled=!q.ok;btn.innerHTML='Siparişi ver · '+M(q.total_kurus)}
@@ -2510,7 +2510,7 @@ async function showFoodAdmin(){FDW_TAB='';
         '<div style="display:flex;align-items:center;gap:12px;padding:10px 0"><div style="flex:1"><b>Anlık bildirimler (Web Push)</b></div>'+sw('stPush',!!SETA.push_enabled,"foodSetting('push_enabled',this.checked,this)")+'</div>'+
         '<div class="two"><div><label for="stAcc">Kabul süresi (dk)</label><input id="stAcc" type="number" min="3" max="60" value="'+(+SETA.accept_timeout_min||10)+'" onchange="foodSetting(&#39;accept_timeout_min&#39;,+this.value,this)"></div><div><label for="stLate">Gecikme eşiği (dk)</label><input id="stLate" type="number" min="3" max="60" value="'+(+SETA.late_notify_min||10)+'" onchange="foodSetting(&#39;late_notify_min&#39;,+this.value,this)"></div></div>'+
         '<p class="fdMuted fdSmall" style="margin-top:10px">Online ödeme: '+(SETA.online_payment_enabled?'açık':'kapalı')+' (ödeme sağlayıcı anahtarları tanımlanınca açılır).</p></div></details>'+
-      '<div class="fdRows" style="margin:12px 0">'+row('🏷️','Kademeli İndirim Fırsatı','Mevcut kupon altyapısıyla kademeli, süreli kampanya','foodAdmFlash()')+row('🛰️','Operasyon merkezi','Alarmlar, acil durum anahtarları, bekleyen işler','showFoodOpsCenter()')+row('🗂️','Başvurular','Restoran ve kurye: Başvuru → Belgeler → İnceleme → Onay → Aktif','showFoodOnboarding()')+row('📣','Reklam ve kampanya alanları','Slider, sponsorlu kart, banner · gösterim/tıklama','showFoodAdminPromos()')+row('💬','Yorum moderasyonu','Bildirilen yorumlar, gizle / yayına al','showFoodAdminReviews()')+'</div>'+
+      '<div class="fdRows" style="margin:12px 0">'+row('🏷️','Kademeli Yemek İndirim Fırsatı','Mevcut kupon altyapısıyla kademeli, süreli kampanya','foodAdmFlash()')+row('🛰️','Operasyon merkezi','Alarmlar, acil durum anahtarları, bekleyen işler','showFoodOpsCenter()')+row('🗂️','Başvurular','Restoran ve kurye: Başvuru → Belgeler → İnceleme → Onay → Aktif','showFoodOnboarding()')+row('📣','Reklam ve kampanya alanları','Slider, sponsorlu kart, banner · gösterim/tıklama','showFoodAdminPromos()')+row('💬','Yorum moderasyonu','Bildirilen yorumlar, gizle / yayına al','showFoodAdminReviews()')+'</div>'+
       '<h2>Kurye başvuruları</h2>'+(o.pending_couriers.length?o.pending_couriers.map(c=>'<div class="fdCard" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;gap:8px"><b>'+E(c.name)+'</b>'+badge(c.status==='suspended'?'cancelled':'new').replace(/>[^<]*</,'>'+(c.status==='suspended'?'Askıda':'Bekliyor')+'<')+'</div><div class="fdMuted fdSmall">'+E(c.phone)+' · '+E(VEH[c.vehicle]||'')+' · '+ago(c.created_at)+'</div><div class="fdRow2">'+(c.status==='pending'?'<button type="button" class="fb ghostBad" onclick="foodAdmCourier(\''+E(c.user_id)+'\',\'rejected\',this)">Reddet</button>':c.status!=='suspended'?'<button type="button" class="fb ghostBad" onclick="foodAdmCourier(\''+E(c.user_id)+'\',\'suspended\',this)">Askıya al</button>':'<span></span>')+'<button type="button" class="fb pri" onclick="foodAdmCourier(\''+E(c.user_id)+'\',\'approved\',this)">Onayla</button></div></div>').join(''):'<p class="fdMuted fdSmall">Bekleyen başvuru yok.</p>')+
       '<h2>Onaylı kuryeler</h2>'+(o.couriers.length?'<div class="fdList">'+o.couriers.map(c=>'<div class="fdCartItem"><div class="tx"><b>'+E(c.name)+' '+(c.is_available?'🟢':'⚪')+'</b><small>'+(+c.rating_avg?'★ '+(+c.rating_avg).toFixed(1):'Puan yok')+'</small></div><button type="button" class="fb ghostBad sm" onclick="foodAdmCourier(\''+E(c.user_id)+'\',\'suspended\',this)">Askıya al</button></div>').join('')+'</div>':'<p class="fdMuted fdSmall">Onaylı kurye yok.</p>')+
       '<h2>Restoranlar</h2><div class="fdList">'+o.venues.map(v=>'<div class="fdCartItem"><div class="tx"><b>'+E(v.name)+'</b><small>'+(v.is_active?'Aktif':'Pasif')+' · '+(v.is_open?'Açık':'Kapalı')+' · komisyon %'+(v.commission_bps/100).toFixed(2).replace('.',',')+' · hizmet '+M(v.platform_fee_kurus)+'</small></div><button type="button" class="fb sm" onclick="foodAdmVenue(\''+E(v.id)+'\','+v.commission_bps+','+v.platform_fee_kurus+','+v.is_active+')">Düzenle</button></div>').join('')+'</div>'+
@@ -2995,7 +2995,7 @@ function flashGroups(){
   return Object.keys(g).map(k=>{const cs=g[k];const seen={};
     const tiers=cs.filter(c=>{const key=c.kind+'|'+c.value+'|'+c.min_subtotal_kurus;if(seen[key])return false;return seen[key]=1}).sort((a,b)=>a.min_subtotal_kurus-b.min_subtotal_kurus||a.value-b.value);
     const ends=cs.map(c=>c.ends_at).filter(Boolean).map(x=>new Date(x).getTime());
-    return {id:k,title:(cs.find(c=>c.title)||{}).title||'İndirim Fırsatı',tiers,end:ends.length?Math.min(...ends):null,all:cs.some(c=>!c.venue_id),vids:[...new Set(cs.map(c=>c.venue_id).filter(Boolean))],coupons:cs};
+    return {id:k,title:(cs.find(c=>c.title)||{}).title||'Yemek İndirim Fırsatı',tiers,end:ends.length?Math.min(...ends):null,all:cs.some(c=>!c.venue_id),vids:[...new Set(cs.map(c=>c.venue_id).filter(Boolean))],coupons:cs};
   }).filter(x=>x.tiers.length&&(x.end==null||x.end>Date.now()+FL_OFF));
 }
 function flashFor(venueId){return flashGroups().filter(g=>g.all||g.vids.includes(venueId))}
@@ -3009,7 +3009,7 @@ function flashHTML(g){
   const t0=g.tiers[0],tl=g.tiers[g.tiers.length-1];
   const sum=g.tiers.length>1?tierTxt(t0)+' – '+tierTxt(tl)+' indirim · '+g.tiers.length+' kademe':(+t0.min_subtotal_kurus?M(t0.min_subtotal_kurus)+' üzeri ':'')+tierTxt(t0)+' indirim';
   const ms=g.end!=null?g.end-(Date.now()+FL_OFF):null;
-  return '<div class="fdwFlash min" data-fl="'+E(g.id)+'"><button type="button" class="bar" aria-haspopup="dialog" aria-expanded="false" aria-label="'+E(g.title)+' · İndirim fırsatını aç" onclick="foodFlashMin(\''+E(g.id)+'\',0)">'+
+  return '<div class="fdwFlash min" data-fl="'+E(g.id)+'"><button type="button" class="bar" aria-haspopup="dialog" aria-expanded="false" aria-label="'+E(g.title)+' · Yemek indirim fırsatını aç" onclick="foodFlashMin(\''+E(g.id)+'\',0)">'+
     (ms!=null?'<span class="bxs" data-fl-box="'+g.end+'">'+flBoxes(ms)+'</span><span class="tx"><b>içinde katılan restoranlardan sipariş ver, indirimlerden birini kap!</b><small>'+E(sum)+'</small></span>':'<span class="bz" aria-hidden="true">🏷️</span><span class="tx"><b>'+E(g.title)+'</b><small>'+E(sum)+'</small></span>')+'</button>'+
     '<button type="button" class="x" aria-label="İndirim fırsatını bu oturum için gizle" onclick="foodFlashX(\''+E(g.id)+'\')">✕</button></div>';
 }
@@ -3022,7 +3022,7 @@ function flBoxes(ms){
 function flashLayerHTML(g){
   const vs=(g.all?HF.rows:HF.rows.filter(v=>g.vids.includes(v.id))).slice().sort((a,b)=>(openNow(b)?1:0)-(openNow(a)?1:0));
   const ms=g.end!=null?g.end-(Date.now()+FL_OFF):null;
-  return '<div class="flh"><div class="flt"><span class="bz">🏷️ İndirim Fırsatı</span><button type="button" class="mn" onclick="foodFlashMin(\''+E(g.id)+'\',1)" aria-label="İndirim fırsatı ekranını küçült">Küçült <i aria-hidden="true">⌄</i></button></div>'+
+  return '<div class="flh"><div class="flt"><span class="bz">🏷️ Yemek İndirim Fırsatı</span><button type="button" class="mn" onclick="foodFlashMin(\''+E(g.id)+'\',1)" aria-label="İndirim fırsatı ekranını küçült">Küçült <i aria-hidden="true">⌄</i></button></div>'+
     '<h2 class="ttl">'+E(g.title)+'</h2>'+
     '<div class="tiers" role="list">'+g.tiers.map((t,i)=>'<div class="t'+(i===g.tiers.length-1&&g.tiers.length>1?' best':'')+'" role="listitem"><span class="lim">'+(+t.min_subtotal_kurus?M(t.min_subtotal_kurus).replace(' TL','TL')+'<small>ve üzerine</small>':'Alt limit<small>yok</small>')+'</span><span class="val"><b>'+E(tierTxt(t)).replace(' TL','TL')+'</b><small>İNDİRİM</small></span></div>').join('')+'</div>'+
     '<p class="nt">Sepet tutarına uyan en yüksek kademe sepette otomatik seçilir. Restoranın minimum sepet tutarı geçerlidir; kademeler ve diğer kuponlar birleştirilemez. Son tutar ödeme adımında doğrulanır.</p>'+
@@ -3057,7 +3057,7 @@ function flashAutoOpen(){
 function flashRender(){const box=document.getElementById('fdwFlash');if(!box)return;box.innerHTML=cpOn()?flashGroups().map(flashHTML).join(''):'';fdwFlBar()}
 function fdwFlBar(){document.body.classList.toggle('fdwFlBarOn',!!document.querySelector('#fdRoot #fdwFlash .fdwFlash.min')&&!FDW_PANEL)}
 window.foodFlashMin=function(id,on){if(on)flashLayerClose();else flashLayerOpen(id)};
-window.foodFlashX=function(id){const l=lsGet(FL_X,sessionStorage);if(!l.includes(id))l.push(id);lsPut(FL_X,l,sessionStorage);flashLayerClose();flashRender();toast('İndirim fırsatı bu oturumda gizlendi. Kuponlarım’dan görebilirsin.')};
+window.foodFlashX=function(id){const l=lsGet(FL_X,sessionStorage);if(!l.includes(id))l.push(id);lsPut(FL_X,l,sessionStorage);flashLayerClose();flashRender();toast('Yemek indirim fırsatı bu oturumda gizlendi. Kuponlarım’dan görebilirsin.')};
 window.foodFlashGo=function(id){HF.fl=id;HF.cuisine='';homeRender();const l=document.getElementById('fdList');l&&l.scrollIntoView({behavior:'smooth',block:'start'})};
 window.foodFlashOff=function(){HF.fl='';homeRender()};
 /* Tek zamanlayıcı: yalnız ekranda sayaç varsa çalışır */
@@ -3091,7 +3091,7 @@ async function quoteAuto(){
 function flashHint(venueId,sub){
   const p=flashPick(venueId,sub);if(!p||(!p.best&&!p.next))return '';
   const pct=p.next?Math.max(4,Math.min(100,Math.round(sub/p.next.min_subtotal_kurus*100))):100;
-  return '<div class="fdwFlHint" role="status"><span>🏷️ '+(p.best?'<b>'+E(tierTxt(p.best))+'</b> indirim fırsatı uygulanabilir':'İndirim fırsatı')+(p.next?(p.best?' · ':': ')+'<b>'+M(p.next.min_subtotal_kurus-sub)+'</b> daha ekle, '+E(tierTxt(p.next))+' indirim':'')+'</span><i><b style="width:'+pct+'%"></b></i></div>';
+  return '<div class="fdwFlHint" role="status"><span>🏷️ '+(p.best?'<b>'+E(tierTxt(p.best))+'</b> Yemek indirim fırsatı uygulanabilir':'Yemek indirim fırsatı')+(p.next?(p.best?' · ':': ')+'<b>'+M(p.next.min_subtotal_kurus-sub)+'</b> daha ekle, '+E(tierTxt(p.next))+' indirim':'')+'</span><i><b style="width:'+pct+'%"></b></i></div>';
 }
 
 /* ---------- V5 · Ana ekran rafları (yalnız gerçek veri; yetersizse raf gizlenir) ---------- */
@@ -3141,8 +3141,8 @@ function homeRails(rows){
 window.foodAdmFlash=async function(){
   let vs=[];try{vs=await Q('GET','food_venues?select=id,name&is_active=eq.true&order=name.asc&limit=200')}catch(e){}
   const tierRow=(a,b)=>'<div class="two fdwFlTier"><div><label>Sepet alt limiti (TL)</label><input inputmode="decimal" data-min value="'+(a||'')+'"></div><div><label>İndirim (TL)</label><input inputmode="decimal" data-val value="'+(b||'')+'"></div></div>';
-  const w=modal(sheetHead('Kademeli İndirim Fırsatı','Her kademe ayrı bir kupon kaydı olarak oluşturulur; müşteri sepetine uyan en yüksek kademeyi kullanır.')+
-    '<div class="fdForm"><label for="flT">Başlık</label><input id="flT" maxlength="80" placeholder="Örn. Hafta sonu indirim fırsatı">'+
+  const w=modal(sheetHead('Kademeli Yemek İndirim Fırsatı','Her kademe ayrı bir kupon kaydı olarak oluşturulur; müşteri sepetine uyan en yüksek kademeyi kullanır.')+
+    '<div class="fdForm"><label for="flT">Başlık</label><input id="flT" maxlength="80" placeholder="Örn. Yemek İndirim Fırsatı">'+
     '<label for="flP">Kod ön eki</label><input id="flP" maxlength="12" placeholder="Örn. FLASH" style="text-transform:uppercase">'+
     '<label>Kademeler</label><div id="flTiers">'+tierRow(275,70)+tierRow(350,100)+tierRow(450,150)+tierRow(550,200)+'</div><button type="button" class="fb sm" id="flAdd">+ Kademe ekle</button>'+
     '<div class="two" style="margin-top:10px"><div><label for="flS">Başlangıç (boş = hemen)</label><input id="flS" type="datetime-local"></div><div><label for="flE">Bitiş</label><input id="flE" type="datetime-local"></div></div>'+
@@ -3514,56 +3514,47 @@ body.fdWorld.fdwFlBarOn .app{padding-bottom:calc(160px + env(safe-area-inset-bot
 .fdwHomeTop .fdwPanelH i{position:absolute;top:-6px;right:-6px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:var(--fdw-hot);color:var(--fdw-hot-ink);font:800 10.5px/18px system-ui,sans-serif;font-style:normal;text-align:center}
 .fdwHomeTop .fdwPanelH i[hidden]{display:none}
 
-/* V5.4 · Flash: hardal zemin, beyaz restoran kartları */
-.fdwFlL{background:#0416E4;color:#FFFFFF}
-.fdwFlL .flh{--fl-a:#0416E4;--fl-b:#1B1A16;--fl-y:#FFFFFF;background:#0416E4;color:#FFFFFF}
-.fdwFlL .ttl{color:#FFFFFF;text-shadow:none}
-.fdwFlL .flt .bz{background:#DC2626;color:#FFFFFF}
-.fdwFlL .mn i{background:#17140E;color:#F2C14E}
-.fdwFlL .t .lim{background:#1B1A16;border-color:#1B1A16;color:#fff}
-.fdwFlL .t .val{background:#fff;border-color:#1B1A16;color:#17140E}
+/* V5.7 · Yemek İndirim Fırsatı: koyu temada siyah zemin + hardal çizgi/vurgular; açık temada beyaz zemin */
+.fdwFlL{background:#0E1013;color:#FFFFFF}
+.fdwFlL .flh{--fl-a:#0E1013;--fl-b:#0E1013;--fl-y:#D9AE45;background:#0E1013;color:#FFFFFF;border-bottom:1px solid rgba(217,174,69,.35)}
+.fdwFlL .ttl{color:#F2C14E;text-shadow:none}
+.fdwFlL .flt .bz{background:#D9AE45;color:#111111}
+.fdwFlL .mn i{background:#111111;color:#F2C14E}
+.fdwFlL .t .lim{background:#D9AE45;border-color:#D9AE45;color:#111111}
+.fdwFlL .t .val{background:#16191E;border-color:#D9AE45;color:#FFFFFF}
 .fdwFlL .t.best .val{background:#D9AE45;border-color:#D9AE45;color:#111111}
-.fdwFlL .nt{color:#E6EAFF;opacity:1}
-.fdwFlL>.bd .fdSecH b{color:#FFFFFF}
-.fdwFlL .fdVCard{background:#fff!important;color:#17140E;border-color:rgba(0,0,0,.08)!important;box-shadow:0 4px 14px rgba(0,0,0,.10)}
-.fdwFlL .fdVCard h3,.fdwFlL .fdVCard .bd{color:#17140E}.fdwFlL .fdVCard .fdMuted,.fdwFlL .fdVCard .mt{color:#5B5446!important}
-.fdwFlL .fdVCard .fdStar{background:#F6F1E4;color:#17140E}
-.fdwFlL .fdVCard .bg em{background:#F6F1E4;color:#17140E}
-.fdwFlL .fdVCard .fdFav{border-color:rgba(0,0,0,.1)}
-.fdwFlL .cd{background:#0311B4;border-top:2px solid #111111;color:#FFFFFF}
-.fdwFlL .cd .bx{background:#fff;color:#0B1230}.fdwFlL .cd .bx b{border-color:#DCE3FF}
-#fdwFlash .fdwFlash.min{background:#FFFFFF;border-top:3px solid #DC2626;color:#0B1230}
-#fdwFlash .fdwFlash.min .bar{color:#17140E}
-#fdwFlash .fdwFlash.min .tx small{color:#DC2626}
-#fdwFlash .fdwFlash.min .x{background:rgba(0,0,0,.14);color:#17140E}
+.fdwFlL .t.best .lim{background:#DC2626;border-color:#DC2626;color:#FFFFFF}
+.fdwFlL .nt{color:#C9CDD4;opacity:1}
+.fdwFlL>.bd .fdSecH b{color:#F2C14E}
+.fdwFlL .fdVCard{background:#16191E!important;color:#FFFFFF;border:1px solid rgba(217,174,69,.55)!important;box-shadow:none}
+.fdwFlL .fdVCard h3,.fdwFlL .fdVCard .bd{color:#FFFFFF}.fdwFlL .fdVCard .fdMuted,.fdwFlL .fdVCard .mt{color:#AEB4BE!important}
+.fdwFlL .fdVCard .fdStar,.fdwFlL .fdVCard .bg em{background:#2A2418;color:#F2C14E}
+.fdwFlL .fdVCard .fdFav{border-color:rgba(255,255,255,.18)}
+.fdwFlL .cd{background:#0A0B0D;border-top:2px solid #D9AE45;color:#FFFFFF}
+.fdwFlL .cd .bx{background:#16191E;color:#F2C14E}.fdwFlL .cd .bx b{border-color:#D9AE45}
+#fdwFlash .fdwFlash.min{background:#0E1013;border-top:2px solid #D9AE45;color:#FFFFFF;box-shadow:0 -6px 18px rgba(0,0,0,.35)}
+#fdwFlash .fdwFlash.min .bar{color:#FFFFFF}
+#fdwFlash .fdwFlash.min .tx small{color:#F2C14E}
+#fdwFlash .fdwFlash.min .bx{background:#16191E;color:#FFFFFF}#fdwFlash .fdwFlash.min .bx small{color:#F2C14E}
+#fdwFlash .fdwFlash.min .x{background:rgba(255,255,255,.12);color:#FFFFFF}
 #fdwFlash .fdwFlash.min .bx b{border:0}
 
-/* V5.5 · Yemek ana ekranı: hardal zemin + beyaz kartlar, siyah yazı, mavi/kırmızı vurgular (yalnız ana ekran, koyu temada; açık tema eskisi gibi) */
-html:not([data-theme="light"]) body.fdWorld.fdwHome{background:#0416E4}
-html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot{--bg:#0416E4;--card:#FFFFFF;--card2:#EEF1FF;--line:rgba(10,20,80,.16);--text:#0B1230;--muted:#44507A;
-  --fdw-acc:#1D4ED8;--fdw-acc2:#1E3A8A;--fdw-ink:#FFFFFF;--fdw-hot:#DC2626;--fdw-hot-ink:#FFFFFF;--fdw-ok:#15803D;--fdw-soft:#E8EFFD;--fdw-hot-soft:#FDECEC;color:#17140E}
-html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdSecT h2,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdSecH b,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdCuis em{color:#FFFFFF}
-html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdSecT .fdMuted,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdSecH .fdMuted{color:#DCE3FF}
-html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdLive.poll{color:#F2C14E!important}
-html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdVCard,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdActiveCard,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdAddr,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdSearchBtn,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdwHomeTop .fdIco,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdwHomeTop #fdBell{box-shadow:0 3px 12px rgba(23,20,14,.10);border-color:rgba(23,20,14,.10)}
-html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdCuis button.on span{border-color:#1D4ED8;background:#E8EFFD}
-html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdwChip.on{background:#17140E;border-color:#17140E;color:#fff}
-html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdwView button.on{background:#17140E;color:#fff}
-html:not([data-theme="light"]) body.fdWorld.fdwHome #fdwFlash .fdwFlash.min{background:#FFFFFF;border-top:3px solid #DC2626;color:#17140E;box-shadow:0 -6px 18px rgba(23,20,14,.18)}
-html:not([data-theme="light"]) body.fdWorld.fdwHome #fdwFlash .fdwFlash.min .bar{color:#17140E}
-html:not([data-theme="light"]) body.fdWorld.fdwHome #fdwFlash .fdwFlash.min .tx small{color:#DC2626}
-html:not([data-theme="light"]) body.fdWorld.fdwHome #fdwFlash .fdwFlash.min .bx{background:#17140E;color:#fff}html:not([data-theme="light"]) body.fdWorld.fdwHome #fdwFlash .fdwFlash.min .bx small{color:#F2C14E}
-html:not([data-theme="light"]) body.fdWorld.fdwHome #fdwFlash .fdwFlash.min .x{background:#F1EDE3;color:#17140E}
+/* V5.7 · Yemek ana ekranı (koyu tema): mevcut siyah zemin, kartlarda hardal çizgi */
+html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdVCard,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdActiveCard,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdAddr,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdSearchBtn,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdwHomeTop .fdIco,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdwHomeTop .fdwPanelH{border-color:rgba(217,174,69,.55)!important}
+html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdCuis button.on span{border-color:#D9AE45}
 
-/* V5.6 · Açık tema: Yemek ana ekranı ve İndirim Fırsatı beyaz fon; vurgular kırmızı/hardal/mavi/siyah */
+/* V5.7 · Açık tema: Yemek ana ekranı ve Yemek İndirim Fırsatı beyaz zemin; hardal çizgi, siyah/kırmızı vurgu */
 html[data-theme="light"] body.fdWorld.fdwHome{background:#FFFFFF}
 html[data-theme="light"] body.fdWorld.fdwHome #fdRoot{--bg:#FFFFFF}
-html[data-theme="light"] .fdwFlL,html[data-theme="light"] .fdwFlL .flh{background:#FFFFFF;color:#0B1230}
-html[data-theme="light"] .fdwFlL .ttl,html[data-theme="light"] .fdwFlL>.bd .fdSecH b{color:#0B1230}html[data-theme="light"] .fdwFlL .nt{color:#3A4466}html[data-theme="light"] .fdwFlL .cd{color:#0B1230}
-html[data-theme="light"] .fdwFlL .flh{--fl-a:#FFFFFF}
-html[data-theme="light"] .fdwFlL .cd{background:#F4F6F5}
-html[data-theme="light"] #fdwFlash .fdwFlash.min{background:#FFFFFF;border-top:3px solid #DC2626;box-shadow:0 -6px 18px rgba(14,26,18,.12)}
-html[data-theme="light"] #fdwFlash .fdwFlash.min .tx small{color:#DC2626}
+html[data-theme="light"] .fdwFlL,html[data-theme="light"] .fdwFlL .flh{background:#FFFFFF;color:#111111}
+html[data-theme="light"] .fdwFlL .flh{--fl-a:#FFFFFF;--fl-b:#FFFFFF}
+html[data-theme="light"] .fdwFlL .ttl,html[data-theme="light"] .fdwFlL>.bd .fdSecH b{color:#111111}html[data-theme="light"] .fdwFlL .nt{color:#4B5563}
+html[data-theme="light"] .fdwFlL .t .val{background:#FFFFFF;color:#111111}html[data-theme="light"] .fdwFlL .t.best .val{background:#D9AE45;color:#111111}
+html[data-theme="light"] .fdwFlL .fdVCard{background:#FFFFFF!important;color:#111111}html[data-theme="light"] .fdwFlL .fdVCard h3,html[data-theme="light"] .fdwFlL .fdVCard .bd{color:#111111}html[data-theme="light"] .fdwFlL .fdVCard .fdMuted,html[data-theme="light"] .fdwFlL .fdVCard .mt{color:#5B6470!important}
+html[data-theme="light"] .fdwFlL .fdVCard .fdStar,html[data-theme="light"] .fdwFlL .fdVCard .bg em{background:#FBF3DF;color:#111111}html[data-theme="light"] .fdwFlL .fdVCard .fdFav{border-color:rgba(0,0,0,.1)}
+html[data-theme="light"] .fdwFlL .cd{background:#F7F5EF;color:#111111}html[data-theme="light"] .fdwFlL .cd .bx{background:#FFFFFF;color:#111111}
+html[data-theme="light"] #fdwFlash .fdwFlash.min{background:#FFFFFF;border-top:3px solid #D9AE45;color:#111111;box-shadow:0 -6px 18px rgba(0,0,0,.12)}
+html[data-theme="light"] #fdwFlash .fdwFlash.min .bar{color:#111111}html[data-theme="light"] #fdwFlash .fdwFlash.min .tx small{color:#B45309}html[data-theme="light"] #fdwFlash .fdwFlash.min .x{background:#F1EDE3;color:#111111}html[data-theme="light"] #fdwFlash .fdwFlash.min .bx{background:#111111;color:#FFFFFF}
 
 /* ---------- V5 · Tek üst başlık, panel modu ---------- */
 #fdRoot > .fdBar.fdwMoved{display:none!important}
