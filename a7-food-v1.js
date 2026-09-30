@@ -3515,35 +3515,36 @@ body.fdWorld.fdwFlBarOn .app{padding-bottom:calc(160px + env(safe-area-inset-bot
 .fdwHomeTop .fdwPanelH i[hidden]{display:none}
 
 /* V5.4 · Flash: hardal zemin, beyaz restoran kartları */
-.fdwFlL{background:#A6E6BC;color:#0E1A12}
-.fdwFlL .flh{--fl-a:#A6E6BC;--fl-b:#1B1A16;--fl-y:#FFFFFF;background:#A6E6BC;color:#0E1A12}
-.fdwFlL .ttl{color:#17140E;text-shadow:none}
+.fdwFlL{background:#0416E4;color:#FFFFFF}
+.fdwFlL .flh{--fl-a:#0416E4;--fl-b:#1B1A16;--fl-y:#FFFFFF;background:#0416E4;color:#FFFFFF}
+.fdwFlL .ttl{color:#FFFFFF;text-shadow:none}
 .fdwFlL .flt .bz{background:#DC2626;color:#FFFFFF}
 .fdwFlL .mn i{background:#17140E;color:#F2C14E}
 .fdwFlL .t .lim{background:#1B1A16;border-color:#1B1A16;color:#fff}
 .fdwFlL .t .val{background:#fff;border-color:#1B1A16;color:#17140E}
 .fdwFlL .t.best .val{background:#D9AE45;border-color:#D9AE45;color:#111111}
-.fdwFlL .nt{color:#1F3327;opacity:1}
-.fdwFlL>.bd .fdSecH b{color:#17140E}
+.fdwFlL .nt{color:#E6EAFF;opacity:1}
+.fdwFlL>.bd .fdSecH b{color:#FFFFFF}
 .fdwFlL .fdVCard{background:#fff!important;color:#17140E;border-color:rgba(0,0,0,.08)!important;box-shadow:0 4px 14px rgba(0,0,0,.10)}
 .fdwFlL .fdVCard h3,.fdwFlL .fdVCard .bd{color:#17140E}.fdwFlL .fdVCard .fdMuted,.fdwFlL .fdVCard .mt{color:#5B5446!important}
 .fdwFlL .fdVCard .fdStar{background:#F6F1E4;color:#17140E}
 .fdwFlL .fdVCard .bg em{background:#F6F1E4;color:#17140E}
 .fdwFlL .fdVCard .fdFav{border-color:rgba(0,0,0,.1)}
-.fdwFlL .cd{background:#8FD9A8;border-top:2px solid #111111;color:#0E1A12}
-.fdwFlL .cd .bx{background:#fff;color:#0E1A12}.fdwFlL .cd .bx b{border-color:#DDEFE3}
-#fdwFlash .fdwFlash.min{background:#A6E6BC;border-top:2px solid #111111;color:#0E1A12}
+.fdwFlL .cd{background:#0311B4;border-top:2px solid #111111;color:#FFFFFF}
+.fdwFlL .cd .bx{background:#fff;color:#0B1230}.fdwFlL .cd .bx b{border-color:#DCE3FF}
+#fdwFlash .fdwFlash.min{background:#FFFFFF;border-top:3px solid #DC2626;color:#0B1230}
 #fdwFlash .fdwFlash.min .bar{color:#17140E}
-#fdwFlash .fdwFlash.min .tx small{color:#1F3327}
+#fdwFlash .fdwFlash.min .tx small{color:#DC2626}
 #fdwFlash .fdwFlash.min .x{background:rgba(0,0,0,.14);color:#17140E}
 #fdwFlash .fdwFlash.min .bx b{border:0}
 
 /* V5.5 · Yemek ana ekranı: hardal zemin + beyaz kartlar, siyah yazı, mavi/kırmızı vurgular (yalnız ana ekran, koyu temada; açık tema eskisi gibi) */
-html:not([data-theme="light"]) body.fdWorld.fdwHome{background:#A6E6BC}
-html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot{--bg:#A6E6BC;--card:#FFFFFF;--card2:#F2FBF5;--line:rgba(14,26,18,.14);--text:#0E1A12;--muted:#3E5246;
+html:not([data-theme="light"]) body.fdWorld.fdwHome{background:#0416E4}
+html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot{--bg:#0416E4;--card:#FFFFFF;--card2:#EEF1FF;--line:rgba(10,20,80,.16);--text:#0B1230;--muted:#44507A;
   --fdw-acc:#1D4ED8;--fdw-acc2:#1E3A8A;--fdw-ink:#FFFFFF;--fdw-hot:#DC2626;--fdw-hot-ink:#FFFFFF;--fdw-ok:#15803D;--fdw-soft:#E8EFFD;--fdw-hot-soft:#FDECEC;color:#17140E}
-html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdSecT h2,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdSecH b,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdCuis em{color:#17140E}
-html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdSecT .fdMuted,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdSecH .fdMuted{color:#2F4637}
+html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdSecT h2,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdSecH b,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdCuis em{color:#FFFFFF}
+html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdSecT .fdMuted,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdSecH .fdMuted{color:#DCE3FF}
+html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdLive.poll{color:#F2C14E!important}
 html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdVCard,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdActiveCard,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdAddr,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdSearchBtn,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdwHomeTop .fdIco,html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdwHomeTop #fdBell{box-shadow:0 3px 12px rgba(23,20,14,.10);border-color:rgba(23,20,14,.10)}
 html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdCuis button.on span{border-color:#1D4ED8;background:#E8EFFD}
 html:not([data-theme="light"]) body.fdWorld.fdwHome #fdRoot .fdwChip.on{background:#17140E;border-color:#17140E;color:#fff}
@@ -3557,7 +3558,8 @@ html:not([data-theme="light"]) body.fdWorld.fdwHome #fdwFlash .fdwFlash.min .x{b
 /* V5.6 · Açık tema: Yemek ana ekranı ve İndirim Fırsatı beyaz fon; vurgular kırmızı/hardal/mavi/siyah */
 html[data-theme="light"] body.fdWorld.fdwHome{background:#FFFFFF}
 html[data-theme="light"] body.fdWorld.fdwHome #fdRoot{--bg:#FFFFFF}
-html[data-theme="light"] .fdwFlL,html[data-theme="light"] .fdwFlL .flh{background:#FFFFFF}
+html[data-theme="light"] .fdwFlL,html[data-theme="light"] .fdwFlL .flh{background:#FFFFFF;color:#0B1230}
+html[data-theme="light"] .fdwFlL .ttl,html[data-theme="light"] .fdwFlL>.bd .fdSecH b{color:#0B1230}html[data-theme="light"] .fdwFlL .nt{color:#3A4466}html[data-theme="light"] .fdwFlL .cd{color:#0B1230}
 html[data-theme="light"] .fdwFlL .flh{--fl-a:#FFFFFF}
 html[data-theme="light"] .fdwFlL .cd{background:#F4F6F5}
 html[data-theme="light"] #fdwFlash .fdwFlash.min{background:#FFFFFF;border-top:3px solid #DC2626;box-shadow:0 -6px 18px rgba(14,26,18,.12)}
