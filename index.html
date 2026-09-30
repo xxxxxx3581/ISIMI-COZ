@@ -755,6 +755,7 @@ body.v2NoScroll{overflow:hidden}
 .v2Sheet{position:fixed;inset:0;z-index:2147482000;background:var(--v2-overlay);display:flex;align-items:flex-end;justify-content:center}
 .v2SheetBox{width:100%;max-width:560px;max-height:92vh;max-height:92dvh;display:flex;flex-direction:column;background:var(--card);color:var(--text);border-radius:20px 20px 0 0;border:1px solid var(--line);border-bottom:0;box-shadow:0 -10px 40px rgba(0,0,0,.35);animation:v2up .18s ease-out}
 @keyframes v2up{from{transform:translateY(24px);opacity:.6}to{transform:none;opacity:1}}
+.hzDot{display:inline-flex;align-items:center;background:#e11d48;color:#fff;font-size:11px;font-weight:800;letter-spacing:.3px;line-height:1.4;border-radius:999px;padding:1px 8px;vertical-align:middle;animation:hzBlink 1.1s ease-in-out infinite}.hzDot.g{display:none}body.hzHas .hzDot.g{display:inline-flex}.hzDot.sm{position:absolute;top:3px;right:3px;width:10px;height:10px;padding:0;font-size:0}#appMenuBtn{position:relative}.hzAlert{display:flex;flex-wrap:wrap;align-items:center;gap:8px;width:100%;box-sizing:border-box;text-align:left;margin:10px 0 0;padding:12px 14px;min-height:44px;border-radius:14px;border:2px solid #e11d48;background:rgba(225,29,72,.08);color:inherit;font:inherit;cursor:pointer}@keyframes hzBlink{50%{opacity:.35}}@media (prefers-reduced-motion:reduce){.hzDot{animation:none}}
 @media(min-width:720px){.v2Sheet{align-items:center}.v2SheetBox{border-radius:20px;border-bottom:1px solid var(--line)}}
 .v2SH{display:flex;align-items:center;gap:8px;padding:14px 16px 10px}
 .v2SH strong{font-size:17px;flex:1}
@@ -1153,7 +1154,7 @@ html[data-theme="light"] .v2Btn.msg{background:#1f5fa8}
 <body>
 <div id="connectionStatus" class="connection offline" title="Supabase">SB…</div>
 <div class="app">
-<header class="v2Top"><div class="v2TopMini" id="v2TopMini"></div><button type="button" class="v2Ico" id="appMenuBtn" onclick="openAppDrawer()" aria-label="Menüyü aç">☰</button><button type="button" class="v2Brand" onclick="showHome()" aria-label="İşimi Çöz ana sayfa"><span class="v2LogoMk" aria-hidden="true"><svg viewBox="0 0 32 32" width="28" height="28" focusable="false"><path d="M7.2 16.8l5.4 5.6 12.2-14" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="v2Wm"><b>İşimi</b><i>Çöz</i></span></button><div class="v2TopR"><button type="button" class="v2AraBtn" onclick="v2GoSearch()" aria-label="Ara">🔎 Ara</button><button type="button" class="v2Ico" id="themeToggleBtn" onclick="toggleAppTheme()" aria-label="Tema değiştir">🌙</button><div id="authArea" class="headerAuthRow"></div></div></header>
+<header class="v2Top"><div class="v2TopMini" id="v2TopMini"></div><button type="button" class="v2Ico" id="appMenuBtn" onclick="openAppDrawer()" aria-label="Menüyü aç">☰<span class="hzDot g sm" aria-hidden="true"></span></button><button type="button" class="v2Brand" onclick="showHome()" aria-label="İşimi Çöz ana sayfa"><span class="v2LogoMk" aria-hidden="true"><svg viewBox="0 0 32 32" width="28" height="28" focusable="false"><path d="M7.2 16.8l5.4 5.6 12.2-14" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="v2Wm"><b>İşimi</b><i>Çöz</i></span></button><div class="v2TopR"><button type="button" class="v2AraBtn" onclick="v2GoSearch()" aria-label="Ara">🔎 Ara</button><button type="button" class="v2Ico" id="themeToggleBtn" onclick="toggleAppTheme()" aria-label="Tema değiştir">🌙</button><div id="authArea" class="headerAuthRow"></div></div></header>
 <main id="app"></main></div>
 <nav class="bottom" aria-label="Ana gezinme"><div class="bottomInner">
 <button class="navBtn" id="navHome" onclick="showHome()"><b>⌂</b>Ana</button>
@@ -1186,7 +1187,7 @@ html[data-theme="light"] .v2Btn.msg{background:#1f5fa8}
   <div class="appDrawerNav">
     <button type="button" onclick="closeAppDrawer();showFavorites()">♡ Favorilerim</button>
     <button type="button" onclick="closeAppDrawer();showSavedSearches()">🔖 Kayıtlı aramalar</button>
-    <button type="button" onclick="closeAppDrawer();showProviderEntry()">📋 Gelen talepler (hizmet veren)</button>
+    <button type="button" onclick="closeAppDrawer();showProviderEntry()">📋 Gelen talepler (hizmet veren) <span class="hzDot g">YENİ</span></button>
   </div>
   <div class="appDrawerSec">Diğer çalışma alanları</div>
   <div class="appDrawerNav">
@@ -4302,7 +4303,7 @@ window.showServiceParseConfirm=showServiceParseConfirm;window.parseServiceFreeTe
 function showRequest(preselected=""){
  setNav("navRequest");
  app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div>
- <button type="button" class="svcProvEntry" onclick="showProviderEntry()"><span class="ic" aria-hidden="true">🛠️</span><span class="tx"><small>Hizmet sağlayıcı mısın?</small><b>Gelen Talepler</b><em>Sana uygun talepleri gör, teklif ver</em></span><span class="go" aria-hidden="true">›</span></button>
+ <button type="button" class="svcProvEntry" onclick="showProviderEntry()"><span class="ic" aria-hidden="true">🛠️</span><span class="tx"><small>Hizmet sağlayıcı mısın?</small><b>Gelen Talepler <span class="hzDot g">YENİ</span></b><em>Sana uygun talepleri gör, teklif ver</em></span><span class="go" aria-hidden="true">›</span></button>
  <div class="formCard"><span class="badge">📋 YENİ HİZMET TALEBİ</span><h1>İhtiyacını anlat.</h1><p class="muted small">Sorununu açıkça anlat. Böylece doğru hizmet sağlayıcısına ulaşmak kolaylaşır.</p>
  <label>Hizmet kategorisi *</label><select id="reqService">${serviceOptions(preselected)}</select>
  <label>Sorunun / ihtiyacın *</label><textarea id="reqDescription" maxlength="1000" placeholder="Örneğin: Klima çalışıyor fakat yeterince soğutmuyor."></textarea><div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap"><button type="button" class="btn secondary smallBtn" id="voiceBtn" onclick="startVoiceInput()">🎤 Sesli anlat</button><button type="button" class="btn secondary smallBtn" onclick="showServiceParseConfirm()">🤖 Anla</button><span class="small muted" id="charCount">0/1000</span></div>
@@ -4956,6 +4957,7 @@ async function showRequestDetailData(r){
 async function showProviderRequestDetail(talepNo){
   const r=await findRequestByNo(talepNo);
   if(!r){alert('Talep bulunamadı.');return;}
+  hzMarkSeen(r);
   const k=serviceKeyFromValue(r.service||r.kategori);
   const s=SERVICES[k]||{name:r.kategori||'Hizmet',emoji:'🛠️'};
   const st=String(r.status||r.durum||'Beklemede');
@@ -5125,8 +5127,9 @@ async function loadProviderDirectory(){
  if(!providers.length){box.innerHTML=`<div class="warning">Supabase'de <strong>providers</strong> tablosundan okunabilir hizmet sağlayıcı kaydı bulunamadı.</div>`;return}
  const s=getAuthSession(), uid=s&&s.user&&s.user.id;
  providers.forEach(p=>{p._open=providerOpenRequests(p,requests).length;p._own=!!uid&&(String(p.owner_id||"")===uid||String(p.user_id||"")===uid);});
+ for(const p of providers.filter(x=>x._own&&x.active)){const a=await hzAlerts(p,requests);p._hz=a.newReqs.length+a.dev.length;}hzPing();
  /* Aktif hesaplar üstte; sonra açık talebi olanlar; sonra kendi hesapların */
- providers.sort((a,b)=>(b.active-a.active)||(b._open-a._open)||(b._own-a._own)||String(a.name).localeCompare(String(b.name),'tr'));
+ providers.sort((a,b)=>((b._hz||0)-(a._hz||0))||(b.active-a.active)||(b._open-a._open)||(b._own-a._own)||String(a.name).localeCompare(String(b.name),'tr'));
  box.innerHTML=`<div class="section"><h2>Hizmet sağlayıcılar</h2>${providers.map(p=>renderProviderCard(p)).join("")}</div>`;
 }
 
@@ -5142,7 +5145,7 @@ function renderProviderCard(p){
      </div>
      <div class="small muted" style="margin-top:6px">📞 ${escapeHTML(phone)}</div>`
   : `<div class="warning">Bu sağlayıcının telefon numarası kayıtlı değil.</div>`;
- return `<article class="request"><div class="requestTop"><div><h3>🛠️ ${escapeHTML(p.name)}</h3><div class="small muted">${escapeHTML(p.city)} • ${escapeHTML(p.district)}</div></div><span class="status">${p.active?"Aktif":"Pasif"}</span></div><div class="meta"><span>🔧 ${escapeHTML(cats)}</span>${p._open!=null?`<span><strong>📋 ${p._open} açık talep</strong></span>`:""}${p._own?`<span>✅ Senin hesabın</span>`:""}${p.neighborhood?`<span>🏘️ ${escapeHTML(p.neighborhood)}</span>`:""}</div>${p.description?`<div class="description">${escapeHTML(p.description)}</div>`:""}${phoneBlock}<br><button type="button" class="btn secondary" onclick='openProviderById(${JSON.stringify(String(p.id))})'>📋 UYGUN TALEPLERİ GÖR</button></article>`;
+ return `<article class="request"><div class="requestTop"><div><h3>🛠️ ${escapeHTML(p.name)}</h3><div class="small muted">${escapeHTML(p.city)} • ${escapeHTML(p.district)}</div></div><span class="status">${p.active?"Aktif":"Pasif"}</span></div><div class="meta"><span>🔧 ${escapeHTML(cats)}</span>${p._open!=null?`<span><strong>📋 ${p._open} açık talep</strong></span>`:""}${p._own?`<span>✅ Senin hesabın</span>`:""}${p._hz?`<span class="hzDot">${p._hz} YENİ</span>`:""}${p.neighborhood?`<span>🏘️ ${escapeHTML(p.neighborhood)}</span>`:""}</div>${p.description?`<div class="description">${escapeHTML(p.description)}</div>`:""}${phoneBlock}<br><button type="button" class="btn secondary" onclick='openProviderById(${JSON.stringify(String(p.id))})'>📋 UYGUN TALEPLERİ GÖR</button></article>`;
 }
 
 async function openProviderById(id){
@@ -5161,6 +5164,9 @@ async function showProviderPanel(p){if(p){write(KEYS.provider,p);write(KEYS.prov
  const requests=await loadRequestsFromSupabase();
  const suitable=providerOpenRequests(p,requests);
  document.getElementById("matchCount").textContent=suitable.length;
+ const hzA=await hzAlerts(p,requests),hzN=new Set(hzA.newReqs.map(r=>String(r.id)));suitable.forEach(r=>{r._hzNew=hzN.has(String(r.id))});hzPing();
+ const hzOL={accepted:'🎉 Teklifin kabul edildi',rejected:'Teklifin kabul edilmedi'};
+ document.getElementById("matchCount").closest('.grid').insertAdjacentHTML('beforebegin',(hzA.newReqs.length?`<button type="button" class="hzAlert" onclick="var c=document.querySelector('.hzNewCard');if(c)c.scrollIntoView({behavior:'smooth',block:'center'})"><span class="hzDot">YENİ</span><b>${hzA.newReqs.length} yeni talep</b><span class="small muted">sana uygun · incele ve teklif ver ›</span></button>`:'')+hzA.dev.map(x=>`<button type="button" class="hzAlert" onclick='showProviderRequestDetail(${JSON.stringify(String(x.r.talep_no||x.r.id||""))})'><span class="hzDot">YENİ</span><b>${escapeHTML(hzOL[x.o.status]||('Teklifinde yeni durum: '+x.o.status))}</b><span class="small muted">${escapeHTML((SERVICES[serviceKeyFromValue(x.r.service||x.r.kategori)]||{}).name||x.r.kategori||'Talep')} · ${escapeHTML(String(x.r.talep_no||''))} ›</span></button>`).join(''));
  const box=document.getElementById("matchedRequests");
  if(!suitable.length){box.innerHTML=`<div class="empty">🔎<h3>Şimdilik uygun talep yok.</h3><p>Sağlayıcının kategorisi ve ilçesi ile eşleşen talepler burada görünecek.</p></div>`}
  else{box.outerHTML=suitable.map(r=>renderProviderRequest(r)).join("");hzFillCardContacts();}
@@ -5187,8 +5193,8 @@ function renderProviderRequest(r){
  const no=String(r.talep_no||r.id||"");
  const wa=whatsappHref(phone);
  const tel=telHref(phone);
- return `<article class="request">
-  <div class="requestTop"><div><h3>${s.emoji} ${escapeHTML(s.name)}</h3><div class="small muted">Talep No: ${escapeHTML(no)}</div></div><span class="status">${escapeHTML(st)}</span></div>
+ return `<article class="request${r._hzNew?' hzNewCard':''}">
+  <div class="requestTop"><div><h3>${r._hzNew?'<span class="hzDot">YENİ</span> ':''}${s.emoji} ${escapeHTML(s.name)}</h3><div class="small muted">Talep No: ${escapeHTML(no)}</div></div><span class="status">${escapeHTML(st)}</span></div>
   <div class="description">${escapeHTML(r.aciklama||r.description||"")}</div>
   <div class="meta"><span>📍 ${escapeHTML(r.ilce||r.district||"")}</span>${r.mahalle?`<span>🏘️ ${escapeHTML(r.mahalle)}</span>`:""}<span>👤 ${escapeHTML(r.ad_soyad||r.name||"")}</span><span>⏱️ ${escapeHTML(r.aciliyet||"")}</span></div>
   ${phone?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">
@@ -5198,6 +5204,25 @@ function renderProviderRequest(r){
   <button type="button" class="btn primary" style="width:100%;margin-top:10px" onclick='showProviderRequestDetail(${JSON.stringify(no)})'>Detayı gör · Teklif ver</button>
  </article>`;
 }
+
+/* Usta & Hizmet · sağlayıcıya "YENİ" işaretleri. Yeni tablo/DB yok: mevcut açık talepler + sağlayıcının kendi teklifleri (mevcut RLS ile) okunur; "görüldü" bilgisi bu cihazda tutulur. */
+function hzSeenKey(){const s=getAuthSession();return 'isimi_hz_seen_'+((s&&s.user&&s.user.id)||'anon')}
+function hzSeen(){try{return JSON.parse(localStorage.getItem(hzSeenKey())||'{}')||{}}catch(e){return {}}}
+function hzMarkSeen(r){if(!r||!r.id)return;try{const s=hzSeen();s['r:'+r.id]=1;Object.values(window.__hzOff||{}).forEach(o=>{if(String(o.request_id)===String(r.id))s['o:'+o.id]=o.status});localStorage.setItem(hzSeenKey(),JSON.stringify(s))}catch(e){}hzPing()}
+async function hzAlerts(p,reqs){
+ const seen=hzSeen();const newReqs=providerOpenRequests(p,reqs).filter(r=>r.id&&!seen['r:'+r.id]);
+ let offers=[];try{offers=await supabaseReadAuth('GET','offers?select=id,request_id,status&provider_id=eq.'+encodeURIComponent(String(p.id))+'&order=created_at.desc&limit=50');}catch(e){}
+ offers=Array.isArray(offers)?offers:[];window.__hzOff=window.__hzOff||{};offers.forEach(o=>{window.__hzOff[o.id]=o});
+ const dev=offers.filter(o=>o.status&&o.status!=='pending'&&seen['o:'+o.id]!==o.status).map(o=>({o,r:(reqs||[]).find(r=>String(r.id)===String(o.request_id))})).filter(x=>x.r&&!['Tamamlandı','İptal'].includes(String(x.r.status||x.r.durum)));
+ return {newReqs,dev};
+}
+async function hzPing(){
+ let n=0;try{const mine=(await v2MyProviders()).filter(p=>p.active);
+  if(mine.length){const rows=await supabaseReadAuth('GET','requests?select=*&order=created_at.desc&limit=200');const reqs=(Array.isArray(rows)?rows:[]).map(mapRequest);
+   for(const p of mine){const a=await hzAlerts(p,reqs);n+=a.newReqs.length+a.dev.length}}}catch(e){}
+ document.body.classList.toggle('hzHas',n>0);return n;
+}
+window.addEventListener('load',function(){setTimeout(hzPing,1500);setInterval(function(){if(document.visibilityState==='visible'&&getAuthSession())hzPing()},120000)});
 
 /* ---------------- OPTIONAL LOCAL PROVIDER ---------------- */
 
@@ -6230,7 +6255,7 @@ async function showMine(){
     else html+=v2SearchCard(it.r,acts);
   });
   var prov=null; try{ prov=(getProvider&&getProvider()&&providerLogged())?getProvider():null; }catch(e){}
-  if(prov&&(seg==='all')) html='<div class="v2MC"><div class="v2MRow" role="button" tabindex="0" data-act="'+(acts.push(function(){ showProviderEntry(); })-1)+'"><div class="v2MThumb"><div class="v2Ph"><span>🛠️</span></div></div><div class="v2MInfo"><div class="t">Gelen talepler</div><div class="m">Hizmet veren hesabına uygun talepler · Teklif ver</div></div></div></div>'+html;
+  if(prov&&(seg==='all')) html='<div class="v2MC"><div class="v2MRow" role="button" tabindex="0" data-act="'+(acts.push(function(){ showProviderEntry(); })-1)+'"><div class="v2MThumb"><div class="v2Ph"><span>🛠️</span></div></div><div class="v2MInfo"><div class="t">Gelen talepler <span class="hzDot g">YENİ</span></div><div class="m">Hizmet veren hesabına uygun talepler · Teklif ver</div></div></div></div>'+html;
   var resume=(seg==='all')?v2ResumeCard():'';
   if(!html){
     var msg=seg==='requests'?['Henüz talebin yok','İhtiyacını anlat, teklifler gelsin.']:seg==='cases'?['Henüz işlem dosyan yok','Bir resmî işlem başlatınca burada takip edersin.']:seg==='searches'?['Kayıtlı aramaların yok','Ara ekranında filtre uygulayıp "Aramayı kaydet" diyebilirsin.']:['Henüz bir işin yok','Bir ilan ver, hizmet iste veya resmî işlem başlat.'];
@@ -6238,7 +6263,7 @@ async function showMine(){
   }
   if(errs.length) html='<div class="v2Warn" role="alert">⚠️ '+errs.join(', ')+' şu an yüklenemedi. Sayfayı yenileyip tekrar dene.</div>'+html;
   box.innerHTML=resume+html; window.__mineActs=acts;
-  if(seg==='all'&&!prov){ v2MyProviders().then(function(mine){ if(!mine.length||!document.body.contains(box)||box.querySelector('.v2ProvIn')) return; box.insertAdjacentHTML('afterbegin','<div class="v2MC v2ProvIn"><div class="v2MRow" role="button" tabindex="0" onclick="showProviderEntry()"><div class="v2MThumb"><div class="v2Ph"><span>📋</span></div></div><div class="v2MInfo"><div class="t">Gelen talepler</div><div class="m">Hizmet veren hesabına uygun talepler · Teklif ver</div></div></div></div>'); }); }
+  if(seg==='all'&&!prov){ v2MyProviders().then(function(mine){ if(!mine.length||!document.body.contains(box)||box.querySelector('.v2ProvIn')) return; box.insertAdjacentHTML('afterbegin','<div class="v2MC v2ProvIn"><div class="v2MRow" role="button" tabindex="0" onclick="showProviderEntry()"><div class="v2MThumb"><div class="v2Ph"><span>📋</span></div></div><div class="v2MInfo"><div class="t">Gelen talepler <span class="hzDot g">YENİ</span></div><div class="m">Hizmet veren hesabına uygun talepler · Teklif ver</div></div></div></div>'); }); }
   v2BindMine(box);
   /* tekliflerin sayısını arka planda doldur (mevcut loadOffersForRequest) */
   reqs.filter(function(r){return v2RequestState(r)==='open';}).slice(0,6).forEach(function(r){
