@@ -735,6 +735,7 @@ body.v2NoScroll{overflow:hidden}
 .v2Ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--muted);font-size:11px}
 .v2Ph span{font-size:30px;line-height:1;opacity:.75}
 .v2Tag{position:absolute;left:8px;top:8px;background:var(--v2-tag-bg);color:var(--v2-tag-ink);font-size:11px;font-weight:800;border-radius:8px;padding:3px 7px}
+.v2Ad{display:inline-block;align-self:flex-start;width:max-content;max-width:100%;font-size:10.5px;font-weight:800;color:#111;background:#D9AE45;border-radius:6px;padding:1px 6px;margin-bottom:4px;white-space:nowrap}.v2Card.isBoost{box-shadow:0 0 0 2px #D9AE45}
 .v2Cnt{position:absolute;left:8px;bottom:8px;background:var(--v2-tag-bg);color:var(--v2-tag-ink);font-size:11px;font-weight:700;border-radius:8px;padding:2px 6px}
 .v2Heart{position:absolute;right:6px;top:6px;width:38px;height:38px;border-radius:50%;border:1px solid rgba(0,0,0,.08);background:rgba(255,255,255,.94);color:#334155;font-size:20px;line-height:1;display:grid;place-items:center;cursor:pointer;padding:0;box-shadow:0 1px 4px rgba(0,0,0,.25);transition:transform .12s}
 .v2Heart:hover{transform:scale(1.08)}.v2Heart:active{transform:scale(.92)}
@@ -1603,9 +1604,17 @@ function mapRequest(r){
 
 /* ---------------- PROVIDER DATA: SUPABASE ---------------- */
 
+/* Usta telefonu: yalnızca usta sahibine, ustanın teklif verdiği talebin sahibine ve admine döner (DB: hz_provider_phone). */
+async function hzProviderPhone(pid){
+ if(!pid)return '';
+ try{const s=getAuthSession();if(!s||!s.access_token)return '';
+  const v=await supabaseWrite('POST','rpc/hz_provider_phone',{p_provider_id:String(pid)});
+  return (typeof v==='string'&&v)?v:'';
+ }catch(e){return ''}
+}
 async function loadProvidersFromSupabase(){
  try{
-  const rows=await supabaseRequest("GET","providers?select=*&limit=500");
+  const rows=await supabaseRequest("GET","providers?select=id,name,district,description,active,created_at,city,services,updated_at,user_id,owner_id,logo_url,availability,lat,lng&limit=500"); /* telefon herkese açık okunmaz; yetkiliye hzProviderPhone ile gelir */
   if(!Array.isArray(rows))return [];
   const providers=rows.map(mapProvider);
   setConnection(true,"SB");
@@ -2089,13 +2098,36 @@ async function kesfetEnsureCache(kind, force){
         "listings?listing_type=eq.gayrimenkul&status=eq.published&order=created_at.desc&select=id,title,price,currency,city,district,neighborhood,category,description,status,created_at,metadata":
         "listings?listing_type=eq.otomobil&status=eq.published&order=created_at.desc&select=id,title,price,currency,city,district,category,description,metadata,created_at";
       var rows=await supabaseRequest('GET',path);
+      var bst=await v2LoadBoosts(); if(Array.isArray(rows)) rows.forEach(function(r){ r._boost=!!bst[String(r.id)]; });
       __listingCache[kind]=Array.isArray(rows)?rows:[]; __kesfetTS[kind]=Date.now();
     }finally{ __kesfetInflight[kind]=null; }
   })();
   return __kesfetInflight[kind];
 }
 
+/* Öne çıkan ilanlar (listing_boosts; yalnız admin/sistem yazar). Hata olursa sessizce boş döner, liste etkilenmez. */
+var __v2Boosts={t:0,map:{}};
+async function v2LoadBoosts(){
+  if(Date.now()-__v2Boosts.t<60000) return __v2Boosts.map;
+  var m={};
+  try{ var now=new Date().toISOString();
+    var rows=await supabaseRequest('GET','listing_boosts?select=listing_id&starts_at=lte.'+encodeURIComponent(now)+'&ends_at=gt.'+encodeURIComponent(now)+'&limit=500');
+    if(Array.isArray(rows)) rows.forEach(function(x){ if(x&&x.listing_id) m[String(x.listing_id)]=1; });
+  }catch(e){}
+  __v2Boosts={t:Date.now(),map:m}; return m;
+}
+/* Varsayılan "en yeni" sıralamada öne çıkan ilanlar üstte; fiyat sıralamaları değişmez. */
 function kesfetBuildList(keepCache){
+  return kesfetBuildListRaw(keepCache).then(function(b){
+    try{ var st=getListingFilterState(b.filterType)||{}; var sort=st.sort||'new';
+      if(sort==='new'&&b.list.some(function(x){return x.row&&x.row._boost;})){
+        b.list=b.list.filter(function(x){return x.row&&x.row._boost;}).concat(b.list.filter(function(x){return !(x.row&&x.row._boost);}));
+      }
+    }catch(e){}
+    return b;
+  });
+}
+function kesfetBuildListRaw(keepCache){
   var cat=window.__kesfetCat||'all';
   return (async function(){
     function dedupe(arr){ var seen={}; return arr.filter(function(x){ var k=x.type+':'+x.row.id; if(seen[k]) return false; seen[k]=1; return true; }); }
@@ -2701,17 +2733,18 @@ function kesfetCardHtml(row,type){
     if(md.zoning&&row.category==='Arsa') facts.push('İmar: '+md.zoning);
   }
   var tag='';
+  var boost=!!row._boost;
   if(type==='gayrimenkul'&&md.deal_type) tag=md.deal_type==='kiralik'?'Kiralık':md.deal_type==='satilik'?'Satılık':'';
   if(!tag&&type==='otomobil'&&md.seller_type==='professional') tag='Galeri';
   if(!tag&&row.created_at&&(Date.now()-new Date(row.created_at).getTime())<3*864e5) tag='Yeni';
   var loc=[row.district,row.city].filter(Boolean).map(escapeHTML).join(', ')||'Konum belirtilmedi';
   var ttl=escapeHTML(row.title||'İlan'), pr=escapeHTML(formatListingPrice(row.price,row.currency));
-  return '<article class="v2Card" role="link" tabindex="0" aria-label="'+ttl+', '+pr+'" onclick="'+open+'" onkeydown="if((event.key===\'Enter\'||event.key===\' \')&&event.target===this){event.preventDefault();'+open+'}">'+
+  return '<article class="v2Card'+(boost?' isBoost':'')+'" role="link" tabindex="0" aria-label="'+ttl+', '+pr+'" onclick="'+open+'" onkeydown="if((event.key===\'Enter\'||event.key===\' \')&&event.target===this){event.preventDefault();'+open+'}">'+
     '<div class="v2Img"><div class="v2Ph" aria-hidden="true"><span>'+(type==='otomobil'?'🚗':'🏠')+'</span>'+(url?'':'Fotoğraf yok')+'</div>'+
     (url?'<img src="'+escapeHTML(url)+'" alt="" loading="lazy" decoding="async" onload="this.classList.add(\'ld\')" onerror="this.remove()">':'')+
     (tag?'<span class="v2Tag">'+escapeHTML(tag)+'</span>':'')+(photos.length>1?'<span class="v2Cnt">📷 '+photos.length+'</span>':'')+
     '<button type="button" class="v2Heart'+(fav?' is-fav':'')+'" data-fav-id="'+id+'" aria-pressed="'+fav+'" aria-label="Favorilere ekle veya çıkar" onclick="return toggleListingFavorite(\''+id+'\',event)">'+(fav?'♥':'♡')+'</button></div>'+
-    '<div class="v2Body"><h3 class="v2T">'+ttl+'</h3><div class="v2P">'+pr+'</div>'+
+    '<div class="v2Body">'+(boost?'<span class="v2Ad">Öne çıkan · Reklam</span>':'')+'<h3 class="v2T">'+ttl+'</h3><div class="v2P">'+pr+'</div>'+
     (facts.length?'<div class="v2F">'+facts.slice(0,4).map(escapeHTML).join(' · ')+'</div>':'')+
     '<div class="v2L">📍 '+loc+'</div></div></article>';
 }
@@ -4509,8 +4542,9 @@ async function loadOffersForRequest(talepNo){
       let pname='',pphone='';
       if(o.provider_id){
         try{
-          const pr=await supabaseRequest('GET','providers?select=id,name,phone,district&id=eq.'+encodeURIComponent(String(o.provider_id))+'&limit=1');
-          if(Array.isArray(pr)&&pr[0]){pname=pr[0].name||'';pphone=pr[0].phone||'';o._pdist=pr[0].district||'';}
+          const pr=await supabaseRequest('GET','providers?select=id,name,district&id=eq.'+encodeURIComponent(String(o.provider_id))+'&limit=1');
+          if(Array.isArray(pr)&&pr[0]){pname=pr[0].name||'';o._pdist=pr[0].district||'';}
+          pphone=await hzProviderPhone(o.provider_id);
         }catch(e){}
       }
       const st=o.status||'pending';
@@ -4945,6 +4979,7 @@ async function showRequestDetailData(r){
   const hzS=hzSeen(),hzOpen=!isCompleted&&!isAccepted&&!hasAcceptedOffer,hzPend=(offers||[]).filter(o=>String(o.status||'').toLowerCase()==='pending');
   const hzNew=new Set(hzOpen?hzPend.filter(o=>!hzS['co:'+o.id]).map(o=>String(o.id)):[]);
   try{(offers||[]).forEach(o=>{hzS['co:'+o.id]=1});localStorage.setItem(hzSeenKey(),JSON.stringify(hzS))}catch(e){}hzPing();
+  hzServerSeen(offers);
   const hzCur=isCompleted?3:(isAccepted||hasAcceptedOffer)?2:hzPend.length?1:0;
   const hzSec=box&&box.closest('.section');
   if(hzSec)hzSec.insertAdjacentHTML('beforebegin','<div class="hzSteps" aria-label="İş adımları">'+['Teklif bekleniyor','Teklif seç','İş devam ediyor','Tamamlandı'].map((t,i)=>'<div class="'+(i<hzCur?'dn':i===hzCur?'cur':'')+'"'+(i===hzCur?' aria-current="step"':'')+'>'+(i<hzCur?'✓ ':'')+t+'</div>').join('')+'</div>'+
@@ -5169,6 +5204,7 @@ async function loadProviderDirectory(){
  const s=getAuthSession(), uid=s&&s.user&&s.user.id;
  providers.forEach(p=>{p._open=providerOpenRequests(p,requests).length;p._own=!!uid&&(String(p.owner_id||"")===uid||String(p.user_id||"")===uid);});
  for(const p of providers.filter(x=>x._own&&x.active)){const a=await hzAlerts(p,requests);p._hz=a.newReqs.length+a.dev.length;}hzPing();
+ for(const p of providers.filter(x=>x._own)){p.phone=await hzProviderPhone(p.id);}
  /* Aktif hesaplar üstte; sonra açık talebi olanlar; sonra kendi hesapların */
  providers.sort((a,b)=>((b._hz||0)-(a._hz||0))||(b.active-a.active)||(b._open-a._open)||(b._own-a._own)||String(a.name).localeCompare(String(b.name),'tr'));
  box.innerHTML=`<div class="section"><h2>Hizmet sağlayıcılar</h2>${providers.map(p=>renderProviderCard(p)).join("")}</div>`;
@@ -5176,7 +5212,7 @@ async function loadProviderDirectory(){
 
 function renderProviderCard(p){
  const cats=(p.services||[]).map(k=>SERVICES[k]?.name||k).filter(Boolean).join(", ")||"Kategori bilgisi yok";
- const phone=p.phone||"";
+ const phone=p._own?(p.phone||""):"";
  const wa=whatsappHref(phone);
  const tel=telHref(phone);
  const phoneBlock=phone
@@ -5185,7 +5221,7 @@ function renderProviderCard(p){
       ${wa?`<a class="btn secondary" style="display:block;text-align:center;text-decoration:none;background:#128C7E;border-color:#128C7E;color:#fff" href="${wa}" target="_blank" rel="noopener noreferrer">💬 WhatsApp</a>`:`<span class="warning" style="display:flex;align-items:center;justify-content:center;padding:8px">WhatsApp yok</span>`}
      </div>
      <div class="small muted" style="margin-top:6px">📞 ${escapeHTML(phone)}</div>`
-  : `<div class="warning">Bu sağlayıcının telefon numarası kayıtlı değil.</div>`;
+  : (p._own?`<div class="warning">Telefon numaran kayıtlı değil.</div>`:"");
  return `<article class="request"><div class="requestTop"><div><h3>🛠️ ${escapeHTML(p.name)}</h3><div class="small muted">${escapeHTML(p.city)} • ${escapeHTML(p.district)}</div></div><span class="status">${p.active?"Aktif":"Pasif"}</span></div><div class="meta"><span>🔧 ${escapeHTML(cats)}</span>${p._open!=null?`<span><strong>📋 ${p._open} açık talep</strong></span>`:""}${p._own?`<span>✅ Senin hesabın</span>`:""}${p._hz?`<span class="hzDot">${p._hz} YENİ</span>`:""}${p.neighborhood?`<span>🏘️ ${escapeHTML(p.neighborhood)}</span>`:""}</div>${p.description?`<div class="description">${escapeHTML(p.description)}</div>`:""}${phoneBlock}<br><button type="button" class="btn secondary" onclick='openProviderById(${JSON.stringify(String(p.id))})'>📋 UYGUN TALEPLERİ GÖR</button></article>`;
 }
 
@@ -5249,6 +5285,8 @@ function renderProviderRequest(r){
 /* Usta & Hizmet · sağlayıcıya "YENİ" işaretleri. Yeni tablo/DB yok: mevcut açık talepler + sağlayıcının kendi teklifleri (mevcut RLS ile) okunur; "görüldü" bilgisi bu cihazda tutulur. */
 function hzSeenKey(){const s=getAuthSession();return 'isimi_hz_seen_'+((s&&s.user&&s.user.id)||'anon')}
 function hzSeen(){try{return JSON.parse(localStorage.getItem(hzSeenKey())||'{}')||{}}catch(e){return {}}}
+/* Müşteri teklifleri gördü: sunucuya bildirilir (görülmeyen teklif kredisi iadesi için). Sessiz, hata akışı etkilemez. */
+function hzServerSeen(offers){try{const ids=[...new Set((offers||[]).map(o=>o&&o.request_id).filter(Boolean).map(String))];const s=getAuthSession();if(!ids.length||!s||!s.access_token)return;ids.forEach(id=>{supabaseWrite('POST','rpc/hz_mark_offers_seen',{p_request_id:id}).catch(()=>{})})}catch(e){}}
 function hzMarkSeen(r){if(!r||!r.id)return;try{const s=hzSeen();s['r:'+r.id]=1;Object.values(window.__hzOff||{}).forEach(o=>{if(String(o.request_id)===String(r.id))s['o:'+o.id]=o.status});localStorage.setItem(hzSeenKey(),JSON.stringify(s))}catch(e){}hzPing()}
 async function hzAlerts(p,reqs){
  const seen=hzSeen();const newReqs=providerOpenRequests(p,reqs).filter(r=>r.id&&!seen['r:'+r.id]);
