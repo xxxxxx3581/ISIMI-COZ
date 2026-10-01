@@ -2422,9 +2422,26 @@ function listingPhotosFromRow(row){
   }catch(e){}
   return [];
 }
+/* İlan fotoğrafını yüklemeden önce tarayıcıda küçült (uzun kenar en fazla 1600 px, WEBP; desteklenmezse JPEG).
+   GIF ve küçültülemeyen dosyalar olduğu gibi gider; sonuç büyükse orijinal kullanılır. */
+async function shrinkListingPhoto(file){
+  if(!/^image\/(jpeg|png|webp)$/.test(file.type||''))return file;
+  try{
+    const img=await new Promise(function(res,rej){const i=new Image();i.onload=function(){res(i)};i.onerror=rej;i.src=URL.createObjectURL(file);});
+    const sc=Math.min(1,1600/Math.max(img.naturalWidth,img.naturalHeight));
+    const w=Math.max(1,Math.round(img.naturalWidth*sc)),h=Math.max(1,Math.round(img.naturalHeight*sc));
+    const cv=document.createElement('canvas');cv.width=w;cv.height=h;cv.getContext('2d').drawImage(img,0,0,w,h);URL.revokeObjectURL(img.src);
+    let out=await new Promise(function(r){cv.toBlob(function(b){r(b)},'image/webp',0.82)});
+    if(!out||out.type!=='image/webp')out=await new Promise(function(r){cv.toBlob(function(b){r(b)},'image/jpeg',0.85)});
+    if(out&&out.size>0&&out.size<file.size)return out;
+  }catch(e){}
+  return file;
+}
 async function uploadListingPhoto(ownerId, listingId, file, token){
   if(!file||!token)throw new Error('Fotoğraf yükleme için giriş gerekli.');
   if(!(file.type&&file.type.indexOf('image/')===0))throw new Error('Sadece görsel dosyaları yüklenebilir.');
+  const small=await shrinkListingPhoto(file);
+  if(small!==file){const ext=small.type==='image/webp'?'.webp':'.jpg';file=new File([small],String(file.name||'photo').replace(/\.[^.]*$/,'')+ext,{type:small.type});}
   if(file.size>5*1024*1024)throw new Error('Her fotoğraf en fazla 5 MB olabilir.');
   const safeName=String(file.name||'photo.jpg').replace(/[^a-zA-Z0-9._-]/g,'_').slice(0,80)||'photo.jpg';
   const path=ownerId+'/'+listingId+'/'+Date.now()+'-'+safeName;
