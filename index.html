@@ -4,6 +4,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="theme-color" content="#07111f">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="İşimi Çöz">
 <title>İşimi Çöz — İzmir</title>
 <script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('isimi-theme')==='light'?'light':'dark')}catch(e){}</script>
 <script>/* Şifre sıfırlama dönüşü (Supabase recovery): token yalnız bellekte tutulur, URL'den hemen silinir */
@@ -1439,6 +1444,19 @@ async function supabaseWrite(method,path,body,opts){
 
 
 
+/* A-paketi: sunucu fonksiyonu çağrısı. Fonksiyon henüz yoksa (404) {__missing:true} döner; eski akış yedek olarak çalışır. */
+async function hzRpc(name,body){
+  await v2EnsureFreshToken();
+  const s=getAuthSession(),t=s&&s.access_token;
+  if(!t)throw new Error('Bu işlem için giriş yapmalısın.');
+  const r=await fetch(SUPABASE_URL+'/rest/v1/rpc/'+name,{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+t,'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(body||{})});
+  const txt=await r.text();let d=null;try{d=txt?JSON.parse(txt):null}catch(e){d=txt}
+  if(r.status===404&&d&&(d.code==='PGRST202'||/function/i.test(String(d.message||''))))return {__missing:true};
+  if(!r.ok)throw new Error((d&&(d.message||d.details||d.hint))||('İşlem başarısız ('+r.status+')'));
+  return d;
+}
+function hzErrText(e){return String((e&&e.message)||e||'').replace(/^[A-Z_]+:\s*/,'')}
+
 function normalize(v){
  return String(v??"").trim().toLowerCase()
  .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
@@ -1614,7 +1632,7 @@ async function hzProviderPhone(pid){
 }
 async function loadProvidersFromSupabase(){
  try{
-  const rows=await supabaseRequest("GET","providers?select=id,name,district,description,active,created_at,city,services,updated_at,user_id,owner_id,logo_url,availability,lat,lng&limit=500"); /* telefon herkese açık okunmaz; yetkiliye hzProviderPhone ile gelir */
+  const rows=await supabaseRequest("GET","providers?select=id,name,district,description,active,created_at,city,services,updated_at,user_id,owner_id,logo_url,availability&limit=500"); /* telefon ve konum herkese açık okunmaz; telefon yetkiliye hzProviderPhone ile gelir */
   if(!Array.isArray(rows))return [];
   const providers=rows.map(mapProvider);
   setConnection(true,"SB");
@@ -1652,6 +1670,7 @@ function mapProvider(r){
   active:pick(r,["active","aktif"],true)!==false,
   owner_id:r.owner_id||null,
   user_id:r.user_id||null,
+  availability:r.availability||'now',
   services:Array.isArray(r.services)?r.services.filter(Boolean).map(serviceKeyFromValue):[]   /* providers.services kolonu kategorilerin asıl kaynağı */
  };
 }
@@ -2260,10 +2279,9 @@ function myListingsBack(){
 function myListingStatusMeta(status){
   const s=String(status||'draft').toLowerCase();
   if(s==='published') return {label:'Yayında', emoji:'🟢', key:'published'};
-  if(s==='passive'||s==='paused') return {label:'Pasif', emoji:'⏸️', key:'passive'};
+  if(s==='passive'||s==='paused'||s==='archived') return {label:'Yayında değil', emoji:'⏸️', key:'passive'};
   if(s==='sold') return {label:'Satıldı', emoji:'🏷️', key:'sold'};
   if(s==='rented') return {label:'Kiralandı', emoji:'🏷️', key:'rented'};
-  if(s==='archived') return {label:'Arşiv', emoji:'🗄️', key:'archived'};
   return {label:'Taslak', emoji:'📝', key:'draft'};
 }
 function myListingMissingHints(row){
@@ -2302,6 +2320,9 @@ function myListingNextStep(row){
   if(st.key!=='sold'&&st.key!=='rented'&&st.key!=='archived') more.push(['✎ İlanı düzenle',edit]);
   if(st.key==='published') more.push(['⏸ Yayından kaldır',"v2SetListingStatus('"+id+"','"+type+"','passive')"]);
   if(st.key==='published') more.push(['📄 Resmî işlem hazırlığı',"openOfficialPrepGate('"+id+"','"+kind+"')"]);
+  var susp=!!(row.metadata&&(row.metadata.pf_suspended===true||row.metadata.pf_suspended==='true'));
+  if(susp) return {hint:'Bu ilan moderasyon nedeniyle askıda. Ayrıntı için destekle iletişime geçebilirsin.',label:'',onclick:'',more:[['👁 İlanı görüntüle',detail]]};
+  more.push(['🗑 İlanı sil',"v2DeleteListing('"+id+"','"+type+"')"]);
   if(st.key==='draft') return miss.length?
     {hint:'Eksik: '+miss.join(', ')+'.',label:'İlanı tamamla →',onclick:edit,more:more}:
     {hint:'İlanın hazır. Yayınlayınca alıcılar görebilir.',label:'İlanı yayınla →',onclick:"republishMyListing('"+id+"','"+type+"')",more:more};
@@ -3032,7 +3053,14 @@ function gmOnCategoryChange(){
   if(ix) ix.style.display=isIsyeri?'block':'none';
 }
 
+/* Açılış kilidi: kategori kapalıysa ilan verme akışı açılmaz (sunucu da yayını engeller) */
+function v2ListingTypeClosed(type){
+  try{ var st=window.PF&&PF.settings; var k=type==='otomobil'?'listings_arac_enabled':'listings_emlak_enabled';
+    if(st&&st[k]===false){ alert((type==='otomobil'?'Araç':'Emlak')+' ilanı verme yakında açılacak. Resmî ilan doğrulama sistemi (EİDS) bağlantısı tamamlanınca bu bölüm açılır.'); return true; } }catch(e){}
+  return false;
+}
 function showGayrimenkulCreateForm(){
+  if(v2ListingTypeClosed('gayrimenkul')) return;
   const session=typeof getAuthSession==='function'?getAuthSession():null;
   if(!session||!session.user||!session.user.id){
     app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showGayrimenkulHub()">← Gayrimenkul</button></div>
@@ -3871,6 +3899,7 @@ function otoParseEdit(){
 }
 
 function startOtomobilWizard(){
+  if(v2ListingTypeClosed('otomobil')) return;
   const session=typeof getAuthSession==='function'?getAuthSession():null;
   if(!session||!session.user||!(session.user.id||session.user.user_id)){
     app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showOtomobilHub()">← Otomobil</button></div>
@@ -4585,6 +4614,10 @@ async function submitOffer(talepNo){
   if(!fiyatRaw){alert('Lütfen fiyat girin (ör. 2500).');return;}
   const fiyatNum=Number(String(fiyatRaw).replace(',','.').replace(/[^0-9.]/g,''));
   if(!fiyatNum||fiyatNum<=0){alert('Geçerli bir fiyat girin.');return;}
+  if(window.__hzOfferBusy)return;
+  window.__hzOfferBusy=true;
+  const sendBtn=document.querySelector('[onclick^="submitOffer("]');
+  if(sendBtn){sendBtn.disabled=true;sendBtn.textContent='GÖNDERİLİYOR...';}
   try{
     let requestId=null;
     const local=(getRequests()||[]).find(function(x){
@@ -4617,7 +4650,10 @@ async function submitOffer(talepNo){
     if(typeof showProviderRequestDetail==='function')showProviderRequestDetail(talepNo);
   }catch(e){
     console.error(e);
-    alert('Teklif gönderilemedi.\n\n'+(e.message||e));
+    alert('Teklif gönderilemedi.\n\n'+hzErrText(e));
+  }finally{
+    window.__hzOfferBusy=false;
+    if(sendBtn&&document.body.contains(sendBtn)){sendBtn.disabled=false;sendBtn.textContent='Teklif Gönder';}
   }
 }
 
@@ -4636,6 +4672,9 @@ async function acceptOffer(talepNo,offerId,providerName,price){
     if(!r.user_id){
       throw new Error('Bu talep sahipsiz (user_id boş). Eski kayıtlar kabul edilemez. Lütfen giriş yapıp YENİ talep oluşturun.');
     }
+    // Sunucuda tek işlemde kabul (teklif kabul + diğerleri red + talep "devam ediyor"). Fonksiyon yoksa eski adımlar.
+    const srv=await hzRpc('hz_accept_offer',{p_offer_id:String(offerId)});
+    if(srv&&srv.__missing){
     // 1) accept offer — must return row
     const off=await supabaseWrite('PATCH','offers?id=eq.'+encodeURIComponent(String(offerId)),{status:'accepted'});
     if(!off||(Array.isArray(off)&&(!off[0]||off[0].status!=='accepted'))){
@@ -4657,6 +4696,9 @@ async function acceptOffer(talepNo,offerId,providerName,price){
     if(!req||(Array.isArray(req)&&(!req[0]||req[0].status!=='accepted'))){
       throw new Error('Talep durumu accepted olarak yazılamadı.');
     }
+    }else if(!srv||String(srv.status)!=='accepted'){
+      throw new Error('Teklif kabul edilemedi. Sayfayı yenileyip tekrar dene.');
+    }
     // Cache only AFTER verified DB write
     try{
       const list=(getRequests()||[]).map(function(x){
@@ -4671,7 +4713,7 @@ async function acceptOffer(talepNo,offerId,providerName,price){
     await showRequestDetail(talepNo);
   }catch(e){
     console.error(e);
-    alert('Teklif kabul edilemedi.\n\n'+(e.message||e));
+    alert('Teklif kabul edilemedi.\n\n'+hzErrText(e));
   }
 }
 
@@ -4908,6 +4950,33 @@ async function showRequestDetail(talepNo,force){
   }
 }
 
+/* Müşteri: talebi iptal (sunucuda hz_cancel_request; bekleyen teklifler reddedilir) */
+function hzFillCancelSlot(r,no){
+  const el=document.getElementById('hzCancelSlot');if(!el)return;
+  const st=String(r.status||r.durum||'').toLocaleLowerCase('tr').replace(/\u0307/g,'');
+  if(st.indexOf('iptal')>=0||st==='cancelled'||st==='canceled'){el.innerHTML='<div class="notice">Bu talep iptal edildi.</div>';return;}
+  if(st.indexOf('tamam')>=0||st==='completed'){el.innerHTML='';return;}
+  el.innerHTML='<button type="button" class="btn secondary" style="width:100%" onclick=\'hzCancelRequest('+escapeHTML(JSON.stringify(no))+')\'>Talebi iptal et</button><div class="small muted" style="margin-top:6px;text-align:center">İptal edince bekleyen teklifler kapanır, ustalara bildirilir.</div>';
+}
+async function hzCancelRequest(talepNo){
+  try{
+    const r=await findRequestByNo(talepNo);
+    if(!r||!r.id)throw new Error('Talep bulunamadı.');
+    const reason=prompt('Talebi neden iptal ediyorsun? (isteğe bağlı)\nÖrn: Başka bir usta buldum / Artık gerek kalmadı','');
+    if(reason===null)return;
+    if(!confirm('Talep iptal edilsin mi? Bu işlem geri alınamaz.'))return;
+    const out=await hzRpc('hz_cancel_request',{p_request_id:String(r.id),p_reason:reason||null});
+    if(out&&out.__missing){
+      const rows=await supabaseWrite('PATCH','requests?id=eq.'+encodeURIComponent(String(r.id)),{status:'cancelled'});
+      if(!rows||(Array.isArray(rows)&&!rows[0]))throw new Error('Talep iptal edilemedi.');
+    }else if(!out||String(out.status)!=='cancelled'){
+      throw new Error('Talep iptal edilemedi. Sayfayı yenileyip tekrar dene.');
+    }
+    try{write(KEYS.requests,(getRequests()||[]).map(function(x){if(String(x.talep_no||'')===String(talepNo)||String(x.id)===String(r.id)){x.status='İptal';x.durum='İptal';}return x;}));}catch(e){}
+    alert('Talebin iptal edildi.');
+    await showRequestDetail(talepNo);
+  }catch(e){console.error(e);alert('Talep iptal edilemedi.\n\n'+hzErrText(e));}
+}
 async function showRequestDetailData(r){
   r=applyLocalJobState(r||{});
   const k=serviceKeyFromValue(r.service||r.kategori);
@@ -4940,13 +5009,16 @@ async function showRequestDetailData(r){
     <div id="inlineCompleteSlot"></div>
   </div>
   <div id="jobActionBox" style="margin-top:12px"></div>
-  <div class="section"><h2>Gelen teklifler</h2><div id="offersBox" class="card" style="text-align:center">⏳ Teklifler yükleniyor...</div></div>`);
+  <div class="section"><h2>Gelen teklifler</h2><div id="offersBox" class="card" style="text-align:center">⏳ Teklifler yükleniyor...</div></div>
+  <div id="hzCancelSlot" style="margin-top:14px"></div>`);
+  hzFillCancelSlot(r,no);
   const box=document.getElementById('offersBox');
   const jobBox=document.getElementById('jobActionBox');
   const inlineSlot=document.getElementById('inlineCompleteSlot');
   try{if(window.PF&&PF.enabled&&PF.fillRequestContact)PF.fillRequestContact()}catch(e){}
   let offers=[];
   try{offers=await loadOffersForRequest(no);}catch(e){console.warn(e);offers=[];}
+  offers=(offers||[]).filter(function(o){return String(o.status||'').toLowerCase()!=='withdrawn'});
   try{
     for(let i=0;i<(offers||[]).length;i++){
       const pid=offers[i].provider_id;
@@ -5030,6 +5102,16 @@ async function showRequestDetailData(r){
 
 
 
+/* Usta: bekleyen teklifini geri çeker (sunucu kuralı: yalnız bekleyen teklif) */
+async function hzWithdrawOffer(offerId,talepNo){
+  if(!confirm('Teklifin geri çekilsin mi? Müşteri bu teklifi artık göremez.'))return;
+  try{
+    const rows=await supabaseWrite('PATCH','offers?id=eq.'+encodeURIComponent(String(offerId)),{status:'withdrawn'});
+    if(!rows||(Array.isArray(rows)&&!rows[0]))throw new Error('Teklif geri çekilemedi.');
+    alert('Teklifin geri çekildi.');
+  }catch(e){console.error(e);alert('Teklif geri çekilemedi.\n\n'+hzErrText(e));}
+  showProviderRequestDetail(talepNo);
+}
 async function showProviderRequestDetail(talepNo){
   const r=await findRequestByNo(talepNo);
   if(!r){alert('Talep bulunamadı.');return;}
@@ -5071,6 +5153,20 @@ async function showProviderRequestDetail(talepNo){
   }else{
     // fallback: allow complete if not pending
     actions=`<button type="button" class="btn primary" style="width:100%;margin-top:12px" onclick='completeRequest(${JSON.stringify(no)})'>🏁 İşi Tamamlandı</button>`;
+  }
+  /* Ustanın bu talepteki kendi teklifi: varsa ikinci teklif formu yerine teklifi ve "geri çek" gösterilir */
+  if(isPending&&r.id){
+    try{
+      const mineIds=(await v2MyProviders()).map(function(p){return String(p.id)});
+      const rows=mineIds.length?await supabaseReadAuth('GET','offers?select=id,price,available_time,note,status,provider_id&request_id=eq.'+encodeURIComponent(String(r.id))):[];
+      const my=(Array.isArray(rows)?rows:[]).find(function(o){return mineIds.indexOf(String(o.provider_id))>=0&&String(o.status)==='pending'});
+      if(my){
+        actions=`<div class="card" style="margin-top:12px"><strong>Teklifin gönderildi</strong>
+          <div class="description" style="margin-top:8px"><strong>${escapeHTML(String(my.price))} TL</strong>${my.note?' — '+escapeHTML(my.note):''}<div class="small muted" style="margin-top:4px">Ne zaman: ${escapeHTML(my.available_time||'')}</div></div>
+          <div class="small muted" style="margin-top:6px">Müşteri teklifini seçerse bildirim alırsın; telefon numarası o zaman açılır.</div>
+          <button type="button" class="btn secondary" style="width:100%;margin-top:10px" onclick='hzWithdrawOffer(${JSON.stringify(String(my.id))},${JSON.stringify(no)})'>Teklifi geri çek</button></div>`;
+      }
+    }catch(e){console.warn(e)}
   }
   app(`<div class="back"><button type="button" class="btn secondary smallBtn" onclick="showProviderEntry()">← Sağlayıcı paneline dön</button></div>
   <span class="badge">🛠️ TALEP</span>
@@ -5186,8 +5282,67 @@ async function v2MyProviders(){
 async function showProviderEntry(){
  setNav("navProvider");
  const logged=!!(getAuthSession()&&getAuthSession().user);
- app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div><div class="formCard"><span class="badge">🛠️ HİZMET SAĞLAYICI</span><h1>Gelen Talepler</h1><p class="muted small">Talepler kategoriye ve ilçeye göre ilgili ustalara düşer. Hesabını seç, açık talepleri gör ve teklif ver.</p>${logged?'':'<div class="warning" style="margin-top:10px">Talepleri görmek ve teklif vermek için giriş yapmalısın. <button type="button" class="btn secondary smallBtn" onclick="openAuthModal(\'login\')">Giriş yap</button></div>'}<div id="providerDirectory"></div></div>`);
+ app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div><div class="formCard"><span class="badge">🛠️ HİZMET SAĞLAYICI</span><h1>Gelen Talepler</h1><p class="muted small">Talepler kategoriye ve ilçeye göre ilgili ustalara düşer. Hesabını seç, açık talepleri gör ve teklif ver.</p>${logged?'':'<div class="warning" style="margin-top:10px">Talepleri görmek ve teklif vermek için giriş yapmalısın. <button type="button" class="btn secondary smallBtn" onclick="openAuthModal(\'login\')">Giriş yap</button></div>'}<div id="hzMyProviderBox"></div><div id="providerDirectory"></div></div>`);
+ if(logged)hzRenderMyProviderBox();
  await loadProviderDirectory();
+}
+/* Usta kaydı: kendi kaydını oluşturma / düzenleme. Yeni kayıt yönetici onayına kadar pasiftir (sunucu kuralı). */
+async function hzRenderMyProviderBox(){
+ const box=document.getElementById('hzMyProviderBox');if(!box)return;
+ window.__myProv=null;let mine=[];try{mine=await v2MyProviders();}catch(e){mine=[];}
+ if(!document.body.contains(box))return;
+ if(!mine.length){
+  box.innerHTML='<div class="card" style="margin-top:12px"><strong>🛠️ Usta olarak hizmet vermek ister misin?</strong><p class="small muted" style="margin:6px 0 10px">Kategorini ve çalıştığın ilçeyi seç. Başvurun onaylanınca bölgendeki talepleri görür ve teklif verirsin.</p><button type="button" class="btn primary" style="width:100%" onclick="hzProviderForm(null)">Usta başvurusu yap</button></div>';
+  return;
+ }
+ box.innerHTML=mine.map(function(p){
+  const st=p.active?'<span class="status">✅ Onaylı</span>':'<span class="status">⏳ Onay bekliyor</span>';
+  const busy=String(p.availability||'now')==='busy';
+  return '<div class="card" style="margin-top:12px"><div class="requestTop"><div><strong>'+escapeHTML(p.name)+'</strong><div class="small muted">'+escapeHTML(p.district||'')+' · '+escapeHTML((p.services||[]).map(function(k){return (SERVICES[k]&&SERVICES[k].name)||k}).join(', '))+'</div></div>'+st+'</div>'+
+   (p.active?(busy?'<div class="small muted" style="margin-top:8px">Şu an "müsait değilim" olarak görünüyorsun; yeni talep bildirimi almazsın.</div>':''):'<div class="small muted" style="margin-top:8px">Başvurun yönetici onayında. Onaylanınca bölgendeki talepleri görüp teklif verebilirsin.</div>')+
+   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px"><button type="button" class="btn secondary" onclick=\'hzProviderForm('+escapeHTML(JSON.stringify(String(p.id)))+')\'>Bilgilerimi düzenle</button>'+
+   (p.active?'<button type="button" class="btn secondary" onclick=\'hzToggleBusy('+escapeHTML(JSON.stringify(String(p.id)))+','+(busy?'false':'true')+')\'>'+(busy?'Müsaitim':'Müsait değilim')+'</button>':'<span></span>')+'</div></div>';
+ }).join('');
+}
+async function hzProviderForm(id){
+ if(!(getAuthSession()&&getAuthSession().user)){openAuthModal('login');return;}
+ let p=null;
+ if(id){p=(await v2MyProviders()).find(function(x){return String(x.id)===String(id)})||null;if(p&&!p.phone){try{p.phone=await hzProviderPhone(p.id)}catch(e){}}}
+ const sv=(p&&p.services)||[];
+ app('<div class="back"><button type="button" class="btn secondary smallBtn" onclick="showProviderEntry()">← Geri</button></div><div class="formCard"><span class="badge">🛠️ USTA KAYDI</span><h1>'+(p?'Bilgilerimi düzenle':'Usta başvurusu')+'</h1>'+
+  '<label style="display:block;margin-top:8px">Ad soyad veya işletme adı *</label><input id="hzpName" maxlength="80" value="'+escapeHTML((p&&p.name)||'')+'" style="width:100%;box-sizing:border-box;padding:12px;border-radius:12px;border:1px solid var(--line)">'+
+  '<label style="display:block;margin-top:8px">Telefon *</label><input id="hzpPhone" type="tel" inputmode="tel" maxlength="16" placeholder="05XX XXX XX XX" value="'+escapeHTML((p&&p.phone)||'')+'" style="width:100%;box-sizing:border-box;padding:12px;border-radius:12px;border:1px solid var(--line)"><div class="small muted">Numaran yalnız teklifini kabul eden müşteriye gösterilir.</div>'+
+  '<label style="display:block;margin-top:8px">Çalıştığın ilçe (İzmir) *</label><select id="hzpDistrict" style="width:100%;box-sizing:border-box;padding:12px;border-radius:12px;border:1px solid var(--line)"><option value="">İlçe seç</option>'+DISTRICTS.map(function(d){return '<option'+((p&&p.district)===d?' selected':'')+'>'+escapeHTML(d)+'</option>'}).join('')+'</select>'+
+  '<label style="display:block;margin-top:8px">Hizmet kategorilerin * <span class="small muted">(en fazla 8)</span></label><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px">'+Object.entries(SERVICES).map(function(e){return '<label class="small" style="display:flex;gap:6px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:10px"><input type="checkbox" class="hzpSvc" value="'+escapeHTML(e[0])+'"'+(sv.indexOf(e[0])>=0?' checked':'')+'> '+e[1].emoji+' '+escapeHTML(e[1].name)+'</label>'}).join('')+'</div>'+
+  '<label style="display:block;margin-top:8px">Kısa tanıtım (isteğe bağlı)</label><textarea id="hzpDesc" maxlength="500" style="width:100%;box-sizing:border-box;min-height:80px;padding:12px;border-radius:12px;border:1px solid var(--line)">'+escapeHTML((p&&p.description)||'')+'</textarea>'+
+  (p?'':'<div class="small muted" style="margin-top:8px">Başvurun yönetici tarafından incelenir. Onaylanınca bölgendeki talepleri görüp teklif verebilirsin.</div>')+
+  '<button type="button" id="hzpSave" class="btn primary" style="width:100%;margin-top:12px" onclick=\'hzSaveProvider('+escapeHTML(JSON.stringify(p?String(p.id):null))+')\'>'+(p?'Kaydet':'Başvuruyu gönder')+'</button></div>');
+}
+async function hzSaveProvider(id){
+ const btn=document.getElementById('hzpSave');if(btn&&btn.disabled)return;
+ const services=[...document.querySelectorAll('.hzpSvc:checked')].map(function(x){return x.value});
+ const body={p_id:id||null,p_name:(document.getElementById('hzpName').value||'').trim(),p_phone:(document.getElementById('hzpPhone').value||'').trim(),p_district:document.getElementById('hzpDistrict').value,p_services:services,p_description:(document.getElementById('hzpDesc').value||'').trim()||null,p_availability:null};
+ if(body.p_name.length<3)return alert('Ad / işletme adı en az 3 karakter olmalı.');
+ if(!body.p_district)return alert('Çalıştığın ilçeyi seç.');
+ if(!services.length)return alert('En az bir hizmet kategorisi seç.');
+ if(services.length>8)return alert('En fazla 8 kategori seçebilirsin.');
+ if(btn){btn.disabled=true;btn.textContent='KAYDEDİLİYOR...';}
+ try{
+  const out=await hzRpc('hz_save_my_provider',body);
+  if(out&&out.__missing)throw new Error('Usta kaydı şu an açılamıyor. Lütfen biraz sonra tekrar dene.');
+  window.__myProv=null;
+  alert(id?'Bilgilerin kaydedildi.':'Başvurun alındı. Yönetici onayından sonra bölgendeki talepleri görüp teklif verebilirsin.');
+  showProviderEntry();
+ }catch(e){console.error(e);alert('Kaydedilemedi.\n\n'+hzErrText(e));if(btn&&document.body.contains(btn)){btn.disabled=false;btn.textContent=id?'Kaydet':'Başvuruyu gönder';}}
+}
+async function hzToggleBusy(id,busy){
+ try{
+  const p=(await v2MyProviders()).find(function(x){return String(x.id)===String(id)});if(!p)return;
+  let ph='';try{ph=await hzProviderPhone(p.id)}catch(e){}
+  const out=await hzRpc('hz_save_my_provider',{p_id:p.id,p_name:p.name,p_phone:ph,p_district:p.district,p_services:p.services||[],p_description:p.description||null,p_availability:busy?'busy':'now'});
+  if(out&&out.__missing)throw new Error('Bu ayar şu an değiştirilemiyor.');
+  window.__myProv=null;hzRenderMyProviderBox();
+ }catch(e){alert('Değiştirilemedi.\n\n'+hzErrText(e));}
 }
 
 /* Açık (henüz karşılanmamış) ve sağlayıcının kategori/ilçesine uyan talepler. Tamamlanan/iptal/devam eden işler listeye girmez. */
@@ -5222,7 +5377,7 @@ function renderProviderCard(p){
      </div>
      <div class="small muted" style="margin-top:6px">📞 ${escapeHTML(phone)}</div>`
   : (p._own?`<div class="warning">Telefon numaran kayıtlı değil.</div>`:"");
- return `<article class="request"><div class="requestTop"><div><h3>🛠️ ${escapeHTML(p.name)}</h3><div class="small muted">${escapeHTML(p.city)} • ${escapeHTML(p.district)}</div></div><span class="status">${p.active?"Aktif":"Pasif"}</span></div><div class="meta"><span>🔧 ${escapeHTML(cats)}</span>${p._open!=null?`<span><strong>📋 ${p._open} açık talep</strong></span>`:""}${p._own?`<span>✅ Senin hesabın</span>`:""}${p._hz?`<span class="hzDot">${p._hz} YENİ</span>`:""}${p.neighborhood?`<span>🏘️ ${escapeHTML(p.neighborhood)}</span>`:""}</div>${p.description?`<div class="description">${escapeHTML(p.description)}</div>`:""}${phoneBlock}<br><button type="button" class="btn secondary" onclick='openProviderById(${JSON.stringify(String(p.id))})'>📋 UYGUN TALEPLERİ GÖR</button></article>`;
+ return `<article class="request"><div class="requestTop"><div><h3>🛠️ ${escapeHTML(p.name)}</h3><div class="small muted">${escapeHTML(p.city)} • ${escapeHTML(p.district)}</div></div><span class="status">${p.active?"Aktif":(p._own?"Onay bekliyor":"Pasif")}</span></div><div class="meta"><span>🔧 ${escapeHTML(cats)}</span>${p._open!=null?`<span><strong>📋 ${p._open} açık talep</strong></span>`:""}${p._own?`<span>✅ Senin hesabın</span>`:""}${p._hz?`<span class="hzDot">${p._hz} YENİ</span>`:""}${p.neighborhood?`<span>🏘️ ${escapeHTML(p.neighborhood)}</span>`:""}</div>${p.description?`<div class="description">${escapeHTML(p.description)}</div>`:""}${phoneBlock}<br><button type="button" class="btn secondary" onclick='openProviderById(${JSON.stringify(String(p.id))})'>📋 UYGUN TALEPLERİ GÖR</button></article>`;
 }
 
 async function openProviderById(id){
@@ -5255,7 +5410,7 @@ async function hzFillCardContacts(){
   let c=null;try{c=await supabaseWrite('POST','rpc/pf_request_contact',{p_request_id:el.getAttribute('data-req')});}catch(e){}
   if(!document.body.contains(el))continue;
   const ph=c&&c.visible&&c.phone?String(c.phone):'';
-  if(!ph){el.innerHTML='<div class="warning">Bu talepte telefon numarası bulunmuyor.</div>';continue;}
+  if(!ph){el.innerHTML='<div class="small muted" style="margin-top:8px">📞 Müşteri telefonu, teklifin kabul edilince görünür.</div>';continue;}
   const tel=telHref(ph),wa=whatsappHref(ph);
   el.innerHTML='<div class="meta" style="margin-top:8px"><span>📞 '+escapeHTML(ph)+'</span></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px">'+
    (tel?'<a class="btn secondary" style="text-align:center;text-decoration:none" href="'+tel+'">📞 Ara</a>':'')+
@@ -5953,6 +6108,7 @@ function v2OwnerToolbarHtml(row,type){
   return '<section class="v2Own" aria-label="İlan yönetimi"><div class="v2OwnT">👤 Bu senin ilanın · '+st.emoji+' '+st.label+'</div>'+
     '<div class="v2OwnBtns"><button type="button" class="v2Btn sm" onclick="'+edit+'">✎ Düzenle</button>'+act+
     (st.key==='published'?'<button type="button" class="v2Btn sm" onclick="return shareListingLink(event)">↗ Paylaş</button>':'')+
+    ((md.pf_suspended===true||md.pf_suspended==='true')?'':'<button type="button" class="v2Btn sm ghost" onclick="v2DeleteListing(\''+id+'\',\''+type+'\')">🗑 Sil</button>')+
     '<button type="button" class="v2Btn sm ghost" onclick="openMyListings()">📂 İlanlarım</button></div>'+
     (hints.length?'<div class="v2Hints"><span>Eksik:</span>'+hints.map(function(h){ return '<button type="button" onclick="'+h[1]+'">'+h[0]+'</button>'; }).join('')+'</div>':'')+'</section>';
 }
@@ -6399,6 +6555,7 @@ function v2ShareMine(id,type){ window.__activeListingRow={id:id,title:'İlan'}; 
 async function v2SetListingStatus(id,type,status,then){
   id=v2Id(id);
   if(status==='passive'&&!confirm('Bu ilan yayından kaldırılsın mı? İstediğin zaman tekrar yayınlayabilirsin.')) return;
+  if(status==='passive') status='archived'; /* veritabanı şeması: draft/published/reserved/sold/archived */
   var s=getAuthSession();
   if(!(s&&s.user&&(s.access_token||s.accessToken))){ openAuthModal('login'); return; }
   try{
@@ -6410,6 +6567,30 @@ async function v2SetListingStatus(id,type,status,then){
     if(then==='ws'){ V2_NAV.replaceNext=true; return v2Workspace(id,type); }
     window.__mineSeg='listings'; window.__mineStatus='all'; showMine();
   }catch(err){ console.error('v2SetListingStatus',err); alert((err&&err.message)?err.message:String(err)); }
+}
+
+/* İlan sahibi: ilanı kalıcı sil. Sunucu kontrolü (askı / açık şikâyet) + fotoğrafların silinmesi. */
+async function v2DeleteListing(id,type){
+  id=v2Id(id);
+  var s=getAuthSession();
+  if(!(s&&s.user&&(s.access_token||s.accessToken))){ openAuthModal('login'); return; }
+  if(!confirm('Bu ilan ve fotoğrafları kalıcı olarak silinsin mi? Bu işlem geri alınamaz.\n\nSadece yayından kaldırmak istersen "Yayından kaldır"ı kullan.')) return;
+  try{
+    var out=await hzRpc('pf_delete_my_listing',{p_listing_id:id});
+    if(out&&out.__missing) throw new Error('Silme şu an yapılamıyor. İstersen ilanı yayından kaldırabilirsin.');
+    var paths=(out&&Array.isArray(out.storage_paths))?out.storage_paths.filter(function(x){return typeof x==='string'&&x;}):[];
+    if(paths.length){
+      try{
+        await v2EnsureFreshToken(); var t=(getAuthSession()||{}).access_token;
+        await fetch(SUPABASE_URL+'/storage/v1/object/listing-photos',{method:'DELETE',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+t,'Content-Type':'application/json'},body:JSON.stringify({prefixes:paths})});
+      }catch(e){ console.warn('İlan fotoğrafları silinemedi',e); }
+    }
+    try{ var fav=JSON.parse(localStorage.getItem('listing_favs')||'[]'); if(Array.isArray(fav)) localStorage.setItem('listing_favs',JSON.stringify(fav.filter(function(x){return String(x&&x.id||x)!==String(id);}))); }catch(e){}
+    try{ var rec=JSON.parse(localStorage.getItem('recent_listings')||'[]'); if(Array.isArray(rec)) localStorage.setItem('recent_listings',JSON.stringify(rec.filter(function(x){return String(x&&x.id||x)!==String(id);}))); }catch(e){}
+    __listingCache.gayrimenkul=[]; __listingCache.otomobil=[];
+    v2Toast('İlan silindi');
+    window.__mineSeg='listings'; window.__mineStatus='all'; showMine();
+  }catch(err){ console.error('v2DeleteListing',err); alert('İlan silinemedi.\n\n'+hzErrText(err)); }
 }
 
 async function v2EditListing(id,type,from){
@@ -6719,7 +6900,7 @@ async function v2SellFlow(subject,text){
   if(!(s&&s.user&&(s.access_token||s.accessToken))){ v2Toast('Devam etmek için giriş yap.'); openAuthModal('login'); return; }
   try{
     var rows=await supabaseAuthRequest('GET','listings?owner_id=eq.'+encodeURIComponent(s.user.id)+'&listing_type=eq.'+type+'&order=created_at.desc&select=id,title,status,category,price,currency,metadata,created_at&limit=20');
-    rows=(Array.isArray(rows)?rows:[]).filter(function(r){ var k=myListingStatusMeta(r.status).key; return k!=='sold'&&k!=='rented'&&k!=='archived'; });
+    rows=(Array.isArray(rows)?rows:[]).filter(function(r){ var k=myListingStatusMeta(r.status).key; return k!=='sold'&&k!=='rented'&&String(r.status)!=='archived'; });
     if(!rows.length) return v2StartSale(type,text);
     if(rows.length===1) return v2Workspace(rows[0].id,type);
     v2Sheet('v2Pick','<div class="v2SH"><strong>Hangi ilan için?</strong><button type="button" class="lnk" onclick="v2SheetClose(\'v2Pick\')">Kapat</button></div><div class="v2CList">'+
@@ -6805,7 +6986,7 @@ function v2PickContinue(state){
   var best=null;
   (state.listings||[]).forEach(function(r){
     var type=r.listing_type==='otomobil'?'otomobil':'gayrimenkul', k=myListingStatusMeta(r.status).key;
-    if(k==='sold'||k==='rented'||k==='archived') return;
+    if(k==='sold'||k==='rented'||String(r.status)==='archived') return;
     var pr=v2WsProgress(r,type);
     if(pr.completed) return;
     /* Sadece gerçekten başlanmış hazırlıklar: dokunulmamış taslak "Devam et" zinciri oluşturmasın */
@@ -6987,7 +7168,7 @@ async function submitAuth(mode){
  if(password.length<6){if(err)err.innerHTML='<div class="authError">Şifre en az 6 karakter olmalı.</div>';return}
  btn.disabled=true;btn.textContent='BEKLEYİN...';
  try{
-   let url=SUPABASE_URL+'/auth/v1/'+(mode==='signup'?'signup':'token?grant_type=password');
+   let url=SUPABASE_URL+'/auth/v1/'+(mode==='signup'?'signup?redirect_to='+encodeURIComponent(location.origin+location.pathname):'token?grant_type=password');
    const r=await fetch(url,{method:'POST',headers:{"apikey":SUPABASE_KEY,"Content-Type":"application/json"},body:JSON.stringify({email,password})});
    const data=await r.json().catch(()=>({}));
    if(!r.ok)throw new Error(data.error_description||data.msg||data.message||'Kimlik doğrulama başarısız.');
@@ -6995,7 +7176,29 @@ async function submitAuth(mode){
       closeAuthModal(); alert('Kayıt tamamlandı. E-posta doğrulaması açıksa gelen kutunu kontrol et, ardından giriş yap.'); return;
    }
    saveAuthSession(data); closeAuthModal(); alert(mode==='signup'?'Hesap oluşturuldu. ✓':'Giriş başarılı. ✓');
- }catch(e){if(err)err.innerHTML='<div class="authError">'+escapeHTML(e.message||String(e))+'</div>';}finally{if(btn){btn.disabled=false;btn.textContent=buttonText(mode)}}
+ }catch(e){
+   const m=String((e&&e.message)||e||'');
+   if(err){
+     if(/not confirmed|email_not_confirmed/i.test(m)){
+       err.innerHTML='<div class="authError">E-posta adresin henüz doğrulanmamış. Gelen kutundaki (ve gereksiz klasöründeki) doğrulama bağlantısına tıkla, sonra tekrar giriş yap.<br><button type="button" class="btn secondary smallBtn" style="margin-top:8px" onclick="resendSignupEmail(this)">Doğrulama e-postasını tekrar gönder</button></div>';
+     }else if(/invalid login credentials/i.test(m)){
+       err.innerHTML='<div class="authError">E-posta veya şifre hatalı.</div>';
+     }else if(/already registered|already exists/i.test(m)){
+       err.innerHTML='<div class="authError">Bu e-posta ile zaten bir hesap var. Giriş yapmayı ya da şifreni sıfırlamayı dene.</div>';
+     }else{
+       err.innerHTML='<div class="authError">'+escapeHTML(m)+'</div>';
+     }
+   }
+ }finally{if(btn){btn.disabled=false;btn.textContent=buttonText(mode)}}
+}
+/* Doğrulama e-postasını yeniden gönder (hesabın varlığını ele vermeyen genel mesaj) */
+async function resendSignupEmail(b){
+ const email=(document.getElementById('authEmail')||{}).value;const em=String(email||'').trim();
+ if(!em){alert('Önce e-posta adresini yaz.');return;}
+ if(b){b.disabled=true;b.textContent='GÖNDERİLİYOR...';}
+ try{await fetch(SUPABASE_URL+'/auth/v1/resend?redirect_to='+encodeURIComponent(location.origin+location.pathname),{method:'POST',headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({type:'signup',email:em})});}catch(e){}
+ if(b){b.textContent='Gönderildi ✓';}
+ alert('Bu adrese ait doğrulanmamış bir hesap varsa doğrulama e-postası tekrar gönderildi. Birkaç dakika içinde gelmezse gereksiz klasörünü kontrol et.');
 }
 function buttonText(mode){return mode==='signup'?'KAYIT OL':'GİRİŞ YAP'}
 function logoutUser(){ /* Sunucudaki oturumu (refresh token) da kapat; ağ hatası çıkışı engellemez */ try{ var _s=getAuthSession(); if(_s&&_s.access_token){ fetch(SUPABASE_URL+'/auth/v1/logout',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+_s.access_token},keepalive:true}).catch(function(){}); } }catch(e){} saveAuthSession(null); /* Ortak cihazda bir sonraki kullanıcıya kişisel veri (telefon, adres, sepet, son yazılan talep) kalmasın */ try{ Object.keys(localStorage).filter(function(k){return /^isimi_food_|^a7_ai_/.test(k)}).forEach(function(k){localStorage.removeItem(k)}); }catch(e){} v2Toast('Çıkış yapıldı.'); try{ showHome(); }catch(e){} }
@@ -7417,7 +7620,7 @@ function open(){ensureStyle();const r=root();r.classList.add('hv');r.style.displ
 function close(){const r=root();r.classList.remove('hv');r.style.display='none';r.innerHTML='';document.body.style.overflow=document.body.dataset.halletOverflow||''}
 function render(x){const r=open();const keep=!!r.querySelector('.hw');const prev=keep?(r.scrollTop||0):0;r.innerHTML='<div class="ha"><div class="hw">'+x+'</div></div>';if(keep){requestAnimationFrame(function(){try{r.scrollTop=prev}catch(e){}})}else{r.scrollTop=0}}
 function top(back){return '<div class="ht"><strong>İşini Hallet</strong><span style="display:inline-flex;gap:6px"><button class="topb" data-a="home" aria-label="Ana sayfa" title="Ana sayfa">⌂ Ana sayfa</button><button class="topb" data-a="'+(back||'close')+'">'+(back?'← Geri':'Kapat')+'</button></span></div>'}
-function gate(){H.step=0;H.answers={};H.documents={};H.documentStatuses={};H.documentFiles={};H.caseId=null;H.createdAt=null;H.dbId=null;render(top('close')+'<div class="hc"><div class="hk">Dijital işlem asistanı</div><h1>Bugün ne yapmak istiyorsun?</h1><p class="hm">İşlem, evrak, kurum veya hizmet — net seç, adım adım ilerle.</p><div class="hg"><button class="hb hp" data-a="islem">📋 Bir işlem yapmak istiyorum</button><button class="hb" data-a="cases">📁 İşlem Dosyalarım</button><button class="hb" data-a="evrak">📄 Evrak hazırlamak istiyorum</button><button class="hb" data-a="kurum">🏛️ Bir kuruma başvuracağım</button><button class="hb" data-a="isimi">🛠️ Hizmet / usta bulmam gerekiyor</button></div><div class="card" style="text-align:left;margin-top:12px;padding:12px;border:1px solid rgba(13,159,104,.4);background:rgba(13,159,104,.08);border-radius:14px"><div class="hk">🔒 Ücretli İşlem Hazırlığı <span class="small">Ücretli işlem</span></div><p class="hm">Kişiye özel evrak ve işlem takibi bu kapının arkasındadır. Şimdilik ödeme alınmaz.</p><button class="hb hp" data-a="official_prep">İşlem hazırlığına devam et →</button></div></div>')}
+function gate(){H.step=0;H.answers={};H.documents={};H.documentStatuses={};H.documentFiles={};H.caseId=null;H.createdAt=null;H.dbId=null;render(top('close')+'<div class="hc"><div class="hk">Dijital işlem asistanı</div><h1>Bugün ne yapmak istiyorsun?</h1><p class="hm">İşlem, evrak, kurum veya hizmet — net seç, adım adım ilerle.</p><p class="hm" role="note" style="font-size:12px;opacity:.85;margin-top:6px">ℹ️ İşini Hallet bir kamu kurumu değildir ve resmî kurumlarla bağlantısı yoktur. Bilgiler rehberlik amaçlıdır; resmî işlem ilgili kurumda tamamlanır. Güncel şart ve ücretleri kurumdan teyit et.</p><div class="hg"><button class="hb hp" data-a="islem">📋 Bir işlem yapmak istiyorum</button><button class="hb" data-a="cases">📁 İşlem Dosyalarım</button><button class="hb" data-a="evrak">📄 Evrak hazırlamak istiyorum</button><button class="hb" data-a="kurum">🏛️ Bir kuruma başvuracağım</button><button class="hb" data-a="isimi">🛠️ Hizmet / usta bulmam gerekiyor</button></div><div class="card" style="text-align:left;margin-top:12px;padding:12px;border:1px solid rgba(13,159,104,.4);background:rgba(13,159,104,.08);border-radius:14px"><div class="hk">🔒 Ücretli İşlem Hazırlığı <span class="small">Ücretli işlem</span></div><p class="hm">Kişiye özel evrak ve işlem takibi bu kapının arkasındadır. Şimdilik ödeme alınmaz.</p><button class="hb hp" data-a="official_prep">İşlem hazırlığına devam et →</button></div></div>')}
 async function cases(){
  const session=getAuthSession();
  if(!session?.access_token||!session?.user?.id){openAuthModal('login');return;}

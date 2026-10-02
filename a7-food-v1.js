@@ -1950,8 +1950,30 @@ async function showFoodReports(venueId,days){
       (del.length?'<p class="fdMuted fdSmall" style="margin:6px 2px 0">En yoğun saat: <b>'+String(peak).padStart(2,'0')+':00–'+String((peak+1)%24).padStart(2,'0')+':00</b> · Ödeme: '+Object.entries(pay).map(([k,n])=>E(k)+' '+n).join(', ')+'</p>':'')+
       popH+
       (pfOn()?'<button type="button" class="fdwStrip" style="margin-top:14px" onclick="foodPromoRequest(\''+E(venueId)+'\')"><span class="i">📣</span><span class="t"><b>Öne çıkmak ister misin?</b><small>Ana sayfa, sponsorlu kart veya kampanya için reklam talebi gönder</small></span></button>':'')+
-      '<p class="fdMuted fdSmall" style="margin:14px 2px 0">Tutarlar teslim edilen siparişlerden hesaplanır; kesin ödeme mutabakatı platform hakediş raporundadır.</p>');
+      '<p class="fdMuted fdSmall" style="margin:14px 2px 0">Tutarlar teslim edilen siparişlerden hesaplanır; kesin ödeme mutabakatı platform hakediş raporundadır.</p>'+
+      '<div id="fdAcct"></div>');
+    if(pfOn())acctFill(venueId,tok);
   }catch(e){if(alive(tok))render(head()+errBox(e,'showFoodReports(\''+E(venueId)+'\','+days+')'))}
+}
+/* Hesap özeti: aylık komisyon, açık bakiye, faturalar ve hakedişler (yalnız restoran sahibi; sunucu pf_my_payouts) */
+async function acctFill(venueId,tok){
+  let d=null;try{d=await RPC('pf_my_payouts',{p_venue_id:venueId})}catch(e){return}
+  if(!alive(tok)||!d||typeof d!=='object')return;
+  const el=document.getElementById('fdAcct');if(!el)return;
+  const months=Array.isArray(d.months)?d.months:[],inv=Array.isArray(d.invoices)?d.invoices:[],pays=Array.isArray(d.payouts)?d.payouts:[];
+  const bal=+d.open_balance_kurus||0;
+  const mName=m=>{const p=String(m||'').split('-');const ay=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'][(+p[1]||1)-1];return ay+' '+(p[0]||'')};
+  const INV={pending:'Hazırlanıyor',issued:'Kesildi',cancelled:'İptal'},PAY={draft:'Taslak',approved:'Onaylandı',paid:'Ödendi',cancelled:'İptal',failed:'Başarısız'};
+  el.innerHTML='<div class="fdSecH" style="margin-top:16px"><b>Hesap özeti</b></div>'+
+    '<div class="fdCard">'+
+      '<div class="fdLine"><span>'+(bal<0?'Platforma ödenecek komisyon':bal>0?'Sana ödenecek hakediş':'Açık bakiye')+'</span><b class="'+(bal<0?'fdBad':'')+'">'+M(Math.abs(bal))+'</b></div>'+
+      '<p class="fdMuted fdSmall" style="margin:6px 0 0">Kapıda ödemeli siparişlerde tutarı sen tahsil edersin; platform komisyonu ay sonunda faturalanır.</p>'+
+    '</div>'+
+    '<div class="fdSecH"><b>Aylık komisyon</b></div>'+
+    (months.length?'<div class="fdCard">'+months.map(m=>'<div class="fdLine"><span>'+E(mName(m.month))+' · '+(+m.orders||0)+' sipariş</span><b>'+M(+m.commission_kurus||0)+'</b></div><div class="fdMuted fdSmall" style="margin:-4px 0 8px">Ürün tutarı '+M(+m.subtotal_kurus||0)+'</div>').join('')+'</div>':'<div class="fdCard fdMuted fdSmall">Son 6 ayda teslim edilmiş sipariş yok.</div>')+
+    '<div class="fdSecH"><b>Faturalar</b></div>'+
+    (inv.length?'<div class="fdCard">'+inv.map(i=>'<div class="fdLine"><span>'+E(i.external_invoice_no||'Fatura')+(i.period_from?' · '+E(String(i.period_from).slice(0,10))+' – '+E(String(i.period_to||'').slice(0,10)):'')+'</span><b>'+M(+i.amount_kurus||0)+' · '+E(INV[i.status]||i.status||'')+'</b></div>').join('')+'</div>':'<div class="fdCard fdMuted fdSmall">Henüz fatura yok. Komisyon faturası ay sonunda burada görünür.</div>')+
+    (pays.length?'<div class="fdSecH"><b>Hakedişler</b></div><div class="fdCard">'+pays.map(p=>'<div class="fdLine"><span>'+E(String(p.period_from||'').slice(0,10))+' – '+E(String(p.period_to||'').slice(0,10))+' · '+(+p.order_count||0)+' sipariş</span><b>'+M(+p.amount_kurus||0)+' · '+E(PAY[p.status]||p.status||'')+'</b></div>').join('')+'</div>':'');
 }
 /* V4 · Reklam talebi: platformun destek kaydı üzerinden yönetime iletilir (yeni tablo gerektirmez) */
 window.foodPromoRequest=function(venueId){
@@ -2052,7 +2074,7 @@ async function showFoodSettings(venueId,firstRun){
     '</div></details>'+
     '<details class="fdDet"><summary>🛵 Sipariş ve teslimat</summary><div>'+
       '<label for="sMode">Sipariş türü</label><select id="sMode">'+opt('both',v.delivery_mode,'Teslimat + Gel-al')+opt('self_delivery',v.delivery_mode,'Yalnızca teslimat')+opt('pickup',v.delivery_mode,'Yalnızca gel-al')+'</select>'+
-      '<label for="sProv">Teslimatı kim yapar?</label><select id="sProv">'+opt('venue',v.delivery_provider,'Kendi kuryemiz')+opt('platform',v.delivery_provider,'Platform kuryeleri')+'</select>'+
+      '<label for="sProv">Teslimatı kim yapar?</label><select id="sProv">'+opt('venue',v.delivery_provider,'Kendi kuryemiz')+((window.PF&&PF.settings&&PF.settings.platform_courier_enabled===false&&v.delivery_provider!=='platform')?'':opt('platform',v.delivery_provider,'Platform kuryeleri'))+'</select>'+
       '<div class="two"><div><label for="sMin">Min. sepet (TL)</label><input id="sMin" inputmode="decimal" value="'+kurusToTl(v.min_order_amount)+'"></div><div><label for="sFee">Teslimat ücreti (TL)</label><input id="sFee" inputmode="decimal" value="'+kurusToTl(v.delivery_fee_kurus)+'"></div></div>'+
       '<div class="two"><div><label for="sPrep">Hazırlık (dk)</label><input id="sPrep" type="number" min="1" max="240" value="'+v.prep_time_min+'"></div><div><label for="sEta">Yol süresi (dk)</label><input id="sEta" type="number" min="1" max="240" value="'+v.delivery_eta_min+'"></div></div>'+
       '<div class="fdNote info" style="margin-top:12px">Platform komisyonu <b>%'+(v.commission_bps/100).toFixed(2).replace('.',',')+'</b> · hizmet bedeli <b>'+M(v.platform_fee_kurus)+'</b> <span class="fdMuted">(platform yönetimi belirler)</span></div>'+
