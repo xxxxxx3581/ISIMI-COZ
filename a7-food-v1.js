@@ -3038,7 +3038,7 @@ function flashHTML(g){
 function flBoxes(ms){
   if(ms<=0)return '<span class="bx"><b>00</b><small>saniye</small></span>';
   const s=Math.floor(ms/1000),d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60),sc=s%60,p=n=>String(n).padStart(2,'0');
-  const u=d?[[d,'gün'],[h,'saat'],[m,'dakika']]:h?[[h,'saat'],[m,'dakika'],[sc,'saniye']]:[[m,'dakika'],[sc,'saniye']];
+  const u=d?[[d,'gün'],[h,'saat'],[m,'dakika'],[sc,'saniye']]:h?[[h,'saat'],[m,'dakika'],[sc,'saniye']]:[[m,'dakika'],[sc,'saniye']];
   return u.map(x=>'<span class="bx"><b>'+p(x[0])+'</b><small>'+x[1]+'</small></span>').join('<i aria-hidden="true">:</i>');
 }
 function flashLayerHTML(g){
@@ -3513,6 +3513,7 @@ body.fdwFlOpen .fdToasts{z-index:2147483600}
 #fdwFlash .fdwFlash.min .bx{display:flex;flex-direction:column;align-items:center;min-width:44px;padding:4px 4px 3px;border-radius:10px;background:#fff;color:#0F172A}
 #fdwFlash .fdwFlash.min .bx b{font-size:18px;font-weight:900;line-height:1.1;font-variant-numeric:tabular-nums}
 #fdwFlash .fdwFlash.min .bx small{font-size:10px;font-weight:700;color:#475569}
+@media(max-width:430px){#fdwFlash .fdwFlash.min .bxs{gap:2px}#fdwFlash .fdwFlash.min .bxs i{font-size:12px}#fdwFlash .fdwFlash.min .bx{min-width:34px;padding:3px 2px 2px;border-radius:8px}#fdwFlash .fdwFlash.min .bx b{font-size:15px}#fdwFlash .fdwFlash.min .bx small{font-size:8.5px}#fdwFlash .fdwFlash.min .bar{gap:8px}}
 #fdwFlash .fdwFlash.min .x{width:36px;height:36px;border-radius:50%;border:0;background:rgba(255,255,255,.16);color:#fff;font-size:15px}
 #fdwFlash .fdwFlash.min .bz{background:#F2C14E;color:#17140E}
 @media(min-width:1024px){#fdwFlash .fdwFlash.min{max-width:1120px}}
