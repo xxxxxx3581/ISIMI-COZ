@@ -6300,8 +6300,14 @@ function v2PfListingActs(box,row,tries){
   try{
     if(!box||!box.isConnected||window.__activeListingRow!==row||box.querySelector('.pfxListingActs')||v2IsOwner(row)) return;
     if(!(window.PF&&PF.enabled)){ if(tries<20) setTimeout(function(){ v2PfListingActs(box,row,tries+1); },300); return; }
-    box.insertAdjacentHTML('beforeend','<div class="pfxListingActs" style="margin:14px 0;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">'+PF.reportButton('listing',row.id,row.title)+(row.owner_id?'<button type="button" class="pfxBtn" style="font-size:12px;padding:6px 10px" onclick="PF.block(\''+escapeHTML(row.owner_id)+'\',true,this)">🚫 Satıcıyı engelle</button>':'')+'</div>');
+    box.insertAdjacentHTML('beforeend','<div class="pfxListingActs" style="margin:14px 0;display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end">'+PF.reportButton('listing',row.id,row.title)+(row.owner_id?'<button type="button" class="pfxBtn" style="font-size:12px;padding:6px 10px" onclick="v2BlockSeller(this)">🚫 Satıcıyı engelle</button>':'')+'</div>');
   }catch(e){}
+}
+
+function v2BlockSeller(btn){
+  var r=window.__activeListingRow;
+  if(!r||!r.owner_id||!(window.PF&&PF.block)) return;
+  PF.block(r.owner_id,true,btn,{report:['listing',r.id,r.title||''],done:function(){ v2GoBack(); }});
 }
 
 function v2DescBoxHtml(row,editing){
