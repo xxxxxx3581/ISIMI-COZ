@@ -1263,7 +1263,10 @@ async function cartExtras(tok,venueId){
         Q('GET','food_item_option_groups?select=menu_item_id,is_required,min_select&venue_id=eq.'+enc+'&is_active=eq.true')]);
         const g={};(groups||[]).forEach(x=>(g[x.menu_item_id]=g[x.menu_item_id]||[]).push(x));CV={v:vs[0],items:items||[],cats:cats||[],groups:g}}
     }
-    if(!alive(tok))return;cartSidesDraw();cartMinDraw();
+    if(!alive(tok))return;
+    /* Sepetteki ürünün fotoğrafı kayıtlı değilse (örn. "tekrar sipariş" ile eklendiyse) menüden tamamla */
+    try{const cc=cartGet();let ch=false;cc.items.forEach(x=>{if(!x.img){const m=CV.items.find(i=>i.id===x.menu_item_id);if(m&&m.image_url){x.img=m.image_url;ch=true}}});if(ch){cartSave(cc,true);cartLines()}}catch(e){}
+    cartSidesDraw();cartMinDraw();
     if(!HF.coupons||!HF.coupons.length){await couponsLoad(null);if(alive(tok))cartMinDraw()}
   }catch(e){}
 }
