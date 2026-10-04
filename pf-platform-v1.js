@@ -54,7 +54,7 @@ function css(){if(document.getElementById('pfxCss'))return;var s=document.create
 '.pfxTa{min-height:90px}.pfxLbl{font-size:13px;opacity:.8;display:block;margin-top:6px}'+
 '.pfxMuted{opacity:.72;font-size:13px}.pfxTag{display:inline-block;border-radius:999px;padding:2px 8px;font-size:12px;font-weight:700;background:rgba(127,127,127,.2)}'+
 '.pfxTag.ok{background:rgba(46,160,67,.25)}.pfxTag.warn{background:rgba(210,153,34,.28)}.pfxTag.bad{background:rgba(192,57,43,.3)}'+
-'.pfxTabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:6px}.pfxTabs button{white-space:nowrap}.pfxTabs button.on{background:#1f7ae0;border-color:#1f7ae0;color:#fff}'+
+'.pfxMenu .pfxBtn{display:flex;justify-content:space-between;align-items:center;width:100%;text-align:left;padding:14px;margin:0 0 8px;font-size:15px}.pfxMenuH{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;opacity:.65;margin:16px 2px 8px}.pfxBack{margin-bottom:6px}.pfxAdmT{margin:10px 0 12px;font-size:18px}.pfxTabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:6px;margin-bottom:6px}.pfxTabs button{white-space:nowrap}.pfxTabs button.on{background:#1f7ae0;border-color:#1f7ae0;color:#fff}'+
 '.pfxDoc{white-space:pre-wrap;line-height:1.55;font-size:14px}'+
 '.pfxChk{display:flex;gap:10px;align-items:flex-start;margin:8px 0;font-size:14px;line-height:1.4}.pfxChk input{margin-top:3px;width:18px;height:18px;flex:none}'+
 '.pfxFoot{margin:28px auto 90px;padding:16px;max-width:980px;font-size:13px;opacity:.85;border-top:1px solid var(--line,rgba(127,127,127,.25))}'+
@@ -416,12 +416,29 @@ function hasRole(r){var R=PF.roles&&PF.roles.roles||[];return R.indexOf('super')
 var TABS=[['docs','Belgeler','moderator'],['venues','İşletme başvuruları','moderator'],['reports','Şikâyetler','moderator'],['listings','İlanlar','moderator'],['providers','Ustalar','moderator'],['susp','Askıya almalar','moderator'],['tickets','Destek','support'],
   ['kvkk','KVKK başvuruları','legal'],['legal','Yasal metinler','legal'],['company','Şirket bilgileri','legal'],['finance','Finans','finance'],['campaigns','Kampanyalar','finance'],['revenue','Gelir','finance'],
   ['settings','Ayarlar','ops'],['dispatch','Kurye dağıtımı','ops'],['hero','Ana ekran fotoğrafları','ops'],['words','Yasaklı kelimeler','ops'],['audit','Denetim kaydı','super']];
+var ADM_GROUPS=[['Moderasyon',['reports','listings','docs','venues','providers','susp','words']],['Destek ve yasal',['tickets','kvkk','legal','company']],['Finans',['finance','campaigns','revenue']],['Operasyon',['settings','dispatch','hero']],['Sistem',['audit']]];
+var ADM_ICON={docs:'📄',venues:'🏪',reports:'🚩',listings:'📋',providers:'🔧',susp:'⛔',words:'🔤',tickets:'🎧',kvkk:'🔒',legal:'⚖️',company:'🏢',finance:'💰',campaigns:'🎟️',revenue:'📈',settings:'⚙️',dispatch:'🛵',hero:'🖼️',audit:'🗂️'};
 PF.openAdmin=async function(tab){
   if(!need())return;
   if(!PF.roles)try{PF.roles=await rpc('pf_my_roles',{})}catch(e){}
   if(!(PF.roles&&PF.roles.is_admin)){toast('Yönetim yetkin yok.');return}
-  var tabs=TABS.filter(function(t){return hasRole(t[2])});ADM.tab=tab||ADM.tab||tabs[0][0];
-  sheet('Yönetim paneli','<div class="pfxTabs">'+tabs.map(function(t){return '<button type="button" class="pfxBtn'+(t[0]===ADM.tab?' on':'')+'" onclick="PF.openAdmin(\''+t[0]+'\')">'+esc(t[1])+'</button>'}).join('')+'</div><div id="pfxAdm">'+loading()+'</div>');
+  var tabs=TABS.filter(function(t){return hasRole(t[2])});
+  var cur=tab?tabs.filter(function(t){return t[0]===tab})[0]:null;
+  if(!cur){
+    ADM.tab=null;
+    var seen={},html='<div class="pfxMenu">';
+    ADM_GROUPS.forEach(function(g){
+      var items=g[1].map(function(k){return tabs.filter(function(t){return t[0]===k})[0]}).filter(Boolean);
+      items.forEach(function(t){seen[t[0]]=1});
+      if(items.length)html+='<div class="pfxMenuH">'+esc(g[0])+'</div>'+items.map(function(t){return '<button type="button" class="pfxBtn" onclick="PF.openAdmin(\''+t[0]+'\')"><span>'+(ADM_ICON[t[0]]||'•')+' '+esc(t[1])+'</span><span>›</span></button>'}).join('');
+    });
+    var rest=tabs.filter(function(t){return !seen[t[0]]});
+    if(rest.length)html+='<div class="pfxMenuH">Diğer</div>'+rest.map(function(t){return '<button type="button" class="pfxBtn" onclick="PF.openAdmin(\''+t[0]+'\')"><span>'+esc(t[1])+'</span><span>›</span></button>'}).join('');
+    sheet('Yönetim paneli',html+'</div>');
+    return;
+  }
+  ADM.tab=cur[0];
+  sheet('Yönetim paneli','<button type="button" class="pfxBtn pfxBack" onclick="PF.openAdmin()">← Bölümler</button><h3 class="pfxAdmT">'+(ADM_ICON[cur[0]]||'')+' '+esc(cur[1])+'</h3><div id="pfxAdm">'+loading()+'</div>');
   var el=document.getElementById('pfxAdm');
   try{await (ADMIN[ADM.tab]||function(){})(el)}catch(e){el.innerHTML=errHTML(e)}
 };
