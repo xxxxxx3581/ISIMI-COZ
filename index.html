@@ -1257,6 +1257,12 @@ html:root .hmAcc .hmAccMe .tx b{font-size:16px;color:#F6ECDC;overflow:hidden;tex
 html:root .hmAcc .hmAccMe .tx small{font-size:12.5px;color:#CDBB9F;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 html:root .hmAcc .hmAccMe .ed{flex:0 0 auto;height:34px;padding:0 14px;border-radius:17px;border:1px solid #6A5236;background:transparent;color:#F0B35A;font:inherit;font-size:13px;font-weight:800;cursor:pointer}
 /*K3-CSS-SON*/
+html:root .hmTrack{animation:none;transition:transform .4s ease;will-change:transform}
+html:root .hmSlider{box-sizing:border-box;border:2px solid rgba(255,255,255,.92);touch-action:pan-y}
+html:root .hmDots i{animation:none;transition:width .25s ease,opacity .25s ease}
+html:root .hmDots i.on{width:18px;opacity:1}
+html:root .hmTile{box-sizing:border-box;border:2px solid rgba(255,255,255,.92)}
+/*K3B-CSS-SON*/
 </style>
 <style id="svcProvEntryCss">.svcProvEntry{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;border-radius:16px;border:1.5px solid rgba(124,92,255,.45);background:rgba(124,92,255,.10);color:var(--text);font:inherit;text-align:left;cursor:pointer}.svcProvEntry .ic{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:rgba(124,92,255,.18)}.svcProvEntry .tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}.svcProvEntry small{font-size:12px;font-weight:700;color:var(--muted)}.svcProvEntry b{font-size:16px;font-weight:900}.svcProvEntry em{font-style:normal;font-size:12.5px;color:var(--muted)}.svcProvEntry .go{flex:0 0 auto;font-size:24px;font-weight:700;color:#7c5cff}.svcProvEntry:active{transform:scale(.99)}.svcProvEntry:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}html[data-theme="light"] .svcProvEntry{background:#f3effe;border-color:#c9bbff}html[data-theme="light"] .svcProvEntry .go{color:#5b3fd6}</style>
 <style id="v2HomeBtnCss">.v2HomeBtn{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:42px;min-width:42px;padding:0 12px 0 10px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;font-size:13px;font-weight:800;cursor:pointer}.v2HomeBtn:active{transform:scale(.97)}.v2HomeBtn:focus-visible{outline:2px solid var(--v2-pri);outline-offset:2px}@media(max-width:430px){.v2HomeBtn{padding:0}.v2HomeBtn span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}}.v2KTop .v2HomeBtn{margin-left:4px}@media(max-width:430px){.v2KTop:has(.v2HomeBtn) .v2Back{font-size:0;gap:0;width:42px;min-width:42px;padding:0;justify-content:center}.v2KTop:has(.v2HomeBtn) .v2Back::before{content:"←";font-size:19px;font-weight:800;line-height:1}}@media(max-width:374px){.v2KTop:has(.v2HomeBtn) h1{font-size:17.5px}}.back.v2BackRow{display:flex;align-items:center;gap:8px}.back.v2BackRow>.btn{flex:1 1 auto;min-width:0}</style>
@@ -2151,9 +2157,8 @@ function hmAccountHtml(u){
   var ini=(name||mail||'?').charAt(0).toLocaleUpperCase('tr');
   return '<div class="hmAcc"><div class="hmAccT">Hesabım</div>'+
     '<div class="hmAccMe"><span class="av">'+E(ini)+'</span><span class="tx"><b>'+E(name||'Hesabım')+'</b><small>'+E(mail)+'</small></span><button type="button" class="ed" data-k="edit" onclick="hmAcc(this.dataset.k)">Düzenle</button></div>'+
-    '<div class="hmAccH">Hesabım</div><div class="hmAccL">'+row('orders','Siparişlerim')+row('favs','Favorilerim')+row('msgs','Mesajlarım')+row('mylist','İlanlarım',true)+row('addr','Adreslerim')+row('bell','Bildirimler')+'</div>'+
-    legal+other+
-    '<div class="hmAccL" style="margin-top:12px">'+row('out','Çıkış yap',false,'out')+'</div></div>';
+    '<div class="hmAccH">Hesabım</div><div class="hmAccL">'+row('orders','Siparişlerim')+row('favs','Favorilerim')+row('msgs','Mesajlarım')+row('mylist','İlanlarım',true)+row('addr','Adreslerim')+row('bell','Bildirimler')+row('out','Çıkış yap',false,'out')+'</div>'+
+    legal+other+'</div>';
 }
 function hmAcc(k){
   var s=null; try{ s=getAuthSession(); }catch(e){}
@@ -2194,6 +2199,46 @@ function showAccount(){
   app(hmAccountHtml(u));
 }
 /*K3-BITIS*/
+/*K3B-BASLA*/
+function hmSliderInit(){
+  var sl=document.querySelector('#app .hmSlider'); if(!sl||sl.__hm) return; sl.__hm=1;
+  var tr=sl.querySelector('.hmTrack'); if(!tr) return;
+  var dots=sl.querySelectorAll('.hmDots i'), N=4, i=0, hold=false, drag=false, lock=null, x0=0, y0=0, dx=0, w=0, jumped=false, rt=0;
+  var reduce=false; try{ reduce=window.matchMedia('(prefers-reduced-motion:reduce)').matches; }catch(e){}
+  var dot=function(k){ for(var j=0;j<dots.length;j++) dots[j].classList.toggle('on',j===(k%N)); };
+  var go=function(k,anim){ i=k; tr.style.transition=anim===false?'none':'transform .4s ease'; tr.style.transform='translateX(-'+(k*20)+'%)'; dot(k); };
+  var snap=function(){ if(i>=N){ go(0,false); } };
+  var next=function(){ snap(); void tr.offsetWidth; go(i+1,true); };
+  tr.addEventListener('transitionend',function(e){ if(e&&e.target&&e.target!==tr) return; if(!drag) snap(); });
+  var hole=function(){ hold=true; clearTimeout(rt); rt=setTimeout(function(){ hold=false; },2500); };
+  sl.addEventListener('touchstart',function(e){
+    var t=e.touches[0]; x0=t.clientX; y0=t.clientY; dx=0; lock=null; jumped=false; drag=true; hold=true; clearTimeout(rt);
+    w=sl.clientWidth;
+    try{ var m=new DOMMatrix(getComputedStyle(tr).transform); tr.style.transition='none'; tr.style.transform='translateX('+m.m41+'px)'; i=Math.max(0,Math.min(N,Math.round(-m.m41/w))); }catch(err){ tr.style.transition='none'; }
+  },{passive:true});
+  sl.addEventListener('touchmove',function(e){
+    if(!drag) return;
+    var t=e.touches[0], mx=t.clientX-x0, my=t.clientY-y0;
+    if(lock===null&&(Math.abs(mx)>8||Math.abs(my)>8)) lock=Math.abs(mx)>Math.abs(my)?'x':'y';
+    if(lock!=='x') return;
+    if(!jumped){ jumped=true; if(mx>0&&i===0) i=N; else if(mx<0&&i>=N) i=0; dot(i); }
+    dx=mx; if(i>=N&&dx<0) dx=0; if(i===0&&dx>0) dx=0;
+    tr.style.transform='translateX('+(-i*w+dx)+'px)';
+  },{passive:true});
+  var end=function(){
+    if(!drag) return; drag=false;
+    if(lock==='x'){ sl.__sw=Date.now(); var th=Math.min(60,w*0.2); if(dx<-th) go(i+1,true); else if(dx>th) go(i-1,true); else go(i,true); }
+    else go(i,false);
+    hole();
+  };
+  sl.addEventListener('touchend',end,{passive:true});
+  sl.addEventListener('touchcancel',end,{passive:true});
+  sl.addEventListener('click',function(e){ if(Date.now()-(sl.__sw||0)<350){ e.stopPropagation(); e.preventDefault(); } },true);
+  var tick=function(){ if(!document.body.contains(sl)) return; if(!hold&&!document.hidden&&!drag) next(); setTimeout(tick,1400); };
+  dot(0);
+  if(!reduce) setTimeout(tick,1400);
+}
+/*K3B-BITIS*/
 function hmImgErr(i){ try{ var f=i.getAttribute('data-f'); if(f&&i.getAttribute('src')!==f){ i.src=f; } else { i.remove(); } }catch(e){} }
 async function hmHeroLoad(){
   try{
@@ -2227,7 +2272,7 @@ function hmSliderHtml(brand){
     cover('listings','ilanlar.jpg','Hayalindeki ev burada','Gayrimenkul ve araç, çok yakında.',true)+
     cover('services','hizmet.jpg','Evin işini ustaya bırak','Usta ve hizmet, çok yakında.',true)+
     food()+
-    '</div><div class="hmBrandW">'+brand+'</div><div class="hmDots"><i></i><i></i><i></i><i></i></div></div>';
+    '</div><div class="hmBrandW">'+brand+'</div><div class="hmDots"><i class="on"></i><i></i><i></i><i></i></div></div>';
 }
 function hmHomeHtml(){
   var I=function(d,s){ return '<svg width="'+(s||24)+'" height="'+(s||24)+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>'; };
@@ -2267,7 +2312,7 @@ function showHome(){
   setNav("navHome");
   window.__v2Understood=null;
   app(hmHomeHtml());
-  /*K1b: eski slider kaldirildi*/try{hmHeroLoad();}catch(e){}
+  /*K1b: eski slider kaldirildi*/try{hmHeroLoad();}catch(e){}try{hmSliderInit();}catch(e){}
   
   
   v2ContinueLoad();
