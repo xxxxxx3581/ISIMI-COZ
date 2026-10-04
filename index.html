@@ -6717,6 +6717,7 @@ function v2FoodHeroCss(){
   '.v2FHero .fhDots{position:absolute;right:12px;width:42%;bottom:34px;z-index:3;display:flex;justify-content:center;gap:4px}.v2FHero .fhDots i{width:5px;height:5px;border-radius:9px;background:rgba(138,58,12,.35);transition:all .4s}.v2FHero .fhDots i.on{width:14px;background:#8a3a0c}'+
   '.v2FHero .fhMq{position:absolute;left:0;right:0;bottom:0;height:30px;background:#8a3a0c;color:#ffe9b0;overflow:hidden;display:flex;align-items:center}'+
   '.v2FHero .fhMq div{white-space:nowrap;font-weight:800;font-size:12px;letter-spacing:.03em;animation:fhMq 16s linear infinite}'+
+  '.v2FHero .fhMq .mA{color:#ffe9b0}.v2FHero .fhMq .mB{color:#ffd23f}.v2FHero .fhMq .mC{color:#8ff0c0}.v2FHero .fhMq .mD{color:#ffb3a1}.v2FHero .fhMq .mS{color:rgba(255,255,255,.4)}'+
   '@keyframes fhMq{from{transform:translateX(0)}to{transform:translateX(-50%)}}'+
   '.v2FHero.fhSolo .fhT,.v2FHero.fhSolo .fhDots{display:none}'+
   '.v2FChips{display:flex;gap:8px;margin:0 0 14px}.v2FChips span{flex:1;text-align:center;font-size:11px;font-weight:800;padding:7px 4px;border-radius:12px;white-space:nowrap;background:#fff4cf;color:#8a3a0c;border:1px solid #f1d27a}'+
@@ -6737,6 +6738,7 @@ async function v2FoodHeroLoad(){
     var feat=document.querySelector('.v2Home .v2FeatWrap');if(!feat)return;
     document.querySelectorAll('.v2Home .v2FHero,.v2Home .v2FChips').forEach(function(n){n.remove()});feat.style.display='';
     var rows=await v2FoodHeroFetch();
+    try{for(var w=0;w<25&&!(window.PF&&PF.ready);w++)await new Promise(function(r){setTimeout(r,100)});if(window.PF&&PF.ready)await Promise.race([PF.ready,new Promise(function(r){setTimeout(r,3000)})])}catch(e){}
     var base=rows.filter(function(x){return x.role==='base'})[0];
     var sl=rows.filter(function(x){return x.role==='slide'}).slice(0,8);
     if(!base)return;
@@ -6745,7 +6747,8 @@ async function v2FoodHeroLoad(){
     var E=function(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
     var U=function(p){return SUPABASE_URL+'/storage/v1/object/public/home-hero/'+encodeURIComponent(p)};
     var caps=sl.map(function(x){return x.caption}).filter(Boolean);
-    var unit=(caps.length?caps.map(E).join(' ✦ ')+' ✦ ':'')+'Hepsi tek yerde ✦ Afiyet olsun! ✦ ';
+    var SG=function(t,c){return '<span class="'+c+'">'+t+'</span>'},SPR='<span class="mS"> ✦ </span>',CPN=!!(window.PF&&PF.settings&&PF.settings.coupons_enabled===true);
+    var unit=caps.map(function(c){return SG(E(c),'mA')}).concat(CPN?[SG('İndirim fırsatları','mB'),SG('Kupon avantajları','mC'),SG('Afiyet olsun!','mD')]:[SG('Hepsi tek yerde','mB'),SG('Afiyet olsun!','mD')]).join(SPR)+SPR;
     var h=document.createElement('div');h.className='v2FHero'+(sl.length?'':' fhSolo');h.setAttribute('role','link');h.setAttribute('aria-label','İşimi Çöz Yemek');
     h.innerHTML='<div class="fhDn"><img alt="" decoding="async" src="'+U(base.storage_path)+'"></div><span class="fhTag">İŞİM YEMEK</span><div class="fhTop">✨ Lezzet zamanı!</div>'+
       '<div class="fhLf"><h2>Acıktın mı?</h2><span class="fhSub">Sıcacık, kapında</span><button type="button" class="fhGo">Sipariş ver ›</button></div>'+
