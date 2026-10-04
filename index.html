@@ -2029,6 +2029,7 @@ function showHome(){
     '</div>');
   var slot=document.getElementById('v2FeatSlot'); if(slot) slot.replaceWith(v2FeaturedNode());
   try{homeFeaturedInit();}catch(e){}
+  try{v2FoodHeroLoad();}catch(e){}
   v2ContinueLoad();
 }
 
@@ -6689,6 +6690,63 @@ function v2DraftResult(row,photoInfo,type){
   else setTimeout(function(){ v2Toast('İlan taslak olarak kaydedildi'); },600);
   try{ window.__v2WorkCache=null; }catch(e){}
   return v2Workspace(row&&row.id,type,row);
+}
+
+/* Ana ekran Yemek kartı: fotoğraflar veri tabanından (home_hero_list). Liste boşsa/hata varsa hiçbir şey değişmez. */
+function v2FoodHeroCss(){
+  if(document.getElementById('v2FoodHeroCss'))return;
+  var st=document.createElement('style');st.id='v2FoodHeroCss';
+  st.textContent='.v2FHero{position:relative;overflow:hidden;height:206px;margin:12px 0 14px;border-radius:22px;background:linear-gradient(135deg,#c2410c,#f08a1c);border:1.5px solid #f4b860;box-shadow:0 8px 24px rgba(226,86,26,.28);cursor:pointer;-webkit-tap-highlight-color:transparent}'+
+  '.v2FHero .fhBase{position:absolute;left:0;top:0;bottom:0;width:38%;overflow:hidden;-webkit-mask-image:linear-gradient(to right,#000 78%,transparent);mask-image:linear-gradient(to right,#000 78%,transparent)}'+
+  '.v2FHero .fhBase img{width:100%;height:100%;object-fit:cover;display:block;animation:fhZoom 12s ease-in-out infinite alternate}'+
+  '@keyframes fhZoom{to{transform:scale(1.1)}}'+
+  '.v2FHero .fhR{position:absolute;left:36%;right:12px;top:12px;bottom:12px;display:flex;flex-direction:column;justify-content:space-between}'+
+  '.v2FHero h2{margin:0;font-size:21px;line-height:1.1;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.35)}'+
+  '.v2FHero h2 span{display:block;font-size:12px;font-weight:700;margin-top:2px;color:#ffe9cf}'+
+  '.v2FHero .fhT{height:92px;overflow:hidden;border-radius:16px;box-shadow:0 6px 16px rgba(0,0,0,.35);border:2px solid rgba(255,255,255,.9);background:#7a2d0a}'+
+  '.v2FHero .fhRail{display:flex;height:100%;transition:transform .9s cubic-bezier(.65,0,.25,1)}'+
+  '.v2FHero .fhRail img{flex:0 0 100%;width:100%;height:100%;object-fit:cover;display:block}'+
+  '.v2FHero .fhRow{display:flex;align-items:center;justify-content:space-between}'+
+  '.v2FHero .fhGo{border:0;border-radius:12px;padding:8px 15px;font:inherit;font-weight:900;font-size:14.5px;background:#fff;color:#c2410c;box-shadow:0 5px 12px rgba(0,0,0,.22)}'+
+  '.v2FHero .fhDots{display:flex;gap:5px}.v2FHero .fhDots i{width:6px;height:6px;border-radius:9px;background:rgba(255,255,255,.55);transition:all .4s}.v2FHero .fhDots i.on{width:18px;background:#fff}'+
+  '.v2FHero.fhSolo .fhR{justify-content:center;gap:14px}'+
+  '@media (prefers-reduced-motion:reduce){.v2FHero .fhBase img{animation:none}.v2FHero .fhRail{transition:none}}';
+  document.head.appendChild(st);
+}
+async function v2FoodHeroFetch(){
+  var c=window.__v2HeroCache;
+  if(c&&Date.now()-c.t<300000)return c.rows;
+  var r=await fetch(SUPABASE_URL+'/rest/v1/rpc/home_hero_list',{method:'POST',headers:{apikey:SUPABASE_KEY,Authorization:'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'},body:'{}'});
+  if(!r.ok)throw new Error('hero '+r.status);
+  var rows=await r.json();if(!Array.isArray(rows))rows=[];
+  window.__v2HeroCache={t:Date.now(),rows:rows};return rows;
+}
+async function v2FoodHeroLoad(){
+  try{
+    var feat=document.querySelector('.v2Home .v2FeatWrap');if(!feat)return;
+    var old=document.querySelector('.v2Home .v2FHero');if(old)old.remove();feat.style.display='';
+    var rows=await v2FoodHeroFetch();
+    var base=rows.filter(function(x){return x.role==='base'})[0];
+    var sl=rows.filter(function(x){return x.role==='slide'}).slice(0,8);
+    if(!base)return;
+    if(!document.body.contains(feat)||document.querySelector('.v2Home .v2FHero'))return;
+    v2FoodHeroCss();
+    var U=function(p){return SUPABASE_URL+'/storage/v1/object/public/home-hero/'+encodeURIComponent(p)};
+    var h=document.createElement('div');h.className='v2FHero'+(sl.length?'':' fhSolo');h.setAttribute('role','link');h.setAttribute('aria-label','İşimi Çöz Yemek');
+    h.innerHTML='<div class="fhBase"><img alt="" decoding="async" src="'+U(base.storage_path)+'"></div><div class="fhR"><h2>Acıktın mı?<span>İşimi Çöz Yemek · kapına kadar</span></h2>'+
+      (sl.length?'<div class="fhT"><div class="fhRail">'+sl.map(function(x,i){return '<img alt="" decoding="async"'+(i?' loading="lazy"':'')+' src="'+U(x.storage_path)+'">'}).join('')+'</div></div>':'')+
+      '<div class="fhRow"><button type="button" class="fhGo">Sipariş ver ›</button>'+(sl.length>1?'<div class="fhDots">'+sl.map(function(x,i){return '<i'+(i?'':' class="on"')+'></i>'}).join('')+'</div>':'')+'</div></div>';
+    h.addEventListener('click',function(){try{showFoodHome()}catch(e){}});
+    feat.style.display='none';feat.parentNode.insertBefore(h,feat);
+    if(sl.length>1){
+      var i=0,rail=h.querySelector('.fhRail'),dots=h.querySelectorAll('.fhDots i'),hold=false;
+      var go=function(k){i=((k%sl.length)+sl.length)%sl.length;rail.style.transform='translateX(-'+(i*100)+'%)';dots.forEach(function(d,j){d.classList.toggle('on',j===i)})};
+      h.addEventListener('touchstart',function(){hold=true},{passive:true});
+      h.addEventListener('touchend',function(){setTimeout(function(){hold=false},2500)},{passive:true});
+      var reduce=false;try{reduce=window.matchMedia('(prefers-reduced-motion:reduce)').matches}catch(e){}
+      if(!reduce){var tm=setInterval(function(){if(!document.body.contains(h)){clearInterval(tm);return}if(hold||document.hidden)return;go(i+1)},3200)}
+    }
+  }catch(e){}
 }
 
 function v2FeaturedNode(){
