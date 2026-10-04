@@ -413,11 +413,11 @@ function injectFooter(){
 /* ------------------------------------------------------------------ yönetim paneli */
 var ADM={tab:null};
 function hasRole(r){var R=PF.roles&&PF.roles.roles||[];return R.indexOf('super')>=0||R.indexOf(r)>=0}
-var TABS=[['docs','Belgeler','moderator'],['venues','İşletme başvuruları','moderator'],['reports','Şikâyetler','moderator'],['listings','İlanlar','moderator'],['providers','Ustalar','moderator'],['susp','Askıya almalar','moderator'],['tickets','Destek','support'],
+var TABS=[['docs','Belgeler','moderator'],['venues','İşletme başvuruları','moderator'],['lreview','Onay bekleyen ilanlar','moderator'],['reports','Şikâyetler','moderator'],['listings','İlanlar','moderator'],['providers','Ustalar','moderator'],['susp','Askıya almalar','moderator'],['tickets','Destek','support'],
   ['kvkk','KVKK başvuruları','legal'],['legal','Yasal metinler','legal'],['company','Şirket bilgileri','legal'],['finance','Finans','finance'],['campaigns','Kampanyalar','finance'],['revenue','Gelir','finance'],
   ['settings','Ayarlar','ops'],['dispatch','Kurye dağıtımı','ops'],['hero','Ana ekran fotoğrafları','ops'],['words','Yasaklı kelimeler','ops'],['audit','Denetim kaydı','super']];
-var ADM_GROUPS=[['Moderasyon',['reports','listings','docs','venues','providers','susp','words']],['Destek ve yasal',['tickets','kvkk','legal','company']],['Finans',['finance','campaigns','revenue']],['Operasyon',['settings','dispatch','hero']],['Sistem',['audit']]];
-var ADM_ICON={docs:'📄',venues:'🏪',reports:'🚩',listings:'📋',providers:'🔧',susp:'⛔',words:'🔤',tickets:'🎧',kvkk:'🔒',legal:'⚖️',company:'🏢',finance:'💰',campaigns:'🎟️',revenue:'📈',settings:'⚙️',dispatch:'🛵',hero:'🖼️',audit:'🗂️'};
+var ADM_GROUPS=[['Moderasyon',['lreview','reports','listings','docs','venues','providers','susp','words']],['Destek ve yasal',['tickets','kvkk','legal','company']],['Finans',['finance','campaigns','revenue']],['Operasyon',['settings','dispatch','hero']],['Sistem',['audit']]];
+var ADM_ICON={lreview:'⏳',docs:'📄',venues:'🏪',reports:'🚩',listings:'📋',providers:'🔧',susp:'⛔',words:'🔤',tickets:'🎧',kvkk:'🔒',legal:'⚖️',company:'🏢',finance:'💰',campaigns:'🎟️',revenue:'📈',settings:'⚙️',dispatch:'🛵',hero:'🖼️',audit:'🗂️'};
 PF.openAdmin=async function(tab){
   if(!need())return;
   if(!PF.roles)try{PF.roles=await rpc('pf_my_roles',{})}catch(e){}
@@ -463,12 +463,18 @@ var ADMIN={
       '<div class="pfxRow"><button type="button" class="pfxBtn pri" onclick="PF._admReport(\''+esc(r.id)+'\',\''+esc(r.source||'pf')+'\',\'resolved\',this)">Çözüldü</button><button type="button" class="pfxBtn" onclick="PF._admReport(\''+esc(r.id)+'\',\''+esc(r.source||'pf')+'\',\'dismissed\',this)">Asılsız</button>'+
       (['listing','user','venue','provider','courier'].indexOf(r.target_type)>=0?'<button type="button" class="pfxBtn bad" onclick="PF._admSuspend(\''+esc(r.target_type)+'\',\''+esc(r.target_id)+'\',this)">Askıya al</button>':'')+'</div></div>'}).join(''):'<p class="pfxMuted">Açık şikâyet yok.</p>';
   },
+  lreview:async function(el){
+    var q=await rpc('pf_admin_listing_queue',{});
+    var LT={gayrimenkul:'Gayrimenkul',otomobil:'Araç',hizmet:'Hizmet'};
+    el.innerHTML=(q||[]).length?'<p class="pfxMuted">'+q.length+' ilan onay bekliyor (en eski önce). Onaylarsan yayına girer; reddedersen sebebi ilan sahibine görünür ve düzeltip tekrar gönderebilir.</p>'+(q||[]).map(function(r){return '<div class="pfxCard"><div class="pfxRow"><b>'+esc(r.title)+'</b><span class="pfxTag">'+esc(LT[r.listing_type]||r.listing_type)+'</span></div><div class="pfxMuted">'+(r.price!=null?esc(r.price)+' '+esc(r.currency||'')+' · ':'')+esc([r.district,r.city].filter(Boolean).join(', ')||'Konum yok')+' · '+esc(r.owner_email||'—')+' · '+esc(fmtDate(r.created_at))+'</div>'+(r.description?'<p style="white-space:pre-wrap">'+esc(r.description)+'</p>':'<p class="pfxMuted">Açıklama yok.</p>')+
+      '<div class="pfxRow"><button type="button" class="pfxBtn pri" onclick="PF._admRev(\''+esc(r.id)+'\',\'approve\',this)">Onayla</button><button type="button" class="pfxBtn bad" onclick="PF._admRev(\''+esc(r.id)+'\',\'reject\',this)">Reddet</button></div></div>'}).join(''):'<p class="pfxMuted">Onay bekleyen ilan yok.</p>';
+  },
   listings:async function(el){
     var st=ADM.lst||'',qq=ADM.lq||'';
     var rows=await rpc('pf_admin_listings',{p_status:st||null,p_q:qq||null,p_limit:100});
     var LT={gayrimenkul:'Gayrimenkul',otomobil:'Araç',hizmet:'Hizmet'},LS={draft:'Taslak',published:'Yayında',reserved:'Rezerve',sold:'Satıldı',archived:'Arşiv'};
     el.innerHTML='<div class="pfxCard"><input class="pfxIn" id="pfxLsQ" placeholder="Ara: başlık, açıklama veya e-posta" value="'+esc(qq)+'"><select class="pfxSel" id="pfxLsS"><option value="">Tüm durumlar</option>'+Object.keys(LS).map(function(k){return '<option value="'+k+'"'+(k===st?' selected':'')+'>'+LS[k]+'</option>'}).join('')+'</select><button type="button" class="pfxBtn pri" onclick="PF._admListGo()">Listele</button><p class="pfxMuted">En yeni 100 ilan gösterilir. "Yayından kaldır" ilanı herkese kapatır; silmez, kayıt ve gerekçe saklanır. Geri almak için "Askıya almalar" sekmesindeki Kaldır düğmesi kullanılır.</p></div>'+
-      ((rows||[]).length?(rows||[]).map(function(r){return '<div class="pfxCard"><div class="pfxRow"><b>'+esc(r.title)+'</b><span class="pfxTag">'+esc(LT[r.listing_type]||r.listing_type)+'</span></div><div class="pfxMuted">'+esc(LS[r.status]||r.status)+' · '+esc(r.owner_email||'—')+' · '+esc(fmtDate(r.created_at))+(r.open_reports>0?' · <b>'+esc(r.open_reports)+' açık şikâyet</b>':'')+'</div>'+(r.description?'<p>'+esc(r.description)+'</p>':'')+
+      ((rows||[]).length?(rows||[]).map(function(r){return '<div class="pfxCard"><div class="pfxRow"><b>'+esc(r.title)+'</b><span class="pfxTag">'+esc(LT[r.listing_type]||r.listing_type)+'</span></div><div class="pfxMuted">'+esc(LS[r.status]||r.status)+(r.review==='pending'?' · ⏳ onay bekliyor':r.review==='rejected'?' · ⛔ reddedildi':'')+' · '+esc(r.owner_email||'—')+' · '+esc(fmtDate(r.created_at))+(r.open_reports>0?' · <b>'+esc(r.open_reports)+' açık şikâyet</b>':'')+'</div>'+(r.description?'<p>'+esc(r.description)+'</p>':'')+
         (r.suspended?'<div class="pfxRow"><span class="pfxTag bad">Askıda</span><span class="pfxMuted">'+esc(r.suspend_reason||'')+'</span></div>':'<div class="pfxRow"><button type="button" class="pfxBtn bad" onclick="PF._admListSusp(\''+esc(r.id)+'\',this)">Yayından kaldır</button></div>')+'</div>'}).join(''):'<p class="pfxMuted">İlan bulunamadı.</p>');
   },
   words:async function(el){
@@ -594,6 +600,7 @@ PF._admDoc=function(id,dec,btn){var reason=null;if(dec==='rejected'){reason=prom
 PF._admVenue=function(id,dec,btn){var reason=null;if(dec==='rejected'){reason=prompt('Ret gerekçesi');if(!reason)return}act(btn,async function(){await rpc('pf_admin_review_venue',{p_venue_id:id,p_decision:dec,p_reason:reason});toast('Kaydedildi.');PF.openAdmin('venues')})};
 PF._admPublish=function(id,btn){if(!confirm('İşletme yayına alınsın mı?'))return;act(btn,async function(){await rpc('pf_admin_publish_venue',{p_venue_id:id});toast('Yayına alındı.');PF.openAdmin('venues')})};
 PF._admReport=function(id,src,st,btn){var res=prompt('Karar notu')||'';act(btn,async function(){await rpc('pf_admin_resolve_report',{p_id:id,p_source:src,p_status:st,p_resolution:res});PF.openAdmin('reports')})};
+PF._admRev=function(id,dec,btn){var reason=null;if(dec==='reject'){reason=prompt('Ret gerekçesi (ilan sahibine gösterilir)');if(!reason||!reason.trim())return;reason=reason.trim()}act(btn,async function(){await rpc('pf_admin_review_listing',{p_id:id,p_decision:dec,p_reason:reason});toast(dec==='approve'?'İlan onaylandı ve yayına girdi.':'İlan reddedildi.');PF.openAdmin('lreview')})};
 PF._admListGo=function(){ADM.lq=(document.getElementById('pfxLsQ')||{}).value||'';ADM.lst=(document.getElementById('pfxLsS')||{}).value||'';PF.openAdmin('listings')};
 PF._admListSusp=function(id,btn){var reason=prompt('Yayından kaldırma gerekçesi (ilan sahibine gösterilir)');if(!reason||!reason.trim())return;act(btn,async function(){await rpc('pf_admin_suspend',{p_target_type:'listing',p_target_id:String(id),p_reason:reason.trim(),p_until:null});toast('İlan yayından kaldırıldı.');PF.openAdmin('listings')})};
 PF._admWordAdd=function(btn){var v=(document.getElementById('pfxWdI')||{}).value||'';if(!v.trim())return toast('Kelime yaz.');act(btn,async function(){await rpc('pf_admin_banned_word_add',{p_word:v});toast('Eklendi.');PF.openAdmin('words')})};

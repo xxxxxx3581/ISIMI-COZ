@@ -2277,8 +2277,9 @@ function myListingsBack(){
   if(b==='hub'&&typeof showListingsHub==='function') return showListingsHub();
   if(typeof showHome==='function') return showHome();
 }
-function myListingStatusMeta(status){
+function myListingStatusMeta(status,row){
   const s=String(status||'draft').toLowerCase();
+  if(s==='draft'){ const rv=row&&row.metadata&&row.metadata.pf_review; if(rv==='pending') return {label:'İncelemede', emoji:'⏳', key:'draft', review:'pending'}; if(rv==='rejected') return {label:'Reddedildi', emoji:'⛔', key:'draft', review:'rejected'}; }
   if(s==='published') return {label:'Yayında', emoji:'🟢', key:'published'};
   if(s==='passive'||s==='paused'||s==='archived') return {label:'Yayında değil', emoji:'⏸️', key:'passive'};
   if(s==='sold') return {label:'Satıldı', emoji:'🏷️', key:'sold'};
@@ -2302,7 +2303,9 @@ function myListingMissingHints(row){
   return miss;
 }
 function myListingTxnHint(row){
-  var st=myListingStatusMeta(row&&row.status);
+  var st=myListingStatusMeta(row&&row.status,row);
+  if(st.review==='pending') return {emoji:'⏳',label:'Onay bekliyor'};
+  if(st.review==='rejected') return {emoji:'⛔',label:'Düzeltme gerekiyor'};
   if(st.key==='draft') return {emoji:'📋',label:'İlan tamamlanmadı'};
   if(st.key==='passive') return {emoji:'📋',label:'Yayında değil'};
   if(st.key==='published'){ var t0=(row&&row.listing_type==='otomobil')?'otomobil':'gayrimenkul', pr0=v2WsProgress(row,t0); if(pr0.completed) return {emoji:'✅',label:'Hazırlık tamamlandı'}; if(pr0.started&&pr0.docDone>0) return {emoji:'📋',label:'Hazırlık %'+pr0.pct}; return {emoji:'📋',label:(t0==='otomobil')?'Devir hazırlığı başlamadı':'Satış hazırlığı başlamadı'}; }
@@ -2310,7 +2313,7 @@ function myListingTxnHint(row){
   return {emoji:'📋',label:'İşlem başlamadı'};
 }
 function myListingNextStep(row){
-  var st=myListingStatusMeta(row.status), id=v2Id(row.id), type=row.listing_type==='otomobil'?'otomobil':'gayrimenkul';
+  var st=myListingStatusMeta(row.status,row), id=v2Id(row.id), type=row.listing_type==='otomobil'?'otomobil':'gayrimenkul';
   var miss=myListingMissingHints(row), car=type==='otomobil';
   var kind=car?'arac':(typeof officialPrepKindFromListing==='function'?officialPrepKindFromListing(row):'konut');
   var detail=(car?'showOtomobilDetail':'showGayrimenkulDetail')+"('"+id+"')";
@@ -2324,6 +2327,8 @@ function myListingNextStep(row){
   var susp=!!(row.metadata&&(row.metadata.pf_suspended===true||row.metadata.pf_suspended==='true'));
   if(susp) return {hint:'Bu ilan moderasyon nedeniyle askıda. Ayrıntı için destekle iletişime geçebilirsin.',label:'',onclick:'',more:[['👁 İlanı görüntüle',detail]]};
   more.push(['🗑 İlanı sil',"v2DeleteListing('"+id+"','"+type+"')"]);
+  if(st.review==='pending') return {hint:'İlanın incelemede. Onaylanınca yayınlanır.',label:'',onclick:'',more:more};
+  if(st.review==='rejected') return {hint:'Reddedildi'+(row.metadata&&row.metadata.pf_review_reason?': '+row.metadata.pf_review_reason:'')+'. Metni düzeltip tekrar yayınlayabilirsin.',label:'İlanı düzenle →',onclick:edit,more:more};
   if(st.key==='draft') return miss.length?
     {hint:'Eksik: '+miss.join(', ')+'.',label:'İlanı tamamla →',onclick:edit,more:more}:
     {hint:'İlanın hazır. Yayınlayınca alıcılar görebilir.',label:'İlanı yayınla →',onclick:"republishMyListing('"+id+"','"+type+"')",more:more};
@@ -2369,13 +2374,13 @@ async function viewMyListingSummary(id, type){
     const rows=await supabaseAuthRequest('GET', path);
     const row=Array.isArray(rows)?rows[0]:null;
     if(!row){ alert('İlan bulunamadı.'); return showMyListings(); }
-    const st=myListingStatusMeta(row.status);
+    const st=myListingStatusMeta(row.status,row);
     const miss=myListingMissingHints(row);
     const title=escapeHTML(row.title||'İlan');
     const price=escapeHTML(typeof formatListingPrice==='function'?formatListingPrice(row.price,row.currency):String(row.price||''));
     const loc=escapeHTML([row.city,row.district,row.neighborhood].filter(Boolean).join(' / ')||'—');
     const missHtml=miss.length?('<p class="small" style="margin:8px 0 0">⚠️ '+miss.length+' eksik: '+escapeHTML(miss.join(', '))+'</p>'):'<p class="small muted">Temel alanlar dolu görünüyor.</p>';
-    const canPub=st.key!=='published';
+    const canPub=st.key!=='published'&&st.review!=='pending';
     app(`<div class="back"><button class="btn secondary smallBtn" type="button" onclick="showMyListings()">← İlanlarım</button></div>
       <div class="formCard">
         <span class="badge">${st.emoji} ${escapeHTML(st.label)}</span>
@@ -6418,7 +6423,7 @@ function v2WorkCardHtml(o,acts){
 function v2Eval(code){ return function(){ try{ (new Function(code))(); }catch(e){ console.error('v2Eval',code,e); v2Toast('İşlem açılamadı: '+(e&&e.message||e)); } }; }
 
 function v2ListingWorkCard(row,acts){
-  var st=myListingStatusMeta(row.status), ns=myListingNextStep(row), tx=myListingTxnHint(row), md=row.metadata||{};
+  var st=myListingStatusMeta(row.status,row), ns=myListingNextStep(row), tx=myListingTxnHint(row), md=row.metadata||{};
   var ph=listingPhotosFromRow(row), first=ph.length?(ph[0].path||ph[0]):'';
   var car=row.listing_type==='otomobil', facts=[];
   if(car){ if(md.year) facts.push(md.year); if(md.km!==undefined&&md.km!==''&&isFinite(Number(md.km))) facts.push(Number(md.km).toLocaleString(V2_MARKET.locale)+' '+V2_MARKET.units.distance); if(md.gear) facts.push(md.gear); }
@@ -6563,7 +6568,8 @@ async function v2SetListingStatus(id,type,status,then){
     var out=await listingsAuthWrite('PATCH','listings?id=eq.'+encodeURIComponent(id),{status:status});
     if(!Array.isArray(out.data)||!out.data.length) throw new Error('Durum güncellenemedi. Bu ilanın sahibi olduğundan emin ol.');
     __listingCache.gayrimenkul=[]; __listingCache.otomobil=[];
-    v2Toast(status==='published'?'İlan yayınlandı':'İlan yayından kaldırıldı');
+    var rr0=out.data[0], inRev=status==='published'&&rr0&&rr0.status!=='published';
+    v2Toast(inRev?'İlanın incelemeye alındı. Onaylanınca yayınlanır.':(status==='published'?'İlan yayınlandı':'İlan yayından kaldırıldı'));
     if(then==='detail') return v2LoadDetail(id,type);
     if(then==='ws'){ V2_NAV.replaceNext=true; return v2Workspace(id,type); }
     window.__mineSeg='listings'; window.__mineStatus='all'; showMine();
