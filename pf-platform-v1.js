@@ -413,7 +413,7 @@ function injectFooter(){
 /* ------------------------------------------------------------------ yönetim paneli */
 var ADM={tab:null};
 function hasRole(r){var R=PF.roles&&PF.roles.roles||[];return R.indexOf('super')>=0||R.indexOf(r)>=0}
-var TABS=[['docs','Belgeler','moderator'],['venues','İşletme başvuruları','moderator'],['reports','Şikâyetler','moderator'],['providers','Ustalar','moderator'],['susp','Askıya almalar','moderator'],['tickets','Destek','support'],
+var TABS=[['docs','Belgeler','moderator'],['venues','İşletme başvuruları','moderator'],['reports','Şikâyetler','moderator'],['listings','İlanlar','moderator'],['providers','Ustalar','moderator'],['susp','Askıya almalar','moderator'],['tickets','Destek','support'],
   ['kvkk','KVKK başvuruları','legal'],['legal','Yasal metinler','legal'],['company','Şirket bilgileri','legal'],['finance','Finans','finance'],['campaigns','Kampanyalar','finance'],['revenue','Gelir','finance'],
   ['settings','Ayarlar','ops'],['dispatch','Kurye dağıtımı','ops'],['hero','Ana ekran fotoğrafları','ops'],['audit','Denetim kaydı','super']];
 PF.openAdmin=async function(tab){
@@ -445,6 +445,14 @@ var ADMIN={
     el.innerHTML=(q||[]).length?(q||[]).map(function(r){return '<div class="pfxCard"><div class="pfxRow"><b>'+esc(REASONS[r.reason]||r.reason)+'</b><span class="pfxTag">'+esc(r.target_type)+'</span></div><div class="pfxMuted">'+esc(r.target_label||r.target_id)+' · '+esc(fmtDate(r.created_at))+(r.source==='marketplace'?' · ilan şikâyeti':'')+'</div>'+(r.details?'<p>'+esc(r.details)+'</p>':'')+
       '<div class="pfxRow"><button type="button" class="pfxBtn pri" onclick="PF._admReport(\''+esc(r.id)+'\',\''+esc(r.source||'pf')+'\',\'resolved\',this)">Çözüldü</button><button type="button" class="pfxBtn" onclick="PF._admReport(\''+esc(r.id)+'\',\''+esc(r.source||'pf')+'\',\'dismissed\',this)">Asılsız</button>'+
       (['listing','user','venue','provider','courier'].indexOf(r.target_type)>=0?'<button type="button" class="pfxBtn bad" onclick="PF._admSuspend(\''+esc(r.target_type)+'\',\''+esc(r.target_id)+'\',this)">Askıya al</button>':'')+'</div></div>'}).join(''):'<p class="pfxMuted">Açık şikâyet yok.</p>';
+  },
+  listings:async function(el){
+    var st=ADM.lst||'',qq=ADM.lq||'';
+    var rows=await rpc('pf_admin_listings',{p_status:st||null,p_q:qq||null,p_limit:100});
+    var LT={gayrimenkul:'Gayrimenkul',otomobil:'Araç',hizmet:'Hizmet'},LS={draft:'Taslak',published:'Yayında',reserved:'Rezerve',sold:'Satıldı',archived:'Arşiv'};
+    el.innerHTML='<div class="pfxCard"><input class="pfxIn" id="pfxLsQ" placeholder="Ara: başlık, açıklama veya e-posta" value="'+esc(qq)+'"><select class="pfxSel" id="pfxLsS"><option value="">Tüm durumlar</option>'+Object.keys(LS).map(function(k){return '<option value="'+k+'"'+(k===st?' selected':'')+'>'+LS[k]+'</option>'}).join('')+'</select><button type="button" class="pfxBtn pri" onclick="PF._admListGo()">Listele</button><p class="pfxMuted">En yeni 100 ilan gösterilir. "Yayından kaldır" ilanı herkese kapatır; silmez, kayıt ve gerekçe saklanır. Geri almak için "Askıya almalar" sekmesindeki Kaldır düğmesi kullanılır.</p></div>'+
+      ((rows||[]).length?(rows||[]).map(function(r){return '<div class="pfxCard"><div class="pfxRow"><b>'+esc(r.title)+'</b><span class="pfxTag">'+esc(LT[r.listing_type]||r.listing_type)+'</span></div><div class="pfxMuted">'+esc(LS[r.status]||r.status)+' · '+esc(r.owner_email||'—')+' · '+esc(fmtDate(r.created_at))+(r.open_reports>0?' · <b>'+esc(r.open_reports)+' açık şikâyet</b>':'')+'</div>'+(r.description?'<p>'+esc(r.description)+'</p>':'')+
+        (r.suspended?'<div class="pfxRow"><span class="pfxTag bad">Askıda</span><span class="pfxMuted">'+esc(r.suspend_reason||'')+'</span></div>':'<div class="pfxRow"><button type="button" class="pfxBtn bad" onclick="PF._admListSusp(\''+esc(r.id)+'\',this)">Yayından kaldır</button></div>')+'</div>'}).join(''):'<p class="pfxMuted">İlan bulunamadı.</p>');
   },
   susp:async function(el){
     var q=await rpc('pf_admin_suspensions',{p_active:true});
@@ -564,6 +572,8 @@ PF._admDoc=function(id,dec,btn){var reason=null;if(dec==='rejected'){reason=prom
 PF._admVenue=function(id,dec,btn){var reason=null;if(dec==='rejected'){reason=prompt('Ret gerekçesi');if(!reason)return}act(btn,async function(){await rpc('pf_admin_review_venue',{p_venue_id:id,p_decision:dec,p_reason:reason});toast('Kaydedildi.');PF.openAdmin('venues')})};
 PF._admPublish=function(id,btn){if(!confirm('İşletme yayına alınsın mı?'))return;act(btn,async function(){await rpc('pf_admin_publish_venue',{p_venue_id:id});toast('Yayına alındı.');PF.openAdmin('venues')})};
 PF._admReport=function(id,src,st,btn){var res=prompt('Karar notu')||'';act(btn,async function(){await rpc('pf_admin_resolve_report',{p_id:id,p_source:src,p_status:st,p_resolution:res});PF.openAdmin('reports')})};
+PF._admListGo=function(){ADM.lq=(document.getElementById('pfxLsQ')||{}).value||'';ADM.lst=(document.getElementById('pfxLsS')||{}).value||'';PF.openAdmin('listings')};
+PF._admListSusp=function(id,btn){var reason=prompt('Yayından kaldırma gerekçesi (ilan sahibine gösterilir)');if(!reason||!reason.trim())return;act(btn,async function(){await rpc('pf_admin_suspend',{p_target_type:'listing',p_target_id:String(id),p_reason:reason.trim(),p_until:null});toast('İlan yayından kaldırıldı.');PF.openAdmin('listings')})};
 PF._admSuspend=function(type,id,btn,reason,until){if(!id)return toast('Kayıt kimliği gir.');reason=reason||prompt('Askıya alma gerekçesi');if(!reason)return;act(btn,async function(){await rpc('pf_admin_suspend',{p_target_type:type,p_target_id:String(id),p_reason:reason,p_until:until?new Date(until).toISOString():null});toast('Askıya alındı.');PF.openAdmin('susp')})};
 PF._admLift=function(id,btn){var n=prompt('Kaldırma notu')||'';act(btn,async function(){await rpc('pf_admin_lift_suspension',{p_id:id,p_note:n});PF.openAdmin('susp')})};
 PF._admDr=function(id,st,btn){var ta=document.getElementById('pfxDrR_'+id);act(btn,async function(){await rpc('pf_admin_handle_data_request',{p_id:id,p_status:st,p_response:ta&&ta.value||null});toast('Kaydedildi.');PF.openAdmin('kvkk')})};
