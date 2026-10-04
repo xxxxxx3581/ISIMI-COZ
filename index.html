@@ -2049,7 +2049,7 @@ function hmShortcut(k){
   try{
     if(k==='orders'){ if(typeof showFoodOrders==='function') return showFoodOrders(); }
     else if(k==='favs'){ return showFavorites(); }
-    else if(k==='msgs'){ if(typeof window.openMsgs==='function') return window.openMsgs(); v2Toast('Mesajlar şu an açılamadı.'); return; }
+    else if(k==='msgs'){ var om=window.__A3514_OPEN_MESSAGES__||window.openMsgs; if(typeof om==='function') return om(); v2Toast('Mesajlar şu an açılamadı.'); return; }
     else if(k==='post'){ return v2StartSheet(); }
     else if(k==='pro'){ return hmGo('services'); }
     else if(k==='official'){ return openHallet(); }
@@ -4469,7 +4469,7 @@ function applyServiceParseAndForm(){
 
 window.showServiceParseConfirm=showServiceParseConfirm;window.parseServiceFreeText=parseServiceFreeText;window.applyServiceParseAndForm=applyServiceParseAndForm;
 function showRequest(preselected=""){
- setNav("navRequest");
+ setNav("navHome");
  app(`<div class="back"><button class="btn secondary smallBtn" onclick="showHome()">← Ana sayfaya dön</button></div>
  <button type="button" class="svcProvEntry" onclick="showProviderEntry()"><span class="ic" aria-hidden="true">🛠️</span><span class="tx"><small>Hizmet sağlayıcı mısın?</small><b>Gelen Talepler <span class="hzDot g">YENİ</span></b><em>Sana uygun talepleri gör, teklif ver</em></span><span class="go" aria-hidden="true">›</span></button>
  <div class="formCard"><span class="badge">📋 YENİ HİZMET TALEBİ</span><h1>İhtiyacını anlat.</h1><p class="muted small">Sorununu açıkça anlat. Böylece doğru hizmet sağlayıcısına ulaşmak kolaylaşır.</p>
