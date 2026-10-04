@@ -1557,18 +1557,19 @@ function trackRender(t){
   const showMap=!pickup&&!TERMINAL.includes(st)&&(!!TRK.courier||courierStage);
   TRK.venue=vLL;TRK.vname=t.venue.name;TRK.st=st;TRK.mode=o.delivery_mode;setTimeout(()=>{trackMap(vLL);pushDraw()},0);
   /* V4: kurye yoldayken harita en üstte, büyük ve 'x dakika sonra kapında' balonuyla */
-  const mapTop=showMap&&['picked_up','on_the_way','near_customer'].includes(st);
+  const onWay=showMap&&['picked_up','on_the_way','near_customer'].includes(st);
+  const mapOpen=TRK.watch===o.id,mapTop=onWay&&mapOpen,watchCard=onWay&&!mapOpen;
   const etaMin=etaTs?Math.max(0,Math.round((new Date(etaTs)-Date.now())/60000)):null;
   const mapBlock=(mapTop?'<div class="fdwTWrap"><div class="fdMap fdwTBig" id="fdTMap"></div><div class="fdwEta" aria-live="polite">'+(etaMin===null?'<b>Kurye yolda</b>':etaMin<=1||st==='near_customer'?'<b>Birazdan</b><span>kapında</span>':'<b>'+etaMin+' dakika</b><span>sonra kapında</span>')+'</div></div>':'<div class="fdMap" id="fdTMap"></div>')+
     (o.delivery_mode==='self_delivery'?'':'<div class="fdChips" style="margin-top:-4px;padding-bottom:6px"><button type="button" class="fdChip'+(TRK.view!=='all'?' on':'')+'" data-tv="focus" onclick="foodTrackView(\'focus\')">🛵 Kuryeye odaklan</button><button type="button" class="fdChip'+(TRK.view==='all'?' on':'')+'" data-tv="all" onclick="foodTrackView(\'all\')">🗺 Tümünü göster</button></div>')+'<p class="fdMuted fdSmall" id="fdTLoc" style="margin:0 0 4px"></p>'+(o.address_text?'<p class="fdMuted fdSmall" style="margin:0 0 12px">🏠 '+E(o.address_text)+'</p>':'');
   (document.getElementById('fdTrack')?patch:render)(bar('#'+o.no,'showFoodOrders()','<span class="fdLive" id="fdLive"></span>',t.venue.name)+
-    '<div id="fdTrack">'+(mapTop?mapBlock:'')+'<div class="fdTrackHero'+(bad?' bad':done?' ok':'')+'"><div class="st"><span class="e">'+info[0]+'</span><div><h2>'+E(info[1])+'</h2><p>'+E(sub)+'</p></div></div>'+
+    '<div id="fdTrack">'+(mapTop?mapBlock:'')+(watchCard?'<div class="fdTrackHero ok" style="text-align:center"><div class="st" style="justify-content:center"><span class="e">🛵</span><div><h2>'+(etaMin===null?'Kurye yolda':etaMin<=1||st==='near_customer'?'Kurye birazdan kapında':'Kurye '+etaMin+' dakika sonra kapında')+'</h2></div></div><button type="button" class="fb pri block" style="margin-top:12px;min-height:46px" onclick="foodTrackOpen(\''+E(o.id)+'\')">🗺 Siparişini izle</button></div>':'')+'<div class="fdTrackHero'+(bad?' bad':done?' ok':'')+'"><div class="st"><span class="e">'+info[0]+'</span><div><h2>'+E(info[1])+'</h2><p>'+E(sub)+'</p></div></div>'+
       (o.cancel_reason&&bad?'<div class="fdNote bad" style="margin:12px 0 0">Sebep: '+E(o.cancel_reason)+'</div>':'')+
       (!bad&&!done&&etaTs?'<div class="fdEta"><small>'+(pickup?'Tahmini hazır olma':'Tahmini teslimat')+'</small><b>'+hm(etaTs)+'</b></div>':'')+
       (done?'<div class="fdEta"><small>✓ Teslim edildi</small><b>'+hm(TRK.deliveredAt||(events.find(e=>e.to==='delivered')||{}).at||o.created_at)+'</b></div><p style="margin-top:6px">'+E(dt(TRK.deliveredAt||(events.find(e=>e.to==='delivered')||{}).at||o.created_at))+' · '+M(o.total_kurus)+'</p>':'')+
       (!bad?'<div class="fdSteps">'+lbl.map((l,i)=>'<div class="'+(i<stg||done?'done':i===stg?'cur':'')+'"><i></i>'+E(l)+'</div>').join('')+'</div>':'')+'</div>'+
     placed+refundNote+(qk.length?'<div class="fdwQk">'+qk.join('')+'</div>':'')+
-    (showMap&&!mapTop?mapBlock:'')+
+    (showMap&&!mapTop&&!watchCard?mapBlock:'')+
     (!TERMINAL.includes(st)?pushSlot('order'):'')+
     (st==='new'&&TRK.acceptMin?'<div class="fdNote info">⏳ Restoran siparişini onaylıyor. '+TRK.acceptMin+' dk içinde yanıt gelmezse sipariş otomatik iptal edilir ve sana bildirilir.</div>':'')+
     (showCode?'<div class="fdCodeBox"><div class="tx"><small>TESLİMAT KODUN</small><span class="fdSmall">Siparişi teslim alırken kuryeye söyle.</span></div><b>'+E(t.delivery_code)+'</b></div>':'')+
@@ -1615,6 +1616,7 @@ function trackView(user){
   qa('[data-tv]').forEach(b=>b.classList.toggle('on',b.dataset.tv===(TRK.view||'focus')));
 }
 window.foodTrackView=function(v){TRK.view=v;trackView(true)};
+window.foodTrackOpen=function(id){TRK.watch=id;showFoodOrderDetail(id)};
 function courierTip(){const sec=TRK.at?Math.round((Date.now()-new Date(TRK.at))/1000):null;return 'Kurye'+(sec!=null?' · '+(sec<60?sec+' sn':Math.round(sec/60)+' dk'):'')}
 function locText(){
   if(TMK.c&&TMK.c.setTooltipContent)TMK.c.setTooltipContent(courierTip());
@@ -3344,7 +3346,7 @@ html:not([data-theme="light"]) .fdwCp b{color:var(--fdw-acc)}
 
 /* Takip haritası (kurye yoldayken) */
 .fdwTWrap{position:relative;margin:0 0 12px}
-.fdMap.fdwTBig{height:min(52vh,420px);min-height:280px;margin:0}
+.fdMap.fdwTBig{height:min(34vh,280px);min-height:210px;margin:0}
 .fdwEta{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:500;display:flex;flex-direction:column;align-items:center;padding:8px 18px;border-radius:18px;background:var(--card);color:var(--text);box-shadow:0 6px 18px rgba(0,0,0,.18);pointer-events:none;text-align:center;line-height:1.15}
 .fdwEta b{font-size:20px;font-weight:900;color:var(--fdw-ok)}.fdwEta span{font-size:12.5px;color:var(--muted);font-weight:700}
 .fdwNudge{border-color:var(--fdw-hot)!important}
@@ -3604,6 +3606,21 @@ body.fdWorld .fdHero .nav>.fdIco:first-child{visibility:hidden}
 `;document.head.appendChild(s);
 }
 
+const fdNav=(name,f)=>function(){const a=arguments,s=this;try{if(typeof window.v2NavPush==='function')window.v2NavPush(name,()=>f.apply(s,a),a)}catch(e){}return f.apply(s,a)};
+showFoodSearch=fdNav('showFoodSearch',showFoodSearch);
+showFoodVenue=fdNav('showFoodVenue',showFoodVenue);
+showFoodCart=fdNav('showFoodCart',showFoodCart);
+showFoodCheckout=fdNav('showFoodCheckout',showFoodCheckout);
+showFoodOrders=fdNav('showFoodOrders',showFoodOrders);
+showFoodOrderDetail=fdNav('showFoodOrderDetail',showFoodOrderDetail);
+showFoodNotifications=fdNav('showFoodNotifications',showFoodNotifications);
+showFoodAccount=fdNav('showFoodAccount',showFoodAccount);
+showFoodHelp=fdNav('showFoodHelp',showFoodHelp);
+showFoodCoupons=fdNav('showFoodCoupons',showFoodCoupons);
+showFoodBusiness=fdNav('showFoodBusiness',showFoodBusiness);
+showFoodMenu=fdNav('showFoodMenu',showFoodMenu);
+showFoodSettings=fdNav('showFoodSettings',showFoodSettings);
+showFoodCourier=fdNav('showFoodCourier',showFoodCourier);
 /* ====================== Dışa aktarım (eski adlarla uyumlu) ====================== */
 Object.assign(window,{
   showFoodHome,showFoodVenue,showFoodCart,showFoodCheckout,showFoodSearch,showFoodOrders,showFoodOrderDetail,showFoodBusiness,showFoodMenu,showFoodSettings,
