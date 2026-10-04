@@ -1197,6 +1197,31 @@ body:has(#app .v2Home.hmx) .bottomInner .navBtn.active{color:var(--hm-chipIcon)!
 .hmSc::-webkit-scrollbar{display:none}
 .hmSc button{flex:0 0 68px;border:0;background:transparent;color:var(--hm-ink,#22170D);display:flex;flex-direction:column;align-items:center;gap:6px;font:inherit;font-size:11px;font-weight:700;white-space:nowrap;padding:0;cursor:pointer}
 .hmSc button span{width:52px;height:52px;border-radius:26px;background:var(--hm-chip,#C5AB82);border:1px solid var(--hm-chipLine,#B69A6D);color:var(--hm-chipIcon,#683207);display:grid;place-items:center}
+
+html:root .hmSlider{position:relative;height:250px;margin:env(safe-area-inset-top,0px) 0 0;border-radius:28px;overflow:hidden;box-shadow:0 8px 24px rgba(40,20,5,.28);background:#58290A;isolation:isolate}
+html:root .hmTrack{display:flex;width:500%;height:100%;animation:hmTrack 20s ease-in-out infinite}
+html:root .hmSlider:active .hmTrack{animation-play-state:paused}
+@keyframes hmTrack{0%,20%{transform:translateX(0)}25%,45%{transform:translateX(-20%)}50%,70%{transform:translateX(-40%)}75%,95%{transform:translateX(-60%)}100%{transform:translateX(-80%)}}
+html:root .hmSl{position:relative;flex:0 0 20%;width:20%;height:100%;border:0;margin:0;padding:0;overflow:hidden;text-align:left;cursor:pointer;color:#fff;font:inherit;background:linear-gradient(135deg,#281607,#6B3A12);-webkit-tap-highlight-color:transparent}
+html:root .hmSl:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(0,0,0,.62),rgba(0,0,0,.12) 75%);z-index:1}
+html:root .hmSl.food:before{display:none}
+html:root .hmSl img.bg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+html:root .hmSl .tx{position:absolute;left:16px;bottom:34px;z-index:2;max-width:75%;display:block}
+html:root .hmSl.food .tx{top:70px;bottom:auto;max-width:44%}
+html:root .hmSl .h{display:block;font-weight:800;line-height:1.12;font-size:clamp(22px,7vw,28px);text-shadow:0 1px 6px rgba(0,0,0,.35)}
+html:root .hmSl .s{display:block;margin-top:6px;font-size:13px;line-height:1.3;opacity:.96}
+html:root .hmSl .b{display:inline-block;margin-top:10px;padding:8px 14px;border-radius:999px;background:#EBDBBF;color:#22170D;font-weight:800;font-size:13px}
+html:root .hmSl .b.soon{background:rgba(255,255,255,.2);color:#fff;border:1px solid rgba(255,255,255,.75)}
+html:root .hmMo{position:absolute;z-index:1;right:10px;top:10px;bottom:24px;width:53%;display:grid;grid-template-columns:repeat(6,1fr);grid-template-rows:1fr 1fr;gap:5px}
+html:root .hmMo img{width:100%;height:100%;min-height:0;object-fit:cover;border-radius:16px;display:block}
+html:root .hmBrandW{position:absolute;left:14px;top:14px;z-index:3;margin:0;padding:0}
+html:root .hmDots{position:absolute;left:0;right:0;bottom:10px;z-index:3;display:flex;justify-content:center;gap:5px;pointer-events:none}
+html:root .hmDots i{display:block;height:6px;width:6px;border-radius:3px;background:#fff;opacity:.5;animation:hmDot 20s infinite}
+html:root .hmDots i:nth-child(2){animation-delay:-15s}
+html:root .hmDots i:nth-child(3){animation-delay:-10s}
+html:root .hmDots i:nth-child(4){animation-delay:-5s}
+@keyframes hmDot{0%,22%{width:18px;opacity:1}27%,100%{width:6px;opacity:.5}}
+@media (prefers-reduced-motion:reduce){html:root .hmTrack,html:root .hmDots i{animation:none}}
 </style>
 <style id="svcProvEntryCss">.svcProvEntry{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;border-radius:16px;border:1.5px solid rgba(124,92,255,.45);background:rgba(124,92,255,.10);color:var(--text);font:inherit;text-align:left;cursor:pointer}.svcProvEntry .ic{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:rgba(124,92,255,.18)}.svcProvEntry .tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}.svcProvEntry small{font-size:12px;font-weight:700;color:var(--muted)}.svcProvEntry b{font-size:16px;font-weight:900}.svcProvEntry em{font-style:normal;font-size:12.5px;color:var(--muted)}.svcProvEntry .go{flex:0 0 auto;font-size:24px;font-weight:700;color:#7c5cff}.svcProvEntry:active{transform:scale(.99)}.svcProvEntry:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}html[data-theme="light"] .svcProvEntry{background:#f3effe;border-color:#c9bbff}html[data-theme="light"] .svcProvEntry .go{color:#5b3fd6}</style>
 <style id="v2HomeBtnCss">.v2HomeBtn{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:42px;min-width:42px;padding:0 12px 0 10px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;font-size:13px;font-weight:800;cursor:pointer}.v2HomeBtn:active{transform:scale(.97)}.v2HomeBtn:focus-visible{outline:2px solid var(--v2-pri);outline-offset:2px}@media(max-width:430px){.v2HomeBtn{padding:0}.v2HomeBtn span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}}.v2KTop .v2HomeBtn{margin-left:4px}@media(max-width:430px){.v2KTop:has(.v2HomeBtn) .v2Back{font-size:0;gap:0;width:42px;min-width:42px;padding:0;justify-content:center}.v2KTop:has(.v2HomeBtn) .v2Back::before{content:"←";font-size:19px;font-weight:800;line-height:1}}@media(max-width:374px){.v2KTop:has(.v2HomeBtn) h1{font-size:17.5px}}.back.v2BackRow{display:flex;align-items:center;gap:8px}.back.v2BackRow>.btn{flex:1 1 auto;min-width:0}</style>
@@ -2056,6 +2081,27 @@ function hmShortcut(k){
     v2Toast('Bu bölüm şu an açılamadı.');
   }catch(e){ try{ v2Toast('Bir sorun oluştu.'); }catch(x){} }
 }
+function hmSlide(k){ if(k==='market'){ hmSoon(); return; } hmGo(k); }
+function hmSliderHtml(brand){
+  var P='images/home/';
+  function im(f,cls,st){ return '<img'+(cls?' class="'+cls+'"':'')+' src="'+P+f+'" alt="" loading="lazy"'+(st?' style="'+st+'"':'')+' onerror="this.remove()">'; }
+  function food(){
+    return '<button type="button" class="hmSl food" data-k="food" onclick="hmSlide(this.dataset.k)">'+
+      '<span class="hmMo">'+im('y-iskender.jpg','','grid-column:1/4')+im('y-burger.jpg','','grid-column:4/7')+im('y-kebap.jpg','','grid-column:1/3')+im('y-doner.jpg','','grid-column:3/5;object-position:50% 30%')+im('yemek.jpg','','grid-column:5/7')+'</span>'+
+      '<span class="tx"><span class="h">Bugün<br>ne yesek?</span><span class="s">Kapında teslim.</span><span class="b">Restoranlar</span></span></button>';
+  }
+  function cover(k,img,h,s,soon){
+    return '<button type="button" class="hmSl" data-k="'+k+'" onclick="hmSlide(this.dataset.k)">'+im(img,'bg')+
+      '<span class="tx"><span class="h">'+h+'</span><span class="s">'+s+'</span>'+(soon?'<span class="b soon">Yakında</span>':'')+'</span></button>';
+  }
+  return '<div class="hmSlider"><div class="hmTrack">'+
+    food()+
+    cover('market','market.jpg','Market yolda','Taze meyve sebze, çok yakında.',true)+
+    cover('listings','ilanlar.jpg','Hayalindeki ev burada','Gayrimenkul ve araç, çok yakında.',true)+
+    cover('services','hizmet.jpg','Evin işini ustaya bırak','Usta ve hizmet, çok yakında.',true)+
+    food()+
+    '</div><div class="hmBrandW">'+brand+'</div><div class="hmDots"><i></i><i></i><i></i><i></i></div></div>';
+}
 function hmHomeHtml(){
   var I=function(d,s){ return '<svg width="'+(s||24)+'" height="'+(s||24)+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>'; };
   var tile=function(k,img,t,s,soon,fn){
@@ -2067,8 +2113,7 @@ function hmHomeHtml(){
   var sc=function(k,label,icon){ return '<button type="button" data-k="'+k+'" onclick="hmShortcut(this.dataset.k)"><span>'+icon+'</span>'+label+'</button>'; };
   var brand='<button type="button" class="hmBrand" onclick="showHome()" aria-label="İşimi Çöz ana sayfa"><svg width="26" height="26" viewBox="0 0 64 64" aria-hidden="true"><path d="M10 31L32 12l22 19" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 28v21a3 3 0 0 0 3 3h24a3 3 0 0 0 3-3V28" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M25 38l6 6 10-12" fill="none" stroke="#FFDF9A" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/></svg><b>İşimi</b><i>Çöz</i></button>';
   return '<div class="v2Home hmx">'+
-    '<div class="hmTop">'+brand+'</div>'+
-    '<div id="v2FeatSlot"></div>'+
+    hmSliderHtml(brand)+
     '<div class="hmTiles">'+
       tile('food','yemek.jpg','Yemek','Restoran yemekleri',false,'hmGo(this.dataset.k)')+
       tile('market','market.jpg','Market','Alışveriş kapına',true,'hmSoon()')+
@@ -2095,9 +2140,9 @@ function showHome(){
   setNav("navHome");
   window.__v2Understood=null;
   app(hmHomeHtml());
-  var slot=document.getElementById('v2FeatSlot'); if(slot) slot.replaceWith(v2FeaturedNode());
-  try{homeFeaturedInit();}catch(e){}
-  try{v2FoodHeroLoad();}catch(e){}
+  /*K1b: eski slider kaldirildi*/
+  
+  
   v2ContinueLoad();
   try{v2RecentVerify();}catch(e){}
 }
