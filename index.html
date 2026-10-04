@@ -1167,6 +1167,36 @@ html[data-theme="light"] .v2Btn.msg{background:#1f5fa8}
 .v2WsLinks{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 4px}
 .v2WsLinks button{border:0;background:transparent;color:var(--v2-pri);font-weight:800;font-size:13px;padding:8px 4px;cursor:pointer}
 .v2WsBar .v2Btn.idle{background:var(--card);color:var(--muted);border-color:var(--line)}
+/* ===== K1a — yeni ana ekran (Kehribar) — yalnız .v2Home.hmx için ===== */
+html:root:has(#app .v2Home.hmx){background:#D2BA95}
+html:root body:has(#app .v2Home.hmx){--hm-bg:#D2BA95;--hm-card:#E3D1B2;--hm-line:#BCA178;--hm-ink:#22170D;--hm-muted:#4D3A26;--hm-pri:#723808;--hm-chip:#C5AB82;--hm-chipLine:#B69A6D;--hm-chipIcon:#683207;background:#D2BA95!important;color:#22170D}
+body:has(#app .v2Home.hmx) .v2Top{display:none!important}
+body:has(#app .v2Home.hmx) nav.bottom{left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));max-width:744px;margin:0 auto;border-radius:28px;background:var(--hm-card)!important;border:1px solid var(--hm-line);box-shadow:0 6px 18px rgba(40,20,5,.18);-webkit-backdrop-filter:none;backdrop-filter:none;padding-bottom:0;overflow:hidden}
+body:has(#app .v2Home.hmx) .bottomInner .navBtn{color:var(--hm-muted)!important;white-space:nowrap}
+body:has(#app .v2Home.hmx) .bottomInner .navBtn.active{color:var(--hm-chipIcon)!important;font-weight:800}
+.v2Home.hmx{--bg:#D2BA95;--card:#E3D1B2;--card2:#E3D1B2;--line:#BCA178;--text:#22170D;--muted:#4D3A26;--v2-pri:#723808;--v2-pri-ink:#FFFFFF;--primary:#723808;padding:8px 0 120px;color:var(--hm-ink,#22170D)}
+.hmTop{display:flex;align-items:center;justify-content:space-between;margin:0 0 12px;padding-top:env(safe-area-inset-top,0px)}
+.hmBrand{display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 14px 0 8px;border:0;border-radius:14px;background:linear-gradient(135deg,#9C5215,#58290A);box-shadow:0 4px 12px rgba(40,20,5,.25);cursor:pointer;color:#fff;font:inherit}
+.hmBrand b{font-size:17px;font-weight:800;color:#fff;letter-spacing:-.01em}
+.hmBrand i{font-style:normal;font-size:17px;font-weight:800;color:#FFDF9A}
+.hmTiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:14px}
+.hmTile{position:relative;height:132px;border-radius:22px;border:0;padding:0;overflow:hidden;background:linear-gradient(135deg,#8a5a2b,#4a2a10);box-shadow:0 6px 16px rgba(40,20,5,.2);text-align:left;color:#fff;cursor:pointer;font:inherit}
+.hmTile img{position:absolute;left:0;top:0;width:100%;height:100%;object-fit:cover}
+.hmTile:after{content:"";position:absolute;left:0;top:0;right:0;bottom:0;background:linear-gradient(to top,rgba(40,22,7,.86) 0%,rgba(40,22,7,.4) 40%,rgba(40,22,7,0) 70%)}
+.hmTile .tx{position:absolute;left:14px;right:14px;bottom:12px;z-index:1;display:block}
+.hmTile .tx b{display:block;font-size:18px;font-weight:800;letter-spacing:-.01em}
+.hmTile .tx small{display:block;font-size:12px;font-weight:700;color:rgba(255,255,255,.92);margin-top:1px}
+.hmSoon{position:absolute;left:10px;top:10px;z-index:2;height:22px;padding:0 10px;border-radius:11px;background:#EBDBBF;color:#22170D;font-size:11px;font-weight:800;display:grid;place-items:center}
+.hmSearch{margin-top:14px;display:flex;align-items:center;gap:8px;height:46px;border-radius:16px;border:1px solid var(--hm-line,#BCA178);background:var(--hm-card,#E3D1B2);padding:0 6px 0 14px;box-sizing:border-box}
+.hmSearch>svg{flex:none;color:var(--hm-muted,#4D3A26)}
+.hmSearch input{flex:1;min-width:0;border:0;outline:0;background:transparent;color:var(--hm-ink,#22170D);font-size:16px;font-weight:600;height:100%;margin:0;padding:0;box-shadow:none}
+.hmSearch input::placeholder{color:var(--hm-muted,#4D3A26);opacity:1}
+.hmSearch .mic{flex:none;width:38px;height:38px;border:0;border-radius:12px;background:transparent;color:var(--hm-muted,#4D3A26);display:grid;place-items:center;cursor:pointer;padding:0}
+.hmH{margin:16px 0 0;font-size:15px;font-weight:800;letter-spacing:-.01em}
+.hmSc{margin-top:10px;display:flex;gap:10px;overflow-x:auto;padding:0 2px 4px;scrollbar-width:none}
+.hmSc::-webkit-scrollbar{display:none}
+.hmSc button{flex:0 0 68px;border:0;background:transparent;color:var(--hm-ink,#22170D);display:flex;flex-direction:column;align-items:center;gap:6px;font:inherit;font-size:11px;font-weight:700;white-space:nowrap;padding:0;cursor:pointer}
+.hmSc button span{width:52px;height:52px;border-radius:26px;background:var(--hm-chip,#C5AB82);border:1px solid var(--hm-chipLine,#B69A6D);color:var(--hm-chipIcon,#683207);display:grid;place-items:center}
 </style>
 <style id="svcProvEntryCss">.svcProvEntry{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;border-radius:16px;border:1.5px solid rgba(124,92,255,.45);background:rgba(124,92,255,.10);color:var(--text);font:inherit;text-align:left;cursor:pointer}.svcProvEntry .ic{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:rgba(124,92,255,.18)}.svcProvEntry .tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}.svcProvEntry small{font-size:12px;font-weight:700;color:var(--muted)}.svcProvEntry b{font-size:16px;font-weight:900}.svcProvEntry em{font-style:normal;font-size:12.5px;color:var(--muted)}.svcProvEntry .go{flex:0 0 auto;font-size:24px;font-weight:700;color:#7c5cff}.svcProvEntry:active{transform:scale(.99)}.svcProvEntry:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}html[data-theme="light"] .svcProvEntry{background:#f3effe;border-color:#c9bbff}html[data-theme="light"] .svcProvEntry .go{color:#5b3fd6}</style>
 <style id="v2HomeBtnCss">.v2HomeBtn{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:42px;min-width:42px;padding:0 12px 0 10px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;font-size:13px;font-weight:800;cursor:pointer}.v2HomeBtn:active{transform:scale(.97)}.v2HomeBtn:focus-visible{outline:2px solid var(--v2-pri);outline-offset:2px}@media(max-width:430px){.v2HomeBtn{padding:0}.v2HomeBtn span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}}.v2KTop .v2HomeBtn{margin-left:4px}@media(max-width:430px){.v2KTop:has(.v2HomeBtn) .v2Back{font-size:0;gap:0;width:42px;min-width:42px;padding:0;justify-content:center}.v2KTop:has(.v2HomeBtn) .v2Back::before{content:"←";font-size:19px;font-weight:800;line-height:1}}@media(max-width:374px){.v2KTop:has(.v2HomeBtn) h1{font-size:17.5px}}.back.v2BackRow{display:flex;align-items:center;gap:8px}.back.v2BackRow>.btn{flex:1 1 auto;min-width:0}</style>
@@ -1178,11 +1208,11 @@ html[data-theme="light"] .v2Btn.msg{background:#1f5fa8}
 <header class="v2Top"><div class="v2TopMini" id="v2TopMini"></div><button type="button" class="v2Ico" id="appMenuBtn" onclick="openAppDrawer()" aria-label="Menüyü aç">☰<span class="hzDot g sm" aria-hidden="true"></span></button><button type="button" class="v2Brand" onclick="showHome()" aria-label="İşimi Çöz ana sayfa"><span class="v2LogoMk" aria-hidden="true"><svg viewBox="0 0 32 32" width="28" height="28" focusable="false"><path d="M7.2 16.8l5.4 5.6 12.2-14" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="v2Wm"><b>İşimi</b><i>Çöz</i></span></button><div class="v2TopR"><button type="button" class="v2AraBtn" onclick="v2GoSearch()" aria-label="Ara">🔎 Ara</button><button type="button" class="v2Ico" id="themeToggleBtn" onclick="toggleAppTheme()" aria-label="Tema değiştir">🌙</button><div id="authArea" class="headerAuthRow"></div></div></header>
 <main id="app"></main></div>
 <nav class="bottom" aria-label="Ana gezinme"><div class="bottomInner">
-<button class="navBtn" id="navHome" onclick="showHome()"><b>⌂</b>Ana</button>
-<button class="navBtn" id="navProvider" onclick="window.__kesfetCat=window.__kesfetCat||'all';window.__v2Understood=null;showKesfet(false)"><b>🔎</b>Ara</button>
-<button class="navBtn" id="navFood" onclick="showFoodHome()"><b>🍽️</b>Yemek</button>
-<button class="navBtn navPlus" id="navRequest" onclick="v2StartSheet()" aria-label="Başlat"><b>＋</b>Başlat</button>
-<button class="navBtn" id="navRequests" onclick="window.__mineSeg='all';window.__mineStatus='all';showMine()"><b>📂</b>İşlerim<span class="hzDot c sm" aria-hidden="true"></span></button>
+<button class="navBtn" id="navHome" onclick="showHome()"><b><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:block;margin:0 auto"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></b>Ana sayfa</button>
+<button class="navBtn" id="navProvider" onclick="window.__kesfetCat=window.__kesfetCat||'all';window.__v2Understood=null;showKesfet(false)"><b><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:block;margin:0 auto"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/></svg></b>Ara</button>
+<button class="navBtn" id="navFood" onclick="showFoodHome()"><b><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:block;margin:0 auto"><path d="M7 3v8M4 3v5a3 3 0 0 0 3 3 3 3 0 0 0 3-3V3M7 11v10M17 3c-2 1.5-3 4-3 7 0 2 1 3 3 3v8"/></svg></b>Yemek</button>
+<button class="navBtn" id="navAccount" onclick="hmOpenAccount()" aria-label="Hesabım"><b><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:block;margin:0 auto"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg></b>Hesabım</button>
+<button class="navBtn" id="navRequests" onclick="window.__mineSeg='all';window.__mineStatus='all';showMine()"><b><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:block;margin:0 auto"><path d="M4 7a2 2 0 0 1 2-2h4l2 2h6a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/></svg></b>İşlerim<span class="hzDot c sm" aria-hidden="true"></span></button>
 </div></nav>
 
 <div class="appDrawerBackdrop" id="appDrawerBackdrop" onclick="closeAppDrawer()" hidden></div>
@@ -1366,7 +1396,7 @@ document.addEventListener('keydown',function(e){
 });
 
 function setNav(a){
-  ["navHome","navRequest","navRequests","navProvider","navFood"].forEach(function(id){
+  ["navHome","navRequest","navRequests","navProvider","navFood","navAccount"].forEach(function(id){
     var e=document.getElementById(id); if(e){ e.classList.remove("active"); e.removeAttribute('aria-current'); }
   });
   if(a){ var el=document.getElementById(a); if(el){ el.classList.add("active"); el.setAttribute('aria-current','page'); } }
@@ -2001,32 +2031,70 @@ function v2HomeExpand(which){
   if(bg)bg.setAttribute('aria-expanded', openGm?'true':'false');
   if(ba)ba.setAttribute('aria-expanded', openAr?'true':'false');
 }
+/* ===== K1a — yeni ana ekran (Kehribar) ===== */
+var HM_ACT={
+  food:function(){ showFoodHome(); },
+  listings:function(){ kesfetOpen('all',true); },
+  services:function(){ showRequest(); }
+};
+/* Açılış kilidi: window.__hmLocks.<anahtar>===false ise bölüm kapalı sayılır (K4'te ayarlardan beslenecek). Varsayılan: hepsi açık. */
+function hmGo(key){
+  var L=window.__hmLocks||{};
+  if(L[key]===false){ try{ v2Toast('Bu bölüm çok yakında açılıyor.'); }catch(e){} return; }
+  var f=HM_ACT[key]; if(typeof f==='function') return f();
+}
+function hmSoon(){ try{ v2Toast('Market çok yakında!'); }catch(e){} }
+function hmOpenAccount(){ try{ openAppDrawer(); }catch(e){} }
+function hmShortcut(k){
+  try{
+    if(k==='orders'){ if(typeof showFoodOrders==='function') return showFoodOrders(); }
+    else if(k==='favs'){ return showFavorites(); }
+    else if(k==='msgs'){ if(typeof window.openMsgs==='function') return window.openMsgs(); v2Toast('Mesajlar şu an açılamadı.'); return; }
+    else if(k==='post'){ return v2StartSheet(); }
+    else if(k==='pro'){ return hmGo('services'); }
+    else if(k==='official'){ return openHallet(); }
+    v2Toast('Bu bölüm şu an açılamadı.');
+  }catch(e){ try{ v2Toast('Bir sorun oluştu.'); }catch(x){} }
+}
+function hmHomeHtml(){
+  var I=function(d,s){ return '<svg width="'+(s||24)+'" height="'+(s||24)+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>'; };
+  var tile=function(k,img,t,s,soon,fn){
+    return '<button type="button" class="hmTile" data-k="'+k+'" onclick="'+fn+'">'+
+      '<img src="images/home/'+img+'" alt="" loading="lazy" onerror="this.remove()">'+
+      (soon?'<span class="hmSoon">Yakında</span>':'')+
+      '<span class="tx"><b>'+t+'</b><small>'+s+'</small></span></button>';
+  };
+  var sc=function(k,label,icon){ return '<button type="button" data-k="'+k+'" onclick="hmShortcut(this.dataset.k)"><span>'+icon+'</span>'+label+'</button>'; };
+  var brand='<button type="button" class="hmBrand" onclick="showHome()" aria-label="İşimi Çöz ana sayfa"><svg width="26" height="26" viewBox="0 0 64 64" aria-hidden="true"><path d="M10 31L32 12l22 19" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M17 28v21a3 3 0 0 0 3 3h24a3 3 0 0 0 3-3V28" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><path d="M25 38l6 6 10-12" fill="none" stroke="#FFDF9A" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/></svg><b>İşimi</b><i>Çöz</i></button>';
+  return '<div class="v2Home hmx">'+
+    '<div class="hmTop">'+brand+'</div>'+
+    '<div id="v2FeatSlot"></div>'+
+    '<div class="hmTiles">'+
+      tile('food','yemek.jpg','Yemek','Restoran yemekleri',false,'hmGo(this.dataset.k)')+
+      tile('market','market.jpg','Market','Alışveriş kapına',true,'hmSoon()')+
+      tile('listings','ilanlar.jpg','İlanlar','Araç ve gayrimenkul',true,'hmGo(this.dataset.k)')+
+      tile('services','hizmet.jpg','İşini Hallet','Usta ve hizmet',true,'hmGo(this.dataset.k)')+
+    '</div>'+
+    '<form class="hmSearch" onsubmit="return v2HomeSearch(event)" role="search">'+I('<circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/>',20)+
+      '<input id="homeAskInput" type="search" enterkeyhint="search" autocomplete="off" aria-label="Yemek, ilan, usta ara" placeholder="Yemek, ilan, usta ara">'+
+      '<button type="button" class="mic" onclick="homeMicAsk()" aria-label="Sesle söyle">'+I('<path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3"/>',20)+'</button></form>'+
+    '<div class="hmH">Kısayollar</div>'+
+    '<div class="hmSc" role="group" aria-label="Kısayollar">'+
+      sc('orders','Siparişler',I('<path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6"/>'))+
+      sc('favs','Favoriler',I('<path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.4A4 4 0 0 1 19 10c0 5.6-7 10-7 10z"/>'))+
+      sc('msgs','Mesajlar',I('<path d="M4 5h16v11H9l-5 4z"/>'))+
+      sc('post','İlan ver',I('<path d="M5 4h14a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1zM12 8v8M8 12h8"/>'))+
+      sc('pro','Usta bul',I('<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>'))+
+      sc('official','Resmî işlem',I('<path d="M7 3h8l4 4v14H7zM15 3v4h4"/>'))+
+    '</div>'+
+    v2ResumeCard()+
+    v2RecentHtml()+
+  '</div>';
+}
 function showHome(){
   setNav("navHome");
   window.__v2Understood=null;
-  app('<div class="v2Home">'+
-    '<section class="v2Hero"><h1>Bütün işlerin, tek yerde.</h1>'+
-    '<p>Hizmetten tapuya, araçtan resmî işlemlere kadar ihtiyacın olan çözümler tek yerde.</p>'+
-    '<form class="v2Search" onsubmit="return v2HomeSearch(event)" role="search"><span class="ic" aria-hidden="true">🔎</span>'+
-    '<input id="homeAskInput" type="search" enterkeyhint="search" autocomplete="off" aria-label="Ne yapmak istiyorsun?" placeholder="Ne yapmak istiyorsun?">'+
-    '<button type="button" class="mic" onclick="homeMicAsk()" aria-label="Sesle söyle">🎤</button>'+
-    '<button type="submit" class="go">Ara</button></form>'+
-    '</section>'+
-    '<div id="v2FeatSlot"></div>'+
-    v2ResumeCard()+
-    '<nav class="v2CompCats" aria-label="Kategoriler">'+
-    '<button type="button" class="v2Comp" id="v2CompGm" onclick="kesfetOpen(\'gayrimenkul\',true)"><span class="ic">🏠</span><span class="tx"><b>Gayrimenkul</b><small>Konut · İş yeri · Arsa</small></span></button>'+
-    '<button type="button" class="v2Comp" id="v2CompArac" onclick="kesfetOpen(\'otomobil\',true)"><span class="ic">🚗</span><span class="tx"><b>Araç</b><small>Al · Sat · İlanlar</small></span></button>'+
-    '<button type="button" class="v2Comp v2CompFood" onclick="showFoodHome()"><span class="ic"><svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" style="display:block"><defs><linearGradient id="v2FoodG" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbbf24"/><stop offset="1" stop-color="#ea580c"/></linearGradient></defs><circle cx="9.5" cy="6.6" r="1.3" fill="url(#v2FoodG)"/><path d="M2.4 15.2a7.1 7.1 0 0 1 14.2 0z" fill="url(#v2FoodG)"/><rect x="1.2" y="16" width="16.6" height="1.9" rx=".95" fill="url(#v2FoodG)"/><path d="M19.3 3.6v4.6a1.5 1.5 0 0 0 3 0V3.6M20.8 3.6v4.4M20.8 9.6v10.8" fill="none" stroke="url(#v2FoodG)" stroke-width="1.5" stroke-linecap="round"/></svg></span><span class="tx"><b>Yemek</b><small>Restoran · Sipariş</small></span></button>'+
-    '<button type="button" class="v2Comp" onclick="showRequest()"><span class="ic">🔧</span><span class="tx"><b>Hizmet</b><small>Usta bul · Talep</small></span></button>'+
-    '<button type="button" class="v2Comp" onclick="openHallet()"><span class="ic">📄</span><span class="tx"><b>Resmî</b><small>Evrak · Başvuru</small></span></button>'+
-    '</nav>'+
-    '<div class="v2Pills" role="group" aria-label="Hızlı işlemler">'+
-    '<button type="button" class="v2Pill" onclick="v2StartSheet()">＋ İlan ver</button>'+
-    '<button type="button" class="v2Pill" onclick="showRequest()">🔧 Hizmet iste</button>'+
-    '<button type="button" class="v2Pill" onclick="openHallet()">📄 Resmî işlem</button></div>'+
-    v2RecentHtml()+
-    '</div>');
+  app(hmHomeHtml());
   var slot=document.getElementById('v2FeatSlot'); if(slot) slot.replaceWith(v2FeaturedNode());
   try{homeFeaturedInit();}catch(e){}
   try{v2FoodHeroLoad();}catch(e){}
