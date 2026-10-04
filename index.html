@@ -2099,6 +2099,7 @@ function showHome(){
   try{homeFeaturedInit();}catch(e){}
   try{v2FoodHeroLoad();}catch(e){}
   v2ContinueLoad();
+  try{v2RecentVerify();}catch(e){}
 }
 
 
@@ -6442,11 +6443,31 @@ function v2RecentList(){ try{ return JSON.parse(localStorage.getItem('recent_lis
 
 function v2RecentPush(row,type){
   try{
+    if(row&&row.status&&row.status!=='published') return;
     var md=row.metadata||{}, ph=listingPhotosFromRow(row);
     var mini={id:row.id,title:row.title,price:row.price,currency:row.currency,city:row.city,district:row.district,category:row.category,created_at:row.created_at,listing_type:type,
       metadata:{photos:ph.length?[ph[0]]:[],year:md.year,km:md.km,fuel:md.fuel,gear:md.gear,rooms:md.rooms,sqm:md.sqm||md.area,floor:md.floor,deal_type:md.deal_type,seller_type:md.seller_type}};
     var a=v2RecentList().filter(function(x){ return x&&x.id!==row.id; }); a.unshift(mini);
     localStorage.setItem('recent_listings',JSON.stringify(a.slice(0,10)));
+  }catch(e){}
+}
+
+/* Son baktıkların: yayında olmayan ilanları sunucuya sorup temizler. Sunucu cevap vermezse/hata olursa listeye DOKUNMAZ. */
+async function v2RecentVerify(){
+  try{
+    var a=v2RecentList(); if(!a.length) return;
+    var ids=a.map(function(x){ return x&&x.id; }).filter(Boolean); if(!ids.length) return;
+    var rows=await supabaseRequest('GET','listings?id=in.('+ids.map(encodeURIComponent).join(',')+')&status=eq.published&select=id');
+    if(!Array.isArray(rows)) return;
+    var ok={}; rows.forEach(function(r){ if(r&&r.id) ok[r.id]=1; });
+    var keep=a.filter(function(x){ return x&&ok[x.id]; });
+    if(keep.length===a.length) return;
+    localStorage.setItem('recent_listings',JSON.stringify(keep));
+    var sec=document.querySelector('.v2Home .v2Recent'); if(!sec) return;
+    var html=v2RecentHtml();
+    if(!html){ sec.remove(); return; }
+    var tmp=document.createElement('div'); tmp.innerHTML=html;
+    if(tmp.firstElementChild) sec.replaceWith(tmp.firstElementChild);
   }catch(e){}
 }
 
