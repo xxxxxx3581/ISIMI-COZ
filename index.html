@@ -6710,6 +6710,7 @@ function v2NavUrl(name,args){
 
 /* Alt menü sekmeleri: aralarında geçiş yeni geçmiş kaydı açmaz; geri tuşu doğrudan Ana sayfaya döner. */
 var V2_NAV_TABS={showKesfet:1,showMine:1,showFoodHome:1};
+var V2_NAV_FOOD_INNER={showFoodSearch:1,showFoodVenue:1,showFoodCart:1,showFoodCheckout:1,showFoodOrders:1,showFoodOrderDetail:1,showFoodNotifications:1,showFoodAccount:1,showFoodHelp:1,showFoodCoupons:1,showFoodBusiness:1,showFoodMenu:1,showFoodSettings:1,showFoodCourier:1};
 function v2NavPush(name,fn,args){
   if(V2_NAV.busy) return;
   try{
@@ -6717,11 +6718,16 @@ function v2NavPush(name,fn,args){
     V2_NAV.replaceNext=false;
     if(cur) cur.scroll=window.scrollY||0;
     /* Ana sayfaya gidiş yeni kayıt açmaz: tarayıcı geçmişinde ilk kayda geri sarılır (arada kalan ekranlar geri tuşunda tekrar dolaşılmaz). */
-    if(name==='showHome'&&V2_NAV.idx>0){ var n=V2_NAV.idx; V2_NAV.stack=[{sig:sig,fn:fn,scroll:0}]; V2_NAV.idx=0; V2_NAV.skip++; V2_NAV.homeUrl=url; history.go(-n); return; }
+    if(name==='showHome'&&V2_NAV.idx>0){ var n=V2_NAV.idx; V2_NAV.stack=[{sig:sig,name:name,fn:fn,scroll:0}]; V2_NAV.idx=0; V2_NAV.skip++; V2_NAV.homeUrl=url; history.go(-n); return; }
     if(!rep&&cur&&cur.sig!==sig&&V2_NAV_TABS[name]&&V2_NAV_TABS[cur.sig]) rep=true;
-    if(V2_NAV.idx<0){ V2_NAV.stack=[{sig:sig,fn:fn,scroll:0}]; V2_NAV.idx=0; history.replaceState({v2:0},'',url); }
-    else if(cur&&(cur.sig===sig||rep)){ cur.sig=sig; cur.fn=fn; history.replaceState({v2:V2_NAV.idx},'',url); }
-    else{ V2_NAV.stack=V2_NAV.stack.slice(0,V2_NAV.idx+1); V2_NAV.stack.push({sig:sig,fn:fn,scroll:0}); V2_NAV.idx++; history.pushState({v2:V2_NAV.idx},'',url); }
+    if(name==='showFoodHome'&&cur&&V2_NAV_FOOD_INNER[cur.name]){
+      var j=V2_NAV.idx-1; while(j>=0&&V2_NAV.stack[j].name!=='showFoodHome') j--;
+      if(j>=0){ var n2=V2_NAV.idx-j; V2_NAV.stack=V2_NAV.stack.slice(0,j+1); V2_NAV.stack[j].fn=fn; V2_NAV.idx=j; V2_NAV.skip++; history.go(-n2); return; }
+    }
+    if(!rep&&cur&&V2_NAV_FOOD_INNER[name]&&V2_NAV_FOOD_INNER[cur.name]) rep=true;
+    if(V2_NAV.idx<0){ V2_NAV.stack=[{sig:sig,name:name,fn:fn,scroll:0}]; V2_NAV.idx=0; history.replaceState({v2:0},'',url); }
+    else if(cur&&(cur.sig===sig||rep)){ cur.sig=sig; cur.name=name; cur.fn=fn; history.replaceState({v2:V2_NAV.idx},'',url); }
+    else{ V2_NAV.stack=V2_NAV.stack.slice(0,V2_NAV.idx+1); V2_NAV.stack.push({sig:sig,name:name,fn:fn,scroll:0}); V2_NAV.idx++; history.pushState({v2:V2_NAV.idx},'',url); }
   }catch(e){ console.warn('nav',e); }
 }
 
