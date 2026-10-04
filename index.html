@@ -2084,13 +2084,27 @@ function hmShortcut(k){
     v2Toast('Bu bölüm şu an açılamadı.');
   }catch(e){ try{ v2Toast('Bir sorun oluştu.'); }catch(x){} }
 }
+function hmImgErr(i){ try{ var f=i.getAttribute('data-f'); if(f&&i.getAttribute('src')!==f){ i.src=f; } else { i.remove(); } }catch(e){} }
+async function hmHeroLoad(){
+  try{
+    var rows=await v2FoodHeroFetch();
+    if(!Array.isArray(rows)||!rows.length) return;
+    var U=function(p){ return SUPABASE_URL+'/storage/v1/object/public/home-hero/'+encodeURIComponent(p); };
+    var base=rows.filter(function(x){ return x&&x.role==='base'&&x.storage_path; })[0];
+    var sl=rows.filter(function(x){ return x&&x.role==='slide'&&x.storage_path; }).slice(0,4);
+    var map={}; if(base) map[4]=base.storage_path; sl.forEach(function(x,i){ map[i]=x.storage_path; });
+    var imgs=document.querySelectorAll('.hmMo img[data-hm]');
+    for(var k=0;k<imgs.length;k++){ var p=map[imgs[k].getAttribute('data-hm')]; if(p) imgs[k].src=U(p); }
+  }catch(e){}
+}
 function hmSlide(k){ if(k==='market'){ hmSoon(); return; } hmGo(k); }
 function hmSliderHtml(brand){
   var P='images/home/';
   function im(f,cls,st){ return '<img'+(cls?' class="'+cls+'"':'')+' src="'+P+f+'" alt="" loading="lazy"'+(st?' style="'+st+'"':'')+' onerror="this.remove()">'; }
+  function mo(n,f,st){ return '<img data-hm="'+n+'" data-f="'+P+f+'" src="'+P+f+'" alt="" loading="lazy" style="'+st+'" onerror="hmImgErr(this)">'; }
   function food(){
     return '<button type="button" class="hmSl food" data-k="food" onclick="hmSlide(this.dataset.k)">'+
-      '<span class="hmMo">'+im('y-iskender.jpg','','grid-column:1/4')+im('y-burger.jpg','','grid-column:4/7')+im('y-kebap.jpg','','grid-column:1/3')+im('y-doner.jpg','','grid-column:3/5;object-position:50% 30%')+im('yemek.jpg','','grid-column:5/7')+'</span>'+
+      '<span class="hmMo">'+mo(0,'y-iskender.jpg','grid-column:1/4')+mo(1,'y-burger.jpg','grid-column:4/7')+mo(2,'y-kebap.jpg','grid-column:1/3')+mo(4,'y-doner.jpg','grid-column:3/5;object-position:50% 30%')+mo(3,'yemek.jpg','grid-column:5/7')+'</span>'+
       '<span class="tx"><span class="h">Bugün<br>ne yesek?</span><span class="s">Kapında teslim.</span><span class="b">Restoranlar</span></span></button>';
   }
   function cover(k,img,h,s,soon){
@@ -2143,7 +2157,7 @@ function showHome(){
   setNav("navHome");
   window.__v2Understood=null;
   app(hmHomeHtml());
-  /*K1b: eski slider kaldirildi*/
+  /*K1b: eski slider kaldirildi*/try{hmHeroLoad();}catch(e){}
   
   
   v2ContinueLoad();

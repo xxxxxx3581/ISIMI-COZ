@@ -571,7 +571,7 @@ var ADMIN={
     var sl=rows.filter(function(r){return r.role==='slide'});
     var thumb=function(r,w,h){return '<img alt="" src="'+esc(pub(r.storage_path))+'" style="width:'+w+'px;height:'+h+'px;object-fit:cover;border-radius:10px;flex:0 0 auto">'};
     ADM.hero=sl;
-    el.innerHTML='<p class="pfxMuted">Ana ekrandaki Yemek kartı bu fotoğrafları gösterir. Sol tarafta sabit duran bir fotoğraf (dikey olanı en iyisi, örn. döner), sağ tarafta sırayla kayan en fazla 8 fotoğraf. Fotoğrafın altında görünen yemek adı en fazla 24 karakter olabilir; kayan şerit yazısı bu adlardan oluşur. Fotoğraflar otomatik küçültülür. Yalnızca kendi çektiğiniz veya kullanım izni olan fotoğrafları yükleyin.</p>'+
+    el.innerHTML='<p class="pfxMuted">Ana ekrandaki Yemek slaydı bu fotoğrafları gösterir. Sabit fotoğraf (dikey olanı en iyisi, örn. döner) alt sıranın ortasına yerleşir. Kayan listedeki ilk dört fotoğraf sırasıyla şu yerlere gelir: üst sıra solda, üst sıra sağda, alt sıra solda, alt sıra sağda. Sırayı ▲▼ ile değiştirebilirsin. Dörtten fazlası gösterilmez. Yemek adı şimdilik ana ekranda görünmez. Fotoğraflar otomatik küçültülür. Yalnızca kendi çektiğiniz veya kullanım izni olan fotoğrafları yükleyin.</p>'+
       '<div class="pfxCard"><b>Sabit fotoğraf (sol)</b><div class="pfxRow" style="margin-top:8px">'+(base?thumb(base,70,96):'<span class="pfxMuted">Henüz yok</span>')+
       '<div><input type="file" accept="image/jpeg,image/png,image/webp" id="pfxHeroB" style="max-width:190px"><button type="button" class="pfxBtn" onclick="PF._heroUp(\'base\',this)">'+(base?'Değiştir':'Yükle')+'</button></div></div></div>'+
       '<div class="pfxCard"><b>Kayan fotoğraflar (sağ)</b>'+
