@@ -6696,21 +6696,32 @@ function v2DraftResult(row,photoInfo,type){
 function v2FoodHeroCss(){
   if(document.getElementById('v2FoodHeroCss'))return;
   var st=document.createElement('style');st.id='v2FoodHeroCss';
-  st.textContent='.v2FHero{position:relative;overflow:hidden;height:206px;margin:12px 0 14px;border-radius:22px;background:linear-gradient(135deg,#c2410c,#f08a1c);border:1.5px solid #f4b860;box-shadow:0 8px 24px rgba(226,86,26,.28);cursor:pointer;-webkit-tap-highlight-color:transparent}'+
-  '.v2FHero .fhBase{position:absolute;left:0;top:0;bottom:0;width:38%;overflow:hidden;-webkit-mask-image:linear-gradient(to right,#000 78%,transparent);mask-image:linear-gradient(to right,#000 78%,transparent)}'+
-  '.v2FHero .fhBase img{width:100%;height:100%;object-fit:cover;display:block;animation:fhZoom 12s ease-in-out infinite alternate}'+
-  '@keyframes fhZoom{to{transform:scale(1.1)}}'+
-  '.v2FHero .fhR{position:absolute;left:36%;right:12px;top:12px;bottom:12px;display:flex;flex-direction:column;justify-content:space-between}'+
-  '.v2FHero h2{margin:0;font-size:21px;line-height:1.1;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.35)}'+
-  '.v2FHero h2 span{display:block;font-size:12px;font-weight:700;margin-top:2px;color:#ffe9cf}'+
-  '.v2FHero .fhT{height:92px;overflow:hidden;border-radius:16px;box-shadow:0 6px 16px rgba(0,0,0,.35);border:2px solid rgba(255,255,255,.9);background:#7a2d0a}'+
+  st.textContent='.v2FHero{position:relative;overflow:hidden;margin:12px 0 8px;border-radius:24px;height:236px;cursor:pointer;-webkit-tap-highlight-color:transparent;background:radial-gradient(120% 90% at 88% 0%,#fff8dc 0%,rgba(255,248,220,0) 55%),linear-gradient(135deg,#f7dc8a,#efc24f 60%,#e6ae33);border:1.5px solid #fff3c4;box-shadow:0 12px 30px rgba(214,160,40,.45),inset 0 1px 0 rgba(255,255,255,.6)}'+
+  '.v2FHero .fhDn{position:absolute;left:0;top:0;bottom:30px;width:43%;overflow:hidden}.v2FHero .fhDn img{width:100%;height:100%;object-fit:cover;object-position:50% 38%;display:block}'+
+  '.v2FHero .fhDn:after{content:"";position:absolute;inset:0;background:linear-gradient(to right,rgba(120,70,5,0) 65%,rgba(120,70,5,.55))}'+
+  '.v2FHero .fhDn:before{content:"";position:absolute;inset:0;z-index:1;background:linear-gradient(to top,rgba(95,45,5,.88) 0%,rgba(95,45,5,.42) 30%,rgba(95,45,5,0) 55%)}'+
+  '.v2FHero .fhLf{position:absolute;left:12px;bottom:42px;width:46%;z-index:2}'+
+  '.v2FHero h2{margin:0;font-size:21px;line-height:1.05;font-weight:900;white-space:nowrap;color:#fff;text-shadow:0 2px 10px rgba(0,0,0,.5)}'+
+  '.v2FHero .fhSub{display:block;margin:4px 0 8px;font-size:11px;font-weight:700;white-space:nowrap;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,.55)}'+
+  '.v2FHero .fhTag{position:absolute;left:12px;top:12px;z-index:2;font-size:11px;font-weight:900;letter-spacing:.06em;color:#fff;background:rgba(95,45,5,.6);padding:4px 9px;border-radius:999px}'+
+  '.v2FHero .fhGo{white-space:nowrap;border:0;border-radius:13px;padding:8px 13px;font:inherit;font-weight:900;font-size:14px;background:linear-gradient(180deg,#d9482b,#b02f0e);color:#fff;box-shadow:0 6px 14px rgba(120,40,10,.4);position:relative;overflow:hidden}'+
+  '.v2FHero .fhGo:after{content:"";position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);animation:fhShine 3s infinite}'+
+  '@keyframes fhShine{to{left:130%}}'+
+  '.v2FHero .fhTop{position:absolute;right:12px;top:12px;width:42%;z-index:3;text-align:center;font-weight:900;font-size:11.5px;color:#6b2a06;background:rgba(255,255,255,.8);border-radius:999px;padding:4px 6px;white-space:nowrap}'+
+  '.v2FHero .fhT{position:absolute;right:12px;top:42px;bottom:42px;width:42%;overflow:hidden;border-radius:16px;border:2px solid #fff;box-shadow:0 10px 22px rgba(120,70,5,.4);background:#7a4a1a}'+
   '.v2FHero .fhRail{display:flex;height:100%;transition:transform .6s cubic-bezier(.65,0,.25,1)}'+
-  '.v2FHero .fhRail img{flex:0 0 100%;width:100%;height:100%;object-fit:cover;display:block}'+
-  '.v2FHero .fhRow{display:flex;align-items:center;justify-content:space-between}'+
-  '.v2FHero .fhGo{border:0;border-radius:12px;padding:8px 15px;font:inherit;font-weight:900;font-size:14.5px;background:#fff;color:#c2410c;box-shadow:0 5px 12px rgba(0,0,0,.22)}'+
-  '.v2FHero .fhDots{display:flex;gap:5px}.v2FHero .fhDots i{width:6px;height:6px;border-radius:9px;background:rgba(255,255,255,.55);transition:all .4s}.v2FHero .fhDots i.on{width:18px;background:#fff}'+
-  '.v2FHero.fhSolo .fhR{justify-content:center;gap:14px}'+
-  '@media (prefers-reduced-motion:reduce){.v2FHero .fhBase img{animation:none}.v2FHero .fhRail{transition:none}}';
+  '.v2FHero .fhS{flex:0 0 100%;height:100%;position:relative}.v2FHero .fhS img{width:100%;height:100%;object-fit:cover;display:block}'+
+  '.v2FHero .fhS.hc:after{content:"";position:absolute;left:0;right:0;bottom:0;height:50%;background:linear-gradient(to top,rgba(0,0,0,.7),rgba(0,0,0,0))}'+
+  '.v2FHero .fhCap{position:absolute;left:8px;bottom:6px;z-index:2;color:#fff;font-weight:900;font-size:12.5px;text-shadow:0 1px 6px rgba(0,0,0,.6);max-width:85%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}'+
+  '.v2FHero .fhBdg{position:absolute;right:5px;top:5px;z-index:3;background:#fff;color:#b02f0e;font-weight:900;font-size:10px;padding:3px 7px;border-radius:999px}'+
+  '.v2FHero .fhDots{position:absolute;right:12px;width:42%;bottom:34px;z-index:3;display:flex;justify-content:center;gap:4px}.v2FHero .fhDots i{width:5px;height:5px;border-radius:9px;background:rgba(138,58,12,.35);transition:all .4s}.v2FHero .fhDots i.on{width:14px;background:#8a3a0c}'+
+  '.v2FHero .fhMq{position:absolute;left:0;right:0;bottom:0;height:30px;background:#8a3a0c;color:#ffe9b0;overflow:hidden;display:flex;align-items:center}'+
+  '.v2FHero .fhMq div{white-space:nowrap;font-weight:800;font-size:12px;letter-spacing:.03em;animation:fhMq 16s linear infinite}'+
+  '@keyframes fhMq{from{transform:translateX(0)}to{transform:translateX(-50%)}}'+
+  '.v2FHero.fhSolo .fhT,.v2FHero.fhSolo .fhDots{display:none}'+
+  '.v2FChips{display:flex;gap:8px;margin:0 0 14px}.v2FChips span{flex:1;text-align:center;font-size:11px;font-weight:800;padding:7px 4px;border-radius:12px;white-space:nowrap;background:#fff4cf;color:#8a3a0c;border:1px solid #f1d27a}'+
+  '[data-theme="dark"] .v2FChips span{background:rgba(212,169,63,.14);color:#f0c65a;border-color:rgba(212,169,63,.35)}'+
+  '@media (prefers-reduced-motion:reduce){.v2FHero .fhRail{transition:none}.v2FHero .fhMq div,.v2FHero .fhGo:after{animation:none}}';
   document.head.appendChild(st);
 }
 async function v2FoodHeroFetch(){
@@ -6724,20 +6735,26 @@ async function v2FoodHeroFetch(){
 async function v2FoodHeroLoad(){
   try{
     var feat=document.querySelector('.v2Home .v2FeatWrap');if(!feat)return;
-    var old=document.querySelector('.v2Home .v2FHero');if(old)old.remove();feat.style.display='';
+    document.querySelectorAll('.v2Home .v2FHero,.v2Home .v2FChips').forEach(function(n){n.remove()});feat.style.display='';
     var rows=await v2FoodHeroFetch();
     var base=rows.filter(function(x){return x.role==='base'})[0];
     var sl=rows.filter(function(x){return x.role==='slide'}).slice(0,8);
     if(!base)return;
     if(!document.body.contains(feat)||document.querySelector('.v2Home .v2FHero'))return;
     v2FoodHeroCss();
+    var E=function(t){return String(t==null?'':t).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
     var U=function(p){return SUPABASE_URL+'/storage/v1/object/public/home-hero/'+encodeURIComponent(p)};
+    var caps=sl.map(function(x){return x.caption}).filter(Boolean);
+    var unit=(caps.length?caps.map(E).join(' ✦ ')+' ✦ ':'')+'Hepsi tek yerde ✦ Afiyet olsun! ✦ ';
     var h=document.createElement('div');h.className='v2FHero'+(sl.length?'':' fhSolo');h.setAttribute('role','link');h.setAttribute('aria-label','İşimi Çöz Yemek');
-    h.innerHTML='<div class="fhBase"><img alt="" decoding="async" src="'+U(base.storage_path)+'"></div><div class="fhR"><h2>Acıktın mı?<span>İşimi Çöz Yemek · kapına kadar</span></h2>'+
-      (sl.length?'<div class="fhT"><div class="fhRail">'+sl.map(function(x,i){return '<img alt="" decoding="async"'+(i?' loading="lazy"':'')+' src="'+U(x.storage_path)+'">'}).join('')+'</div></div>':'')+
-      '<div class="fhRow"><button type="button" class="fhGo">Sipariş ver ›</button>'+(sl.length>1?'<div class="fhDots">'+sl.map(function(x,i){return '<i'+(i?'':' class="on"')+'></i>'}).join('')+'</div>':'')+'</div></div>';
+    h.innerHTML='<div class="fhDn"><img alt="" decoding="async" src="'+U(base.storage_path)+'"></div><span class="fhTag">İŞİM YEMEK</span><div class="fhTop">✨ Lezzet zamanı!</div>'+
+      '<div class="fhLf"><h2>Acıktın mı?</h2><span class="fhSub">Sıcacık, kapında</span><button type="button" class="fhGo">Sipariş ver ›</button></div>'+
+      (sl.length?'<div class="fhT"><span class="fhBdg">🔥 Sıcak sıcak</span><div class="fhRail">'+sl.map(function(x,i){return '<div class="fhS'+(x.caption?' hc':'')+'"><img alt="" decoding="async"'+(i?' loading="lazy"':'')+' src="'+U(x.storage_path)+'">'+(x.caption?'<span class="fhCap">'+E(x.caption)+'</span>':'')+'</div>'}).join('')+'</div></div>':'')+
+      (sl.length>1?'<div class="fhDots">'+sl.map(function(x,i){return '<i'+(i?'':' class="on"')+'></i>'}).join('')+'</div>':'')+
+      '<div class="fhMq"><div>'+unit+unit+unit+unit+'</div></div>';
     h.addEventListener('click',function(){try{showFoodHome()}catch(e){}});
-    feat.style.display='none';feat.parentNode.insertBefore(h,feat);
+    var chips=document.createElement('div');chips.className='v2FChips';chips.innerHTML='<span>🚪 Kapıda ödeme</span><span>📍 Canlı takip</span><span>🍴 Yakın restoran</span>';
+    feat.style.display='none';feat.parentNode.insertBefore(h,feat);feat.parentNode.insertBefore(chips,feat);
     if(sl.length>1){
       var i=0,rail=h.querySelector('.fhRail'),dots=h.querySelectorAll('.fhDots i'),hold=false;
       var go=function(k){i=((k%sl.length)+sl.length)%sl.length;rail.style.transform='translateX(-'+(i*100)+'%)';dots.forEach(function(d,j){d.classList.toggle('on',j===i)})};
