@@ -307,6 +307,7 @@ function css(){
 .fb.danger{background:var(--fd-bad);border-color:var(--fd-bad);color:#fff}
 .fb.ghost{background:transparent;border-color:transparent;color:var(--fd-acc);min-height:40px;padding:0 8px}
 .fb.ghostBad{background:transparent;border-color:transparent;color:var(--fd-bad);min-height:40px;padding:0 8px}
+.fdCartHead{display:flex;justify-content:flex-end;margin:0 0 4px}
 .fb.sm{min-height:38px;padding:0 12px;font-size:13.5px;border-radius:11px}.fb.block{width:100%}
 .fb.soft{background:var(--fd-soft);border-color:transparent;color:var(--fd-acc)}
 /* Üst bar */
@@ -1235,8 +1236,9 @@ async function showFoodCart(){
   if(!A())return;FDW_TAB='cart';const tok=newScreen();const c=cartGet();
   if(!c.items.length)return render(bar('Sepetim','showFoodHome()')+empty('🛒','Sepetin boş','Restoranlara göz at, beğendiklerini sepete ekle.','<button type="button" class="fb pri" onclick="showFoodHome()">Restoranları keşfet</button>'));
   coFulfillDefault();
-  render(bar('Sepetim','showFoodVenue(\''+E(c.venue.id)+'\')','<button type="button" class="fb ghostBad" onclick="foodClearCart()">Temizle</button>')+
+  render(bar('Sepetim','showFoodVenue(\''+E(c.venue.id)+'\')')+
     '<button type="button" class="fdRowBtn" style="margin-bottom:12px" onclick="showFoodVenue(\''+E(c.venue.id)+'\')">'+pic(c.venue.image_url||'',c.venue.name,'sq').replace('class="fdPic sq"','class="fdPic sq" style="width:44px;border-radius:12px"')+'<span class="tx"><small>Restoran</small><b>'+E(c.venue.name)+'</b></span><span class="fdMuted fdSmall" style="font-weight:700">Menü ›</span></button>'+
+    '<div class="fdCartHead"><button type="button" class="fb ghostBad" onclick="foodClearCart()">🗑 Sepeti temizle</button></div>'+
     '<div class="fdList" id="fdLines"></div>'+
     '<button type="button" class="fb ghost" style="margin:6px 0 0" onclick="showFoodVenue(\''+E(c.venue.id)+'\')">+ Ürün ekle</button>'+
     '<div id="fdMin"></div><div id="fdSides"></div>'+
