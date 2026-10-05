@@ -1279,6 +1279,15 @@ html:root .hmSoon{left:14px;top:12px}
 html:root .hmSearch{display:none}
 html:root .hmH{margin-top:22px}
 /*K6-BITIS*/
+/*K6C-BASLA*/
+html:root .v2Home.hmx{--v2-ph1:#3A2D20;--v2-ph2:#4A3A27}
+html:root .v2Home.hmx .v2Recent{margin:20px 0 4px}
+html:root .v2Home.hmx .v2Recent h3{font-size:15px;font-weight:800;color:#F6ECDC}
+html:root .v2RecentBox{display:flex;align-items:center;gap:12px;margin-top:10px;padding:14px;border:1px solid #54422D;border-radius:18px;background:#3A2D20;color:#F6ECDC}
+html:root .v2RecentBox .ic{flex:0 0 auto;width:40px;height:40px;border-radius:20px;background:#4A3A27;border:1px solid #6A5236;display:grid;place-items:center;font-size:18px}
+html:root .v2RecentBox b{display:block;font-size:14px;font-weight:800}
+html:root .v2RecentBox small{display:block;margin-top:2px;font-size:12px;color:#CDBB9F}
+/*K6C-BITIS*/
 </style>
 <style id="svcProvEntryCss">.svcProvEntry{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;border-radius:16px;border:1.5px solid rgba(124,92,255,.45);background:rgba(124,92,255,.10);color:var(--text);font:inherit;text-align:left;cursor:pointer}.svcProvEntry .ic{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:rgba(124,92,255,.18)}.svcProvEntry .tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}.svcProvEntry small{font-size:12px;font-weight:700;color:var(--muted)}.svcProvEntry b{font-size:16px;font-weight:900}.svcProvEntry em{font-style:normal;font-size:12.5px;color:var(--muted)}.svcProvEntry .go{flex:0 0 auto;font-size:24px;font-weight:700;color:#7c5cff}.svcProvEntry:active{transform:scale(.99)}.svcProvEntry:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}html[data-theme="light"] .svcProvEntry{background:#f3effe;border-color:#c9bbff}html[data-theme="light"] .svcProvEntry .go{color:#5b3fd6}</style>
 <style id="v2HomeBtnCss">.v2HomeBtn{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:42px;min-width:42px;padding:0 12px 0 10px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;font-size:13px;font-weight:800;cursor:pointer}.v2HomeBtn:active{transform:scale(.97)}.v2HomeBtn:focus-visible{outline:2px solid var(--v2-pri);outline-offset:2px}@media(max-width:430px){.v2HomeBtn{padding:0}.v2HomeBtn span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}}.v2KTop .v2HomeBtn{margin-left:4px}@media(max-width:430px){.v2KTop:has(.v2HomeBtn) .v2Back{font-size:0;gap:0;width:42px;min-width:42px;padding:0;justify-content:center}.v2KTop:has(.v2HomeBtn) .v2Back::before{content:"←";font-size:19px;font-weight:800;line-height:1}}@media(max-width:374px){.v2KTop:has(.v2HomeBtn) h1{font-size:17.5px}}.back.v2BackRow{display:flex;align-items:center;gap:8px}.back.v2BackRow>.btn{flex:1 1 auto;min-width:0}</style>
@@ -6728,8 +6737,8 @@ async function v2RecentVerify(){
 function v2RecentClear(){ try{ localStorage.removeItem('recent_listings'); }catch(e){} showHome(); }
 
 function v2RecentHtml(){
-  var a=v2RecentList(); if(!a.length) return '';
-  return '<section class="v2Recent"><div class="v2SecH"><h3 style="margin:0">Son baktıkların</h3><button type="button" class="v2DescMore" onclick="v2RecentClear()">Temizle</button></div><div class="v2Rail">'+
+  var a=v2RecentList(); if(!a.length) return '<section class="v2Recent v2RecentEmpty"><div class="v2SecH"><h3 style="margin:0">En son gezdiklerim</h3></div><div class="v2RecentBox"><span class="ic" aria-hidden="true">🕘</span><div><b>Henüz gezdiğin bir şey yok</b><small>Baktığın ilanlar burada görünecek.</small></div></div></section>';
+  return '<section class="v2Recent"><div class="v2SecH"><h3 style="margin:0">En son gezdiklerim</h3><button type="button" class="v2DescMore" onclick="v2RecentClear()">Temizle</button></div><div class="v2Rail">'+
     a.map(function(r){ return kesfetCardHtml(r,r.listing_type==='otomobil'?'otomobil':'gayrimenkul'); }).join('')+'</div></section>';
 }
 
