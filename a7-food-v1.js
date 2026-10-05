@@ -754,7 +754,8 @@ function stickyCart(){
   return '<div class="fdSticky" id="fdSticky">'+(cv&&HF.coupons&&HF.coupons.length?flashHint(cv.id,cartEst()):'')+'<button type="button" class="fdCartBar" onclick="showFoodCart()"><span class="n">'+n+'</span><span class="l">Sepete git</span><span class="r">'+M(cartEst())+'</span></button></div>';
 }
 function refreshSticky(){const el=document.getElementById('fdSticky');const html=stickyCart();if(el){if(html)el.outerHTML=html;else el.remove()}else if(html){const r=document.getElementById('fdRoot');if(r&&r.dataset.sticky==='1')r.insertAdjacentHTML('beforeend',html)}}
-function refreshProdBadges(){if(!VENUE)return;const m=cartQtyByItem(VENUE.v.id);qa('[data-add]').forEach(b=>{const n=m[b.dataset.add]||0;b.classList.toggle('in',n>0);b.textContent=n>0?n:'+';b.setAttribute('aria-label',n>0?n+' adet sepette, bir tane daha ekle':'Sepete ekle')})}
+function refreshProdBadges(){if(!VENUE)return;const m=cartQtyByItem(VENUE.v.id);qa('[data-add]').forEach(b=>{const n=m[b.dataset.add]||0;b.classList.toggle('in',n>0);b.textContent=n>0?n:'+';b.setAttribute('aria-label',n>0?n+' adet sepette, bir tane daha ekle':'Sepete ekle')});
+  qa('[data-step]').forEach(st=>{const n=m[st.dataset.step]||0;st.hidden=!n;st.querySelector('b').textContent=n;const a=st.parentNode.querySelector(':scope > [data-add]');if(a)a.hidden=n>0})}
 
 /* ====================== Adres (kayıtlı + tek seferlik) ====================== */
 let ADDRS=null;
@@ -1081,7 +1082,9 @@ async function showFoodVenue(id,openItemId){
 }
 function prodRow(i,groups){
   const na=!i.is_available;const hasReq=(groups||[]).some(g=>g.is_required||g.min_select>0);
-  const addBtn=na?'':'<button type="button" class="fdAdd'+(i.image_url?'':' fdAddS')+'" data-add="'+E(i.id)+'" aria-label="Sepete ekle" onclick="event.stopPropagation();'+(hasReq?'foodOpenItem':'foodQuickAdd')+'(\''+E(i.id)+'\')">+</button>';
+  const plain=!(groups||[]).length;
+  const addBtn=na?'':'<button type="button" class="fdAdd'+(i.image_url?'':' fdAddS')+'" data-add="'+E(i.id)+'" aria-label="Sepete ekle" onclick="event.stopPropagation();'+(hasReq?'foodOpenItem':'foodQuickAdd')+'(\''+E(i.id)+'\')">+</button>'+
+    (plain?'<span class="fdStep'+(i.image_url?'':' fdAddS')+'" data-step="'+E(i.id)+'" hidden onclick="event.stopPropagation()"><button type="button" aria-label="Azalt" onclick="event.stopPropagation();foodQuickDec(\''+E(i.id)+'\')">−</button><b>0</b><button type="button" aria-label="Bir tane daha ekle" onclick="event.stopPropagation();foodQuickAdd(\''+E(i.id)+'\')">+</button></span>':'');
   return '<div class="fdProd'+(na?' na':'')+'" data-pid="'+E(i.id)+'" data-q="'+E(((i.name||'')+' '+(i.description||'')).toLocaleLowerCase('tr'))+'" '+(na?'':'role="button" tabindex="0" onclick="foodOpenItem(\''+E(i.id)+'\')"')+'>'+
     '<div class="tx"><b>'+E(i.name)+'</b>'+(i.description?'<p>'+E(i.description)+'</p>':'')+'<div class="pr">'+M(i.price_kurus)+(groups&&groups.length&&!na?'<span class="fdMuted fdSmall" style="font-weight:600"> · seçenekli</span>':'')+'</div>'+allergenLine(i)+'<div class="fdwLk" data-lk="'+E(i.id)+'"></div></div>'+
     (i.image_url?'<div class="im">'+pic(i.image_url,i.name,'sq')+(na?'<span class="fdSold">Tükendi</span>':'')+addBtn+'</div>':(na?'<span class="fdPill">Tükendi</span>':addBtn))+'</div>';
@@ -1148,6 +1151,11 @@ function sideItems(V,excludeIds,max){
 window.foodQuickAdd=async function(itemId){
   if(!VENUE)return;const i=VENUE.items.find(x=>x.id===itemId);if(!i)return;
   await cartAdd(VENUE.v,{key:i.id+'|',menu_item_id:i.id,name:i.name,quantity:1,option_ids:[],options_label:'',unit_kurus:i.price_kurus,img:i.image_url||null});
+};
+window.foodQuickDec=function(itemId){
+  const c=cartGet();const x=c.items.find(y=>y.key===itemId+'|');if(!x)return;
+  if(x.quantity>1)x.quantity--;else c.items.splice(c.items.indexOf(x),1);
+  cartSave(c);refreshSticky();refreshProdBadges();
 };
 window.foodOpenItem=function(itemId){
   if(!VENUE)return;const i=VENUE.items.find(x=>x.id===itemId);if(!i||!i.is_available)return;
@@ -1325,7 +1333,7 @@ function coDraw(tok){
   const vDelivery=vm!=='pickup',vPickup=vm!=='self_delivery';const fee=+v.delivery_fee_kurus||0;
   const mn=document.querySelector('#fdRoot .fdCoMain'),mst=mn?mn.scrollTop:0;
   patch(bar('Siparişi onayla','showFoodCart()',null,v.name)+'<div class="fdCo">'+
-    (vDelivery&&vPickup?'<div class="fdSeg fdCoSeg"><button type="button" class="dl'+(CO.fulfillment==='delivery'?' on':'')+'" onclick="foodSetFul(\'delivery\')"><b>🛵 Adresime getir</b>'+(fee>0?'<small>+'+M(fee)+'</small>':'')+'</button><button type="button" class="pk'+(CO.fulfillment==='pickup'?' on':'')+'" onclick="foodSetFul(\'pickup\')"><b>🛍 Ben gelip alayım</b>'+(fee>0?'<em class="fdCoSave">'+M(fee)+' ucuz</em>':'')+'</button></div>':'')+
+    (vDelivery&&vPickup?'<div class="fdSeg fdCoSeg"><button type="button" class="dl'+(CO.fulfillment==='delivery'?' on':'')+'" aria-pressed="'+(CO.fulfillment==='delivery')+'" onclick="foodSetFul(\'delivery\')"><b>🛵 Adresime getir</b>'+(fee>0?'<small>+'+M(fee)+'</small>':'')+'</button><button type="button" class="pk'+(CO.fulfillment==='pickup'?' on':'')+'" aria-pressed="'+(CO.fulfillment==='pickup')+'" onclick="foodSetFul(\'pickup\')"><b>🛍 Ben gelip alayım</b>'+(fee>0?'<em class="fdCoSave">'+M(fee)+' ucuz</em>':'')+'</button></div>':'')+
     '<div class="fdCoMain"><div class="fdRows">'+
       (CO.fulfillment==='delivery'?row('📍','Teslimat adresi',a?addrValueHTML(a):'','foodAddrSheet(\'co\')',{id:'coAddr',empty:'Adres ekle'}):
         '<div class="fdRowBtn" style="cursor:default"><span class="ic">🛍️</span><span class="tx"><small>Gel-al · restorandan teslim al</small><b>'+E([v.address_text,v.district].filter(Boolean).join(', ')||v.name)+'</b></span></div>')+
@@ -2828,11 +2836,14 @@ function fdwCart(){
 window.addEventListener('storage',e=>{if(e.key===CART_KEY)fdwCart()});
 
 /* Hesabım */
+const accRow=(ic,t,sub,fn,cls)=>'<button type="button" class="fdwRow'+(cls?' '+cls:'')+'" onclick="'+fn+'"><span class="ic">'+fdIco(ic,21)+'</span><span class="tx"><b>'+E(t)+'</b>'+(sub?'<small>'+E(sub)+'</small>':'')+'</span><span class="ch" aria-hidden="true">›</span></button>';
 async function showFoodAccount(){
+  if(!(S()&&S().access_token))return showFoodAccountGuest();
   if(!A())return;FDW_TAB='account';const tok=newScreen();
   const u=(S()&&S().user)||{};const name=(u.user_metadata&&(u.user_metadata.full_name||u.user_metadata.name))||'';
-  const r=(ic,t,sub,fn,cls)=>'<button type="button" class="fdwRow'+(cls?' '+cls:'')+'" onclick="'+fn+'"><span class="ic">'+fdIco(ic,21)+'</span><span class="tx"><b>'+E(t)+'</b>'+(sub?'<small>'+E(sub)+'</small>':'')+'</span><span class="ch" aria-hidden="true">›</span></button>';
+  const r=accRow;
   render('<div class="fdwAcc"><div class="fdwMe"><span class="av">'+E((name||u.email||'?').trim().charAt(0).toLocaleUpperCase('tr'))+'</span><span class="tx"><b>'+E(name||'Hesabım')+'</b><small>'+E(u.email||'')+'</small></span></div>'+
+    '<div class="fdwList">'+r('out','Çıkış yap','','foodLogout()','fdwOut')+'</div>'+
     '<div class="fdwQuick"><button type="button" onclick="showFoodOrders()">'+fdIco('receipt',24)+'<b>Siparişlerim</b></button><button type="button" onclick="foodAccFavs()">'+fdIco('heart',24)+'<b>Favorilerim</b></button></div>'+
     '<div class="fdwList">'+r('ticket','Kuponlarım','Kullanabileceğin indirimler','showFoodCoupons()')+r('pin','Adreslerim','Teslimat adreslerini yönet',"foodAddrSheet('account')")+r('bell','Bildirimler','Sipariş ve kampanya bildirimleri','showFoodNotifications()')+
     r('help','Yardım ve destek','Sık sorulanlar, sorun bildir, destek talebi','showFoodHelp()')+r('shield','Hesap ve güvenlik','Kullanıcı bilgilerin','location.href=\'./marketplace-profile.html\'')+
@@ -2841,6 +2852,21 @@ async function showFoodAccount(){
     '<div class="fdwList">'+r('out','İşimi Çöz’e dön','Ana platforma geç','showHome()')+'</div></div>');
   try{const w=await whoami();if(!alive(tok))return;if(w&&w.is_admin){const box=document.getElementById('fdwAccRoles');if(box)box.insertAdjacentHTML('beforeend',r('gear','Yemek yönetimi','Platform yönetim paneli','showFoodAdmin()'))}}catch(e){}
 }
+/* Girişsiz Hesabım: A() kontrolü yok; diğer ekranlar girişi eskisi gibi ister */
+function showFoodAccountGuest(){
+  FDW_TAB='account';newScreen();const r=accRow;
+  render('<div class="fdwAcc fdwAccGuest"><div class="fdwMe"><span class="av">?</span><span class="tx"><b>Giriş yapmadın</b><small>Sipariş vermek için giriş yap veya kayıt ol</small></span></div>'+
+    '<div class="fdwQuick"><button type="button" onclick="openAuthModal(\'login\')">'+fdIco('user',24)+'<b>Giriş yap</b></button><button type="button" onclick="openAuthModal(\'signup\')">'+fdIco('user',24)+'<b>Kayıt ol</b></button></div>'+
+    '<div class="fdwList">'+r('help','Yardım ve destek','Sık sorulanlar, sorun bildir, destek talebi','showFoodHelp()')+'</div>'+
+    '<div class="fdwList">'+r('out','İşimi Çöz’e dön','Ana platforma geç','showHome()')+'</div></div>');
+}
+/* Yemek içinden çıkış: bellekteki kullanıcı verisini sıfırla, Yemek Hesabım'da kal (toast yok) */
+window.foodLogout=function(){
+  WHO=null;WHO_AT=0;ADDRS=null;FAV=null;LIKES={};FDW_PN=null;FDW_PN_AT=0;CV=null;VENUE=null;
+  Object.assign(CO,{phone:'',note:'',coupon:'',autoCp:false,prefs:{},cons:{},quote:null,when:null});
+  try{logoutUser()}catch(e){}
+  fdwCart();showFoodAccountGuest();
+};
 function pfFn(n){try{return !!(window.PF&&typeof PF[n]==='function')}catch(e){return false}}
 const FAQ=[
  ['Siparişimi nasıl iptal ederim?','Restoran siparişi onaylamadan önce Siparişlerim › Detay ekranından iptal edebilirsin. Onaylandıktan sonra iptal için restoranı ara ya da sorun bildir.'],
@@ -3641,6 +3667,18 @@ body:has(.fdCo) #fdRoot{padding-bottom:0}
 .fdCo .fdCta .fb{flex:none;min-height:46px}
 @media (max-height:700px){.fdCo{--co-r:40px;--co-g:5px;--co-s:48px;--co-l:17px}.fdCo .fdLegal{font-size:10px}.fdCo .fdCta .fb{min-height:44px}}
 /*K18-BITIS*/
+/*K19-BASLA*/
+.fdwAcc .fdwOut b{color:var(--fd-bad,#dc2626)}.fdwAcc .fdwOut .ic{color:var(--fd-bad,#dc2626)}
+.fdProd .im{width:92px;flex:0 0 92px}
+.fdProd .fdAdd[hidden],.fdProd .fdStep[hidden]{display:none}
+.fdProd .fdStep{position:absolute;right:-4px;bottom:-6px;z-index:1;display:flex;align-items:center;justify-content:space-between;width:96px;height:32px;border-radius:11px;background:#152026;color:#fff;box-shadow:0 3px 10px rgba(0,0,0,.22)}
+.fdProd .fdStep.fdAddS{position:static;flex:0 0 auto;align-self:center}
+.fdProd .fdStep button{width:32px;height:32px;min-width:32px;padding:0;border:0;background:transparent;color:#D4A93F;font:800 20px/1 system-ui,sans-serif;cursor:pointer;display:grid;place-items:center}
+.fdProd .fdStep b{flex:1;text-align:center;font-size:14px;font-weight:800}
+.fdCo .fdCoSeg button.pk:not(.on){background:transparent;color:var(--muted);box-shadow:inset 0 0 0 1px var(--line)}
+.fdCo .fdCoSeg button.on,.fdCo .fdCoSeg button.pk.on{background:#152026;color:#fff;box-shadow:inset 0 0 0 2px #D4A93F}
+.fdCo .fdCoSeg button.on b:before{content:"✓ ";color:#D4A93F}
+/*K19-BITIS*/
 `;document.head.appendChild(s);
 }
 
