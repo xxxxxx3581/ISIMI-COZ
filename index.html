@@ -2105,8 +2105,7 @@ var HM_ACT={
 };
 /* Açılış kilidi: window.__hmLocks.<anahtar>===false ise bölüm kapalı sayılır (K4'te ayarlardan beslenecek). Varsayılan: hepsi açık. */
 function hmGo(key){
-  var L=window.__hmLocks||{};
-  if(L[key]===false){ try{ v2Toast('Bu bölüm çok yakında açılıyor.'); }catch(e){} return; }
+  if(hmLockOn(key)){ try{ v2Toast('Bu bölüm çok yakında açılıyor.'); }catch(e){} return; }
   var f=HM_ACT[key]; if(typeof f==='function') return f();
 }
 function hmSoon(){ try{ v2Toast('Market çok yakında!'); }catch(e){} }
@@ -2172,7 +2171,7 @@ function hmAcc(k){
       case 'orders': if(guestStop()) return; return showFoodOrders();
       case 'favs': if(guestStop()) return; return showFavorites();
       case 'msgs': if(guestStop()) return; var om=window.__A3514_OPEN_MESSAGES__||window.openMsgs; if(typeof om==='function') return om(); return v2Toast('Mesajlar şu an açılamadı.');
-      case 'mylist': return showMyListings();
+      case 'mylist': if(hmLockOn('listings')){ return v2Toast('Bu bölüm çok yakında açılıyor.'); } return showMyListings();
       case 'addr': return window.foodAddrSheet('account');
       case 'bell': return showFoodNotifications();
       case 'help': return logged?pfCall('openSupport'):openA7SmartAI();
@@ -2239,6 +2238,28 @@ function hmSliderInit(){
   if(!reduce) setTimeout(tick,1400);
 }
 /*K3B-BITIS*/
+/*K4-BASLA*/
+function hmLockOn(key){
+  try{
+    var st=window.PF&&window.PF.settings; if(!st) return false;
+    if(key==='listings') return st.listings_emlak_enabled===false&&st.listings_arac_enabled===false;
+    if(key==='services') return st.services_enabled===false;
+  }catch(e){}
+  return false;
+}
+function hmGuardInstall(){
+  var G={showKesfet:'listings',kesfetOpen:'listings',showGayrimenkulCreateForm:'listings',startOtomobilWizard:'listings',showRequest:'services',showProviderEntry:'services',openHallet:'services'};
+  Object.keys(G).forEach(function(n){
+    var f=window[n]; if(typeof f!=='function'||f.__hmg) return;
+    var key=G[n];
+    var w=function(){
+      if(hmLockOn(key)){ try{ v2Toast('Bu bölüm çok yakında açılıyor.'); }catch(e){} return; }
+      return f.apply(this,arguments);
+    };
+    w.__hmg=1; if(f.__v2nav) w.__v2nav=1; window[n]=w;
+  });
+}
+/*K4-BITIS*/
 function hmImgErr(i){ try{ var f=i.getAttribute('data-f'); if(f&&i.getAttribute('src')!==f){ i.src=f; } else { i.remove(); } }catch(e){} }
 async function hmHeroLoad(){
   try{
@@ -7445,6 +7466,7 @@ window.addEventListener('popstate',function(e){
   }).observe(app,{childList:true,subtree:true});
 })();
 v2NavInstall();
+hmGuardInstall();
 window.addEventListener('load',function(){ try{ v2NavInstall(); }catch(e){} });   /* Yemek modülü sonradan yüklenir; ana ekranını da geçmişe ekle */
 
 startApp();
