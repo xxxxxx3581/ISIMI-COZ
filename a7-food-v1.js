@@ -1312,7 +1312,7 @@ async function showFoodCheckout(){
   coFulfillDefault();CO.phone=CO.phone||localStorage.getItem(PHONE_KEY)||'';
   try{const pc=sessionStorage.getItem('isimi_food_coupon');if(pc&&!CO.coupon&&pfOn()&&pfSet().coupons_enabled===true){CO.coupon=pc;sessionStorage.removeItem('isimi_food_coupon')}}catch(e){}
   render(bar('Siparişi onayla','showFoodCart()',null,c.venue.name)+skel('row',3));
-  try{const vs=await Q('GET','food_venues?select=id,name,address_text,district,delivery_mode,image_url,phone&id=eq.'+encodeURIComponent(c.venue.id));CO.venue=vs&&vs[0]||c.venue}catch(e){CO.venue=c.venue}
+  try{const vs=await Q('GET','food_venues?select=id,name,address_text,district,delivery_mode,image_url,phone,delivery_fee_kurus&id=eq.'+encodeURIComponent(c.venue.id));CO.venue=vs&&vs[0]||c.venue}catch(e){CO.venue=c.venue}
   await loadAddrs();await currentAddr();
   if(pfOn()){try{CO.legal=await PF.legalList()}catch(e){CO.legal=[]}}else CO.legal=[];
   if(CO.payment==='online_card'&&!(pfOn()&&pfSet().online_payment_enabled===true))CO.payment='cash_on_delivery';
@@ -1322,10 +1322,11 @@ async function showFoodCheckout(){
 }
 function coDraw(tok){
   const c=cartGet();const vm=coVenueMode();const a=addrGet();const v=CO.venue||c.venue;
-  const vDelivery=vm!=='pickup',vPickup=vm!=='self_delivery';
-  patch(bar('Siparişi onayla','showFoodCart()',null,v.name)+
-    (vDelivery&&vPickup?'<div class="fdSeg"><button type="button" class="'+(CO.fulfillment==='delivery'?'on':'')+'" onclick="foodSetFul(\'delivery\')">🛵 Teslimat</button><button type="button" class="'+(CO.fulfillment==='pickup'?'on':'')+'" onclick="foodSetFul(\'pickup\')">🛍️ Gel-al</button></div>':'')+
-    '<div class="fdRows">'+
+  const vDelivery=vm!=='pickup',vPickup=vm!=='self_delivery';const fee=+v.delivery_fee_kurus||0;
+  const mn=document.querySelector('#fdRoot .fdCoMain'),mst=mn?mn.scrollTop:0;
+  patch(bar('Siparişi onayla','showFoodCart()',null,v.name)+'<div class="fdCo">'+
+    (vDelivery&&vPickup?'<div class="fdSeg fdCoSeg"><button type="button" class="dl'+(CO.fulfillment==='delivery'?' on':'')+'" onclick="foodSetFul(\'delivery\')"><b>🛵 Adresime getir</b>'+(fee>0?'<small>+'+M(fee)+'</small>':'')+'</button><button type="button" class="pk'+(CO.fulfillment==='pickup'?' on':'')+'" onclick="foodSetFul(\'pickup\')"><b>🛍 Ben gelip alayım</b>'+(fee>0?'<em class="fdCoSave">'+M(fee)+' ucuz</em>':'')+'</button></div>':'')+
+    '<div class="fdCoMain"><div class="fdRows">'+
       (CO.fulfillment==='delivery'?row('📍','Teslimat adresi',a?addrValueHTML(a):'','foodAddrSheet(\'co\')',{id:'coAddr',empty:'Adres ekle'}):
         '<div class="fdRowBtn" style="cursor:default"><span class="ic">🛍️</span><span class="tx"><small>Gel-al · restorandan teslim al</small><b>'+E([v.address_text,v.district].filter(Boolean).join(', ')||v.name)+'</b></span></div>')+
       row('📞','Telefon',CO.phone?E(CO.phone):'','foodCoPhone()',{id:'coPhone',empty:'Telefon ekle'})+
@@ -1335,10 +1336,11 @@ function coDraw(tok){
       (pfOn()&&pfSet().scheduled_orders_enabled===true&&CO.payment!=='online_card'?row('🕒','Teslim zamanı',CO.when?E(dt(CO.when)):'','foodCoWhen()',{id:'coWhen',empty:'Hemen (planla)'}):'')+
     '</div>'+
     '<h2>Teslimat tercihleri</h2><div class="fdCard fdPrefs" style="padding:2px 14px">'+PREFS.filter(p=>!p[3]||CO.fulfillment==='delivery').map(p=>'<div class="fdPref"><div class="tx"><b>'+E(p[1])+'</b><small>'+E(p[2])+'</small></div>'+sw('pf_'+p[0],!!CO.prefs[p[0]],"foodPref('"+p[0]+"',this.checked)")+'</div>').join('')+'</div>'+
-    '<h2>Ödeme özeti</h2><div class="fdCard" id="fdSum">'+(CO.quote?sumHTML(CO.quote):skel('line',3))+'</div><div id="fdIss"></div>'+
+    '<div id="fdIss"></div>'+
     '<p class="fdMuted fdSmall fdCenter" id="fdEtaL" style="margin-top:10px"></p>'+
-    coLegalHTML()+
-    '<div class="fdSticky"><div class="fdCta"><button type="button" class="fb pri" id="fdPlace" disabled onclick="foodPlaceOrder(this)">Siparişi ver</button></div></div>');
+    coLegalHTML()+'</div>'+
+    '<div class="fdSticky"><div class="fdCta"><h2>Ödeme özeti</h2><div class="fdCard" id="fdSum">'+(CO.quote?sumHTML(CO.quote):skel('line',3))+'</div><button type="button" class="fb pri" id="fdPlace" disabled onclick="foodPlaceOrder(this)">Siparişi ver</button></div></div></div>');
+  const mn2=document.querySelector('#fdRoot .fdCoMain');if(mn2&&mst)mn2.scrollTop=mst;
   coQuote(tok);
 }
 function coLegalHTML(){
@@ -3608,6 +3610,37 @@ body.fdWorld .fdHero .nav>.fdIco:first-child{visibility:hidden}
 @media(max-width:380px){.fdwTop{gap:6px;padding-left:8px;padding-right:8px}.fdwTop .fdwIco,.fdwSlot .fdIco{width:38px;height:38px}.fdwCart.has b{display:none}.fdwCart.has{padding:0 10px}}
 /* Hareket azaltma */
 @media (prefers-reduced-motion: reduce){body.fdWorld *,body.fdWorld *::before,body.fdWorld *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+/*K18-BASLA*/
+body:has(.fdCo) #fdRoot{padding-bottom:0}
+.fdCo{--co-r:44px;--co-g:6px;--co-s:54px;--co-l:19px;display:flex;flex-direction:column;height:calc(100dvh - 58px - 65px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px) - var(--co-off,18px));min-height:0}
+.fdCo .fdCoSeg{flex:none;height:var(--co-s);gap:6px;padding:0;margin:0 0 8px;background:none;border-radius:0}
+.fdCo .fdCoSeg button{height:100%;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:12px;padding:0 6px;background:transparent;color:var(--muted);box-shadow:inset 0 0 0 1px var(--line);line-height:1.15}
+.fdCo .fdCoSeg button b{font-size:14px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.fdCo .fdCoSeg button small{font-size:11px;font-weight:700;opacity:.85}
+.fdCo .fdCoSeg button.pk{background:#12382B;color:#7EE2A8;box-shadow:inset 0 0 0 1.5px #3FBF7F}
+.fdCo .fdCoSeg button.on,.fdCo .fdCoSeg button.pk.on{background:#152026;color:#fff;box-shadow:inset 0 0 0 1.5px #D4A93F}
+.fdCo .fdCoSave{font-style:normal;font-size:10.5px;font-weight:800;line-height:1;padding:3px 7px;border-radius:999px;background:#3FBF7F;color:#06241A}
+.fdCo .fdCoMain{flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch}
+.fdCo .fdRows>*+*{margin-top:var(--co-g)}
+.fdCo .fdRowBtn{min-height:var(--co-r);padding:0 12px;gap:10px;border-radius:12px}
+.fdCo .fdRowBtn .ic{font-size:17px;width:22px}.fdCo .fdRowBtn small{font-size:10.5px;line-height:1.2}
+.fdCo .fdRowBtn b{font-size:13.5px;line-height:1.25;-webkit-line-clamp:1}.fdCo .fdRowBtn .ch{font-size:19px}
+.fdCo h2{display:none}
+.fdCo .fdPrefs{display:flex;gap:6px;padding:6px 8px!important;margin-top:var(--co-g)}
+.fdCo .fdPrefs .fdPref{flex:1 1 0;min-width:0;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:2px 0;border:0;text-align:center}
+.fdCo .fdPref b{font-size:11px;line-height:1.15}.fdCo .fdPref small{display:none}
+.fdCo .fdPref .fdSw i{width:34px;height:20px}.fdCo .fdPref .fdSw i:after{width:14px;height:14px}.fdCo .fdPref .fdSw input:checked+i:after{transform:translateX(14px)}
+.fdCo #fdIss .fdNote{margin-top:var(--co-g)}
+.fdCo #fdEtaL{margin-top:6px!important;font-size:11px}.fdCo #fdEtaL:empty{display:none}
+.fdCo .fdLegal{font-size:10.5px;line-height:1.3;margin:4px 4px 2px}.fdCo #coLegal{margin-top:6px!important;padding:8px 10px}
+.fdCo .fdSticky{position:static;flex:none;margin:8px 0 0}
+.fdCo .fdCta{flex-direction:column;align-items:stretch;gap:6px;padding:8px 10px}
+.fdCo #fdSum{border:0;padding:0;background:none;box-shadow:none;margin:0}
+.fdCo #fdSum .fdLine{padding:0;min-height:var(--co-l);line-height:var(--co-l);font-size:13px}
+.fdCo #fdSum .fdLine.total{font-size:14px;margin-top:2px;padding-top:2px}
+.fdCo .fdCta .fb{flex:none;min-height:46px}
+@media (max-height:700px){.fdCo{--co-r:40px;--co-g:5px;--co-s:48px;--co-l:17px}.fdCo .fdLegal{font-size:10px}.fdCo .fdCta .fb{min-height:44px}}
+/*K18-BITIS*/
 `;document.head.appendChild(s);
 }
 
