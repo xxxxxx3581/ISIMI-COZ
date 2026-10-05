@@ -2249,9 +2249,9 @@ function hmSliderInit(){
   sl.addEventListener('touchend',end,{passive:true});
   sl.addEventListener('touchcancel',end,{passive:true});
   sl.addEventListener('click',function(e){ if(Date.now()-(sl.__sw||0)<350){ e.stopPropagation(); e.preventDefault(); } },true);
-  var tick=function(){ if(!document.body.contains(sl)) return; if(!hold&&!document.hidden&&!drag) next(); setTimeout(tick,1400); };
+  var tick=function(){ if(!document.body.contains(sl)) return; if(!hold&&!document.hidden&&!drag) next(); setTimeout(tick,1900); };
   dot(0);
-  if(!reduce) setTimeout(tick,1400);
+  if(!reduce) setTimeout(tick,1900);
 }
 /*K3B-BITIS*/
 /*K4-BASLA*/
