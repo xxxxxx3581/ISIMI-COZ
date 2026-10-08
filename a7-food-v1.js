@@ -336,6 +336,8 @@ function css(){
 .fdCuis{display:flex;gap:10px;overflow-x:auto;padding:2px 0 6px;scrollbar-width:none}.fdCuis::-webkit-scrollbar{display:none}
 .fdCuis button{flex:0 0 72px;display:flex;flex-direction:column;align-items:center;gap:6px;border:0;background:none;color:var(--text);font:inherit;font-size:12px;font-weight:700;cursor:pointer;padding:0}
 .fdCuis button span{width:60px;height:60px;border-radius:18px;display:grid;place-items:center;font-size:28px;background:var(--card);border:1px solid var(--line)}
+.fdCuis button span.im{overflow:hidden}
+.fdCuis button span.im img{display:block;width:100%;height:100%;object-fit:cover}
 .fdCuis button.on span{border-color:var(--fd-acc);background:var(--fd-soft)}.fdCuis button em{font-style:normal;max-width:72px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fdGrid{display:grid;grid-template-columns:1fr;gap:14px}@media(min-width:720px){.fdGrid{grid-template-columns:1fr 1fr}}
 .fdVCard{display:block;width:100%;padding:0;border:1px solid var(--line);border-radius:var(--fd-r);background:var(--card);color:var(--text);font:inherit;text-align:left;cursor:pointer;overflow:hidden}
@@ -3166,6 +3168,8 @@ async function homeExtra(tok){
 }
 function venueImg(v){if(v.cover_url)return v.cover_url;const it=(HF.items||[]).find(i=>i.venue_id===v.id);return it?it.image_url:''}
 function cuisImg(c){
+  const i=CUISINES.findIndex(x=>x[0]===c);
+  if(i>=0&&catPhoto(i))return catPhoto(i);
   const cu=CUISINES.find(x=>x[0]===c);const re=cu&&cu[2];
   const it=(re&&(HF.items||[]).find(i=>re.test(String(i.name||'').toLocaleLowerCase('tr'))))||(HF.items||[]).find(i=>{const v=HF.rows.find(r=>r.id===i.venue_id);return v&&venueCats(v)[0]===c});
   return it?it.image_url:'';
