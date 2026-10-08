@@ -549,6 +549,8 @@ const CUISINES=[['Döner','🌯',/döner|doner|iskender/],['Kebap','🍢',/kebap
  ['Kahve','☕',/kahve|coffee|cafe|kafe/],['Uzakdoğu','🍣',/sushi|uzakdoğu|çin|japon|noodle/],['Dünya mutfağı','🌍',/dünya|meksika|italyan|hint/]];
 function catOf(token){const t=String(token||'').toLocaleLowerCase('tr');const c=CUISINES.find(x=>x[0].toLocaleLowerCase('tr')===t)||CUISINES.find(x=>x[2].test(t));return c?c[0]:null}
 function catIcon(name){const c=CUISINES.find(x=>x[0]===name);return c?c[1]:foodIcon(name)}
+const CAT_IMG=['01-doner','02-kebap','03-pide','04-lahmacun','05-corba','06-kofte','07-cig-kofte','08-burger','09-pizza','10-tavuk','11-ev-yemekleri','12-tost-sandvic','13-kahvalti-borek','14-tantuni-durum','15-izgara','16-balik-deniz-urunleri','17-makarna-manti','18-salata-saglikli','19-tatli','20-dondurma','21-pastane-firin','22-kahve','23-uzakdogu','24-dunya-mutfagi'].map(s=>'images/food/categories/'+s+'.webp');
+function catPhoto(i){return CAT_IMG[i]||''}
 /* Restoranın katalog mutfakları (eski serbest metinler de eşleşir) + eşleşmeyen etiketler */
 function venueCats(v){const out=[];cuisines(v&&v.cuisine_type).forEach(t=>{const c=catOf(t)||t;if(!out.includes(c))out.push(c)});return out}
 
@@ -1019,7 +1021,7 @@ function searchIdle(){
     (h.length?'<div class="fdSecH"><b>🕘 Arama geçmişi</b><button type="button" class="fdLink" onclick="foodHistClear()">Temizle</button></div><div class="fdHist">'+h.map(q=>'<button type="button" class="fdChip" onclick="foodSearchSet(this.textContent)">'+E(q)+'</button>').join('')+'</div>':'')+
     (top.length?'<div class="fdSecH"><b>🔥 Öne çıkan aramalar</b></div><div class="fdHist">'+top.map(q=>'<button type="button" class="fdChip" onclick="foodSearchSet(this.textContent)">'+E(q.toLocaleLowerCase('tr'))+'</button>').join('')+'</div>':'')+
     (vs.length?'<div class="fdSecH"><b>Restoranlar</b></div><div class="fdLogos">'+vs.map(v=>'<button type="button" onclick="showFoodVenue(\''+E(v.id)+'\')">'+pic(v.image_url||v.cover_url||'',v.name,'sq',catIcon(venueCats(v)[0]))+'<em>'+E(v.name)+'</em></button>').join('')+'</div>':'')+
-    '<div class="fdSecH"><b>Mutfaklar</b></div><div class="fdCatGrid">'+CUISINES.map((c,i)=>'<button type="button" onclick="foodPickCuisine('+i+')"><span>'+c[1]+'</span>'+E(c[0])+(cnt[c[0]]?'<small>'+cnt[c[0]]+' restoran</small>':'')+'</button>').join('')+'</div>');
+    '<div class="fdSecH"><b>Mutfaklar</b></div><div class="fdCatGrid">'+CUISINES.map((c,i)=>'<button type="button" onclick="foodPickCuisine('+i+')"><span class="im" style="display:block;width:64px;height:64px;border-radius:14px;overflow:hidden"><img src="'+E(catPhoto(i))+'" alt="'+E(c[0])+'" loading="lazy" style="display:block;width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\';this.parentNode.textContent='+JSON.stringify('')+'"></span>'+E(c[0])+(cnt[c[0]]?'<small>'+cnt[c[0]]+' restoran</small>':'')+'</button>').join('')+'</div>');
 }
 async function searchRun(tok,raw){
   const q=String(raw||'').trim();if(q.length<2)return searchIdle();const seq=++SQSEQ;
