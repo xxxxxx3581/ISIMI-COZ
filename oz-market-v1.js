@@ -567,8 +567,8 @@ function renderProduct(){
   var moreH=sel.id?'<div id="ozPDMore"></div>':'';
   var revH='';
   var qs_=arr(p.questions);
-  var qH='<div class="ozSecH"><h2>Soru ve cevaplar</h2><button type="button" class="ozBtn sm" data-a="ask">Soru sor</button></div>'+
-    (qs_.length?'<div class="ozCard">'+qs_.map(function(q){return '<div class="ozRev"><div class="h"><span>Soru</span><span>'+E(fmtDay(q.created_at))+'</span></div><p><b>'+E(q.question)+'</b></p>'+(q.answer?'<div class="ozReply"><b>Üretici:</b> '+E(q.answer)+'</div>':'<p class="ozMuted">Üreticinin cevabı bekleniyor.</p>')+'</div>'}).join('')+'</div>':'<p class="ozMuted">Henüz soru sorulmamış.</p>');
+  /* B4: tek satır; dokununca alt panelde liste + "Soru sor" */
+  var qH='<button type="button" class="ozRowBtn ozQaRow" data-a="pdQa"><span class="ic">'+ico('bell',20)+'</span><span class="tx"><b>Soru ve cevaplar ('+qs_.length+')</b></span><span class="ch" aria-hidden="true">›</span></button>';
   paint(gal+info+feH+descH+vars+buy+ship+revH+qH+moreH+bar);
   var g=D.getElementById('ozGal'),n=D.getElementById('ozGalN');
   var gd=D.getElementById('ozGalD');if(g&&gd)g.addEventListener('scroll',function(){var i=Math.round(g.scrollLeft/Math.max(1,g.clientWidth));qa('button',gd).forEach(function(x,j){x.classList.toggle('on',i===j)})},{passive:true});
@@ -586,6 +586,9 @@ async function pdMore(pd,sel){
   box=D.getElementById('ozPDMore');if(box)box.innerHTML=pdMoreHtml(pd,sel);
 }
 ACT_EXTRA({
+  pdQa:function(){var pd=ST.pd;if(!pd)return;var l=arr(pd.p.questions);
+    sheet('Soru ve cevaplar ('+l.length+')',(l.length?l.map(function(q){return '<div class="ozRev"><div class="h"><span>Soru</span><span>'+E(fmtDay(q.created_at))+'</span></div><p><b>'+E(q.question)+'</b></p>'+(q.answer?'<div class="ozReply"><b>Üretici:</b> '+E(q.answer)+'</div>':'<p class="ozMuted">Üreticinin cevabı bekleniyor.</p>')+'</div>'}).join(''):'<p class="ozMuted">Henüz soru sorulmamış.</p>')+
+      '<button type="button" class="ozBtn pri wide" data-a="ask" style="margin-top:12px">Soru sor</button>',{noFocus:true})},
   pdRev:function(){var pd=ST.pd;if(!pd)return;var l=arr(pd.p.reviews).slice(0,20);
     sheet('Değerlendirmeler ('+num(pd.p.rating_count)+')',(l.length?l.map(revHtml).join(''):'<p class="ozMuted">Henüz yorum yazılmamış.</p>')+'<p class="ozHint" style="margin:10px 0 0">Değerlendirmeyi yalnız teslim aldığı siparişten alıcılar yazabilir.</p>',{noFocus:true})},
   galGo:function(b){var g=D.getElementById('ozGal');if(!g)return;var i=num(b.dataset.i);try{g.scrollTo({left:i*g.clientWidth,behavior:'smooth'})}catch(e){g.scrollLeft=i*g.clientWidth}},
@@ -976,7 +979,7 @@ async function askQuestion(pid){
   var v=await formBox('Üreticiye soru sor','<label for="ozAskQ">Sorun</label><textarea class="ozTa" id="ozAskQ" data-f="q" maxlength="500" placeholder="Örn. Asit oranı nedir?"></textarea><p class="ozHint">Sorun ve cevabı ürün sayfasında herkese açık görünür. Kişisel bilgi yazma.</p>','Gönder',function(v){return v.q.length<5?'Soru en az 5 karakter olmalı.':''});
   if(!v)return;
   await rpc('oz_ask_question',{p_product:pid,p_question:v.q});
-  toast('Sorun üreticiye iletildi. Cevaplanınca burada görünecek.');
+  toast('Sorun üreticiye iletildi. Cevaplanınca "Soru ve cevaplar" bölümünde görünecek.');
 }
 
 /* ====================== Dünya kabuğu: üst çubuk, gezinme ====================== */
