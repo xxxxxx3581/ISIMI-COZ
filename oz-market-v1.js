@@ -228,6 +228,60 @@ function startHero(t){
   try{if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return}catch(e){}
   var tm=setInterval(function(){if(!alive(t)||!tr.isConnected){clearInterval(tm);return}if(stop||D.hidden)return;var i=(idx()+1)%n;try{tr.scrollTo({left:i*tr.clientWidth,behavior:'smooth'})}catch(e){tr.scrollLeft=i*tr.clientWidth}},5000);
 }
+/* K35: üretici sayfası parçaları */
+function ppHtml(d){
+  var nm=String(d.display_name||'Üretici');var cv=httpsUrl(d.cover_url),lg=httpsUrl(d.logo_url);var loc=[d.city,d.district].filter(Boolean).join(' · ');var st=String(d.story||'');var lng=st.length>220;
+  var info=[];if(num(d.handling_days))info.push(['Hazırlık',num(d.handling_days)+' gün']);if(num(d.free_ship_over_kurus))info.push(['Ücretsiz kargo',TL(d.free_ship_over_kurus)+' üzeri']);
+  var cats=arr(d.categories);
+  return '<div class="ozPP"><div class="cv">'+(cv?'<img src="'+E(cv)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">':'')+'<button type="button" class="bk" data-a="back" aria-label="Geri">'+ico('back')+'</button></div>'+
+    '<div class="hd"><span class="lg">'+(lg?'<img src="'+E(lg)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">':'')+'<i aria-hidden="true">'+E(initials(nm))+'</i></span><span class="ok">✓ Onaylı üretici</span></div>'+
+    '<h1 class="nm">'+E(nm)+'</h1>'+(loc?'<p class="loc">'+E(loc)+'</p>':'')+
+    '<p class="rt">'+(num(d.rating_count)?'★ '+NF1.format(num(d.rating_avg))+' · '+num(d.rating_count)+' değerlendirme':'<em>Yeni</em>')+'</p>'+
+    (st?'<p class="ozStory'+(lng?' ozClamp':'')+'" id="ozStory">'+E(st)+'</p>'+(lng?'<button type="button" class="ozLink" data-a="storyMore" aria-controls="ozStory" aria-expanded="false">Devamı</button>':''):'')+
+    (info.length?'<div class="inf">'+info.map(function(x){return '<div><small>'+E(x[0])+'</small><b>'+E(x[1])+'</b></div>'}).join('')+'</div>':'')+
+    (cats.length?'<div class="ozSecH"><h2>Bu dükkândaki kategoriler</h2></div><div class="ozCts" role="list">'+
+      '<button type="button" class="ozCt" data-a="ppCat" data-cat=""><span class="b" style="background:#2E8B57"><i aria-hidden="true">🧺</i></span><span class="l">Tümü</span></button>'+
+      cats.map(function(c){return catTile(c,'data-a="ppCat" data-cat="'+E(c.slug)+'"')}).join('')+'</div>':'')+
+    '<div class="ozSecH"><h2>Ürünler</h2></div><div id="ozPPL">'+skel(2)+'</div><div id="ozPPBar"></div></div>';
+}
+function ppMark(){var c=(ST.pp&&ST.pp.cat)||'';qa('#ozRoot .ozPP [data-a=ppCat]').forEach(function(b){var on=(b.dataset.cat||'')===c;b.classList.toggle('sel',on);b.setAttribute('aria-pressed',String(on))})}
+function ppLines(pid){return cartGet().filter(function(x){return String(x.product_id)===String(pid)})}
+function ppCtrl(p){
+  if(p.in_stock===false)return '<button type="button" class="ozPlus" disabled aria-label="Tükendi">+</button>';
+  var ls=ppLines(p.id);
+  if(ls.length===1)return '<span class="ozPStep" role="group" aria-label="Adet"><button type="button" data-a="ppQty" data-v="'+E(ls[0].variant_id)+'" data-d="-1" aria-label="Azalt">−</button><b>'+num(ls[0].qty)+'</b><button type="button" data-a="ppQty" data-v="'+E(ls[0].variant_id)+'" data-d="1" aria-label="Bir tane daha">+</button></span>';
+  var n=ls.reduce(function(k,x){return k+num(x.qty)},0);
+  return '<button type="button" class="ozPlus'+(n?' in':'')+'" data-a="ppPlus" data-id="'+E(p.id)+'" aria-label="'+(n?n+' adet sepette, ekle':'Sepete ekle')+'">'+(n||'+')+'</button>';
+}
+function ppCard(p){var im=httpsUrl(p.image);
+  return '<div class="ozPPc" data-pid="'+E(p.id)+'"><button type="button" class="im" data-a="nav" data-k="product" data-id="'+E(p.id)+'" aria-label="'+E(p.name)+'">'+pic(im,p.name)+(p.in_stock===false?'<span class="so">Tükendi</span>':'')+'</button>'+
+    '<button type="button" class="nm" data-a="nav" data-k="product" data-id="'+E(p.id)+'">'+E(p.name)+'</button><div class="ft"><b>'+TL(p.price_kurus)+'</b><span class="ac">'+ppCtrl(p)+'</span></div></div>'}
+function ppRefresh(){var pp=ST.pp;if(!pp)return;qa('#ozPPL .ozPPc').forEach(function(c){var p=pp.list.filter(function(x){return String(x.id)===c.dataset.pid})[0];var ac=qs('.ac',c);if(p&&ac)ac.innerHTML=ppCtrl(p)});ppBar()}
+function ppBar(){var b=D.getElementById('ozPPBar');if(!b)return;var c=cartGet();var n=c.reduce(function(k,x){return k+num(x.qty)},0);var tot=c.reduce(function(k,x){return k+num(x.price_kurus)*num(x.qty)},0);
+  b.innerHTML=n?'<div class="ozPPBar"><span><b>'+n+' ürün</b><small>'+TL(tot)+'</small></span><button type="button" class="ozBtn sun" data-a="nav" data-k="cart">Sepete git</button></div>':''}
+async function ppLoad(t){
+  var pp=ST.pp;if(!pp)return;var seq=++pp.seq;var box=D.getElementById('ozPPL');if(box)box.innerHTML=skel(2);
+  var p={seller_id:pp.id,limit:24,offset:0,sort:'new'};if(pp.cat)p.category=pp.cat;
+  var l;try{l=arr(await rpc('oz_search_products',{p:p}))}catch(e){if(alive(t)&&seq===pp.seq&&(box=D.getElementById('ozPPL')))box.innerHTML=errBox(e);return}
+  if(!alive(t)||seq!==pp.seq)return;   /* geç gelen eski istek yeni listeyi ezmez */
+  pp.list=l;box=D.getElementById('ozPPL');if(!box)return;
+  box.innerHTML=l.length?'<div class="ozPPg">'+l.map(ppCard).join('')+'</div>':empty(ico('box',32),'Bu kategoride ürün yok','Diğer kategorilere göz atabilirsin.');
+}
+ACT_EXTRA({
+  ppCat:function(b){var pp=ST.pp;if(!pp)return;pp.cat=b.dataset.cat||'';var c=cur();c.a=Object.assign({},c.a,{cat:pp.cat});hSync();ppMark();return ppLoad(SCR)},
+  ppQty:function(b){var v=b.dataset.v;cartSetQty(v,cartQty(v)+num(b.dataset.d));ppRefresh()},
+  ppPlus:async function(b){
+    var id=b.dataset.id;if(ppLines(id).length>1){go('product',{id:id});return}
+    await busy(b,async function(){
+      var d=await rpc('oz_product_detail',{p_id:id});var vs=arr(d&&d.variants).filter(function(v){return v.is_active!==false});
+      /* tek seçenekli ve stoklu üründe doğrudan ekle; seçenekli üründe ürün sayfası (varsayılan seçenek sessizce eklenmez) */
+      if(vs.length!==1||!(num(vs[0].stock)>0)){go('product',{id:id});return}
+      var v=vs[0],sel=d.seller||{};
+      cartAdd({variant_id:v.id,product_id:d.id,name:d.name,label:v.label||'',image:arr(d.images)[0]||null,price_kurus:num(v.price_kurus),seller_id:sel.id||null,seller_name:sel.display_name||''},1);
+      ppRefresh();toast('Sepete eklendi');
+    });
+  }
+});
 /* K30: üretici kartı (oz_producers kaydı). wide: Üreticiler sekmesindeki geniş hâl */
 /* K35: üretici kartı — solda logo/baş harf + ad + il·ilçe + puan; sağda 108px akan fotoğraf kutusu (kapak, sonra ürün görselleri) */
 function initials(n){var w=String(n||'').trim().split(/\s+/).filter(Boolean);return (w.slice(0,2).map(function(x){return x.charAt(0).toLocaleUpperCase('tr')}).join(''))||'Ü'}
@@ -348,23 +402,15 @@ VIEWS_EXTRA({
   },
 
   /* ====================== Alıcı · satıcı vitrini ====================== */
+  /* K35: üretici sayfası — oz_producer_detail + oz_search_products({seller_id,category}); sepet mevcut fonksiyonlarla */
   store:async function(a,t){
     paint(skel(1)+skel(2));
-    var rows=await get('oz_seller_public?select=*&id=eq.'+encodeURIComponent(a.id)+'&limit=1');
+    var d=null;try{d=await rpc('oz_producer_detail',{p_id:a.id})}catch(e){d=null}
     if(!alive(t))return;
-    var s=arr(rows)[0];
-    if(!s){paint(empty(ico('store',36),'Üretici bulunamadı','Bu mağaza şu anda yayında değil.','<button type="button" class="ozBtn" data-a="nav" data-k="home">Ana ekrana dön</button>'));return}
-    var loc=[s.district,s.city].filter(Boolean).join(', ');var st=String(s.story||'');var lng=st.length>220;
-    var h='<div class="ozSCv">'+(s.cover_url?'<img src="'+E(s.cover_url)+'" alt="" loading="lazy" onerror="this.remove()">':'')+'</div>'+
-      '<div class="ozStoreH">'+pic(s.logo_url,s.display_name)+'<div class="tx"><b>'+E(s.display_name||'Üretici')+'</b><span class="ozMuted">'+E(loc)+(num(s.rating_count)?(loc?' · ':'')+'★ '+NF1.format(num(s.rating_avg))+' ('+num(s.rating_count)+')':'')+'</span></div></div>'+
-      '<div class="ozCard">'+(st?'<p class="ozStory'+(lng?' ozClamp':'')+'" id="ozStory" style="margin:0 0 4px">'+E(st)+'</p>'+(lng?'<button type="button" class="ozLink" data-a="storyMore" aria-controls="ozStory" aria-expanded="false">Devamı</button>':'')+'<p style="margin:4px 0 8px">'+CLAIM+'</p>':'')+
-      (num(s.free_ship_over_kurus)?'<p class="ozFree">'+ico('truck',16)+' '+TL(s.free_ship_over_kurus)+' ve üzeri siparişte kargo bedava</p>':'')+
-      '<div class="ozMuted">'+(num(s.handling_days)?num(s.handling_days)+' iş günü içinde kargoya verir':'Kargoya veriliş süresi belirtilmedi')+'</div></div>'+
-      '<div class="ozSecH"><h2>Ürünler</h2></div><div id="ozRes">'+skel(2)+'</div>';
-    paint(h);
-    ST.sr={a:{seller:s.id,sort:'new'},list:[],offset:0,more:false};
-    await loadFavs();
-    await searchMore(t);
+    if(!d||!d.id){paint(empty(ico('store',36),'Üretici bulunamadı','Bu mağaza şu anda yayında değil.','<button type="button" class="ozBtn" data-a="nav" data-k="home">Ana ekrana dön</button>'));return}
+    ST.pp={id:d.id,cat:a.cat||'',seq:0,list:[]};
+    paint(ppHtml(d));ppMark();ppBar();
+    await ppLoad(t);
   },
 
   /* ====================== K30: Alıcı · üreticiler (oz_producers) ====================== */
