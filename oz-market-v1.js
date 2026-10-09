@@ -15,7 +15,13 @@ function E(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return 
 var NF=new Intl.NumberFormat('tr-TR',{minimumFractionDigits:2,maximumFractionDigits:2});
 var NF1=new Intl.NumberFormat('tr-TR',{maximumFractionDigits:1});
 function TL(k){return NF.format(Math.round(+k||0)/100)+' ₺'}
-function tlToKurus(v){var s=String(v==null?'':v).trim().replace(/\s/g,'').replace(/₺|TL/gi,'');if(!s)return NaN;if(s.indexOf(',')>=0)s=s.replace(/\./g,'').replace(',','.');var n=Number(s);return isFinite(n)&&n>=0?Math.round(n*100):NaN}
+/* Türkçe TL girişi → kuruş. Nokta binlik, virgül ondalık: 1000 · 1.000 · 1.000,50 · 1000,5. Tek noktadan sonra 1-2 hane (65.90) ondalık sayılır.
+   Geçersiz biçim (harf, 1.00.0, 1,234 …) → NaN; çağıran uyarı verir ve kaydetmez. */
+function tlToKurus(v){var s=String(v==null?'':v).replace(/\s+|₺|TL/gi,'');if(!s)return NaN;
+  if(/^\d{1,3}(\.\d{3})+(,\d{1,2})?$/.test(s))s=s.replace(/\./g,'').replace(',','.');
+  else if(/^\d+(,\d{1,2})?$/.test(s))s=s.replace(',','.');
+  else if(!/^\d+\.\d{1,2}$/.test(s))return NaN;
+  var n=Number(s);return isFinite(n)&&n>=0?Math.round(n*100):NaN}
 function kurusToInput(k){k=+k||0;return k%100===0?String(k/100):(k/100).toFixed(2).replace('.',',')}
 function fmtDate(ts){if(!ts)return '';var d=new Date(ts);if(isNaN(d))return '';return d.toLocaleDateString('tr-TR',{day:'numeric',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'})}
 function fmtDay(ts){if(!ts)return '';var d=new Date(ts);return isNaN(d)?'':d.toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'})}
@@ -1041,7 +1047,8 @@ function pfPayload(){
   var vs=[];
   for(var i=0;i<pf.variants.length;i++){var v=pf.variants[i];var pr=tlToKurus(v.price),cm=v.compare?tlToKurus(v.compare):null,stk=v.stock===''?NaN:Number(v.stock),wg=v.weight===''?NaN:Number(v.weight);
     if(!v.label.trim())return (i+1)+'. seçeneğin adını yaz.';
-    if(!(pr>0))return (i+1)+'. seçeneğin fiyatını yaz.';
+    if(!(pr>0))return (i+1)+'. seçeneğin fiyatını '+(String(v.price).trim()?'doğru yaz (örn. 1.250,50).':'yaz.');
+    if(cm!==null&&isNaN(cm))return (i+1)+'. seçeneğin eski fiyatını doğru yaz (örn. 1.250,50) ya da boş bırak.';
     if(cm!==null&&!(cm>pr))return (i+1)+'. seçenekte eski fiyat, fiyattan yüksek olmalı (ya da boş bırak).';
     if(!(stk>=0)||Math.floor(stk)!==stk)return (i+1)+'. seçeneğin stok adedini yaz.';
     if(!(wg>0))return (i+1)+'. seçeneğin kargo ağırlığını gram olarak yaz.';
@@ -1058,7 +1065,7 @@ async function saveStore(btn){
   else if(!lock&&!/^\d{10,11}$/.test(g('tax_no')))err='TCKN 11, vergi numarası 10 haneli olmalı.';
   else if(!/^TR\d{24}$/.test(iban))err='TR ile başlayan 26 karakterlik IBAN yaz.';
   else if(g('iban_holder').length<3)err='Hesap sahibi adını yaz.';
-  else{var dg=g('phone').replace(/\D/g,'');if(dg.length<10||dg.length>13)err='Geçerli bir telefon numarası yaz.';else if(!g('city'))err='İl yaz.';else if(!g('ship_from_city'))err='Kargonun çıkacağı ili yaz.';else if(!(hd>=1&&hd<=14))err='Hazırlık süresi 1-14 iş günü olmalı.';else if(fs!==null&&!(fs>0))err='Kargo bedava tutarını doğru yaz ya da boş bırak.'}
+  else{var dg=g('phone').replace(/\D/g,'');if(dg.length<10||dg.length>13)err='Geçerli bir telefon numarası yaz.';else if(!g('city'))err='İl yaz.';else if(!g('ship_from_city'))err='Kargonun çıkacağı ili yaz.';else if(!(hd>=1&&hd<=14))err='Hazırlık süresi 1-14 iş günü olmalı.';else if(fs!==null&&!(fs>0))err='Kargo bedava tutarını doğru yaz (örn. 1.000 veya 1.000,50) ya da boş bırak.'}
   var pe=D.getElementById('ozSErr');if(err){if(pe){pe.textContent=err;pe.hidden=false}return}
   if(pe)pe.hidden=true;
   var s=Object.assign({},SELLER.data||{},SELLER.img||{});
@@ -1081,7 +1088,7 @@ ACT_EXTRA({
   rateDel:function(b){var rs=readRates().map(function(r){return {max_weight_g:isFinite(r.max_weight_g)?r.max_weight_g:'',fee_kurus:isFinite(r.fee_kurus)?r.fee_kurus:''}});rs.splice(+b.dataset.i,1);SELLER.rates=rs;var el=D.getElementById('ozRates');if(el)el.outerHTML=ratesEditor()},
   ratesSave:async function(b){
     var rs=readRates();var err='';
-    rs.forEach(function(r,i){if(!err&&!(r.max_weight_g>0))err=(i+1)+'. satırda ağırlığı yaz.';if(!err&&!(r.fee_kurus>=0))err=(i+1)+'. satırda ücreti yaz.'});
+    rs.forEach(function(r,i){if(!err&&!(r.max_weight_g>0))err=(i+1)+'. satırda ağırlığı yaz.';if(!err&&!(r.fee_kurus>=0))err=(i+1)+'. satırda ücreti doğru yaz (örn. 49,90).'});
     var ws=rs.map(function(r){return r.max_weight_g});if(!err&&new Set(ws).size!==ws.length)err='Aynı ağırlık iki kez yazılmış.';
     var pe=D.getElementById('ozRErr');if(err){if(pe){pe.textContent=err;pe.hidden=false}return}
     rs.sort(function(a,b){return a.max_weight_g-b.max_weight_g});
