@@ -948,7 +948,8 @@ function fltPass(v,cv){const f=HF.f;
   return true}
 window.foodFlt=function(k){HF.f[k]=!HF.f[k];homeRender()};
 window.foodView=function(v){try{localStorage.setItem('isimi_food_view',v)}catch(e){}homeRender()};
-function viewMode(){try{return localStorage.getItem('isimi_food_view')==='list'?'list':'cards'}catch(e){return 'cards'}}
+/* K32: kompakt liste tek görünüm; eski 'cards' tercihi yok sayılır */
+function viewMode(){return 'list'}
 function homeRender(){
   const list=document.getElementById('fdList');if(!list)return;
   const rows=HF.rows;const cnt=cuisCounts(rows);const cv=campVenues();
@@ -973,7 +974,7 @@ function homeRender(){
     arr.forEach((v,i)=>{out.push(card(v));if((i===1||(i>1&&(i-1)%4===0))&&k<ads.length){const a=ads[k++];const av=byId[a.venue_id];if(av)out.push(card(av,a))}});
     return out.join('')};
   const head='<div class="fdSecT"><h2>'+(flg?'🏷️ '+E(flg.title):HF.cuisine?E(HF.cuisine):'Tüm restoranlar')+' <span class="fdMuted fdSmall" style="font-weight:600">· '+f.length+' restoran</span></h2>'+
-    '<span class="fdwView" role="group" aria-label="Görünüm"><button type="button" class="'+(vm==='cards'?'on':'')+'" aria-pressed="'+(vm==='cards')+'" aria-label="Büyük kart görünümü" onclick="foodView(\'cards\')">▭</button><button type="button" class="'+(vm==='list'?'on':'')+'" aria-pressed="'+(vm==='list')+'" aria-label="Liste görünümü" onclick="foodView(\'list\')">☰</button></span></div>'+
+    '</div>'+
     (anyF?'<div class="fdwActiveF"><span class="fdMuted fdSmall">Filtre uygulandı</span><button type="button" class="fb ghost" onclick="foodResetFilters()">✕ Temizle</button></div>':'');
   list.innerHTML=!f.length?head+empty(rows.length?'🔍':'🍽️',rows.length?'Bu filtreye uyan restoran yok':'Henüz restoran yok',rows.length?'Filtreleri değiştir veya temizle.':'Yakında burada restoranlar olacak.',rows.length?'<button type="button" class="fb sm" onclick="foodResetFilters()">Tümünü göster</button>':''):
     head+(open.length?'<div class="fdGrid'+(vm==='list'?' fdwListV':'')+'">'+withAds(open)+'</div>':'')+
@@ -3685,6 +3686,8 @@ body:has(.fdCo) #fdRoot{padding-bottom:0}
 .fdCo .fdCoSeg button.on,.fdCo .fdCoSeg button.pk.on{background:#152026;color:#fff;box-shadow:inset 0 0 0 2px #D4A93F}
 .fdCo .fdCoSeg button.on b:before{content:"✓ ";color:#D4A93F}
 /*K19-BITIS*/
+/*K32-BASLA*/
+/*K32-BITIS*/
 `;document.head.appendChild(s);
 }
 
