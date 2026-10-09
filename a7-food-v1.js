@@ -3748,6 +3748,9 @@ body:has(.fdCo) #fdRoot{padding-bottom:0}
 .fdwRvC .ft b{font-size:13px}.fdwRvC .ft small{font-size:12px;color:var(--muted);white-space:nowrap}
 /* K34-1 kalp kapak sağ üstte (K32 .fdHero .nav .fdFav: zeminsiz, kalın çizgi + koyu hale, 44px) */
 .fdwVRt{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-start}
+/* K34-2 puan sütunu en üstte, restoran adının ilk satırıyla hizalı */
+.fdVHead{align-items:flex-start}.fdVHead>.fdPic.fdLogo{align-self:center}.fdVHead>div[style]{align-self:center}
+.fdwVRt{align-self:flex-start;align-items:center}.fdwVRt .fdwRateBtn{padding-top:0;margin-top:0}
 /* K33-3 restoran kapağı ~%62 (360px 191→119, 390px 208→129, 430px+ 230→143); object-fit:cover */
 .fdHero .fdPic.cover{aspect-ratio:auto;height:clamp(110px,33vw,143px);max-height:none}
 .fdHero .fdPic.cover img{object-fit:cover}
