@@ -1092,7 +1092,8 @@ function prodRow(i,groups){
     (plain?'<span class="fdStep'+(i.image_url?'':' fdAddS')+'" data-step="'+E(i.id)+'" hidden onclick="event.stopPropagation()"><button type="button" aria-label="Azalt" onclick="event.stopPropagation();foodQuickDec(\''+E(i.id)+'\')">−</button><b>0</b><button type="button" aria-label="Bir tane daha ekle" onclick="event.stopPropagation();foodQuickAdd(\''+E(i.id)+'\')">+</button></span>':'');
   return '<div class="fdProd'+(na?' na':'')+'" data-pid="'+E(i.id)+'" data-q="'+E(((i.name||'')+' '+(i.description||'')).toLocaleLowerCase('tr'))+'" '+(na?'':'role="button" tabindex="0" onclick="foodOpenItem(\''+E(i.id)+'\')"')+'>'+
     '<div class="tx"><b>'+E(i.name)+'</b>'+(i.description?'<p>'+E(i.description)+'</p>':'')+'<div class="pr">'+M(i.price_kurus)+(groups&&groups.length&&!na?'<span class="fdMuted fdSmall" style="font-weight:600"> · seçenekli</span>':'')+'</div>'+allergenLine(i)+'<div class="fdwLk" data-lk="'+E(i.id)+'"></div></div>'+
-    (i.image_url?'<div class="im">'+pic(i.image_url,i.name,'sq')+(na?'<span class="fdSold">Tükendi</span>':'')+addBtn+'</div>':(na?'<span class="fdPill">Tükendi</span>':addBtn))+'</div>';
+    /* K32: ekle/adım düğmesi fotoğrafın üstünde değil, altında ayrı alanda (refreshProdBadges için [data-add] ve [data-step] kardeş kalır) */
+    (i.image_url?'<div class="rc"><div class="im">'+pic(i.image_url,i.name,'sq')+(na?'<span class="fdSold">Tükendi</span>':'')+'</div>'+(addBtn?'<div class="ac">'+addBtn+'</div>':'')+'</div>':(na?'<span class="fdPill">Tükendi</span>':addBtn))+'</div>';
 }
 window.foodVenueFilter=function(q){
   q=String(q||'').toLocaleLowerCase('tr').trim();let shown=0;
@@ -3702,6 +3703,15 @@ body:has(.fdCo) #fdRoot{padding-bottom:0}
 .fdwHero .fdwSl em{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fdwHero .fdwSl i{position:absolute;right:12px;bottom:14px;margin:0;padding:6px 12px;font-size:12.5px;white-space:nowrap}
 .fdwHero .dots{bottom:5px}
+/* K32-4 menü satırı: + / − fotoğrafın altında, çakışmasız; 44px dokunma */
+.fdProd .rc{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.fdProd .rc .im{width:92px;flex:0 0 auto}
+.fdProd .rc .ac{display:flex;justify-content:flex-end}
+.fdProd .rc .fdAdd,.fdProd .rc .fdStep{position:static}
+.fdProd .fdAdd{min-width:44px;height:44px;border-radius:12px}
+.fdProd .fdAdd.in{font-size:15px}
+.fdProd .fdStep{width:116px;height:44px;border-radius:12px}
+.fdProd .fdStep button{width:44px;height:44px;min-width:44px}
 /*K32-BITIS*/
 `;document.head.appendChild(s);
 }
