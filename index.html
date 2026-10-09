@@ -1818,6 +1818,19 @@ html:root #ozRes .ozPRow .ozPlus:disabled{background-color:#D9CDB8;color:#7A6A55
 html:root .ozPP .ozCt.off,html:root .ozPPCats .ozCt.off{opacity:.55;filter:none}
 html:root .ozPP .ozCt.off img,html:root .ozPP .ozCt.off .b{filter:none}
 html:root .ozPP .ozCt.off.sel{opacity:.85}
+/*OZ C4 sipariş detayı: tek satır değerlendirme, kapalı hareketler*/
+html:root .ozRvC{border-color:#4FB67F}
+html:root .ozRvI{display:flex;align-items:center;gap:10px;min-width:0;padding:6px 0;border-top:1px solid #4A3A27}
+html:root .ozRvI:first-of-type{border-top:0}
+html:root .ozRvI .ozPic{flex:0 0 44px;width:44px;height:44px;border-radius:10px;aspect-ratio:auto}
+html:root .ozRvI b{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}
+html:root .ozRvI .ozBtn{flex:none;min-height:44px}
+html:root #ozTrkC .ozSteps.col{margin:2px 0 12px}
+html:root .ozTrkH{margin:10px 0 0;border-top:1px solid #4A3A27}
+html:root .ozTrkH>summary{min-height:44px;display:flex;align-items:center;justify-content:space-between;font-weight:800;cursor:pointer;list-style:none}
+html:root .ozTrkH>summary::-webkit-details-marker{display:none}
+html:root .ozTrkH>summary:after{content:"›";font-size:20px;color:#CDBB9F;transition:transform .2s}
+html:root .ozTrkH[open]>summary:after{transform:rotate(90deg)}
 /*K21-BITIS*/
 </style>
 <style id="svcProvEntryCss">.svcProvEntry{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;border-radius:16px;border:1.5px solid rgba(124,92,255,.45);background:rgba(124,92,255,.10);color:var(--text);font:inherit;text-align:left;cursor:pointer}.svcProvEntry .ic{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:rgba(124,92,255,.18)}.svcProvEntry .tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}.svcProvEntry small{font-size:12px;font-weight:700;color:var(--muted)}.svcProvEntry b{font-size:16px;font-weight:900}.svcProvEntry em{font-style:normal;font-size:12.5px;color:var(--muted)}.svcProvEntry .go{flex:0 0 auto;font-size:24px;font-weight:700;color:#7c5cff}.svcProvEntry:active{transform:scale(.99)}.svcProvEntry:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}html[data-theme="light"] .svcProvEntry{background:#f3effe;border-color:#c9bbff}html[data-theme="light"] .svcProvEntry .go{color:#5b3fd6}</style>
