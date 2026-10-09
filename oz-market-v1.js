@@ -1283,10 +1283,12 @@ var SP={
     var all=[];st.forEach(function(x,i){all=all.concat(arr(r[i]).filter(function(y){return y.status===x}))});SELLER.orders=all;
     var ss=r[st.length+1];
     var h='<div class="ozSoCnt k4" role="tablist" aria-label="Sipariş durumu">'+SG.map(function(g){var on=stt===g[0];return '<button type="button" role="tab" class="c '+g[2]+(on?' on':'')+'" aria-selected="'+on+'" data-a="soTab" data-st="'+g[0]+'"><b>'+cnt[g[0]]+'</b><small>'+E(g[1])+'</small></button>'}).join('')+'</div>';
-    var more=[];if(ss&&(ss.low+ss.out))more.push(row('tag','Düşük stok / Tükendi ('+(ss.low+ss.out)+')',ss.out?ss.out+' ürün tükendi':'Stok ekle','sTab',{tab:'urunler',low:'1'}));
-    if(num(d.open_questions))more.push(row('star','Cevap bekleyen soru ('+num(d.open_questions)+')','Alıcılar bekliyor','sTab',{tab:'sorular'}));
-    if(num(d.unreplied_reviews))more.push(row('star','Yanıtsız yorum ('+num(d.unreplied_reviews)+')','Alıcılara teşekkür et','sTab',{tab:'sorular'}));
-    if(more.length)h+='<div class="ozList ozSoMore">'+more.join('')+'</div>';
+    /* küçük rozetler: sayaç satırının sağında (ikon + sayı) */
+    function mini(ic,n,lbl,attrs){return '<button type="button" class="ozSoMi" data-a="sTab" '+attrs+' aria-label="'+E(lbl+': '+n)+'" title="'+E(lbl)+'">'+ico(ic,18)+'<b>'+n+'</b></button>'}
+    var more=[];if(ss&&(ss.low+ss.out))more.push(mini('tag',ss.low+ss.out,'Düşük stok / Tükendi','data-tab="urunler" data-low="1"'));
+    if(num(d.open_questions))more.push(mini('bell',num(d.open_questions),'Cevap bekleyen soru','data-tab="sorular"'));
+    if(num(d.unreplied_reviews))more.push(mini('star',num(d.unreplied_reviews),'Yanıtsız yorum','data-tab="sorular"'));
+    if(more.length)h+='<div class="ozSoMore2">'+more.join('')+'</div>';
     var list;
     if(stt==='past'){list=arr(r[st.length]).filter(function(x){return /^(delivered|completed|cancelled|returned)$/.test(x.status)});
       h+='<div class="ozSecH"><h2>Geçmiş siparişler</h2><button type="button" class="ozLink" data-a="soTab" data-st="past">Kapat</button></div>'+(list.length?'<div class="ozList">'+list.map(sellerOrderCard).join('')+'</div>':'<p class="ozMuted">Geçmiş sipariş yok.</p>');}
@@ -1409,9 +1411,9 @@ function sellerOrderCard(o){
   else if(o.status==='accepted')acts='<button type="button" class="ozBtn pri" data-a="soAct" data-act="pack" data-id="'+id+'">Hazırlandı</button><button type="button" class="ozBtn ghost sm" data-a="soCancel" data-id="'+id+'">İptal et</button>';
   else if(o.status==='packed')acts='<button type="button" class="ozBtn pri" data-a="soShip" data-id="'+id+'">Kargoya ver</button><button type="button" class="ozBtn ghost sm" data-a="soCancel" data-id="'+id+'">İptal et</button>';
   var wait=o.status==='shipped'?'<p class="ozHint" style="margin:8px 0 0">Kargoda. Alıcı teslim aldığını onaylayınca tamamlanır; onaylamazsa belirlenen süre sonunda otomatik teslim edilmiş sayılır.</p>':'';
-  return '<div class="ozCard" style="margin:0"><div class="ozRow2" style="justify-content:space-between"><b>'+E(o.order_no||'Sipariş')+'</b>'+stTag(ORDER_ST,o.status)+'</div><p class="ozMuted" style="margin:4px 0 8px">'+E(fmtDate(o.created_at))+' · '+TL(o.total_kurus)+'</p>'+soSteps(o.status)+
+  return '<div class="ozCard ozSoC" style="margin:0"><div class="ozRow2" style="justify-content:space-between"><b>'+E(o.order_no||'Sipariş')+'</b>'+stTag(ORDER_ST,o.status)+'</div><p class="ozMuted" style="margin:2px 0 6px">'+E(fmtDate(o.created_at))+' · '+TL(o.total_kurus)+'</p>'+soSteps(o.status)+
     its.map(function(it){return '<div class="ozLine"><span>'+num(it.qty)+' × '+E(it.name)+(it.label?' ('+E(it.label)+')':'')+'</span><span>'+TL(it.line_total_kurus||num(it.unit_price_kurus)*num(it.qty))+'</span></div>'}).join('')+
-    '<div class="ozReply" style="margin-top:8px"><b>Teslimat:</b> '+E(sh.recipient||o.buyer_name||'')+(sh.phone?' · '+E(sh.phone):'')+'<br>'+E(addrText(sh))+(o.note?'<br><b>Not:</b> '+E(o.note):'')+'</div>'+
+    '<details class="ozAdr"><summary>'+ico('pin',14)+'<span>'+E([sh.recipient||o.buyer_name||'',sh.district].filter(Boolean).join(' · ')||'Teslimat adresi')+'</span></summary><div>'+(sh.phone?E(sh.phone)+'<br>':'')+E(addrText(sh))+(o.note?'<br><b>Not:</b> '+E(o.note):'')+'</div></details>'+(o.note?'<p class="ozHint" style="margin:4px 0 0">📝 Siparişte not var</p>':'')+
     (o.tracking_no?'<p class="ozMuted" style="margin:8px 0 0">'+E(o.carrier||'Kargo')+' · '+E(o.tracking_no)+'</p>':'')+
     (ret?'<div class="ozWarn"><b>İade:</b> '+stTag(RET_ST,ret.status)+' '+E(ret.reason||'')+(ret.details?' — '+E(ret.details):'')+(ret.status==='requested'?'<div class="ozRow2" style="margin-top:8px"><button type="button" class="ozBtn sm pri" data-a="retDecide" data-id="'+E(ret.id)+'" data-ok="1">İadeyi kabul et</button><button type="button" class="ozBtn sm bad" data-a="retDecide" data-id="'+E(ret.id)+'" data-ok="0">Reddet</button></div>':'')+'</div>':'')+
     wait+(acts?'<div class="ozRow2 ozSoActs" style="margin-top:10px">'+acts+'</div>':'')+'</div>';
