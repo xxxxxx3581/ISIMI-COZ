@@ -248,9 +248,13 @@ var SORTS=[['new','Yeni gelenler'],['popular','Çok satanlar'],['rating','En yü
 function sortName(k){var x=SORTS.filter(function(s){return s[0]===k})[0];return x?x[1]:''}
 function sortChips(sort){return '<div class="ozChips ozSorts" role="group" aria-label="Sırala">'+SORTS.map(function(s){var on=(sort||'new')===s[0];return '<button type="button" class="ozChip'+(on?' on':'')+'" data-a="sortPick" data-sort="'+s[0]+'" aria-pressed="'+on+'">'+E(s[1])+'</button>'}).join('')+'</div>'}
 /* Kategori kutusu: fotoğraf yoksa slug'a göre emoji ve zemin */
-var CAT_EMO=[[/bal|recel/,'🍯','#5A4320'],[/zeytin/,'🫒','#3E4A24'],[/kuruyemis|meyve/,'🥜','#5A3A22'],[/baharat|bitki|cay/,'🌿','#2F4A33'],[/tahin|pekmez/,'🥣','#56381F'],[/tursu|konserve/,'🥒','#35502F'],[/sabun|bakim/,'🧼','#3B4656'],[/el-emegi|emek/,'🧶','#563A4A']];
-function catTile(c){var sl=String(c.slug||'');var m=CAT_EMO.filter(function(x){return x[0].test(sl)})[0]||[null,'🌿','#3E4A30'];
-  return '<button type="button" class="ozCt" data-a="nav" data-k="search" data-cat="'+E(c.slug)+'"><span class="b" style="background:'+m[2]+'">'+(c.image_url?'<img src="'+E(c.image_url)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">':'')+'<i aria-hidden="true">'+m[1]+'</i></span><span class="l">'+E(c.name)+'</span></button>'}
+var CAT_EMO=[[/bal|recel/,'🍯','#5A4320'],[/zeytin/,'🫒','#3E4A24'],[/kuruyemis|kuru-yemis|meyve/,'🥜','#5A3A22'],[/baharat|bitki|cay/,'🌿','#2F4A33'],[/tahin|pekmez/,'🥣','#56381F'],[/tursu|konserve/,'🥒','#35502F'],[/sabun|bakim/,'🧼','#3B4656'],[/el-emegi|emek|ev-yapimi/,'🧶','#563A4A']];
+/* K35: kategori görseli: oz_categories.image_url (yalnız https) → assets/oz-cat/<slug>.jpg → ikon. Görsel yüklenemezse ikon görünür. */
+var CAT_IMG={'bal-recel':1,'recel':1,'kuruyemis-meyve':1,'kuru-yemis':1,'baharat-bitki-cay':1,'bitki-cayi':1,'tahin-pekmez':1,'tursu-konserve':1,'konserve':1,'sabun-dogal-bakim':1,'bakim':1,'el-emegi':1,'ev-yapimi':1};
+function httpsUrl(u){u=String(u||'');return /^https:\/\//i.test(u)?u:''}
+function catImg(slug,url){return httpsUrl(url)||(CAT_IMG[slug]?'assets/oz-cat/'+slug+'.jpg':'')}
+function catTile(c,attrs){var sl=String(c.slug||'');var m=CAT_EMO.filter(function(x){return x[0].test(sl)})[0]||[null,'🌿','#3E4A30'];var im=catImg(sl,c.image_url);
+  return '<button type="button" class="ozCt" '+(attrs||'data-a="nav" data-k="search" data-cat="'+E(c.slug)+'"')+'><span class="b'+(im?' ph':'')+'" style="background:'+m[2]+'">'+(im?'<img src="'+E(im)+'" alt="" loading="lazy" decoding="async" onerror="this.parentNode.classList.remove(\'ph\');this.remove()">':'')+'<i aria-hidden="true">'+m[1]+'</i></span><span class="l">'+E(c.name)+'</span></button>'}
 D.addEventListener('submit',function(e){
   var f=e.target;if(!f||!f.dataset||!f.dataset.sub||!f.closest('#ozRoot,.ozOv'))return;e.preventDefault();
   var fn=SUBMIT[f.dataset.sub];if(fn){try{var r=fn(f,e);if(r&&r.catch)r.catch(fail)}catch(err){fail(err)}}
