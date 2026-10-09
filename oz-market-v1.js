@@ -107,6 +107,7 @@ var IC={
   store:'<path d="M4 9l1.5-5h13L20 9M4 9h16v11H4zM9 20v-6h6v6"/>',box:'<path d="M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10"/>',pin:'<path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/>',
   leaf:'<path d="M5 19c0-8 6-14 15-14 0 9-6 15-14 15zM5 19l7-7"/>',star:'<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
   truck:'<path d="M3 6h11v10H3zM14 9h4l3 3v4h-7M7 19a2 2 0 1 0 0-.1M17 19a2 2 0 1 0 0-.1"/>',home:'<path d="M4 11l8-7 8 7v9H4z"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>',
+  chk2:'<path d="M2 13l4 4 9-10M10 16l1.5 1.5L22 7"/>',trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
   sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/>',tag:'<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.5"/>',wallet:'<path d="M3 7h15a3 3 0 0 1 3 3v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 7l12-3v3"/><circle cx="16.5" cy="13.5" r="1.2"/>'
 };
 function ico(n,s){return '<svg width="'+(s||22)+'" height="'+(s||22)+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+(IC[n]||'')+'</svg>'}
@@ -169,7 +170,7 @@ async function loadNotifs(){
 function notifHtml(list){
   if(!list.length)return empty(ico('bell',34),'Bildirim yok','Sipariş ve mağaza gelişmeleri burada görünür.');
   var nu=list.filter(unread).length;
-  return '<div class="ozNtH"><span class="pill'+(nu?' on':'')+'">'+(nu?nu+' okunmamış':'Hepsi okundu')+'</span><span class="acts">'+(ST.ntDel===true?'<button type="button" class="ozNtB bad" data-a="notifDel">Tümünü sil</button>':'')+'<button type="button" class="ozNtB" data-a="notifAll"'+(nu?'':' disabled')+'>Hepsini okundu yap</button></span></div>'+
+  return '<div class="ozNtH"><span class="pill'+(nu?' on':'')+'">'+(nu?nu+' okunmamış':'Hepsi okundu')+'</span><span class="acts"><button type="button" class="ozNtB" data-a="notifAll"'+(nu?'':' disabled')+' aria-label="Hepsini okundu işaretle">'+ico('chk2',16)+'<span>Okundu işaretle</span></button>'+(ST.ntDel===true?'<button type="button" class="ozNtB bad" data-a="notifDel" aria-label="Tüm bildirimleri sil">'+ico('trash',16)+'<span>Tümünü sil</span></button>':'')+'</span></div>'+
     '<div class="ozList">'+list.map(function(n){return '<button type="button" class="ozNt'+(unread(n)?' new':'')+'" data-a="notifOpen" data-id="'+E(n.id)+'"><b>'+E(n.title||'Bildirim')+'</b>'+(n.body?'<span>'+E(n.body)+'</span>':'')+'<small>'+E(fmtDate(n.created_at))+'</small></button>'}).join('')+'</div>';
 }
 async function openNotifs(){

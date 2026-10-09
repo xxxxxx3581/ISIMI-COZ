@@ -1856,6 +1856,18 @@ html:root .ozPP .nmr .nm{white-space:nowrap;overflow:hidden;text-overflow:ellips
 html:root .ozPP .nmr .loc{margin:2px 0 0}
 html:root .ozPP .rtb2{flex:none;display:flex;flex-direction:column;align-items:flex-end;justify-content:center;gap:2px;min-height:48px;min-width:44px;padding:4px 12px;border:1px solid #6B5A44;border-radius:14px;background:#3A2D20;color:#F7D24A;font:inherit;cursor:pointer;text-align:right}
 html:root .ozPP .rtb2 b{font-size:17px;line-height:1.1}html:root .ozPP .rtb2 small{font-size:11.5px;color:#CDBB9F;white-space:nowrap;text-decoration:underline;text-underline-offset:2px}
+/*OZ D1 bildirim kontrol satırı: rozet + iki kompakt ikonlu buton*/
+html:root .ozNtH{flex-wrap:nowrap;gap:6px;min-height:44px}
+html:root .ozNtH .acts{display:flex;gap:6px;margin-left:auto;flex:none}
+html:root .ozNtB{display:inline-flex;align-items:center;gap:5px;min-height:44px;padding:0 10px;border:1px solid #54422D;border-radius:12px;background:#3A2D20;color:#E9DCC4;font:700 12.5px/1 system-ui,sans-serif;white-space:nowrap;cursor:pointer}
+html:root .ozNtB::after{display:none}
+html:root .ozNtB svg{flex:none}
+html:root .ozNtB.bad{color:#F0A792;border-color:#6A3A2E}
+html:root .ozNtB:disabled{opacity:.45;cursor:default}
+@media (max-width:359px){html:root .ozNtB span{display:none}html:root .ozNtB{min-width:44px;justify-content:center}}
+html:root .ozNtH .pill{padding:0 9px;font-size:12px}html:root .ozNtH .acts{gap:4px}html:root .ozNtB{padding:0 8px;gap:4px;font-size:12px}
+html:root .ozNtH .pill{padding:0 8px;font-size:11.5px}html:root .ozNtB{padding:0 7px;font-size:11.5px}html:root .ozNtB svg{width:14px;height:14px}
+@media (max-width:374px){html:root .ozNtB.bad span{display:none}html:root .ozNtB.bad{min-width:44px;justify-content:center}}
 /*K21-BITIS*/
 </style>
 <style id="svcProvEntryCss">.svcProvEntry{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;border-radius:16px;border:1.5px solid rgba(124,92,255,.45);background:rgba(124,92,255,.10);color:var(--text);font:inherit;text-align:left;cursor:pointer}.svcProvEntry .ic{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:rgba(124,92,255,.18)}.svcProvEntry .tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}.svcProvEntry small{font-size:12px;font-weight:700;color:var(--muted)}.svcProvEntry b{font-size:16px;font-weight:900}.svcProvEntry em{font-style:normal;font-size:12.5px;color:var(--muted)}.svcProvEntry .go{flex:0 0 auto;font-size:24px;font-weight:700;color:#7c5cff}.svcProvEntry:active{transform:scale(.99)}.svcProvEntry:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}html[data-theme="light"] .svcProvEntry{background:#f3effe;border-color:#c9bbff}html[data-theme="light"] .svcProvEntry .go{color:#5b3fd6}</style>
