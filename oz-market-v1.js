@@ -243,12 +243,10 @@ function startHero(t){
   var tm=setInterval(function(){if(!alive(t)||!tr.isConnected){clearInterval(tm);return}if(stop||D.hidden)return;var i=(idx()+1)%n;try{tr.scrollTo({left:i*tr.clientWidth,behavior:'smooth'})}catch(e){tr.scrollLeft=i*tr.clientWidth}},5000);
 }
 /* K35: üretici sayfası parçaları */
-/* Üretici sayfası (sade): puan adın sağında (dokununca değerlendirmeler alt panelde), tek kompakt bilgi bloğu,
+/* Üretici sayfası (sade): başlık (logo, ad, konum, puan), kategoriler, ürünler. Kargo/minimum bilgisi sepet-ödeme ve ürün sayfasında (C8).
    açıklama yazısı gösterilmez, kategoriler kaydırmasız küçük ızgara ("Tümü" yok; aynı ikona tekrar dokunmak filtreyi kaldırır) */
 function ppHtml(d,all){
   var nm=String(d.display_name||'Üretici');var cv=httpsUrl(d.cover_url),lg=httpsUrl(d.logo_url);var loc=[d.city,d.district].filter(Boolean).join(' · ');
-  var info=[];if(d.ship_kurus!=null)info.push(['Kargo ücreti',num(d.ship_kurus)?TL(d.ship_kurus):'Ücretsiz']);if(num(d.min_order_kurus))info.push(['En az sipariş',TL(d.min_order_kurus)]);
-  if(num(d.handling_days))info.push(['Hazırlık',num(d.handling_days)+' gün']);if(num(d.free_ship_over_kurus))info.push(['Ücretsiz kargo',TL(d.free_ship_over_kurus)+' üzeri']);
   var own=arr(d.categories),cnt={};own.forEach(function(c){cnt[c.slug]=num(c.count)});
   var cats=all&&all.length?all.slice():own.slice();own.forEach(function(c){if(!cats.some(function(x){return x.slug===c.slug}))cats.push(c)});
   var rc=num(d.rating_count);
@@ -257,7 +255,6 @@ function ppHtml(d,all){
     /* C7: solda ad (tek satır) + konum; sağda tek dokunma alanı: ★ puan / Değerlendirmeler (N) */
     '<div class="nmr"><div class="nl"><h1 class="nm">'+E(nm)+'</h1>'+(loc?'<p class="loc">'+E(loc)+'</p>':'')+'</div>'+
       (rc?'<button type="button" class="rtb2" data-a="ppRev" data-id="'+E(d.id)+'" aria-label="'+rc+' değerlendirmeyi gör"><b>★ '+num(d.rating_avg).toLocaleString('tr-TR',{minimumFractionDigits:1,maximumFractionDigits:1})+'</b><small>Değerlendirmeler ('+rc+')</small></button>':'<em class="new">Yeni</em>')+'</div>'+
-    (info.length?'<dl class="ozPPInf">'+info.map(function(x){return '<div><dt>'+E(x[0])+'</dt><dd>'+E(x[1])+'</dd></div>'}).join('')+'</dl>':'')+
     (cats.length?'<div class="ozSecH"><h2>Kategoriler</h2></div><div class="ozPPCats" role="list">'+
       cats.map(function(c){var n=cnt[c.slug]||0;return catTile({slug:c.slug,image_url:c.image_url,name:c.name+(n?' ('+n+')':'')},'data-a="ppCat" data-cat="'+E(c.slug)+'"'+(n?'':' data-off="1"'))}).join('')+'</div>':'')+
     '<div class="ozSecH"><h2>Ürünler</h2></div><div id="ozPPL">'+skel(2)+'</div><div id="ozPPBar"></div></div>';
