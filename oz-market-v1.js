@@ -168,7 +168,7 @@ async function loadNotifs(){
   ST.notif=arr(r);bellBadge(ST.notif.filter(unread).length);return ST.notif;
 }
 function notifHtml(list){
-  if(!list.length)return empty(ico('bell',34),'Bildirim yok','Sipariş ve mağaza gelişmeleri burada görünür.');
+  if(!list.length)return empty(ico('bell',34),'Bildirimin yok','Sipariş ve mağaza gelişmeleri burada görünür.');
   var nu=list.filter(unread).length;
   return '<div class="ozNtH"><span class="pill'+(nu?' on':'')+'">'+(nu?nu+' okunmamış':'Hepsi okundu')+'</span><span class="acts"><button type="button" class="ozNtB" data-a="notifAll"'+(nu?'':' disabled')+' aria-label="Hepsini okundu işaretle">'+ico('chk2',16)+'<span>Okundu işaretle</span></button>'+(ST.ntDel===true?'<button type="button" class="ozNtB bad" data-a="notifDel" aria-label="Tüm bildirimleri sil">'+ico('trash',16)+'<span>Tümünü sil</span></button>':'')+'</span></div>'+
     '<div class="ozList">'+list.map(function(n){return '<button type="button" class="ozNt'+(unread(n)?' new':'')+'" data-a="notifOpen" data-id="'+E(n.id)+'"><b>'+E(n.title||'Bildirim')+'</b>'+(n.body?'<span>'+E(n.body)+'</span>':'')+'<small>'+E(fmtDate(n.created_at))+'</small></button>'}).join('')+'</div>';
@@ -186,8 +186,12 @@ async function ntDelCheck(){
 }
 ACT_EXTRA({
   notifDel:async function(btn){
-    if(!await confirmBox('Tüm bildirimlerin silinsin mi?','Bu işlem geri alınamaz. Yalnız kendi bildirimlerin silinir.','Tümünü sil',true)){openNotifs();return}
-    await busy(btn,async function(){await rpc('oz_delete_my_notifications',{p_check:false});ST.notif=[];bellBadge(0);toast('Bildirimler silindi');openNotifs()});
+    if(ST.ntDelBusy)return;
+    if(!await confirmBox('Tüm bildirimlerin silinsin mi?','Bu işlem geri alınamaz.','Sil',true)){openNotifs();return}
+    /* kilit: onay penceresi düğmeyi kapattığı için ayrı bayrak; sunucu yalnız auth.uid() bildirimlerini siler */
+    ST.ntDelBusy=1;
+    try{await rpc('oz_delete_my_notifications',{p_check:false});ST.notif=[];bellBadge(0);toast('Bildirimler silindi')}catch(e){fail(e)}
+    finally{ST.ntDelBusy=0;openNotifs()}
   },
   notifAll:async function(btn){await busy(btn,async function(){await rpc('oz_mark_notifications_read',{p_ids:null});(ST.notif||[]).forEach(function(n){n.read_at=n.read_at||new Date().toISOString()});bellBadge(0);var b=qs('.ozOv .ozShB');if(b)b.innerHTML=notifHtml(ST.notif||[])})},
   notifOpen:async function(btn){
