@@ -75,7 +75,8 @@ function sheet(title,html,opt){
   var f=qs('.ozShB input,.ozShB select,.ozShB textarea,.ozShB button',ov);if(f&&!opt.noFocus)try{f.focus({preventScroll:true})}catch(e){}
   return ov;
 }
-function closeSheet(){qa('.ozOv').forEach(function(x){x.remove()});if(SHEET_ESC){D.removeEventListener('keydown',SHEET_ESC);SHEET_ESC=null}}
+function closeSheet(){var hadH=!!qs('.ozOvH');qa('.ozOv').forEach(function(x){x.remove()});if(SHEET_ESC){D.removeEventListener('keydown',SHEET_ESC);SHEET_ESC=null}
+  if(hadH&&ST.preH){ST.preH=false;var keep=ST.preKeep;ST.preKeep=false;var V=hNav();if(!keep&&V&&V.stack[V.idx]&&V.stack[V.idx].name==='oz:sheet')history.back()}}
 function confirmBox(title,text,okLabel,danger){
   return new Promise(function(res){
     var done=false;
@@ -516,7 +517,7 @@ function coSyncBtn(){var b=D.getElementById('ozPlace');if(b&&ST.co&&!ST.placing)
 /* Mükerrer sipariş: BİRİNCİL yol sunucunun {duplicate:true} yanıtı (aynı client_request_id). Bu fonksiyon yalnızca YEDEK:
    eşzamanlı iki istekte oz_orders_client_request_id_seller_id_key benzersizlik ihlali. Başka benzersizlik hataları (ör. order_no) mükerrer SAYILMAZ. */
 function isDupErr(e){var m=String(e&&e.message||'');return /client_request_id/i.test(m)&&(/duplicate key|unique/i.test(m)||!!(e&&e.code==='23505'))}
-function dupDone(){cartSet([]);ST.crid=null;ST.co=null;toast('Bu sipariş zaten alındı, Siparişlerim\'den kontrol et.');NAV=NAV.filter(function(x){return x.k!=='checkout'&&x.k!=='cart'});go('orders',{})}
+function dupDone(){cartSet([]);ST.crid=null;ST.co=null;ST.staleSeq=HSEQ;ST.staleUsed=true;toast('Bu sipariş zaten alındı, Siparişlerim\'den kontrol et.');NAV=NAV.filter(function(x){return x.k!=='checkout'&&x.k!=='cart'});go('orders',{})}
 function drawCheckout(){
   var co=ST.co;var q=co.q||{};var s=S();
   var pays=[];if(s.payment_mock)pays.push('mock');if(s.cod)pays.push('cod');
@@ -629,7 +630,7 @@ ACT_EXTRA({
       res=res||{};
       if(res.duplicate===true){dupDone();return}  /* birincil yol */
       /* Sözleşme onayları oz_orders ekleme tetikleyicisinde kaydedilir (context 'order', subject 'oz:<id>'); istemci ayrıca kayıt yapmaz. */
-      cartSet([]);ST.crid=null;var pay=co.pay;ST.co=null;
+      cartSet([]);ST.crid=null;var pay=co.pay;ST.co=null;ST.staleSeq=HSEQ;ST.staleUsed=false;
       go('placed',{res:res,pay:pay},true);
     })}finally{ST.placing=false}
   },
@@ -676,8 +677,45 @@ var NAV=[],SCR=0;
 function alive(t){return t===SCR&&!!D.getElementById('ozRoot')}
 function paint(html){var r=D.getElementById('ozRoot');if(r)r.innerHTML=html}
 function cur(){return NAV[NAV.length-1]||{k:'home',a:{}}}
-function go(k,a,replace){if(replace&&NAV.length)NAV.pop();NAV.push({k:k,a:a||{}});draw()}
-function back(){if(NAV.length>1){NAV.pop();draw()}else exitWorld()}
+function go(k,a,replace){if(replace&&NAV.length)NAV.pop();NAV.push({k:k,a:a||{}});HPEND={rep:!!replace};draw()}
+function back(){var V=hNav(),ce=V&&V.stack[V.idx];if(ce&&isOzEnt(ce)&&V.idx>0){history.back();return}if(NAV.length>1){NAV.pop();draw()}else exitWorld()}
+
+/* ====================== K30: geri tuşu (platform V2_NAV yığınıyla) ======================
+   Platform (index.html) her ekranı V2_NAV.stack'e {v2:idx} durumuyla pushState eder; popstate'te önce açık pencereleri
+   (.v2Sheet, çekmece, giriş modalı, .ozOv) kapatır, sonra kayıttaki fn'i çalıştırır. Özüne Dön ekranları bu yığına
+   "oz:N" adlı kayıtlar olarak girer; fn, o anki NAV kopyasını geri yükler. Kök Özüne Dön kaydından geri → platform ana sayfası. */
+var HSEQ=0,HREST=false,HPEND=null;
+function hNav(){var V=window.V2_NAV;return typeof window.v2NavPush==='function'&&V&&Array.isArray(V.stack)?V:null}
+function isOzEnt(e){return !!(e&&typeof e.name==='string'&&e.name.indexOf('oz:')===0&&e.name!=='oz:sheet')}
+function hSnap(){return NAV.map(function(x){return {k:x.k,a:Object.assign({},x.a)}})}
+function hFn(snap,pre,seq){return function(){return hRestore(snap,pre,seq)}}
+function hPush(rep){
+  var V=hNav();if(!V||HREST)return;
+  var ce=V.stack[V.idx];var seq=++HSEQ;
+  if((rep&&isOzEnt(ce))||(ce&&ce.name==='oz:sheet'))V.replaceNext=true;   /* platform kaydı (ana sayfa) asla ezilmez */
+  try{window.v2NavPush('oz:'+seq,hFn(hSnap(),isPre(),seq),[])}catch(e){}
+}
+function hSync(){var V=hNav();if(!V||HREST)return;var ce=V.stack[V.idx];if(isOzEnt(ce))ce.fn=hFn(hSnap(),isPre(),+ce.name.slice(3))}
+function hRestore(snap,pre,seq){
+  var top=snap[snap.length-1]||{};
+  /* Sipariş verildikten sonra eski sepet/ödeme kayıtlarına dönülmez: ilki Siparişlerim olur, sonrakiler atlanır */
+  if(ST.staleSeq&&seq<=ST.staleSeq&&(top.k==='checkout'||top.k==='cart')){
+    if(!ST.staleUsed){ST.staleUsed=true;snap=[{k:'home',a:{}},{k:'orders',a:{}}];var V=hNav();if(V&&V.stack[V.idx])V.stack[V.idx].fn=hFn(snap,false,++HSEQ)}
+    else{setTimeout(function(){history.back()},0);return}
+  }
+  HREST=true;
+  try{D.body.classList.toggle('ozPre',!!pre);NAV=snap.map(function(x){return {k:x.k,a:Object.assign({},x.a)}});draw()}finally{HREST=false}
+}
+/* Kök Özüne Dön kaydına geri sar (yeni kayıt açmadan); yoksa ana ekrana git */
+function goRoot(){
+  var V=hNav();
+  if(V&&isOzEnt(V.stack[V.idx])&&!isOzEnt(V.stack[V.idx-1])){NAV=[{k:'home',a:{}}];HPEND={rep:true};draw();return}
+  if(V){for(var j=V.idx-1;j>=0;j--){var e=V.stack[j];if(!isOzEnt(e))break;var nx=V.stack[j-1];if(!isOzEnt(nx)){history.go(j-V.idx);return}}}
+  NAV=[{k:'home',a:{}}];HPEND={rep:false};draw();
+}
+OZ.closeSheet=function(){closeSheet()};
+/* Platform popstate'inden sonra çalışır: geçmiş kaydı olan alt sayfa (.ozOvH) açıkken geri → yalnızca kapat */
+window.addEventListener('popstate',function(){if(qs('.ozOvH')){ST.preKeep=true;closeSheet()}});
 /* K27 ön başvuru kipi (body.ozPre): pazar kapalıyken yalnızca satıcı ekranları */
 var PRE_OK={seller:1,sellerApply:1,sellerProduct:1};
 function isPre(){return D.body.classList.contains('ozPre')}
@@ -687,6 +725,7 @@ function draw(){
   try{window.scrollTo(0,0)}catch(e){}
   topSync();
   var v=VIEWS[t.k]||VIEWS.home;
+  var hp=HPEND;HPEND=null;if(hp)hPush(hp.rep);else hSync();
   try{var p=v(t.a||{},SCR);if(p&&p.catch)p.catch(function(e){if(e&&e.auth&&!logged()){paint(loginWall());return}paint(errBox(e))})}catch(e){paint(errBox(e))}
 }
 OZ.go=function(k,a){go(k,a)};
@@ -730,19 +769,22 @@ OZ.tryEnter=async function(){
     return false;
   }
   D.body.classList.remove('ozPre');
-  NAV=[{k:'home',a:{}}];draw();
+  NAV=[{k:'home',a:{}}];HPEND={rep:false};draw();
   if(logged())loadNotifs().catch(function(){});
   return true;
 };
 
 function preSheet(s){
   var has=!!(s&&s.my_seller);
-  sheet('Özüne Dön çok yakında','<p class="ozP">Doğal ürün üreticisi misin? Şimdiden ön başvurunu yap, mağazan hazır olsun.</p><div class="ozRow2"><button type="button" class="ozBtn" data-a="sheetClose">Kapat</button><button type="button" class="ozBtn pri" data-a="preApply">'+(has?'Satıcı panelim':'Ön başvuru yap')+'</button></div>',{noFocus:true});
+  /* Ana sayfa yığının en altında olabilir: alt sayfa için ayrı geçmiş kaydı (geri tuşu yalnızca alt sayfayı kapatır, siteden çıkmaz) */
+  var V=hNav();if(V&&!HREST){try{window.v2NavPush('oz:sheet',function(){},[]);ST.preH=true}catch(e){}}
+  var ov=sheet('Özüne Dön çok yakında','<p class="ozP">Doğal ürün üreticisi misin? Şimdiden ön başvurunu yap, mağazan hazır olsun.</p><div class="ozRow2"><button type="button" class="ozBtn" data-a="sheetClose">Kapat</button><button type="button" class="ozBtn pri" data-a="preApply">'+(has?'Satıcı panelim':'Ön başvuru yap')+'</button></div>',{noFocus:true});
+  ov.classList.add('ozOvH');
 }
 function enterPre(){
-  var s=S();if(s.market_open){D.body.classList.remove('ozPre');NAV=[{k:'home',a:{}}];draw();return}
+  var s=S();if(s.market_open){D.body.classList.remove('ozPre');NAV=[{k:'home',a:{}}];HPEND={rep:false};draw();return}
   if(s.seller_signup_enabled!==true&&!s.my_seller){toast('Satıcı başvuruları şu anda kapalı.');return}
-  D.body.classList.add('ozPre');NAV=[{k:'seller',a:{}}];draw();
+  D.body.classList.add('ozPre');NAV=[{k:'seller',a:{}}];HPEND={rep:false};draw();
 }
 function preGo(){loadSettings(true).then(enterPre).catch(function(e){fail(e)})}
 preGo.outside=true;
@@ -751,12 +793,12 @@ preGo.outside=true;
 ACT_EXTRA({
   sheetClose:function(){closeSheet()},
   back:function(){back()},
-  nav:function(b){var k=b.dataset.k;var a={};if(b.dataset.id)a.id=b.dataset.id;if(b.dataset.q)a.q=b.dataset.q;if(b.dataset.cat)a.cat=b.dataset.cat;if(b.dataset.tab)a.tab=b.dataset.tab;if(k==='home'){NAV=[];}go(k,a)},
+  nav:function(b){var k=b.dataset.k;var a={};if(b.dataset.id)a.id=b.dataset.id;if(b.dataset.q)a.q=b.dataset.q;if(b.dataset.cat)a.cat=b.dataset.cat;if(b.dataset.tab)a.tab=b.dataset.tab;if(k==='home'&&!a.cat&&!a.q){goRoot();return}if(k==='home'){NAV=[];}go(k,a)},
   redraw:function(){draw()},
   login:function(){needLogin(function(){draw()})},
   bell:function(){openNotifs()},
   exit:function(){exitWorld()},
-  preApply:function(){closeSheet();if(!logged()){needLogin(preGo);return}preGo()}
+  preApply:function(){ST.preKeep=true;closeSheet();if(!logged()){needLogin(preGo);return}preGo()}
 });
 D.addEventListener('click',function(e){
   var b=e.target.closest&&e.target.closest('[data-a]');if(!b)return;

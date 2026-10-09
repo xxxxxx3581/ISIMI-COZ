@@ -7208,7 +7208,7 @@ function v2HalletOpen(){
 
 function v2OverlaysOpen(){
   var d=document.getElementById('appDrawer');
-  return !!(document.querySelector('.v2Sheet')||(d&&d.classList.contains('on'))||document.getElementById('authModal')||v2HalletOpen());
+  return !!(document.querySelector('.v2Sheet,.ozOv:not(.ozOvH)')||(d&&d.classList.contains('on'))||document.getElementById('authModal')||v2HalletOpen());
 }
 
 function v2CloseOverlays(){
@@ -7216,6 +7216,7 @@ function v2CloseOverlays(){
   try{ closeAppDrawer(); }catch(e){}
   var am=document.getElementById('authModal'); if(am) am.remove();
   if(v2HalletOpen()){ try{ window.Hallet.close(); }catch(e){} }
+  if(document.querySelector('.ozOv:not(.ozOvH)')){ try{ window.OZ.closeSheet(); }catch(e){ document.querySelectorAll('.ozOv').forEach(function(x){ x.remove(); }); } }   /* Özüne Dön alt sayfası */
 }
 
 function v2WsDocs(row,type){
