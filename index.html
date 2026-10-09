@@ -1709,15 +1709,27 @@ html:root .ozSoCnt .c1{background:#B5482F}html:root .ozSoCnt .c2{background:#B77
 html:root .ozSoCnt .c4{background:#2F6FA3}html:root .ozSoCnt .c5{background:#2E8B57}html:root .ozSoCnt .c6{background:#5E5348}
 html:root .ozSoCnt .c.on{border-color:#F7D24A;box-shadow:0 0 0 2px rgba(247,210,74,.35)}
 html:root .ozSteps{display:flex;list-style:none;margin:2px 0 10px;padding:0;gap:2px}
-html:root .ozSteps li{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;font-size:10.5px;color:#9C8B72;text-align:center}
-html:root .ozSteps li i{display:block;height:6px;border-radius:3px;background:#54422D}
-html:root .ozSteps li.ok i{background:#2E8B57}html:root .ozSteps li.cur i{background:#F7D24A}
-html:root .ozSteps li.ok,html:root .ozSteps li.cur{color:#F6ECDC;font-weight:700}
-html:root .ozSteps li span{line-height:1.15;overflow-wrap:anywhere}
+html:root .ozSteps>*{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;font-size:10.5px;color:#9C8B72;text-align:center}
+html:root .ozSteps>* i{display:block;height:6px;border-radius:3px;background:#54422D}
+html:root .ozSteps>.ok i{background:#2E8B57}html:root .ozSteps>.cur i{background:#F7D24A}
+html:root .ozSteps>.ok,html:root .ozSteps>.cur{color:#F6ECDC;font-weight:700}
+html:root .ozSteps>*>span{line-height:1.15;overflow-wrap:anywhere}
 html:root .ozSoActs .ozBtn.pri{flex:1 1 auto}
 html:root .ozSpCts{margin:0 0 12px}html:root .ozSpCts .ozCt .b{box-sizing:border-box;border:3px solid transparent}
 html:root .ozSpCts .ozCt.sel .b{border-color:#4FB67F}html:root .ozSpCts .ozCt.sel .l{color:#4FB67F;font-weight:800}
 html:root .ozSpCts .ozCt.off{opacity:.42}
+/*K37 siparişlerim*/
+html:root .ozSteps.col{display:flex;margin:8px 0}
+html:root .ozSteps.col>.s0.ok i,html:root .ozSteps.col>.s0.cur i{background:#D9694A}html:root .ozSteps.col>.s1.ok i,html:root .ozSteps.col>.s1.cur i{background:#E0A84A}
+html:root .ozSteps.col>.s2.ok i,html:root .ozSteps.col>.s2.cur i{background:#4E95D0}html:root .ozSteps.col>.s3.ok i,html:root .ozSteps.col>.s3.cur i{background:#4FB67F}
+html:root .ozProg.col li.s0.done i,html:root .ozProg.col li.s0.cur i{background:#D9694A;border-color:#D9694A;color:#fff}
+html:root .ozProg.col li.s1.done i,html:root .ozProg.col li.s1.cur i{background:#E0A84A;border-color:#E0A84A;color:#2B2118}
+html:root .ozProg.col li.s2.done i,html:root .ozProg.col li.s2.cur i{background:#4E95D0;border-color:#4E95D0;color:#fff}
+html:root .ozProg.col li.s3.done i,html:root .ozProg.col li.s3.cur i{background:#4FB67F;border-color:#4FB67F;color:#fff}
+html:root .ozProg.col li.s1.done::before,html:root .ozProg.col li.s1.cur::before{background:#E0A84A}html:root .ozProg.col li.s2.done::before,html:root .ozProg.col li.s2.cur::before{background:#4E95D0}html:root .ozProg.col li.s3.done::before,html:root .ozProg.col li.s3.cur::before{background:#4FB67F}
+html:root .ozTrk{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px;padding:8px 10px;border:1px dashed #6B5A44;border-radius:12px;background:#2B2118}
+html:root .ozTrk>span{display:flex;flex-direction:column;min-width:0}html:root .ozTrk small{font-size:11.5px;color:#CDBB9F}html:root .ozTrk b{font-size:16px;overflow-wrap:anywhere}
+html:root .ozTrk .ozBtn{flex:none;min-height:44px}
 /*K21-BITIS*/
 </style>
 <style id="svcProvEntryCss">.svcProvEntry{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;border-radius:16px;border:1.5px solid rgba(124,92,255,.45);background:rgba(124,92,255,.10);color:var(--text);font:inherit;text-align:left;cursor:pointer}.svcProvEntry .ic{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:rgba(124,92,255,.18)}.svcProvEntry .tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}.svcProvEntry small{font-size:12px;font-weight:700;color:var(--muted)}.svcProvEntry b{font-size:16px;font-weight:900}.svcProvEntry em{font-style:normal;font-size:12.5px;color:var(--muted)}.svcProvEntry .go{flex:0 0 auto;font-size:24px;font-weight:700;color:#7c5cff}.svcProvEntry:active{transform:scale(.99)}.svcProvEntry:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}html[data-theme="light"] .svcProvEntry{background:#f3effe;border-color:#c9bbff}html[data-theme="light"] .svcProvEntry .go{color:#5b3fd6}</style>
