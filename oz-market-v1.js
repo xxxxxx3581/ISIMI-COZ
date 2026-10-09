@@ -1049,11 +1049,12 @@ function soBadge(){var b=D.getElementById('ozSoN');if(!b)return;var n=SELLER.soN
 function sellerPanelOn(){var d=SELLER.dash;return !!(d&&d.has_seller&&/^(approved|active|suspended)$/.test(d.status||''))}
 /* Yeni sipariş ışığı: satıcının "Yeni" durumda siparişi varsa Hesabım sekmesinde ve Hesabım > Satıcı paneli satırında
    yumuşak yanıp sönen nokta. Sayı mevcut oz_seller_dashboard'dan (en fazla dakikada bir); sipariş "Yeni"den çıkınca söner. */
-function newDotSync(){var on=num(ST.newN)>0;qa('#ozNav .ozNavB[data-k=account], #ozRoot .ozRowBtn[data-k=seller]').forEach(function(b){b.classList.toggle('ozPulse',on)})}
+/* C6: bekleyen iş = Yeni + Hazırlanıyor (kabul edildi / hazırlandı); hepsi kargoya verilince söner */
+function newDotSync(){var n=num(ST.newN),on=n>0;qa('#ozNav .ozNavB[data-k=account], #ozRoot .ozRowBtn[data-k=seller]').forEach(function(b){b.classList.toggle('ozPulse',on);if(on)b.setAttribute('data-n',n>9?'9+':String(n));else b.removeAttribute('data-n')})}
 function newDotCheck(){
   var ms=S().my_seller;if(!logged()||!ms||!/^(approved|active)$/.test(ms.status||''))return;
   if(ST.newBusy||Date.now()-(ST.newAt||0)<60000)return;ST.newBusy=1;ST.newAt=Date.now();
-  rpc('oz_seller_dashboard',{}).then(function(d){ST.newN=num(d&&d.orders&&d.orders.new);newDotSync()}).catch(function(){}).then(function(){ST.newBusy=0});
+  rpc('oz_seller_dashboard',{}).then(function(d){var o=(d&&d.orders)||{};ST.newN=num(o.new)+num(o.accepted)+num(o.packed);newDotSync()}).catch(function(){}).then(function(){ST.newBusy=0});
 }
 function navSync(){
   var c=cur(),k=c.k,nav=D.getElementById('ozNav');
@@ -1276,7 +1277,7 @@ var SP={
     var c=cur();var stt=c.a.st||'';if(stt==='toship')stt='prep';if(!SG_BY[stt]&&stt!=='past')stt='';
     var o=d.orders||{};
     var cnt={new:num(o.new),prep:num(o.accepted)+num(o.packed),ship:num(o.shipped),issue:Math.max(num(o.return_requested),num(d.open_returns))};
-    SELLER.soN=cnt.new+cnt.prep;soBadge();ST.newN=cnt.new;ST.newAt=Date.now();
+    SELLER.soN=cnt.new+cnt.prep;soBadge();ST.newN=cnt.new+cnt.prep;ST.newAt=Date.now();
     var st=['new','accepted','packed','shipped','return_requested'];
     var r=await Promise.all(st.map(function(x){return rpc('oz_seller_orders',{p_status:x,p_limit:50,p_offset:0}).catch(function(){return []})}).concat([stt==='past'?rpc('oz_seller_orders',{p_status:null,p_limit:50,p_offset:0}):null,stockStats().catch(function(){return null})]));
     if(!alive(t))return;
