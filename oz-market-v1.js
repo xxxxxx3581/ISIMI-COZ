@@ -533,12 +533,11 @@ function renderProduct(){
     (imgs.length>1?'<span class="ozGalN" id="ozGalN">1 / '+imgs.length+'</span>':'')+favBtn(p.id,isFav(p.id))+'</div>'+(imgs.length>1?'<div class="ozThumbs" id="ozGalD">'+imgs.map(function(u,i){return '<button type="button" class="'+(i?'':'on')+'" data-a="galGo" data-i="'+i+'" aria-label="'+(i+1)+'. görsel">'+pic(u,'')+'</button>'}).join('')+'</div>':'');
   var lg=httpsUrl(sel.logo_url);
   var chipP=sel.id?'<button type="button" class="ozPChip" data-a="nav" data-k="store" data-id="'+E(sel.id)+'"><span class="lg">'+(lg?'<img src="'+E(lg)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">':'')+'<i aria-hidden="true">'+E(initials(sel.display_name))+'</i></span><b>'+E(sel.display_name||'Üretici')+'</b><span aria-hidden="true">›</span></button>':'';
-  var ich=[];if(p.net_content)ich.push(['Net miktar',p.net_content]);if(p.origin_city)ich.push(['Menşe',p.origin_city]);if(num(p.shelf_life_days))ich.push(['Raf ömrü',num(p.shelf_life_days)+' gün']);
-  var ichH=ich.length?'<div class="ozIChips">'+ich.map(function(x){return '<span><small>'+E(x[0])+'</small><b>'+E(x[1])+'</b></span>'}).join('')+'</div>':'';
   var info='<h1 class="ozPName">'+E(p.name)+'</h1>'+chipP+
     '<div class="ozMuted">'+[p.origin_city?'📍 '+E(p.origin_city):'',num(p.rating_count)?stars(p.rating_avg)+' '+num(p.rating_count)+' değerlendirme':'',num(p.sold_count)?num(p.sold_count)+' satıldı':''].filter(Boolean).join(' · ')+'</div>'+
-    '<div class="ozPrice">'+(v?'<b>'+TL(price)+'</b>'+(cmp>price?'<s>'+TL(cmp)+'</s>':''):'—')+'</div>'+(v&&unitPrice(p,v)?'<p class="ozUnit">'+unitPrice(p,v)+'</p>':'')+ichH;
-  var vars=vs.length>1||(vs[0]&&vs[0].label)?'<div class="ozVars" role="radiogroup" aria-label="Seçenek">'+vs.map(function(x){var out=num(x.stock)<=0;return '<button type="button" class="ozVar'+(x.id===pd.sel?' on':'')+'" role="radio" aria-checked="'+(x.id===pd.sel)+'" data-a="pickVar" data-id="'+E(x.id)+'"'+(out?' disabled':'')+'>'+E(x.label||'Standart')+'<small>'+(out?'Tükendi':TL(x.price_kurus))+'</small></button>'}).join('')+'</div>':'';
+    '<div class="ozPrice">'+(v?'<b>'+TL(price)+'</b>'+(cmp>price?'<s>'+TL(cmp)+'</s>':''):'—')+'</div>'+(v&&unitPrice(p,v)?'<p class="ozUnit">'+unitPrice(p,v)+'</p>':'');
+  /* B2: tek seçenekte seçim kutusu yok (etiketi alt çubukta) */
+  var vars=vs.length>1?'<div class="ozVars" role="radiogroup" aria-label="Seçenek">'+vs.map(function(x){var out=num(x.stock)<=0;return '<button type="button" class="ozVar'+(x.id===pd.sel?' on':'')+'" role="radio" aria-checked="'+(x.id===pd.sel)+'" data-a="pickVar" data-id="'+E(x.id)+'"'+(out?' disabled':'')+'>'+E(x.label||'Standart')+'<small>'+(out?'Tükendi':TL(x.price_kurus))+'</small></button>'}).join('')+'</div>':'';
   /* K30: stok bilgisi içerikte, satın alma sabit alt çubukta (seçili seçenek + fiyat + adet + buton) */
   var buy=!v||stock<=0?'<div class="ozWarn">Bu ürün şu anda stokta yok.</div>':
     (maxQ<=0?'<div class="ozWarn">Stoktaki tüm adetler sepetinde.</div>':'<div class="ozQty"><span class="ozMuted">Adet</span><div class="ozStep" role="group" aria-label="Adet"><button type="button" data-a="pdQty" data-d="-1" aria-label="Azalt"'+(pd.qty<=1?' disabled':'')+'>−</button><b aria-live="polite">'+pd.qty+'</b><button type="button" data-a="pdQty" data-d="1" aria-label="Artır"'+(pd.qty>=maxQ?' disabled':'')+'>+</button></div>'+(stock<=5?'<span class="ozMuted">Son '+stock+' adet</span>':'')+'</div>')+(inCart&&v&&stock>0?'<p class="ozMuted" style="margin:0 0 10px">Sepetinde '+inCart+' adet var.</p>':'');
@@ -546,7 +545,7 @@ function renderProduct(){
     (!v||stock<=0?'<button type="button" class="ozBtn" disabled>Stokta yok</button>':
     maxQ<=0?'<button type="button" class="ozBtn pri" data-a="nav" data-k="cart">Sepete git</button>':
     '<button type="button" class="ozBtn pri" data-a="addCart">Sepete ekle'+(pd.qty>1?' ('+pd.qty+')':'')+'</button>')+'</div>';
-  var ship='<div class="ozCard"><div class="ozMuted">'+ico('truck',16)+' '+(num(sel.handling_days)?num(sel.handling_days)+' iş günü içinde kargoya verilir':'Kargoya veriliş süresi satıcıya göre değişir')+'</div>'+(num(sel.free_ship_over_kurus)?'<div class="ozMuted" style="margin-top:4px">'+E(sel.display_name||'Bu üretici')+' ürünlerinde '+TL(sel.free_ship_over_kurus)+' ve üzeri kargo bedava</div>':'')+'</div>';
+  var ship='<p class="ozShipN">'+ico('truck',16)+'<span>'+(num(sel.handling_days)?num(sel.handling_days)+' iş günü içinde kargoya verilir':'Kargoya veriliş süresi satıcıya göre değişir')+(num(sel.free_ship_over_kurus)?' · '+TL(sel.free_ship_over_kurus)+' ve üzeri kargo bedava':'')+'</span></p>';
   /* B1: foto ve fiyatın hemen altında tek "Özellikler" kartı (hep açık, iki sütun, boşlar gizli); açıklama 3 satır + Devamı */
   var alg=arr(p.allergens);var fe=[];
   if(p.net_content)fe.push(['Net miktar',E(p.net_content)]);
