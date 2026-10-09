@@ -522,6 +522,8 @@ function unitPrice(p,v){var vs=arr(p.variants);var q=qtyOf(v.label)||(vs.length=
 
 /* K27: organik / menşe / sertifika bilgileri satıcı beyanıdır */
 var CLAIM='<span class="ozClaim">Satıcı beyanı – platform tarafından doğrulanmadı</span>';
+/* A1: sepette ürün varsa alt çubukta kalıcı yeşil sepet düğmesi + adet rozeti */
+function cartBtnH(){var n=cartCount();return n?'<button type="button" class="ozCartB" data-a="nav" data-k="cart" aria-label="Sepete git, '+n+' ürün">'+ico('cart',22)+'<span class="n">'+(n>99?'99+':n)+'</span></button>':''}
 function renderProduct(){
   var pd=ST.pd;if(!pd)return;var p=pd.p;var vs=arr(p.variants);
   var v=vs.filter(function(x){return x.id===pd.sel})[0]||null;
@@ -546,7 +548,7 @@ function renderProduct(){
   var bar='<div class="ozBuyBar" role="region" aria-label="Satın al"><div class="tx"><small>'+E(v?(v.label||'Standart'):'')+'</small><b>'+(v?TL(price):'—')+'</b></div>'+
     (!v||stock<=0?'<button type="button" class="ozBtn" disabled>Stokta yok</button>':
     maxQ<=0?'<button type="button" class="ozBtn pri" data-a="nav" data-k="cart">Sepete git</button>':
-    '<button type="button" class="ozBtn pri" data-a="addCart">Sepete ekle'+(pd.qty>1?' ('+pd.qty+')':'')+'</button>')+'</div>';
+    '<button type="button" class="ozBtn pri" data-a="addCart">Sepete ekle'+(pd.qty>1?' ('+pd.qty+')':'')+'</button>')+cartBtnH()+'</div>';
   var ship='<p class="ozShipN">'+ico('truck',16)+'<span>'+(num(sel.handling_days)?num(sel.handling_days)+' iş günü içinde kargoya verilir':'Kargoya veriliş süresi satıcıya göre değişir')+(num(sel.free_ship_over_kurus)?' · '+TL(sel.free_ship_over_kurus)+' ve üzeri kargo bedava':'')+'</span></p>';
   /* B1: foto ve fiyatın hemen altında tek "Özellikler" kartı (hep açık, iki sütun, boşlar gizli); açıklama 3 satır + Devamı */
   var alg=arr(p.allergens);var fe=[];
@@ -613,7 +615,6 @@ ACT_EXTRA({
     var sel=p.seller||{};
     cartAdd({variant_id:v.id,product_id:p.id,name:p.name,label:v.label||'',image:arr(p.images)[0]||null,price_kurus:num(v.price_kurus),seller_id:sel.id||null,seller_name:sel.display_name||''},pd.qty);
     pd.qty=1;renderProduct();
-    try{if(typeof v2Toast==='function'){v2Toast('Sepete eklendi','Sepete git',function(){go('cart')});return}}catch(e){}
     toast('Sepete eklendi');
   },
   ask:function(){
