@@ -922,8 +922,10 @@ var SP={
     var box=D.getElementById('ozSO');if(!box)return;
     box.innerHTML=l.length?'<div class="ozList">'+l.map(sellerOrderCard).join('')+'</div>':empty(ico('box',32),'Bu durumda sipariş yok','');
   },
+  /* Satıcı paneli "Sorular ve yorumlar": tabloyu doğrudan okuyan TEK yer. Ürün sayfası oz_product_detail yanıtındaki reviews/questions'ı kullanır;
+     misafir bu sekmeye ulaşamaz (seller görünümü giriş ister) — yine de girişsiz/satıcısız durumda tabloya istek atılmaz. user_id/order_id istenmez. */
   sorular:async function(d,t){
-    var sid=sellerId();
+    var sid=sellerId();if(!logged()||!sid){var b0=D.getElementById('ozSP');if(b0)b0.innerHTML=loginWall();return}
     var ps=arr(await get('oz_products?select=id,name&seller_id=eq.'+encodeURIComponent(sid)));
     var ids=ps.map(function(x){return x.id});var nm={};ps.forEach(function(x){nm[x.id]=x.name});
     var qsl=[],rvl=[];
