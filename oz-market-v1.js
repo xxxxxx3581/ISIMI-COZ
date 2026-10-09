@@ -168,7 +168,8 @@ async function loadNotifs(){
 }
 function notifHtml(list){
   if(!list.length)return empty(ico('bell',34),'Bildirim yok','Sipariş ve mağaza gelişmeleri burada görünür.');
-  return '<div class="ozRow2" style="margin-bottom:8px"><span class="ozMuted">'+list.filter(unread).length+' okunmamış</span><button type="button" class="ozBtn sm" data-a="notifAll"'+(list.some(unread)?'':' disabled')+'>Hepsini okundu yap</button></div>'+
+  var nu=list.filter(unread).length;
+  return '<div class="ozNtH"><span class="pill'+(nu?' on':'')+'">'+(nu?nu+' okunmamış':'Hepsi okundu')+'</span><span class="acts"><button type="button" class="ozNtB" data-a="notifAll"'+(nu?'':' disabled')+'>Hepsini okundu yap</button></span></div>'+
     '<div class="ozList">'+list.map(function(n){return '<button type="button" class="ozNt'+(unread(n)?' new':'')+'" data-a="notifOpen" data-id="'+E(n.id)+'"><b>'+E(n.title||'Bildirim')+'</b>'+(n.body?'<span>'+E(n.body)+'</span>':'')+'<small>'+E(fmtDate(n.created_at))+'</small></button>'}).join('')+'</div>';
 }
 async function openNotifs(){

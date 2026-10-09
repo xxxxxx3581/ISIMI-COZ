@@ -1770,6 +1770,15 @@ html:root .ozTrkL li.cur i{background:#F7D24A;border-color:#F7D24A}
 html:root .ozTrkL b{font-size:14px}html:root .ozTrkL small{font-size:12px;color:#CDBB9F}
 html:root #ozTrkC [data-a=trkGo]{font-size:14px;padding-left:10px;padding-right:10px}
 html:root .ozTrk .ozCopyB{background:#F7D24A;border-color:#F7D24A;color:#1F1A12;font-weight:800}
+/*OZ P2.6 bildirim başlığı*/
+html:root .ozNtH{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 10px;flex-wrap:wrap}
+html:root .ozNtH .pill{display:inline-flex;align-items:center;min-height:30px;padding:0 12px;border-radius:999px;background:#3A2D20;border:1px solid #54422D;color:#CDBB9F;font-size:13px;font-weight:800}
+html:root .ozNtH .pill.on{background:#F7D24A;border-color:#F7D24A;color:#1F1A12}
+html:root .ozNtH .acts{display:flex;gap:6px;margin-left:auto}
+html:root .ozNtB{min-height:36px;padding:0 10px;border:1px solid #54422D;border-radius:10px;background:transparent;color:#CDBB9F;font:700 12.5px/1 system-ui,sans-serif;cursor:pointer;position:relative}
+html:root .ozNtB::after{content:"";position:absolute;inset:-4px 0}
+html:root .ozNtB:disabled{opacity:.45;cursor:default}
+html:root .ozNtB.bad{color:#E8A08E;border-color:#6A3A2E}
 /*K21-BITIS*/
 </style>
 <style id="svcProvEntryCss">.svcProvEntry{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;border-radius:16px;border:1.5px solid rgba(124,92,255,.45);background:rgba(124,92,255,.10);color:var(--text);font:inherit;text-align:left;cursor:pointer}.svcProvEntry .ic{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:rgba(124,92,255,.18)}.svcProvEntry .tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}.svcProvEntry small{font-size:12px;font-weight:700;color:var(--muted)}.svcProvEntry b{font-size:16px;font-weight:900}.svcProvEntry em{font-style:normal;font-size:12.5px;color:var(--muted)}.svcProvEntry .go{flex:0 0 auto;font-size:24px;font-weight:700;color:#7c5cff}.svcProvEntry:active{transform:scale(.99)}.svcProvEntry:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}html[data-theme="light"] .svcProvEntry{background:#f3effe;border-color:#c9bbff}html[data-theme="light"] .svcProvEntry .go{color:#5b3fd6}</style>
