@@ -327,15 +327,15 @@ function sellerBtn(s){
   var loc=[s.city,s.district].filter(Boolean).join(' / ');
   return '<button type="button" class="ozSeller" data-a="nav" data-k="store" data-id="'+E(s.id)+'">'+pic(s.logo_url,s.display_name)+'<span class="tx"><b>'+E(s.display_name||'Üretici')+'</b><small>'+E(loc||'Üretici')+(num(s.rating_count)?' · ★ '+NF1.format(num(s.rating_avg))+' ('+num(s.rating_count)+')':'')+'</small></span><span class="go">Mağazayı gör ›</span></button>';
 }
-function searchForm(q){return '<form class="ozSearch" data-sub="search" role="search"><input class="ozIn" id="ozQ" type="search" enterkeyhint="search" autocomplete="off" placeholder="Zeytinyağı, bal, peynir ara" aria-label="Ürün ara" value="'+E(q||'')+'"><button type="submit" class="ozBtn pri">'+ico('search',18)+'<span>Ara</span></button></form>'}
+function searchForm(q){return '<form class="ozSearch" data-sub="search" role="search"><input class="ozIn" id="ozQ" type="search" enterkeyhint="search" autocomplete="off" placeholder="Bal, zeytinyağı, reçel ara" aria-label="Ürün ara" value="'+E(q||'')+'"><button type="submit" class="ozBtn pri">'+ico('search',18)+'<span>Ara</span></button></form>'}
 /* oz_search_products'ın desteklediği anahtarlar: new, popular, rating, price_asc, price_desc (beşi de destekleniyor) */
 var SORTS=[['new','Yeni gelenler'],['popular','Çok satanlar'],['rating','En yüksek puan'],['price_asc','Fiyat ↑'],['price_desc','Fiyat ↓']];
 function sortName(k){var x=SORTS.filter(function(s){return s[0]===k})[0];return x?x[1]:''}
 function sortChips(sort){return '<div class="ozChips ozSorts" role="group" aria-label="Sırala">'+SORTS.map(function(s){var on=(sort||'new')===s[0];return '<button type="button" class="ozChip'+(on?' on':'')+'" data-a="sortPick" data-sort="'+s[0]+'" aria-pressed="'+on+'">'+E(s[1])+'</button>'}).join('')+'</div>'}
 /* Kategori kutusu: fotoğraf yoksa slug'a göre emoji ve zemin */
-var CAT_EMO=[[/bal|recel/,'🍯','#5A4320'],[/zeytin/,'🫒','#3E4A24'],[/kuruyemis|kuru-yemis|meyve/,'🥜','#5A3A22'],[/baharat|bitki|cay/,'🌿','#2F4A33'],[/tahin|pekmez/,'🥣','#56381F'],[/tursu|konserve/,'🥒','#35502F'],[/sabun|bakim/,'🧼','#3B4656'],[/el-emegi|emek|ev-yapimi/,'🧶','#563A4A']];
+var CAT_EMO=[[/bal|recel/,'🍯','#5A4320'],[/zeytin/,'🫒','#3E4A24'],[/kuruyemis|kuru-yemis|meyve/,'🥜','#5A3A22'],[/baharat|bitki|cay/,'🌿','#2F4A33'],[/tahin|pekmez/,'🥣','#56381F'],[/tursu|konserve/,'🥒','#35502F'],[/sabun|bakim/,'🧼','#3B4656'],[/el-emegi|emek|ev-yapimi/,'🧶','#563A4A'],[/icecek|sut/,'🥛','#3B4E5A']];
 /* K35: kategori görseli: oz_categories.image_url (yalnız https) → assets/oz-cat/<slug>.jpg → ikon. Görsel yüklenemezse ikon görünür. */
-var CAT_IMG={'bal-recel':1,'recel':1,'kuruyemis-meyve':1,'kuru-yemis':1,'baharat-bitki-cay':1,'bitki-cayi':1,'tahin-pekmez':1,'tursu-konserve':1,'konserve':1,'sabun-dogal-bakim':1,'bakim':1,'el-emegi':1,'ev-yapimi':1};
+var CAT_IMG={'bal-recel':1,'recel':1,'kuruyemis-meyve':1,'kuru-yemis':1,'baharat-bitki-cay':1,'bitki-cayi':1,'tahin-pekmez':1,'tursu-konserve':1,'konserve':1,'sabun-dogal-bakim':1,'bakim':1,'el-emegi':1,'ev-yapimi':1,'zeytin-zeytinyagi':1,'icecekler':1};
 function httpsUrl(u){u=String(u||'');return /^https:\/\//i.test(u)?u:''}
 function catImg(slug,url){return httpsUrl(url)||(CAT_IMG[slug]?'assets/oz-cat/'+slug+'.jpg':'')}
 function catTile(c,attrs){var sl=String(c.slug||'');var m=CAT_EMO.filter(function(x){return x[0].test(sl)})[0]||[null,'🌿','#3E4A30'];var im=catImg(sl,c.image_url);
