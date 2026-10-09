@@ -3687,6 +3687,13 @@ body:has(.fdCo) #fdRoot{padding-bottom:0}
 .fdCo .fdCoSeg button.on b:before{content:"✓ ";color:#D4A93F}
 /*K19-BITIS*/
 /*K32-BASLA*/
+/* K32-2 favori: zeminsiz kalp, 44px dokunma alanı; resim üstünde açık çizgi + gölge, kart içinde metin rengi; favoride dolu vurgu rengi */
+.fdFav{background:transparent!important;border:0!important;box-shadow:none!important;width:44px;height:44px;min-width:44px;padding:0;border-radius:50%;font-size:25px;line-height:1;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.65),0 0 1px rgba(0,0,0,.9)}
+.fdFav.on{color:#e11d48}
+.fdVCard .fdFav{right:4px;top:4px}
+.fdwRowV .h .fdFav{width:44px;height:44px;margin:-11px -8px -11px 0;font-size:22px;color:var(--text);text-shadow:none}
+.fdwRowV .h .fdFav.on{color:#e11d48}
+.fdHero .nav .fdFav{width:44px;height:44px}
 /*K32-BITIS*/
 `;document.head.appendChild(s);
 }
