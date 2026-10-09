@@ -162,7 +162,9 @@ function stripSync(){
   D.body.classList.toggle('ozStripOn',!!on);
   if(!on){if(old)old.remove();return}
   var tot=c.reduce(function(s2,x){return s2+num(x.price_kurus)*num(x.qty)},0);
-  var h='<button type="button" class="ozCStrip" id="ozCStrip" data-a="nav" data-k="cart">'+ico('cart',20)+'<b>Sepeti gör</b><span>'+n+' ürün · '+TL(tot)+'</span><i aria-hidden="true">›</i></button>';
+  /* E1: solda sepet ikonu + altın adet rozeti + toplam; sağda "Sepeti gör ›"; adet değişince rozet kısa nabız */
+  if(ST.stripN!=null&&ST.stripN!==n)ST.stripBump=Date.now();ST.stripN=n;var bump=Date.now()-(ST.stripBump||0)<450;
+  var h='<button type="button" class="ozCStrip" id="ozCStrip" data-a="nav" data-k="cart" aria-label="Sepeti gör, '+n+' ürün, '+TL(tot)+'"><span class="l">'+ico('cart',22)+'<span class="bd'+(bump?' bump':'')+'">'+(n>99?'99+':n)+'</span><b>'+TL(tot)+'</b></span><span class="r">Sepeti gör ›</span></button>';
   if(old)old.outerHTML=h;else r.insertAdjacentHTML('beforeend',h);
 }
 function cartCount(){return cartGet().reduce(function(n,x){return n+num(x.qty)},0)}

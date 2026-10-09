@@ -1924,6 +1924,17 @@ html:root .ozPlacedB .ozLink{align-self:flex-start;min-height:36px;padding:0;col
 html:root .ozPlacedB .x{flex:none;display:grid;place-items:center;width:44px;height:44px;margin:-6px 0;border:0;background:none;color:#CFE7C2;cursor:pointer}
 html:root .ozToast.err{background:#5A2219;border:1px solid #E5735A;color:#FFE9E3;cursor:pointer;bottom:calc(96px + env(safe-area-inset-bottom,0px))}
 html:root .ozOdActs{flex-wrap:wrap}html:root .ozOdActs .ozBtn{flex:1 1 150px;min-height:48px}
+/*OZ E1 kompakt Sepeti gör çubuğu*/
+html:root .ozCStrip{bottom:calc(73px + env(safe-area-inset-bottom,0px));min-height:48px;max-height:52px;padding:0 12px;justify-content:space-between}
+html:root .ozCStrip .l,html:root .ozCStrip .bd,html:root .ozCStrip .r{flex:none;text-align:left;overflow:visible}
+html:root .ozCStrip .l{display:flex;align-items:center;gap:8px;min-width:0;flex:1 1 auto}
+html:root .ozCStrip .bd{display:inline-grid;place-items:center;min-width:24px;height:24px;padding:0 6px;box-sizing:border-box;border-radius:12px;background:#F7D24A;color:#1F1A12;font:800 13px/1 system-ui,sans-serif;margin-left:-14px;margin-top:-16px;box-shadow:0 0 0 2px #2E8B57}
+html:root .ozCStrip .l b{font-size:16px;white-space:nowrap}
+html:root .ozCStrip .r{flex:none;font-weight:800;font-size:15px;white-space:nowrap}
+html:root .ozCStrip .bd.bump{animation:ozBump .45s ease-out}
+@keyframes ozBump{0%{transform:scale(1)}40%{transform:scale(1.35)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion:reduce){html:root .ozCStrip .bd.bump{animation:none}}
+html:root body.ozNavOn.ozStripOn .app{padding-bottom:calc(140px + env(safe-area-inset-bottom,0px))!important}
 /*K21-BITIS*/
 </style>
 <style id="svcProvEntryCss">.svcProvEntry{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;border-radius:16px;border:1.5px solid rgba(124,92,255,.45);background:rgba(124,92,255,.10);color:var(--text);font:inherit;text-align:left;cursor:pointer}.svcProvEntry .ic{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:rgba(124,92,255,.18)}.svcProvEntry .tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}.svcProvEntry small{font-size:12px;font-weight:700;color:var(--muted)}.svcProvEntry b{font-size:16px;font-weight:900}.svcProvEntry em{font-style:normal;font-size:12.5px;color:var(--muted)}.svcProvEntry .go{flex:0 0 auto;font-size:24px;font-weight:700;color:#7c5cff}.svcProvEntry:active{transform:scale(.99)}.svcProvEntry:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}html[data-theme="light"] .svcProvEntry{background:#f3effe;border-color:#c9bbff}html[data-theme="light"] .svcProvEntry .go{color:#5b3fd6}</style>
