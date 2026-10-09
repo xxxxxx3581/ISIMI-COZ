@@ -707,6 +707,15 @@ VIEWS_EXTRA({
       empty(ico('pin',36),'Kayıtlı adresin yok','Siparişlerin için teslimat adresi ekle.'))+'<button type="button" class="ozBtn pri wide" data-a="addrNew" style="margin-top:12px">Yeni adres ekle</button>');
   }
 });
+/* Ödeme adımı TEK yerde: bugün yalnız deneme (mock) ödemesi. Gerçek ödeme sağlayıcısı geldiğinde yalnız bu fonksiyon değişir.
+   Dönüş: {ok, skipped}. Hata fırlatmaz; başarısız sipariş "Ödeme bekleniyor" kalır, detayda "Ödemeyi tamamla" ile tekrar denenir. */
+async function payOrders(os,method){
+  var s=S();if(method!=='mock'||!s.payment_mock)return {ok:false,skipped:true};
+  var ok=true;
+  for(var i=0;i<os.length;i++){var o=os[i];if(o.status&&o.status!=='awaiting_payment')continue;
+    try{await rpc('oz_mock_pay',{p_order:o.id});o.status='new'}catch(e){ok=false}}
+  return {ok:ok,skipped:false};
+}
 /* A3: tek ekran ödeme yükleyici (Sepet sekmesi ve checkout ortak) */
 async function coLoad(t,title){
   paint(pageHead(title)+skel(3,'line'));
@@ -893,7 +902,7 @@ function orderDetailHtml(d){
   var o=d.order||{};var its=ordItems(d.items);var ev=arr(d.events);var rv=arr(d.reviewed_product_ids).map(String);var ret=d.return;var s=S();
   var st=o.status;
   var acts='';
-  if(st==='awaiting_payment'&&o.payment_method==='mock'&&s.payment_mock)acts+='<button type="button" class="ozBtn sun" data-a="mockPay" data-id="'+E(o.id)+'">Deneme ödemesini tamamla</button>';
+  if(st==='awaiting_payment'&&o.payment_method==='mock'&&s.payment_mock)acts+='<button type="button" class="ozBtn sun" data-a="mockPay" data-id="'+E(o.id)+'">Ödemeyi tamamla</button>';
   if(st==='shipped')acts+='<button type="button" class="ozBtn pri" data-a="ordDeliver" data-id="'+E(o.id)+'">Siparişim elime ulaştı</button>';
   if(st==='awaiting_payment'||st==='new')acts+='<button type="button" class="ozBtn bad" data-a="ordCancel" data-id="'+E(o.id)+'" data-no="'+E(o.order_no||'')+'">Siparişi iptal et</button>';
   if(d.can_return&&!ret)acts+='<button type="button" class="ozBtn" data-a="ordReturn" data-id="'+E(o.id)+'">İade talebi oluştur</button>';
@@ -979,14 +988,18 @@ ACT_EXTRA({
       if(res.duplicate===true){dupDone();return}  /* birincil yol */
       /* Sözleşme onayları oz_orders ekleme tetikleyicisinde kaydedilir (context 'order', subject 'oz:<id>'); istemci ayrıca kayıt yapmaz. */
       cartSet([]);ST.crid=null;var pay=co.pay;ST.co=null;ST.staleSeq=HSEQ;ST.staleUsed=false;
-      go('placed',{res:res,pay:pay},true);
+      /* A4: ödeme adımı otomatik zincirlenir, ara ekran yok → siparişin detayı. Başarısızsa sipariş "Ödeme bekleniyor" kalır. */
+      var os=arr(res.orders);var pr=await payOrders(os,pay);
+      ST.placedBand={ids:os.map(function(o){return String(o.id)}),n:os.length,payFail:!pr.ok&&!pr.skipped};
+      if(os.length)go('order',{id:os[0].id},true);else go('orders',{},true);  /* ödeme ekranının yerine geçer */
     })}finally{ST.placing=false}
   },
   mockPayAll:async function(b){
     var c=cur();var os=arr(c.a.res&&c.a.res.orders).filter(function(o){return o.status==='awaiting_payment'});
     await busy(b,async function(){for(var i=0;i<os.length;i++){await rpc('oz_mock_pay',{p_order:os[i].id});os[i].status='new'}toast('Deneme ödemesi tamamlandı');draw()});
   },
-  mockPay:async function(b){await busy(b,async function(){await rpc('oz_mock_pay',{p_order:b.dataset.id});toast('Deneme ödemesi tamamlandı');draw()})},
+  mockPay:async function(b){await busy(b,async function(){var r=await payOrders([{id:b.dataset.id,status:'awaiting_payment'}],'mock');
+    if(r.ok){if(ST.placedBand)ST.placedBand.payFail=false;toast('Ödeme tamamlandı')}else fail(new Error('Ödeme tamamlanamadı. Biraz sonra tekrar dene.'));draw()})},
   ordMore:function(){ordersMore(SCR).catch(fail)},
   ordTab:function(b){var c=cur();c.a=Object.assign({},c.a,{tab:b.dataset.tab});if(ST.ol&&ST.ol.off){ST.ol.tab=b.dataset.tab;hSync();ordersPaint();ordRvLoad(SCR);return}draw()},
   trkGo:function(b){var w=null;try{w=window.open(b.dataset.u,'_blank','noopener,noreferrer')}catch(e){}copyText(b.dataset.v).then(function(ok){toast(ok?'Takip numarası kopyalandı; firma sayfasında yapıştır.':'Takip no: '+b.dataset.v)});},
