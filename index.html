@@ -1943,6 +1943,43 @@ html:root .ozPPCats .ozCt.has .l{color:#fff;font-weight:800}
 html:root .ozPPCats .ozCt.none .l{color:#9C8B72;font-weight:600}
 html:root .ozPPCats .ozCt .cn{position:absolute;top:-5px;right:calc(50% - 32px);min-width:20px;height:20px;padding:0 5px;box-sizing:border-box;border-radius:10px;background:#F2B431;color:#1F1A12;font:800 11px/20px system-ui,sans-serif;font-style:normal;text-align:center;box-shadow:0 0 0 2px #2B2118;z-index:2}
 html:root .ozPPCats .ozCt.sel .b{border-color:#4FB67F;box-shadow:0 0 0 2px rgba(79,182,127,.45)}
+/*OZ E3 müşteri sipariş detayı kompakt*/
+html:root .ozOd{padding-top:4px}
+html:root .ozOdH{display:flex;align-items:center;justify-content:space-between;gap:10px}
+html:root .ozOdH .no{display:flex;flex-direction:column;min-width:0}
+html:root .ozOdH .no small{font-size:11.5px;color:#CDBB9F}
+html:root .ozOdH .no span{display:flex;align-items:center;gap:2px}
+html:root .ozOdH .no b{font-size:17px;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html:root .ozOdH .cp{display:grid;place-items:center;width:44px;height:44px;margin:-10px 0;border:0;background:none;color:#CDBB9F;cursor:pointer}
+html:root .ozOdS{margin:0 0 8px;font-size:13px;color:#CDBB9F;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html:root .ozOd .ozProg{margin:0 0 6px}
+html:root .ozOd .ozProg i{width:24px;height:24px;font-size:11px}
+html:root .ozOd .ozProg li::before{top:11px}
+html:root .ozOd .ozProg li{font-size:11px;gap:4px}
+html:root .ozOdN{margin:0 0 8px;font-size:12.5px;color:#CDBB9F;text-align:center}
+html:root .ozOd .ozOdActs{margin:0 0 10px}
+html:root .ozBadO{background:transparent!important;border:1.5px solid #E5735A!important;color:#F3B6A6!important;min-height:44px}
+html:root .ozOd .ozCard{margin:0 0 10px;padding:10px 12px}
+html:root .ozOdI{display:flex;align-items:center;gap:10px;min-width:0;padding:4px 0}
+html:root .ozOdI .ozPic{flex:0 0 44px;width:44px;height:44px;border-radius:10px;aspect-ratio:auto}
+html:root .ozOdI .tx{flex:1;min-width:0;display:flex;flex-direction:column}
+html:root .ozOdI .tx b{font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html:root .ozOdI .tx small{font-size:12.5px;color:#CDBB9F}
+html:root .ozOdI .t{flex:none;font-weight:800;font-size:14px}
+html:root .ozOdT{margin:6px 0 0;padding-top:6px;border-top:1px solid #4A3A27;font-size:13px;line-height:1.55}
+html:root .ozOdT div{display:flex;justify-content:space-between}html:root .ozOdT span:first-child{color:#CDBB9F}
+html:root .ozOdT .tot{font-weight:800;font-size:14.5px}html:root .ozOdT .tot span:first-child{color:#F6ECDC}
+html:root .ozOdP{margin:4px 0 0;font-size:12.5px;color:#CDBB9F}
+html:root .ozOdA{margin:0 0 10px}
+html:root .ozOd .ozDet{margin:0 0 10px}
+html:root .ozOd .ozWarn{margin:0 0 8px;padding:8px 10px;font-size:13px}
+/*OZ E3 kompakt kargo kartı*/
+html:root .ozTrkR{display:flex;align-items:center;gap:8px;min-width:0;min-height:44px}
+html:root .ozTrkR svg{flex:none;color:#4FB67F}
+html:root .ozTrkR .tx{flex:1;min-width:0;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html:root .ozTrkR .cp{flex:none;display:inline-flex;align-items:center;gap:4px;min-height:44px;padding:0 10px;border:1px solid #F7D24A;border-radius:10px;background:#F7D24A;color:#1F1A12;font:800 12.5px/1 system-ui,sans-serif;cursor:pointer}
+html:root .ozTrkC .ozTrkGo{min-height:44px;margin-top:6px;font-size:14px}
+html:root .ozTrkC .ozTrkH{margin-top:6px}
 /*K21-BITIS*/
 </style>
 <style id="svcProvEntryCss">.svcProvEntry{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;border-radius:16px;border:1.5px solid rgba(124,92,255,.45);background:rgba(124,92,255,.10);color:var(--text);font:inherit;text-align:left;cursor:pointer}.svcProvEntry .ic{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:rgba(124,92,255,.18)}.svcProvEntry .tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}.svcProvEntry small{font-size:12px;font-weight:700;color:var(--muted)}.svcProvEntry b{font-size:16px;font-weight:900}.svcProvEntry em{font-style:normal;font-size:12.5px;color:var(--muted)}.svcProvEntry .go{flex:0 0 auto;font-size:24px;font-weight:700;color:#7c5cff}.svcProvEntry:active{transform:scale(.99)}.svcProvEntry:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}html[data-theme="light"] .svcProvEntry{background:#f3effe;border-color:#c9bbff}html[data-theme="light"] .svcProvEntry .go{color:#5b3fd6}</style>
