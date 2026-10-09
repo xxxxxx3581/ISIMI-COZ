@@ -3004,11 +3004,10 @@ async function venueLikes(tok,v){
   LIKES={};try{const r=await RPC('food_item_like_stats',{p_venue_id:v.id});if(!alive(tok))return;(r||[]).forEach(x=>LIKES[x.menu_item_id]={likes:+x.likes||0,total:+x.total||0});
     qa('[data-lk]').forEach(el=>{el.innerHTML=likeTxt(el.dataset.lk)})}catch(e){}
 }
-function payChips(){const on=pfOn()&&pfSet().online_payment_enabled===true;
-  return ['💵 Kapıda nakit','💳 Kapıda kart'].concat(on?['🔒 Online kart']:[]).map(x=>'<span>'+x+'</span>').join('')}
 function todayHours(v){const wh=v.working_hours;if(!wh||!Object.keys(wh).length)return 'Adres, saatler, teslimat';const r=wh[WK[istNow().getDay()]]||[];return r.length?'Bugün '+r.map(x=>x[0]+'–'+(x[1]==='24:00'?'00:00':x[1])).join(', '):'Bugün kapalı'}
 function venueExtras(v){
-  return '<div class="fdwVX"><div class="fdwPay" aria-label="Ödeme yöntemleri">'+payChips()+'</div>'+
+  /* K32: "Kapıda nakit / kart" kutucukları restoran sayfasından kaldırıldı (ödeme ekranındaki seçimler aynı) */
+  return '<div class="fdwVX">'+
     '<div class="fdwVBtns one"><button type="button" class="fdwRevBtn inf" onclick="foodVenueInfo()"><b>Hakkında</b><span>'+E(todayHours(v))+'</span><i aria-hidden="true">›</i></button></div></div><div id="fdwVPromo"></div>';
 }
 async function venuePromo(tok,v){
@@ -3019,7 +3018,8 @@ async function venuePromo(tok,v){
     const p=(HF.promos||[]).filter(x=>x.placement==='venue_strip'&&(!x.venue_id||x.venue_id===v.id))[0];
     const cps=(HF.coupons||[]).filter(c=>!c.flash_group&&(!c.venue_id||c.venue_id===v.id)).slice(0,3);
     let h='';
-    if(cpOn())flashFor(v.id).forEach(g=>{h+='<div class="fdwStrip fl" role="note"><span class="i">🏷️</span><span class="t"><b>'+E(g.title)+'</b><small>'+g.tiers.map(t=>(+t.min_subtotal_kurus?M(t.min_subtotal_kurus)+' üzeri ':'')+tierTxt(t)).join(' · ')+'</small></span>'+flTimer(g)+'</div>'});
+    /* K32: "Yemek indirim fırsatı" kutuları ve geri sayımları restoran sayfasında gösterilmez.
+       İndirim sepette/ödemede aynen uygulanır (flashPick → flashAuto → pf_quote; sepet çubuğundaki fdwFlHint kalır). */
     if(p)h+='<button type="button" class="fdwStrip" data-promo="'+E(p.id)+'" onclick="foodPromoClick(\''+E(p.id)+'\')"><span class="i">%</span><span class="t"><b>'+E(p.title)+'</b>'+(p.subtitle?'<small>'+E(p.subtitle)+'</small>':'')+'</span>'+(p.sponsored?'<em>Sponsorlu</em>':'')+'</button>';
     cps.forEach(c=>{h+='<button type="button" class="fdwStrip" onclick="foodCopyCoupon(\''+E(c.code)+'\')"><span class="i">🎟</span><span class="t"><b>'+E(couponTxt(c))+'</b><small>'+(+c.min_subtotal_kurus?M(c.min_subtotal_kurus)+' ve üzeri':'Alt limit yok')+' · Kod: '+E(c.code)+'</small></span></button>'});
     setHTML('fdwVPromo',h);if(p)promoSeen();refreshSticky();if(h.includes('data-fl-end'))flashTick(tok);
