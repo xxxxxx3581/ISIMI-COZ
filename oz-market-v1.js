@@ -790,6 +790,25 @@ function progHtml(o){
   return (st==='awaiting_payment'?'<div class="ozWarn" role="status">Ödeme bekleniyor. Ödeme tamamlanınca sipariş üreticiye iletilir.</div>':'')+
     '<ol class="ozProg col" aria-label="Sipariş durumu">'+PROG.map(function(n,j){return '<li class="s'+j+' '+(j<i?'done':j===i?'cur':'')+'"'+(j===i?' aria-current="step"':'')+'><i aria-hidden="true">'+(j<i||(j===i&&i===3)?'✓':j+1)+'</i><span>'+n+'</span></li>'}).join('')+'</ol>';
 }
+/* Sipariş takip (kargo) kartı: tarihli durum çizgisi, firma, takip no + Kopyala, bilinen firmada "firmanın sayfasında takip et".
+   Uygulamada canlı konum yok; konum/ayrıntı yalnız kargo firmasının sayfasında. */
+var TRK_SITES=[[/aras/i,'Aras Kargo','https://www.araskargo.com.tr/'],[/yurt\s*i[cç]i/i,'Yurtiçi Kargo','https://www.yurticikargo.com/tr/online-servisler/gonderi-sorgula'],[/mng/i,'MNG Kargo','https://www.mngkargo.com.tr/'],
+  [/ptt/i,'PTT Kargo','https://gonderitakip.ptt.gov.tr/'],[/s[uü]rat/i,'Sürat Kargo','https://www.suratkargo.com.tr/'],[/\bups\b/i,'UPS','https://www.ups.com/track?loc=tr_TR'],
+  [/hepsi\s*jet/i,'HepsiJet','https://www.hepsijet.com/'],[/trendyol/i,'Trendyol Express','https://www.trendyolexpress.com/']];
+function carrierOf(n){n=String(n||'');for(var i=0;i<TRK_SITES.length;i++)if(TRK_SITES[i][0].test(n))return TRK_SITES[i];return null}
+function trkCard(o,ev){
+  var st=o.status;if(!o.tracking_no&&!/^(shipped|delivered|completed)$/.test(st))return '';
+  function at(to){var e=arr(ev).filter(function(x){return x.to===to})[0];return e?e.at:null}
+  var idx={awaiting_payment:0,new:0,accepted:1,packed:1,shipped:2,delivered:3,completed:3}[st];if(idx==null)idx=-1;
+  var steps=[['Alındı',at('new')||o.created_at],['Hazırlanıyor',at('accepted')],['Kargoya verildi',o.shipped_at||at('shipped')],['Teslim edildi',o.delivered_at||at('delivered')]];
+  var line='<ol class="ozTrkL">'+steps.map(function(x,k){var done=k<=idx;return '<li class="'+(done?'ok':'')+(k===idx?' cur':'')+'"><i aria-hidden="true"></i><b>'+E(x[0])+'</b>'+(done&&x[1]?'<small>'+E(fmtDate(x[1]))+'</small>':'')+'</li>'}).join('')+'</ol>';
+  var cr=carrierOf(o.carrier);
+  return '<div class="ozCard" id="ozTrkC"><h3>Kargo takibi</h3>'+line+
+    (o.carrier?'<p class="ozMuted" style="margin:0 0 6px">Kargo firması: <b style="color:#F6ECDC">'+E(o.carrier)+'</b></p>':'')+
+    (o.tracking_no?'<div class="ozTrk"><span><small>Takip no</small><b class="ozMono">'+E(o.tracking_no)+'</b></span><button type="button" class="ozBtn sm ozCopyB" data-a="copyTrk" data-v="'+E(o.tracking_no)+'" aria-label="Takip numarasını kopyala">Kopyala</button></div>':'')+
+    (cr&&o.tracking_no?'<button type="button" class="ozBtn wide" data-a="trkGo" data-v="'+E(o.tracking_no)+'" data-u="'+E(cr[2])+'">Kargo firmasının sayfasında takip et</button><p class="ozHint" style="margin:6px 0 0">Takip numaran kopyalanır, '+E(cr[1])+' sayfası açılır; numarayı oraya yapıştır.</p>':
+      (o.tracking_url&&/^https:\/\//i.test(o.tracking_url)?'<a class="ozBtn wide" href="'+E(o.tracking_url)+'" target="_blank" rel="noopener noreferrer">Takip bağlantısını aç</a>':''))+'</div>';
+}
 function orderDetailHtml(d){
   var o=d.order||{};var its=ordItems(d.items);var ev=arr(d.events);var rv=arr(d.reviewed_product_ids).map(String);var ret=d.return;var s=S();
   var st=o.status;
@@ -801,7 +820,7 @@ function orderDetailHtml(d){
   var canReview=(st==='delivered'||st==='completed');
   var ship=o.ship_to||{};
   var tl=ev.length?'<ol class="ozTl">'+ev.map(function(e){return '<li><b>'+E((ORDER_ST[e.to]||[e.to])[0])+'</b><small>'+E(fmtDate(e.at))+(e.role?' · '+E(ROLE[e.role]||e.role):'')+(e.reason?' · '+E(e.reason):'')+'</small></li>'}).join('')+'</ol>':'<p class="ozMuted">Henüz hareket yok.</p>';
-  var trk=o.tracking_no?'<div class="ozCard" id="ozTrkC"><h3>Kargo takibi</h3><p style="margin:0 0 6px">'+E(o.carrier||'Kargo')+'</p><div class="ozTrk"><span><small>Takip no</small><b class="ozMono">'+E(o.tracking_no)+'</b></span><button type="button" class="ozBtn sm sun" data-a="copyTrk" data-v="'+E(o.tracking_no)+'" aria-label="Takip numarasını kopyala">Kopyala</button></div>'+(o.tracking_url&&/^https?:\/\//i.test(o.tracking_url)?'<a class="ozBtn wide" href="'+E(o.tracking_url)+'" target="_blank" rel="noopener noreferrer">Kargonu takip et</a>':'')+'</div>':'';
+  var trk=trkCard(o,ev);
   return '<div class="ozHead"><h1>'+E(o.order_no||'Sipariş')+'</h1><p>'+E(d.seller_name||'')+' · '+E(fmtDate(o.created_at))+'</p></div>'+
     '<div style="margin:0 0 10px">'+stTag(ORDER_ST,st)+'</div>'+progHtml(o)+
     (acts?'<div class="ozRow2" style="margin:0 0 12px">'+acts+'</div>':'')+
@@ -886,6 +905,7 @@ ACT_EXTRA({
   mockPay:async function(b){await busy(b,async function(){await rpc('oz_mock_pay',{p_order:b.dataset.id});toast('Deneme ödemesi tamamlandı');draw()})},
   ordMore:function(){ordersMore(SCR).catch(fail)},
   ordTab:function(b){var c=cur();c.a=Object.assign({},c.a,{tab:b.dataset.tab});if(ST.ol&&ST.ol.off){ST.ol.tab=b.dataset.tab;hSync();ordersPaint();ordRvLoad(SCR);return}draw()},
+  trkGo:function(b){var w=null;try{w=window.open(b.dataset.u,'_blank','noopener,noreferrer')}catch(e){}copyText(b.dataset.v).then(function(ok){toast(ok?'Takip numarası kopyalandı; firma sayfasında yapıştır.':'Takip no: '+b.dataset.v)});},
   copyTrk:async function(b){var t=b.dataset.v;var ok=false;try{await navigator.clipboard.writeText(t);ok=true}catch(e){try{var x=D.createElement('textarea');x.value=t;x.style.position='fixed';x.style.opacity='0';D.body.appendChild(x);x.select();ok=D.execCommand('copy');x.remove()}catch(_){}}toast(ok?'Takip numarası kopyalandı':'Kopyalanamadı; numarayı elle seç.')},
   ordDeliver:async function(b){if(!await confirmBox('Teslim aldın mı?','Ürünleri teslim aldığını onaylıyorsun. Sorun varsa sonrasında iade isteyebilirsin.','Teslim aldım'))return;await busy(b,async function(){await rpc('oz_transition_order',{p_order:b.dataset.id,p_action:'deliver',p:{}});toast('Teslimat onaylandı');draw()})},
   /* Müşteri iptali: yalnız ilk aşamada (ödeme bekleniyor / Alındı); sonrası "Sorun bildir". Sunucu da aynı kuralı uygular,

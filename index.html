@@ -1759,6 +1759,17 @@ html:root .ozOBand{margin:10px 0 0;border:1px solid #F2B431;background:linear-gr
 html:root .ozOBand svg{color:#F2B431;flex:none}
 html:root .ozOBand b{color:#F7D24A}html:root .ozOBand small{color:#E9DCC4}
 html:root .ozOBand>span:last-child{color:#F2B431}
+/*OZ P2.4 kargo takip kartı*/
+html:root .ozTrkL{list-style:none;margin:4px 0 12px;padding:0}
+html:root .ozTrkL li{position:relative;display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px;padding:0 0 12px 26px;color:#9C8B72}
+html:root .ozTrkL li i{position:absolute;left:4px;top:3px;width:12px;height:12px;border-radius:50%;border:2px solid #6B5A44;background:#2B2118;box-sizing:border-box}
+html:root .ozTrkL li::before{content:"";position:absolute;left:9px;top:16px;bottom:0;width:2px;background:#54422D}
+html:root .ozTrkL li:last-child{padding-bottom:0}html:root .ozTrkL li:last-child::before{display:none}
+html:root .ozTrkL li.ok{color:#F6ECDC}html:root .ozTrkL li.ok i{background:#4FB67F;border-color:#4FB67F}html:root .ozTrkL li.ok::before{background:#4FB67F}
+html:root .ozTrkL li.cur i{background:#F7D24A;border-color:#F7D24A}
+html:root .ozTrkL b{font-size:14px}html:root .ozTrkL small{font-size:12px;color:#CDBB9F}
+html:root #ozTrkC [data-a=trkGo]{font-size:14px;padding-left:10px;padding-right:10px}
+html:root .ozTrk .ozCopyB{background:#F7D24A;border-color:#F7D24A;color:#1F1A12;font-weight:800}
 /*K21-BITIS*/
 </style>
 <style id="svcProvEntryCss">.svcProvEntry{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;border-radius:16px;border:1.5px solid rgba(124,92,255,.45);background:rgba(124,92,255,.10);color:var(--text);font:inherit;text-align:left;cursor:pointer}.svcProvEntry .ic{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:rgba(124,92,255,.18)}.svcProvEntry .tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}.svcProvEntry small{font-size:12px;font-weight:700;color:var(--muted)}.svcProvEntry b{font-size:16px;font-weight:900}.svcProvEntry em{font-style:normal;font-size:12.5px;color:var(--muted)}.svcProvEntry .go{flex:0 0 auto;font-size:24px;font-weight:700;color:#7c5cff}.svcProvEntry:active{transform:scale(.99)}.svcProvEntry:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}html[data-theme="light"] .svcProvEntry{background:#f3effe;border-color:#c9bbff}html[data-theme="light"] .svcProvEntry .go{color:#5b3fd6}</style>
