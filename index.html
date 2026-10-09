@@ -1549,6 +1549,29 @@ html:root .ozSCv img{display:block;width:100%;height:100%;object-fit:cover}
 html:root .ozClamp{display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 html:root .ozFree{display:flex;align-items:center;gap:6px;margin:6px 0;color:#4FB67F;font-weight:700;font-size:14px}
 html:root .ozSeller .go{flex:none;color:#4FB67F;font-weight:800;font-size:13px;white-space:nowrap}
+/*K30 siparişlerim ve takip*/
+html:root .ozOrd{display:flex;flex-direction:column;gap:8px;width:100%;padding:12px;border:1px solid #54422D;border-radius:14px;background:#3A2D20;color:#F6ECDC;text-align:left;cursor:pointer;font:inherit}
+html:root .ozOrd .h{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
+html:root .ozOrd .h b{min-width:0;overflow-wrap:anywhere}
+html:root .ozOrd .th{display:flex;gap:6px;align-items:center}
+html:root .ozOrd .th .ozPic{flex:0 0 48px;width:48px;border-radius:10px}
+html:root .ozOrd .th .more{font-size:13px;color:#CDBB9F;font-weight:700}
+html:root .ozOrd .f{display:flex;align-items:baseline;justify-content:space-between;gap:8px;flex-wrap:wrap}
+html:root .ozOrd .f small{color:#CDBB9F;font-size:12.5px}html:root .ozOrd .f b{white-space:nowrap;font-size:16px}
+html:root .ozProg{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));list-style:none;margin:0 0 14px;padding:0;counter-reset:none}
+html:root .ozProg li{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;font-size:12px;font-weight:700;color:#9C8B72}
+html:root .ozProg li::before{content:"";position:absolute;top:14px;right:50%;width:100%;height:3px;background:#54422D;z-index:0}
+html:root .ozProg li:first-child::before{display:none}
+html:root .ozProg li.done::before,html:root .ozProg li.cur::before{background:#4FB67F}
+html:root .ozProg i{position:relative;z-index:1;display:grid;place-items:center;width:30px;height:30px;border-radius:50%;background:#3A2D20;border:2px solid #54422D;font-style:normal;font-size:13px}
+html:root .ozProg li.done i{background:#2E8B57;border-color:#2E8B57;color:#fff}
+html:root .ozProg li.cur i{border-color:#F7D24A;color:#F7D24A}html:root .ozProg li.cur{color:#F6ECDC}html:root .ozProg li.done{color:#CDBB9F}
+html:root .ozProg span{overflow-wrap:anywhere;line-height:1.2}
+html:root .ozProgX{display:flex;flex-direction:column;gap:4px;margin:0 0 14px;padding:12px;border-radius:14px;border:1px solid #54422D;background:#3A2D20}
+html:root .ozProgX.bad{border-color:#E5735A}html:root .ozProgX.warn{border-color:#E0A84A}
+html:root .ozProgX span{color:#CDBB9F;font-size:13.5px}
+html:root .ozRate{border-color:#4FB67F}
+html:root .ozMono{font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:.3px;overflow-wrap:anywhere}
 /*K21-BITIS*/
 </style>
 <style id="svcProvEntryCss">.svcProvEntry{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;border-radius:16px;border:1.5px solid rgba(124,92,255,.45);background:rgba(124,92,255,.10);color:var(--text);font:inherit;text-align:left;cursor:pointer}.svcProvEntry .ic{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:rgba(124,92,255,.18)}.svcProvEntry .tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}.svcProvEntry small{font-size:12px;font-weight:700;color:var(--muted)}.svcProvEntry b{font-size:16px;font-weight:900}.svcProvEntry em{font-style:normal;font-size:12.5px;color:var(--muted)}.svcProvEntry .go{flex:0 0 auto;font-size:24px;font-weight:700;color:#7c5cff}.svcProvEntry:active{transform:scale(.99)}.svcProvEntry:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}html[data-theme="light"] .svcProvEntry{background:#f3effe;border-color:#c9bbff}html[data-theme="light"] .svcProvEntry .go{color:#5b3fd6}</style>
