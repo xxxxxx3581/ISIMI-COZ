@@ -547,17 +547,21 @@ function renderProduct(){
     maxQ<=0?'<button type="button" class="ozBtn pri" data-a="nav" data-k="cart">Sepete git</button>':
     '<button type="button" class="ozBtn pri" data-a="addCart">Sepete ekle'+(pd.qty>1?' ('+pd.qty+')':'')+'</button>')+'</div>';
   var ship='<div class="ozCard"><div class="ozMuted">'+ico('truck',16)+' '+(num(sel.handling_days)?num(sel.handling_days)+' iş günü içinde kargoya verilir':'Kargoya veriliş süresi satıcıya göre değişir')+'</div>'+(num(sel.free_ship_over_kurus)?'<div class="ozMuted" style="margin-top:4px">'+E(sel.display_name||'Bu üretici')+' ürünlerinde '+TL(sel.free_ship_over_kurus)+' ve üzeri kargo bedava</div>':'')+'</div>';
-  function det(title,body,open){return body?'<details class="ozDet"'+(open?' open':'')+'><summary>'+E(title)+'</summary><div>'+body+'</div></details>':''}
-  var kv=[];
-  if(v&&num(v.weight_g))kv.push(['Kargo ağırlığı',NF1.format(num(v.weight_g)/1000)+' kg']);
-  if(p.category&&p.category.name)kv.push(['Kategori',p.category.name]);
-  if(p.organic_cert)kv.push(['Organik sertifika',p.organic_cert,1]);
-  var kvH=kv.length?'<dl class="ozKV">'+kv.map(function(x){return '<dt>'+E(x[0])+'</dt><dd>'+E(x[1])+(x[2]?' '+CLAIM:'')+'</dd>'}).join('')+'</dl>':'';
-  var store=(p.storage_info?'<p style="margin:0 0 6px">'+E(p.storage_info)+'</p>':'')+(num(p.shelf_life_days)?'<p style="margin:0">Raf ömrü: '+num(p.shelf_life_days)+' gün</p>':'');
-  var origin=(p.origin_city?'<p style="margin:0 0 6px"><b>'+E(p.origin_city)+'</b> '+CLAIM+'</p>':'')+(p.origin_note?'<p class="ozStory" style="margin:0">'+E(p.origin_note)+'</p>':'')+(!p.origin_city&&p.origin_note?'<p style="margin:6px 0 0">'+CLAIM+'</p>':'');
-  var alg=arr(p.allergens);
-  var dets=det('Ürün açıklaması',p.description?'<p class="ozStory" style="margin:0">'+E(p.description)+'</p>':'',true)+det('Saklama ve raf ömrü',store)+det('İçindekiler',p.ingredients?'<p class="ozStory" style="margin:0">'+E(p.ingredients)+'</p>':'')+
-    det('Alerjen bilgisi',alg.length?'<div class="ozWrap">'+alg.map(function(x){return '<span class="ozTag warn">'+E(algLabel(x))+'</span>'}).join('')+'</div>':'')+det('Ürün bilgileri',kvH)+det('Menşe',origin);
+  /* B1: foto ve fiyatın hemen altında tek "Özellikler" kartı (hep açık, iki sütun, boşlar gizli); açıklama 3 satır + Devamı */
+  var alg=arr(p.allergens);var fe=[];
+  if(p.net_content)fe.push(['Net miktar',E(p.net_content)]);
+  if(p.origin_city||p.origin_note)fe.push(['Menşe',E(p.origin_city||'')+(p.origin_note?(p.origin_city?'<br>':'')+'<span class="ozMuted">'+E(p.origin_note)+'</span>':'')]);
+  if(num(p.shelf_life_days))fe.push(['Raf ömrü',num(p.shelf_life_days)+' gün']);
+  if(p.storage_info)fe.push(['Saklama',E(p.storage_info)]);
+  if(p.ingredients)fe.push(['İçindekiler',E(p.ingredients)]);
+  if(alg.length)fe.push(['Alerjen',alg.map(function(x){return '<span class="ozTag warn">'+E(algLabel(x))+'</span>'}).join(' ')]);
+  if(p.category&&p.category.name)fe.push(['Kategori',E(p.category.name)]);
+  if(v&&num(v.weight_g))fe.push(['Kargo ağırlığı',NF1.format(num(v.weight_g)/1000)+' kg']);
+  if(p.organic_cert)fe.push(['Organik sertifika',E(p.organic_cert)]);
+  var feH=fe.length?'<div class="ozCard ozFeat"><h3>Özellikler</h3><dl class="ozKV">'+fe.map(function(x){return '<dt>'+E(x[0])+'</dt><dd>'+x[1]+'</dd>'}).join('')+'</dl>'+
+    ((p.origin_city||p.origin_note||p.organic_cert)?'<p class="ozFeatN">'+CLAIM+'</p>':'')+'</div>':'';
+  var dsc=String(p.description||'');
+  var descH=dsc?'<div class="ozDesc"><p class="ozStory'+(dsc.length>140?' ozClamp ozC3':'')+'" id="ozStory">'+E(dsc)+'</p>'+(dsc.length>140?'<button type="button" class="ozLink" data-a="storyMore" aria-controls="ozStory" aria-expanded="false">Devamı</button>':'')+'</div>':'';
   /* K37: büyük üretici kutusu yerine üstte çip; altta "Üreticinin diğer ürünleri" */
   var moreH=sel.id?'<div id="ozPDMore"></div>':'';
   var revs=arr(p.reviews);
@@ -566,7 +570,7 @@ function renderProduct(){
   var qs_=arr(p.questions);
   var qH='<div class="ozSecH"><h2>Soru ve cevaplar</h2><button type="button" class="ozBtn sm" data-a="ask">Soru sor</button></div>'+
     (qs_.length?'<div class="ozCard">'+qs_.map(function(q){return '<div class="ozRev"><div class="h"><span>Soru</span><span>'+E(fmtDay(q.created_at))+'</span></div><p><b>'+E(q.question)+'</b></p>'+(q.answer?'<div class="ozReply"><b>Üretici:</b> '+E(q.answer)+'</div>':'<p class="ozMuted">Üreticinin cevabı bekleniyor.</p>')+'</div>'}).join('')+'</div>':'<p class="ozMuted">Henüz soru sorulmamış.</p>');
-  paint(gal+info+vars+buy+ship+dets+revH+qH+moreH+bar);
+  paint(gal+info+feH+descH+vars+buy+ship+revH+qH+moreH+bar);
   var g=D.getElementById('ozGal'),n=D.getElementById('ozGalN');
   var gd=D.getElementById('ozGalD');if(g&&gd)g.addEventListener('scroll',function(){var i=Math.round(g.scrollLeft/Math.max(1,g.clientWidth));qa('button',gd).forEach(function(x,j){x.classList.toggle('on',i===j)})},{passive:true});
   if(sel.id)pdMore(pd,sel);
