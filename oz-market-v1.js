@@ -375,7 +375,7 @@ VIEWS_EXTRA({
     var r=await Promise.all([homeData(),rpc('oz_producers',{p_limit:3,p_offset:0}).catch(function(){return null}),loadFavs(),logged()?rpc('oz_my_orders',{p_limit:10,p_offset:0}).catch(function(){return null}):null]);if(!alive(t))return;
     var d=r[0]||{},prErr=r[1]===null,prs=arr(r[1]).slice(0,3);var cats=arr(d.categories);var any=arr(d.newest).length>0;
     ST.prs=prs;
-    var h=searchForm('')+ordBand(arr(r[3]))+heroHtml(prs);
+    var h=searchForm('')+heroHtml(prs)+ordBand(arr(r[3]));
     if(cats.length)h+='<div class="ozSecH"><h2>Kategoriler</h2><button type="button" class="ozLink" data-a="catAll">Tümünü gör</button></div><div class="ozCts" role="list" aria-label="Kategoriler">'+cats.map(function(c){return catTile(c)}).join('')+'</div>';
     /* K35: Üreticiler şeridi — hata olursa sessizce gizli; boşsa nazik metin */
     if(prs.length)h+='<div class="ozSecH"><h2>Üreticiler</h2><button type="button" class="ozLink" data-a="tab" data-k="producers">Tümü</button></div><div class="ozPrds ozPrds3">'+prs.map(function(x){return producerCard(x)}).join('')+'</div>';
@@ -730,8 +730,10 @@ function drawCheckout(){
     '<button type="button" class="ozBtn pri" id="ozPlace" data-a="place"'+(blocked||!termsOk(co)?' disabled':'')+'>Siparişi tamamla · '+TL(q.total_kurus)+'</button></div></div>');
 }
 /* K37: ana ekran sipariş bandı — yalnız aktif sipariş varsa */
-function ordBand(l){var a=l.filter(function(o){return ordTab(o.status)==='active'});if(!a.length)return '';var o=a[0];
-  return '<button type="button" class="ozOBand" data-a="nav" data-k="'+(a.length>1?'orders':'order')+'" data-id="'+E(o.id)+'">'+ico('box',20)+'<span class="tx"><b>'+E((ORDER_ST[o.status]||[o.status])[0])+'</b><small>'+E(o.order_no||'')+(a.length>1?' · '+a.length+' aktif sipariş':'')+'</small></span><span aria-hidden="true">›</span></button>'}
+function ordBand(l){var a=l.filter(function(o){return ordTab(o.status)==='active'});if(!a.length)return '';var o=a[0],n=a.length;
+  /* "Siparişini izle": slider'ın hemen altında, altın vurgulu; tek siparişte takip ekranı, birden fazlada Siparişlerim/Aktif */
+  var at=n>1?'data-k="orders" data-tab="active"':'data-k="order" data-id="'+E(o.id)+'"'+(o.status==='shipped'?' data-focus="trk"':'');
+  return '<button type="button" class="ozOBand" data-a="nav" '+at+'>'+ico('truck',22)+'<span class="tx"><b>'+(n>1?n+' aktif siparişin var':'Siparişini izle')+'</b><small>'+(n>1?'Siparişlerime git':E((ORDER_ST[o.status]||[o.status])[0])+' · '+E(o.order_no||''))+'</small></span><span aria-hidden="true">›</span></button>'}
 /* K30: Siparişlerim sekmeleri (oz_my_orders durum filtresi almaz; ayrım istemcide) */
 var ORD_TABS=[['active','Aktif',['awaiting_payment','new','accepted','packed','shipped']],['done','Teslim edilen',['delivered','completed']],['ret','İade/İptal',['cancelled','return_requested','returned','refund_pending','refunded']]];
 function ordTab(st){for(var i=0;i<ORD_TABS.length;i++)if(ORD_TABS[i][2].indexOf(st)>=0)return ORD_TABS[i][0];return 'active'}
