@@ -533,8 +533,10 @@ function renderProduct(){
     (imgs.length>1?'<span class="ozGalN" id="ozGalN">1 / '+imgs.length+'</span>':'')+favBtn(p.id,isFav(p.id))+'</div>'+(imgs.length>1?'<div class="ozThumbs" id="ozGalD">'+imgs.map(function(u,i){return '<button type="button" class="'+(i?'':'on')+'" data-a="galGo" data-i="'+i+'" aria-label="'+(i+1)+'. görsel">'+pic(u,'')+'</button>'}).join('')+'</div>':'');
   var lg=httpsUrl(sel.logo_url);
   var chipP=sel.id?'<button type="button" class="ozPChip" data-a="nav" data-k="store" data-id="'+E(sel.id)+'"><span class="lg">'+(lg?'<img src="'+E(lg)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">':'')+'<i aria-hidden="true">'+E(initials(sel.display_name))+'</i></span><b>'+E(sel.display_name||'Üretici')+'</b><span aria-hidden="true">›</span></button>':'';
-  var info='<h1 class="ozPName">'+E(p.name)+'</h1>'+chipP+
-    '<div class="ozMuted">'+[p.origin_city?'📍 '+E(p.origin_city):'',num(p.rating_count)?stars(p.rating_avg)+' '+num(p.rating_count)+' değerlendirme':'',num(p.sold_count)?num(p.sold_count)+' satıldı':''].filter(Boolean).join(' · ')+'</div>'+
+  /* B3: adın yanında yıldız + sayı; dokununca değerlendirmeler alt panelde (son 20) */
+  var rcP=num(p.rating_count);
+  var info='<div class="ozPNm"><h1 class="ozPName">'+E(p.name)+'</h1>'+(rcP?'<button type="button" class="ozRtB" data-a="pdRev" aria-label="'+rcP+' değerlendirmeyi gör"><b>★ '+num(p.rating_avg).toLocaleString('tr-TR',{minimumFractionDigits:1,maximumFractionDigits:1})+'</b><small>('+rcP+')</small></button>':'')+'</div>'+chipP+
+    '<div class="ozMuted">'+[p.origin_city?'📍 '+E(p.origin_city):'',num(p.sold_count)?num(p.sold_count)+' satıldı':''].filter(Boolean).join(' · ')+'</div>'+
     '<div class="ozPrice">'+(v?'<b>'+TL(price)+'</b>'+(cmp>price?'<s>'+TL(cmp)+'</s>':''):'—')+'</div>'+(v&&unitPrice(p,v)?'<p class="ozUnit">'+unitPrice(p,v)+'</p>':'');
   /* B2: tek seçenekte seçim kutusu yok (etiketi alt çubukta) */
   var vars=vs.length>1?'<div class="ozVars" role="radiogroup" aria-label="Seçenek">'+vs.map(function(x){var out=num(x.stock)<=0;return '<button type="button" class="ozVar'+(x.id===pd.sel?' on':'')+'" role="radio" aria-checked="'+(x.id===pd.sel)+'" data-a="pickVar" data-id="'+E(x.id)+'"'+(out?' disabled':'')+'>'+E(x.label||'Standart')+'<small>'+(out?'Tükendi':TL(x.price_kurus))+'</small></button>'}).join('')+'</div>':'';
@@ -563,9 +565,7 @@ function renderProduct(){
   var descH=dsc?'<div class="ozDesc"><p class="ozStory'+(dsc.length>140?' ozClamp ozC3':'')+'" id="ozStory">'+E(dsc)+'</p>'+(dsc.length>140?'<button type="button" class="ozLink" data-a="storyMore" aria-controls="ozStory" aria-expanded="false">Devamı</button>':'')+'</div>':'';
   /* K37: büyük üretici kutusu yerine üstte çip; altta "Üreticinin diğer ürünleri" */
   var moreH=sel.id?'<div id="ozPDMore"></div>':'';
-  var revs=arr(p.reviews);
-  var revH='<div class="ozSecH"><h2>Değerlendirmeler'+(num(p.rating_count)?' ('+num(p.rating_count)+')':'')+'</h2>'+(num(p.rating_count)?'<span>'+stars(p.rating_avg)+'</span>':'')+'</div>'+
-    (revs.length?'<div class="ozCard">'+revs.map(function(r){return '<div class="ozRev"><div class="h"><span>'+stars(r.rating)+' '+E(r.name||'Alıcı')+'</span><span>'+E(fmtDay(r.created_at))+'</span></div>'+(r.comment?'<p>'+E(r.comment)+'</p>':'')+(r.seller_reply?'<div class="ozReply"><b>Üretici yanıtı:</b> '+E(r.seller_reply)+'</div>':'')+'</div>'}).join('')+'</div>':'<p class="ozMuted">Henüz değerlendirme yok. Ürünü alanlar teslimattan sonra değerlendirebilir.</p>');
+  var revH='';
   var qs_=arr(p.questions);
   var qH='<div class="ozSecH"><h2>Soru ve cevaplar</h2><button type="button" class="ozBtn sm" data-a="ask">Soru sor</button></div>'+
     (qs_.length?'<div class="ozCard">'+qs_.map(function(q){return '<div class="ozRev"><div class="h"><span>Soru</span><span>'+E(fmtDay(q.created_at))+'</span></div><p><b>'+E(q.question)+'</b></p>'+(q.answer?'<div class="ozReply"><b>Üretici:</b> '+E(q.answer)+'</div>':'<p class="ozMuted">Üreticinin cevabı bekleniyor.</p>')+'</div>'}).join('')+'</div>':'<p class="ozMuted">Henüz soru sorulmamış.</p>');
@@ -586,6 +586,8 @@ async function pdMore(pd,sel){
   box=D.getElementById('ozPDMore');if(box)box.innerHTML=pdMoreHtml(pd,sel);
 }
 ACT_EXTRA({
+  pdRev:function(){var pd=ST.pd;if(!pd)return;var l=arr(pd.p.reviews).slice(0,20);
+    sheet('Değerlendirmeler ('+num(pd.p.rating_count)+')',(l.length?l.map(revHtml).join(''):'<p class="ozMuted">Henüz yorum yazılmamış.</p>')+'<p class="ozHint" style="margin:10px 0 0">Değerlendirmeyi yalnız teslim aldığı siparişten alıcılar yazabilir.</p>',{noFocus:true})},
   galGo:function(b){var g=D.getElementById('ozGal');if(!g)return;var i=num(b.dataset.i);try{g.scrollTo({left:i*g.clientWidth,behavior:'smooth'})}catch(e){g.scrollLeft=i*g.clientWidth}},
   sortGo:function(b){go('search',{sort:b.dataset.sort})},
   sortPick:function(b){var c=cur();c.a=Object.assign({},c.a,{sort:b.dataset.sort});
