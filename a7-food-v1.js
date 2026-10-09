@@ -336,6 +336,8 @@ function css(){
 .fdCuis{display:flex;gap:10px;overflow-x:auto;padding:2px 0 6px;scrollbar-width:none}.fdCuis::-webkit-scrollbar{display:none}
 .fdCuis button{flex:0 0 72px;display:flex;flex-direction:column;align-items:center;gap:6px;border:0;background:none;color:var(--text);font:inherit;font-size:12px;font-weight:700;cursor:pointer;padding:0}
 .fdCuis button span{width:60px;height:60px;border-radius:18px;display:grid;place-items:center;font-size:28px;background:var(--card);border:1px solid var(--line)}
+.fdCuis button span.im{overflow:hidden}
+.fdCuis button span.im img{display:block;width:100%;height:100%;object-fit:cover}
 .fdCuis button.on span{border-color:var(--fd-acc);background:var(--fd-soft)}.fdCuis button em{font-style:normal;max-width:72px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fdGrid{display:grid;grid-template-columns:1fr;gap:14px}@media(min-width:720px){.fdGrid{grid-template-columns:1fr 1fr}}
 .fdVCard{display:block;width:100%;padding:0;border:1px solid var(--line);border-radius:var(--fd-r);background:var(--card);color:var(--text);font:inherit;text-align:left;cursor:pointer;overflow:hidden}
@@ -549,6 +551,8 @@ const CUISINES=[['Döner','🌯',/döner|doner|iskender/],['Kebap','🍢',/kebap
  ['Kahve','☕',/kahve|coffee|cafe|kafe/],['Uzakdoğu','🍣',/sushi|uzakdoğu|çin|japon|noodle/],['Dünya mutfağı','🌍',/dünya|meksika|italyan|hint/]];
 function catOf(token){const t=String(token||'').toLocaleLowerCase('tr');const c=CUISINES.find(x=>x[0].toLocaleLowerCase('tr')===t)||CUISINES.find(x=>x[2].test(t));return c?c[0]:null}
 function catIcon(name){const c=CUISINES.find(x=>x[0]===name);return c?c[1]:foodIcon(name)}
+const CAT_IMG=['images/food/categories/01-doner.webp','images/food/categories/02-kebap.webp','images/food/categories/03-pide.webp','https://images.pexels.com/photos/32562204/pexels-photo-32562204.jpeg?auto=compress&cs=tinysrgb&w=800','images/food/categories/05-corba.webp','images/food/categories/06-kofte.webp','https://images.pexels.com/photos/32986453/pexels-photo-32986453.jpeg?auto=compress&cs=tinysrgb&w=800','images/food/categories/08-burger.webp','images/food/categories/09-pizza.webp','images/food/categories/10-tavuk.webp','images/food/categories/11-ev-yemekleri.webp','images/food/categories/12-tost-sandvic.webp','images/food/categories/13-kahvalti-borek.webp','images/food/categories/14-tantuni-durum.webp','images/food/categories/15-izgara.webp','images/food/categories/16-balik-deniz-urunleri.webp','images/food/categories/17-makarna-manti.webp','images/food/categories/18-salata-saglikli.webp','images/food/categories/19-tatli.webp','images/food/categories/20-dondurma.webp','images/food/categories/21-pastane-firin.webp','images/food/categories/22-kahve.webp','images/food/categories/23-uzakdogu.webp','images/food/categories/24-dunya-mutfagi.webp'];
+function catPhoto(i){return CAT_IMG[i]||''}
 /* Restoranın katalog mutfakları (eski serbest metinler de eşleşir) + eşleşmeyen etiketler */
 function venueCats(v){const out=[];cuisines(v&&v.cuisine_type).forEach(t=>{const c=catOf(t)||t;if(!out.includes(c))out.push(c)});return out}
 
@@ -1019,7 +1023,7 @@ function searchIdle(){
     (h.length?'<div class="fdSecH"><b>🕘 Arama geçmişi</b><button type="button" class="fdLink" onclick="foodHistClear()">Temizle</button></div><div class="fdHist">'+h.map(q=>'<button type="button" class="fdChip" onclick="foodSearchSet(this.textContent)">'+E(q)+'</button>').join('')+'</div>':'')+
     (top.length?'<div class="fdSecH"><b>🔥 Öne çıkan aramalar</b></div><div class="fdHist">'+top.map(q=>'<button type="button" class="fdChip" onclick="foodSearchSet(this.textContent)">'+E(q.toLocaleLowerCase('tr'))+'</button>').join('')+'</div>':'')+
     (vs.length?'<div class="fdSecH"><b>Restoranlar</b></div><div class="fdLogos">'+vs.map(v=>'<button type="button" onclick="showFoodVenue(\''+E(v.id)+'\')">'+pic(v.image_url||v.cover_url||'',v.name,'sq',catIcon(venueCats(v)[0]))+'<em>'+E(v.name)+'</em></button>').join('')+'</div>':'')+
-    '<div class="fdSecH"><b>Mutfaklar</b></div><div class="fdCatGrid">'+CUISINES.map((c,i)=>'<button type="button" onclick="foodPickCuisine('+i+')"><span>'+c[1]+'</span>'+E(c[0])+(cnt[c[0]]?'<small>'+cnt[c[0]]+' restoran</small>':'')+'</button>').join('')+'</div>');
+    '<div class="fdSecH"><b>Mutfaklar</b></div><div class="fdCatGrid">'+CUISINES.map((c,i)=>'<button type="button" onclick="foodPickCuisine('+i+')"><span class="im" style="display:block;width:64px;height:64px;border-radius:14px;overflow:hidden"><img src="'+E(catPhoto(i))+'" alt="'+E(c[0])+'" loading="lazy" style="display:block;width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\';this.parentNode.textContent='+JSON.stringify('')+'"></span>'+E(c[0])+(cnt[c[0]]?'<small>'+cnt[c[0]]+' restoran</small>':'')+'</button>').join('')+'</div>');
 }
 async function searchRun(tok,raw){
   const q=String(raw||'').trim();if(q.length<2)return searchIdle();const seq=++SQSEQ;
@@ -3164,6 +3168,8 @@ async function homeExtra(tok){
 }
 function venueImg(v){if(v.cover_url)return v.cover_url;const it=(HF.items||[]).find(i=>i.venue_id===v.id);return it?it.image_url:''}
 function cuisImg(c){
+  const i=CUISINES.findIndex(x=>x[0]===c);
+  if(i>=0&&catPhoto(i))return catPhoto(i);
   const cu=CUISINES.find(x=>x[0]===c);const re=cu&&cu[2];
   const it=(re&&(HF.items||[]).find(i=>re.test(String(i.name||'').toLocaleLowerCase('tr'))))||(HF.items||[]).find(i=>{const v=HF.rows.find(r=>r.id===i.venue_id);return v&&venueCats(v)[0]===c});
   return it?it.image_url:'';
