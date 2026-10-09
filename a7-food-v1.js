@@ -1092,9 +1092,9 @@ function prodRow(i,groups){
   const addBtn=na?'':'<button type="button" class="fdAdd'+(i.image_url?'':' fdAddS')+'" data-add="'+E(i.id)+'" aria-label="Sepete ekle" onclick="event.stopPropagation();'+(hasReq?'foodOpenItem':'foodQuickAdd')+'(\''+E(i.id)+'\')">+</button>'+
     (plain?'<span class="fdStep'+(i.image_url?'':' fdAddS')+'" data-step="'+E(i.id)+'" hidden onclick="event.stopPropagation()"><button type="button" aria-label="Azalt" onclick="event.stopPropagation();foodQuickDec(\''+E(i.id)+'\')">−</button><b>0</b><button type="button" aria-label="Bir tane daha ekle" onclick="event.stopPropagation();foodQuickAdd(\''+E(i.id)+'\')">+</button></span>':'');
   return '<div class="fdProd'+(na?' na':'')+'" data-pid="'+E(i.id)+'" data-q="'+E(((i.name||'')+' '+(i.description||'')).toLocaleLowerCase('tr'))+'" '+(na?'':'role="button" tabindex="0" onclick="foodOpenItem(\''+E(i.id)+'\')"')+'>'+
-    '<div class="tx"><b>'+E(i.name)+'</b>'+(i.description?'<p>'+E(i.description)+'</p>':'')+'<div class="pr">'+M(i.price_kurus)+(groups&&groups.length&&!na?'<span class="fdMuted fdSmall" style="font-weight:600"> · seçenekli</span>':'')+'</div>'+allergenLine(i)+'<div class="fdwLk" data-lk="'+E(i.id)+'"></div></div>'+
-    /* K32: ekle/adım düğmesi fotoğrafın üstünde değil, altında ayrı alanda (refreshProdBadges için [data-add] ve [data-step] kardeş kalır) */
-    (i.image_url?'<div class="rc"><div class="im">'+pic(i.image_url,i.name,'sq')+(na?'<span class="fdSold">Tükendi</span>':'')+'</div>'+(addBtn?'<div class="ac">'+addBtn+'</div>':'')+'</div>':(na?'<span class="fdPill">Tükendi</span>':addBtn))+'</div>';
+    '<div class="tx"><b>'+E(i.name)+'</b>'+(i.description?'<p>'+E(i.description)+'</p>':'')+(i.image_url?'<div class="prRow">':'')+'<div class="pr">'+M(i.price_kurus)+(groups&&groups.length&&!na?'<span class="fdMuted fdSmall" style="font-weight:600"> · seçenekli</span>':'')+'</div>'+(i.image_url?(addBtn?'<span class="ac">'+addBtn+'</span>':'')+'</div>':'')+allergenLine(i)+'<div class="fdwLk" data-lk="'+E(i.id)+'"></div></div>'+
+    /* K33: ekle/adım kontrolü fotoğrafın üstünde/altında değil, fiyat satırının sağında (refreshProdBadges için [data-add] ve [data-step] kardeş kalır) */
+    (i.image_url?'<div class="im">'+pic(i.image_url,i.name,'sq')+(na?'<span class="fdSold">Tükendi</span>':'')+'</div>':(na?'<span class="fdPill">Tükendi</span>':addBtn))+'</div>';
 }
 window.foodVenueFilter=function(q){
   q=String(q||'').toLocaleLowerCase('tr').trim();let shown=0;
@@ -3716,15 +3716,17 @@ body:has(.fdCo) #fdRoot{padding-bottom:0}
 .fdwHero .fdwSl em{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fdwHero .fdwSl i{position:absolute;right:12px;bottom:14px;margin:0;padding:6px 12px;font-size:12.5px;white-space:nowrap}
 .fdwHero .dots{bottom:5px}
-/* K32-4 menü satırı: + / − fotoğrafın altında, çakışmasız; 44px dokunma */
-.fdProd .rc{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:8px}
-.fdProd .rc .im{width:92px;flex:0 0 auto}
-.fdProd .rc .ac{display:flex;justify-content:flex-end}
-.fdProd .rc .fdAdd,.fdProd .rc .fdStep{position:static}
-.fdProd .fdAdd{min-width:44px;height:44px;border-radius:12px}
-.fdProd .fdAdd.in{font-size:15px}
-.fdProd .fdStep{width:116px;height:44px;border-radius:12px}
-.fdProd .fdStep button{width:44px;height:44px;min-width:44px}
+/* K32-4 → K33-4 menü satırı: kompakt kontrol. "+" ~32px görünür daire, 44px dokunma (görünmez dolgu); "− n +" sığ hap, içeriği kadar */
+.fdProd .prRow{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;min-height:32px}
+.fdProd .prRow .pr{margin-top:0;min-width:0}
+.fdProd .ac{display:inline-flex;flex:0 0 auto;align-items:center}
+.fdProd .fdAdd{position:static;width:44px;height:44px;min-width:44px;margin:-6px;padding:6px;border:0;border-radius:50%;background:var(--fd-acc) content-box;color:var(--fd-ink,#111);box-shadow:none;font-size:20px;font-weight:800;line-height:1;display:grid;place-items:center}
+.fdProd .fdAdd.in{background:var(--fd-acc) content-box;color:var(--fd-ink,#111);font-size:13px}
+.fdProd .fdStep{position:static;display:inline-flex;align-items:center;width:auto;height:32px;padding:0 1px;border-radius:999px;border:1px solid var(--line);background:var(--card2,rgba(127,127,127,.12));color:var(--text);box-shadow:none}
+.fdProd .fdStep button{position:relative;width:30px;height:30px;min-width:30px;padding:0;border:0;background:transparent;color:var(--fd-acc);font:800 18px/1 system-ui,sans-serif;display:grid;place-items:center;cursor:pointer}
+.fdProd .fdStep button::before{content:"";position:absolute;inset:-7px}
+.fdProd .fdStep b{flex:none;min-width:18px;padding:0 2px;text-align:center;font-size:13.5px;font-weight:800}
+.fdProd>.fdAdd.fdAddS,.fdProd>.fdStep.fdAddS{align-self:center;margin-right:0}
 /* K32-5 üstteki puan alanı Yorumlar'ı açar (ayrı "Yorumlar" satırı kaldırıldı) */
 .fdwRateBtn{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:44px;min-height:44px;padding:4px 6px;border:0;border-radius:12px;background:transparent;color:inherit;font:inherit;cursor:pointer}
 .fdwRateBtn .rc{font-size:11px;text-decoration:underline;text-underline-offset:2px;white-space:nowrap}
