@@ -465,6 +465,7 @@ VIEWS_EXTRA({
       sellerRow+
       (s.is_admin?row('leaf','Özüne Dön yönetimi','Satıcı, ürün, sipariş ve ayarlar','admin'):'')+
       row('home','İşimi Çöz ana sayfası','Ana platforma dön','exit')+'</div>');
+    newDotSync();
   }
 });
 var SELLER_ST={draft:['Başvuru taslağı','warn'],pending:['İnceleniyor','warn'],in_review:['İnceleniyor','warn'],approved:['Onaylı','ok'],active:['Onaylı','ok'],rejected:['Reddedildi','bad'],suspended:['Askıda','bad']};
@@ -1026,11 +1027,19 @@ function sellerNavHtml(){return STABS.map(function(t){return '<button type="butt
 /* K37: Siparişler sekmesinde kırmızı rozet — bekleyen (yeni + hazırlanıyor + kargoya hazır) sipariş sayısı */
 function soBadge(){var b=D.getElementById('ozSoN');if(!b)return;var n=SELLER.soN;if(n==null){var o=(SELLER.dash&&SELLER.dash.orders)||{};n=num(o.new)+num(o.accepted)+num(o.packed)}b.hidden=!n;b.textContent=n>9?'9+':String(n)}
 function sellerPanelOn(){var d=SELLER.dash;return !!(d&&d.has_seller&&/^(approved|active|suspended)$/.test(d.status||''))}
+/* Yeni sipariş ışığı: satıcının "Yeni" durumda siparişi varsa Hesabım sekmesinde ve Hesabım > Satıcı paneli satırında
+   yumuşak yanıp sönen nokta. Sayı mevcut oz_seller_dashboard'dan (en fazla dakikada bir); sipariş "Yeni"den çıkınca söner. */
+function newDotSync(){var on=num(ST.newN)>0;qa('#ozNav .ozNavB[data-k=account], #ozRoot .ozRowBtn[data-k=seller]').forEach(function(b){b.classList.toggle('ozPulse',on)})}
+function newDotCheck(){
+  var ms=S().my_seller;if(!logged()||!ms||!/^(approved|active)$/.test(ms.status||''))return;
+  if(ST.newBusy||Date.now()-(ST.newAt||0)<60000)return;ST.newBusy=1;ST.newAt=Date.now();
+  rpc('oz_seller_dashboard',{}).then(function(d){ST.newN=num(d&&d.orders&&d.orders.new);newDotSync()}).catch(function(){}).then(function(){ST.newBusy=0});
+}
 function navSync(){
   var c=cur(),k=c.k,nav=D.getElementById('ozNav');
   var mode=!D.body.classList.contains('ozWorld')||isPre()?'':k==='seller'?(sellerPanelOn()?'seller':''):(NONAV[k]?'':'buyer');
   if(nav&&mode&&nav.dataset.mode!==mode){nav.innerHTML=mode==='seller'?sellerNavHtml():navHtml();nav.dataset.mode=mode;nav.setAttribute('aria-label',mode==='seller'?'Satıcı menüsü':'Özüne Dön menüsü');cartBadge()}
-  if(mode==='seller')soBadge();
+  if(mode==='seller')soBadge();else if(mode==='buyer'){newDotSync();newDotCheck()}
   D.body.classList.toggle('ozNavOn',!!mode);
   qa('#ozNav .ozNavB').forEach(function(b){var on=mode==='seller'?b.dataset.tab===((c.a&&c.a.tab)||'ozet'):TAB_OF[k]===b.dataset.k;if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
 }
@@ -1247,7 +1256,7 @@ var SP={
     var c=cur();var stt=c.a.st||'';if(stt==='toship')stt='prep';if(!SG_BY[stt]&&stt!=='past')stt='';
     var o=d.orders||{};
     var cnt={new:num(o.new),prep:num(o.accepted)+num(o.packed),ship:num(o.shipped),issue:Math.max(num(o.return_requested),num(d.open_returns))};
-    SELLER.soN=cnt.new+cnt.prep;soBadge();
+    SELLER.soN=cnt.new+cnt.prep;soBadge();ST.newN=cnt.new;ST.newAt=Date.now();
     var st=['new','accepted','packed','shipped','return_requested'];
     var r=await Promise.all(st.map(function(x){return rpc('oz_seller_orders',{p_status:x,p_limit:50,p_offset:0}).catch(function(){return []})}).concat([stt==='past'?rpc('oz_seller_orders',{p_status:null,p_limit:50,p_offset:0}):null,stockStats().catch(function(){return null})]));
     if(!alive(t))return;
