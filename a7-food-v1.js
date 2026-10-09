@@ -3706,7 +3706,7 @@ body:has(.fdCo) #fdRoot{padding-bottom:0}
 .fdVCard .fdFav{right:4px;top:4px}
 .fdwRowV .h .fdFav{width:44px;height:44px;margin:-11px -8px -11px 0;font-size:22px;color:var(--text);text-shadow:none}
 .fdwRowV .h .fdFav.on{color:#e11d48}
-.fdHero .nav .fdFav{width:44px;height:44px}
+.fdHero .nav .fdFav,.fdVCard:not(.fdwRowV) .fdFav{width:44px;height:44px;font-size:30px;font-weight:900;-webkit-text-stroke:1.2px currentColor;text-shadow:0 0 2px #000,0 0 6px rgba(0,0,0,.85)}
 /* K32-3 ana sayfa öne çıkan slayt: ~%62 yükseklik (360px≈108, 390px≈117, 430px≈129, en fazla 170px); "Menüyü gör" sağ altta */
 .fdwHero .fdwSl{aspect-ratio:auto;height:clamp(108px,30vw,170px);min-height:0;max-height:none}
 .fdwHero .fdwSl .ov{gap:1px;padding:10px 132px 14px 14px}
