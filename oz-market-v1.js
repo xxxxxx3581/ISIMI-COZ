@@ -63,7 +63,11 @@ function inList(ids){return '('+ids.map(function(x){return encodeURIComponent(St
 
 /* ====================== Toast / sheet / onay ====================== */
 function toast(m){m=cleanMsg(m);try{if(typeof v2Toast==='function')return v2Toast(m)}catch(e){}var t=D.createElement('div');t.className='ozToast';t.setAttribute('role','status');t.textContent=m;D.body.appendChild(t);setTimeout(function(){t.remove()},3200)}
-function fail(e){if(e&&e.auth){needLogin(null);return}toast(e&&e.message||e)}
+function fail(e){if(e&&e.auth){needLogin(null);return}errToast(e&&e.message||e)}
+/* A5: hata mesajı en az 6 sn kalır, dokununca kapanır (kaybolan beyaz uyarıya bağımlı olmaz) */
+function errToast(m){m=cleanMsg(m);qa('.ozToast.err').forEach(function(x){x.remove()});
+  var t=D.createElement('div');t.className='ozToast err';t.setAttribute('role','alert');t.textContent=m;t.title='Kapatmak için dokun';
+  t.addEventListener('click',function(){t.remove()});D.body.appendChild(t);setTimeout(function(){t.remove()},Math.max(6000,Math.min(12000,m.length*90)))}
 var SHEET_ESC=null;
 function sheet(title,html,opt){
   opt=opt||{};closeSheet();
@@ -910,9 +914,14 @@ function orderDetailHtml(d){
   var ship=o.ship_to||{};
   var tl=ev.length?'<ol class="ozTl">'+ev.map(function(e){return '<li><b>'+E((ORDER_ST[e.to]||[e.to])[0])+'</b><small>'+E(fmtDate(e.at))+(e.role?' · '+E(ROLE[e.role]||e.role):'')+(e.reason?' · '+E(e.reason):'')+'</small></li>'}).join('')+'</ol>':'<p class="ozMuted">Henüz hareket yok.</p>';
   var trk=trkCard(o,ev);
-  return '<div class="ozHead"><h1>'+E(o.order_no||'Sipariş')+'</h1><p>'+E(d.seller_name||'')+' · '+E(fmtDate(o.created_at))+'</p></div>'+
+  /* A5: sipariş oluşturulduktan sonra kalıcı yeşil bant (kapatılabilir) */
+  var pb=ST.placedBand,band='';
+  if(pb&&pb.ids.indexOf(String(o.id))>=0)band='<div class="ozPlacedB" role="status"><span class="i">'+ico('leaf',20)+'</span><span class="tx"><b>Siparişin alındı</b><small>'+
+    (pb.payFail&&st==='awaiting_payment'?'Ödeme tamamlanamadı; aşağıdan "Ödemeyi tamamla" ile tekrar dene.':st==='awaiting_payment'?'Ödemeyi tamamladığında üreticiye iletilir.':'Üretici onayladığında bildirim alacaksın.')+
+    (pb.n>1?' '+pb.n+' üreticiden '+pb.n+' sipariş oluşturuldu.':'')+'</small>'+(pb.n>1?'<button type="button" class="ozLink" data-a="nav" data-k="orders">Siparişlerim</button>':'')+'</span><button type="button" class="x" data-a="bandClose" aria-label="Kapat">'+ico('x',18)+'</button></div>';
+  return band+'<div class="ozHead"><h1>'+E(o.order_no||'Sipariş')+'</h1><p>'+E(d.seller_name||'')+' · '+E(fmtDate(o.created_at))+'</p></div>'+
     '<div style="margin:0 0 10px">'+stTag(ORDER_ST,st)+'</div>'+progHtml(o)+
-    (acts?'<div class="ozRow2" style="margin:0 0 12px">'+acts+'</div>':'')+
+    (acts?'<div class="ozRow2 ozOdActs" style="margin:0 0 12px">'+acts+'</div>':'')+
     (canReview&&its.some(function(it){return it.product_id&&rv.indexOf(String(it.product_id))<0})?'<div class="ozCard ozRvC" id="ozRateC"><h3>Ürünleri değerlendir</h3>'+its.filter(function(it){return it.product_id&&rv.indexOf(String(it.product_id))<0}).map(function(it){return '<div class="ozRvI">'+pic(it.image,it.name)+'<b>'+E(it.name)+'</b><button type="button" class="ozBtn sm pri" data-a="ordReview" data-o="'+E(o.id)+'" data-p="'+E(String(it.product_id))+'">Değerlendir</button></div>'}).join('')+'</div>':'')+
     (ret?'<div class="ozCard"><h3>İade</h3><p style="margin:0 0 6px">'+stTag(RET_ST,ret.status)+'</p>'+(ret.reason?'<p class="ozMuted" style="margin:0">Neden: '+E(ret.reason)+'</p>':'')+(ret.decision_note||ret.note?'<p class="ozMuted" style="margin:4px 0 0">Not: '+E(ret.decision_note||ret.note)+'</p>':'')+'</div>':'')+
     trk+
@@ -957,6 +966,7 @@ async function reviewBox(orderId,productId){
   toast('Değerlendirmen için teşekkürler');draw();
 }
 ACT_EXTRA({
+  bandClose:function(b){ST.placedBand=null;var x=b.closest('.ozPlacedB');if(x)x.remove()},
   cQty:function(b){coKeep();var id=b.dataset.id;cartSetQty(id,cartQty(id)+num(b.dataset.d));draw()},
   cDel:function(b){coKeep();cartSetQty(b.dataset.id,0);toast('Ürün sepetten çıkarıldı');draw()},
   coAddrSheet:function(){var co=ST.co;if(!co)return;coKeep();
