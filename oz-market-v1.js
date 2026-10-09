@@ -511,7 +511,9 @@ var CONSENTS=[['mesafeli_satis','Mesafeli Satış Sözleşmesi\'ni okudum, onayl
 function termsOk(co){return !!(co&&co.terms&&CONSENTS.every(function(c){return co.terms[c[0]]}))}
 function coReadTerms(){var co=ST.co;if(!co)return;co.terms={};CONSENTS.forEach(function(c){co.terms[c[0]]=checked('ozT_'+c[0])})}
 function coSyncBtn(){var b=D.getElementById('ozPlace');if(b&&ST.co&&!ST.placing)b.disabled=!!ST.co.blocked||!termsOk(ST.co)}
-function isDupErr(e){return /duplicate key|unique constraint|23505|client_request_id/i.test(String(e&&e.message||''))||(e&&e.code==='23505')}
+/* Mükerrer sipariş: BİRİNCİL yol sunucunun {duplicate:true} yanıtı (aynı client_request_id). Bu fonksiyon yalnızca YEDEK:
+   eşzamanlı iki istekte oz_orders_client_request_id_seller_id_key benzersizlik ihlali. Başka benzersizlik hataları (ör. order_no) mükerrer SAYILMAZ. */
+function isDupErr(e){var m=String(e&&e.message||'');return /client_request_id/i.test(m)&&(/duplicate key|unique/i.test(m)||!!(e&&e.code==='23505'))}
 function dupDone(){cartSet([]);ST.crid=null;ST.co=null;toast('Bu sipariş zaten alındı, Siparişlerim\'den kontrol et.');NAV=NAV.filter(function(x){return x.k!=='checkout'&&x.k!=='cart'});go('orders',{})}
 function drawCheckout(){
   var co=ST.co;var q=co.q||{};var s=S();
@@ -619,9 +621,9 @@ ACT_EXTRA({
     try{await busy(b,async function(){
       var res;
       try{res=await rpc('oz_place_order',{p:{items:cartItemsParam(),address_id:co.addr,note:co.note||null,payment_method:co.pay,client_request_id:ST.crid,terms:true}})}
-      catch(e){if(isDupErr(e)){dupDone();return}throw e}
+      catch(e){if(isDupErr(e)){dupDone();return}throw e}  /* yedek yol */
       res=res||{};
-      if(res.duplicate){dupDone();return}
+      if(res.duplicate===true){dupDone();return}  /* birincil yol */
       /* Onay kaydı: sipariş başına; yayında olmayan metinler sunucuda not_published döner. Sipariş alındıktan sonra hata siparişi etkilemez. */
       var ua=String(navigator.userAgent||'').slice(0,380);
       await Promise.all(arr(res.orders).map(function(o){return rpc('pf_record_consents',{p_items:CONSENTS.map(function(c){return {doc_type:c[0],accepted:true}}),p_context:'oz_order',p_subject_id:String(o.id),p_user_agent:ua}).catch(function(){})}));
