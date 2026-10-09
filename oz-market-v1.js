@@ -624,9 +624,7 @@ ACT_EXTRA({
       catch(e){if(isDupErr(e)){dupDone();return}throw e}  /* yedek yol */
       res=res||{};
       if(res.duplicate===true){dupDone();return}  /* birincil yol */
-      /* Onay kaydı: sipariş başına; yayında olmayan metinler sunucuda not_published döner. Sipariş alındıktan sonra hata siparişi etkilemez. */
-      var ua=String(navigator.userAgent||'').slice(0,380);
-      await Promise.all(arr(res.orders).map(function(o){return rpc('pf_record_consents',{p_items:CONSENTS.map(function(c){return {doc_type:c[0],accepted:true}}),p_context:'oz_order',p_subject_id:String(o.id),p_user_agent:ua}).catch(function(){})}));
+      /* Sözleşme onayları oz_orders ekleme tetikleyicisinde kaydedilir (context 'order', subject 'oz:<id>'); istemci ayrıca kayıt yapmaz. */
       cartSet([]);ST.crid=null;var pay=co.pay;ST.co=null;
       go('placed',{res:res,pay:pay},true);
     })}finally{ST.placing=false}
