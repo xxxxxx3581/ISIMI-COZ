@@ -129,8 +129,8 @@ OZ.authChanged=function(isIn){
   ST.fav=null;ST.notif=null;ST.crid=null;ST.co=null;ST.addrs=null;ST.od=null;ST.pd=null;ST.pf=null;ST.home=null;SELLER.data=null;SELLER.img={};SELLER.id=null;SELLER.dash=null;SELLER.docs=null;SELLER.rates=null;SELLER.products=null;SELLER.variants=null;SELLER.orders=null;ST.setAt=0;
   if(!isIn){ST.resume=null;ST.set=null;cartBadge();bellBadge(0);return}
   var r=ST.resume;ST.resume=null;
-  if(!D.getElementById('ozRoot'))return;
-  loadSettings(true).then(function(){topSync();if(r)r();else draw()}).catch(function(){if(r)r();else draw()});
+  if(!D.getElementById('ozRoot')&&!(r&&r.outside))return;
+  loadSettings(true).then(function(){if(D.getElementById('ozRoot'))topSync();if(r)r();else draw()}).catch(function(){if(r)r();else draw()});
 };
 
 /* ====================== Sepet (yerel) ====================== */
@@ -649,8 +649,12 @@ function paint(html){var r=D.getElementById('ozRoot');if(r)r.innerHTML=html}
 function cur(){return NAV[NAV.length-1]||{k:'home',a:{}}}
 function go(k,a,replace){if(replace&&NAV.length)NAV.pop();NAV.push({k:k,a:a||{}});draw()}
 function back(){if(NAV.length>1){NAV.pop();draw()}else exitWorld()}
+/* K27 ön başvuru kipi (body.ozPre): pazar kapalıyken yalnızca satıcı ekranları */
+var PRE_OK={seller:1,sellerApply:1,sellerProduct:1};
+function isPre(){return D.body.classList.contains('ozPre')}
 function draw(){
-  var t=cur();SCR++;closeSheet();ensureWorld();
+  var t=cur();if(isPre()&&!PRE_OK[t.k]){NAV=[{k:'seller',a:{}}];t=cur()}
+  SCR++;closeSheet();ensureWorld();
   try{window.scrollTo(0,0)}catch(e){}
   topSync();
   var v=VIEWS[t.k]||VIEWS.home;
@@ -676,12 +680,12 @@ function ensureWorld(){
   if(!D.getElementById('ozTop')){var h=D.createElement('header');h.id='ozTop';h.className='ozTop';h.innerHTML=topHtml();D.body.appendChild(h)}
   if(!D.getElementById('ozStrip')){var s=D.createElement('div');s.id='ozStrip';s.className='ozStrip';s.setAttribute('role','status');s.hidden=true;s.textContent='Yönetici önizleme · Pazar herkese kapalı';D.body.appendChild(s)}
 }
-function leaveWorld(){D.body.classList.remove('ozWorld');['ozTop','ozStrip'].forEach(function(id){var e=D.getElementById(id);if(e)e.remove()});closeSheet()}
+function leaveWorld(){D.body.classList.remove('ozWorld','ozPre');['ozTop','ozStrip'].forEach(function(id){var e=D.getElementById(id);if(e)e.remove()});closeSheet()}
 function exitWorld(){NAV=[];leaveWorld();try{showHome()}catch(e){}}
 function topSync(){
   var s=S();var strip=D.getElementById('ozStrip');
-  var pv=!!(s.is_admin&&s.market_enabled===false);
-  if(strip)strip.hidden=!pv;D.body.classList.toggle('ozPreview',pv);
+  var pre=isPre();var pv=!pre&&!!(s.is_admin&&s.market_enabled===false);
+  if(strip){strip.hidden=!(pv||pre);strip.textContent=pre?'Ön başvuru · Özüne Dön henüz açılmadı':'Yönetici önizleme · Pazar herkese kapalı'}D.body.classList.toggle('ozPreview',pv||pre);
   cartBadge();
   if(logged()&&ST.notif)bellBadge(ST.notif.filter(unread).length);else if(!logged())bellBadge(0);
 }
@@ -689,13 +693,30 @@ function topSync(){
   new MutationObserver(function(){if(!D.getElementById('ozRoot')&&D.body.classList.contains('ozWorld')){NAV=[];leaveWorld()}}).observe(a,{childList:true});})();
 
 /* Giriş noktası: pazar kapalıysa false döner (ana sayfa hmSoon gösterir). Yönetici için market_open her zaman true. */
+/* K27: pazar kapalı + satıcı başvurusu açık → ön başvuru alt sayfası (true döner). Ayar okunamazsa false (eski "Yakında" bildirimi). */
 OZ.tryEnter=async function(){
-  var s=await loadSettings(true);
-  if(!s||!s.market_open)return false;
+  var s=null;try{s=await loadSettings(true)}catch(e){return false}
+  if(!s||!s.market_open){
+    if(s&&s.seller_signup_enabled===true){preSheet(s);return true}
+    return false;
+  }
+  D.body.classList.remove('ozPre');
   NAV=[{k:'home',a:{}}];draw();
   if(logged())loadNotifs().catch(function(){});
   return true;
 };
+
+function preSheet(s){
+  var has=!!(s&&s.my_seller);
+  sheet('Özüne Dön çok yakında','<p class="ozP">Doğal ürün üreticisi misin? Şimdiden ön başvurunu yap, mağazan hazır olsun.</p><div class="ozRow2"><button type="button" class="ozBtn" data-a="sheetClose">Kapat</button><button type="button" class="ozBtn pri" data-a="preApply">'+(has?'Satıcı panelim':'Ön başvuru yap')+'</button></div>',{noFocus:true});
+}
+function enterPre(){
+  var s=S();if(s.market_open){D.body.classList.remove('ozPre');NAV=[{k:'home',a:{}}];draw();return}
+  if(s.seller_signup_enabled!==true&&!s.my_seller){toast('Satıcı başvuruları şu anda kapalı.');return}
+  D.body.classList.add('ozPre');NAV=[{k:'seller',a:{}}];draw();
+}
+function preGo(){loadSettings(true).then(enterPre).catch(function(e){fail(e)})}
+preGo.outside=true;
 
 /* ====================== Tıklama yönlendirici (data-a) ====================== */
 ACT_EXTRA({
@@ -705,7 +726,8 @@ ACT_EXTRA({
   redraw:function(){draw()},
   login:function(){needLogin(function(){draw()})},
   bell:function(){openNotifs()},
-  exit:function(){exitWorld()}
+  exit:function(){exitWorld()},
+  preApply:function(){closeSheet();if(!logged()){needLogin(preGo);return}preGo()}
 });
 D.addEventListener('click',function(e){
   var b=e.target.closest&&e.target.closest('[data-a]');if(!b)return;
@@ -832,6 +854,7 @@ VIEWS_EXTRA({
     if(!logged()){paint(loginWall());return}
     paint(pageHead(a.id?'Ürünü düzenle':'Yeni ürün')+skel(3,'line'));
     var hd=null;try{hd=await homeData()}catch(e){}
+    if(!hd||!arr(hd.categories).length){try{hd={categories:arr(await get('oz_categories?select=id,name&is_active=eq.true&parent_id=is.null&order=sort.asc'))}}catch(e){}}
     var p={},vs=[];
     if(a.id){p=arr(await get('oz_products?select=*&id=eq.'+encodeURIComponent(a.id)+'&limit=1'))[0]||{};vs=arr(await get('oz_variants?select=*&product_id=eq.'+encodeURIComponent(a.id)+'&order=sort.asc'))}
     if(!alive(t))return;
