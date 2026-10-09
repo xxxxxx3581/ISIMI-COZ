@@ -339,10 +339,6 @@ async function producersMore(t){
   startFade(t);
 }
 ACT_EXTRA({prMore:function(b){return busy(b,function(){return producersMore(SCR)})}});
-function sellerBtn(s){
-  var loc=[s.city,s.district].filter(Boolean).join(' / ');
-  return '<button type="button" class="ozSeller" data-a="nav" data-k="store" data-id="'+E(s.id)+'">'+pic(s.logo_url,s.display_name)+'<span class="tx"><b>'+E(s.display_name||'Üretici')+'</b><small>'+E(loc||'Üretici')+(num(s.rating_count)?' · ★ '+NF1.format(num(s.rating_avg))+' ('+num(s.rating_count)+')':'')+'</small></span><span class="go">Mağazayı gör ›</span></button>';
-}
 function searchForm(q){return '<form class="ozSearch" data-sub="search" role="search"><input class="ozIn" id="ozQ" type="search" enterkeyhint="search" autocomplete="off" placeholder="Bal, zeytinyağı, reçel ara" aria-label="Ürün ara" value="'+E(q||'')+'"><button type="submit" class="ozBtn pri">'+ico('search',18)+'<span>Ara</span></button></form>'}
 /* oz_search_products'ın desteklediği anahtarlar: new, popular, rating, price_asc, price_desc (beşi de destekleniyor) */
 var SORTS=[['new','Yeni gelenler'],['popular','Çok satanlar'],['rating','En yüksek puan'],['price_asc','Fiyat ↑'],['price_desc','Fiyat ↓']];
@@ -539,14 +535,14 @@ function renderProduct(){
   var dets=det('Ürün açıklaması',p.description?'<p class="ozStory" style="margin:0">'+E(p.description)+'</p>':'',true)+det('Saklama ve raf ömrü',store)+det('İçindekiler',p.ingredients?'<p class="ozStory" style="margin:0">'+E(p.ingredients)+'</p>':'')+
     det('Alerjen bilgisi',alg.length?'<div class="ozWrap">'+alg.map(function(x){return '<span class="ozTag warn">'+E(algLabel(x))+'</span>'}).join('')+'</div>':'')+det('Ürün bilgileri',kvH)+det('Menşe',origin);
   /* K37: büyük üretici kutusu yerine üstte çip; altta "Üreticinin diğer ürünleri" */
-  var sellerH='';var moreH=sel.id?'<div id="ozPDMore"></div>':'';
+  var moreH=sel.id?'<div id="ozPDMore"></div>':'';
   var revs=arr(p.reviews);
   var revH='<div class="ozSecH"><h2>Değerlendirmeler'+(num(p.rating_count)?' ('+num(p.rating_count)+')':'')+'</h2>'+(num(p.rating_count)?'<span>'+stars(p.rating_avg)+'</span>':'')+'</div>'+
     (revs.length?'<div class="ozCard">'+revs.map(function(r){return '<div class="ozRev"><div class="h"><span>'+stars(r.rating)+' '+E(r.name||'Alıcı')+'</span><span>'+E(fmtDay(r.created_at))+'</span></div>'+(r.comment?'<p>'+E(r.comment)+'</p>':'')+(r.seller_reply?'<div class="ozReply"><b>Üretici yanıtı:</b> '+E(r.seller_reply)+'</div>':'')+'</div>'}).join('')+'</div>':'<p class="ozMuted">Henüz değerlendirme yok. Ürünü alanlar teslimattan sonra değerlendirebilir.</p>');
   var qs_=arr(p.questions);
   var qH='<div class="ozSecH"><h2>Soru ve cevaplar</h2><button type="button" class="ozBtn sm" data-a="ask">Soru sor</button></div>'+
     (qs_.length?'<div class="ozCard">'+qs_.map(function(q){return '<div class="ozRev"><div class="h"><span>Soru</span><span>'+E(fmtDay(q.created_at))+'</span></div><p><b>'+E(q.question)+'</b></p>'+(q.answer?'<div class="ozReply"><b>Üretici:</b> '+E(q.answer)+'</div>':'<p class="ozMuted">Üreticinin cevabı bekleniyor.</p>')+'</div>'}).join('')+'</div>':'<p class="ozMuted">Henüz soru sorulmamış.</p>');
-  paint(gal+info+vars+buy+ship+dets+sellerH+revH+qH+moreH+bar);
+  paint(gal+info+vars+buy+ship+dets+revH+qH+moreH+bar);
   var g=D.getElementById('ozGal'),n=D.getElementById('ozGalN');
   var gd=D.getElementById('ozGalD');if(g&&gd)g.addEventListener('scroll',function(){var i=Math.round(g.scrollLeft/Math.max(1,g.clientWidth));qa('button',gd).forEach(function(x,j){x.classList.toggle('on',i===j)})},{passive:true});
   if(sel.id)pdMore(pd,sel);
