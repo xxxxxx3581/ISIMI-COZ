@@ -877,6 +877,7 @@ ACT_EXTRA({
   ordReview:function(b){return reviewBox(b.dataset.o,b.dataset.p)}
 });
 Object.assign(CHANGE,{
+  pfCat:function(el){var n=D.getElementById('ozPCatN');if(n)n.hidden=!pfCatIsDrink(el.value)},
   homeSort:function(el){var c=cur();if(c.k!=='home')return;c.a=Object.assign({},c.a,{sort:el.value});hSync();ST.sr={a:{sort:el.value},list:[],offset:0,more:false,rows:1};var r=D.getElementById('ozRes');if(r)r.innerHTML=skel(2);return searchMore(SCR)},
   coAddr:function(el){if(ST.co){ST.co.addr=el.value;ST.co.note=val('ozCoNote');coReadTerms();drawCheckout()}},
   coPay:function(el){if(ST.co){ST.co.pay=el.value;ST.co.note=val('ozCoNote');coReadTerms();drawCheckout()}},
@@ -1174,7 +1175,7 @@ VIEWS_EXTRA({
     if(!logged()){paint(loginWall());return}
     paint(pageHead(a.id?'Ürünü düzenle':'Yeni ürün')+skel(3,'line'));
     var hd=null;try{hd=await homeData()}catch(e){}
-    if(!hd||!arr(hd.categories).length){try{hd={categories:arr(await get('oz_categories?select=id,name&is_active=eq.true&parent_id=is.null&order=sort.asc'))}}catch(e){}}
+    if(!hd||!arr(hd.categories).length){try{hd={categories:arr(await get('oz_categories?select=id,slug,name&is_active=eq.true&parent_id=is.null&order=sort.asc'))}}catch(e){}}
     var p={},vs=[];
     if(a.id){p=arr(await get('oz_products?select=*&id=eq.'+encodeURIComponent(a.id)+'&limit=1'))[0]||{};vs=arr(await get('oz_variants?select=*&product_id=eq.'+encodeURIComponent(a.id)+'&order=sort.asc'))}
     if(!alive(t))return;
@@ -1224,7 +1225,7 @@ var SP={
       return '<div class="ozCard" style="margin:0"><div class="ozCI" style="border:0;padding:0">'+pic(arr(p.images)[0],p.name)+'<div class="tx"><b>'+E(p.name||'Adsız ürün')+'</b><small>'+pv.length+' seçenek · '+stock+' stok'+(low?' · <span style="color:#F7D24A">düşük stok</span>':'')+'</small><div style="margin-top:4px">'+stTag(PROD_ST,st)+'</div></div></div>'+
         ((p.status_reason||p.reject_reason)&&p.status==='rejected'?'<div class="ozWarn">Gerekçe: '+E(p.status_reason||p.reject_reason)+'</div>':'')+
         '<div class="ozRow2" style="margin-top:10px"><button type="button" class="ozBtn sm" data-a="nav" data-k="sellerProduct" data-id="'+E(p.id)+'">Düzenle</button>'+(pv.length?'<button type="button" class="ozBtn sm" data-a="stockBox" data-id="'+E(p.id)+'">Stok</button>':'')+
-        (p.status==='draft'||p.status==='rejected'?'<button type="button" class="ozBtn sm pri" data-a="prodSubmit" data-id="'+E(p.id)+'">İncelemeye gönder</button>':'')+
+        ((p.status==='draft'||p.status==='rejected')&&sellerApproved()?'<button type="button" class="ozBtn sm pri" data-a="prodSubmit" data-id="'+E(p.id)+'" data-st="'+E(p.status)+'">'+(p.status==='draft'?'Yayınla':'Yeniden incelemeye gönder')+'</button>':'')+
         (p.status==='published'||p.status==='active'||p.status==='approved'?'<button type="button" class="ozBtn sm" data-a="prodHide" data-id="'+E(p.id)+'" data-h="1">Gizle</button>':'')+(p.status==='hidden'||p.is_hidden?'<button type="button" class="ozBtn sm" data-a="prodHide" data-id="'+E(p.id)+'" data-h="0">Göster</button>':'')+
         '<button type="button" class="ozBtn sm ghost" data-a="prodDel" data-id="'+E(p.id)+'">Sil</button></div></div>'}).join('')+'</div>';
     var b=D.getElementById('ozSP');if(b)b.innerHTML=h;
@@ -1378,7 +1379,7 @@ function drawProductForm(){
   var st=PROD_ST[pf.status]||['Taslak',''];
   paint(pageHead(pf.id?'Ürünü düzenle':'Yeni ürün')+(pf.id?'<p style="margin:-6px 0 12px">'+stTag(PROD_ST,pf.status)+'</p>':'')+(pf.reason&&pf.status==='rejected'?'<div class="ozWarn">Gerekçe: '+E(pf.reason)+'</div>':'')+
     '<div class="ozCard"><h3>Fotoğraflar</h3>'+imgs+'</div>'+
-    '<div class="ozCard ozForm"><h3>Ürün bilgileri</h3>'+f('name','Ürün adı',{max:120})+'<label for="ozP_category_id">Kategori</label><select class="ozSel" id="ozP_category_id">'+catOpts+'</select>'+
+    '<div class="ozCard ozForm"><h3>Ürün bilgileri</h3>'+f('name','Ürün adı',{max:120})+'<label for="ozP_category_id">Kategori</label><select class="ozSel" id="ozP_category_id" data-chg="pfCat">'+catOpts+'</select><p class="ozHint" id="ozPCatN"'+(pfCatIsDrink(pf.category_id)?'':' hidden')+'>⚠ '+E(DRINK_NOTE)+'</p>'+
       ta('description','Açıklama','Ürünü, üretim şeklini ve tadını anlat')+
       '<div class="ozWarn">Sağlık beyanı uyarısı: "hastalığı önler, tedavi eder, bağışıklığı güçlendirir" gibi sağlık iddiaları yasal olarak yasaktır. Bu tür ifadeler içeren ürünler onaylanmaz.</div>'+
       ta('ingredients','İçindekiler','Örn. %100 süzme çiçek balı')+
@@ -1387,8 +1388,15 @@ function drawProductForm(){
       ta('origin_note','Menşe notu','Örn. Ula köyündeki kendi bahçemizden')+ta('storage_info','Saklama koşulları','Örn. Serin ve kuru yerde saklayın')+f('organic_cert','Organik sertifika no (varsa)',{max:80})+
       '<fieldset style="border:0;padding:0;margin:12px 0 0"><legend class="ozMuted" style="font-weight:700;font-size:13px">Alerjenler</legend><div class="ozWrap">'+Object.keys(ALG).map(function(k){var on=pf.allergens.indexOf(k)>=0;return '<button type="button" class="ozChip'+(on?' on':'')+'" data-a="algT" data-k="'+k+'" aria-pressed="'+on+'">'+E(ALG[k])+'</button>'}).join('')+'</div></fieldset></div></div>'+
     '<div class="ozCard" id="ozVars"><h3>Seçenekler, fiyat ve stok</h3>'+vars+'<button type="button" class="ozBtn sm" data-a="varAdd">Seçenek ekle</button></div>'+
-    '<p class="ozErr" id="ozPErr" hidden></p><div class="ozRow2"><button type="button" class="ozBtn" data-a="prodSave">Kaydet</button><button type="button" class="ozBtn pri" data-a="prodSave" data-sub="1">Kaydet ve incelemeye gönder</button></div>');
+    '<p class="ozErr" id="ozPErr" hidden></p><div class="ozRow2"><button type="button" class="ozBtn'+(pfSubLabel(pf)?'':' pri')+'" data-a="prodSave">Kaydet</button>'+(pfSubLabel(pf)?'<button type="button" class="ozBtn pri" data-a="prodSave" data-sub="1">'+pfSubLabel(pf)+'</button>':'')+'</div>');
 }
+/* K37: oz_product_submit taslağı doğrudan yayınlar, reddedileni yeniden incelemeye alır; onaysız satıcıda / yayındaki üründe gönderim düğmesi yok */
+function sellerApproved(){var st=(SELLER.dash&&SELLER.dash.status)||((S().my_seller||{}).status)||'';return /^(approved|active)$/.test(st)}
+function pfSubLabel(pf){if(!sellerApproved())return '';var st=pf.status||'draft';return st==='draft'?'Kaydet ve yayınla':st==='rejected'?'Yeniden incelemeye gönder':''}
+function prodSubToast(st){return st==='rejected'?'Ürün yeniden incelemeye gönderildi':'Ürün yayınlandı'}
+/* K37: Süt & İçecekler notu */
+function pfCatIsDrink(id){var c=(ST.pf&&ST.pf.cats||[]).filter(function(x){return String(x.id)===String(id)})[0];return !!c&&(c.slug==='icecekler'||/içecek/i.test(c.name||''))}
+var DRINK_NOTE='Taze süt/çabuk bozulan ürün satılamaz; yalnızca uzun ömürlü içecekler.';
 function pfPayload(){
   var pf=ST.pf;pfRead();
   if(pf.name.trim().length<3)return 'Ürün adı en az 3 karakter olmalı.';
@@ -1461,11 +1469,11 @@ ACT_EXTRA({
     if(pe)pe.hidden=true;
     await busy(b,async function(){
       var id=await rpc('oz_product_save',{p:p});id=typeof id==='string'?id:(id&&id.id)||ST.pf.id;ST.pf.id=id;
-      if(b.dataset.sub){await rpc('oz_product_submit',{p_id:id});toast('Ürün incelemeye gönderildi')}else toast('Ürün kaydedildi');
+      if(b.dataset.sub){var st0=ST.pf.status;await rpc('oz_product_submit',{p_id:id});toast(prodSubToast(st0))}else toast('Ürün kaydedildi');
       NAV.pop();var c=cur();if(c.k==='seller')c.a={tab:'urunler'};draw();
     });
   },
-  prodSubmit:async function(b){await busy(b,async function(){await rpc('oz_product_submit',{p_id:b.dataset.id});toast('Ürün incelemeye gönderildi');draw()})},
+  prodSubmit:async function(b){await busy(b,async function(){await rpc('oz_product_submit',{p_id:b.dataset.id});toast(prodSubToast(b.dataset.st));draw()})},
   prodHide:async function(b){await busy(b,async function(){await rpc('oz_product_set_hidden',{p_id:b.dataset.id,p_hidden:b.dataset.h==='1'});toast(b.dataset.h==='1'?'Ürün gizlendi':'Ürün yeniden gösteriliyor');draw()})},
   prodDel:async function(b){if(!await confirmBox('Ürün silinsin mi?','Bu işlem geri alınamaz.','Sil',true))return;await rpc('oz_product_delete',{p_id:b.dataset.id});toast('Ürün silindi');draw()},
   stockBox:async function(b){
