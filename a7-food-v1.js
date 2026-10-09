@@ -1069,9 +1069,10 @@ async function showFoodVenue(id,openItemId){
     const secs=(cats||[]).map(c=>({c,items:vis.filter(i=>i.category_id===c.id)})).filter(s=>s.items.length);
     const other=vis.filter(i=>!i.category_id);if(other.length)secs.push({c:{id:'other',name:secs.length?'Diğer':'Menü'},items:other});
     render('<div class="fdHero">'+pic(v.cover_url||'',v.name+' '+(v.cuisine_type||''),'cover',foodIcon(v.cuisine_type||v.name))+
-        '<div class="nav"><button type="button" class="fdIco" aria-label="Geri" onclick="showFoodHome()">‹</button><span style="display:flex;gap:8px">'+favBtn(v.id)+'</span></div></div>'+
+        '<div class="nav"><button type="button" class="fdIco" aria-label="Geri" onclick="showFoodHome()">‹</button></div></div>'+
       '<div class="fdVHead">'+(v.image_url?pic(v.image_url,v.name,'fdLogo'):'')+'<div style="min-width:0;flex:1"><h1>'+E(v.name)+'</h1><div class="sub">'+E([cs.slice(0,3).join(' · '),v.district].filter(Boolean).join(' • '))+'</div></div>'+
-        (+v.rating_count?'<button type="button" class="fdCenter fdwRateBtn" onclick="showFoodReviews(\''+E(v.id)+'\')" aria-label="Puan '+(+v.rating_avg).toFixed(1).replace('.',',')+', '+v.rating_count+' değerlendirme. Yorumları gör"><span class="fdStar" style="box-shadow:none;border:1px solid var(--line)">★ '+(+v.rating_avg).toFixed(1).replace('.',',')+'</span><span class="fdMuted rc">'+v.rating_count+' değerlendirme <i aria-hidden="true">›</i></span></button>':'<span class="fdNew">Yeni</span>')+'</div>'+
+        /* K33: favori kalbi kapakta değil, puanın hemen üstünde (aynı favBtn/foodFav) */
+        '<div class="fdwVRt">'+favBtn(v.id,'fdwHFav')+(+v.rating_count?'<button type="button" class="fdCenter fdwRateBtn" onclick="showFoodReviews(\''+E(v.id)+'\')" aria-label="Puan '+(+v.rating_avg).toFixed(1).replace('.',',')+', '+v.rating_count+' değerlendirme. Yorumları gör"><span class="fdStar" style="box-shadow:none;border:1px solid var(--line)">★ '+(+v.rating_avg).toFixed(1).replace('.',',')+'</span><span class="fdMuted rc">'+v.rating_count+' değerlendirme <i aria-hidden="true">›</i></span></button>':'<span class="fdNew">Yeni</span>')+'</div></div>'+
       '<div class="fdStats"><div><small>'+(v.delivery_mode==='pickup'?'Hazırlık':'Teslimat')+'</small><b>'+etaText(v)+'</b></div><div><small>'+(v.delivery_mode==='pickup'?'Sipariş':'Teslimat ücreti')+'</small><b>'+(v.delivery_mode==='pickup'?'Gel-al':(+v.delivery_fee_kurus?M(v.delivery_fee_kurus):'Ücretsiz'))+'</b></div><div><small>Min. sepet</small><b>'+(+v.min_order_amount?M(v.min_order_amount):'Yok')+'</b></div></div>'+venueExtras(v)+
       (!open?'<div class="fdNote bad">🕐 '+E(nextOpen(v))+'. Menüye göz atabilirsin; restoran açıldığında sipariş verebilirsin.</div>':'')+
       '<div id="fdPast"></div>'+
@@ -3744,6 +3745,10 @@ body:has(.fdCo) #fdRoot{padding-bottom:0}
 .fdwRvC p{margin:0;font-size:13.5px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
 .fdwRvC .ft{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:auto}
 .fdwRvC .ft b{font-size:13px}.fdwRvC .ft small{font-size:12px;color:var(--muted);white-space:nowrap}
+/* K33-2 restoran başlığında kalp: puanın üstünde, sola hizalı; zeminsiz, ~24px ikon, 44px dokunma; tema metin rengi, favoride #e11d48 */
+.fdwVRt{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-start}
+.fdVHead .fdFav.fdwHFav{width:44px;height:44px;min-width:44px;margin:-6px 0 0 -2px;font-size:24px;font-weight:400;-webkit-text-stroke:0;color:var(--text);text-shadow:none;background:transparent!important;border:0!important;box-shadow:none!important}
+.fdVHead .fdFav.fdwHFav.on{color:#e11d48}
 /*K32-BITIS*/
 `;document.head.appendChild(s);
 }
