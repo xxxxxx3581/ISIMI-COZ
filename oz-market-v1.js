@@ -477,10 +477,8 @@ VIEWS_EXTRA({
     var ms=s.my_seller;
     var sellerRow=ms?row('store','Satıcı paneli',SELLER_ST[ms.status]?SELLER_ST[ms.status][0]:'Mağazanı yönet','nav',{k:'seller'}):(s.seller_signup_enabled?row('store','Satıcı ol','Ürünlerini Özüne Dön\'de sat','nav',{k:'seller'}):'');
     paint(pageHead('Hesabım',u.email||'')+'<div class="ozList">'+
-      row('box','Siparişlerim','Sipariş durumu, kargo takibi, iade','nav',{k:'orders'})+
       row('heart','Favorilerim','Kaydettiğin ürünler','nav',{k:'favs'})+
       row('pin','Adreslerim','Teslimat adreslerini yönet','nav',{k:'addresses'})+
-      row('bell','Bildirimler','Sipariş ve mağaza gelişmeleri','bell')+
       sellerRow+
       (s.is_admin?row('leaf','Özüne Dön yönetimi','Satıcı, ürün, sipariş ve ayarlar','admin'):'')+
       row('home','İşimi Çöz ana sayfası','Ana platforma dön','exit')+'</div>');
