@@ -935,21 +935,28 @@ var SP={
 };
 function storeForm(s,wizard){
   s=Object.assign({},s,SELLER.img||{});
-  function f(id,label,v,opt){opt=opt||{};return '<label for="ozS_'+id+'">'+E(label)+'</label><input class="ozIn" id="ozS_'+id+'" value="'+E(v==null?'':v)+'"'+(opt.im?' inputmode="'+opt.im+'"':'')+(opt.type?' type="'+opt.type+'"':'')+' maxlength="'+(opt.max||120)+'">'}
-  var kind=s.kind||'person';
+  function f(id,label,v,opt){opt=opt||{};return '<label for="ozS_'+id+'">'+E(label)+'</label><input class="ozIn" id="ozS_'+id+'" value="'+E(v==null?'':v)+'"'+(opt.im?' inputmode="'+opt.im+'"':'')+(opt.type?' type="'+opt.type+'"':'')+(opt.ac?' autocomplete="'+opt.ac+'"':'')+(opt.ph?' placeholder="'+E(opt.ph)+'"':'')+' maxlength="'+(opt.max||120)+'">'}
+  var kind=s.kind||'person';var lock=sellerLocked(s);
   var imgs=s.id?'<div class="ozTwo" style="margin-top:12px"><div><span class="ozMuted">Logo</span>'+(s.logo_url?pic(s.logo_url,'Logo','')+'':'')+fileBtn(s.logo_url?'Logoyu değiştir':'Logo yükle','logo','image/jpeg,image/png,image/webp')+'</div><div><span class="ozMuted">Kapak fotoğrafı</span>'+(s.cover_url?pic(s.cover_url,'Kapak',''):'')+fileBtn(s.cover_url?'Kapağı değiştir':'Kapak yükle','cover','image/jpeg,image/png,image/webp')+'</div></div>':'<p class="ozHint">Logo ve kapak fotoğrafını bu adımı kaydettikten sonra ekleyebilirsin.</p>';
-  return '<div class="ozCard ozForm"><fieldset style="border:0;padding:0;margin:0"><legend class="ozMuted">Satıcı türü</legend>'+
+  var legal=lock?'<div class="ozLock"><dl class="ozKV"><dt>Satıcı türü</dt><dd>'+(kind==='business'?'İşletme':'Bireysel üretici')+'</dd><dt>Ad soyad / ticari unvan</dt><dd>'+E(s.legal_name||'—')+'</dd><dt>TCKN / Vergi no</dt><dd>'+E(s.tax_no||'—')+'</dd></dl><p class="ozHint">Değiştirmek için destekle iletişime geç.</p></div>'+f('display_name','Mağaza adı (alıcılar görür)',s.display_name,{max:60})+f('tax_office','Vergi dairesi',s.tax_office,{max:60}):
+    '<fieldset style="border:0;padding:0;margin:0"><legend class="ozMuted">Satıcı türü</legend>'+
     '<label class="ozPick'+(kind==='person'?' on':'')+'"><input type="radio" name="ozKind" value="person"'+(kind==='person'?' checked':'')+'><span class="tx"><b>Bireysel üretici</b><small>Şahıs olarak satış (çiftçi, ev üreticisi)</small></span></label>'+
     '<label class="ozPick'+(kind==='business'?' on':'')+'"><input type="radio" name="ozKind" value="business"'+(kind==='business'?' checked':'')+'><span class="tx"><b>İşletme</b><small>Şirket veya şahıs işletmesi</small></span></label></fieldset>'+
     f('display_name','Mağaza adı (alıcılar görür)',s.display_name,{max:60})+f('legal_name','Ad soyad / ticari unvan',s.legal_name,{max:120})+
-    '<div class="ozTwo"><div>'+f('tax_no','TCKN / Vergi no',s.tax_no,{im:'numeric',max:11})+'</div><div>'+f('tax_office','Vergi dairesi',s.tax_office,{max:60})+'</div></div>'+
-    f('phone','Telefon',s.phone,{type:'tel',im:'tel',max:20})+
+    '<div class="ozTwo"><div>'+f('tax_no','TCKN / Vergi no',s.tax_no,{im:'numeric',max:11})+'</div><div>'+f('tax_office','Vergi dairesi',s.tax_office,{max:60})+'</div></div>';
+  /* IBAN yalnızca satıcının kendi formunda (oz_sellers, RLS: sahibi/yönetici); müşteri ekranlarında hiç kullanılmaz */
+  var bank='<div class="ozBank"><b class="ozBankH">Ödeme hesabı</b>'+f('iban','IBAN',s.iban,{max:34,ac:'off',ph:'TR00 0000 0000 0000 0000 0000 00'})+f('iban_holder','Hesap sahibi adı',s.iban_holder,{max:160,ac:'off'})+'<p class="ozHint">Ödemeler bu hesaba yapılır. Hesap sahibi adı ünvanınla aynı olmalı.</p></div>';
+  return '<div class="ozCard ozForm">'+legal+
+    f('phone','Telefon',s.phone,{type:'tel',im:'tel',max:20})+bank+
     '<div class="ozTwo"><div>'+f('city','İl',s.city,{max:40})+'</div><div>'+f('district','İlçe',s.district,{max:60})+'</div></div>'+
     f('ship_from_city','Kargonun çıkacağı il',s.ship_from_city,{max:40})+
     '<label for="ozS_story">Hikâyen (alıcılar görür)</label><textarea class="ozTa" id="ozS_story" maxlength="2000" placeholder="Ürünlerini nasıl üretiyorsun?">'+E(s.story||'')+'</textarea>'+
     '<div class="ozTwo"><div>'+f('handling_days','Hazırlık süresi (iş günü)',s.handling_days==null?2:s.handling_days,{im:'numeric',max:2})+'</div><div>'+f('free_ship','Bu tutar ve üzeri kargo bedava (₺, boş = yok)',s.free_ship_over_kurus?kurusToInput(s.free_ship_over_kurus):'',{im:'decimal',max:10})+'</div></div>'+
     imgs+'<p class="ozErr" id="ozSErr" hidden></p><button type="button" class="ozBtn pri wide" data-a="storeSave" data-w="'+(wizard?'1':'')+'" style="margin-top:14px">'+(wizard?'Kaydet ve devam':'Mağaza bilgilerini kaydet')+'</button></div>';
 }
+/* Onaylı hesapta tür, ünvan ve vergi no sunucuda kilitli (PF_STATE) — formda salt okunur */
+function sellerLocked(s){return !!(s&&s.id&&s.status==='approved')}
+function ibanClean(v){return String(v||'').replace(/\s+/g,'').toUpperCase()}
 function ratesEditor(){
   return '<div class="ozCard" id="ozRates"><p class="ozMuted" style="margin:0 0 10px">Paketin ağırlığına göre kargo ücreti. Her satır "bu ağırlığa kadar" geçerlidir.</p>'+
     SELLER.rates.map(function(r,i){return '<div class="ozRate"><div><label class="ozMuted" for="ozRw'+i+'">En fazla (kg)</label><input class="ozIn" id="ozRw'+i+'" data-rw inputmode="decimal" value="'+E(r.max_weight_g?NF1.format(num(r.max_weight_g)/1000):'')+'"></div><div><label class="ozMuted" for="ozRf'+i+'">Ücret (₺)</label><input class="ozIn" id="ozRf'+i+'" data-rf inputmode="decimal" value="'+E(r.fee_kurus===''||r.fee_kurus==null?'':kurusToInput(r.fee_kurus))+'"></div><button type="button" class="ozX" data-a="rateDel" data-i="'+i+'" aria-label="Satırı sil"'+(SELLER.rates.length<2?' disabled':'')+'>✕</button></div>'}).join('')+
@@ -997,10 +1004,11 @@ function drawProductForm(){
     '<div class="ozCard ozForm"><h3>Ürün bilgileri</h3>'+f('name','Ürün adı',{max:120})+'<label for="ozP_category_id">Kategori</label><select class="ozSel" id="ozP_category_id">'+catOpts+'</select>'+
       ta('description','Açıklama','Ürünü, üretim şeklini ve tadını anlat')+
       '<div class="ozWarn">Sağlık beyanı uyarısı: "hastalığı önler, tedavi eder, bağışıklığı güçlendirir" gibi sağlık iddiaları yasal olarak yasaktır. Bu tür ifadeler içeren ürünler onaylanmaz.</div>'+
-      ta('ingredients','İçindekiler','Örn. %100 süzme çiçek balı')+f('net_content','Net miktar',{max:40})+
+      ta('ingredients','İçindekiler','Örn. %100 süzme çiçek balı')+
+      (pf.id?'<div class="ozReapp"><p class="ozHint">↻ Bu alanları değiştirirsen ürün yeniden onaya girer.</p>':'<div>')+f('net_content','Net miktar',{max:40})+
       '<div class="ozTwo"><div>'+f('origin_city','Menşe (il)',{max:40})+'</div><div>'+f('shelf_life_days','Raf ömrü (gün)',{im:'numeric',max:5})+'</div></div>'+
       ta('origin_note','Menşe notu','Örn. Ula köyündeki kendi bahçemizden')+ta('storage_info','Saklama koşulları','Örn. Serin ve kuru yerde saklayın')+f('organic_cert','Organik sertifika no (varsa)',{max:80})+
-      '<fieldset style="border:0;padding:0;margin:12px 0 0"><legend class="ozMuted" style="font-weight:700;font-size:13px">Alerjenler</legend><div class="ozWrap">'+Object.keys(ALG).map(function(k){var on=pf.allergens.indexOf(k)>=0;return '<button type="button" class="ozChip'+(on?' on':'')+'" data-a="algT" data-k="'+k+'" aria-pressed="'+on+'">'+E(ALG[k])+'</button>'}).join('')+'</div></fieldset></div>'+
+      '<fieldset style="border:0;padding:0;margin:12px 0 0"><legend class="ozMuted" style="font-weight:700;font-size:13px">Alerjenler</legend><div class="ozWrap">'+Object.keys(ALG).map(function(k){var on=pf.allergens.indexOf(k)>=0;return '<button type="button" class="ozChip'+(on?' on':'')+'" data-a="algT" data-k="'+k+'" aria-pressed="'+on+'">'+E(ALG[k])+'</button>'}).join('')+'</div></fieldset></div></div>'+
     '<div class="ozCard" id="ozVars"><h3>Seçenekler, fiyat ve stok</h3>'+vars+'<button type="button" class="ozBtn sm" data-a="varAdd">Seçenek ekle</button></div>'+
     '<p class="ozErr" id="ozPErr" hidden></p><div class="ozRow2"><button type="button" class="ozBtn" data-a="prodSave">Kaydet</button><button type="button" class="ozBtn pri" data-a="prodSave" data-sub="1">Kaydet ve incelemeye gönder</button></div>');
 }
@@ -1023,16 +1031,20 @@ function pfPayload(){
 }
 async function saveStore(btn){
   var kindEl=qs('input[name=ozKind]:checked');var g=function(k){return val('ozS_'+k)};
+  var lock=sellerLocked(SELLER.data);var iban=ibanClean(g('iban'));
   var err='';var hd=Number(g('handling_days'));var fs=g('free_ship')?tlToKurus(g('free_ship')):null;
-  if(g('display_name').length<3)err='Mağaza adını yaz.';else if(g('legal_name').length<3)err='Ad soyad veya ticari unvanı yaz.';
-  else if(!/^\d{10,11}$/.test(g('tax_no')))err='TCKN 11, vergi numarası 10 haneli olmalı.';
+  if(g('display_name').length<3)err='Mağaza adını yaz.';else if(!lock&&g('legal_name').length<3)err='Ad soyad veya ticari unvanı yaz.';
+  else if(!lock&&!/^\d{10,11}$/.test(g('tax_no')))err='TCKN 11, vergi numarası 10 haneli olmalı.';
+  else if(!/^TR\d{24}$/.test(iban))err='TR ile başlayan 26 karakterlik IBAN yaz.';
+  else if(g('iban_holder').length<3)err='Hesap sahibi adını yaz.';
   else{var dg=g('phone').replace(/\D/g,'');if(dg.length<10||dg.length>13)err='Geçerli bir telefon numarası yaz.';else if(!g('city'))err='İl yaz.';else if(!g('ship_from_city'))err='Kargonun çıkacağı ili yaz.';else if(!(hd>=1&&hd<=14))err='Hazırlık süresi 1-14 iş günü olmalı.';else if(fs!==null&&!(fs>0))err='Kargo bedava tutarını doğru yaz ya da boş bırak.'}
   var pe=D.getElementById('ozSErr');if(err){if(pe){pe.textContent=err;pe.hidden=false}return}
   if(pe)pe.hidden=true;
   var s=Object.assign({},SELLER.data||{},SELLER.img||{});
-  var p={display_name:g('display_name'),kind:kindEl?kindEl.value:'person',legal_name:g('legal_name'),tax_no:g('tax_no'),tax_office:g('tax_office')||null,phone:g('phone'),city:g('city'),district:g('district')||null,ship_from_city:g('ship_from_city'),story:g('story')||null,logo_url:s.logo_url||null,cover_url:s.cover_url||null,handling_days:Math.round(hd),free_ship_over_kurus:fs};
+  var p={display_name:g('display_name'),iban:iban,iban_holder:g('iban_holder'),tax_office:g('tax_office')||null,phone:g('phone'),city:g('city'),district:g('district')||null,ship_from_city:g('ship_from_city'),story:g('story')||null,logo_url:s.logo_url||null,cover_url:s.cover_url||null,handling_days:Math.round(hd),free_ship_over_kurus:fs};
+  if(!lock){p.kind=kindEl?kindEl.value:'person';p.legal_name=g('legal_name');p.tax_no=g('tax_no')}
   await busy(btn,async function(){
-    var r=await rpc('oz_seller_apply',{p:p});
+    var r;try{r=await rpc('oz_seller_apply',{p:p})}catch(e){if(e&&e.auth)throw e;if(pe){pe.textContent=e.message;pe.hidden=false;try{pe.scrollIntoView({block:'center'})}catch(x){}}return}
     if(r&&r.seller_id)SELLER.id=r.seller_id;
     SELLER.img={};
     await loadSettings(true);SELLER.data=null;
