@@ -773,7 +773,7 @@ function orderDetailHtml(d){
   var acts='';
   if(st==='awaiting_payment'&&o.payment_method==='mock'&&s.payment_mock)acts+='<button type="button" class="ozBtn sun" data-a="mockPay" data-id="'+E(o.id)+'">Deneme ödemesini tamamla</button>';
   if(st==='shipped')acts+='<button type="button" class="ozBtn pri" data-a="ordDeliver" data-id="'+E(o.id)+'">Teslim aldım</button>';
-  if(st==='awaiting_payment'||st==='new')acts+='<button type="button" class="ozBtn bad" data-a="ordCancel" data-id="'+E(o.id)+'">Siparişi iptal et</button>';
+  if(st==='awaiting_payment'||st==='new')acts+='<button type="button" class="ozBtn bad" data-a="ordCancel" data-id="'+E(o.id)+'" data-no="'+E(o.order_no||'')+'">Siparişi iptal et</button>';
   if(d.can_return&&!ret)acts+='<button type="button" class="ozBtn" data-a="ordReturn" data-id="'+E(o.id)+'">İade talebi oluştur</button>';
   var canReview=(st==='delivered'||st==='completed');
   var ship=o.ship_to||{};
@@ -865,9 +865,17 @@ ACT_EXTRA({
   ordTab:function(b){var c=cur();c.a=Object.assign({},c.a,{tab:b.dataset.tab});if(ST.ol&&ST.ol.off){ST.ol.tab=b.dataset.tab;hSync();ordersPaint();return}draw()},
   copyTrk:async function(b){var t=b.dataset.v;var ok=false;try{await navigator.clipboard.writeText(t);ok=true}catch(e){try{var x=D.createElement('textarea');x.value=t;x.style.position='fixed';x.style.opacity='0';D.body.appendChild(x);x.select();ok=D.execCommand('copy');x.remove()}catch(_){}}toast(ok?'Takip numarası kopyalandı':'Kopyalanamadı; numarayı elle seç.')},
   ordDeliver:async function(b){if(!await confirmBox('Teslim aldın mı?','Ürünleri teslim aldığını onaylıyorsun. Sorun varsa sonrasında iade isteyebilirsin.','Teslim aldım'))return;await busy(b,async function(){await rpc('oz_transition_order',{p_order:b.dataset.id,p_action:'deliver',p:{}});toast('Teslimat onaylandı');draw()})},
+  /* Müşteri iptali: yalnız ilk aşamada (ödeme bekleniyor / Alındı); sonrası "Sorun bildir". Sunucu da aynı kuralı uygular,
+     stoğu geri koyar (oz_restock) ve satıcıya bildirim gönderir. Onay → kilit → net mesaj → ekran ve sayaçlar yenilenir. */
   ordCancel:async function(b){
-    var v=await formBox('Siparişi iptal et','<label for="ozCnR">İptal nedeni (isteğe bağlı)</label><textarea class="ozTa" id="ozCnR" data-f="r" maxlength="300" style="min-height:72px"></textarea>','İptal et');
-    if(!v)return;await rpc('oz_transition_order',{p_order:b.dataset.id,p_action:'cancel',p:{reason:v.r||null}});toast('Sipariş iptal edildi');draw();
+    if(ST.cnl)return;
+    var v=await formBox('Siparişi iptal et','<p class="ozP" style="margin:0 0 8px">'+E(b.dataset.no?b.dataset.no+' iptal edilecek. ':'')+'Bu işlem geri alınamaz; ödediysen ücret iadesi başlatılır.</p><label for="ozCnR">İptal nedeni (isteğe bağlı)</label><textarea class="ozTa" id="ozCnR" data-f="r" maxlength="300" style="min-height:72px"></textarea>','Evet, iptal et');
+    if(!v)return;
+    ST.cnl=1;
+    try{await busy(b,async function(){
+      await rpc('oz_transition_order',{p_order:b.dataset.id,p_action:'cancel',p:{reason:v.r||null}});
+      toast('Siparişin iptal edildi; üreticiye bildirildi.');draw();
+    })}finally{ST.cnl=0}
   },
   ordReturn:async function(b){
     var rd=num(S().return_days);
