@@ -714,12 +714,20 @@ async function coLoad(t,title){
   if(!alive(t))return;
   if(!ST.crid)ST.crid=uuid();
   var adr=arr(r[1]);
+  /* A6: üretici kargo eşiği / en az sipariş (gösterim için oz_producer_detail; kural sunucuda) */
+  ST.sinfo=ST.sinfo||{};var need=arr(r[0]&&r[0].groups).map(function(g){return g.seller_id}).filter(function(id){return id&&!ST.sinfo[id]});
+  if(need.length){var ds=await Promise.all(need.map(function(id){return rpc('oz_producer_detail',{p_id:id}).catch(function(){return null})}));if(!alive(t))return;need.forEach(function(id,i){if(ds[i])ST.sinfo[id]=ds[i]})}
   ST.co=ST.co||{};ST.co.title=title;ST.co.qe=r[0]&&r[0].__err||null;ST.co.q=ST.co.qe?null:r[0];ST.co.addrs=adr;
   if(!ST.co.addr||!adr.some(function(x){return x.id===ST.co.addr}))ST.co.addr=(adr.filter(function(x){return x.is_default})[0]||adr[0]||{}).id||null;
   var s=S();var pays=[];if(s.payment_mock)pays.push('mock');if(s.cod)pays.push('cod');
   if(pays.indexOf(ST.co.pay)<0)ST.co.pay=pays[0]||null;
   drawCheckout();
 }
+function freeHint(g){var si=(ST.sinfo||{})[g.seller_id]||{};var fo=num(si.free_ship_over_kurus);if(!fo)return '';var sub=num(g.subtotal_kurus);
+  return '<p class="ozFreeH">'+TL(fo)+' üzeri kargo ücretsiz'+(sub<fo&&num(g.shipping_kurus)?' · '+TL(fo-sub)+' daha ekle':'')+'</p>'}
+/* en az sipariş: sunucu toplam ara tutarı genel ayarla karşılaştırır; burada yalnız uyarı ve buton pasifleştirme */
+function minInfo(q,groups){if(!q)return '';var s=S();var g0=groups[0]||{};var si=(ST.sinfo||{})[g0.seller_id]||{};var min=num(s.min_order_kurus)||num(si.min_order_kurus);var sub=num(q.subtotal_kurus);
+  if(!min||sub>=min||!sub)return '';return (groups.length===1?'Bu üreticiden en az '+TL(min)+' sipariş verebilirsin, ':'En az sipariş tutarı '+TL(min)+'; ')+TL(min-sub)+' daha ekle.'}
 function coKeep(){var co=ST.co;if(!co)return;var n=D.getElementById('ozCoNote');if(n)co.note=n.value;coReadTerms()}
 function cartHtml(q,c){
   var groups=arr(q&&q.groups);var issues=arr(q&&q.issues);
@@ -769,7 +777,7 @@ function drawCheckout(){
   /* sepet ürünleri: adet −/+ ve kaldır (üretici başına) */
   var itH=groups.map(function(g){return '<div class="ozCard ozCoG"><div class="ozRow2" style="justify-content:space-between"><b>'+E(g.seller_name||'Üretici')+'</b>'+(num(g.handling_days)?'<span class="ozMuted">'+num(g.handling_days)+' iş gününde kargoda</span>':'')+'</div>'+
     arr(g.items).map(function(it){return cartLine(it,num(it.stock))}).join('')+
-    '<div class="ozLine"><span class="m">Ürünler</span><span>'+TL(g.subtotal_kurus)+'</span></div><div class="ozLine"><span class="m">Kargo</span><span>'+(num(g.shipping_kurus)?TL(g.shipping_kurus):'Bedava')+'</span></div></div>'}).join('');
+    '<div class="ozLine"><span class="m">Ürünler</span><span>'+TL(g.subtotal_kurus)+'</span></div><div class="ozLine"><span class="m">Kargo ücreti</span><span>'+(num(g.shipping_kurus)?TL(g.shipping_kurus):'Bedava')+'</span></div>'+freeHint(g)+'</div>'}).join('');
   if(orphan.length)itH+='<div class="ozCard"><b>Satışta olmayan ürünler</b>'+orphan.map(function(x){return cartLine({variant_id:x.variant_id,product_id:x.product_id,name:x.name,label:x.label,image:x.image,unit_price_kurus:x.price_kurus,qty:x.qty,line_total_kurus:x.price_kurus*x.qty,issue:'Bu ürün artık satışta değil; sepetten çıkar.'},0)}).join('')+'</div>';
   if(!co.q)itH+=(co.qe?errBox(co.qe):'')+'<div class="ozCard">'+c.map(function(x){return cartLine({variant_id:x.variant_id,product_id:x.product_id,name:x.name,label:x.label,image:x.image,unit_price_kurus:x.price_kurus,qty:x.qty,line_total_kurus:x.price_kurus*x.qty},99)}).join('')+'</div>';
   /* teslimat adresi: seçili adres + Değiştir / Ekle */
@@ -789,11 +797,12 @@ function drawCheckout(){
   if(issues.length||orphan.length||groups.some(function(g){return arr(g.items).some(function(it){return it.issue})}))reasons.push('Sepetteki sorunlu ürünleri düzelt.');
   if(!pays.length)reasons.push('Ödeme yöntemi çok yakında.');
   if(!co.addr)reasons.push('Teslimat adresi ekle.');
+  var mn=minInfo(q,groups);if(mn)reasons.unshift(mn);
   co.reasons=reasons;co.blocked=reasons.length>0;
   var why=coWhy(co);
   paint('<div class="ozCo"><div class="ozCoMain">'+pageHead(co.title||'Sepetim',cartCount()+' ürün')+itH+
     (issues.length?'<div class="ozWarn">'+issues.map(function(i){return '<div>'+E(typeof i==='string'?(i==='unavailable'?'Bazı ürünler artık satışta değil.':i):(i.message||''))+'</div>'}).join('')+'</div>':'')+
-    adrH+payH+noteH+consH+
+    (mn?'<div class="ozWarn ozMinW">'+E(mn)+'</div>':'')+adrH+payH+noteH+consH+
     '</div><div class="ozCoBar"><div class="ozLine"><span class="m">Ürünler</span><span>'+TL(q.subtotal_kurus)+'</span></div><div class="ozLine"><span class="m">Kargo</span><span>'+(num(q.shipping_kurus)?TL(q.shipping_kurus):'Bedava')+'</span></div><div class="ozLine tot"><span>Toplam</span><span>'+TL(q.total_kurus)+'</span></div>'+
     '<p class="ozWhy" id="ozPlaceWhy" role="status"'+(why?'':' hidden')+'>'+E(why)+'</p>'+
     '<button type="button" class="ozBtn pri" id="ozPlace" data-a="place"'+(why?' disabled':'')+'>Siparişi onayla ve öde</button></div></div>');
