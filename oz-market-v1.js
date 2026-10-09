@@ -48,7 +48,9 @@ function cleanMsg(m){
   return m||'Beklenmeyen bir hata oluştu.';
 }
 function isAuthErr(e){var m=String(e&&e.message||'');return !!(e&&(e.code==='NOAUTH'||e.status===401||/PF_AUTH|JWT|jwt expired|giriş yapmalısın|oturum/i.test(m)))}
-function wrapErr(e){var er=new Error(cleanMsg(e&&e.message||e));er.code=e&&e.code;er.status=e&&e.status;er.auth=isAuthErr(e);return er}
+function wrapErr(e){var raw=String(e&&e.message||e||'');var er=new Error(cleanMsg(raw));er.code=e&&e.code;er.status=e&&e.status;er.auth=isAuthErr(e);er.pf=/^(PF|OZ)_[A-Z]+:/.test(raw);return er}
+/* Beklenmeyen ham veritabanı hatası: HTTP hatası olup PF_ önekli (RAISE EXCEPTION → SQLSTATE P0001) olmayan, oturum hatası da olmayan (ör. 23505, 22P02). */
+function isRawDbErr(e){return !!e&&!e.auth&&!e.pf&&e.code!=='P0001'&&num(e.status)>=400}
 async function rpc(fn,args){
   if(!window.PF||typeof PF.rpc!=='function')throw new Error('Platform katmanı yüklenemedi. Sayfayı yenileyip tekrar dene.');
   try{return await PF.rpc(fn,args||{},{auth:false})}catch(e){throw wrapErr(e)}
@@ -621,7 +623,9 @@ ACT_EXTRA({
     try{await busy(b,async function(){
       var res;
       try{res=await rpc('oz_place_order',{p:{items:cartItemsParam(),address_id:co.addr,note:co.note||null,payment_method:co.pay,client_request_id:ST.crid,terms:true}})}
-      catch(e){if(isDupErr(e)){dupDone();return}throw e}  /* yedek yol */
+      catch(e){if(isDupErr(e)){dupDone();return}  /* yedek yol */
+        if(isRawDbErr(e)){toast('Siparişin oluşturulamadı, lütfen tekrar dene. Sorun sürerse destekle iletişime geç.');return}  /* ham DB mesajı gösterilmez; sepet korunur */
+        throw e}
       res=res||{};
       if(res.duplicate===true){dupDone();return}  /* birincil yol */
       /* Sözleşme onayları oz_orders ekleme tetikleyicisinde kaydedilir (context 'order', subject 'oz:<id>'); istemci ayrıca kayıt yapmaz. */
