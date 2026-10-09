@@ -927,7 +927,7 @@ var SP={
     var ps=arr(await get('oz_products?select=id,name&seller_id=eq.'+encodeURIComponent(sid)));
     var ids=ps.map(function(x){return x.id});var nm={};ps.forEach(function(x){nm[x.id]=x.name});
     var qsl=[],rvl=[];
-    if(ids.length){var r=await Promise.all([get('oz_questions?select=*&product_id=in.'+inList(ids)+'&order=created_at.desc&limit=100'),get('oz_reviews?select=*&product_id=in.'+inList(ids)+'&order=created_at.desc&limit=100')]);qsl=arr(r[0]);rvl=arr(r[1])}
+    if(ids.length){var r=await Promise.all([get('oz_questions?select=id,product_id,question,answer,created_at&product_id=in.'+inList(ids)+'&order=created_at.desc&limit=100'),get('oz_reviews?select=id,product_id,rating,comment,seller_reply,created_at&product_id=in.'+inList(ids)+'&order=created_at.desc&limit=100')]);qsl=arr(r[0]);rvl=arr(r[1])}
     if(!alive(t))return;
     qsl.sort(function(a,b){return (a.answer?1:0)-(b.answer?1:0)});rvl.sort(function(a,b){return (a.seller_reply?1:0)-(b.seller_reply?1:0)});
     var h='<div class="ozSecH"><h2>Sorular</h2><span class="ozMuted">'+qsl.filter(function(x){return !x.answer}).length+' cevapsız</span></div>'+
