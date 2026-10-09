@@ -1079,9 +1079,9 @@ async function showFoodVenue(id,openItemId){
       '<div id="fdPop"></div><div id="fdVNo"></div>'+
       (secs.length>1?'<div class="fdTabsS"><div class="fdChips" id="fdCatBar">'+secs.map((s,i)=>'<button type="button" class="fdChip'+(i?'':' on')+'" data-sec="'+E(s.c.id)+'" onclick="foodGoSec(\''+E(s.c.id)+'\')">'+E(s.c.name)+'</button>').join('')+'</div></div>':'')+
       (secs.length?secs.map(s=>'<section class="fdMenuSec" id="fdSec-'+E(s.c.id)+'" data-sec="'+E(s.c.id)+'"><h2>'+E(s.c.name)+'</h2><div class="fdList">'+s.items.map(i=>prodRow(i,gByItem[i.id])).join('')+'</div></section>').join(''):
-        empty('📋','Menü hazırlanıyor','Restoran menüsünü henüz eklemedi.')));
+        empty('📋','Menü hazırlanıyor','Restoran menüsünü henüz eklemedi.'))+'<div id="fdwRvSec"></div>');
     const root=document.getElementById('fdRoot');root.dataset.sticky='1';root.insertAdjacentHTML('beforeend',stickyCart());
-    refreshProdBadges();venuePast(tok,v);venuePopular(tok,v);venueLikes(tok,v);venuePromo(tok,v);if(secs.length>1)scrollSpy(tok);
+    refreshProdBadges();venuePast(tok,v);venuePopular(tok,v);venueLikes(tok,v);venuePromo(tok,v);venueReviewCards(tok,v);if(secs.length>1)scrollSpy(tok);
     if(openItemId){const it=vis.find(x=>x.id===openItemId);if(it){const el=document.querySelector('[data-pid="'+openItemId+'"]');el&&el.scrollIntoView({block:'center'});if(it.is_available)setTimeout(()=>foodOpenItem(openItemId),250)}}
   }catch(e){if(alive(tok))render(bar('Restoran','showFoodHome()')+errBox(e,'showFoodVenue(\''+E(id)+'\')'))}
 }
@@ -3025,6 +3025,19 @@ async function venuePromo(tok,v){
     setHTML('fdwVPromo',h);if(p)promoSeen();refreshSticky();if(h.includes('data-fl-end'))flashTick(tok);
   }catch(e){}
 }
+/* K32-7: menünün altında "Müşteri yorumları" — mevcut food_venue_reviews (yazar adı sunucuda maskeli); yorum yoksa/okunamazsa gizli */
+function agoLong(ts){const d=(Date.now()-new Date(ts))/1000;if(!(d>=0))return '';if(d<86400)return ago(ts);const g=Math.floor(d/86400);
+  if(g<7)return g+' gün önce';if(g<30)return Math.floor(g/7)+' hafta önce';if(g<365)return Math.floor(g/30)+' ay önce';return Math.floor(g/365)+' yıl önce'}
+async function venueReviewCards(tok,v){
+  let rs=null;try{rs=await RPC('food_venue_reviews',{p_venue_id:v.id,p_limit:10,p_offset:0})}catch(e){rs=null}
+  if(!alive(tok))return;const l=(Array.isArray(rs)?rs:[]).filter(r=>+r.rating>0).sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).slice(0,10);
+  if(!l.length){setHTML('fdwRvSec','');return}
+  const go='showFoodReviews(\''+E(v.id)+'\')';const avg=+v.rating_count?(+v.rating_avg).toFixed(1).replace('.',','):'';
+  setHTML('fdwRvSec','<section class="fdwRvS" aria-label="Müşteri yorumları"><div class="fdSecH"><b>Müşteri yorumları</b><button type="button" class="fb ghost sm" onclick="'+go+'">Tümünü gör</button></div>'+
+    (avg?'<button type="button" class="fdwRvSum1" onclick="'+go+'">★ '+avg+' · '+(+v.rating_count)+' değerlendirme <i aria-hidden="true">›</i></button>':'')+
+    '<div class="fdwRvRail">'+l.map(r=>{const n=Math.max(0,Math.min(5,Math.round(+r.rating||0)));return '<article class="fdwRvC"><span class="st" aria-label="'+n+' yıldız">'+'★'.repeat(n)+'<s>'+'★'.repeat(5-n)+'</s></span>'+
+      (r.comment?'<p>'+E(r.comment)+'</p>':'<p class="fdMuted">Yorum yazılmadı.</p>')+'<span class="ft"><b>'+E(r.author||'Müşteri')+'</b><small>'+E(agoLong(r.created_at))+'</small></span></article>'}).join('')+'</div></section>');
+}
 async function showFoodReviews(venueId,off){
   if(!A())return;const tok=newScreen();off=+off||0;
   render(bar('Yorumlar',"showFoodVenue('"+E(venueId)+"')")+'<div id="fdwRvH"></div><div id="fdwRvL">'+skel('row',4)+'</div>');
@@ -3717,6 +3730,20 @@ body:has(.fdCo) #fdRoot{padding-bottom:0}
 .fdwRateBtn .rc i{font-style:normal;font-weight:800}
 .fdwRateBtn:active{background:var(--card2)}
 .fdwVBtns.one{grid-template-columns:1fr}
+/* K32-7 menü altı yorum kartları (yatay kaydırma; dikey sayfa kaydırması serbest) */
+.fdwRvS{margin:22px 0 8px}
+.fdwRvS .fdSecH{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.fdwRvS .fdSecH .fb{min-height:44px}
+.fdwRvSum1{display:inline-flex;align-items:center;gap:6px;min-height:44px;margin:0 0 6px;padding:0 2px;border:0;background:transparent;color:var(--text);font:inherit;font-weight:800;font-size:14px;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.fdwRvSum1 i{font-style:normal}
+.fdwRvRail{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(240px,78%);gap:10px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding:2px 2px 8px}
+.fdwRvRail::-webkit-scrollbar{display:none}
+@media(min-width:768px){.fdwRvRail{grid-auto-columns:minmax(260px,32%)}}
+.fdwRvC{scroll-snap-align:start;display:flex;flex-direction:column;gap:6px;min-width:0;padding:12px 14px;border:1px solid var(--line);border-radius:16px;background:var(--card)}
+.fdwRvC .st{color:#D4A93F;font-size:15px;letter-spacing:1px}.fdwRvC .st s{text-decoration:none;color:var(--line)}
+.fdwRvC p{margin:0;font-size:13.5px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+.fdwRvC .ft{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-top:auto}
+.fdwRvC .ft b{font-size:13px}.fdwRvC .ft small{font-size:12px;color:var(--muted);white-space:nowrap}
 /*K32-BITIS*/
 `;document.head.appendChild(s);
 }
