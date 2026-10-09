@@ -206,11 +206,18 @@ function card(p){
     '<span class="pr"><b>'+TL(price)+'</b>'+(cmp>price?'<s>'+TL(cmp)+'</s>':'')+'</span></div></div>';
 }
 /* K30: hero slayt — yalnızca gerçek veri: marka slaytı + kapak fotoğraflı, ürünü olan en fazla 3 üretici */
-function heroHtml(prs){
-  var top=arr(prs).filter(function(x){return x.cover_url&&num(x.product_count)>0}).sort(function(a,b){return (num(b.rating_count)-num(a.rating_count))||(num(b.rating_avg)-num(a.rating_avg))||(num(b.product_count)-num(a.product_count))}).slice(0,3);
-  var sl=['<div class="ozHs brand"><b>Doğadan sofranıza</b><span>Özüne Dön</span></div>'].concat(top.map(function(x){var loc=[x.district,x.city].filter(Boolean).join(', ');
-    return '<div class="ozHs"><img src="'+E(x.cover_url)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()"><div class="ov"><b>'+E(x.display_name)+(loc?' – '+E(loc):'')+'</b><button type="button" class="ozBtn sun sm" data-a="nav" data-k="store" data-id="'+E(x.id)+'">Mağazayı gör</button></div></div>'}));
-  return '<section class="ozHero" aria-label="Öne çıkanlar" aria-roledescription="slayt"><div class="ozHeroT" id="ozHeroT">'+sl.join('')+'</div>'+(sl.length>1?'<div class="ozDots" id="ozHeroD" aria-hidden="true">'+sl.map(function(_,i){return '<i'+(i?'':' class="on"')+'></i>'}).join('')+'</div>':'')+'</section>';
+/* K35: hero — 3 marka slaytı (sabit marka bloğu + metin + assets/oz-cat fotoğraf üçlüsü). İddia içeren metin yok. */
+var OZ_WHEAT='<svg class="lg" viewBox="0 0 32 40" aria-hidden="true" focusable="false"><path d="M16 39V13" stroke="#F7D24A" stroke-width="2" stroke-linecap="round" fill="none"/><g fill="#F7D24A"><ellipse cx="16" cy="7" rx="3" ry="5.5"/><ellipse cx="11.6" cy="14" rx="2.6" ry="5" transform="rotate(-32 11.6 14)"/><ellipse cx="20.4" cy="14" rx="2.6" ry="5" transform="rotate(32 20.4 14)"/><ellipse cx="11.2" cy="21.5" rx="2.6" ry="5" transform="rotate(-36 11.2 21.5)"/><ellipse cx="20.8" cy="21.5" rx="2.6" ry="5" transform="rotate(36 20.8 21.5)"/></g><path d="M16 33c-4-1-7-4-8-8 4 .6 7 3.6 8 8zM16 36c4-1 7-4 8-8-4 .6-7 3.6-8 8z" fill="#CFE7C2" opacity=".85"/></svg>';
+var OZ_OLIVE='<svg class="br" viewBox="0 0 120 60" aria-hidden="true" focusable="false"><path d="M4 52C30 40 62 30 116 10" stroke="#9CC58A" stroke-width="2" fill="none" stroke-linecap="round"/><g fill="#9CC58A" opacity=".9"><ellipse cx="26" cy="38" rx="9" ry="3.4" transform="rotate(-38 26 38)"/><ellipse cx="34" cy="46" rx="9" ry="3.4" transform="rotate(14 34 46)"/><ellipse cx="52" cy="29" rx="9" ry="3.4" transform="rotate(-40 52 29)"/><ellipse cx="60" cy="37" rx="9" ry="3.4" transform="rotate(10 60 37)"/><ellipse cx="80" cy="20" rx="9" ry="3.4" transform="rotate(-42 80 20)"/><ellipse cx="88" cy="28" rx="9" ry="3.4" transform="rotate(8 88 28)"/></g><g fill="#3E5A2A"><ellipse cx="44" cy="40" rx="3.6" ry="4.6"/><ellipse cx="72" cy="30" rx="3.6" ry="4.6"/></g></svg>';
+var HERO_SL=[['Doğadan sofranıza','Üreticiden doğrudan kapına.',['bal-recel','kuruyemis-meyve','recel']],
+  ['Her kavanozda bir hikâye','Anadolu\'nun köylerinden el emeği ürünler.',['recel','tursu-konserve','el-emegi']],
+  ['Güvenilir üreticiler','Başvurusu incelenen, onaylı üreticilerden.',['kuru-yemis','baharat-bitki-cay','bitki-cayi']]];
+function heroHtml(){
+  var oe="var p=this.parentNode;this.remove();if(p&&!p.querySelector('img'))p.remove()";
+  var sl=HERO_SL.map(function(h,n){return '<div class="ozHs ozBn" role="group" aria-roledescription="slayt" aria-label="'+(n+1)+' / '+HERO_SL.length+'">'+OZ_OLIVE+
+    '<div class="mk">'+OZ_WHEAT+'<b>Özüne <em>Dön</em></b></div><div class="tx"><strong>'+E(h[0])+'</strong><small>'+E(h[1])+'</small></div>'+
+    '<div class="ph">'+h[2].map(function(sg,k){return '<img class="p'+(k+1)+'" src="assets/oz-cat/'+sg+'.jpg" alt="" loading="'+(n?'lazy':'eager')+'" decoding="async" onerror="'+oe+'">'}).join('')+'</div></div>'});
+  return '<section class="ozHero" aria-label="Özüne Dön" aria-roledescription="slayt gösterisi"><div class="ozHeroT" id="ozHeroT">'+sl.join('')+'</div><div class="ozDots" id="ozHeroD" aria-hidden="true">'+sl.map(function(_,i){return '<i'+(i?'':' class="on"')+'></i>'}).join('')+'</div></section>';
 }
 function startHero(t){
   var tr=D.getElementById('ozHeroT'),dt=D.getElementById('ozHeroD');if(!tr||!dt)return;
@@ -218,6 +225,7 @@ function startHero(t){
   function idx(){return Math.round(tr.scrollLeft/Math.max(1,tr.clientWidth))}
   tr.addEventListener('scroll',function(){var i=idx();qa('i',dt).forEach(function(x,j){x.classList.toggle('on',i===j)})},{passive:true});
   ['pointerdown','touchstart','focusin'].forEach(function(ev){tr.addEventListener(ev,function(){stop=true},{passive:true})});
+  try{if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return}catch(e){}
   var tm=setInterval(function(){if(!alive(t)||!tr.isConnected){clearInterval(tm);return}if(stop||D.hidden)return;var i=(idx()+1)%n;try{tr.scrollTo({left:i*tr.clientWidth,behavior:'smooth'})}catch(e){tr.scrollLeft=i*tr.clientWidth}},5000);
 }
 /* K30: üretici kartı (oz_producers kaydı). wide: Üreticiler sekmesindeki geniş hâl */

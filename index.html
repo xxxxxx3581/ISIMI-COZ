@@ -1583,6 +1583,23 @@ html:root .ozCt .b.ph{background:#fff!important;border:1px solid rgba(255,255,25
 html:root .ozCt .b.ph img{object-fit:cover}
 html:root .ozCt .b.ph i{display:none}
 html:root .ozCt .l{text-align:center;font-size:12px;line-height:1.2}
+/*K35 ana ekran slaytı*/
+html:root .ozHs.ozBn{display:block;height:184px;background:linear-gradient(135deg,#1F3B2A 0%,#2E8B57 62%,#3E9A62 100%);color:#fff}
+html:root .ozBn .br{position:absolute;right:-6px;top:-4px;width:120px;height:60px;opacity:.55;z-index:0}
+html:root .ozBn .mk{position:absolute;left:16px;top:14px;z-index:2;display:flex;align-items:center;gap:6px}
+html:root .ozBn .mk .lg{width:22px;height:28px;flex:none}
+html:root .ozBn .mk b{font:italic 700 28px/1 Georgia,"Times New Roman","Noto Serif",serif;color:#fff;letter-spacing:-.01em;white-space:nowrap;text-shadow:0 1px 4px rgba(0,0,0,.25)}
+html:root .ozBn .mk em{font-style:italic;color:#F7D24A}
+html:root .ozBn .tx{position:absolute;left:16px;bottom:22px;z-index:2;width:calc(100% - 178px);display:flex;flex-direction:column;gap:4px}
+html:root .ozBn .tx strong{font-size:17px;line-height:1.2;font-weight:800;color:#fff;overflow-wrap:break-word}
+html:root .ozBn .tx small{font-size:12.5px;line-height:1.3;color:#E6F2DD}
+html:root .ozBn .ph{position:absolute;right:10px;top:36px;bottom:14px;width:150px;z-index:1}
+html:root .ozBn .ph img{position:absolute;inset:auto;width:72px;height:72px;object-fit:cover;border-radius:14px;border:3px solid #fff;box-shadow:0 6px 16px rgba(0,0,0,.3);background:#fff}
+html:root .ozBn .ph .p1{right:58px;top:8px;transform:rotate(-8deg);z-index:1}
+html:root .ozBn .ph .p2{right:4px;top:0;transform:rotate(7deg);z-index:2}
+html:root .ozBn .ph .p3{right:28px;bottom:0;transform:rotate(-2deg);z-index:3}
+html:root .ozBn:not(:has(.ph)) .tx{width:auto;right:16px}
+@media (min-width:720px){html:root .ozHs.ozBn{height:200px}html:root .ozBn .ph img{width:96px;height:96px}html:root .ozBn .ph .p1{right:82px}}
 /*K21-BITIS*/
 </style>
 <style id="svcProvEntryCss">.svcProvEntry{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;border-radius:16px;border:1.5px solid rgba(124,92,255,.45);background:rgba(124,92,255,.10);color:var(--text);font:inherit;text-align:left;cursor:pointer}.svcProvEntry .ic{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:rgba(124,92,255,.18)}.svcProvEntry .tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}.svcProvEntry small{font-size:12px;font-weight:700;color:var(--muted)}.svcProvEntry b{font-size:16px;font-weight:900}.svcProvEntry em{font-style:normal;font-size:12.5px;color:var(--muted)}.svcProvEntry .go{flex:0 0 auto;font-size:24px;font-weight:700;color:#7c5cff}.svcProvEntry:active{transform:scale(.99)}.svcProvEntry:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}html[data-theme="light"] .svcProvEntry{background:#f3effe;border-color:#c9bbff}html[data-theme="light"] .svcProvEntry .go{color:#5b3fd6}</style>
