@@ -3694,6 +3694,14 @@ body:has(.fdCo) #fdRoot{padding-bottom:0}
 .fdwRowV .h .fdFav{width:44px;height:44px;margin:-11px -8px -11px 0;font-size:22px;color:var(--text);text-shadow:none}
 .fdwRowV .h .fdFav.on{color:#e11d48}
 .fdHero .nav .fdFav{width:44px;height:44px}
+/* K32-3 ana sayfa öne çıkan slayt: ~%62 yükseklik (360px≈108, 390px≈117, 430px≈129, en fazla 170px); "Menüyü gör" sağ altta */
+.fdwHero .fdwSl{aspect-ratio:auto;height:clamp(108px,30vw,170px);min-height:0;max-height:none}
+.fdwHero .fdwSl .ov{gap:1px;padding:10px 132px 14px 14px}
+.fdwHero .fdwSl small{font-size:11px}
+.fdwHero .fdwSl b{font-size:18px;line-height:1.15;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.fdwHero .fdwSl em{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fdwHero .fdwSl i{position:absolute;right:12px;bottom:14px;margin:0;padding:6px 12px;font-size:12.5px;white-space:nowrap}
+.fdwHero .dots{bottom:5px}
 /*K32-BITIS*/
 `;document.head.appendChild(s);
 }
