@@ -1071,7 +1071,7 @@ async function showFoodVenue(id,openItemId){
     render('<div class="fdHero">'+pic(v.cover_url||'',v.name+' '+(v.cuisine_type||''),'cover',foodIcon(v.cuisine_type||v.name))+
         '<div class="nav"><button type="button" class="fdIco" aria-label="Geri" onclick="showFoodHome()">‹</button><span style="display:flex;gap:8px">'+favBtn(v.id)+'<button type="button" class="fdIco" aria-label="Restoran bilgileri" onclick="foodVenueInfo()">ⓘ</button></span></div></div>'+
       '<div class="fdVHead">'+(v.image_url?pic(v.image_url,v.name,'fdLogo'):'')+'<div style="min-width:0;flex:1"><h1>'+E(v.name)+'</h1><div class="sub">'+E([cs.slice(0,3).join(' · '),v.district].filter(Boolean).join(' • '))+'</div></div>'+
-        (+v.rating_count?'<div class="fdCenter"><div class="fdStar" style="box-shadow:none;border:1px solid var(--line)">★ '+(+v.rating_avg).toFixed(1).replace('.',',')+'</div><div class="fdMuted" style="font-size:11px;margin-top:3px">'+v.rating_count+' değerlendirme</div></div>':'<span class="fdNew">Yeni</span>')+'</div>'+
+        (+v.rating_count?'<button type="button" class="fdCenter fdwRateBtn" onclick="showFoodReviews(\''+E(v.id)+'\')" aria-label="Puan '+(+v.rating_avg).toFixed(1).replace('.',',')+', '+v.rating_count+' değerlendirme. Yorumları gör"><span class="fdStar" style="box-shadow:none;border:1px solid var(--line)">★ '+(+v.rating_avg).toFixed(1).replace('.',',')+'</span><span class="fdMuted rc">'+v.rating_count+' değerlendirme <i aria-hidden="true">›</i></span></button>':'<span class="fdNew">Yeni</span>')+'</div>'+
       '<div class="fdStats"><div><small>'+(v.delivery_mode==='pickup'?'Hazırlık':'Teslimat')+'</small><b>'+etaText(v)+'</b></div><div><small>'+(v.delivery_mode==='pickup'?'Sipariş':'Teslimat ücreti')+'</small><b>'+(v.delivery_mode==='pickup'?'Gel-al':(+v.delivery_fee_kurus?M(v.delivery_fee_kurus):'Ücretsiz'))+'</b></div><div><small>Min. sepet</small><b>'+(+v.min_order_amount?M(v.min_order_amount):'Yok')+'</b></div></div>'+venueExtras(v)+
       (!open?'<div class="fdNote bad">🕐 '+E(nextOpen(v))+'. Menüye göz atabilirsin; restoran açıldığında sipariş verebilirsin.</div>':'')+
       '<div id="fdPast"></div>'+
@@ -3009,8 +3009,7 @@ function payChips(){const on=pfOn()&&pfSet().online_payment_enabled===true;
 function todayHours(v){const wh=v.working_hours;if(!wh||!Object.keys(wh).length)return 'Adres, saatler, teslimat';const r=wh[WK[istNow().getDay()]]||[];return r.length?'Bugün '+r.map(x=>x[0]+'–'+(x[1]==='24:00'?'00:00':x[1])).join(', '):'Bugün kapalı'}
 function venueExtras(v){
   return '<div class="fdwVX"><div class="fdwPay" aria-label="Ödeme yöntemleri">'+payChips()+'</div>'+
-    '<div class="fdwVBtns"><button type="button" class="fdwRevBtn" onclick="showFoodReviews(\''+E(v.id)+'\')"><b>Yorumlar</b><span>'+(+v.rating_count?(+v.rating_count)+' değerlendirme':'Henüz yok')+'</span><i aria-hidden="true">›</i></button>'+
-    '<button type="button" class="fdwRevBtn inf" onclick="foodVenueInfo()"><b>Hakkında</b><span>'+E(todayHours(v))+'</span><i aria-hidden="true">›</i></button></div></div><div id="fdwVPromo"></div>';
+    '<div class="fdwVBtns one"><button type="button" class="fdwRevBtn inf" onclick="foodVenueInfo()"><b>Hakkında</b><span>'+E(todayHours(v))+'</span><i aria-hidden="true">›</i></button></div></div><div id="fdwVPromo"></div>';
 }
 async function venuePromo(tok,v){
   try{
@@ -3712,6 +3711,12 @@ body:has(.fdCo) #fdRoot{padding-bottom:0}
 .fdProd .fdAdd.in{font-size:15px}
 .fdProd .fdStep{width:116px;height:44px;border-radius:12px}
 .fdProd .fdStep button{width:44px;height:44px;min-width:44px}
+/* K32-5 üstteki puan alanı Yorumlar'ı açar (ayrı "Yorumlar" satırı kaldırıldı) */
+.fdwRateBtn{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:44px;min-height:44px;padding:4px 6px;border:0;border-radius:12px;background:transparent;color:inherit;font:inherit;cursor:pointer}
+.fdwRateBtn .rc{font-size:11px;text-decoration:underline;text-underline-offset:2px;white-space:nowrap}
+.fdwRateBtn .rc i{font-style:normal;font-weight:800}
+.fdwRateBtn:active{background:var(--card2)}
+.fdwVBtns.one{grid-template-columns:1fr}
 /*K32-BITIS*/
 `;document.head.appendChild(s);
 }
