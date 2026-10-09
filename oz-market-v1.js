@@ -169,15 +169,25 @@ async function loadNotifs(){
 function notifHtml(list){
   if(!list.length)return empty(ico('bell',34),'Bildirim yok','Sipariş ve mağaza gelişmeleri burada görünür.');
   var nu=list.filter(unread).length;
-  return '<div class="ozNtH"><span class="pill'+(nu?' on':'')+'">'+(nu?nu+' okunmamış':'Hepsi okundu')+'</span><span class="acts"><button type="button" class="ozNtB" data-a="notifAll"'+(nu?'':' disabled')+'>Hepsini okundu yap</button></span></div>'+
+  return '<div class="ozNtH"><span class="pill'+(nu?' on':'')+'">'+(nu?nu+' okunmamış':'Hepsi okundu')+'</span><span class="acts">'+(ST.ntDel===true?'<button type="button" class="ozNtB bad" data-a="notifDel">Tümünü sil</button>':'')+'<button type="button" class="ozNtB" data-a="notifAll"'+(nu?'':' disabled')+'>Hepsini okundu yap</button></span></div>'+
     '<div class="ozList">'+list.map(function(n){return '<button type="button" class="ozNt'+(unread(n)?' new':'')+'" data-a="notifOpen" data-id="'+E(n.id)+'"><b>'+E(n.title||'Bildirim')+'</b>'+(n.body?'<span>'+E(n.body)+'</span>':'')+'<small>'+E(fmtDate(n.created_at))+'</small></button>'}).join('')+'</div>';
 }
 async function openNotifs(){
   if(!logged()){needLogin(function(){openNotifs()});return}
   sheet('Bildirimler',skel(3,'line'),{noFocus:true});
-  try{var l=await loadNotifs();var b=qs('.ozOv .ozShB');if(b)b.innerHTML=notifHtml(l)}catch(e){var b2=qs('.ozOv .ozShB');if(b2)b2.innerHTML=errBox(e,false)}
+  try{var l=await loadNotifs();await ntDelCheck();var b=qs('.ozOv .ozShB');if(b)b.innerHTML=notifHtml(l)}catch(e){var b2=qs('.ozOv .ozShB');if(b2)b2.innerHTML=errBox(e,false)}
+}
+/* "Tümünü sil" yalnız oz_delete_my_notifications RPC'si kuruluysa görünür (oz-paket4-bildirim-sil.sql). p_check:true hiçbir şey silmez. */
+async function ntDelCheck(){
+  if(ST.ntDel!==undefined)return;
+  try{await rpc('oz_delete_my_notifications',{p_check:true});ST.ntDel=true}
+  catch(e){var m=String(e&&(e.code||'')+' '+(e.message||e));if(/PGRST202|Could not find the function|kullanılamıyor|schema cache|404/i.test(m))ST.ntDel=false}
 }
 ACT_EXTRA({
+  notifDel:async function(btn){
+    if(!await confirmBox('Tüm bildirimlerin silinsin mi?','Bu işlem geri alınamaz. Yalnız kendi bildirimlerin silinir.','Tümünü sil',true)){openNotifs();return}
+    await busy(btn,async function(){await rpc('oz_delete_my_notifications',{p_check:false});ST.notif=[];bellBadge(0);toast('Bildirimler silindi');openNotifs()});
+  },
   notifAll:async function(btn){await busy(btn,async function(){await rpc('oz_mark_notifications_read',{p_ids:null});(ST.notif||[]).forEach(function(n){n.read_at=n.read_at||new Date().toISOString()});bellBadge(0);var b=qs('.ozOv .ozShB');if(b)b.innerHTML=notifHtml(ST.notif||[])})},
   notifOpen:async function(btn){
     var n=(ST.notif||[]).filter(function(x){return String(x.id)===btn.dataset.id})[0];if(!n)return;
