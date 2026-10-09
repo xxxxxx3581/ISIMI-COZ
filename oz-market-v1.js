@@ -254,8 +254,9 @@ function ppHtml(d,all){
   var rc=num(d.rating_count);
   return '<div class="ozPP"><div class="cv">'+(cv?'<img src="'+E(cv)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">':'')+'<button type="button" class="bk" data-a="back" aria-label="Geri">'+ico('back')+'</button></div>'+
     '<div class="hd"><span class="lg">'+(lg?'<img src="'+E(lg)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">':'')+'<i aria-hidden="true">'+E(initials(nm))+'</i></span><span class="ok">✓ Onaylı üretici</span></div>'+
-    '<div class="nmr"><h1 class="nm">'+E(nm)+'</h1>'+(rc?'<button type="button" class="rtb" data-a="ppRev" data-id="'+E(d.id)+'" aria-label="'+rc+' değerlendirmeyi gör">★ '+NF1.format(num(d.rating_avg))+' <span>('+rc+')</span></button>':'<em class="new">Yeni</em>')+'</div>'+
-    (loc?'<p class="loc">'+E(loc)+'</p>':'')+
+    /* C7: solda ad (tek satır) + konum; sağda tek dokunma alanı: ★ puan / Değerlendirmeler (N) */
+    '<div class="nmr"><div class="nl"><h1 class="nm">'+E(nm)+'</h1>'+(loc?'<p class="loc">'+E(loc)+'</p>':'')+'</div>'+
+      (rc?'<button type="button" class="rtb2" data-a="ppRev" data-id="'+E(d.id)+'" aria-label="'+rc+' değerlendirmeyi gör"><b>★ '+num(d.rating_avg).toLocaleString('tr-TR',{minimumFractionDigits:1,maximumFractionDigits:1})+'</b><small>Değerlendirmeler ('+rc+')</small></button>':'<em class="new">Yeni</em>')+'</div>'+
     (info.length?'<dl class="ozPPInf">'+info.map(function(x){return '<div><dt>'+E(x[0])+'</dt><dd>'+E(x[1])+'</dd></div>'}).join('')+'</dl>':'')+
     (cats.length?'<div class="ozSecH"><h2>Kategoriler</h2></div><div class="ozPPCats" role="list">'+
       cats.map(function(c){var n=cnt[c.slug]||0;return catTile({slug:c.slug,image_url:c.image_url,name:c.name+(n?' ('+n+')':'')},'data-a="ppCat" data-cat="'+E(c.slug)+'"'+(n?'':' data-off="1"'))}).join('')+'</div>':'')+
