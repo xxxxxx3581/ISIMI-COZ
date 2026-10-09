@@ -3749,6 +3749,9 @@ body:has(.fdCo) #fdRoot{padding-bottom:0}
 .fdwVRt{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-start}
 .fdVHead .fdFav.fdwHFav{width:44px;height:44px;min-width:44px;margin:-6px 0 0 -2px;font-size:24px;font-weight:400;-webkit-text-stroke:0;color:var(--text);text-shadow:none;background:transparent!important;border:0!important;box-shadow:none!important}
 .fdVHead .fdFav.fdwHFav.on{color:#e11d48}
+/* K33-3 restoran kapağı ~%62 (360px 191→119, 390px 208→129, 430px+ 230→143); object-fit:cover */
+.fdHero .fdPic.cover{aspect-ratio:auto;height:clamp(110px,33vw,143px);max-height:none}
+.fdHero .fdPic.cover img{object-fit:cover}
 /*K32-BITIS*/
 `;document.head.appendChild(s);
 }
