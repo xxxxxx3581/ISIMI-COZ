@@ -1006,6 +1006,7 @@ ACT_EXTRA({
       /* A4: ödeme adımı otomatik zincirlenir, ara ekran yok → siparişin detayı. Başarısızsa sipariş "Ödeme bekleniyor" kalır. */
       var os=arr(res.orders);var pr=await payOrders(os,pay);
       ST.placedBand={ids:os.map(function(o){return String(o.id)}),n:os.length,payFail:!pr.ok&&!pr.skipped};
+      if(!pr.ok&&!pr.skipped)errToast('Siparişin alındı ama ödeme tamamlanamadı; "Ödemeyi tamamla" ile tekrar dene.');else if(os.length>1)toast(os.length+' üreticiden '+os.length+' sipariş oluşturuldu.');
       if(os.length)go('order',{id:os[0].id},true);else go('orders',{},true);  /* ödeme ekranının yerine geçer */
     })}finally{ST.placing=false}
   },
