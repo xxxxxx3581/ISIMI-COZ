@@ -181,6 +181,7 @@ function cartItemsParam(){return cartGet().map(function(x){return {variant_id:x.
 
 /* ====================== Bildirimler ====================== */
 function unread(n){return !(n&&(n.read_at||n.is_read===true||n.read===true))}
+function ntMotion(){try{return !(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)}catch(e){return true}}
 function bellBadge(n){var b=D.getElementById('ozBellN');if(!b)return;b.hidden=!n;b.textContent=n>9?'9+':String(n||'')}
 async function loadNotifs(){
   if(!logged()){ST.notif=[];bellBadge(0);return []}
@@ -190,7 +191,8 @@ async function loadNotifs(){
 function notifHtml(list){
   if(!list.length)return empty(ico('bell',34),'Bildirimin yok','Sipariş ve mağaza gelişmeleri burada görünür.');
   var nu=list.filter(unread).length;
-  return '<div class="ozNtH"><span class="pill'+(nu?' on':'')+'">'+(nu?nu+' okunmamış':'Hepsi okundu')+'</span><span class="acts"><button type="button" class="ozNtB" data-a="notifAll"'+(nu?'':' disabled')+' aria-label="Hepsini okundu işaretle">'+ico('chk2',16)+'<span>Okundu işaretle</span></button>'+(ST.ntDel===true?'<button type="button" class="ozNtB bad" data-a="notifDel" aria-label="Tüm bildirimleri sil">'+ico('trash',16)+'<span>Tümünü sil</span></button>':'')+'</span></div>'+
+  /* E6: etiket iki katman (çapraz solma için), düğmeler: yeşil tonlu "Okundu işaretle", kırmızı tonlu "Tümünü sil"; dar ekranda kısa etiket */
+  return '<div class="ozNtH"><span class="pill'+(nu?' on':'')+'" aria-live="polite"><span class="a">'+(nu?nu+' okunmamış':'Hepsi okundu')+'</span><span class="b" aria-hidden="true">Hepsi okundu</span></span><span class="acts'+(ST.ntDel===true?' two':'')+'"><button type="button" class="ozNtB ok" data-a="notifAll"'+(nu?'':' disabled')+' aria-label="Hepsini okundu işaretle">'+ico('chk2',16)+'<span class="lg">Okundu işaretle</span><span class="sh">Okundu</span></button>'+(ST.ntDel===true?'<button type="button" class="ozNtB bad" data-a="notifDel" aria-label="Tüm bildirimleri sil">'+ico('trash',16)+'<span class="lg">Tümünü sil</span><span class="sh">Sil</span></button>':'')+'</span></div>'+
     '<div class="ozList">'+list.map(function(n){return '<button type="button" class="ozNt'+(unread(n)?' new':'')+'" data-a="notifOpen" data-id="'+E(n.id)+'"><b>'+E(n.title||'Bildirim')+'</b>'+(n.body?'<span>'+E(n.body)+'</span>':'')+'<small>'+E(fmtDate(n.created_at))+'</small></button>'}).join('')+'</div>';
 }
 async function openNotifs(){
@@ -210,10 +212,22 @@ ACT_EXTRA({
     if(!await confirmBox('Tüm bildirimlerin silinsin mi?','Bu işlem geri alınamaz.','Sil',true)){openNotifs();return}
     /* kilit: onay penceresi düğmeyi kapattığı için ayrı bayrak; sunucu yalnız auth.uid() bildirimlerini siler */
     ST.ntDelBusy=1;
-    try{await rpc('oz_delete_my_notifications',{p_check:false});ST.notif=[];bellBadge(0);toast('Bildirimler silindi')}catch(e){fail(e)}
-    finally{ST.ntDelBusy=0;openNotifs()}
+    var old=(ST.notif||[]).slice(),okDel=false;
+    try{await rpc('oz_delete_my_notifications',{p_check:false});okDel=true}catch(e){fail(e)}
+    if(!okDel){ST.ntDelBusy=0;openNotifs();return}
+    /* E6: listeyi geri aç, kartları solarak çıkar, ardından boş durum */
+    sheet('Bildirimler',notifHtml(old),{noFocus:true});var cards=qa('.ozOv .ozNt');
+    cards.forEach(function(c,i){c.style.transitionDelay=Math.min(i*30,240)+'ms';c.classList.add('gone')});
+    await new Promise(function(r){setTimeout(r,ntMotion()?320:0)});
+    ST.notif=[];bellBadge(0);ST.ntDelBusy=0;
+    var b=qs('.ozOv .ozShB');if(b)b.innerHTML='<div class="ozNtIn">'+notifHtml([])+'</div>';
   },
-  notifAll:async function(btn){await busy(btn,async function(){await rpc('oz_mark_notifications_read',{p_ids:null});(ST.notif||[]).forEach(function(n){n.read_at=n.read_at||new Date().toISOString()});bellBadge(0);var b=qs('.ozOv .ozShB');if(b)b.innerHTML=notifHtml(ST.notif||[])})},
+  notifAll:async function(btn){await busy(btn,async function(){await rpc('oz_mark_notifications_read',{p_ids:null});(ST.notif||[]).forEach(function(n){n.read_at=n.read_at||new Date().toISOString()});
+    /* E6: düğme kısa parlar, okunmamış kartlar yumuşakça sönükleşir, etiket çapraz solar, çan rozeti söner */
+    btn.classList.add('glow');qa('.ozOv .ozNt.new').forEach(function(c){c.classList.remove('new')});var pl=qs('.ozOv .ozNtH .pill');if(pl){pl.classList.remove('on');pl.classList.add('x')}
+    var bb=D.getElementById('ozBellN');if(bb&&!bb.hidden){bb.classList.add('fade');setTimeout(function(){bellBadge(0);bb.classList.remove('fade')},ntMotion()?260:0)}else bellBadge(0);
+    setTimeout(function(){btn.classList.remove('glow')},600);
+  });btn.disabled=true},
   notifOpen:async function(btn){
     var n=(ST.notif||[]).filter(function(x){return String(x.id)===btn.dataset.id})[0];if(!n)return;
     if(unread(n)){try{await rpc('oz_mark_notifications_read',{p_ids:[n.id]});n.read_at=new Date().toISOString();bellBadge(ST.notif.filter(unread).length)}catch(e){}}
