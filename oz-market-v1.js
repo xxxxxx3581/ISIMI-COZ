@@ -1252,7 +1252,7 @@ OZ.go=function(k,a){go(k,a)};
 function loginWall(text){return empty(ico('user',34),'Giriş yapman gerekiyor',text||'Bu bölümü görmek için hesabına giriş yap.','<button type="button" class="ozBtn pri" data-a="login">Giriş yap</button>')}
 function topHtml(){
   return '<button type="button" class="ozIc" data-a="back" aria-label="Geri">'+ico('back')+'</button>'+
-    '<button type="button" class="ozBrand" data-a="nav" data-k="home" aria-label="Özüne Dön ana sayfa"><span>Özüne <b>Dön</b></span></button>'+
+    '<button type="button" class="ozBrand" data-a="nav" data-k="home" aria-label="Özüne Dön ana sayfa"><span>Özüne <b>Dön</b></span></button><span class="ozSellTag" id="ozSellTag" hidden>Satıcı paneli</span>'+
     '<button type="button" class="ozIc" data-a="nav" data-k="search" aria-label="Ara">'+ico('search')+'</button>'+
     '<button type="button" class="ozIc" data-a="bell" aria-label="Bildirimler">'+ico('bell')+'<span class="ozBdg dot" id="ozBellN" hidden></span></button>';
 }
@@ -1271,7 +1271,10 @@ function soBadge(){
   var d=SELLER.dash||{};var n=SELLER.soN;if(n==null){var o=d.orders||{};n=num(o.new)+num(o.accepted)+num(o.packed)}
   set('ozSoN',n);set('ozSqN',num(d.open_questions)+num(d.unreplied_reviews));set('ozSlN',num(SELLER.lowN));
 }
-function sellerPanelOn(){var d=SELLER.dash;return !!(d&&d.has_seller&&/^(approved|active|suspended)$/.test(d.status||''))}
+function sellerPanelOn(){var d=SELLER.dash;if(d)return !!(d.has_seller&&/^(approved|active|suspended)$/.test(d.status||''));var ms=S().my_seller;return !!(ms&&/^(approved|active|suspended)$/.test(ms.status||''))}
+/* N1-1: satıcı alt menüsü panelin TÜM ekranlarında (sekmeler, ürün düzenle/yeni ürün, onaylı satıcının belgeleri); seçili sekme ekrana göre */
+var STAB_OF={sellerProduct:'urunler',sellerApply:'magaza'};
+function sellerTabOf(c){if(c.k==='seller'){var t=(c.a&&c.a.tab)||'ozet';return t==='siparisler'?'ozet':t}return STAB_OF[c.k]||'ozet'}
 /* Yeni sipariş ışığı: satıcının "Yeni" durumda siparişi varsa Hesabım sekmesinde ve Hesabım > Satıcı paneli satırında
    yumuşak yanıp sönen nokta. Sayı mevcut oz_seller_dashboard'dan (en fazla dakikada bir); sipariş "Yeni"den çıkınca söner. */
 /* C6: bekleyen iş = Yeni + Hazırlanıyor (kabul edildi / hazırlandı); hepsi kargoya verilince söner */
@@ -1283,11 +1286,12 @@ function newDotCheck(){
 }
 function navSync(){
   var c=cur(),k=c.k,nav=D.getElementById('ozNav');
-  var mode=!D.body.classList.contains('ozWorld')||isPre()?'':k==='seller'?(sellerPanelOn()?'seller':''):(NONAV[k]?'':'buyer');
+  var mode=!D.body.classList.contains('ozWorld')||isPre()?'':(k==='seller'||STAB_OF[k])?(sellerPanelOn()?'seller':''):(NONAV[k]?'':'buyer');
+  D.body.classList.toggle('ozSellerNav',mode==='seller');var tg=D.getElementById('ozSellTag');if(tg)tg.hidden=mode!=='seller';
   if(nav&&mode&&nav.dataset.mode!==mode){nav.innerHTML=mode==='seller'?sellerNavHtml():navHtml();nav.dataset.mode=mode;nav.setAttribute('aria-label',mode==='seller'?'Satıcı menüsü':'Özüne Dön menüsü');cartBadge()}
   if(mode==='seller')soBadge();else if(mode==='buyer'){newDotSync();newDotCheck()}
   D.body.classList.toggle('ozNavOn',!!mode);
-  qa('#ozNav .ozNavB').forEach(function(b){var on=mode==='seller'?b.dataset.tab===((c.a&&c.a.tab)||'ozet'):TAB_OF[k]===b.dataset.k;if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
+  qa('#ozNav .ozNavB').forEach(function(b){var on=mode==='seller'?b.dataset.tab===sellerTabOf(c):TAB_OF[k]===b.dataset.k;if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
 }
 function ensureWorld(){
   if(!D.getElementById('ozRoot')){
@@ -1456,7 +1460,9 @@ VIEWS_EXTRA({
     var tab=a.tab==='siparisler'?'ozet':(a.tab||'ozet');
     navSync();
     var TT={ozet:'Siparişler',siparisler:'Siparişler',urunler:'Ürünlerim',kazanc:'Kazançlarım',magaza:'Mağaza ayarları',sorular:'Sorular ve yorumlar'};
-    paint((tab==='ozet'?'<p class="ozSpH"><b>'+E(d.display_name||'Mağazam')+'</b> · Satıcı paneli</p>':pageHead(TT[tab]||'Satıcı paneli'))+(st==='suspended'?statusCard(d):'')+(isPre()?sellerTabs(tab):'')+'<div id="ozSP">'+skel(2,'line')+'</div>');
+    /* N1-1: panelde küçük "Müşteri görünümüne geç" bağlantısı (Keşfet'e döner, alıcı menüsü gelir) */
+    var cv='<button type="button" class="ozLink ozCustV" data-a="nav" data-k="home">Müşteri görünümüne geç ›</button>';
+    paint((tab==='ozet'?'<div class="ozSpHW"><p class="ozSpH"><b>'+E(d.display_name||'Mağazam')+'</b> · Satıcı paneli</p>'+cv+'</div>':'<div class="ozSpHW">'+pageHead(TT[tab]||'Satıcı paneli')+cv+'</div>')+(st==='suspended'?statusCard(d):'')+(isPre()?sellerTabs(tab):'')+'<div id="ozSP">'+skel(2,'line')+'</div>');
     var fn=SP[tab]||SP.ozet;await fn(d,t);
   },
   sellerApply:async function(a,t){
