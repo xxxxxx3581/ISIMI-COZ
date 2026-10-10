@@ -349,18 +349,16 @@ function ppCtrl(p){
   return '<span class="ozPStep" role="group" aria-label="Adet"><button type="button" data-a="ppQty" data-v="'+E(l.variant_id)+'" data-d="-1" aria-label="'+(q<=1?'Sepetten çıkar':'Azalt')+'">−</button><b aria-live="polite">'+q+'</b>'+
     '<button type="button" data-a="ppQty" data-v="'+E(l.variant_id)+'" data-d="1" aria-label="Bir tane daha"'+(q>=mx?' disabled':'')+'>+</button></span>';
 }
-/* L: kart fiyat bloğu. Seçenekler (oz_variants, etkin olanlar) biliniyorsa: birden çoksa en düşük seçenek fiyatı "X ₺'den"
-   (o seçeneğin indirimi aynı mantıkla çizili) + "N seçenek · birim"; tek seçenekte fiyat + "≈ X ₺/kg|L" (unitPrice; miktar
+/* L/M: kart fiyat bloğu. Seçenekler (oz_variants, etkin olanlar) biliniyorsa: birden çoksa kartta FİYAT YOK, yalnız
+   "N seçenek · birim" (fiyatlar ürün panelinde); tek seçenekte fiyat (+ indirim çizili) + "≈ X ₺/kg|L" (unitPrice; miktar
    okunamazsa gösterilmez). Seçenekler bilinmiyorsa eski gösterim. Yalnız gösterim; tutar sunucuda hesaplanır. */
 function unitWord(l){var m=/^\s*\d+(?:[.,]\d+)?\s*(g|gr|gram|kg|kilo|ml|l|lt|litre)\s*$/i.exec(String(l||''));if(!m)return '';var u=m[1].toLowerCase();return u==='g'||u==='gram'?'gr':u==='kilo'?'kg':u==='l'||u==='litre'?'lt':u}
 function cardPrice(p,sFirst){
-  var vs=Array.isArray(p.vars)?p.vars:null;var price=num(p.price_kurus),cmp=num(p.compare_at_kurus),sub='',from='';
-  if(vs&&vs.length>1){var pool=vs.filter(function(v){return num(v.stock)>0});if(!pool.length)pool=vs;
-    var m=pool.reduce(function(a,v){return num(v.price_kurus)<num(a.price_kurus)?v:a});price=num(m.price_kurus);cmp=num(m.compare_at_kurus);from='\'den';
-    var us=vs.map(function(v){return unitWord(v.label)});var u=us[0]&&us.every(function(x){return x===us[0]})?us[0]:'';
-    sub=vs.length+' seçenek'+(u?' · '+u:'')}
-  else if(vs&&vs.length===1){var v=vs[0];price=num(v.price_kurus);cmp=num(v.compare_at_kurus);sub=unitPrice({variants:vs,net_content:p.net_content},v)}
-  var b='<b>'+TL(price)+from+'</b>',st=cmp>price?'<s>'+TL(cmp)+'</s>':'';
+  var vs=Array.isArray(p.vars)?p.vars:null;var price=num(p.price_kurus),cmp=num(p.compare_at_kurus),sub='';
+  if(vs&&vs.length>1){var us=vs.map(function(v){return unitWord(v.label)});var u=us[0]&&us.every(function(x){return x===us[0]})?us[0]:'';
+    return '<small class="u ov" style="display:block;font-size:13px;font-weight:700;color:#6B5A44;white-space:nowrap">'+E(vs.length+' seçenek'+(u?' · '+u:''))+'</small>'}
+  if(vs&&vs.length===1){var v=vs[0];price=num(v.price_kurus);cmp=num(v.compare_at_kurus);sub=unitPrice({variants:vs,net_content:p.net_content},v)}
+  var b='<b>'+TL(price)+'</b>',st=cmp>price?'<s>'+TL(cmp)+'</s>':'';
   return (sFirst?st+b:b+st)+(sub?'<small class="u" style="display:block;font-size:11.5px;font-weight:600;color:#8E7E66;white-space:nowrap">'+E(sub)+'</small>':'')}
 /* F2: Keşfet şeridi için küçük kart (beyaz zemin, koyu yazı, F6 "+") */
 function krCard(p){ST.rows=ST.rows||{};ST.rows[String(p.id)]=p;var im=httpsUrl(p.image)||httpsUrl(arr(p.images)[0]);var price=num(p.price_kurus),cmp=num(p.compare_at_kurus);
@@ -685,7 +683,8 @@ async function openProduct(id){
   if(!p||!p.id){qs('.ozShB',ov).innerHTML=empty(ico('box',36),'Ürün bulunamadı','Bu ürün yayından kaldırılmış olabilir.');return}
   if(logged()){try{await loadFavs()}catch(e){}if(p.is_favorite)ST.fav.add(String(p.id));else if(ST.fav)ST.fav.delete(String(p.id))}
   if(!ov.isConnected)return;
-  var vs=arr(p.variants);var first=vs.filter(function(v){return num(v.stock)>0})[0]||vs[0]||null;
+  /* M: birden çok seçenekte başta seçim yok; kullanıcı seçer. Tek seçenekte ilk (stoklu) seçenek seçili. */
+  var vs=arr(p.variants);var first=vs.length>1?null:(vs.filter(function(v){return num(v.stock)>0})[0]||vs[0]||null);
   ST.pd={p:p,sel:first?first.id:null};ST.pnv=ST.pnv||{};ST.pnv[String(p.id)]=vs.filter(function(x){return x.is_active!==false}).length;
   pdRender();
 }
@@ -713,17 +712,18 @@ function pdRender(){
     (imgs.length>1?'<div class="ozDots" id="ozGalD" aria-hidden="true">'+imgs.map(function(_,i){return '<i'+(i?'':' class="on"')+'></i>'}).join('')+'</div>':'');
   var rc=num(p.rating_count);
   var head='<div class="ozPNm"><h3 class="ozPName">'+E(p.name)+'</h3>'+(rc?'<button type="button" class="ozRtB" data-a="pdRev" aria-label="'+rc+' değerlendirmeyi gör"><b>★ '+num(p.rating_avg).toLocaleString('tr-TR',{minimumFractionDigits:1,maximumFractionDigits:1})+'</b><small>('+rc+')</small></button>':'')+'</div>'+
-    '<div class="ozPrice">'+(v?'<b>'+TL(price)+'</b>'+(cmp>price?'<s>'+TL(cmp)+'</s>':''):'—')+(v&&unitPrice(p,v)?'<small class="ozUnit">'+unitPrice(p,v)+'</small>':'')+'</div>';
-  var vars=vs.length>1?'<div class="ozVars" role="radiogroup" aria-label="Seçenek">'+vs.map(function(x){var out=num(x.stock)<=0;return '<button type="button" class="ozVar'+(x.id===pd.sel?' on':'')+'" role="radio" aria-checked="'+(x.id===pd.sel)+'" data-a="pickVar" data-id="'+E(x.id)+'"'+(out?' disabled':'')+'>'+E(x.label||'Standart')+'<small>'+(out?'Tükendi':TL(x.price_kurus))+'</small>'+(!out&&unitPrice(p,x)?'<small class="u" style="font-size:11px;opacity:.8">'+E(unitPrice(p,x))+'</small>':'')+'</button>'}).join('')+'</div>':'';
+    (!v&&vs.length>1?'':'<div class="ozPrice">'+(v?'<b>'+TL(price)+'</b>'+(cmp>price?'<s>'+TL(cmp)+'</s>':''):'—')+(v&&unitPrice(p,v)?'<small class="ozUnit">'+unitPrice(p,v)+'</small>':'')+'</div>');
+  var vars=vs.length>1?'<div class="ozVars" role="radiogroup" aria-label="Seçenek">'+vs.map(function(x){var out=num(x.stock)<=0;return '<button type="button" class="ozVar'+(x.id===pd.sel?' on':'')+'" role="radio" aria-checked="'+(x.id===pd.sel)+'" data-a="pickVar" data-id="'+E(x.id)+'"'+(out?' disabled':'')+'>'+E(x.label||'Standart')+'<small>'+(out?'Tükendi':TL(x.price_kurus)+(num(x.compare_at_kurus)>num(x.price_kurus)?' <s style="opacity:.7">'+TL(x.compare_at_kurus)+'</s>':''))+'</small>'+(!out&&unitPrice(p,x)?'<small class="u" style="font-size:11px;opacity:.8">'+E(unitPrice(p,x))+'</small>':'')+'</button>'}).join('')+'</div>':'';
   var dsc=String(p.description||'');
   var desc=dsc?'<div class="ozDesc"><p class="ozStory'+(dsc.length>140?' ozClamp ozC3':'')+'" id="ozStory">'+E(dsc)+'</p>'+(dsc.length>140?'<button type="button" class="ozLink" data-a="storyMore" aria-controls="ozStory" aria-expanded="false">Devamı</button>':'')+'</div>':'';
   var ship='<p class="ozShipN">'+ico('truck',16)+'<span>'+(num(sel.handling_days)?num(sel.handling_days)+' iş günü içinde kargoya verilir':'Kargoya veriliş süresi satıcıya göre değişir')+(num(sel.free_ship_over_kurus)?' · '+TL(sel.free_ship_over_kurus)+' ve üzeri kargo bedava':'')+'</span></p>';
   /* G2-2: üretici satırı; alt sabit çubuk: solda fiyat, sağda "Sepete ekle" → eklenince aynı yerde − n + (stokta + pasif) */
   var prod=sel.id?'<div class="ozPdPr"><span class="ok">✓ Onaylı üretici</span><b>'+E(sel.display_name||'Üretici')+'</b><button type="button" class="ozLink" data-a="pdSeller" data-id="'+E(sel.id)+'">Üreticiyi gör ›</button></div>':'';
-  var act=!v||stock<=0?'<button type="button" class="ozBtn" disabled>Stokta yok</button>':
+  var pick=!v&&vs.length>1;
+  var act=pick?'<button type="button" class="ozBtn pri" disabled aria-disabled="true">Sepete ekle</button>':!v||stock<=0?'<button type="button" class="ozBtn" disabled>Stokta yok</button>':
     inCart?'<span class="ozPStep ozPdStep" role="group" aria-label="Sepetteki adet"><button type="button" data-a="pdStep" data-d="-1" aria-label="'+(inCart<=1?'Sepetten çıkar':'Azalt')+'">−</button><b aria-live="polite">'+inCart+'</b><button type="button" data-a="pdStep" data-d="1" aria-label="Bir tane daha"'+(inCart>=Math.min(99,stock)?' disabled':'')+'>+</button></span>':
     '<button type="button" class="ozBtn pri" data-a="addCart">Sepete ekle</button>';
-  var bar='<div class="ozPdBar"><span class="pp"><b>'+(v?TL(price):'—')+'</b>'+(v&&cmp>price?'<s>'+TL(cmp)+'</s>':'')+'</span>'+act+'</div>';
+  var bar='<div class="ozPdBar"><span class="pp">'+(pick?'<b class="pk" style="font-size:16px;color:#CDBB9F">Seçenek seç</b>':'<b>'+(v?TL(price):'—')+'</b>'+(v&&cmp>price?'<s>'+TL(cmp)+'</s>':''))+'</span>'+act+'</div>';
   var b=qs('.ozShB',ov);if(!b)return;var keep=b.scrollTop,openInf=!!qs('.ozPdInf[open]',b);
   b.innerHTML=gal+head+prod+desc+vars+pdFeat(p)+ship+bar;
   if(openInf){var di=qs('.ozPdInf',b);if(di)di.open=true}b.scrollTop=keep;

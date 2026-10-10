@@ -26,10 +26,14 @@ const {chromium,open,enter}=require('./harness.js');
    inf:!!inf,infOpen:inf?inf.open:null,infTitle:inf?inf.querySelector('summary').innerText.trim():'',bar:q('.ozPdBar')?q('.ozPdBar').innerText.replace(/\s+/g,' '):''}},S);
  ok(base,'ürün paneli açılmalı');
  if(base){
-  ok(base.gal&&base.name&&base.price&&base.desc,'foto, ad, fiyat, açıklama görünür olmalı: '+JSON.stringify(base));
+  // M: iki seçenekli üründe başta seçim yok → fiyat seçenek satırlarında, alt çubukta "Seçenek seç"
+  ok(base.gal&&base.name&&base.desc,'foto, ad, açıklama görünür olmalı: '+JSON.stringify(base));
+  ok(!base.price&&/^Seçenek seç Sepete ekle$/.test(base.bar),'seçim yokken üst fiyat yok, alt çubukta "Seçenek seç": '+base.bar);
   ok(/Onaylı üretici/.test(base.prod)&&/Üreticiyi gör ›/.test(base.prod),'üretici satırı olmalı: '+base.prod);
   ok(base.inf&&base.infOpen===false&&/Ürün bilgileri/.test(base.infTitle),'"Ürün bilgileri" kapalı başlamalı');
-  ok(/650,00/.test(base.bar)&&/Sepete ekle/.test(base.bar),'alt çubuk: fiyat + Sepete ekle: '+base.bar);
+  await click(p,S+' .ozVar:nth-child(1)',300);
+  const sel1=await p.evaluate(S=>{const o=document.querySelector(S);return {price:!!o.querySelector('.ozPrice b'),bar:o.querySelector('.ozPdBar').innerText.replace(/\s+/g,' ')}},S);
+  ok(sel1.price&&/650,00/.test(sel1.bar)&&/Sepete ekle/.test(sel1.bar),'seçince fiyat + Sepete ekle: '+JSON.stringify(sel1));
   await click(p,S+' .ozPdInf summary',300);
   const inf=await p.evaluate(S=>{const d=document.querySelector(S+' .ozPdInf');return d&&d.open?d.innerText.replace(/\s+/g,' '):null},S);
   ok(inf&&/Menşe/.test(inf)&&/İçindekiler/.test(inf)&&/Raf ömrü/.test(inf)&&/Saklama/.test(inf)&&/Satıcı beyanı – platform tarafından doğrulanmadı/.test(inf),'bilgiler + beyan notu açılmalı: '+inf);
