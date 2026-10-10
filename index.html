@@ -2357,6 +2357,11 @@ html:root .ozGc .ozPlus{background:radial-gradient(circle,transparent 13.5px,#F2
 html:root .ozGc .ozPlus:disabled{background:radial-gradient(circle,transparent 13.5px,#6B5A44 14px,#6B5A44 15.5px,transparent 16px);box-shadow:none;color:#A8987F}
 html:root .ozGc .ozPStep{background:transparent;color:#F2C14E;box-shadow:inset 0 0 0 1.5px #F2C14E}
 html:root .ozGc .ozPlus .bd{background:#1F6F43;color:#fff}
+/*OZ U2 ürün liste kartı seçenek etiketi: "+"ın hemen solunda (8px), altın yazı/kenar, hafif altın zemin, ≥32px. Sığmazsa
+  bir üst satıra geçer, sağa hizalı "+"ın üstünde kalır.*/
+html:root .ozGc .ft{flex-wrap:wrap;justify-content:flex-end;column-gap:15px;row-gap:6px}
+html:root .ozGc .ft .opt{flex:0 1 auto;align-self:center;min-height:32px;max-width:100%;margin:0;padding:5px 12px;box-sizing:border-box;border:1px solid #F2C14E;border-radius:999px;background:rgba(242,193,78,.12);color:#F2C14E;font:inherit;font-size:13px;font-weight:800;line-height:1.25;text-align:center;cursor:pointer;overflow-wrap:anywhere}
+html:root .ozGc .ft .opt:disabled{border-color:#6B5A44;background:transparent;color:#BFAE92;cursor:not-allowed}
 /*K21-BITIS*/
 </style>
 <style id="svcProvEntryCss">.svcProvEntry{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;border-radius:16px;border:1.5px solid rgba(124,92,255,.45);background:rgba(124,92,255,.10);color:var(--text);font:inherit;text-align:left;cursor:pointer}.svcProvEntry .ic{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:rgba(124,92,255,.18)}.svcProvEntry .tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}.svcProvEntry small{font-size:12px;font-weight:700;color:var(--muted)}.svcProvEntry b{font-size:16px;font-weight:900}.svcProvEntry em{font-style:normal;font-size:12.5px;color:var(--muted)}.svcProvEntry .go{flex:0 0 auto;font-size:24px;font-weight:700;color:#7c5cff}.svcProvEntry:active{transform:scale(.99)}.svcProvEntry:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}html[data-theme="light"] .svcProvEntry{background:#f3effe;border-color:#c9bbff}html[data-theme="light"] .svcProvEntry .go{color:#5b3fd6}</style>

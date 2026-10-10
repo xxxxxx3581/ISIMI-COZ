@@ -21,7 +21,7 @@ const BIG='html:root .ozGc .nm{font-size:22px!important}html:root .ozGc .ds{font
   R.oz_my_favorites=[{id:'p1'}];R.oz_toggle_favorite=true});
  await enter(p);await p.waitForTimeout(600);
  await p.evaluate(()=>OZ.go('plist',{seller:'s1'}));await p.waitForTimeout(1500);
- const C=()=>p.evaluate(()=>[...document.querySelectorAll('#ozRoot .ozGc')].map(c=>{const R=e=>e?e.getBoundingClientRect():null;const nm=c.querySelector('.nm'),tr=c.querySelector('.tr'),fv=c.querySelector('.tr [data-a=fav]'),rt=c.querySelector('.tr .rt'),pr=c.querySelector('.ft .pr'),ac=c.querySelector('.ac');
+ const C=()=>p.evaluate(()=>[...document.querySelectorAll('#ozRoot .ozGc')].map(c=>{const R=e=>e?e.getBoundingClientRect():null;const nm=c.querySelector('.nm'),tr=c.querySelector('.tr'),fv=c.querySelector('.tr [data-a=fav]'),rt=c.querySelector('.tr .rt'),pr=c.querySelector('.ft :is(.pr,.opt)'),ac=c.querySelector('.ac');
   const ov=(a,b)=>a&&b&&a.left<b.right-1&&b.left<a.right-1&&a.top<b.bottom-1&&b.top<a.bottom-1;
   const glyphs=e=>{if(!e)return [];const out=[];const w=document.createTreeWalker(e,NodeFilter.SHOW_TEXT);let t;const box=e.getBoundingClientRect();while((t=w.nextNode())){if(!t.nodeValue.trim())continue;const rg=document.createRange();rg.selectNodeContents(t);out.push(...[...rg.getClientRects()].filter(x=>x.width>0&&x.top<box.bottom-1&&x.bottom>box.top+1))}return out};
   const cr=R(c),fr=R(fv),rr=R(rt),ar=R(ac),pg=glyphs(pr),ng=glyphs(nm);

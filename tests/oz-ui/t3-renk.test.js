@@ -30,11 +30,11 @@ const {chromium,open,enter}=require('./harness.js');
   return {page,cards:cards.map(c=>{const cs=getComputedStyle(c);const bg=rgb(cs.backgroundColor);const out=[];
    const T=(sel,kind)=>c.querySelectorAll(sel).forEach(e=>{if(!e.offsetWidth||!e.textContent.trim())return;const s=getComputedStyle(e);const fs=parseFloat(s.fontSize),fw=parseInt(s.fontWeight)||400;
     const big=fs>=24||(fs>=18.66&&fw>=700);const fg=mix(rgb(s.color),bgOf(e));out.push({sel,kind,txt:e.textContent.trim().slice(0,24),ratio:+cr(fg,bgOf(e)).toFixed(2),need:kind==='icon'?3:big?3:4.5})});
-   T('.nm');T('.ds');T('.pr b');T('.pr s');T('.pr small');T('.tr .rt');T('.tr .rt small');T('.ozPlus .bd');T('.ozPStep b');T('.ozPlus:not(:disabled)','icon');
+   T('.nm');T('.ds');T('.pr b');T('.pr s');T('.pr small');T('.tr .rt');T('.tr .rt small');T('.ozPlus .bd');T('.ozPStep b');T('.ft .opt:not(:disabled)');T('.ozPlus:not(:disabled)','icon');
    c.querySelectorAll('.tr .ozFav').forEach(e=>{const s=getComputedStyle(e);out.push({sel:'.ozFav'+(e.classList.contains('on')?'.on':''),kind:'icon',ratio:+cr(mix(rgb(s.color),bgOf(e)),bgOf(e)).toFixed(2),need:3})});
    const img=c.querySelector('.im img');const im=c.querySelector('.im');const is=img?getComputedStyle(img):null;
    return {id:c.dataset.pid,bg,border:rgb(cs.borderTopColor),bw:parseFloat(cs.borderTopWidth),rad:parseFloat(cs.borderTopLeftRadius),pairs:out,
-    state:{multi:/seçene/.test((c.querySelector('.pr')||{}).textContent||''),strike:!!c.querySelector('.pr s'),unit:!!c.querySelector('.pr small.u:not(.ov)'),so:!!c.querySelector('.so'),dis:!!c.querySelector('.ozPlus:disabled'),rt:!!c.querySelector('.tr .rt'),favOn:!!c.querySelector('.ozFav.on'),favOff:!!c.querySelector('.ozFav:not(.on)'),bd:!!c.querySelector('.ozPlus .bd, .ozPStep b')},
+    state:{multi:/seçene/.test((c.querySelector('.ft')||{}).textContent||''),strike:!!c.querySelector('.pr s'),unit:!!c.querySelector('.pr small.u:not(.ov)'),so:!!c.querySelector('.so'),dis:!!c.querySelector('.ozPlus:disabled'),rt:!!c.querySelector('.tr .rt'),favOn:!!c.querySelector('.ozFav.on'),favOff:!!c.querySelector('.ozFav:not(.on)'),bd:!!c.querySelector('.ozPlus .bd, .ozPStep b')},
     photo:is?{filter:is.filter,op:is.opacity,imRad:parseFloat(getComputedStyle(im).borderTopLeftRadius),imFilter:getComputedStyle(im).filter,imOp:getComputedStyle(im).opacity}:null}})}});
  const L=c=>{const f=v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)};return .2126*f(c.r)+.7152*f(c.g)+.0722*f(c.b)};
  const CR=(a,b)=>{const x=L(a),y=L(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05)};

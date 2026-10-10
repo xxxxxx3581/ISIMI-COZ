@@ -451,7 +451,9 @@ function gcCard(p){ST.rows=ST.rows||{};ST.rows[String(p.id)]=p;
     '<div class="hd"><button type="button" class="nm" data-a="nav" data-k="product" data-id="'+id+'">'+E(p.name)+'</button><span class="tr">'+favBtn(p.id,isFav(p.id))+
     (rc?'<button type="button" class="rt" data-a="nav" data-k="product" data-rev="1" data-id="'+id+'" aria-label="'+rc+' değerlendirmeyi gör">★ '+num(p.rating_avg).toLocaleString('tr-TR',{minimumFractionDigits:1,maximumFractionDigits:1})+' <small>('+rc+')</small></button>':'')+'</span></div>'+
     (p.description?'<span class="ds">'+E(p.description)+'</span>':'')+
-    '<div class="ft"><span class="pr">'+cardPrice(p,1)+'</span><span class="ac">'+ppCtrl(p)+'</span></div></div>'}
+    /* U2: çok seçenekte fiyat yerine "+"ın hemen solunda altın etiket; dokununca "+" ile aynı küçük seçenek penceresi (ppPlus) */
+    '<div class="ft">'+(Array.isArray(p.vars)&&p.vars.length>1?'<button type="button" class="opt" data-a="ppPlus" data-id="'+id+'"'+(p.in_stock===false?' disabled':'')+'>'+E(optText(p.vars,p.net_content))+'</button>':'<span class="pr">'+cardPrice(p,1)+'</span>')+
+    '<span class="ac">'+ppCtrl(p)+'</span></div></div>'}
 /* kart açıklaması arama sonucunda yok: görünür ürünler için tek okuma (RLS: yalnız yayındaki ürünler). Hata olursa sessizce gizli. */
 async function gcEnrich(l){var ids=l.filter(function(x){return x&&x.id&&x.description===undefined}).map(function(x){return x.id});if(!ids.length)return;
   /* L: etkin seçenekler (oz_variants, RLS: yalnız yayındaki ürünler) — kartta "X ₺'den · N seçenek" / birim fiyat için */
