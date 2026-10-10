@@ -684,7 +684,17 @@ VIEWS_EXTRA({
     /* K37: tüm kategoriler (ana ekran sırası); üreticinin olanlar sayılı ve belirgin */
     var cnt={};arr(d.categories).forEach(function(c){cnt[c.slug]=num(c.count)});
     ST.pp={id:d.id,cnt:cnt,list:[],prods:arr(r[2])};
-    paint(ppHtml(d,arr(r[1]&&r[1].categories),arr(r[2])));startPPS(t);
+    /* R2: satıcı vitrin seçtiyse (showcase_ids, sıralı) üst şerit yalnız o ürünler, o sırayla. Son 12 üründe olmayanlar tek okumayla
+       (yayındaki ürünler) tamamlanır; bulunamayan/boş id atlanır. Hiçbiri gösterilemiyorsa eski davranış (son ürünler). */
+    var sids=arr(d.showcase_ids).filter(function(x){return x!=null&&String(x)!==''}).map(String),slp=arr(r[2]);
+    if(sids.length){
+      var by={};arr(r[2]).forEach(function(p){if(p&&p.id!=null)by[String(p.id)]=p});
+      var miss=sids.filter(function(x){return !by[x]});
+      if(miss.length){var ex=await get('oz_products?select=id,name,images,status&status=eq.published&id=in.'+inList(miss)).catch(function(){return null});if(!alive(t))return;
+        arr(ex).forEach(function(p){if(p&&p.id!=null&&(!p.status||p.status==='published'))by[String(p.id)]=p})}
+      var vl=sids.map(function(x){return by[x]}).filter(Boolean);if(ppSlides(vl).length)slp=vl;
+    }
+    paint(ppHtml(d,arr(r[1]&&r[1].categories),slp));startPPS(t);
     /* Q1-3: kategori ikonlarının altında şeritler; yorum okuması sayfayı bekletmez, yorum yoksa şerit hiç çıkmaz */
     var pp=qs('#ozRoot .ozPP');if(pp){pp.insertAdjacentHTML('beforeend','<div id="ozPPRc">'+recentStrip(d.id)+'</div><div id="ozPPRv"></div>');
       rpc('oz_producer_reviews',{p_id:d.id,p_limit:30}).then(function(l){if(!alive(t))return;var b=D.getElementById('ozPPRv');if(b)b.innerHTML=revStrip(l,r[2]);fitBars()}).catch(function(){})}
