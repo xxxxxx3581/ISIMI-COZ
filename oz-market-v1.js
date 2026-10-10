@@ -162,7 +162,7 @@ function cartGet(){try{var c=JSON.parse(localStorage.getItem(CART_KEY)||'[]');re
 function cartSet(c){try{if(c&&c.length)localStorage.setItem(CART_KEY,JSON.stringify(c));else localStorage.removeItem(CART_KEY)}catch(e){}cartBadge();stripSync()}
 /* A2: liste ekranlarında (Keşfet, Üreticiler, üretici sayfası, arama) alt menünün hemen üstünde kalıcı "Sepeti gör" şeridi.
    Ürün sayfası (kendi alt çubuğu var), sepet ve ödeme ekranlarında yok. Toplam yalnız gösterim; tutar sunucuda hesaplanır. */
-var STRIP_ON={home:1,producers:1,store:1,search:1,favs:1};
+var STRIP_ON={home:1,producers:1,store:1,search:1,favs:1,plist:1};
 function stripSync(){
   var r=D.getElementById('ozRoot');if(!r)return;var old=D.getElementById('ozCStrip');
   var c=cartGet();var n=c.reduce(function(k,x){return k+num(x.qty)},0);var k=(NAV&&NAV.length)?cur().k:'';
@@ -503,6 +503,20 @@ VIEWS_EXTRA({
     if(any){ST.sr={a:{sort:sort},list:[],offset:0,more:false,rows:1};await searchMore(t)}
   },
 
+  /* F5: ortak ürün liste sayfası — kategori (üretici içinde), üreticinin tüm ürünleri, Keşfet "Yeni ürünler · Tümü" */
+  plist:async function(a,t){
+    var d=null;try{d=await homeData()}catch(e){}if(!alive(t))return;
+    var cn=a.cat?((arr(d&&d.categories).filter(function(c){return c.slug===a.cat})[0]||{}).name||a.cat):'';
+    var title=a.cat?cn+(a.sname?' · '+a.sname:''):a.seller?'Tüm ürünler'+(a.sname?' · '+a.sname:''):'Yeni ürünler';
+    var sort=a.sort||'new';
+    paint('<div class="ozPlH"><button type="button" class="ozIc" data-a="back" aria-label="Geri">'+ico('back')+'</button><div class="tx"><h1>'+E(title)+'</h1><small id="ozPlN"></small></div></div>'+
+      (a.seller&&a.cat?'':'<div class="ozPlS">'+sortSel(sort).replace('data-chg="homeSort"','data-chg="plSort"')+'</div>')+'<div id="ozRes">'+skel(2,'line')+'</div>');
+    ST.sr={a:{sort:sort,cat:a.cat||'',seller:a.seller||''},list:[],offset:0,more:false,cards:1,noCount:1,
+      emptyH:empty(ico('box',36),a.seller&&a.cat?'Bu üreticinin bu kategoride ürünü yok':a.cat?'Bu kategoride ürün yok':'Henüz ürün yok',a.seller?'Diğer kategorilere göz atabilirsin.':'')};
+    await loadFavs();
+    await searchMore(t);
+  },
+
   /* ====================== Alıcı · arama ve listeleme ====================== */
   search:async function(a,t){
     var q=a.q||'',cat=a.cat||'',sort=a.sort||'new';
@@ -585,8 +599,9 @@ async function searchMore(t){
     if(!alive(t))return;
     sr.list=sr.list.concat(l);sr.offset+=l.length;sr.more=l.length>=LIM;
     var box=D.getElementById('ozRes');if(!box)return;
-    box.innerHTML=sr.list.length?'<p class="ozMuted" style="margin:0 0 8px">'+sr.list.length+(sr.more?'+':'')+' ürün</p>'+(sr.cards?'<div class="ozPLs">'+sr.list.map(plCard).join('')+'</div>':sr.rows?'<div class="ozRows">'+sr.list.map(prodRow).join('')+'</div>':'<div class="ozGrid">'+sr.list.map(card).join('')+'</div>')+(sr.more?'<button type="button" class="ozBtn wide" id="ozMore" data-a="more" style="margin-top:12px">Daha fazla göster</button>':''):
-      empty(ico('search',36),'Sonuç bulunamadı',a.seller?'Bu üreticinin şu anda satışta ürünü yok.':'Farklı bir kelime ya da kategori deneyebilirsin.');
+    var cn=D.getElementById('ozPlN');if(cn)cn.textContent=sr.list.length+(sr.more?'+':'')+' ürün';
+    box.innerHTML=sr.list.length?(sr.noCount?'':'<p class="ozMuted" style="margin:0 0 8px">'+sr.list.length+(sr.more?'+':'')+' ürün</p>')+(sr.cards?'<div class="ozPLs">'+sr.list.map(plCard).join('')+'</div>':sr.rows?'<div class="ozRows">'+sr.list.map(prodRow).join('')+'</div>':'<div class="ozGrid">'+sr.list.map(card).join('')+'</div>')+(sr.more?'<button type="button" class="ozBtn wide" id="ozMore" data-a="more" style="margin-top:12px">Daha fazla göster</button>':''):
+      (sr.emptyH||empty(ico('search',36),'Sonuç bulunamadı',a.seller?'Bu üreticinin şu anda satışta ürünü yok.':'Farklı bir kelime ya da kategori deneyebilirsin.'));
   }catch(e){var b=D.getElementById('ozRes');if(b&&alive(t))b.innerHTML=errBox(e)}
 }
 D.addEventListener('change',function(e){
@@ -1091,6 +1106,7 @@ ACT_EXTRA({
   ordReview:function(b){return reviewBox(b.dataset.o,b.dataset.p)}
 });
 Object.assign(CHANGE,{
+  plSort:function(el){var c=cur();if(c.k!=='plist')return;c.a=Object.assign({},c.a,{sort:el.value});hSync();ST.sr.a.sort=el.value;ST.sr.list=[];ST.sr.offset=0;var r=D.getElementById('ozRes');if(r)r.innerHTML=skel(2,'line');return searchMore(SCR)},
   pfCat:function(el){var n=D.getElementById('ozPCatN');if(n)n.hidden=!pfCatIsDrink(el.value)},
   homeSort:function(el){var c=cur();if(c.k!=='home')return;c.a=Object.assign({},c.a,{sort:el.value});hSync();ST.sr={a:{sort:el.value},list:[],offset:0,more:false,rows:1};var r=D.getElementById('ozRes');if(r)r.innerHTML=skel(2);return searchMore(SCR)},
   coAddr:function(el){if(ST.co){ST.co.addr=el.value;ST.co.note=val('ozCoNote');coReadTerms();drawCheckout()}},
@@ -1111,7 +1127,7 @@ var NAV=[],SCR=0;
 function alive(t){return t===SCR&&!!D.getElementById('ozRoot')}
 function paint(html){var r=D.getElementById('ozRoot');if(r)r.innerHTML=html;stripSync()}
 function cur(){return NAV[NAV.length-1]||{k:'home',a:{}}}
-function go(k,a,replace){if(replace&&NAV.length)NAV.pop();NAV.push({k:k,a:a||{}});HPEND={rep:!!replace};draw()}
+function go(k,a,replace){if(!replace&&NAV.length){try{cur().sy=window.scrollY||0;hSync()}catch(e){}}if(replace&&NAV.length)NAV.pop();NAV.push({k:k,a:a||{}});HPEND={rep:!!replace};draw()}
 function back(){var V=hNav(),ce=V&&V.stack[V.idx];if(ce&&isOzEnt(ce)&&V.idx>0){history.back();return}if(NAV.length>1){NAV.pop();draw()}else exitWorld()}
 
 /* ====================== K30: geri tuşu (platform V2_NAV yığınıyla) ======================
@@ -1121,7 +1137,7 @@ function back(){var V=hNav(),ce=V&&V.stack[V.idx];if(ce&&isOzEnt(ce)&&V.idx>0){h
 var HSEQ=0,HREST=false,HPEND=null;
 function hNav(){var V=window.V2_NAV;return typeof window.v2NavPush==='function'&&V&&Array.isArray(V.stack)?V:null}
 function isOzEnt(e){return !!(e&&typeof e.name==='string'&&e.name.indexOf('oz:')===0&&e.name!=='oz:sheet')}
-function hSnap(){return NAV.map(function(x){return {k:x.k,a:Object.assign({},x.a)}})}
+function hSnap(){return NAV.map(function(x){var o={k:x.k,a:Object.assign({},x.a)};if(x.sy)o.sy=x.sy;return o})}
 function hFn(snap,pre,seq){return function(){return hRestore(snap,pre,seq)}}
 function hPush(rep){
   var V=hNav();if(!V||HREST)return;
@@ -1138,7 +1154,7 @@ function hRestore(snap,pre,seq){
     else{setTimeout(function(){history.back()},0);return}
   }
   HREST=true;
-  try{D.body.classList.toggle('ozPre',!!pre);NAV=snap.map(function(x){return {k:x.k,a:Object.assign({},x.a)}});draw()}finally{HREST=false}
+  try{D.body.classList.toggle('ozPre',!!pre);NAV=snap.map(function(x){var o={k:x.k,a:Object.assign({},x.a)};if(x.sy)o.sy=x.sy;return o});draw()}finally{HREST=false}
 }
 /* Kök Özüne Dön kaydına geri sar (yeni kayıt açmadan); yoksa ana ekrana git */
 function goRoot(){
@@ -1160,7 +1176,9 @@ function draw(){
   topSync();
   var v=VIEWS[t.k]||VIEWS.home;
   var hp=HPEND;HPEND=null;if(hp)hPush(hp.rep);else hSync();
-  try{var p=v(t.a||{},SCR);if(p&&p.catch)p.catch(function(e){if(e&&e.auth&&!logged()){paint(loginWall());return}paint(errBox(e))})}catch(e){paint(errBox(e))}
+  var sy=t.sy;delete t.sy;
+  function back2(){if(!sy)return;var k=SCR;function to(){if(k===SCR&&Math.abs((window.scrollY||0)-sy)>4)try{window.scrollTo(0,sy)}catch(e){}}to();setTimeout(to,60);setTimeout(to,260)}  /* F5: geri dönüşte kaydırma konumu (platform geri işleyicisi sonradan başa sarabildiği için tekrar uygulanır) */
+  try{var p=v(t.a||{},SCR);if(p&&p.then)p.then(back2,function(e){if(e&&e.auth&&!logged()){paint(loginWall());return}paint(errBox(e))});else back2()}catch(e){paint(errBox(e))}
 }
 OZ.go=function(k,a){go(k,a)};
 function loginWall(text){return empty(ico('user',34),'Giriş yapman gerekiyor',text||'Bu bölümü görmek için hesabına giriş yap.','<button type="button" class="ozBtn pri" data-a="login">Giriş yap</button>')}
@@ -1172,7 +1190,7 @@ function topHtml(){
 }
 /* K30: alt menü (alıcı). Ürün sayfası (sabit "Sepete ekle"), ödeme, satıcı ekranları ve ön başvuru kipinde gizli. */
 var TABS=[['home','Keşfet','leaf'],['producers','Üreticiler','store'],['orders','Siparişlerim','box'],['cart','Sepet','cart'],['account','Hesabım','user']];
-var TAB_OF={home:'home',search:'home',producers:'producers',orders:'orders',order:'orders',cart:'cart',account:'account',favs:'account',addresses:'account'};
+var TAB_OF={home:'home',search:'home',plist:'home',producers:'producers',orders:'orders',order:'orders',cart:'cart',account:'account',favs:'account',addresses:'account'};
 var NONAV={product:1,checkout:1,seller:1,sellerApply:1,sellerProduct:1};
 function navHtml(){return TABS.map(function(t){return '<button type="button" class="ozNavB" data-a="tab" data-k="'+t[0]+'">'+ico(t[2],22)+'<span class="l">'+t[1]+'</span>'+(t[0]==='cart'?'<span class="ozBdg" id="ozCartN" hidden></span>':'')+'</button>'}).join('')}
 /* K30: satıcı alt menüsü (onaylı/askıdaki satıcı panelinde; ön başvuru kipinde menü yok, üstteki sekme çipleri kalır) */
@@ -1258,7 +1276,7 @@ preGo.outside=true;
 ACT_EXTRA({
   sheetClose:function(){closeSheet()},
   back:function(){back()},
-  nav:function(b){var k=b.dataset.k;if(k==='product'&&b.dataset.id){openProduct(b.dataset.id);return}var a={};if(b.dataset.id)a.id=b.dataset.id;if(b.dataset.q)a.q=b.dataset.q;if(b.dataset.cat)a.cat=b.dataset.cat;if(b.dataset.tab)a.tab=b.dataset.tab;if(b.dataset.focus)a.focus=b.dataset.focus;if(k==='home'&&!a.cat&&!a.q){goRoot();return}if(k==='home'){NAV=[];}go(k,a)},
+  nav:function(b){var k=b.dataset.k;if(k==='product'&&b.dataset.id){openProduct(b.dataset.id);return}var a={};if(b.dataset.id)a.id=b.dataset.id;if(b.dataset.q)a.q=b.dataset.q;if(b.dataset.cat)a.cat=b.dataset.cat;if(b.dataset.tab)a.tab=b.dataset.tab;if(b.dataset.focus)a.focus=b.dataset.focus;if(b.dataset.seller)a.seller=b.dataset.seller;if(b.dataset.sname)a.sname=b.dataset.sname;if(b.dataset.sort)a.sort=b.dataset.sort;if(k==='home'&&!a.cat&&!a.q){goRoot();return}if(k==='home'){NAV=[];}go(k,a)},
   redraw:function(){draw()},
   login:function(){needLogin(function(){draw()})},
   /* Alt menü: Keşfet köke geri sarar; sekmeler arası geçiş yeni geçmiş kaydı açmaz (platformdaki gibi) */
