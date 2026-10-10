@@ -119,6 +119,7 @@ var IC={
   leaf:'<path d="M5 19c0-8 6-14 15-14 0 9-6 15-14 15zM5 19l7-7"/>',star:'<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
   truck:'<path d="M3 6h11v10H3zM14 9h4l3 3v4h-7M7 19a2 2 0 1 0 0-.1M17 19a2 2 0 1 0 0-.1"/>',home:'<path d="M4 11l8-7 8 7v9H4z"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>',
   copy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/>',
+  out:'<path d="M14 4h4a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-4M9 16l-4-4 4-4M5 12h11"/>',
   zoom:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4M11 8v6M8 11h6"/>',
   chk2:'<path d="M2 13l4 4 9-10M10 16l1.5 1.5L22 7"/>',trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
   sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/>',tag:'<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.5"/>',wallet:'<path d="M3 7h15a3 3 0 0 1 3 3v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 7l12-3v3"/><circle cx="16.5" cy="13.5" r="1.2"/>'
@@ -151,7 +152,7 @@ function needLogin(resume){
 /* index.html saveAuthSession → OZ.authChanged(true/false) */
 OZ.authChanged=function(isIn){
   ST.fav=null;ST.notif=null;ST.crid=null;ST.co=null;ST.addrs=null;ST.od=null;ST.pd=null;ST.pf=null;ST.home=null;SELLER.data=null;SELLER.img={};SELLER.id=null;SELLER.dash=null;SELLER.docs=null;SELLER.rates=null;SELLER.products=null;SELLER.variants=null;SELLER.orders=null;ST.setAt=0;
-  if(!isIn){ST.resume=null;ST.set=null;cartBadge();bellBadge(0);return}
+  if(!isIn){ST.resume=null;ST.set=null;ST.newN=0;ST.newAt=0;cartBadge();bellBadge(0);newDotSync();return}
   var r=ST.resume;ST.resume=null;
   if(!D.getElementById('ozRoot')&&!(r&&r.outside))return;
   loadSettings(true).then(function(){if(D.getElementById('ozRoot'))topSync();if(r)r();else draw()}).catch(function(){if(r)r();else draw()});
@@ -604,7 +605,11 @@ VIEWS_EXTRA({
   /* ====================== Hesap menüsü ====================== */
   account:async function(a,t){
     var s=S();
-    if(!logged()){paint(pageHead('Hesabım')+loginWall('Siparişlerini, favorilerini ve adreslerini görmek için giriş yap.')+'<div class="ozList" style="margin-top:12px">'+row('home','İşimi Çöz ana sayfası','Ana platforma dön','exit')+'</div>');return}
+    /* I2: "İşimi Çöz ana sayfası" en altta küçük ve soluk */
+    var homeRow='<button type="button" class="ozHomeL" data-a="exit">'+ico('home',16)+'<span>İşimi Çöz ana sayfası</span></button>';
+    /* I2: oturum yokken giriş / kayıt kartı; giriş sonrası Özüne Dön'de kalınır (needLogin → OZ.authChanged → draw) */
+    if(!logged()){paint(pageHead('Hesabım')+'<div class="ozAuthC"><span class="ic">'+ico('user',30)+'</span><b>Özüne Dön hesabın</b><p>Siparişlerini, favorilerini ve adreslerini görmek için giriş yap ya da kayıt ol.</p>'+
+      '<div class="ozRow2"><button type="button" class="ozBtn pri" data-a="login">Giriş yap</button><button type="button" class="ozBtn" data-a="signup">Kayıt ol</button></div></div>'+homeRow);return}
     var u=(sess()||{}).user||{};
     var ms=s.my_seller;
     var sellerRow=ms?row('store','Satıcı paneli',SELLER_ST[ms.status]?SELLER_ST[ms.status][0]:'Mağazanı yönet','nav',{k:'seller'}):(s.seller_signup_enabled?row('store','Satıcı ol','Ürünlerini Özüne Dön\'de sat','nav',{k:'seller'}):'');
@@ -613,7 +618,7 @@ VIEWS_EXTRA({
       row('pin','Adreslerim','Teslimat adreslerini yönet','nav',{k:'addresses'})+
       sellerRow+
       (s.is_admin?row('leaf','Özüne Dön yönetimi','Satıcı, ürün, sipariş ve ayarlar','admin'):'')+
-      row('home','İşimi Çöz ana sayfası','Ana platforma dön','exit')+'</div>');
+      row('out','Çıkış yap','Bu cihazdaki oturumu kapat','ozLogout')+'</div>'+homeRow);
     newDotSync();
   }
 });
@@ -1312,6 +1317,15 @@ ACT_EXTRA({
   nav:function(b){var k=b.dataset.k;if(k==='product'&&b.dataset.id){openProduct(b.dataset.id);return}var a={};if(b.dataset.id)a.id=b.dataset.id;if(b.dataset.q)a.q=b.dataset.q;if(b.dataset.cat)a.cat=b.dataset.cat;if(b.dataset.tab)a.tab=b.dataset.tab;if(b.dataset.focus)a.focus=b.dataset.focus;if(b.dataset.seller)a.seller=b.dataset.seller;if(b.dataset.sname)a.sname=b.dataset.sname;if(b.dataset.sort)a.sort=b.dataset.sort;if(k==='home'&&!a.cat&&!a.q){goRoot();return}if(k==='home'){NAV=[];}go(k,a)},
   redraw:function(){draw()},
   login:function(){needLogin(function(){draw()})},
+  signup:function(){ST.resume=function(){draw()};try{openAuthModal('signup')}catch(e){}},
+  /* I2: platformun logoutUser'ı kullanılır (sunucu oturumu + yerel kişisel veri temizliği). O fonksiyon sonda showHome() ile
+     ana sayfaya döner; yalnız bu çağrı boyunca showHome etkisiz bırakılır, böylece kullanıcı Özüne Dön'de kalır. Platform kodu değişmez. */
+  ozLogout:async function(){
+    if(!await confirmBox('Çıkış yapılsın mı?','Bu cihazdaki oturumun kapanacak. Sepetin de temizlenir.','Çıkış yap',true))return;
+    if(typeof logoutUser!=='function'){toast('Çıkış yapılamadı.');return}
+    var sh=window.showHome;try{window.showHome=function(){};logoutUser()}finally{window.showHome=sh}
+    cartBadge();stripSync();go('account',{},true);toast('Çıkış yapıldı.')
+  },
   /* Alt menü: Keşfet köke geri sarar; sekmeler arası geçiş yeni geçmiş kaydı açmaz (platformdaki gibi) */
   tab:function(b){var k=b.dataset.k;if(k==='home'){goRoot();return}
     var c=cur();if(c.k===k&&NAV.length<=2){try{window.scrollTo(0,0)}catch(e){}return}
