@@ -349,10 +349,23 @@ function ppCtrl(p){
   return '<span class="ozPStep" role="group" aria-label="Adet"><button type="button" data-a="ppQty" data-v="'+E(l.variant_id)+'" data-d="-1" aria-label="'+(q<=1?'Sepetten çıkar':'Azalt')+'">−</button><b aria-live="polite">'+q+'</b>'+
     '<button type="button" data-a="ppQty" data-v="'+E(l.variant_id)+'" data-d="1" aria-label="Bir tane daha"'+(q>=mx?' disabled':'')+'>+</button></span>';
 }
+/* L: kart fiyat bloğu. Seçenekler (oz_variants, etkin olanlar) biliniyorsa: birden çoksa en düşük seçenek fiyatı "X ₺'den"
+   (o seçeneğin indirimi aynı mantıkla çizili) + "N seçenek · birim"; tek seçenekte fiyat + "≈ X ₺/kg|L" (unitPrice; miktar
+   okunamazsa gösterilmez). Seçenekler bilinmiyorsa eski gösterim. Yalnız gösterim; tutar sunucuda hesaplanır. */
+function unitWord(l){var m=/^\s*\d+(?:[.,]\d+)?\s*(g|gr|gram|kg|kilo|ml|l|lt|litre)\s*$/i.exec(String(l||''));if(!m)return '';var u=m[1].toLowerCase();return u==='g'||u==='gram'?'gr':u==='kilo'?'kg':u==='l'||u==='litre'?'lt':u}
+function cardPrice(p,sFirst){
+  var vs=Array.isArray(p.vars)?p.vars:null;var price=num(p.price_kurus),cmp=num(p.compare_at_kurus),sub='',from='';
+  if(vs&&vs.length>1){var pool=vs.filter(function(v){return num(v.stock)>0});if(!pool.length)pool=vs;
+    var m=pool.reduce(function(a,v){return num(v.price_kurus)<num(a.price_kurus)?v:a});price=num(m.price_kurus);cmp=num(m.compare_at_kurus);from='\'den';
+    var us=vs.map(function(v){return unitWord(v.label)});var u=us[0]&&us.every(function(x){return x===us[0]})?us[0]:'';
+    sub=vs.length+' seçenek'+(u?' · '+u:'')}
+  else if(vs&&vs.length===1){var v=vs[0];price=num(v.price_kurus);cmp=num(v.compare_at_kurus);sub=unitPrice({variants:vs,net_content:p.net_content},v)}
+  var b='<b>'+TL(price)+from+'</b>',st=cmp>price?'<s>'+TL(cmp)+'</s>':'';
+  return (sFirst?st+b:b+st)+(sub?'<small class="u" style="display:block;font-size:11.5px;font-weight:600;color:#8E7E66;white-space:nowrap">'+E(sub)+'</small>':'')}
 /* F2: Keşfet şeridi için küçük kart (beyaz zemin, koyu yazı, F6 "+") */
 function krCard(p){ST.rows=ST.rows||{};ST.rows[String(p.id)]=p;var im=httpsUrl(p.image)||httpsUrl(arr(p.images)[0]);var price=num(p.price_kurus),cmp=num(p.compare_at_kurus);
   return '<div class="ozKr" role="listitem" data-pid="'+E(p.id)+'"><button type="button" class="im" data-a="nav" data-k="product" data-id="'+E(p.id)+'" aria-label="'+E(p.name)+'">'+pic(im,p.name)+(p.in_stock===false?'<span class="so">Tükendi</span>':'')+'</button>'+
-    '<button type="button" class="nm" data-a="nav" data-k="product" data-id="'+E(p.id)+'">'+E(p.name)+'</button><div class="ft"><span class="pr"><b>'+TL(price)+'</b>'+(cmp>price?'<s>'+TL(cmp)+'</s>':'')+'</span><span class="ac">'+ppCtrl(p)+'</span></div></div>'}
+    '<button type="button" class="nm" data-a="nav" data-k="product" data-id="'+E(p.id)+'">'+E(p.name)+'</button><div class="ft"><span class="pr">'+cardPrice(p)+'</span><span class="ac">'+ppCtrl(p)+'</span></div></div>'}
 /* G1/H1: liste sayfaları (kategori, Tüm ürünler, arama) 2 sütunlu beyaz kart.
    Üstte 4:3 foto (birden çoksa kart içinde kaydırılır, altta noktalar); fotoya ya da ada dokunuş ürün panelini (F7) açar.
    Altında ad (2 satır), tek satır açıklama, puan (varsa), fiyat + beyaz "+". K: kartta "i" yok; menşe/raf ömrü/saklama/içindekiler
@@ -369,12 +382,17 @@ function gcCard(p){ST.rows=ST.rows||{};ST.rows[String(p.id)]=p;
     '<button type="button" class="nm" data-a="nav" data-k="product" data-id="'+id+'">'+E(p.name)+'</button>'+
     (p.description?'<span class="ds">'+E(p.description)+'</span>':'')+
     (rc?'<span class="rt">★ '+num(p.rating_avg).toLocaleString('tr-TR',{minimumFractionDigits:1,maximumFractionDigits:1})+' <small>('+rc+')</small></span>':'')+
-    '<div class="ft"><span class="pr">'+(cmp>price?'<s>'+TL(cmp)+'</s>':'')+'<b>'+TL(price)+'</b></span><span class="ac">'+ppCtrl(p)+'</span></div></div>'}
+    '<div class="ft"><span class="pr">'+cardPrice(p,1)+'</span><span class="ac">'+ppCtrl(p)+'</span></div></div>'}
 /* kart açıklaması arama sonucunda yok: görünür ürünler için tek okuma (RLS: yalnız yayındaki ürünler). Hata olursa sessizce gizli. */
 async function gcEnrich(l){var ids=l.filter(function(x){return x&&x.id&&x.description===undefined}).map(function(x){return x.id});if(!ids.length)return;
-  var r=[];try{r=arr(await get('oz_products?select=id,description&id=in.'+inList(ids)))}catch(e){return}
-  var m={};r.forEach(function(x){m[String(x.id)]=x});
-  l.forEach(function(x){var e=m[String(x.id)];if(e)x.description=e.description||''})}
+  /* L: etkin seçenekler (oz_variants, RLS: yalnız yayındaki ürünler) — kartta "X ₺'den · N seçenek" / birim fiyat için */
+  var r=await Promise.all([get('oz_products?select=id,description,net_content&id=in.'+inList(ids)).catch(function(){return null}),
+    get('oz_variants?select=product_id,label,price_kurus,compare_at_kurus,stock,sort&is_active=eq.true&order=sort.asc&product_id=in.'+inList(ids)).catch(function(){return null})]);
+  var m={};arr(r[0]).forEach(function(x){m[String(x.id)]=x});var vm=null;
+  if(r[1]){vm={};arr(r[1]).forEach(function(v){var k=String(v.product_id);(vm[k]=vm[k]||[]).push(v)})}
+  ST.pnv=ST.pnv||{};
+  l.forEach(function(x){var k=String(x.id),e=m[k];if(e){x.description=e.description||'';if(e.net_content)x.net_content=e.net_content}
+    if(vm&&vm[k]){x.vars=vm[k];ST.pnv[k]=vm[k].length}})}
 D.addEventListener('scroll',function(e){var sc=e.target;if(!sc||!sc.classList||!sc.classList.contains('sc')||!sc.closest('.ozGc'))return;var dt=sc.parentNode.querySelector('.dt');if(!dt)return;var i=Math.round(sc.scrollLeft/Math.max(1,sc.clientWidth));qa('i',dt).forEach(function(x,j){x.classList.toggle('on',i===j)})},true);
 /* G1: tam ekran fotoğraf görüntüleyici — yalnız ürün panelindeki yakınlaştırma düğmesinden açılır.
    Yana kaydırma, altta nokta göstergesi (tek fotoğrafta yok), X / Esc ile kapanır (Esc alttaki paneli kapatmaz). */
@@ -501,7 +519,8 @@ async function reorderRail(orders,t){
     var seen={},ids=[];ordItems(d&&d.items).forEach(function(x){var k=x.product_id&&String(x.product_id);if(k&&!seen[k]){seen[k]=1;ids.push(k)}});ids=ids.slice(0,6);if(!ids.length)return;
     var ps=await Promise.all(ids.map(function(id){return rpc('oz_product_detail',{p_id:id}).catch(function(){return null})}));if(!alive(t))return;
     var l=ps.filter(function(p){return p&&p.id}).map(function(p){var vs=arr(p.variants).filter(function(v){return v.is_active!==false});var v=vs.filter(function(x){return num(x.stock)>0})[0]||vs[0]||{};
-      return {id:p.id,name:p.name,images:arr(p.images),price_kurus:num(v.price_kurus),compare_at_kurus:num(v.compare_at_kurus),in_stock:vs.some(function(x){return num(x.stock)>0})}});
+      ST.pnv=ST.pnv||{};ST.pnv[String(p.id)]=vs.length;
+      return {id:p.id,name:p.name,images:arr(p.images),net_content:p.net_content,vars:vs,price_kurus:num(v.price_kurus),compare_at_kurus:num(v.compare_at_kurus),in_stock:vs.some(function(x){return num(x.stock)>0})}});
     var box=D.getElementById('ozReo');if(!l.length||!box)return;
     box.innerHTML='<div class="ozSecH"><h2>Tekrar sipariş ver</h2></div><div class="ozKrs" role="list" aria-label="Tekrar sipariş ver">'+l.map(krCard).join('')+'</div>';
   }catch(e){}
@@ -695,7 +714,7 @@ function pdRender(){
   var rc=num(p.rating_count);
   var head='<div class="ozPNm"><h3 class="ozPName">'+E(p.name)+'</h3>'+(rc?'<button type="button" class="ozRtB" data-a="pdRev" aria-label="'+rc+' değerlendirmeyi gör"><b>★ '+num(p.rating_avg).toLocaleString('tr-TR',{minimumFractionDigits:1,maximumFractionDigits:1})+'</b><small>('+rc+')</small></button>':'')+'</div>'+
     '<div class="ozPrice">'+(v?'<b>'+TL(price)+'</b>'+(cmp>price?'<s>'+TL(cmp)+'</s>':''):'—')+(v&&unitPrice(p,v)?'<small class="ozUnit">'+unitPrice(p,v)+'</small>':'')+'</div>';
-  var vars=vs.length>1?'<div class="ozVars" role="radiogroup" aria-label="Seçenek">'+vs.map(function(x){var out=num(x.stock)<=0;return '<button type="button" class="ozVar'+(x.id===pd.sel?' on':'')+'" role="radio" aria-checked="'+(x.id===pd.sel)+'" data-a="pickVar" data-id="'+E(x.id)+'"'+(out?' disabled':'')+'>'+E(x.label||'Standart')+'<small>'+(out?'Tükendi':TL(x.price_kurus))+'</small></button>'}).join('')+'</div>':'';
+  var vars=vs.length>1?'<div class="ozVars" role="radiogroup" aria-label="Seçenek">'+vs.map(function(x){var out=num(x.stock)<=0;return '<button type="button" class="ozVar'+(x.id===pd.sel?' on':'')+'" role="radio" aria-checked="'+(x.id===pd.sel)+'" data-a="pickVar" data-id="'+E(x.id)+'"'+(out?' disabled':'')+'>'+E(x.label||'Standart')+'<small>'+(out?'Tükendi':TL(x.price_kurus))+'</small>'+(!out&&unitPrice(p,x)?'<small class="u" style="font-size:11px;opacity:.8">'+E(unitPrice(p,x))+'</small>':'')+'</button>'}).join('')+'</div>':'';
   var dsc=String(p.description||'');
   var desc=dsc?'<div class="ozDesc"><p class="ozStory'+(dsc.length>140?' ozClamp ozC3':'')+'" id="ozStory">'+E(dsc)+'</p>'+(dsc.length>140?'<button type="button" class="ozLink" data-a="storyMore" aria-controls="ozStory" aria-expanded="false">Devamı</button>':'')+'</div>':'';
   var ship='<p class="ozShipN">'+ico('truck',16)+'<span>'+(num(sel.handling_days)?num(sel.handling_days)+' iş günü içinde kargoya verilir':'Kargoya veriliş süresi satıcıya göre değişir')+(num(sel.free_ship_over_kurus)?' · '+TL(sel.free_ship_over_kurus)+' ve üzeri kargo bedava':'')+'</span></p>';
