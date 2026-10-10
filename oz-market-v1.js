@@ -151,7 +151,7 @@ function needLogin(resume){
 }
 /* index.html saveAuthSession → OZ.authChanged(true/false) */
 OZ.authChanged=function(isIn){
-  ST.fav=null;ST.notif=null;ST.crid=null;ST.co=null;ST.addrs=null;ST.od=null;ST.pd=null;ST.pf=null;ST.home=null;SELLER.data=null;SELLER.img={};SELLER.id=null;SELLER.dash=null;SELLER.docs=null;SELLER.rates=null;SELLER.products=null;SELLER.variants=null;SELLER.orders=null;ST.setAt=0;
+  ST.fav=null;ST.sfav=null;ST.notif=null;ST.crid=null;ST.co=null;ST.addrs=null;ST.od=null;ST.pd=null;ST.pf=null;ST.home=null;SELLER.data=null;SELLER.img={};SELLER.id=null;SELLER.dash=null;SELLER.docs=null;SELLER.rates=null;SELLER.products=null;SELLER.variants=null;SELLER.orders=null;ST.setAt=0;
   if(!isIn){ST.resume=null;ST.set=null;ST.newN=0;ST.newAt=0;cartBadge();bellBadge(0);newDotSync();return}
   var r=ST.resume;ST.resume=null;
   if(!D.getElementById('ozRoot')&&!(r&&r.outside))return;
@@ -275,6 +275,19 @@ var ALG={gluten:'Gluten',sut:'Süt',yumurta:'Yumurta',yer_fistigi:'Yer fıstığ
 function algLabel(x){return ALG[x]||String(x||'')}
 function isFav(id){return !!(ST.fav&&ST.fav.has(String(id)))}
 async function loadFavs(){if(!logged()){ST.fav=new Set();return ST.fav}if(ST.fav)return ST.fav;try{var l=await rpc('oz_my_favorites',{});ST.fav=new Set(arr(l).map(function(x){return String(x.id)}))}catch(e){ST.fav=new Set()}return ST.fav}
+/* V1: üretici favorisi (oz_toggle_favorite_seller / oz_favorite_sellers / oz_my_favorite_sellers). Ürün favorisinden ayrı. */
+function sfavBtn(id,on,cls){return '<button type="button" class="'+cls+(on?' on':'')+'" data-a="sFav" data-id="'+E(id)+'" aria-pressed="'+(on?'true':'false')+'" aria-label="'+(on?'Üreticiyi favorilerden çıkar':'Üreticiyi favorilere ekle')+'">'+ico('heart',20)+'</button>'}
+function sfavPaint(id,on){if(!ST.sfav)ST.sfav=new Set();if(on)ST.sfav.add(String(id));else ST.sfav.delete(String(id));
+  qa('[data-a=sFav][data-id="'+String(id).replace(/"/g,'')+'"]').forEach(function(x){x.classList.toggle('on',!!on);x.setAttribute('aria-pressed',on?'true':'false');x.setAttribute('aria-label',on?'Üreticiyi favorilerden çıkar':'Üreticiyi favorilere ekle')})}
+async function sfavLoad(id){if(!logged())return false;if(ST.sfav&&ST.sfavAll)return ST.sfav.has(String(id));
+  var l=await get('oz_favorite_sellers?select=seller_id&seller_id=eq.'+encodeURIComponent(id));var on=arr(l).some(function(x){return x&&String(x.seller_id)===String(id)});sfavPaint(id,on);return on}
+/* iyimser güncelle → RPC; dönen değer beklenenden farklıysa ya da hata olursa eski durum + kısa uyarı. Çağrı sürerken aynı üretici kilitli. */
+async function sfavSet(id,want,apply){ST.sfavBusy=ST.sfavBusy||{};var k=String(id);if(ST.sfavBusy[k])return;ST.sfavBusy[k]=1;
+  var bs=qa('[data-a=sFav][data-id="'+k.replace(/"/g,'')+'"]');bs.forEach(function(b){b.disabled=true;b.setAttribute('aria-busy','true')});
+  sfavPaint(k,want);if(apply)apply(want);
+  try{var r=await rpc('oz_toggle_favorite_seller',{p_seller:k});if(!!r!==want)throw new Error('x');toast(want?'Üretici favorilere eklendi':'Üretici favorilerden çıkarıldı')}
+  catch(e){sfavPaint(k,!want);if(apply)apply(!want);toast('Favori güncellenemedi, eski hâline döndü.')}
+  finally{delete ST.sfavBusy[k];qa('[data-a=sFav][data-id="'+k.replace(/"/g,'')+'"]').forEach(function(b){b.disabled=false;b.removeAttribute('aria-busy')})}}
 function favBtn(id,on){return '<button type="button" class="ozFav'+(on?' on':'')+'" data-a="fav" data-id="'+E(id)+'" aria-pressed="'+(on?'true':'false')+'" aria-label="'+(on?'Favorilerden çıkar':'Favorilere ekle')+'">'+ico('heart',20)+'</button>'}
 function card(p){
   var price=num(p.price_kurus),cmp=num(p.compare_at_kurus);
@@ -382,7 +395,7 @@ function ppHtml(d,all,prods){
   var own=arr(d.categories),cnt={};own.forEach(function(c){cnt[c.slug]=num(c.count)});
   var cats=all&&all.length?all.slice():own.slice();own.forEach(function(c){if(!cats.some(function(x){return x.slug===c.slug}))cats.push(c)});
   var rc=num(d.rating_count);
-  return '<div class="ozPP"><div class="cv">'+ppCover(cv,ppSlides(prods))+'</div>'+  /* T2: fotoğraf üstü geri oku yok; üst çubuktaki "<" aynı back() ile bir adım geri */
+  return '<div class="ozPP"><div class="cv">'+ppCover(cv,ppSlides(prods))+sfavBtn(d.id,!!(ST.sfav&&ST.sfav.has(String(d.id))),'ppFav')+'</div>'+  /* T2: fotoğraf üstü geri oku yok; üst çubuktaki "<" aynı back() ile bir adım geri */
     '<div class="hd"><span class="lg">'+(lg?'<img src="'+E(lg)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">':'')+'<i aria-hidden="true">'+E(initials(nm))+'</i></span><span class="ok">✓ Onaylı üretici</span></div>'+
     /* C7: solda ad (tek satır) + konum; sağda tek dokunma alanı: ★ puan / Değerlendirmeler (N) */
     '<div class="nmr"><div class="nl"><h1 class="nm">'+E(nm)+'</h1>'+(loc?'<p class="loc">'+E(loc)+'</p>':'')+'</div>'+
@@ -706,6 +719,7 @@ VIEWS_EXTRA({
       var vl=sids.map(function(x){return by[x]}).filter(Boolean);if(ppSlides(vl).length)slp=vl;
     }
     paint(ppHtml(d,arr(r[1]&&r[1].categories),slp));startPPS(t);
+    sfavLoad(d.id).catch(function(){});  /* V1: kalp durumu (yalnız giriş varsa) sayfayı bekletmez */
     /* Q1-3: kategori ikonlarının altında şeritler; yorum okuması sayfayı bekletmez, yorum yoksa şerit hiç çıkmaz */
     var pp=qs('#ozRoot .ozPP');if(pp){pp.insertAdjacentHTML('beforeend','<div id="ozPPRc">'+recentStrip(d.id)+'</div><div id="ozPPRv"></div>');
       rpc('oz_producer_reviews',{p_id:d.id,p_limit:30}).then(function(l){if(!alive(t))return;var b=D.getElementById('ozPPRv');if(b)b.innerHTML=revStrip(l);fitBars()}).catch(function(){})}
@@ -863,6 +877,8 @@ ACT_EXTRA({
   catAll:async function(){var d=await homeData();sheet('Kategoriler','<div class="ozCtGrid">'+arr(d&&d.categories).map(function(c){return catTile(c)}).join('')+'</div>',{noFocus:true})},
   srchCat:function(b){var c=cur();c.a=Object.assign({},c.a,{cat:b.dataset.cat,q:val('ozQ')});draw()},
   more:function(){searchMore(SCR)},
+  sFav:function(b){var id=b.dataset.id;if(!logged()){needLogin(function(){sfavSet(id,!(ST.sfav&&ST.sfav.has(String(id))))});return}
+    sfavSet(id,!b.classList.contains('on'))},
   fav:async function(b){
     var id=b.dataset.id;
     if(!logged()){needLogin(function(){toggleFav(id)});return}
