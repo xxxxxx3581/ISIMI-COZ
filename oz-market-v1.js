@@ -492,7 +492,9 @@ function ppAddVar(d,v){
 /* K30: üretici kartı (oz_producers kaydı). wide: Üreticiler sekmesindeki geniş hâl */
 /* K35: üretici kartı — solda logo/baş harf + ad + il·ilçe + puan; sağda 108px akan fotoğraf kutusu (kapak, sonra ürün görselleri) */
 function initials(n){var w=String(n||'').trim().split(/\s+/).filter(Boolean);return (w.slice(0,2).map(function(x){return x.charAt(0).toLocaleUpperCase('tr')}).join(''))||'Ü'}
-function prdImgs(s){var seen={},out=[];[s.cover_url].concat(arr(s.products).map(function(p){return p&&p.image})).forEach(function(u){u=httpsUrl(u);if(u&&!seen[u]){seen[u]=1;out.push(u)}});return out}
+/* Q1-2: kart fotoğrafı üreticinin ürün fotoğrafları arasında akar; ürün fotoğrafı yoksa kapak */
+function prdImgs(s){var seen={},out=[];arr(s.products).map(function(p){return p&&p.image}).forEach(function(u){u=httpsUrl(u);if(u&&!seen[u]){seen[u]=1;out.push(u)}});
+  if(!out.length&&httpsUrl(s.cover_url))out.push(httpsUrl(s.cover_url));return out}
 /* I1: Keşfet üretici kartında logonun yanında canlı yeşil zeytin dalı (kodla çizilmiş, özgün). Eski soluk desenin yerine. */
 var OZ_SPRIG='<svg class="sp" viewBox="0 0 96 34" aria-hidden="true" focusable="false"><defs><linearGradient id="ozSpL" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9ED36A"/><stop offset="1" stop-color="#3E8E3A"/></linearGradient><linearGradient id="ozSpD" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7FC25A"/><stop offset="1" stop-color="#2F6E2E"/></linearGradient></defs>'+
   '<path d="M3 27C22 25 40 20 58 13S84 4 93 3" fill="none" stroke="#8A6B3E" stroke-width="1.6" stroke-linecap="round"/>'+
@@ -512,8 +514,9 @@ function producerCard(s){
     '<span class="ozPrdF"><i class="fb" aria-hidden="true">'+(lg?'<img src="'+E(lg)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">':'')+'<span>'+ini+'</span></i>'+
       ims.map(function(u,k){return '<img class="fi'+(k?'':' on')+'" src="'+E(u)+'" alt="" loading="lazy" decoding="async" onerror="ozFadeErr(this)">'}).join('')+'</span></button>';
 }
-/* Çapraz geçiş: 3 sn, kartlar 1 sn kaydırılmış; görünmeyen kartta durur; ekran değişince temizlenir; reduced-motion'da sabit */
-var FADE={tm:[],io:null};
+/* Q1-2: çapraz geçiş 2 sn (kartlar 0,7 sn kaydırılmış); kart basılı tutulurken durur; görünmeyen kartta durur; ekran değişince
+   temizlenir; reduced-motion'da sabit. */
+var FADE={tm:[],io:null,ms:2000};
 function fadeStop(){FADE.tm.forEach(function(x){clearTimeout(x);clearInterval(x)});FADE.tm=[];if(FADE.io){try{FADE.io.disconnect()}catch(e){}FADE.io=null}}
 window.ozFadeErr=function(img){var b=img.parentNode;var was=img.classList.contains('on');img.remove();if(was&&b){var n=b.querySelector('img.fi');if(n)n.classList.add('on')}};
 function startFade(t){
@@ -522,12 +525,16 @@ function startFade(t){
   var vis=new Set();
   if('IntersectionObserver' in window){FADE.io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting)vis.add(e.target);else vis.delete(e.target)})});boxes.forEach(function(b){FADE.io.observe(b)})}
   else boxes.forEach(function(b){vis.add(b)});
-  boxes.forEach(function(b,i){FADE.tm.push(setTimeout(function(){
+  boxes.forEach(function(b,i){
+    var card=b.closest('.ozPrd2')||b;
+    card.addEventListener('pointerdown',function(){b.__held=true},{passive:true});
+    ['pointerup','pointercancel','pointerleave'].forEach(function(ev){card.addEventListener(ev,function(){b.__held=false},{passive:true})});
+    FADE.tm.push(setTimeout(function(){
     FADE.tm.push(setInterval(function(){
-      if(!alive(t)||!b.isConnected){fadeStop();return}if(!vis.has(b)||D.hidden)return;
+      if(!alive(t)||!b.isConnected){fadeStop();return}if(!vis.has(b)||D.hidden||b.__held)return;
       var im=qa('img.fi',b);if(im.length<2)return;var k=-1;im.forEach(function(x,j){if(x.classList.contains('on'))k=j});
       if(k>=0)im[k].classList.remove('on');im[(k+1)%im.length].classList.add('on');
-    },3000))},(i%3)*1000))});
+    },FADE.ms))},(i%3)*700))});
 }
 async function producersMore(t){
   var pr=ST.pr;var LIM=20;
