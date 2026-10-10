@@ -1,6 +1,6 @@
 // G2-1: kart "+" sayacı — 390px, sahte veri. Çalıştırma: node tests/oz-ui/g2-sayac.test.js
 // Doğrulanan: tek seçenekli üründe "+" → "− 1 +"; "+" stok sınırında pasif; "−" 1'de sepetten çıkarır ve "+" geri gelir;
-// "Sepeti gör" şeridi her adımda adetle aynı. Çok seçenekli üründe "+" tam ürün panelini açar (N1-3), sonra sayaç değil "+" üstünde adet rozeti.
+// "Sepeti gör" şeridi her adımda adetle aynı. Çok seçenekli üründe "+" küçük seçenek penceresini açar (O1), sonra sayaç değil "+" üstünde adet rozeti.
 // Keşfet "Tekrar sipariş ver" kartında da aynı sayaç.
 const {chromium,open,enter}=require('./harness.js');
 (async()=>{
@@ -40,10 +40,10 @@ const {chromium,open,enter}=require('./harness.js');
  // liste: çok seçenekli ürün
  await D({p:{id:'p2',name:'Ezine peyniri 2'},v:[{id:'va',label:'250 g',price_kurus:20000,stock:5},{id:'vb',label:'500 g',price_kurus:38000,stock:5}]});
  const g2='.ozGc[data-pid=p2]';
- await click(g2+' .ac .ozPlus',900);ok(!!(await p.$('.ozOv.ozPdS .ozVar'))&&!(await p.$('.ozOv .ozOpt')),'çok seçenekte "+" tam ürün panelini açmalı (küçük seçenek penceresi değil)');
- if(await p.$('.ozOv.ozPdS .ozVar')){await click('.ozOv.ozPdS .ozVar:not([disabled])',300);await click('.ozOv.ozPdS [data-a=addCart]',400);await p.keyboard.press('Escape');await p.waitForTimeout(500)}
+ await click(g2+' .ac .ozPlus',900);ok(!!(await p.$('.ozOv.ozPkS .ozPkO'))&&!(await p.$('.ozOv.ozPdS')),'çok seçenekte "+" küçük seçenek penceresini açmalı (tam panel değil)');
+ if(await p.$('.ozOv.ozPkS .ozPkO')){await click('.ozOv.ozPkS .ozPkO:not([disabled])',300);await click('.ozOv.ozPkS [data-a=pkAdd]',600)}
  c=await ctl(g2);ok(c&&c.plus&&!c.step&&c.badge==='1'&&c.strip==='1','çok seçenekte sayaç değil "+" + rozet 1: '+JSON.stringify(c));
- await click(g2+' .ac .ozPlus',900);ok(!!(await p.$('.ozOv.ozPdS .ozVar')),'rozetli "+" yine ürün panelini açmalı');
+ await click(g2+' .ac .ozPlus',900);ok(!!(await p.$('.ozOv.ozPkS .ozPkO')),'rozetli "+" yine seçenek penceresini açmalı');
  ok(!st.errors.length,'sayfa hatası olmamalı: '+st.errors.join(' | '));
  await br.close();
  if(fails.length){console.error('g2-sayac BAŞARISIZ:\n - '+fails.join('\n - '));process.exit(1)}

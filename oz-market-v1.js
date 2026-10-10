@@ -408,19 +408,35 @@ ACT_EXTRA({
     if(l&&l.stock!=null&&q>num(l.stock)){toast('Stoktaki tüm adetler sepetinde.');return}cartSetQty(v,q);ppRefresh()},
   /* "+": seçeneksiz (tek seçenekli) ürün doğrudan sepete; birden çok seçenekte (250 g / 500 g / 1 kg…) alt panelde seçtirir.
      Fiyat burada yalnız gösterim; sipariş tutarı sunucuda varyanttan hesaplanır (oz_quote / oz_place_order). */
-  /* N1-3: seçenekli üründe "+" küçük seçenek penceresi yerine tam ürün panelini açar (karta dokunmayla aynı, tek panel);
-     seçeneksiz / tek seçenekli ürün doğrudan sepete. Seçenek sayısı biliniyorsa sorgu beklemeden panel açılır. */
+  /* O1: seçenekli üründe "+" listenin üstünde KÜÇÜK seçenek penceresi açar (tam panel değil); seçim → "Sepete ekle" →
+     pencere kapanır, kart adet rozeti gösterir, sayfa değişmez. Seçeneksiz / tek seçenekli ürün doğrudan sepete. */
   ppPlus:async function(b){
     var id=b.dataset.id;
-    if(num((ST.pnv||{})[String(id)])>1||ppMulti(id,ppLines(id))){openProduct(id);return}
     await busy(b,async function(){
       var d=await rpc('oz_product_detail',{p_id:id});var vs=arr(d&&d.variants).filter(function(v){return v.is_active!==false});
       ST.pnv=ST.pnv||{};if(d&&d.id)ST.pnv[String(d.id)]=vs.length;
-      if(!d||vs.length!==1){openProduct(id);return}
-      if(!(num(vs[0].stock)>0)){toast('Bu ürün şu anda stokta yok.');return}ppAddVar(d,vs[0]);
+      if(!d||!vs.length){openProduct(id);return}
+      if(vs.length===1){if(!(num(vs[0].stock)>0)){toast('Bu ürün şu anda stokta yok.');return}ppAddVar(d,vs[0]);return}
+      ST.pick={d:d,vs:vs,sel:null};pkOpen();
     });
-  }
+  },
+  pkSel:function(b){var pk=ST.pick;if(!pk)return;pk.sel=b.dataset.v;pkRender()},
+  pkAdd:function(){var pk=ST.pick;if(!pk)return;var v=pk.vs.filter(function(x){return String(x.id)===String(pk.sel)})[0];if(!v)return;
+    if(cartQty(v.id)>=num(v.stock)){toast('Stoktaki tüm adetler sepetinde.');return}closeSheet();ppAddVar(pk.d,v)}
 });
+/* O1: küçük seçenek penceresi (yarım ekrandan kısa): ad + küçük foto, seçenek satırları (etiket, fiyat, çizili eski fiyat,
+   ≈ birim fiyat); başta seçim yok → "Seçenek seç" + pasif düğme; seçince fiyat + "Sepete ekle". */
+function pkOpen(){var pk=ST.pick;if(!pk)return;sheet('Seçenek seç','',{noFocus:true,cls:'ozPkS'});pkRender()}
+function pkRender(){
+  var pk=ST.pick,ov=qs('.ozOv.ozPkS');if(!pk||!ov)return;var d=pk.d,im=httpsUrl(arr(d.images)[0]);
+  var v=pk.vs.filter(function(x){return String(x.id)===String(pk.sel)})[0]||null;
+  var h='<div class="ozPkHd">'+pic(im,d.name,'ozPkIm')+'<b>'+E(d.name||'')+'</b></div><div class="ozPkL" role="radiogroup" aria-label="Seçenek">'+pk.vs.map(function(x){
+    var out=num(x.stock)<=0,on=v&&x.id===v.id,cm=num(x.compare_at_kurus),pr=num(x.price_kurus),u=unitPrice(d,x),inC=cartQty(x.id);
+    return '<button type="button" class="ozPkO'+(on?' on':'')+'" role="radio" aria-checked="'+!!on+'" data-a="pkSel" data-v="'+E(x.id)+'"'+(out?' disabled':'')+'><span class="l">'+E(x.label||'Standart')+(inC?' <i>Sepette '+inC+'</i>':'')+'</span>'+
+      '<span class="p">'+(out?'<small>Tükendi</small>':'<b>'+TL(pr)+'</b>'+(cm>pr?'<s>'+TL(cm)+'</s>':'')+(u?'<small>'+E(u)+'</small>':''))+'</span></button>'}).join('')+'</div>'+
+    '<div class="ozPkBar"><span class="pp">'+(v?'<b>'+TL(v.price_kurus)+'</b>':'<b class="pk">Seçenek seç</b>')+'</span><button type="button" class="ozBtn pri" data-a="pkAdd"'+(v?'':' disabled aria-disabled="true"')+'>Sepete ekle</button></div>';
+  var b=qs('.ozShB',ov);if(b)b.innerHTML=h;
+}
 function ppAddVar(d,v){
   var have=cartQty(v.id);if(have>=num(v.stock)){toast('Stoktaki tüm adetler sepetinde.');return}
   var sel=d.seller||{};
@@ -613,7 +629,9 @@ VIEWS_EXTRA({
     paint(pageHead('Favorilerim')+skel(2));
     var l=arr(await rpc('oz_my_favorites',{}));if(!alive(t))return;
     ST.fav=new Set(l.map(function(x){return String(x.id)}));
-    paint(pageHead('Favorilerim',l.length?l.length+' ürün':'')+(l.length?'<div class="ozGrid">'+l.map(card).join('')+'</div>':empty(ico('heart',36),'Favorin yok','Ürünlerdeki kalbe dokunarak favorilerine ekleyebilirsin.','<button type="button" class="ozBtn pri" data-a="nav" data-k="home">Ürünlere göz at</button>')));
+    /* O1: favoriler de liste kartıyla (fiyat/seçenek gösterimi ve "+" aynı) */
+    await gcEnrich(l);if(!alive(t))return;
+    paint(pageHead('Favorilerim',l.length?l.length+' ürün':'')+(l.length?'<div class="ozGcs" role="list">'+l.map(gcCard).join('')+'</div>':empty(ico('heart',36),'Favorin yok','Ürünlerdeki kalbe dokunarak favorilerine ekleyebilirsin.','<button type="button" class="ozBtn pri" data-a="nav" data-k="home">Ürünlere göz at</button>')));
   },
 
   /* ====================== Hesap menüsü ====================== */

@@ -2231,6 +2231,19 @@ html:root .ozSpAdd{align-self:flex-end;min-height:40px;padding:0 14px;border:1px
 /*OZ N1-5 Sorular başlığı boşluğu; ürün formu net miktar + birim*/
 html:root .ozSpQH{margin-top:14px}
 html:root .ozNetQ{grid-template-columns:minmax(0,1.3fr) minmax(0,1fr)}
+/*OZ O1 küçük seçenek penceresi (yarım ekrandan kısa)*/
+html:root .ozOv.ozPkS .ozSh{max-height:48vh;max-height:48dvh;display:flex;flex-direction:column;overflow:hidden;padding-bottom:0}
+html:root .ozOv.ozPkS .ozShH h2{font-size:14px;color:#CDBB9F;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html:root .ozOv.ozPkS .ozShB{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;overflow:hidden;padding-bottom:0}
+html:root .ozPkHd{display:flex;align-items:center;gap:10px;margin:0 0 8px}html:root .ozPkHd .ozPkIm{flex:none;width:44px;height:44px;border-radius:10px}html:root .ozPkHd b{font-size:15px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+html:root .ozPkL{flex:1 1 auto;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:6px;padding:2px}
+html:root .ozPkO{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:52px;padding:8px 12px;border:1.5px solid #54422D;border-radius:12px;background:#3A2D20;color:#F6ECDC;font:inherit;text-align:left;cursor:pointer}
+html:root .ozPkO.on{border-color:#F2B431;background:rgba(242,180,49,.12)}html:root .ozPkO:disabled{opacity:.5;cursor:not-allowed}
+html:root .ozPkO .l{font-weight:800;font-size:15px}html:root .ozPkO .l i{font-style:normal;font-size:11.5px;color:#7FD3A2;font-weight:700}
+html:root .ozPkO .p{display:flex;flex-direction:column;align-items:flex-end}html:root .ozPkO .p b{color:#F7D24A}html:root .ozPkO .p s{font-size:11.5px;color:#9C8B72}html:root .ozPkO .p small{font-size:11px;color:#CDBB9F}
+html:root .ozPkBar{flex:none;display:flex;align-items:center;justify-content:space-between;gap:12px;margin:8px -16px 0;padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));border-top:1px solid #54422D;background:#3A2D20}
+html:root .ozPkBar .pp b{font-size:18px;color:#F7D24A}html:root .ozPkBar .pp b.pk{font-size:15px;color:#CDBB9F}
+html:root .ozPkBar .ozBtn{min-width:150px;min-height:48px}
 /*K21-BITIS*/
 </style>
 <style id="svcProvEntryCss">.svcProvEntry{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;border-radius:16px;border:1.5px solid rgba(124,92,255,.45);background:rgba(124,92,255,.10);color:var(--text);font:inherit;text-align:left;cursor:pointer}.svcProvEntry .ic{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:rgba(124,92,255,.18)}.svcProvEntry .tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}.svcProvEntry small{font-size:12px;font-weight:700;color:var(--muted)}.svcProvEntry b{font-size:16px;font-weight:900}.svcProvEntry em{font-style:normal;font-size:12.5px;color:var(--muted)}.svcProvEntry .go{flex:0 0 auto;font-size:24px;font-weight:700;color:#7c5cff}.svcProvEntry:active{transform:scale(.99)}.svcProvEntry:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}html[data-theme="light"] .svcProvEntry{background:#f3effe;border-color:#c9bbff}html[data-theme="light"] .svcProvEntry .go{color:#5b3fd6}</style>

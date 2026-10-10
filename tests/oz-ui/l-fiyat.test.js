@@ -29,7 +29,7 @@ const V=[{product_id:'p0',label:'3kg',price_kurus:120000,compare_at_kurus:null,s
  ok(c.p3&&!/den|seçenek|≈/.test(c.p3),'seçenek verisi gelmeyen üründe eski gösterim: '+c.p3);
  // "+" davranışı aynı: çok seçenekte panel
  await clk('.ozGc[data-pid=p0] .ac .ozPlus',800);
- ok(!!(await p.$('.ozOv.ozPdS .ozVar'))&&!(await p.$('.ozOv .ozOpt')),'çok seçenekli üründe "+" tam ürün panelini açmalı');
+ ok(!!(await p.$('.ozOv.ozPkS .ozPkO'))&&!(await p.$('.ozOv.ozPdS')),'çok seçenekli üründe "+" küçük seçenek penceresini açmalı');
  await p.keyboard.press('Escape');await p.waitForTimeout(300);
  // kart/fotoğraf dokunuşu paneli açar; çok seçenekte başta seçim yok
  await clk('.ozGc[data-pid=p0] .sc',1200);
