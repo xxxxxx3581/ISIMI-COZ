@@ -359,6 +359,23 @@ function startPPS(t){
   tr.__oz={state:function(){return {i:idx(),held:held,n:n}}};
   arm();
 }
+/* Q1-3: "Son baktığın ürünler" — yalnız bu tarayıcıda (localStorage), üretici başına en fazla 10, en yeni önce. */
+var RECENT_KEY='isimi_oz_recent';
+function recentAll(){try{var o=JSON.parse(localStorage.getItem(RECENT_KEY)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return {}}}
+function recentAdd(p){try{var sid=p&&p.seller&&p.seller.id;if(!sid||!p.id)return;var all=recentAll();var vs=arr(p.variants).filter(function(v){return v.is_active!==false});
+  var mn=vs.reduce(function(a,v){return a==null||num(v.price_kurus)<a?num(v.price_kurus):a},null);
+  var it={id:String(p.id),name:String(p.name||''),image:httpsUrl(arr(p.images)[0])||'',price_kurus:mn||0,nv:vs.length};
+  var l=arr(all[sid]).filter(function(x){return x&&String(x.id)!==it.id});l.unshift(it);all[sid]=l.slice(0,10);localStorage.setItem(RECENT_KEY,JSON.stringify(all))}catch(e){}}
+function recentStrip(sid){var l=arr(recentAll()[sid]).filter(function(x){return x&&x.id});if(!l.length)return '';
+  return '<section class="ozPPx" aria-label="Son baktığın ürünler"><div class="ozSecH"><h2>Son baktığın ürünler</h2></div><div class="ozRcs" role="list">'+l.map(function(x){
+    return '<button type="button" class="ozRcC" role="listitem" data-a="nav" data-k="product" data-id="'+E(x.id)+'">'+pic(x.image,x.name)+'<b>'+E(x.name)+'</b><small>'+(num(x.nv)>1?num(x.nv)+' seçenek':TL(x.price_kurus))+'</small></button>'}).join('')+'</div></section>'}
+/* Q1-3: "Müşteri yorumları" — oz_producer_reviews (mevcut okuma), en yeni önce, en fazla 10; ürün adı ürün panelini açar */
+function revStrip(l,prods){l=arr(l).slice().sort(function(a,b){return String(b.created_at||'').localeCompare(String(a.created_at||''))}).slice(0,10);if(!l.length)return '';
+  var byName={};arr(prods).forEach(function(p){if(p&&p.name)byName[String(p.name)]=p.id});
+  return '<section class="ozPPx" aria-label="Müşteri yorumları"><div class="ozSecH"><h2>Müşteri yorumları</h2></div><div class="ozRvs" role="list">'+l.map(function(r){var pid=byName[String(r.product_name||'')];
+    return '<div class="ozRvC" role="listitem"><div class="h">'+stars(r.rating)+'<small>'+E(fmtDay(r.created_at))+'</small></div>'+
+      (r.product_name?(pid?'<button type="button" class="pn" data-a="nav" data-k="product" data-id="'+E(pid)+'">'+E(r.product_name)+' ›</button>':'<span class="pn">'+E(r.product_name)+'</span>'):'')+
+      (String(r.comment||'').trim()?'<p>'+E(r.comment)+'</p>':'')+'</div>'}).join('')+'</div></section>'}
 function ppHtml(d,all,prods){
   var nm=String(d.display_name||'Üretici');var cv=httpsUrl(d.cover_url),lg=httpsUrl(d.logo_url);var loc=[d.city,d.district].filter(Boolean).join(' · ');
   var own=arr(d.categories),cnt={};own.forEach(function(c){cnt[c.slug]=num(c.count)});
@@ -668,6 +685,9 @@ VIEWS_EXTRA({
     var cnt={};arr(d.categories).forEach(function(c){cnt[c.slug]=num(c.count)});
     ST.pp={id:d.id,cnt:cnt,list:[],prods:arr(r[2])};
     paint(ppHtml(d,arr(r[1]&&r[1].categories),arr(r[2])));startPPS(t);
+    /* Q1-3: kategori ikonlarının altında şeritler; yorum okuması sayfayı bekletmez, yorum yoksa şerit hiç çıkmaz */
+    var pp=qs('#ozRoot .ozPP');if(pp){pp.insertAdjacentHTML('beforeend','<div id="ozPPRc">'+recentStrip(d.id)+'</div><div id="ozPPRv"></div>');
+      rpc('oz_producer_reviews',{p_id:d.id,p_limit:30}).then(function(l){if(!alive(t))return;var b=D.getElementById('ozPPRv');if(b)b.innerHTML=revStrip(l,r[2]);fitBars()}).catch(function(){})}
   },
 
   /* ====================== K30: Alıcı · üreticiler (oz_producers) ====================== */
@@ -756,7 +776,7 @@ async function openProduct(id){
   if(!ov.isConnected)return;
   /* M: birden çok seçenekte başta seçim yok; kullanıcı seçer. Tek seçenekte ilk (stoklu) seçenek seçili. */
   var vs=arr(p.variants);var first=vs.length>1?null:(vs.filter(function(v){return num(v.stock)>0})[0]||vs[0]||null);
-  ST.pd={p:p,sel:first?first.id:null};ST.pnv=ST.pnv||{};ST.pnv[String(p.id)]=vs.filter(function(x){return x.is_active!==false}).length;
+  ST.pd={p:p,sel:first?first.id:null};recentAdd(p);ST.pnv=ST.pnv||{};ST.pnv[String(p.id)]=vs.filter(function(x){return x.is_active!==false}).length;
   pdRender();
 }
 function pdReopen(){if(!ST.pd)return;sheet('Ürün','',{noFocus:true,cls:'ozPdS',drag:true});pdRender()}
