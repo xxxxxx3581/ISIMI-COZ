@@ -2269,6 +2269,21 @@ html:root .ozRvC .h{display:flex;align-items:center;justify-content:space-betwee
 html:root .ozRvC .pn{align-self:flex-start;min-height:32px;padding:0;border:0;background:none;color:#7FD3A2;font:700 13px/1.3 system-ui,sans-serif;text-align:left;cursor:pointer}
 html:root .ozRvC span.pn{color:#CDBB9F;cursor:default;display:flex;align-items:center}
 html:root .ozRvC p{margin:0;font-size:13px;line-height:1.4;color:#E8DCC6;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+/*OZ Q1-4 müşteri alt menüsü ve üst çubuk renkleri (satıcı menüsü hariç): Keşfet yeşil, Üreticiler altın, Siparişlerim mavi,
+  Sepet mercan, Hesabım mor; seçili sekme o rengin yarı saydam zemini + parlak ikon/etiket, diğerleri renkli ama soluk*/
+html:root body:not(.ozSellerNav) .ozNav{background:#352A1F;border-top:1px solid #C9A33A}
+html:root body:not(.ozSellerNav) .ozNavB{--nc:#CDBB9F;--nb:rgba(205,187,159,.16);color:var(--nc);opacity:1}
+html:root body:not(.ozSellerNav) .ozNavB svg,html:root body:not(.ozSellerNav) .ozNavB .l{opacity:.78}
+html:root body:not(.ozSellerNav) .ozNavB[data-k=home]{--nc:#7ED39A;--nb:rgba(126,211,154,.18)}
+html:root body:not(.ozSellerNav) .ozNavB[data-k=producers]{--nc:#EFC35A;--nb:rgba(239,195,90,.18)}
+html:root body:not(.ozSellerNav) .ozNavB[data-k=orders]{--nc:#86B8E8;--nb:rgba(134,184,232,.18)}
+html:root body:not(.ozSellerNav) .ozNavB[data-k=cart]{--nc:#F09A84;--nb:rgba(240,154,132,.18)}
+html:root body:not(.ozSellerNav) .ozNavB[data-k=account]{--nc:#C8B4F0;--nb:rgba(200,180,240,.18)}
+html:root body:not(.ozSellerNav) .ozNavB[aria-current=page]{color:var(--nc);background:var(--nb);box-shadow:inset 0 0 0 1px var(--nb)}
+html:root body:not(.ozSellerNav) .ozNavB[aria-current=page] svg,html:root body:not(.ozSellerNav) .ozNavB[aria-current=page] .l{opacity:1}
+html:root body:not(.ozSellerNav) .ozNavB[aria-current=page] svg{stroke-width:2.2}
+html:root .ozTop .ozBrand,html:root .ozTop .ozBrand b{color:#F2C14E}
+html:root .ozTop .ozIc[data-k=search],html:root .ozTop .ozIc[data-a=bell]{flex:0 0 40px;width:40px;height:40px;margin:0 2px;border-radius:50%;background:rgba(239,195,90,.16);color:#F3D27A;box-shadow:inset 0 0 0 1px rgba(239,195,90,.28)}
 /*K21-BITIS*/
 </style>
 <style id="svcProvEntryCss">.svcProvEntry{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;border-radius:16px;border:1.5px solid rgba(124,92,255,.45);background:rgba(124,92,255,.10);color:var(--text);font:inherit;text-align:left;cursor:pointer}.svcProvEntry .ic{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:rgba(124,92,255,.18)}.svcProvEntry .tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}.svcProvEntry small{font-size:12px;font-weight:700;color:var(--muted)}.svcProvEntry b{font-size:16px;font-weight:900}.svcProvEntry em{font-style:normal;font-size:12.5px;color:var(--muted)}.svcProvEntry .go{flex:0 0 auto;font-size:24px;font-weight:700;color:#7c5cff}.svcProvEntry:active{transform:scale(.99)}.svcProvEntry:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}html[data-theme="light"] .svcProvEntry{background:#f3effe;border-color:#c9bbff}html[data-theme="light"] .svcProvEntry .go{color:#5b3fd6}</style>
