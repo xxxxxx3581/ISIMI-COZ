@@ -883,7 +883,7 @@ function drawCheckout(){
   var groups=arr(q.groups);var issues=arr(q.issues);
   var byV={};groups.forEach(function(g){arr(g.items).forEach(function(it){byV[it.variant_id]=it})});
   var orphan=co.q?c.filter(function(x){return !byV[x.variant_id]}):[];
-  /* ürünler (yalnız bu alan kayar) */
+  /* ürünler; H2: sayfa bütün olarak kayar, yalnız Toplam çubuğu altta yapışık */
   var itH=groups.map(function(g){var si=(ST.sinfo||{})[g.seller_id]||{};var fo=num(si.free_ship_over_kurus),sub=num(g.subtotal_kurus);
     return '<div class="ozCoG2"><p class="hd"><b>'+E(g.seller_name||'Üretici')+'</b>'+(num(g.handling_days)?'<span> · '+num(g.handling_days)+' iş gününde kargoda</span>':'')+'</p>'+
     arr(g.items).map(function(it){return coLine(it,num(it.stock))}).join('')+
