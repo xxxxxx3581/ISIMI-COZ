@@ -261,25 +261,43 @@ var OZ_WHEAT='<svg class="lg" viewBox="0 0 32 40" aria-hidden="true" focusable="
 var OZ_OLIVE='<svg class="br" viewBox="0 0 120 60" aria-hidden="true" focusable="false"><path d="M4 52C30 40 62 30 116 10" stroke="#9CC58A" stroke-width="2" fill="none" stroke-linecap="round"/><g fill="#9CC58A" opacity=".9"><ellipse cx="26" cy="38" rx="9" ry="3.4" transform="rotate(-38 26 38)"/><ellipse cx="34" cy="46" rx="9" ry="3.4" transform="rotate(14 34 46)"/><ellipse cx="52" cy="29" rx="9" ry="3.4" transform="rotate(-40 52 29)"/><ellipse cx="60" cy="37" rx="9" ry="3.4" transform="rotate(10 60 37)"/><ellipse cx="80" cy="20" rx="9" ry="3.4" transform="rotate(-42 80 20)"/><ellipse cx="88" cy="28" rx="9" ry="3.4" transform="rotate(8 88 28)"/></g><g fill="#3E5A2A"><ellipse cx="44" cy="40" rx="3.6" ry="4.6"/><ellipse cx="72" cy="30" rx="3.6" ry="4.6"/></g></svg>';
 /* K37: banner arka planında soluk, özgün zeytin dalı */
 var OZ_BRANCH='<svg class="bg" viewBox="0 0 400 220" aria-hidden="true" focusable="false"><path d="M-10 210C70 170 150 150 230 96S350 20 410 6" stroke="#CFE7C2" stroke-width="3" fill="none" stroke-linecap="round"/><g fill="#CFE7C2"><ellipse cx="40" cy="186" rx="22" ry="7" transform="rotate(-40 40 186)"/><ellipse cx="62" cy="196" rx="22" ry="7" transform="rotate(18 62 196)"/><ellipse cx="104" cy="160" rx="22" ry="7" transform="rotate(-48 104 160)"/><ellipse cx="128" cy="172" rx="22" ry="7" transform="rotate(12 128 172)"/><ellipse cx="176" cy="126" rx="22" ry="7" transform="rotate(-52 176 126)"/><ellipse cx="200" cy="138" rx="22" ry="7" transform="rotate(6 200 138)"/><ellipse cx="250" cy="80" rx="22" ry="7" transform="rotate(-50 250 80)"/><ellipse cx="276" cy="92" rx="22" ry="7" transform="rotate(4 276 92)"/><ellipse cx="326" cy="40" rx="20" ry="6.5" transform="rotate(-46 326 40)"/><ellipse cx="350" cy="50" rx="20" ry="6.5" transform="rotate(0 350 50)"/></g><g fill="#E6F2DD"><ellipse cx="88" cy="180" rx="8" ry="10"/><ellipse cx="158" cy="146" rx="8" ry="10"/><ellipse cx="232" cy="104" rx="8" ry="10"/></g></svg>';
-var HERO_SL=[['Doğadan sofranıza','Üreticiden doğrudan kapına.',['bal-recel','kuruyemis-meyve','recel']],
-  ['Her kavanozda bir hikâye','Anadolu\'nun köylerinden el emeği ürünler.',['recel','tursu-konserve','el-emegi']],
-  ['Güvenilir üreticiler','Başvurusu incelenen, onaylı üreticilerden.',['kuru-yemis','baharat-bitki-cay','bitki-cayi']]];
+/* F1: slaytlar. producerId (isteğe bağlı) verilirse kısa dokunuş o üreticinin sayfasını açar; yoksa dokunuş akışı durdurur/sürdürür.
+   İleride oz_home_slides tablosundan gelecek (bkz. oz-slider-plan.sql); şimdilik kodda sabit. */
+var HERO_SL=[{t:'Doğadan sofranıza',s:'Üreticiden doğrudan kapına.',img:['bal-recel','kuruyemis-meyve','recel'],producerId:null},
+  {t:'Her kavanozda bir hikâye',s:'Anadolu\'nun köylerinden el emeği ürünler.',img:['recel','tursu-konserve','el-emegi'],producerId:null},
+  {t:'Güvenilir üreticiler',s:'Başvurusu incelenen, onaylı üreticilerden.',img:['kuru-yemis','baharat-bitki-cay','bitki-cayi'],producerId:null}];
+var HERO_MS={wait:2500,anim:500};  /* bekleme ve geçiş süresi tek yerde */
 function heroHtml(){
   var oe="var p=this.parentNode;this.remove();if(p&&!p.querySelector('img'))p.remove()";
-  var sl=HERO_SL.map(function(h,n){return '<div class="ozHs ozBn" role="group" aria-roledescription="slayt" aria-label="'+(n+1)+' / '+HERO_SL.length+'">'+OZ_OLIVE+
-    OZ_BRANCH+'<div class="mk">'+OZ_WHEAT+'<b>Özüne <em>Dön</em></b></div><div class="tx"><em>Doğal olanı keşfet.</em><strong>'+E(h[0])+'</strong><small>'+E(h[1])+'</small></div>'+
+  var sl=HERO_SL.map(function(h,n){return '<div class="ozHs ozBn" role="group" aria-roledescription="slayt" aria-label="'+(n+1)+' / '+HERO_SL.length+'"'+(h.producerId?' data-pid="'+E(h.producerId)+'"':'')+'>'+OZ_OLIVE+
+    OZ_BRANCH+'<span class="pz" aria-hidden="true"><i></i><i></i></span><div class="mk">'+OZ_WHEAT+'<b>Özüne <em>Dön</em></b></div><div class="tx"><em>Doğal olanı keşfet.</em><strong>'+E(h.t)+'</strong><small>'+E(h.s)+'</small></div>'+
     '<div class="tc"><span>✓ Onaylı üretici</span><span>🚚 Kapına kargo</span><span>🔒 Güvenli ödeme</span></div>'+
-    '<div class="ph">'+h[2].map(function(sg,k){return '<img class="p'+(k+1)+'" src="assets/oz-cat/'+sg+'.jpg" alt="" loading="'+(n?'lazy':'eager')+'" decoding="async" onerror="'+oe+'">'}).join('')+'</div></div>'});
+    '<div class="ph">'+h.img.map(function(sg,k){return '<img class="p'+(k+1)+'" src="assets/oz-cat/'+sg+'.jpg" alt="" loading="'+(n?'lazy':'eager')+'" decoding="async" onerror="'+oe+'">'}).join('')+'</div></div>'});
   return '<section class="ozHero" aria-label="Özüne Dön" aria-roledescription="slayt gösterisi"><div class="ozHeroT" id="ozHeroT">'+sl.join('')+'</div><div class="ozDots" id="ozHeroD" aria-hidden="true">'+sl.map(function(_,i){return '<i'+(i?'':' class="on"')+'></i>'}).join('')+'</div></section>';
 }
+/* F1: 2,5 sn bekle, 0,5 sn geç. Parmakla kaydırma serbest; basılı tutunca durur, bırakınca sürer.
+   Kısa dokunuş: slayt üreticiye bağlıysa üretici sayfası; değilse durdur/sürdür (köşede "duraklatıldı" simgesi). */
 function startHero(t){
   var tr=D.getElementById('ozHeroT'),dt=D.getElementById('ozHeroD');if(!tr||!dt)return;
-  var n=tr.children.length,stop=false;
+  var n=tr.children.length,held=false,paused=false,anim=false,tm=null,down=null;
+  var rm=false;try{rm=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)}catch(e){}
   function idx(){return Math.round(tr.scrollLeft/Math.max(1,tr.clientWidth))}
-  tr.addEventListener('scroll',function(){var i=idx();qa('i',dt).forEach(function(x,j){x.classList.toggle('on',i===j)})},{passive:true});
-  ['pointerdown','touchstart','focusin'].forEach(function(ev){tr.addEventListener(ev,function(){stop=true},{passive:true})});
-  try{if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return}catch(e){}
-  var tm=setInterval(function(){if(!alive(t)||!tr.isConnected){clearInterval(tm);return}if(stop||D.hidden)return;var i=(idx()+1)%n;try{tr.scrollTo({left:i*tr.clientWidth,behavior:'smooth'})}catch(e){tr.scrollLeft=i*tr.clientWidth}},5000);
+  function dots(){var i=idx();qa('i',dt).forEach(function(x,j){x.classList.toggle('on',i===j)})}
+  tr.addEventListener('scroll',dots,{passive:true});
+  function go2(i){var w=tr.clientWidth,from=tr.scrollLeft,to=i*w;if(rm||!w){tr.scrollLeft=to;dots();return}
+    anim=true;tr.style.scrollSnapType='none';var t0=performance.now();
+    (function step(now){var k=Math.min(1,(now-t0)/HERO_MS.anim);var e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;tr.scrollLeft=from+(to-from)*e;
+      if(k<1&&tr.isConnected)requestAnimationFrame(step);else{tr.style.scrollSnapType='';anim=false;dots()}})(t0)}
+  function arm(){clearTimeout(tm);if(rm)return;tm=setTimeout(function(){if(!alive(t)||!tr.isConnected)return;if(!held&&!paused&&!anim&&!D.hidden){go2((idx()+1)%n);tm=setTimeout(arm,HERO_MS.anim)}else arm()},HERO_MS.wait)}
+  function setPause(v){paused=v;qa('.ozHs',tr).forEach(function(x){x.classList.toggle('paused',v)});tr.setAttribute('aria-live',v?'polite':'off')}
+  tr.addEventListener('pointerdown',function(e){held=true;down={x:e.clientX,y:e.clientY,t:Date.now()}},{passive:true});
+  function up(e){var d=down;held=false;down=null;if(!d)return;
+    var tap=e&&e.type==='pointerup'&&Math.abs(e.clientX-d.x)<10&&Math.abs(e.clientY-d.y)<10&&Date.now()-d.t<350;
+    if(tap){var sl=tr.children[idx()];var pid=sl&&sl.dataset.pid;if(pid){go('store',{id:pid});return}setPause(!paused)}
+    arm()}
+  tr.addEventListener('pointerup',up,{passive:true});tr.addEventListener('pointercancel',up,{passive:true});
+  tr.__oz={state:function(){return {i:idx(),held:held,paused:paused}}};
+  arm();
 }
 /* K35: üretici sayfası parçaları */
 /* Üretici sayfası (sade): başlık (logo, ad, konum, puan), kategoriler, ürünler. Kargo/minimum bilgisi sepet-ödeme ve ürün sayfasında (C8).
