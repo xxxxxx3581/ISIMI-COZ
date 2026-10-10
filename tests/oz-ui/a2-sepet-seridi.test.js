@@ -20,6 +20,8 @@ const {chromium,open,enter}=require('./harness.js');
   const top=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return {photo:!!img&&img.complete&&img.naturalWidth>0,plusOnTop:!!top&&b.contains(top)}},sel);
  ok(card&&card.photo,'p1 kartında fotoğraf yüklenmiş olmalı');
  ok(card&&card.plusOnTop,'fotoğraflı kartta "+" en üstte ve tıklanabilir olmalı');
+ // "+" örtülüyse sonraki adımlar tıklayamaz: zaman aşımı yerine açık nedenle hemen düş
+ if(fails.length){await br.close();console.error('a2 BAŞARISIZ:\n - '+fails.join('\n - '));process.exit(1)}
  // sahte oz_product_detail tek kayıt döndürür: tıklanan kartın ürünü olsun
  await p.evaluate(()=>{const D=window.__OZ_FX.R.oz_product_detail;D.id='p1';D.name='Çam balı 1'});
  await p.click(sel+' .ac .ozPlus');await p.waitForTimeout(800);
@@ -45,4 +47,4 @@ const {chromium,open,enter}=require('./harness.js');
  await br.close();
  if(fails.length){console.error('a2 BAŞARISIZ:\n - '+fails.join('\n - '));process.exit(1)}
  console.log('a2 sepet şeridi: tüm kontroller geçti');process.exit(0);
-})().catch(e=>{console.error('a2 HATA:',e);process.exit(1)});
+})().catch(e=>{console.error('a2 HATA:',e&&e.message?e.message.split('\n')[0]:e);process.exit(1)});
