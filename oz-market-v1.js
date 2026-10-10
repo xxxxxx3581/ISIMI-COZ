@@ -280,7 +280,8 @@ function heroHtml(){
     OZ_BRANCH+'<span class="pz" aria-hidden="true"><i></i><i></i></span><div class="mk">'+OZ_WHEAT+'<b>Özüne <em>Dön</em></b></div><div class="tx"><em>Doğal olanı keşfet.</em><strong>'+E(h.t)+'</strong><small>'+E(h.s)+'</small></div>'+
     '<div class="tc"><span>✓ Onaylı üretici</span><span>🚚 Kapına kargo</span><span>🔒 Güvenli ödeme</span></div>'+
     '<div class="ph">'+h.img.map(function(sg,k){return '<img class="p'+(k+1)+'" src="assets/oz-cat/'+sg+'.jpg" alt="" loading="'+(n?'lazy':'eager')+'" decoding="async" onerror="'+oe+'">'}).join('')+'</div></div>'});
-  return '<section class="ozHero" aria-label="Özüne Dön" aria-roledescription="slayt gösterisi"><div class="ozHeroT" id="ozHeroT">'+sl.join('')+'</div><div class="ozDots" id="ozHeroD" aria-hidden="true">'+sl.map(function(_,i){return '<i'+(i?'':' class="on"')+'></i>'}).join('')+'</div></section>';
+  return '<section class="ozHero" aria-label="Özüne Dön" aria-roledescription="slayt gösterisi"><div class="ozHeroW"><div class="ozHeroT" id="ozHeroT">'+sl.join('')+'</div>'+
+    (sl.length>1?'<span class="ozHeroN" id="ozHeroN" aria-hidden="true">1/'+sl.length+'</span>':'')+'</div><div class="ozDots" id="ozHeroD" aria-hidden="true">'+sl.map(function(_,i){return '<i'+(i?'':' class="on"')+'></i>'}).join('')+'</div></section>';
 }
 /* F1: 2,5 sn bekle, 0,5 sn geç. Parmakla kaydırma serbest; basılı tutunca durur, bırakınca sürer.
    Kısa dokunuş: slayt üreticiye bağlıysa üretici sayfası; değilse durdur/sürdür (köşede "duraklatıldı" simgesi). */
@@ -289,7 +290,8 @@ function startHero(t){
   var n=tr.children.length,held=false,paused=false,anim=false,tm=null,down=null;
   var rm=false;try{rm=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)}catch(e){}
   function idx(){return Math.round(tr.scrollLeft/Math.max(1,tr.clientWidth))}
-  function dots(){var i=idx();qa('i',dt).forEach(function(x,j){x.classList.toggle('on',i===j)})}
+  var cn=D.getElementById('ozHeroN');  /* G1: sağ alttaki "2/5" sayaç çipi */
+  function dots(){var i=idx();qa('i',dt).forEach(function(x,j){x.classList.toggle('on',i===j)});if(cn)cn.textContent=(Math.min(i,n-1)+1)+'/'+n}
   tr.addEventListener('scroll',dots,{passive:true});
   function go2(i){var w=tr.clientWidth,from=tr.scrollLeft,to=i*w;if(rm||!w){tr.scrollLeft=to;dots();return}
     anim=true;tr.style.scrollSnapType='none';var t0=performance.now();
