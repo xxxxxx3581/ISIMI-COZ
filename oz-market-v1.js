@@ -1622,11 +1622,13 @@ VIEWS_EXTRA({
 function rvNeedsReply(r){return !!(r&&!r.seller_reply&&String(r.comment||'').trim())}
 /* R4: satıcı listesinde yalnız okunmamış yorumlar (seller_read_at boş). Müşteri tarafı bu alanı kullanmaz. */
 function rvUnread(r){return !!r&&r.seller_read_at==null}
+/* R5: satıcı listesinde yalnız kaldırılmamış sorular (seller_hidden false). Müşteri tarafı bu alanı kullanmaz. */
+function qVisible(q){return !!q&&q.seller_hidden!==true}
 async function sqCount(){var sid=sellerId();if(!logged()||!sid)return;
   try{var ps=arr(await get('oz_products?select=id&seller_id=eq.'+encodeURIComponent(sid)));var ids=ps.map(function(x){return x.id});
     if(!ids.length){SELLER.sqN=0;soBadge();return}
-    var r=await Promise.all([get('oz_questions?select=id,answer&product_id=in.'+inList(ids)+'&limit=200'),get('oz_reviews?select=id,comment,seller_reply,seller_read_at&product_id=in.'+inList(ids)+'&seller_read_at=is.null&limit=200')]);
-    SELLER.sqN=arr(r[0]).filter(function(x){return !x.answer}).length+arr(r[1]).filter(rvUnread).filter(rvNeedsReply).length;soBadge()}catch(e){}}
+    var r=await Promise.all([get('oz_questions?select=id,answer,seller_hidden&product_id=in.'+inList(ids)+'&seller_hidden=not.is.true&limit=200'),get('oz_reviews?select=id,comment,seller_reply,seller_read_at&product_id=in.'+inList(ids)+'&seller_read_at=is.null&limit=200')]);
+    SELLER.sqN=arr(r[0]).filter(qVisible).filter(function(x){return !x.answer}).length+arr(r[1]).filter(rvUnread).filter(rvNeedsReply).length;soBadge()}catch(e){}}
 /* N1-2/R1: Ürünler sekmesi çizimi (veri SELLER.products/variants/cats). R1: üstte "Vitrin" (sıralı, ↑ ↓, Vitrinden çıkar),
    yayındaki ürünlerde "Vitrine koy" (en fazla 6). Her değişiklikte oz_showcase_set(tam sıra); hata olursa eski sıra geri gelir. */
 var SHOW_MAX=6;
@@ -1713,10 +1715,11 @@ var SP={
     var ps=arr(await get('oz_products?select=id,name&seller_id=eq.'+encodeURIComponent(sid)));
     var ids=ps.map(function(x){return x.id});var nm={};ps.forEach(function(x){nm[x.id]=x.name});
     var qsl=[],rvl=[];
-    if(ids.length){var r=await Promise.all([get('oz_questions?select=id,product_id,question,answer,created_at&product_id=in.'+inList(ids)+'&order=created_at.desc&limit=100'),get('oz_reviews?select=id,product_id,rating,comment,seller_reply,seller_read_at,created_at&product_id=in.'+inList(ids)+'&seller_read_at=is.null&order=created_at.desc&limit=100')]);qsl=arr(r[0]);rvl=arr(r[1]).filter(rvUnread)}
+    if(ids.length){var r=await Promise.all([get('oz_questions?select=id,product_id,question,answer,seller_hidden,created_at&product_id=in.'+inList(ids)+'&seller_hidden=not.is.true&order=created_at.desc&limit=100'),get('oz_reviews?select=id,product_id,rating,comment,seller_reply,seller_read_at,created_at&product_id=in.'+inList(ids)+'&seller_read_at=is.null&order=created_at.desc&limit=100')]);qsl=arr(r[0]).filter(qVisible);rvl=arr(r[1]).filter(rvUnread)}
     if(!alive(t))return;
     qsl.sort(function(a,b){return (a.answer?1:0)-(b.answer?1:0)});rvl.sort(function(a,b){return (a.seller_reply?1:0)-(b.seller_reply?1:0)});
     var h='<div class="ozSecH ozSpQH"><h2>Sorular</h2><span class="ozMuted">'+qsl.filter(function(x){return !x.answer}).length+' cevapsız</span></div>'+
+      (qsl.length?'<div class="ozSpClr"><button type="button" class="ozBtn sm" data-a="qHideAll">Listemden kaldır</button><small class="ozMuted">Sorular müşterilere görünmeye devam eder.</small></div>':'')+
       (qsl.length?'<div class="ozList">'+qsl.map(function(q){return '<div class="ozCard" style="margin:0"><small class="ozMuted">'+E(nm[q.product_id]||'')+' · '+E(fmtDay(q.created_at))+'</small><p style="margin:4px 0 8px"><b>'+E(q.question)+'</b></p>'+'<div class="ozRow2">'+(q.answer?'<div class="ozReply" style="flex:1 1 100%">'+E(q.answer)+'</div>':'<button type="button" class="ozBtn sm pri" data-a="qAnswer" data-id="'+E(q.id)+'">Cevapla</button>')+'<button type="button" class="ozBtn sm ghost" data-a="nav" data-k="product" data-id="'+E(q.product_id)+'">Ürüne git</button></div>'+'</div>'}).join('')+'</div>':'<p class="ozMuted">Soru yok.</p>')+
       '<div class="ozSecH"><h2>Yorumlar</h2><span class="ozMuted">'+rvl.filter(rvNeedsReply).length+' yanıtsız</span></div>'+
       (rvl.length?'<div class="ozSpClr"><button type="button" class="ozBtn sm" data-a="rvReadAll">Tümünü okundu say</button><small class="ozMuted">Müşteriler yorumları görmeye devam eder.</small></div>':'')+
@@ -1990,6 +1993,9 @@ ACT_EXTRA({
   /* R4: yalnız satıcının listesini temizler (oz_reviews_mark_all_read); yorumlar müşterilere görünmeye devam eder */
   rvReadAll:async function(){if(!await confirmBox('Tüm yorumlar okundu sayılsın mı?','Müşteriler yorumları görmeye devam eder.','Okundu say'))return;
     var n=await rpc('oz_reviews_mark_all_read',{});toast((num(n)?num(n)+' yorum':'Yorumlar')+' okundu sayıldı.');draw()},
+  /* R5: soruları yalnız satıcının listesinden kaldırır (oz_questions_hide_all); sorular müşterilere görünmeye devam eder */
+  qHideAll:async function(){if(!await confirmBox('Sorular listenden kaldırılsın mı?','Sorular müşterilere görünmeye devam eder.','Listemden kaldır'))return;
+    var n=await rpc('oz_questions_hide_all',{});toast((num(n)?num(n)+' soru':'Sorular')+' listenden kaldırıldı.');draw()},
   qAnswer:async function(b){var v=await formBox('Soruyu cevapla','<label for="ozQa">Cevabın (herkese açık)</label><textarea class="ozTa" id="ozQa" data-f="a" maxlength="1000"></textarea>','Gönder',function(v){return v.a.length<2?'Cevabını yaz.':''});if(!v)return;await rpc('oz_answer_question',{p_question:b.dataset.id,p_answer:v.a});toast('Cevabın yayınlandı');draw()},
   rReply:async function(b){var v=await formBox('Değerlendirmeyi yanıtla','<label for="ozRr">Yanıtın (herkese açık)</label><textarea class="ozTa" id="ozRr" data-f="a" maxlength="1000"></textarea>','Gönder',function(v){return v.a.length<2?'Yanıtını yaz.':''});if(!v)return;await rpc('oz_reply_review',{p_review:b.dataset.id,p_reply:v.a});toast('Yanıtın yayınlandı');draw()}
 });
