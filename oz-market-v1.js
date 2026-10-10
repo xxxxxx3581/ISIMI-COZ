@@ -165,17 +165,31 @@ function cartSet(c){try{if(c&&c.length)localStorage.setItem(CART_KEY,JSON.string
 /* A2: liste ekranlarında (Keşfet, Üreticiler, üretici sayfası, arama) alt menünün hemen üstünde kalıcı "Sepeti gör" şeridi.
    Ürün sayfası (kendi alt çubuğu var), sepet ve ödeme ekranlarında yok. Toplam yalnız gösterim; tutar sunucuda hesaplanır. */
 var STRIP_ON={home:1,producers:1,store:1,search:1,favs:1,plist:1};
+/* O2: alt boşluk ölçümle. Alt menü / "Sepeti gör" şeridi yüksekliği sabit varsayılmaz (büyük yazı tipinde uzar):
+   şerit menünün hemen üstüne oturur, sayfa altına menü + şerit + 16px boşluk bırakılır; son kartın "+"sı örtülmez. */
+var FIT={ro:null};
+function fitBars(){
+  var b=D.body;if(!b.classList.contains('ozWorld')){b.classList.remove('ozFit');b.style.removeProperty('--oz-bot');return}
+  var nav=D.getElementById('ozNav'),cs=D.getElementById('ozCStrip');
+  var nh=b.classList.contains('ozNavOn')&&nav?nav.getBoundingClientRect().height:0;
+  if(cs)cs.style.bottom=nh?Math.round(nh+1)+'px':'';
+  var sh=cs&&b.classList.contains('ozStripOn')?cs.getBoundingClientRect().height+8:0;
+  b.style.setProperty('--oz-bot',Math.round(nh+sh)+'px');b.classList.add('ozFit');
+  if(!FIT.ro&&window.ResizeObserver&&nav){FIT.ro=new ResizeObserver(function(){fitBars()});FIT.ro.observe(nav)}
+}
+window.addEventListener('resize',function(){if(D.body.classList.contains('ozWorld'))fitBars()});
 function stripSync(){
   var r=D.getElementById('ozRoot');if(!r)return;var old=D.getElementById('ozCStrip');
   var c=cartGet();var n=c.reduce(function(k,x){return k+num(x.qty)},0);var k=(NAV&&NAV.length)?cur().k:'';
   var on=n>0&&STRIP_ON[k]&&D.body.classList.contains('ozWorld');
   D.body.classList.toggle('ozStripOn',!!on);
-  if(!on){if(old)old.remove();return}
+  if(!on){if(old)old.remove();fitBars();return}
   var tot=c.reduce(function(s2,x){return s2+num(x.price_kurus)*num(x.qty)},0);
   /* E1: solda sepet ikonu + altın adet rozeti + toplam; sağda "Sepeti gör ›"; adet değişince rozet kısa nabız */
   if(ST.stripN!=null&&ST.stripN!==n)ST.stripBump=Date.now();ST.stripN=n;var bump=Date.now()-(ST.stripBump||0)<450;
   var h='<button type="button" class="ozCStrip" id="ozCStrip" data-a="nav" data-k="cart" aria-label="Sepeti gör, '+n+' ürün, '+TL(tot)+'"><span class="l">'+ico('cart',22)+'<span class="bd'+(bump?' bump':'')+'">'+(n>99?'99+':n)+'</span><b>'+TL(tot)+'</b></span><span class="r">Sepeti gör ›</span></button>';
   if(old)old.outerHTML=h;else r.insertAdjacentHTML('beforeend',h);
+  fitBars();
 }
 function cartCount(){return cartGet().reduce(function(n,x){return n+num(x.qty)},0)}
 function cartQty(variantId){var x=cartGet().filter(function(y){return y.variant_id===variantId})[0];return x?num(x.qty):0}
@@ -743,6 +757,8 @@ function pdRender(){
   var bar='<div class="ozPdBar"><span class="pp">'+(pick?'<b class="pk" style="font-size:16px;color:#CDBB9F">Seçenek seç</b>':'<b>'+(v?TL(price):'—')+'</b>'+(v&&cmp>price?'<s>'+TL(cmp)+'</s>':''))+'</span>'+act+'</div>';
   var b=qs('.ozShB',ov);if(!b)return;var keep=b.scrollTop,openInf=!!qs('.ozPdInf[open]',b);
   b.innerHTML=gal+head+prod+desc+vars+pdFeat(p)+ship+bar;
+  /* O2: alt çubuk panelin altına sabit; içerik alanına çubuk yüksekliği kadar alt boşluk → son seçenek/bilgi çubuğun altında kalmaz */
+  var pb=qs('.ozPdBar',b);if(pb)b.style.paddingBottom=Math.ceil(pb.getBoundingClientRect().height+12)+'px';
   if(openInf){var di=qs('.ozPdInf',b);if(di)di.open=true}b.scrollTop=keep;
   var g=D.getElementById('ozGal'),gd=D.getElementById('ozGalD');
   if(g&&gd)g.addEventListener('scroll',function(){var i=Math.round(g.scrollLeft/Math.max(1,g.clientWidth));qa('i',gd).forEach(function(x,j){x.classList.toggle('on',i===j)})},{passive:true});
@@ -1309,6 +1325,7 @@ function navSync(){
   if(mode==='seller')soBadge();else if(mode==='buyer'){newDotSync();newDotCheck()}
   D.body.classList.toggle('ozNavOn',!!mode);
   qa('#ozNav .ozNavB').forEach(function(b){var on=mode==='seller'?b.dataset.tab===sellerTabOf(c):TAB_OF[k]===b.dataset.k;if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
+  fitBars();
 }
 function ensureWorld(){
   if(!D.getElementById('ozRoot')){
