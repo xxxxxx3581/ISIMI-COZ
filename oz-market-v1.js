@@ -119,6 +119,7 @@ var IC={
   leaf:'<path d="M5 19c0-8 6-14 15-14 0 9-6 15-14 15zM5 19l7-7"/>',star:'<path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
   truck:'<path d="M3 6h11v10H3zM14 9h4l3 3v4h-7M7 19a2 2 0 1 0 0-.1M17 19a2 2 0 1 0 0-.1"/>',home:'<path d="M4 11l8-7 8 7v9H4z"/>',x:'<path d="M6 6l12 12M18 6L6 18"/>',
   copy:'<rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a1 1 0 0 1 1-1h10"/>',
+  zoom:'<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4M11 8v6M8 11h6"/>',
   chk2:'<path d="M2 13l4 4 9-10M10 16l1.5 1.5L22 7"/>',trash:'<path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/>',
   sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5L19 19M5 19l1.5-1.5M17.5 6.5L19 5"/>',tag:'<path d="M3 12V4h8l10 10-8 8z"/><circle cx="7.5" cy="8.5" r="1.5"/>',wallet:'<path d="M3 7h15a3 3 0 0 1 3 3v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 7l12-3v3"/><circle cx="16.5" cy="13.5" r="1.2"/>'
 };
@@ -352,13 +353,15 @@ function gcCard(p){ST.rows=ST.rows||{};ST.rows[String(p.id)]=p;var im=httpsUrl(p
   return '<div class="ozGc" role="listitem" data-pid="'+E(p.id)+'"><div class="im"><button type="button" class="ph" data-a="nav" data-k="product" data-id="'+E(p.id)+'" aria-label="'+E(p.name)+'">'+pic(im,p.name)+'</button>'+
     (p.in_stock===false?'<span class="so">Tükendi</span>':'')+'<span class="ac">'+ppCtrl(p)+'</span></div>'+
     '<button type="button" class="nm" data-a="nav" data-k="product" data-id="'+E(p.id)+'">'+E(p.name)+'</button><span class="pr">'+(cmp>price?'<s>'+TL(cmp)+'</s>':'')+'<b>'+TL(price)+'</b></span></div>'}
-/* tam ekran fotoğraf görüntüleyici */
+/* G1: tam ekran fotoğraf görüntüleyici — yalnız ürün panelindeki yakınlaştırma düğmesinden açılır.
+   Yana kaydırma, altta nokta göstergesi (tek fotoğrafta yok), X / Esc ile kapanır (Esc alttaki paneli kapatmaz). */
 function pvOpen(imgs,start){if(!imgs.length)return;var ov=D.createElement('div');ov.className='ozPv';ov.setAttribute('role','dialog');ov.setAttribute('aria-modal','true');ov.setAttribute('aria-label','Fotoğraflar');
-  ov.innerHTML='<div class="sc">'+imgs.map(function(u){return '<img src="'+E(u)+'" alt="">'}).join('')+'</div><button type="button" class="x" aria-label="Kapat">'+ico('x',22)+'</button>'+(imgs.length>1?'<span class="n">1 / '+imgs.length+'</span>':'');
-  D.body.appendChild(ov);var sc=qs('.sc',ov),n=qs('.n',ov);sc.scrollLeft=(start||0)*sc.clientWidth;
-  sc.addEventListener('scroll',function(){if(n)n.textContent=(Math.round(sc.scrollLeft/Math.max(1,sc.clientWidth))+1)+' / '+imgs.length},{passive:true});
-  function close(){ov.remove();D.removeEventListener('keydown',esc)}function esc(e){if(e.key==='Escape')close()}
-  qs('.x',ov).addEventListener('click',close);D.addEventListener('keydown',esc);try{qs('.x',ov).focus()}catch(e){}}
+  ov.innerHTML='<div class="sc">'+imgs.map(function(u){return '<img src="'+E(u)+'" alt="">'}).join('')+'</div><button type="button" class="x" aria-label="Kapat">'+ico('x',22)+'</button>'+
+    (imgs.length>1?'<span class="dt" aria-hidden="true">'+imgs.map(function(_,i){return '<i'+(i===(start||0)?' class="on"':'')+'></i>'}).join('')+'</span>':'');
+  D.body.appendChild(ov);var sc=qs('.sc',ov),dt=qs('.dt',ov);sc.scrollLeft=(start||0)*sc.clientWidth;
+  sc.addEventListener('scroll',function(){if(!dt)return;var i=Math.round(sc.scrollLeft/Math.max(1,sc.clientWidth));qa('i',dt).forEach(function(x,j){x.classList.toggle('on',i===j)})},{passive:true});
+  function close(){ov.remove();D.removeEventListener('keydown',esc,true)}function esc(e){if(e.key==='Escape'){e.stopImmediatePropagation();close()}}
+  qs('.x',ov).addEventListener('click',close);D.addEventListener('keydown',esc,true);try{qs('.x',ov).focus()}catch(e){}}
 function ppRefresh(){var m=ST.rows||{},pl=(ST.pp&&ST.pp.list)||[];qa('#ozRoot [data-pid]').forEach(function(c){var p=m[c.dataset.pid]||pl.filter(function(x){return String(x.id)===c.dataset.pid})[0];var ac=qs('.ac',c);if(p&&ac)ac.innerHTML=ppCtrl(p)});ppBar()}
 function ppBar(){stripSync()}
 ACT_EXTRA({
@@ -652,7 +655,7 @@ function pdRender(){
   if(pd.qty>maxQ)pd.qty=Math.max(1,maxQ);
   var imgs=arr(p.images).map(httpsUrl).filter(Boolean);var sel=p.seller||{};var price=v?num(v.price_kurus):0,cmp=v?num(v.compare_at_kurus):0;
   var h2=qs('.ozShH h2',ov);if(h2)h2.textContent=sel.display_name||'Ürün';
-  var gal='<div class="ozGalW pdS"><div class="ozGal" id="ozGal" aria-label="Ürün görselleri">'+(imgs.length?imgs.map(function(u,i){return pic(u,p.name+' '+(i+1))}).join(''):pic('',p.name))+'</div>'+favBtn(p.id,isFav(p.id))+'</div>'+
+  var gal='<div class="ozGalW pdS"><div class="ozGal" id="ozGal" aria-label="Ürün görselleri">'+(imgs.length?imgs.map(function(u,i){return pic(u,p.name+' '+(i+1))}).join(''):pic('',p.name))+'</div>'+favBtn(p.id,isFav(p.id))+(imgs.length?'<button type="button" class="ozZm" data-a="pdZoom" aria-label="Fotoğrafı büyüt">'+ico('zoom',20)+'</button>':'')+'</div>'+
     (imgs.length>1?'<div class="ozDots" id="ozGalD" aria-hidden="true">'+imgs.map(function(_,i){return '<i'+(i?'':' class="on"')+'></i>'}).join('')+'</div>':'');
   var rc=num(p.rating_count);
   var head='<div class="ozPNm"><h3 class="ozPName">'+E(p.name)+'</h3>'+(rc?'<button type="button" class="ozRtB" data-a="pdRev" aria-label="'+rc+' değerlendirmeyi gör"><b>★ '+num(p.rating_avg).toLocaleString('tr-TR',{minimumFractionDigits:1,maximumFractionDigits:1})+'</b><small>('+rc+')</small></button>':'')+'</div>'+
@@ -672,6 +675,7 @@ ACT_EXTRA({
   pdRev:function(){var pd=ST.pd;if(!pd)return;var l=arr(pd.p.reviews).slice(0,20);
     sheet('Değerlendirmeler ('+num(pd.p.rating_count)+')','<button type="button" class="ozLink ozBackL" data-a="pdBack">‹ Ürüne dön</button>'+(l.length?l.map(revHtml).join(''):'<p class="ozMuted">Henüz yorum yazılmamış.</p>')+'<p class="ozHint" style="margin:10px 0 0">Değerlendirmeyi yalnız teslim aldığı siparişten alıcılar yazabilir.</p>',{noFocus:true})},
   pdBack:function(){pdReopen()},
+  pdZoom:function(){var pd=ST.pd;if(!pd)return;var imgs=arr(pd.p.images).map(httpsUrl).filter(Boolean);var g=D.getElementById('ozGal');pvOpen(imgs,g?Math.round(g.scrollLeft/Math.max(1,g.clientWidth)):0)},
   sortGo:function(b){go('search',{sort:b.dataset.sort})},
   sortPick:function(b){var c=cur();c.a=Object.assign({},c.a,{sort:b.dataset.sort});
     if(c.k==='home'){qa('.ozSorts .ozChip').forEach(function(x){var on=x===b;x.classList.toggle('on',on);x.setAttribute('aria-pressed',String(on))});hSync();ST.sr={a:{sort:b.dataset.sort},list:[],offset:0,more:false};var r=D.getElementById('ozRes');if(r)r.innerHTML=skel(2);return searchMore(SCR)}
