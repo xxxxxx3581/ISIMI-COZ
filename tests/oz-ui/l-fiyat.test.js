@@ -1,5 +1,5 @@
 // L/M: seçenekli ürün fiyat gösterimi — 390px, sahte veri (canlıdaki Zeytin/Reçel/Bal yapısıyla aynı). Çalıştırma: node tests/oz-ui/l-fiyat.test.js
-// Doğrulanan kart metinleri: çok seçenekli → kartta HİÇ fiyat yok (M), yalnız "N seçenek · birim"; tek seçenekli → fiyat (+ indirim çizili) + "≈ X ₺/kg"; miktar okunamazsa birim fiyat yok;
+// Doğrulanan kart metinleri: çok seçenekli → kartta HİÇ fiyat yok (M), yalnız "N gramaj/hacim seçeneği" (T1-d); tek seçenekli → fiyat (+ indirim çizili) + "≈ X ₺/kg"; miktar okunamazsa birim fiyat yok;
 // seçenek verisi gelmezse eski gösterim. Keşfet "Tekrar sipariş ver" kartı da aynı. Panel (M): çok seçenekte başta seçim
 // yok, alt çubukta "Seçenek seç" + pasif buton; seçenek satırında fiyat, çizili eski fiyat, birim fiyat; seçince fiyat ve
 // aktif "Sepete ekle", eklenince sayaç ve sepete seçilen seçeneğin id'si; seçeneksiz üründe panel eskisi gibi.
@@ -19,11 +19,11 @@ const V=[{product_id:'p0',label:'3kg',price_kurus:120000,compare_at_kurus:null,s
  const pr=sel=>p.evaluate(s=>{const e=document.querySelector(s);return e?e.innerText.replace(/\s+/g,' ').trim():null},sel);
  // Keşfet: Tekrar sipariş ver (p0, iki seçenek)
  const kr=await pr('#ozReo .ozKr[data-pid=p0] .pr');
- ok(kr==='2 seçenek · kg'&&!/₺/.test(kr),'Keşfet kartında seçenekli üründe fiyat olmamalı: '+kr);
+ ok(kr==='2 gramaj seçeneği'&&!/₺/.test(kr),'Keşfet kartında seçenekli üründe fiyat olmamalı: '+kr);
  await p.evaluate(()=>OZ.go('plist',{seller:'s1'}));await p.waitForTimeout(1300);
  const c={};for(const id of ['p0','p1','p2','p3','p4'])c[id]=await pr('.ozGc[data-pid='+id+'] .pr');
- ok(c.p0==='2 seçenek · kg'&&!/₺/.test(c.p0),'zeytinyağı (3kg/5kg) kartında fiyat olmamalı: '+c.p0);
- ok(c.p1==='3 seçenek · gr'&&!/₺/.test(c.p1),'reçel kartında fiyat/eski fiyat olmamalı: '+c.p1);
+ ok(c.p0==='2 gramaj seçeneği'&&!/₺/.test(c.p0),'zeytinyağı (3kg/5kg) kartında fiyat olmamalı: '+c.p0);
+ ok(c.p1==='3 gramaj seçeneği'&&!/₺/.test(c.p1),'reçel kartında fiyat/eski fiyat olmamalı: '+c.p1);
  ok(c.p2==='1.200,00 ₺ 1.000,00 ₺ ≈ 1.250,00 ₺/kg','bal tek seçenek (indirim + birim fiyat): '+c.p2);
  ok(c.p4==='450,00 ₺','miktarı okunamayan tek seçenekte birim fiyat olmamalı: '+c.p4);
  ok(c.p3&&!/den|seçenek|≈/.test(c.p3),'seçenek verisi gelmeyen üründe eski gösterim: '+c.p3);

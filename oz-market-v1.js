@@ -416,10 +416,16 @@ function ppCtrl(p){
    "N seçenek · birim" (fiyatlar ürün panelinde); tek seçenekte fiyat (+ indirim çizili) + "≈ X ₺/kg|L" (unitPrice; miktar
    okunamazsa gösterilmez). Seçenekler bilinmiyorsa eski gösterim. Yalnız gösterim; tutar sunucuda hesaplanır. */
 function unitWord(l){var m=/^\s*\d+(?:[.,]\d+)?\s*(g|gr|gram|kg|kilo|ml|l|lt|litre)\s*$/i.exec(String(l||''));if(!m)return '';var u=m[1].toLowerCase();return u==='g'||u==='gram'?'gr':u==='kilo'?'kg':u==='l'||u==='litre'?'lt':u}
+/* T1-d: çok seçenekte tür: ağırlık (gr/kg) → "N gramaj seçeneği", hacim (ml/lt) → "N hacim seçeneği", diğer → "N seçenek".
+   Birimi olmayan çıplak sayı etiketi ("500") diğer etiketlerin (yoksa net miktarın) birimini alır; birim dışı metin ya da
+   ağırlık+hacim karışıksa "N seçenek". */
+function optDim(l){var t=String(l==null?'':l).trim();if(/^\d+(?:[.,]\d+)?$/.test(t))return '';var u=unitWord(t);return !u?'x':(u==='ml'||u==='lt')?'v':'w'}
+function optText(vs,net){var n=vs.length,ds=vs.map(function(v){return optDim(v.label)});var k=ds.filter(Boolean);
+  if(k.indexOf('x')>=0)return n+' seçenek';if(!k.length){var nd=net!=null&&String(net).trim()?optDim(net):'x';k=nd?[nd]:['x']}
+  var d=k[0];if(!k.every(function(x){return x===d}))return n+' seçenek';return n+(d==='w'?' gramaj seçeneği':d==='v'?' hacim seçeneği':' seçenek')}
 function cardPrice(p,sFirst){
   var vs=Array.isArray(p.vars)?p.vars:null;var price=num(p.price_kurus),cmp=num(p.compare_at_kurus),sub='';
-  if(vs&&vs.length>1){var us=vs.map(function(v){return unitWord(v.label)});var u=us[0]&&us.every(function(x){return x===us[0]})?us[0]:'';
-    return '<small class="u ov" style="display:block;font-size:13px;font-weight:700;color:#6B5A44;white-space:nowrap">'+E(vs.length+' seçenek'+(u?' · '+u:''))+'</small>'}
+  if(vs&&vs.length>1)return '<small class="u ov" style="display:block;font-size:13px;font-weight:700;color:#6B5A44;white-space:nowrap">'+E(optText(vs,p.net_content))+'</small>'
   if(vs&&vs.length===1){var v=vs[0];price=num(v.price_kurus);cmp=num(v.compare_at_kurus);sub=unitPrice({variants:vs,net_content:p.net_content},v)}
   var b='<b>'+TL(price)+'</b>',st=cmp>price?'<s>'+TL(cmp)+'</s>':'';
   return (sFirst?st+b:b+st)+(sub?'<small class="u" style="display:block;font-size:11.5px;font-weight:600;color:#8E7E66;white-space:nowrap">'+E(sub)+'</small>':'')}
@@ -440,9 +446,11 @@ function gcCard(p){ST.rows=ST.rows||{};ST.rows[String(p.id)]=p;
     (imgs.length>1?'<span class="dt" aria-hidden="true">'+imgs.map(function(_,i){return '<i'+(i?'':' class="on"')+'></i>'}).join('')+'</span>':'')+
     (p.in_stock===false?'<span class="so">Tükendi</span>':'')+
     '</div>'+
-    '<button type="button" class="nm" data-a="nav" data-k="product" data-id="'+id+'">'+E(p.name)+'</button>'+
+    /* T1: ad solda (kalan genişlikte sarılır); sağ üst sütunda kalp (oz_toggle_favorite, mevcut fav akışı) ve altında yıldız
+       (dokununca panel değerlendirmeleriyle açılır; yorum yoksa yok) */
+    '<div class="hd"><button type="button" class="nm" data-a="nav" data-k="product" data-id="'+id+'">'+E(p.name)+'</button><span class="tr">'+favBtn(p.id,isFav(p.id))+
+    (rc?'<button type="button" class="rt" data-a="nav" data-k="product" data-rev="1" data-id="'+id+'" aria-label="'+rc+' değerlendirmeyi gör">★ '+num(p.rating_avg).toLocaleString('tr-TR',{minimumFractionDigits:1,maximumFractionDigits:1})+' <small>('+rc+')</small></button>':'')+'</span></div>'+
     (p.description?'<span class="ds">'+E(p.description)+'</span>':'')+
-    (rc?'<span class="rt">★ '+num(p.rating_avg).toLocaleString('tr-TR',{minimumFractionDigits:1,maximumFractionDigits:1})+' <small>('+rc+')</small></span>':'')+
     '<div class="ft"><span class="pr">'+cardPrice(p,1)+'</span><span class="ac">'+ppCtrl(p)+'</span></div></div>'}
 /* kart açıklaması arama sonucunda yok: görünür ürünler için tek okuma (RLS: yalnız yayındaki ürünler). Hata olursa sessizce gizli. */
 async function gcEnrich(l){var ids=l.filter(function(x){return x&&x.id&&x.description===undefined}).map(function(x){return x.id});if(!ids.length)return;
@@ -779,7 +787,7 @@ var CLAIM='<span class="ozClaim">Satıcı beyanı – platform tarafından doğr
 /* F7: ürün detayı = kompakt alt panel (her yerden açılır). Eski tam sayfa ürün ekranı kaldırıldı.
    İçerik: foto(lar), ad + puan, fiyat, seçenekler (birden çoksa), adet, Özellikler (menşe, içindekiler, raf ömrü, saklama… zorunlu),
    beyan notu, açıklama (3 satır), kargo notu, sabit "Sepete ekle · tutar". */
-async function openProduct(id){
+async function openProduct(id,opt){
   var ov=sheet('Ürün',skel(1)+skel(2,'line'),{noFocus:true,cls:'ozPdS',drag:true});
   var p=null;try{p=await rpc('oz_product_detail',{p_id:id})}catch(e){var b0=qs('.ozShB',ov);if(ov.isConnected&&b0)b0.innerHTML=errBox(e,false);return}
   if(!ov.isConnected)return;
@@ -790,7 +798,11 @@ async function openProduct(id){
   var vs=arr(p.variants);var first=vs.length>1?null:(vs.filter(function(v){return num(v.stock)>0})[0]||vs[0]||null);
   ST.pd={p:p,sel:first?first.id:null};recentAdd(p);ST.pnv=ST.pnv||{};ST.pnv[String(p.id)]=vs.filter(function(x){return x.is_active!==false}).length;
   pdRender();
+  /* T1-b: karttaki yıldızdan gelindiyse panelin değerlendirmeler görünümü ("‹ Ürüne dön" ile panele dönülür) */
+  if(opt&&opt.rev&&num(p.rating_count))pdRevShow();
 }
+function pdRevShow(){var pd=ST.pd;if(!pd)return;var l=arr(pd.p.reviews).slice(0,20);
+    sheet('Değerlendirmeler ('+num(pd.p.rating_count)+')','<button type="button" class="ozLink ozBackL" data-a="pdBack">‹ Ürüne dön</button>'+(l.length?l.map(revHtml).join(''):'<p class="ozMuted">Henüz yorum yazılmamış.</p>')+'<p class="ozHint" style="margin:10px 0 0">Değerlendirmeyi yalnız teslim aldığı siparişten alıcılar yazabilir.</p>',{noFocus:true})}
 function pdReopen(){if(!ST.pd)return;sheet('Ürün','',{noFocus:true,cls:'ozPdS',drag:true});pdRender()}
 /* G2-2: "Ürün bilgileri ›" (kapalı başlangıç): menşe, içindekiler, raf ömrü, saklama (+ net miktar, alerjen, organik sertifika
    güvenlik/beyan için) ve satıcı beyanı notu. Boş alan yok; hiç bilgi yoksa başlık da yok. */
@@ -836,8 +848,7 @@ function pdRender(){
   if(g&&gd)g.addEventListener('scroll',function(){var i=Math.round(g.scrollLeft/Math.max(1,g.clientWidth));qa('i',gd).forEach(function(x,j){x.classList.toggle('on',i===j)})},{passive:true});
 }
 ACT_EXTRA({
-  pdRev:function(){var pd=ST.pd;if(!pd)return;var l=arr(pd.p.reviews).slice(0,20);
-    sheet('Değerlendirmeler ('+num(pd.p.rating_count)+')','<button type="button" class="ozLink ozBackL" data-a="pdBack">‹ Ürüne dön</button>'+(l.length?l.map(revHtml).join(''):'<p class="ozMuted">Henüz yorum yazılmamış.</p>')+'<p class="ozHint" style="margin:10px 0 0">Değerlendirmeyi yalnız teslim aldığı siparişten alıcılar yazabilir.</p>',{noFocus:true})},
+  pdRev:function(){pdRevShow()},
   pdBack:function(){pdReopen()},
   pdZoom:function(){var pd=ST.pd;if(!pd)return;var imgs=arr(pd.p.images).map(httpsUrl).filter(Boolean);var g=D.getElementById('ozGal');pvOpen(imgs,g?Math.round(g.scrollLeft/Math.max(1,g.clientWidth)):0)},
   sortGo:function(b){go('search',{sort:b.dataset.sort})},
@@ -1454,7 +1465,7 @@ preGo.outside=true;
 ACT_EXTRA({
   sheetClose:function(){closeSheet()},
   back:function(){back()},
-  nav:function(b){var k=b.dataset.k;if(k==='product'&&b.dataset.id){openProduct(b.dataset.id);return}var a={};if(b.dataset.id)a.id=b.dataset.id;if(b.dataset.q)a.q=b.dataset.q;if(b.dataset.cat)a.cat=b.dataset.cat;if(b.dataset.tab)a.tab=b.dataset.tab;if(b.dataset.focus)a.focus=b.dataset.focus;if(b.dataset.seller)a.seller=b.dataset.seller;if(b.dataset.sname)a.sname=b.dataset.sname;if(b.dataset.sort)a.sort=b.dataset.sort;if(k==='home'&&!a.cat&&!a.q){goRoot();return}if(k==='home'){NAV=[];}go(k,a)},
+  nav:function(b){var k=b.dataset.k;if(k==='product'&&b.dataset.id){openProduct(b.dataset.id,b.dataset.rev?{rev:1}:null);return}var a={};if(b.dataset.id)a.id=b.dataset.id;if(b.dataset.q)a.q=b.dataset.q;if(b.dataset.cat)a.cat=b.dataset.cat;if(b.dataset.tab)a.tab=b.dataset.tab;if(b.dataset.focus)a.focus=b.dataset.focus;if(b.dataset.seller)a.seller=b.dataset.seller;if(b.dataset.sname)a.sname=b.dataset.sname;if(b.dataset.sort)a.sort=b.dataset.sort;if(k==='home'&&!a.cat&&!a.q){goRoot();return}if(k==='home'){NAV=[];}go(k,a)},
   redraw:function(){draw()},
   login:function(){needLogin(function(){draw()})},
   signup:function(){ST.resume=function(){draw()};try{openAuthModal('signup')}catch(e){}},

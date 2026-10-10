@@ -2326,6 +2326,21 @@ html:root .ozSpVB{display:flex;align-items:center;gap:8px;margin-top:8px}html:ro
 /*OZ R4-R5 satıcı listesini temizle*/
 html:root .ozSpClr{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;margin:0 0 10px}
 html:root .ozSpClr small{flex:1 1 160px;font-size:12.5px;line-height:1.35}
+/*OZ T1 ürün liste kartı: ad solda (kalan genişlikte sarılır), sağ üstte kalp + altında yıldız; açıklama; fiyat / "N gramaj
+  seçeneği" ile "+" aynı satırda (kartın sağ altı). Kart ve düğmelerde uzun basınca metin seçilmez (panel metinleri seçilebilir).*/
+html:root .ozGc{grid-template-rows:auto auto 1fr}
+html:root .ozGc .im{grid-row:1 / span 3}
+html:root .ozGc .hd{grid-column:2;grid-row:1;display:flex;align-items:flex-start;gap:6px;min-width:0}
+html:root .ozGc .hd .nm{order:0;flex:1 1 auto;min-width:0;padding:4px 0 0;-webkit-line-clamp:3}
+html:root .ozGc .tr{order:1;flex:none;display:flex;flex-direction:column;align-items:flex-end;margin:-6px -6px 0 0}
+html:root .ozGc .tr .ozFav{position:static;width:40px;height:40px;border-radius:20px;background:transparent;color:#8E7E66}
+html:root .ozGc .tr .ozFav.on{color:#E5735A}
+html:root .ozGc .tr .rt{display:block;margin:0 6px 0 0;padding:2px 0 4px;min-height:24px;border:0;background:none;font:inherit;font-size:12.5px;font-weight:800;color:#B07800;white-space:nowrap;cursor:pointer}
+html:root .ozGc .ds{grid-row:2}
+html:root .ozGc .ft{grid-row:3;align-self:end;display:flex;align-items:flex-end;justify-content:space-between;gap:8px;padding:6px 0 0}
+html:root .ozGc .ft .pr{flex:1 1 auto;min-width:0;padding-bottom:8px}
+html:root .ozGc .ac{position:static;flex:none;margin:0 -2px -2px 0}
+html:root .ozGc,html:root .ozKr,html:root #ozRoot button,html:root #ozNav button,html:root .ozOv button,html:root .ozPrd2,html:root .ozRcC{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 /*K21-BITIS*/
 </style>
 <style id="svcProvEntryCss">.svcProvEntry{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;border-radius:16px;border:1.5px solid rgba(124,92,255,.45);background:rgba(124,92,255,.10);color:var(--text);font:inherit;text-align:left;cursor:pointer}.svcProvEntry .ic{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:rgba(124,92,255,.18)}.svcProvEntry .tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}.svcProvEntry small{font-size:12px;font-weight:700;color:var(--muted)}.svcProvEntry b{font-size:16px;font-weight:900}.svcProvEntry em{font-style:normal;font-size:12.5px;color:var(--muted)}.svcProvEntry .go{flex:0 0 auto;font-size:24px;font-weight:700;color:#7c5cff}.svcProvEntry:active{transform:scale(.99)}.svcProvEntry:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}html[data-theme="light"] .svcProvEntry{background:#f3effe;border-color:#c9bbff}html[data-theme="light"] .svcProvEntry .go{color:#5b3fd6}</style>
