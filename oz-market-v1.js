@@ -332,12 +332,39 @@ function startHero(t){
 /* K35: üretici sayfası parçaları */
 /* Üretici sayfası (sade): başlık (logo, ad, konum, puan), kategoriler, ürünler. Kargo/minimum bilgisi sepet-ödeme ve ürün sayfasında (C8).
    açıklama yazısı gösterilmez, kategoriler kaydırmasız küçük ızgara ("Tümü" yok; aynı ikona tekrar dokunmak filtreyi kaldırır) */
-function ppHtml(d,all){
+/* Q1-1: üretici vitrini — yayındaki ürünlerin kapak fotoğrafları kayan şerit (2 sn bekle + 0,5 sn geçiş; basılı tutunca durur;
+   parmakla kaydırılır; sağ altta "2/5", altta noktalar; slayta dokunuş o ürünün panelini açar). Ürün yoksa eski kapak; tek üründe akış yok. */
+var PPS_MS={wait:2000,anim:500};
+function ppSlides(prods){return arr(prods).map(function(p){return {id:p.id,name:p.name,img:httpsUrl(p.image)||httpsUrl(arr(p.images)[0])}}).filter(function(x){return x.img}).slice(0,8)}
+function ppCover(cv,sl){
+  if(!sl.length)return cv?'<img src="'+E(cv)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">':'';
+  var n=sl.length;
+  return '<div class="ppS" id="ozPPS" aria-roledescription="slayt gösterisi" aria-label="Ürünler">'+sl.map(function(x,i){return '<div class="sl" data-pid="'+E(x.id)+'" role="button" tabindex="0" aria-label="'+E(x.name)+' ('+(i+1)+'/'+n+')"><img src="'+E(x.img)+'" alt="" loading="'+(i?'lazy':'eager')+'" decoding="async"></div>'}).join('')+'</div>'+
+    (n>1?'<span class="ppN" id="ozPPN" aria-hidden="true">1/'+n+'</span><span class="ppD" id="ozPPD" aria-hidden="true">'+sl.map(function(_,i){return '<i'+(i?'':' class="on"')+'></i>'}).join('')+'</span>':'');
+}
+function startPPS(t){
+  var tr=D.getElementById('ozPPS');if(!tr)return;var n=tr.children.length,dt=D.getElementById('ozPPD'),cn=D.getElementById('ozPPN');
+  var held=false,anim=false,tm=null,down=null;var rm=false;try{rm=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)}catch(e){}
+  function idx(){return Math.round(tr.scrollLeft/Math.max(1,tr.clientWidth))}
+  function sync(){var i=Math.min(idx(),n-1);if(dt)qa('i',dt).forEach(function(x,j){x.classList.toggle('on',i===j)});if(cn)cn.textContent=(i+1)+'/'+n}
+  tr.addEventListener('scroll',sync,{passive:true});
+  function go2(i){var w=tr.clientWidth,from=tr.scrollLeft,to=i*w;if(rm||!w){tr.scrollLeft=to;sync();return}anim=true;tr.style.scrollSnapType='none';var t0=performance.now();
+    (function step(now){var k=Math.min(1,(now-t0)/PPS_MS.anim);var e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2;tr.scrollLeft=from+(to-from)*e;if(k<1&&tr.isConnected)requestAnimationFrame(step);else{tr.style.scrollSnapType='';anim=false;sync()}})(t0)}
+  function arm(){clearTimeout(tm);if(rm||n<2)return;tm=setTimeout(function(){if(!alive(t)||!tr.isConnected)return;if(!held&&!anim&&!D.hidden){go2((idx()+1)%n);tm=setTimeout(arm,PPS_MS.anim)}else arm()},PPS_MS.wait)}
+  tr.addEventListener('pointerdown',function(e){held=true;down={x:e.clientX,y:e.clientY,t:Date.now()}},{passive:true});
+  function up(e){var d=down;held=false;down=null;if(!d)return;var tap=e&&e.type==='pointerup'&&Math.abs(e.clientX-d.x)<10&&Math.abs(e.clientY-d.y)<10&&Date.now()-d.t<350;
+    if(tap){var sl=tr.children[Math.min(idx(),n-1)];if(sl&&sl.dataset.pid){openProduct(sl.dataset.pid);return}}arm()}
+  tr.addEventListener('pointerup',up,{passive:true});tr.addEventListener('pointercancel',up,{passive:true});
+  tr.addEventListener('keydown',function(e){if(e.key==='Enter'){var sl=e.target.closest&&e.target.closest('.sl');if(sl)openProduct(sl.dataset.pid)}});
+  tr.__oz={state:function(){return {i:idx(),held:held,n:n}}};
+  arm();
+}
+function ppHtml(d,all,prods){
   var nm=String(d.display_name||'Üretici');var cv=httpsUrl(d.cover_url),lg=httpsUrl(d.logo_url);var loc=[d.city,d.district].filter(Boolean).join(' · ');
   var own=arr(d.categories),cnt={};own.forEach(function(c){cnt[c.slug]=num(c.count)});
   var cats=all&&all.length?all.slice():own.slice();own.forEach(function(c){if(!cats.some(function(x){return x.slug===c.slug}))cats.push(c)});
   var rc=num(d.rating_count);
-  return '<div class="ozPP"><div class="cv">'+(cv?'<img src="'+E(cv)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">':'')+'<button type="button" class="bk" data-a="back" aria-label="Geri">'+ico('back')+'</button></div>'+
+  return '<div class="ozPP"><div class="cv">'+ppCover(cv,ppSlides(prods))+'<button type="button" class="bk" data-a="back" aria-label="Geri">'+ico('back')+'</button></div>'+
     '<div class="hd"><span class="lg">'+(lg?'<img src="'+E(lg)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">':'')+'<i aria-hidden="true">'+E(initials(nm))+'</i></span><span class="ok">✓ Onaylı üretici</span></div>'+
     /* C7: solda ad (tek satır) + konum; sağda tek dokunma alanı: ★ puan / Değerlendirmeler (N) */
     '<div class="nmr"><div class="nl"><h1 class="nm">'+E(nm)+'</h1>'+(loc?'<p class="loc">'+E(loc)+'</p>':'')+'</div>'+
@@ -626,13 +653,14 @@ VIEWS_EXTRA({
   /* K35: üretici sayfası — oz_producer_detail + oz_search_products({seller_id,category}); sepet mevcut fonksiyonlarla */
   store:async function(a,t){
     paint(skel(1)+skel(2));
-    var r=await Promise.all([rpc('oz_producer_detail',{p_id:a.id}).catch(function(){return null}),homeData().catch(function(){return null})]);var d=r[0];
+    var r=await Promise.all([rpc('oz_producer_detail',{p_id:a.id}).catch(function(){return null}),homeData().catch(function(){return null}),
+      rpc('oz_search_products',{p:{seller_id:a.id,sort:'new',limit:12,offset:0}}).catch(function(){return null})]);var d=r[0];
     if(!alive(t))return;
     if(!d||!d.id){paint(empty(ico('store',36),'Üretici bulunamadı','Bu mağaza şu anda yayında değil.','<button type="button" class="ozBtn" data-a="nav" data-k="home">Ana ekrana dön</button>'));return}
     /* K37: tüm kategoriler (ana ekran sırası); üreticinin olanlar sayılı ve belirgin */
     var cnt={};arr(d.categories).forEach(function(c){cnt[c.slug]=num(c.count)});
-    ST.pp={id:d.id,cnt:cnt,list:[]};
-    paint(ppHtml(d,arr(r[1]&&r[1].categories)));
+    ST.pp={id:d.id,cnt:cnt,list:[],prods:arr(r[2])};
+    paint(ppHtml(d,arr(r[1]&&r[1].categories),arr(r[2])));startPPS(t);
   },
 
   /* ====================== K30: Alıcı · üreticiler (oz_producers) ====================== */
