@@ -97,10 +97,10 @@ function confirmBox(title,text,okLabel,danger){
   });
 }
 /* Form penceresi: alanlar → değerler (Vazgeç ise null) */
-function formBox(title,fieldsHtml,okLabel,validate){
+function formBox(title,fieldsHtml,okLabel,validate,okCls){
   return new Promise(function(res){
     var done=false;
-    var ov=sheet(title,'<div class="ozForm">'+fieldsHtml+'</div><p class="ozErr" id="ozFbErr" hidden></p><div class="ozRow2"><button type="button" class="ozBtn" data-a="fbNo">Vazgeç</button><button type="button" class="ozBtn pri" data-a="fbOk">'+E(okLabel||'Kaydet')+'</button></div>');
+    var ov=sheet(title,'<div class="ozForm">'+fieldsHtml+'</div><p class="ozErr" id="ozFbErr" hidden></p><div class="ozRow2"><button type="button" class="ozBtn" data-a="fbNo">Vazgeç</button><button type="button" class="ozBtn '+(okCls||'pri')+'" data-a="fbOk">'+E(okLabel||'Kaydet')+'</button></div>');
     ov.addEventListener('click',function(e){var b=e.target.closest('[data-a]');if(!b||done)return;
       if(b.dataset.a==='fbNo'||b.dataset.a==='sheetClose'){done=true;e.stopPropagation();closeSheet();res(null);return}
       if(b.dataset.a==='fbOk'){e.stopPropagation();var v={};qa('[data-f]',ov).forEach(function(i){v[i.dataset.f]=(i.type==='checkbox'||i.type==='radio')?i.checked:String(i.value||'').trim()});
@@ -939,9 +939,11 @@ function ordTabs(tab){return '<div class="ozTabs" role="tablist" aria-label="Sip
    oz_my_orders / oz_seller_orders kısa ad (name, label, qty, image) — liste, detay ve satıcı kartı hep buradan okur */
 function ordItems(l){return arr(l).map(function(it){it=it||{};var q=num(it.qty!=null?it.qty:it.quantity),u=num(it.unit_price_kurus);
   return {product_id:it.product_id||null,variant_id:it.variant_id||null,name:it.name||it.product_name||'Ürün',label:it.label||it.variant_label||'',qty:q,image:it.image||it.image_url||'',unit_price_kurus:u,line_total_kurus:num(it.line_total_kurus)||u*q}})}
+/* J1: müşterinin "Siparişi iptal et" düğmesi (kart + detay): yumuşak mercan, ince ×. Görünme koşulu çağıranda (yalnız ödeme bekleniyor / Alındı). */
+function cnlBtn(o,cls){return '<button type="button" class="ozBtn ozCnl'+(cls?' '+cls:'')+'" data-a="ordCancel" data-id="'+E(o.id)+'" data-no="'+E(o.order_no||'')+'">'+ico('x',15)+'<span>Siparişi iptal et</span></button>'}
 /* Siparişlerim kartında duruma göre TEK aksiyon (kart tıklamasından ayrı düğme) */
 function ordAct(o){var id=E(o.id),st=o.status;
-  if(st==='awaiting_payment'||st==='new')return '<button type="button" class="ozBtn sm bad" data-a="ordCancel" data-id="'+id+'" data-no="'+E(o.order_no||'')+'">İptal et</button>';
+  if(st==='awaiting_payment'||st==='new')return cnlBtn(o,'sm');
   if(st==='shipped')return '<button type="button" class="ozBtn sm sun" data-a="nav" data-k="order" data-id="'+id+'" data-focus="trk">Kargoyu takip et</button>';
   if(st==='delivered'||st==='completed'){var rv=ST.rvd&&ST.rvd[o.id];return rv==='all'?'<button type="button" class="ozBtn sm" disabled>Değerlendirildi</button>':'<button type="button" class="ozBtn sm pri" data-a="nav" data-k="order" data-id="'+id+'" data-focus="rate">Değerlendir</button>'}
   return '';
@@ -1013,7 +1015,7 @@ function orderDetailHtml(d){
   var acts='';
   if(st==='awaiting_payment'&&o.payment_method==='mock'&&s.payment_mock)acts+='<button type="button" class="ozBtn sun" data-a="mockPay" data-id="'+E(o.id)+'">Ödemeyi tamamla</button>';
   if(st==='shipped')acts+='<button type="button" class="ozBtn pri" data-a="ordDeliver" data-id="'+E(o.id)+'">Siparişim elime ulaştı</button>';
-  if(st==='awaiting_payment'||st==='new')acts+='<button type="button" class="ozBtn ozBadO" data-a="ordCancel" data-id="'+E(o.id)+'" data-no="'+E(o.order_no||'')+'">Siparişi iptal et</button>';
+  if(st==='awaiting_payment'||st==='new')acts+=cnlBtn(o,'');
   if(d.can_return&&!ret)acts+='<button type="button" class="ozBtn" data-a="ordReturn" data-id="'+E(o.id)+'">İade talebi oluştur</button>';
   var canReview=(st==='delivered'||st==='completed');
   var ship=o.ship_to||{};
@@ -1129,7 +1131,7 @@ ACT_EXTRA({
      stoğu geri koyar (oz_restock) ve satıcıya bildirim gönderir. Onay → kilit → net mesaj → ekran ve sayaçlar yenilenir. */
   ordCancel:async function(b){
     if(ST.cnl)return;
-    var v=await formBox('Siparişi iptal et','<p class="ozP" style="margin:0 0 8px">'+E(b.dataset.no?b.dataset.no+' iptal edilecek. ':'')+'Bu işlem geri alınamaz; ödediysen ücret iadesi başlatılır.</p><label for="ozCnR">İptal nedeni (isteğe bağlı)</label><textarea class="ozTa" id="ozCnR" data-f="r" maxlength="300" style="min-height:72px"></textarea>','Evet, iptal et');
+    var v=await formBox('Siparişi iptal et','<p class="ozP" style="margin:0 0 8px">'+E(b.dataset.no?b.dataset.no+' iptal edilecek. ':'')+'Bu işlem geri alınamaz; ödediysen ücret iadesi başlatılır.</p><label for="ozCnR">İptal nedeni (isteğe bağlı)</label><textarea class="ozTa" id="ozCnR" data-f="r" maxlength="300" style="min-height:72px"></textarea>','Evet, iptal et',null,'ozCnl');
     if(!v)return;
     ST.cnl=1;
     try{await busy(b,async function(){
