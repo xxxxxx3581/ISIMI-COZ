@@ -1584,7 +1584,7 @@ var SP={
     if(ids.length){var r=await Promise.all([get('oz_questions?select=id,product_id,question,answer,created_at&product_id=in.'+inList(ids)+'&order=created_at.desc&limit=100'),get('oz_reviews?select=id,product_id,rating,comment,seller_reply,created_at&product_id=in.'+inList(ids)+'&order=created_at.desc&limit=100')]);qsl=arr(r[0]);rvl=arr(r[1])}
     if(!alive(t))return;
     qsl.sort(function(a,b){return (a.answer?1:0)-(b.answer?1:0)});rvl.sort(function(a,b){return (a.seller_reply?1:0)-(b.seller_reply?1:0)});
-    var h='<div class="ozSecH"><h2>Sorular</h2><span class="ozMuted">'+qsl.filter(function(x){return !x.answer}).length+' cevapsız</span></div>'+
+    var h='<div class="ozSecH ozSpQH"><h2>Sorular</h2><span class="ozMuted">'+qsl.filter(function(x){return !x.answer}).length+' cevapsız</span></div>'+
       (qsl.length?'<div class="ozList">'+qsl.map(function(q){return '<div class="ozCard" style="margin:0"><small class="ozMuted">'+E(nm[q.product_id]||'')+' · '+E(fmtDay(q.created_at))+'</small><p style="margin:4px 0 8px"><b>'+E(q.question)+'</b></p>'+'<div class="ozRow2">'+(q.answer?'<div class="ozReply" style="flex:1 1 100%">'+E(q.answer)+'</div>':'<button type="button" class="ozBtn sm pri" data-a="qAnswer" data-id="'+E(q.id)+'">Cevapla</button>')+'<button type="button" class="ozBtn sm ghost" data-a="nav" data-k="product" data-id="'+E(q.product_id)+'">Ürüne git</button></div>'+'</div>'}).join('')+'</div>':'<p class="ozMuted">Soru yok.</p>')+
       '<div class="ozSecH"><h2>Yorumlar</h2><span class="ozMuted">'+rvl.filter(function(x){return !x.seller_reply}).length+' yanıtsız</span></div>'+
       (rvl.length?'<div class="ozList">'+rvl.map(function(r){return '<div class="ozCard" style="margin:0"><small class="ozMuted">'+E(nm[r.product_id]||'')+' · '+E(fmtDay(r.created_at))+'</small><div style="margin:4px 0">'+stars(r.rating)+'</div>'+(r.comment?'<p style="margin:0 0 8px">'+E(r.comment)+'</p>':'')+(r.seller_reply?'<div class="ozReply">'+E(r.seller_reply)+'</div>':'<button type="button" class="ozBtn sm" data-a="rReply" data-id="'+E(r.id)+'">Yanıtla</button>')+'</div>'}).join('')+'</div>':'<p class="ozMuted">Değerlendirme yok.</p>');
@@ -1690,7 +1690,9 @@ async function stockStats(){
 }
 function pfRead(){
   var pf=ST.pf;if(!pf)return;
-  ['name','category_id','description','ingredients','origin_city','origin_note','net_content','shelf_life_days','storage_info','organic_cert'].forEach(function(k){var el=D.getElementById('ozP_'+k);if(el)pf[k]=el.value});
+  ['name','category_id','description','ingredients','origin_city','origin_note','shelf_life_days','storage_info','organic_cert'].forEach(function(k){var el=D.getElementById('ozP_'+k);if(el)pf[k]=el.value});
+  /* N1-5: net miktar = sayı + birim (gr, kg, ml, lt, adet); veritabanında aynı metin alanına "800 gr" olarak yazılır */
+  var nn=D.getElementById('ozP_net_n'),nu=D.getElementById('ozP_net_u');if(nn&&nu){pf.net_n=nn.value;pf.net_u=nu.value;pf.net_content=String(nn.value).trim()?String(nn.value).trim()+(nu.value?' '+nu.value:''):''}
   qa('#ozVars .ozVarRow').forEach(function(r,i){var v=pf.variants[i];if(!v)return;['label','price','compare','stock','weight','sku'].forEach(function(k){var el=qs('[data-v="'+k+'"]',r);if(el)v[k]=el.value});var ac=qs('[data-v="active"]',r);if(ac)v.active=ac.checked});
 }
 function drawProductForm(){
@@ -1712,7 +1714,7 @@ function drawProductForm(){
       ta('description','Açıklama','Ürünü, üretim şeklini ve tadını anlat')+
       '<div class="ozWarn">Sağlık beyanı uyarısı: "hastalığı önler, tedavi eder, bağışıklığı güçlendirir" gibi sağlık iddiaları yasal olarak yasaktır. Bu tür ifadeler içeren ürünler onaylanmaz.</div>'+
       ta('ingredients','İçindekiler','Örn. %100 süzme çiçek balı')+
-      (pf.id?'<div class="ozReapp"><p class="ozHint">↻ Bu alanları değiştirirsen ürün yeniden onaya girer.</p>':'<div>')+f('net_content','Net miktar',{max:40})+
+      (pf.id?'<div class="ozReapp"><p class="ozHint">↻ Bu alanları değiştirirsen ürün yeniden onaya girer.</p>':'<div>')+netField(pf)+
       '<div class="ozTwo"><div>'+f('origin_city','Menşe (il)',{max:40})+'</div><div>'+f('shelf_life_days','Raf ömrü (gün)',{im:'numeric',max:5})+'</div></div>'+
       ta('origin_note','Menşe notu','Örn. Ula köyündeki kendi bahçemizden')+ta('storage_info','Saklama koşulları','Örn. Serin ve kuru yerde saklayın')+f('organic_cert','Organik sertifika no (varsa)',{max:80})+
       '<fieldset style="border:0;padding:0;margin:12px 0 0"><legend class="ozMuted" style="font-weight:700;font-size:13px">Alerjenler</legend><div class="ozWrap">'+Object.keys(ALG).map(function(k){var on=pf.allergens.indexOf(k)>=0;return '<button type="button" class="ozChip'+(on?' on':'')+'" data-a="algT" data-k="'+k+'" aria-pressed="'+on+'">'+E(ALG[k])+'</button>'}).join('')+'</div></fieldset></div></div>'+
@@ -1726,11 +1728,20 @@ function prodSubToast(st){return st==='rejected'?'Ürün yeniden incelemeye gön
 /* K37: Süt & İçecekler notu */
 function pfCatIsDrink(id){var c=(ST.pf&&ST.pf.cats||[]).filter(function(x){return String(x.id)===String(id)})[0];return !!c&&(c.slug==='icecekler'||/içecek/i.test(c.name||''))}
 var DRINK_NOTE='Taze süt/çabuk bozulan ürün satılamaz; yalnızca uzun ömürlü içecekler.';
+/* N1-5: "800 gr", "1kg", "1,5 L" → sayı + birim; okunamayan eski metin sayı alanında kalır (birim seçilene kadar kayıt olmaz) */
+var NET_U=[['gr','gr'],['kg','kg'],['ml','ml'],['lt','lt'],['adet','adet']];
+function netSplit(t){t=String(t||'').trim();if(!t)return {n:'',u:''};var m=/^(\d+(?:[.,]\d+)?)\s*([a-zA-ZğüşıöçİĞÜŞÖÇ]*)\.?$/.exec(t);if(!m)return {n:t,u:''};
+  var u=m[2].toLowerCase();u=/^(g|gr|gram)$/.test(u)?'gr':/^(kg|kilo|kilogram)$/.test(u)?'kg':/^ml$/.test(u)?'ml':/^(l|lt|litre)$/.test(u)?'lt':/^adet$/.test(u)?'adet':'';return {n:m[1],u:u}}
+function netField(pf){if(pf.net_n==null){var sp=netSplit(pf.net_content);pf.net_n=sp.n;pf.net_u=sp.u}
+  return '<label for="ozP_net_n">Net miktar</label><div class="ozTwo ozNetQ"><div><input class="ozIn" id="ozP_net_n" inputmode="decimal" maxlength="12" placeholder="Örn. 800" value="'+E(pf.net_n)+'"></div>'+
+    '<div><select class="ozSel" id="ozP_net_u" aria-label="Net miktar birimi"><option value="">Birim seç</option>'+NET_U.map(function(u){return '<option value="'+u[0]+'"'+(pf.net_u===u[0]?' selected':'')+'>'+u[1]+'</option>'}).join('')+'</select></div></div>'}
 function pfPayload(){
   var pf=ST.pf;pfRead();
   if(pf.name.trim().length<3)return 'Ürün adı en az 3 karakter olmalı.';
   if(!pf.category_id)return 'Kategori seç.';
   if(!pf.images.length)return 'En az bir fotoğraf ekle.';
+  var nnv=String(pf.net_n==null?'':pf.net_n).trim();
+  if(nnv){if(!/^\d+(?:[.,]\d+)?$/.test(nnv)||!(Number(nnv.replace(',','.'))>0))return 'Net miktarı sayı olarak yaz (örn. 800).';if(!pf.net_u)return 'Net miktar için birim seç (gr, kg, ml, lt, adet).'}
   var vs=[];
   for(var i=0;i<pf.variants.length;i++){var v=pf.variants[i];var pr=tlToKurus(v.price),cm=v.compare?tlToKurus(v.compare):null,stk=v.stock===''?NaN:Number(v.stock),wg=v.weight===''?NaN:Number(v.weight);
     if(!v.label.trim())return (i+1)+'. seçeneğin adını yaz.';
@@ -1770,7 +1781,8 @@ async function saveStore(btn){
 ACT_EXTRA({
   /* N1-2/4: ürün düzenle / yeni ürün. Önce satıcı kaydı Ürünler sekmesine çekilir: geri dönüşte Ürünler açılır, alt menü kalır. */
   spGo:function(b){var c=cur();if(c.k==='seller'&&(c.a||{}).tab!=='urunler'){c.a={tab:'urunler'};hSync()}go('sellerProduct',b.dataset.id?{id:b.dataset.id}:{})},
-  sTab:function(b){var a={tab:b.dataset.tab};if(b.dataset.st!=null)a.st=b.dataset.st;if(b.dataset.low)a.low=1;var c=cur();if(c.k!=='seller'){go('seller',a);return}c.a=a;draw()},
+  /* N1-5: sekme değişince sayfa başa döner (uzun sekmeden kısa sekmeye geçişte başlık üst çubuğun altında kalmasın) */
+  sTab:function(b){var a={tab:b.dataset.tab};if(b.dataset.st!=null)a.st=b.dataset.st;if(b.dataset.low)a.low=1;var c=cur();if(c.k!=='seller'){go('seller',a);return}c.a=a;c.sy=0;try{window.scrollTo(0,0)}catch(e){}draw()},
   spCat:function(b){var c=cur();c.a=Object.assign({},c.a,{tab:'urunler',cat:b.dataset.cat||''});hSync();draw()},
   soTab:function(b){var c=cur();var k=b.dataset.st||'';var now=(c.a&&c.a.st)||'';c.a=Object.assign({},c.a,{tab:'ozet',st:now===k?'':k});draw()},
   storeSave:function(b){return saveStore(b)},
