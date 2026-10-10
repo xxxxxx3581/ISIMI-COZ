@@ -408,19 +408,18 @@ ACT_EXTRA({
     if(l&&l.stock!=null&&q>num(l.stock)){toast('Stoktaki tüm adetler sepetinde.');return}cartSetQty(v,q);ppRefresh()},
   /* "+": seçeneksiz (tek seçenekli) ürün doğrudan sepete; birden çok seçenekte (250 g / 500 g / 1 kg…) alt panelde seçtirir.
      Fiyat burada yalnız gösterim; sipariş tutarı sunucuda varyanttan hesaplanır (oz_quote / oz_place_order). */
+  /* N1-3: seçenekli üründe "+" küçük seçenek penceresi yerine tam ürün panelini açar (karta dokunmayla aynı, tek panel);
+     seçeneksiz / tek seçenekli ürün doğrudan sepete. Seçenek sayısı biliniyorsa sorgu beklemeden panel açılır. */
   ppPlus:async function(b){
     var id=b.dataset.id;
+    if(num((ST.pnv||{})[String(id)])>1||ppMulti(id,ppLines(id))){openProduct(id);return}
     await busy(b,async function(){
       var d=await rpc('oz_product_detail',{p_id:id});var vs=arr(d&&d.variants).filter(function(v){return v.is_active!==false});
       ST.pnv=ST.pnv||{};if(d&&d.id)ST.pnv[String(d.id)]=vs.length;
-      if(!d||!vs.length){openProduct(id);return}
-      if(vs.length===1){if(!(num(vs[0].stock)>0)){toast('Bu ürün şu anda stokta yok.');return}ppAddVar(d,vs[0]);return}
-      ST.pick={d:d,vs:vs};
-      sheet(d.name||'Seçenek seç','<p class="ozMuted" style="margin:0 0 10px">Seçenek seç</p><div class="ozOpts">'+vs.map(function(v){var st=num(v.stock),inC=cartQty(v.id);
-        return '<button type="button" class="ozOpt" data-a="ppPick" data-v="'+E(v.id)+'"'+(st>0?'':' disabled')+'><b>'+E(v.label||'Standart')+'</b><span>'+TL(v.price_kurus)+'</span><small>'+(st<=0?'Tükendi':inC?'Sepette '+inC:st<=5?'Son '+st:'')+'</small></button>'}).join('')+'</div>',{noFocus:true});
+      if(!d||vs.length!==1){openProduct(id);return}
+      if(!(num(vs[0].stock)>0)){toast('Bu ürün şu anda stokta yok.');return}ppAddVar(d,vs[0]);
     });
-  },
-  ppPick:function(b){var pk=ST.pick;if(!pk)return;var v=pk.vs.filter(function(x){return String(x.id)===b.dataset.v})[0];if(!v)return;closeSheet();ppAddVar(pk.d,v)}
+  }
 });
 function ppAddVar(d,v){
   var have=cartQty(v.id);if(have>=num(v.stock)){toast('Stoktaki tüm adetler sepetinde.');return}
