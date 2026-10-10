@@ -9,8 +9,8 @@ const {chromium,open,enter}=require('./harness.js');
  const fails=[];const ok=(c,m)=>{if(!c)fails.push(m)};
  const click=async(p,sel,w)=>{try{await p.click(sel,{timeout:3000})}catch(e){fails.push('tıklanamadı: '+sel);return false}await p.waitForTimeout(w||900);return true};
  const {p,st}=await open(br,{w:390,h:844,visible:true});
- const REV=[{id:'r1',rating:5,comment:'Harika bal.',name:'A. Y.',created_at:'2026-09-01T10:00:00Z',product_name:'Çam balı 1'},{id:'r2',rating:4,comment:null,name:'B. K.',created_at:'2026-10-05T10:00:00Z',product_name:'Çam balı 1'},
-  {id:'r3',rating:3,comment:'Geç geldi.',name:'C. D.',created_at:'2026-09-20T10:00:00Z',product_name:'Bilinmeyen ürün'}].concat(Array.from({length:10},(_,i)=>({id:'x'+i,rating:5,comment:'Eski '+i,name:'Z',created_at:'2025-01-0'+((i%9)+1)+'T10:00:00Z',product_name:'Kekik 3'})));
+ const REV=[{id:'r1',rating:5,comment:'Harika bal.',name:'A. Y.',created_at:'2026-09-01T10:00:00Z',product_name:'Çam balı 1',product_id:'p1'},{id:'r2',rating:4,comment:null,name:'B. K.',created_at:'2026-10-05T10:00:00Z',product_name:'Çam balı 1',product_id:'p1'},
+  {id:'r3',rating:3,comment:'Geç geldi.',name:'C. D.',created_at:'2026-09-20T10:00:00Z',product_name:'Bilinmeyen ürün',product_id:null}].concat(Array.from({length:10},(_,i)=>({id:'x'+i,rating:5,comment:'Eski '+i,name:'Z',created_at:'2025-01-0'+((i%9)+1)+'T10:00:00Z',product_name:'Kekik 3',product_id:'p3'})));
  await p.evaluate(rev=>{localStorage.removeItem('isimi_oz_recent');const R=window.__OZ_FX.R;R.oz_producer_detail={id:'s1',display_name:'Yayla Üreticileri',city:'Muğla',product_count:6,categories:[{slug:'bal',name:'Bal',count:1}]};R.oz_producer_reviews=[]},REV);
  await enter(p);await p.waitForTimeout(600);
  const goStore=async()=>{await p.evaluate(()=>OZ.go('store',{id:'s1'}));await p.waitForTimeout(1500)};
