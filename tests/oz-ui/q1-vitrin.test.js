@@ -1,6 +1,6 @@
 // Q1-1: üretici sayfası üst vitrin — 390px, sahte veri, sahte zamanlayıcı. Çalıştırma: node tests/oz-ui/q1-vitrin.test.js
 // Doğrulanan: kapak yerine yayındaki ürünlerin kapak fotoğrafları kayan şerit; 2 sn'de bir akar, basılı tutunca durur,
-// sağ altta "1/2" çipi ve noktalar güncellenir; slayta dokununca o ürünün paneli açılır. Geri düğmesi ve logo yerinde.
+// sağ altta "1/2" çipi ve noktalar güncellenir; slayta dokununca o ürünün paneli açılır. Logo yerinde; geri üst çubukta (T2).
 // Tek ürün: akış, nokta, çip yok. Ürün yok: eski kapak fotoğrafı.
 const {chromium,open,enter}=require('./harness.js');
 (async()=>{
@@ -17,7 +17,7 @@ const {chromium,open,enter}=require('./harness.js');
  }
  const S=p=>p.evaluate(()=>{const tr=document.getElementById('ozPPS');const cv=document.querySelector('#ozRoot .ozPP .cv');
   return {slides:tr?tr.children.length:0,i:tr&&tr.__oz?tr.__oz.state().i:null,chip:(document.getElementById('ozPPN')||{}).textContent||null,dots:document.querySelectorAll('#ozPPD i').length,
-   on:[...document.querySelectorAll('#ozPPD i')].findIndex(x=>x.classList.contains('on')),coverImg:!!(cv&&cv.querySelector(':scope > img')),back:!!(cv&&cv.querySelector('.bk')),logo:!!document.querySelector('#ozRoot .ozPP .hd .lg'),
+   on:[...document.querySelectorAll('#ozPPD i')].findIndex(x=>x.classList.contains('on')),coverImg:!!(cv&&cv.querySelector(':scope > img')),back:!(cv&&cv.querySelector('.bk'))&&!!document.querySelector('#ozTop [data-a=back]'),logo:!!document.querySelector('#ozRoot .ozPP .hd .lg'),
    pids:tr?[...tr.children].map(x=>x.dataset.pid).join(','):''}});
  const P=(id,img)=>({id,name:'Ürün '+id,image:img,images:img?[img]:[],price_kurus:10000,in_stock:true});
  // çok ürün
@@ -25,7 +25,7 @@ const {chromium,open,enter}=require('./harness.js');
  let s=await S(p);
  ok(s.slides===3&&s.pids==='a1,a2,a4','fotoğraflı yayındaki ürünler slayt olmalı: '+JSON.stringify(s));
  ok(s.chip==='1/3'&&s.dots===3&&s.on===0&&!s.coverImg,'çip 1/3, 3 nokta, kapak yerine şerit: '+JSON.stringify(s));
- ok(s.back&&s.logo,'geri düğmesi ve logo yerinde olmalı');
+ ok(s.back&&s.logo,'fotoğraf üstünde geri oku yok (T2), üst çubuk geri düğmesi ve logo yerinde olmalı');
  await p.clock.runFor(2000+700);s=await S(p);ok(s.i===1&&s.chip==='2/3'&&s.on===1,'2 sn sonra 2. slayt: '+JSON.stringify(s));
  const box=await p.$eval('#ozPPS',e=>{const r=e.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2}}).catch(()=>null);
  if(!box){fails.push('vitrin şeridi (#ozPPS) yok');await br.close();console.error('q1-vitrin BAŞARISIZ:\n - '+fails.join('\n - '));process.exit(1)}

@@ -381,7 +381,7 @@ function ppHtml(d,all,prods){
   var own=arr(d.categories),cnt={};own.forEach(function(c){cnt[c.slug]=num(c.count)});
   var cats=all&&all.length?all.slice():own.slice();own.forEach(function(c){if(!cats.some(function(x){return x.slug===c.slug}))cats.push(c)});
   var rc=num(d.rating_count);
-  return '<div class="ozPP"><div class="cv">'+ppCover(cv,ppSlides(prods))+'<button type="button" class="bk" data-a="back" aria-label="Geri">'+ico('back')+'</button></div>'+
+  return '<div class="ozPP"><div class="cv">'+ppCover(cv,ppSlides(prods))+'</div>'+  /* T2: fotoğraf üstü geri oku yok; üst çubuktaki "<" aynı back() ile bir adım geri */
     '<div class="hd"><span class="lg">'+(lg?'<img src="'+E(lg)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">':'')+'<i aria-hidden="true">'+E(initials(nm))+'</i></span><span class="ok">✓ Onaylı üretici</span></div>'+
     /* C7: solda ad (tek satır) + konum; sağda tek dokunma alanı: ★ puan / Değerlendirmeler (N) */
     '<div class="nmr"><div class="nl"><h1 class="nm">'+E(nm)+'</h1>'+(loc?'<p class="loc">'+E(loc)+'</p>':'')+'</div>'+
