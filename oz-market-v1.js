@@ -151,7 +151,7 @@ function needLogin(resume){
 }
 /* index.html saveAuthSession → OZ.authChanged(true/false) */
 OZ.authChanged=function(isIn){
-  ST.fav=null;ST.sfav=null;ST.notif=null;ST.crid=null;ST.co=null;ST.addrs=null;ST.od=null;ST.pd=null;ST.pf=null;ST.home=null;SELLER.data=null;SELLER.img={};SELLER.id=null;SELLER.dash=null;SELLER.docs=null;SELLER.rates=null;SELLER.products=null;SELLER.variants=null;SELLER.orders=null;ST.setAt=0;
+  ST.fav=null;ST.sfav=null;ST.sfavAll=false;ST.fsl=null;ST.notif=null;ST.crid=null;ST.co=null;ST.addrs=null;ST.od=null;ST.pd=null;ST.pf=null;ST.home=null;SELLER.data=null;SELLER.img={};SELLER.id=null;SELLER.dash=null;SELLER.docs=null;SELLER.rates=null;SELLER.products=null;SELLER.variants=null;SELLER.orders=null;ST.setAt=0;
   if(!isIn){ST.resume=null;ST.set=null;ST.newN=0;ST.newAt=0;cartBadge();bellBadge(0);newDotSync();return}
   var r=ST.resume;ST.resume=null;
   if(!D.getElementById('ozRoot')&&!(r&&r.outside))return;
@@ -288,6 +288,18 @@ async function sfavSet(id,want,apply){ST.sfavBusy=ST.sfavBusy||{};var k=String(i
   try{var r=await rpc('oz_toggle_favorite_seller',{p_seller:k});if(!!r!==want)throw new Error('x');toast(want?'Üretici favorilere eklendi':'Üretici favorilerden çıkarıldı')}
   catch(e){sfavPaint(k,!want);if(apply)apply(!want);toast('Favori güncellenemedi, eski hâline döndü.')}
   finally{delete ST.sfavBusy[k];qa('[data-a=sFav][data-id="'+k.replace(/"/g,'')+'"]').forEach(function(b){b.disabled=false;b.removeAttribute('aria-busy')})}}
+/* V2: Favoriler ekranı "Favori üreticiler": yatay kart (logo/baş harf, ad, il · ilçe, yıldız); karta dokunma üretici sayfası,
+   sağdaki dolu kalp onaysız çıkarır (liste anında güncellenir, hata olursa geri gelir). */
+function favSellersHtml(l){return '<div class="ozSecH"><h2>Favori üreticiler</h2></div>'+(l.length?'<div class="ozFsL" role="list">'+l.map(function(s){
+  var nm=String(s.display_name||'Üretici'),lg=httpsUrl(s.logo_url),loc=[s.city,s.district].filter(Boolean).join(' · '),rc=num(s.rating_count);
+  return '<div class="ozFsC" role="listitem" data-sid="'+E(s.id)+'"><button type="button" class="m" data-a="nav" data-k="store" data-id="'+E(s.id)+'" aria-label="'+E(nm)+' üretici sayfası">'+
+    '<span class="lg">'+(lg?'<img src="'+E(lg)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">':'')+'<i aria-hidden="true">'+E(initials(nm))+'</i></span>'+
+    '<span class="tx"><b>'+E(nm)+'</b>'+(loc?'<small>'+E(loc)+'</small>':'')+'<span class="rt">'+(rc?'★ '+num(s.rating_avg).toLocaleString('tr-TR',{minimumFractionDigits:1,maximumFractionDigits:1})+' <span>('+rc+' yorum)</span>':'<span>Henüz yorum yok</span>')+'</span></span></button>'+
+    sfavBtn(s.id,true,'ozFsH')+'</div>'}).join('')+'</div>':'<p class="ozMuted ozFsE">Henüz favori üreticin yok.</p>')}
+function favsSellerRm(id){var k=String(id),l=ST.fsl||[],i=-1,it=null;l.forEach(function(x,j){if(String(x.id)===k){i=j;it=x}});if(i<0)return;
+  sfavSet(k,false,function(on){var cur=ST.fsl||[];var has=cur.some(function(x){return String(x.id)===k});
+    if(!on&&has)ST.fsl=cur.filter(function(x){return String(x.id)!==k});else if(on&&!has){ST.fsl=cur.slice();ST.fsl.splice(Math.min(i,ST.fsl.length),0,it)}
+    var b=D.getElementById('ozFsS');if(b)b.innerHTML=favSellersHtml(ST.fsl)})}
 function favBtn(id,on){return '<button type="button" class="ozFav'+(on?' on':'')+'" data-a="fav" data-id="'+E(id)+'" aria-pressed="'+(on?'true':'false')+'" aria-label="'+(on?'Favorilerden çıkar':'Favorilere ekle')+'">'+ico('heart',20)+'</button>'}
 function card(p){
   var price=num(p.price_kurus),cmp=num(p.compare_at_kurus);
@@ -736,11 +748,14 @@ VIEWS_EXTRA({
   favs:async function(a,t){
     if(!logged()){paint(pageHead('Favorilerim')+loginWall('Beğendiğin ürünleri kaydetmek için giriş yap.'));return}
     paint(pageHead('Favorilerim')+skel(2));
-    var l=arr(await rpc('oz_my_favorites',{}));if(!alive(t))return;
+    /* V2: favori üreticiler (oz_my_favorite_sellers) ürünlerle birlikte okunur; okunamazsa bölüm gizli, ürünler etkilenmez */
+    var rr=await Promise.all([rpc('oz_my_favorites',{}),rpc('oz_my_favorite_sellers',{}).catch(function(){return null})]);if(!alive(t))return;
+    var l=arr(rr[0]);ST.fsl=rr[1]==null?null:arr(rr[1]).filter(function(x){return x&&x.id});
+    if(ST.fsl){ST.sfav=new Set(ST.fsl.map(function(x){return String(x.id)}));ST.sfavAll=true}
     ST.fav=new Set(l.map(function(x){return String(x.id)}));
     /* O1: favoriler de liste kartıyla (fiyat/seçenek gösterimi ve "+" aynı) */
     await gcEnrich(l);if(!alive(t))return;
-    paint(pageHead('Favorilerim',l.length?l.length+' ürün':'')+(l.length?'<div class="ozGcs" role="list">'+l.map(gcCard).join('')+'</div>':empty(ico('heart',36),'Favorin yok','Ürünlerdeki kalbe dokunarak favorilerine ekleyebilirsin.','<button type="button" class="ozBtn pri" data-a="nav" data-k="home">Ürünlere göz at</button>')));
+    paint(pageHead('Favorilerim',l.length?l.length+' ürün':'')+(ST.fsl?'<section class="ozFsS" id="ozFsS" aria-label="Favori üreticiler">'+favSellersHtml(ST.fsl)+'</section><div class="ozSecH"><h2>Favori ürünler</h2></div>':'')+(l.length?'<div class="ozGcs" role="list">'+l.map(gcCard).join('')+'</div>':empty(ico('heart',36),'Favorin yok','Ürünlerdeki kalbe dokunarak favorilerine ekleyebilirsin.','<button type="button" class="ozBtn pri" data-a="nav" data-k="home">Ürünlere göz at</button>')));
   },
 
   /* ====================== Hesap menüsü ====================== */
@@ -878,6 +893,7 @@ ACT_EXTRA({
   srchCat:function(b){var c=cur();c.a=Object.assign({},c.a,{cat:b.dataset.cat,q:val('ozQ')});draw()},
   more:function(){searchMore(SCR)},
   sFav:function(b){var id=b.dataset.id;if(!logged()){needLogin(function(){sfavSet(id,!(ST.sfav&&ST.sfav.has(String(id))))});return}
+    if(b.closest('.ozFsC')){favsSellerRm(id);return}
     sfavSet(id,!b.classList.contains('on'))},
   fav:async function(b){
     var id=b.dataset.id;
