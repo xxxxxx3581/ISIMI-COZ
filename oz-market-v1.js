@@ -1518,11 +1518,16 @@ var SP={
     var cnt={new:num(o.new),prep:num(o.accepted)+num(o.packed),ship:num(o.shipped),issue:Math.max(num(o.return_requested),num(d.open_returns))};
     SELLER.soN=cnt.new+cnt.prep;soBadge();ST.newN=cnt.new+cnt.prep;ST.newAt=Date.now();
     var st=['new','accepted','packed','shipped','return_requested'];
-    var r=await Promise.all(st.map(function(x){return rpc('oz_seller_orders',{p_status:x,p_limit:50,p_offset:0}).catch(function(){return []})}).concat([stt==='past'?rpc('oz_seller_orders',{p_status:null,p_limit:50,p_offset:0}):null,stockStats().catch(function(){return null})]));
+    var r=await Promise.all(st.map(function(x){return rpc('oz_seller_orders',{p_status:x,p_limit:50,p_offset:0}).catch(function(){return []})}).concat([stt==='past'?rpc('oz_seller_orders',{p_status:null,p_limit:50,p_offset:0}):null,stockStats().catch(function(){return null}),
+      get('oz_products?select=id,status&seller_id=eq.'+encodeURIComponent(sellerId()||'')).catch(function(){return null})]));
     if(!alive(t))return;
     var all=[];st.forEach(function(x,i){all=all.concat(arr(r[i]).filter(function(y){return y.status===x}))});SELLER.orders=all;
-    var ss=r[st.length+1];
+    var ss=r[st.length+1],pl=r[st.length+2];
     var h='<div class="ozSoCnt k4" role="tablist" aria-label="Sipariş durumu">'+SG.map(function(g){var on=stt===g[0];return '<button type="button" role="tab" class="c '+g[2]+(on?' on':'')+'" aria-selected="'+on+'" data-a="soTab" data-st="'+g[0]+'"><b>'+cnt[g[0]]+'</b><small>'+E(g[1])+'</small></button>'}).join('')+'</div>';
+    /* N1-4: sayaçların altında her zaman (boş durumda da) "Ürünlerimi düzenle" kartı + "+ Yeni ürün ekle" kısayolu */
+    var pn=pl?arr(pl).length:null,pp=pl?arr(pl).filter(function(x){return x.status==='published'}).length:0;
+    h+='<div class="ozSpSc"><button type="button" class="ozSpEdit" data-a="sTab" data-tab="urunler"><span class="ic">'+ico('tag',22)+'</span><span class="tx"><b>Ürünlerimi düzenle</b>'+(pn!=null?'<small>'+pn+' ürün · '+pp+' yayında</small>':'')+'</span><span class="ch" aria-hidden="true">›</span></button>'+
+      '<button type="button" class="ozSpAdd" data-a="spGo">+ Yeni ürün ekle</button></div>';
     /* E5: yorum/soru sayısı Sorular sekmesi rozetinde, düşük stok Ürünler sekmesi rozetinde */
     SELLER.lowN=ss?ss.low+ss.out:0;soBadge();
     var list;
