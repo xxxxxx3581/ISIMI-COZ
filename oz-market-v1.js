@@ -404,17 +404,17 @@ function ppAddVar(d,v){
 /* K35: üretici kartı — solda logo/baş harf + ad + il·ilçe + puan; sağda 108px akan fotoğraf kutusu (kapak, sonra ürün görselleri) */
 function initials(n){var w=String(n||'').trim().split(/\s+/).filter(Boolean);return (w.slice(0,2).map(function(x){return x.charAt(0).toLocaleUpperCase('tr')}).join(''))||'Ü'}
 function prdImgs(s){var seen={},out=[];[s.cover_url].concat(arr(s.products).map(function(p){return p&&p.image})).forEach(function(u){u=httpsUrl(u);if(u&&!seen[u]){seen[u]=1;out.push(u)}});return out}
-/* F3: Keşfet üretici kartı sol alanında soluk zeytin dalı deseni (kodla çizilmiş, özgün) */
+/* G1: ürün sayısı fotoğrafın üstünde değil, sol sütunda küçük etiket. F3: Keşfet üretici kartı sol alanında soluk zeytin dalı deseni (kodla çizilmiş, özgün) */
 var OZ_LEAFPAT='<svg class="lp" viewBox="0 0 200 120" preserveAspectRatio="xMinYMid slice" aria-hidden="true" focusable="false"><g fill="none" stroke="#CFE7C2" stroke-width="1.6" stroke-linecap="round"><path d="M-6 112C40 90 80 70 120 40S176 6 206 -4"/><path d="M10 40C40 34 64 22 90 2"/></g><g fill="#CFE7C2"><ellipse cx="22" cy="104" rx="11" ry="3.6" transform="rotate(-34 22 104)"/><ellipse cx="34" cy="110" rx="11" ry="3.6" transform="rotate(16 34 110)"/><ellipse cx="58" cy="90" rx="11" ry="3.6" transform="rotate(-40 58 90)"/><ellipse cx="72" cy="96" rx="11" ry="3.6" transform="rotate(12 72 96)"/><ellipse cx="96" cy="68" rx="11" ry="3.6" transform="rotate(-44 96 68)"/><ellipse cx="110" cy="74" rx="11" ry="3.6" transform="rotate(8 110 74)"/><ellipse cx="136" cy="42" rx="10" ry="3.4" transform="rotate(-44 136 42)"/><ellipse cx="148" cy="48" rx="10" ry="3.4" transform="rotate(4 148 48)"/><ellipse cx="30" cy="34" rx="9" ry="3" transform="rotate(-24 30 34)"/><ellipse cx="54" cy="24" rx="9" ry="3" transform="rotate(-30 54 24)"/><ellipse cx="74" cy="12" rx="9" ry="3" transform="rotate(-38 74 12)"/></g><g fill="#E6F2DD"><ellipse cx="46" cy="100" rx="4" ry="5"/><ellipse cx="86" cy="80" rx="4" ry="5"/></g></svg>';
 function producerCard(s){
   var nm=String(s.display_name||'Üretici');var loc=[s.city,s.district].filter(Boolean).join(' · ');var lg=httpsUrl(s.logo_url);var ims=prdImgs(s);var ini=E(initials(nm));
   return '<button type="button" class="ozPrd2" data-a="nav" data-k="store" data-id="'+E(s.id)+'" aria-label="'+E(nm)+' üretici sayfası">'+OZ_LEAFPAT+
     '<span class="l"><span class="hd"><span class="lg">'+(lg?'<img src="'+E(lg)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">':'')+'<i aria-hidden="true">'+ini+'</i></span><b>'+E(nm)+'</b></span>'+
       (loc?'<small>'+E(loc)+'</small>':'')+'<span class="rt">'+(num(s.rating_count)?'★ '+NF1.format(num(s.rating_avg))+' <span>('+num(s.rating_count)+')</span>':'<em>Yeni</em>')+'</span>'+
-      (num(s.free_ship_over_kurus)?'<span class="fs">'+TL(s.free_ship_over_kurus)+' üzeri kargo ücretsiz</span>':'')+'</span>'+
+      (num(s.free_ship_over_kurus)?'<span class="fs">'+TL(s.free_ship_over_kurus)+' üzeri kargo ücretsiz</span>':'')+
+      (num(s.product_count)?'<span class="pc">'+num(s.product_count)+' ürün</span>':'')+'</span>'+
     '<span class="ozPrdF"><i class="fb" aria-hidden="true">'+(lg?'<img src="'+E(lg)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">':'')+'<span>'+ini+'</span></i>'+
-      ims.map(function(u,k){return '<img class="fi'+(k?'':' on')+'" src="'+E(u)+'" alt="" loading="lazy" decoding="async" onerror="ozFadeErr(this)">'}).join('')+
-      (num(s.product_count)?'<span class="n">'+num(s.product_count)+' ürün</span>':'')+'</span></button>';
+      ims.map(function(u,k){return '<img class="fi'+(k?'':' on')+'" src="'+E(u)+'" alt="" loading="lazy" decoding="async" onerror="ozFadeErr(this)">'}).join('')+'</span></button>';
 }
 /* Çapraz geçiş: 3 sn, kartlar 1 sn kaydırılmış; görünmeyen kartta durur; ekran değişince temizlenir; reduced-motion'da sabit */
 var FADE={tm:[],io:null};
