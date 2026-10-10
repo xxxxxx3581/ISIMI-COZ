@@ -1615,6 +1615,40 @@ async function sqCount(){var sid=sellerId();if(!logged()||!sid)return;
     if(!ids.length){SELLER.sqN=0;soBadge();return}
     var r=await Promise.all([get('oz_questions?select=id,answer&product_id=in.'+inList(ids)+'&limit=200'),get('oz_reviews?select=id,comment,seller_reply&product_id=in.'+inList(ids)+'&limit=200')]);
     SELLER.sqN=arr(r[0]).filter(function(x){return !x.answer}).length+arr(r[1]).filter(rvNeedsReply).length;soBadge()}catch(e){}}
+/* N1-2/R1: Ürünler sekmesi çizimi (veri SELLER.products/variants/cats). R1: üstte "Vitrin" (sıralı, ↑ ↓, Vitrinden çıkar),
+   yayındaki ürünlerde "Vitrine koy" (en fazla 6). Her değişiklikte oz_showcase_set(tam sıra); hata olursa eski sıra geri gelir. */
+var SHOW_MAX=6;
+function spShowList(){return arr(SELLER.products).filter(function(p){return p.showcase_order!=null&&p.status==='published'}).sort(function(a,b){return num(a.showcase_order)-num(b.showcase_order)})}
+function spUrunRender(){
+  var ps=arr(SELLER.products),vs=arr(SELLER.variants),cats=arr(SELLER.cats);
+  var low=!!cur().a.low,cat=cur().a.cat||'';
+  if(low)ps=ps.filter(function(p){return vs.some(function(v){return v.product_id===p.id&&v.is_active!==false&&num(v.stock)<LOW_STOCK})});
+    var cid={};cats.forEach(function(c){cid[c.slug]=String(c.id)});var cn={};SELLER.products.forEach(function(p){cn[String(p.category_id)]=(cn[String(p.category_id)]||0)+1});
+    var catH=cats.length&&SELLER.products.length?'<div class="ozCts ozSpCts" role="list" aria-label="Kategori">'+'<button type="button" class="ozCt'+(cat?'':' sel')+'" data-a="spCat" data-cat="" aria-pressed="'+!cat+'"><span class="b" style="background:#2E8B57"><i aria-hidden="true">🧺</i></span><span class="l">Tümü ('+SELLER.products.length+')</span></button>'+
+      cats.map(function(c){var n=cn[String(c.id)]||0;var on=cat===c.slug;return catTile({slug:c.slug,image_url:c.image_url,name:c.name+(n?' ('+n+')':'')},'data-a="spCat" data-cat="'+E(c.slug)+'" aria-pressed="'+on+'"').replace('class="ozCt"','class="ozCt'+(on?' sel':'')+(n?'':' off')+'"')}).join('')+'</div>':'';
+    if(cat)ps=ps.filter(function(p){return String(p.category_id)===cid[cat]});
+    /* N1-2: üstte "+ Yeni ürün"; her satırda foto, ad, fiyat (tek seçenek) ya da seçenek sayısı, durum, belirgin "Düzenle" */
+    var sc=spShowList(),full=sc.length>=SHOW_MAX;
+    var vit=sc.length?'<section class="ozSpVit" aria-label="Vitrin"><div class="ozSecH"><h2>Vitrin</h2><span class="ozMuted">'+sc.length+' / '+SHOW_MAX+'</span></div><ol class="ozSpVL">'+sc.map(function(p,i){
+      return '<li class="ozSpV" data-pid="'+E(p.id)+'">'+pic(arr(p.images)[0],p.name)+'<b>'+E(p.name||'')+'</b><span class="ar"><button type="button" class="ozIc sm" data-a="spVit" data-op="up" data-id="'+E(p.id)+'" aria-label="Yukarı taşı"'+(i?'':' disabled')+'>↑</button>'+
+        '<button type="button" class="ozIc sm" data-a="spVit" data-op="down" data-id="'+E(p.id)+'" aria-label="Aşağı taşı"'+(i<sc.length-1?'':' disabled')+'>↓</button></span><button type="button" class="ozBtn sm" data-a="spVit" data-op="rm" data-id="'+E(p.id)+'" aria-label="Vitrinden çıkar">Çıkar</button></li>'}).join('')+'</ol></section>':'';
+    var h='<button type="button" class="ozBtn pri wide ozSpNew" data-a="spGo" style="margin-bottom:12px">+ Yeni ürün</button>'+vit+catH+(low?'<div class="ozWrap ozApplied"><button type="button" class="ozChip x" data-a="sTab" data-tab="urunler" aria-label="Düşük stok filtresini kaldır">Düşük stok / Tükendi ✕</button></div>':'');
+    if(!ps.length){h+=cat?empty(ico('box',36),'Bu kategoride ürünün yok',''):empty(ico('box',36),'Henüz ürünün yok','İlk ürününü ekleyip yayınla.');}
+    else h+='<div class="ozList">'+ps.map(function(p){
+      var pv=vs.filter(function(v){return v.product_id===p.id});var stock=pv.reduce(function(n,v){return n+num(v.stock)},0);
+      var st=p.is_hidden?'hidden':p.status;var low=pv.some(function(v){return v.is_active!==false&&num(v.stock)<=3});
+      var act=pv.filter(function(v){return v.is_active!==false});var prc=act.length===1?TL(act[0].price_kurus):act.length>1?act.length+' seçenek':'Seçenek yok';
+      return '<div class="ozCard ozSpRow" style="margin:0" data-pid="'+E(p.id)+'"><div class="ozCI" style="border:0;padding:0">'+pic(arr(p.images)[0],p.name)+'<div class="tx"><b>'+E(p.name||'Adsız ürün')+'</b><span class="pr">'+E(prc)+'</span><small>'+stock+' stok'+(low?' · <span style="color:#F7D24A">düşük stok</span>':'')+'</small><div style="margin-top:4px">'+stTag(PROD_ST,st)+'</div></div>'+
+        '<button type="button" class="ozBtn sun ozSpEd" data-a="spGo" data-id="'+E(p.id)+'">'+ico('tag',16)+'<span>Düzenle</span></button></div>'+
+        ((p.status_reason||p.reject_reason)&&p.status==='rejected'?'<div class="ozWarn">Gerekçe: '+E(p.status_reason||p.reject_reason)+'</div>':'')+
+        (p.status==='published'?(p.showcase_order!=null?'<div class="ozSpVB"><button type="button" class="ozBtn sm" data-a="spVit" data-op="rm" data-id="'+E(p.id)+'">Vitrinden çıkar</button></div>':
+          '<div class="ozSpVB"><button type="button" class="ozBtn sm sun" data-a="spVit" data-op="add" data-id="'+E(p.id)+'"'+(full?' disabled aria-disabled="true"':'')+'>Vitrine koy</button>'+(full?'<small class="ozMuted">En fazla '+SHOW_MAX+'</small>':'')+'</div>'):'')+
+        '<div class="ozRow2" style="margin-top:10px">'+(pv.length?'<button type="button" class="ozBtn sm" data-a="stockBox" data-id="'+E(p.id)+'">Stok</button>':'')+
+        ((p.status==='draft'||p.status==='rejected')&&sellerApproved()?'<button type="button" class="ozBtn sm pri" data-a="prodSubmit" data-id="'+E(p.id)+'" data-st="'+E(p.status)+'">'+(p.status==='draft'?'Yayınla':'Yeniden incelemeye gönder')+'</button>':'')+
+        (p.status==='published'||p.status==='active'||p.status==='approved'?'<button type="button" class="ozBtn sm" data-a="prodHide" data-id="'+E(p.id)+'" data-h="1">Gizle</button>':'')+(p.status==='hidden'||p.is_hidden?'<button type="button" class="ozBtn sm" data-a="prodHide" data-id="'+E(p.id)+'" data-h="0">Göster</button>':'')+
+        '<button type="button" class="ozBtn sm ghost" data-a="prodDel" data-id="'+E(p.id)+'">Sil</button></div></div>'}).join('')+'</div>';
+    var b=D.getElementById('ozSP');if(b)b.innerHTML=h;
+}
 var SP={
   /* Tek panel: renkli sayaçlar (sunucu sayımı: oz_seller_dashboard.orders) + altında duruma göre siparişler.
      Sayaca dokunmak listeyi o duruma süzer, tekrar dokunmak kaldırır. Her kartta tek ana aksiyon (sellerOrderCard). */
@@ -1656,28 +1690,8 @@ var SP={
     var cats=[];try{cats=arr((await homeData()||{}).categories)}catch(e){}
     if(!cats.length){try{cats=arr(await get('oz_categories?select=id,slug,name,image_url&is_active=eq.true&parent_id=is.null&order=sort.asc'))}catch(e){}}
     if(!alive(t))return;
-    SELLER.products=ps;SELLER.variants=vs;
-    var low=!!cur().a.low,cat=cur().a.cat||'';
-    if(low)ps=ps.filter(function(p){return vs.some(function(v){return v.product_id===p.id&&v.is_active!==false&&num(v.stock)<LOW_STOCK})});
-    var cid={};cats.forEach(function(c){cid[c.slug]=String(c.id)});var cn={};SELLER.products.forEach(function(p){cn[String(p.category_id)]=(cn[String(p.category_id)]||0)+1});
-    var catH=cats.length&&SELLER.products.length?'<div class="ozCts ozSpCts" role="list" aria-label="Kategori">'+'<button type="button" class="ozCt'+(cat?'':' sel')+'" data-a="spCat" data-cat="" aria-pressed="'+!cat+'"><span class="b" style="background:#2E8B57"><i aria-hidden="true">🧺</i></span><span class="l">Tümü ('+SELLER.products.length+')</span></button>'+
-      cats.map(function(c){var n=cn[String(c.id)]||0;var on=cat===c.slug;return catTile({slug:c.slug,image_url:c.image_url,name:c.name+(n?' ('+n+')':'')},'data-a="spCat" data-cat="'+E(c.slug)+'" aria-pressed="'+on+'"').replace('class="ozCt"','class="ozCt'+(on?' sel':'')+(n?'':' off')+'"')}).join('')+'</div>':'';
-    if(cat)ps=ps.filter(function(p){return String(p.category_id)===cid[cat]});
-    /* N1-2: üstte "+ Yeni ürün"; her satırda foto, ad, fiyat (tek seçenek) ya da seçenek sayısı, durum, belirgin "Düzenle" */
-    var h='<button type="button" class="ozBtn pri wide ozSpNew" data-a="spGo" style="margin-bottom:12px">+ Yeni ürün</button>'+catH+(low?'<div class="ozWrap ozApplied"><button type="button" class="ozChip x" data-a="sTab" data-tab="urunler" aria-label="Düşük stok filtresini kaldır">Düşük stok / Tükendi ✕</button></div>':'');
-    if(!ps.length){h+=cat?empty(ico('box',36),'Bu kategoride ürünün yok',''):empty(ico('box',36),'Henüz ürünün yok','İlk ürününü ekleyip yayınla.');}
-    else h+='<div class="ozList">'+ps.map(function(p){
-      var pv=vs.filter(function(v){return v.product_id===p.id});var stock=pv.reduce(function(n,v){return n+num(v.stock)},0);
-      var st=p.is_hidden?'hidden':p.status;var low=pv.some(function(v){return v.is_active!==false&&num(v.stock)<=3});
-      var act=pv.filter(function(v){return v.is_active!==false});var prc=act.length===1?TL(act[0].price_kurus):act.length>1?act.length+' seçenek':'Seçenek yok';
-      return '<div class="ozCard ozSpRow" style="margin:0" data-pid="'+E(p.id)+'"><div class="ozCI" style="border:0;padding:0">'+pic(arr(p.images)[0],p.name)+'<div class="tx"><b>'+E(p.name||'Adsız ürün')+'</b><span class="pr">'+E(prc)+'</span><small>'+stock+' stok'+(low?' · <span style="color:#F7D24A">düşük stok</span>':'')+'</small><div style="margin-top:4px">'+stTag(PROD_ST,st)+'</div></div>'+
-        '<button type="button" class="ozBtn sun ozSpEd" data-a="spGo" data-id="'+E(p.id)+'">'+ico('tag',16)+'<span>Düzenle</span></button></div>'+
-        ((p.status_reason||p.reject_reason)&&p.status==='rejected'?'<div class="ozWarn">Gerekçe: '+E(p.status_reason||p.reject_reason)+'</div>':'')+
-        '<div class="ozRow2" style="margin-top:10px">'+(pv.length?'<button type="button" class="ozBtn sm" data-a="stockBox" data-id="'+E(p.id)+'">Stok</button>':'')+
-        ((p.status==='draft'||p.status==='rejected')&&sellerApproved()?'<button type="button" class="ozBtn sm pri" data-a="prodSubmit" data-id="'+E(p.id)+'" data-st="'+E(p.status)+'">'+(p.status==='draft'?'Yayınla':'Yeniden incelemeye gönder')+'</button>':'')+
-        (p.status==='published'||p.status==='active'||p.status==='approved'?'<button type="button" class="ozBtn sm" data-a="prodHide" data-id="'+E(p.id)+'" data-h="1">Gizle</button>':'')+(p.status==='hidden'||p.is_hidden?'<button type="button" class="ozBtn sm" data-a="prodHide" data-id="'+E(p.id)+'" data-h="0">Göster</button>':'')+
-        '<button type="button" class="ozBtn sm ghost" data-a="prodDel" data-id="'+E(p.id)+'">Sil</button></div></div>'}).join('')+'</div>';
-    var b=D.getElementById('ozSP');if(b)b.innerHTML=h;
+    SELLER.products=ps;SELLER.variants=vs;SELLER.cats=cats;
+    spUrunRender();
   },
   siparisler:function(d,t){return SP.ozet(d,t)},
   /* Satıcı paneli "Sorular ve yorumlar": tabloyu doğrudan okuyan TEK yer. Ürün sayfası oz_product_detail yanıtındaki reviews/questions'ı kullanır;
@@ -1887,6 +1901,18 @@ async function saveStore(btn){
 }
 ACT_EXTRA({
   /* N1-2/4: ürün düzenle / yeni ürün. Önce satıcı kaydı Ürünler sekmesine çekilir: geri dönüşte Ürünler açılır, alt menü kalır. */
+  /* R1: vitrin ekle/çıkar/sırala → iyimser güncelle, oz_showcase_set(tam sıra); hata olursa eski sıra ve kısa uyarı */
+  spVit:async function(b){
+    var id=b.dataset.id,op=b.dataset.op;var ps=arr(SELLER.products);var p=ps.filter(function(x){return String(x.id)===String(id)})[0];if(!p)return;
+    var ids=spShowList().map(function(x){return x.id});var i=ids.indexOf(p.id);
+    if(op==='add'){if(p.status!=='published'||i>=0)return;if(ids.length>=SHOW_MAX){toast('Vitrine en fazla '+SHOW_MAX+' ürün konabilir.');return}ids.push(p.id)}
+    else if(op==='rm'){if(i<0)return;ids.splice(i,1)}
+    else if(op==='up'||op==='down'){var j=i+(op==='up'?-1:1);if(i<0||j<0||j>=ids.length)return;var x=ids[i];ids[i]=ids[j];ids[j]=x}else return;
+    var old={};ps.forEach(function(x){old[x.id]=x.showcase_order});
+    ps.forEach(function(x){var k=ids.indexOf(x.id);x.showcase_order=k>=0?k+1:null});spUrunRender();
+    try{await rpc('oz_showcase_set',{p_ids:ids})}
+    catch(e){ps.forEach(function(x){x.showcase_order=old[x.id]});spUrunRender();toast('Vitrin kaydedilemedi, eski hâline döndü.')}
+  },
   spGo:function(b){var c=cur();if(c.k==='seller'&&(c.a||{}).tab!=='urunler'){c.a={tab:'urunler'};hSync()}go('sellerProduct',b.dataset.id?{id:b.dataset.id}:{})},
   /* N1-5: sekme değişince sayfa başa döner (uzun sekmeden kısa sekmeye geçişte başlık üst çubuğun altında kalmasın) */
   sTab:function(b){var a={tab:b.dataset.tab};if(b.dataset.st!=null)a.st=b.dataset.st;if(b.dataset.low)a.low=1;var c=cur();if(c.k!=='seller'){go('seller',a);return}c.a=a;c.sy=0;try{window.scrollTo(0,0)}catch(e){}draw()},
