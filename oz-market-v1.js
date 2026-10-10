@@ -759,8 +759,10 @@ var CHANGE={
    weight_g KULLANILMAZ: kargo ağırlığıdır (ambalaj dahil), net miktar değildir. Biçim tam eşleşmezse gösterilmez. */
 function qtyOf(txt){var m=/^\s*(\d+(?:[.,]\d+)?)\s*(g|gr|gram|kg|kilo|ml|l|lt|litre)\s*$/i.exec(String(txt||''));if(!m)return null;var n=Number(m[1].replace(',','.'));if(!(n>0))return null;var u=m[2].toLowerCase();
   if(u==='g'||u==='gr'||u==='gram')return {q:n/1000,u:'kg'};if(u==='kg'||u==='kilo')return {q:n,u:'kg'};if(u==='ml')return {q:n/1000,u:'L'};return {q:n,u:'L'}}
+/* S1: tam 1 L / 1 kg'da da gösterilir (önceden gizleniyordu). Paket başına 50 L/kg üstü gerçekçi değildir (ör. canlıdaki
+   "1000 lt" kaydı, büyük olasılıkla 1000 ml): yanıltıcı "≈ 0,09 ₺/L" yerine birim fiyat hiç gösterilmez. */
 function unitPrice(p,v){var vs=arr(p.variants);var q=qtyOf(v.label)||(vs.length===1?qtyOf(p.net_content):null);if(!q||!(num(v.price_kurus)>0))return '';
-  var k=Math.round(num(v.price_kurus)/q.q);if(Math.abs(q.q-1)<1e-9)return '';return '≈ '+TL(k)+'/'+q.u}
+  if(q.q>50)return '';var k=Math.round(num(v.price_kurus)/q.q);return '≈ '+TL(k)+'/'+q.u}
 
 /* K27: organik / menşe / sertifika bilgileri satıcı beyanıdır */
 var CLAIM='<span class="ozClaim">Satıcı beyanı – platform tarafından doğrulanmadı</span>';
