@@ -1,5 +1,5 @@
 // G2-2: ürün paneli — 390px, sahte veri. Çalıştırma: node tests/oz-ui/g2-panel.test.js
-// Doğrulanan: her zaman görünür fotoğraf, ad, fiyat, üretici satırı ("Onaylı üretici" + "Üreticiyi gör ›"), açıklama;
+// Doğrulanan: liste kartında "i" ikonu/bilgi kutusu yok (K paketi); panelde her zaman görünür fotoğraf, ad, fiyat, üretici satırı ("Onaylı üretici" + "Üreticiyi gör ›"), açıklama;
 // "Ürün bilgileri" kapalı başlar, açınca menşe/içindekiler/raf ömrü/saklama + satıcı beyanı; bilgi yoksa başlık yok.
 // Alt çubuk: solda fiyat, sağda "Sepete ekle" → aynı yerde "− 1 +" (stokta + pasif, 1'de − çıkarır); çubuk kaydırınca
 // görünür kalır ve en altta içeriği örtmez; "Üreticiyi gör" paneli kapatıp üretici sayfasını açar.
@@ -12,7 +12,13 @@ const {chromium,open,enter}=require('./harness.js');
  await p.evaluate(()=>localStorage.removeItem('isimi_oz_cart'));
  await enter(p);await p.waitForTimeout(700);
  await p.evaluate(()=>{const d=window.__OZ_FX.R.oz_product_detail;d.id='p1';d.variants=[{id:'v1',label:'500 ml',price_kurus:65000,compare_at_kurus:80000,stock:2,weight_g:600},{id:'v2',label:'1 L',price_kurus:125000,stock:3}]});
+ // K: p1'in menşe/raf ömrü/saklama/içindekiler bilgisi var; yine de kartta "i" ikonu ve bilgi kutusu OLMAMALI
+ await p.evaluate(()=>{window.__OZ_FX.T.oz_products=[{id:'p1',description:'Çam balı açıklaması',origin_city:'Muğla',origin_note:null,shelf_life_days:720,storage_info:'Serin yerde',ingredients:'%100 bal'}]});
  await p.evaluate(()=>OZ.go('plist',{seller:'s1'}));await p.waitForTimeout(1200);
+ const cardInfo=await p.evaluate(()=>{const cs=[...document.querySelectorAll('.ozGc')];return {n:cs.length,icon:cs.filter(c=>c.querySelector('.if,[data-a=gcInfo]')).length,box:cs.filter(c=>c.querySelector('.inf')).length,
+  txt:/Raf ömrü|Saklama|İçindekiler|Satıcı beyanı/.test(cs.map(c=>c.innerText).join(' ')),desc:!!document.querySelector('.ozGc[data-pid=p1] .ds')}});
+ ok(cardInfo.n>0&&cardInfo.icon===0&&cardInfo.box===0&&!cardInfo.txt,'kartlarda "i" ikonu / bilgi kutusu olmamalı: '+JSON.stringify(cardInfo));
+ ok(cardInfo.desc,'kartın geri kalanı (tek satır açıklama) durmalı');
  await click(p,'.ozGc[data-pid=p1] .sc',1200);
  const S='.ozOv.ozPdS';
  const base=await p.evaluate(S=>{const o=document.querySelector(S);if(!o)return null;const q=s=>o.querySelector(s);const inf=q('.ozPdInf');
