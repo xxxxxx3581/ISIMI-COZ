@@ -2100,6 +2100,37 @@ html:root .ozCStrip.hi{animation:ozStripHi .7s ease-out}
 @keyframes ozStripHi{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(247,210,74,.8)}40%{transform:scale(1.03);box-shadow:0 0 0 6px rgba(247,210,74,.35)}100%{transform:scale(1);box-shadow:0 6px 18px rgba(0,0,0,.35)}}
 @media (prefers-reduced-motion:reduce){html:root .ozCStrip.hi{animation:none}}
 html:root .ozOv.ozPdS .ozSh{overflow:hidden;padding-bottom:0}
+/*OZ F6 liste ürün kartı + beyaz "+" + tam ekran görüntüleyici*/
+html:root .ozPLs{display:flex;flex-direction:column;gap:10px}
+html:root .ozPL{display:grid;grid-template-columns:112px minmax(0,1fr);grid-template-rows:auto auto;column-gap:12px;row-gap:6px;padding:10px;border:1px solid #54422D;border-radius:16px;background:#3A2D20}
+html:root .ozPL .ph{grid-row:1/3;position:relative;width:112px;height:112px;border-radius:12px;overflow:hidden;background:#4A3A27;align-self:start}
+html:root .ozPL .ph .sc{display:flex;width:100%;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none;cursor:zoom-in}
+html:root .ozPL .ph .sc::-webkit-scrollbar{display:none}
+html:root .ozPL .ph img{flex:0 0 100%;width:100%;height:100%;object-fit:cover;scroll-snap-align:start}
+html:root .ozPL .ph .sc>i{margin:auto;font-style:normal;font-size:30px;opacity:.6}
+html:root .ozPL .ph .dt{position:absolute;left:0;right:0;bottom:6px;display:flex;justify-content:center;gap:4px;pointer-events:none}
+html:root .ozPL .ph .dt i{width:6px;height:6px;border-radius:3px;background:rgba(255,255,255,.55)}html:root .ozPL .ph .dt i.on{background:#fff;width:12px}
+html:root .ozPL .ph .so{position:absolute;left:6px;top:6px;padding:1px 7px;border-radius:999px;background:rgba(20,14,8,.8);color:#fff;font-size:11px;font-weight:800}
+html:root .ozPL .bd{display:flex;flex-direction:column;gap:3px;min-width:0;cursor:pointer}
+html:root .ozPL .nm{font-size:15px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;overflow-wrap:anywhere}
+html:root .ozPL .ds{font-size:12.5px;line-height:1.35;color:#CDBB9F;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+html:root .ozPL .sm{font-size:12px;color:#BFAE92;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html:root .ozPL .mt{display:flex;align-items:center;gap:8px}
+html:root .ozPL .rv{position:relative;min-height:28px;padding:0;border:0;background:none;color:#F7D24A;font:700 12.5px/1 system-ui,sans-serif;cursor:pointer}
+html:root .ozPL .rv::after{content:"";position:absolute;inset:-8px -4px}
+html:root .ozPL .dl{margin-left:auto;color:#4FB67F;font-size:12.5px;font-weight:800}
+html:root .ozPL .ft{grid-column:2;display:flex;align-items:center;justify-content:space-between;gap:8px}
+html:root .ozPL .pr{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 6px;min-width:0}
+html:root .ozPL .pr b{font-size:16px;color:#F7D24A;white-space:nowrap}html:root .ozPL .pr s{font-size:12px;color:#9C8B72}html:root .ozPL .pr small{width:100%;font-size:11.5px;color:#BFAE92}
+html:root .ozPL .ac{flex:none;display:flex;padding-right:7px}
+html:root .ozPL .ozPlus,html:root .ozKr .ozPlus{background:#fff;background-clip:content-box;color:#111;box-shadow:none}
+html:root .ozPL .ozPlus:disabled,html:root .ozKr .ozPlus:disabled{background-color:#6B5A44;color:#BFAE92}
+html:root .ozPL .ozPStep,html:root .ozKr .ozPStep{background:#fff;color:#111}
+html:root .ozPv{position:fixed;inset:0;z-index:2147483100;background:rgba(0,0,0,.94);display:flex;align-items:center}
+html:root .ozPv .sc{display:flex;width:100%;height:100%;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none}
+html:root .ozPv .sc img{flex:0 0 100%;width:100%;height:100%;object-fit:contain;scroll-snap-align:center}
+html:root .ozPv .x{position:absolute;top:calc(10px + env(safe-area-inset-top,0px));right:10px;width:48px;height:48px;display:grid;place-items:center;border:0;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;cursor:pointer}
+html:root .ozPv .n{position:absolute;left:0;right:0;bottom:calc(18px + env(safe-area-inset-bottom,0px));text-align:center;color:#fff;font-weight:700}
 /*K21-BITIS*/
 </style>
 <style id="svcProvEntryCss">.svcProvEntry{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;border-radius:16px;border:1.5px solid rgba(124,92,255,.45);background:rgba(124,92,255,.10);color:var(--text);font:inherit;text-align:left;cursor:pointer}.svcProvEntry .ic{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:rgba(124,92,255,.18)}.svcProvEntry .tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}.svcProvEntry small{font-size:12px;font-weight:700;color:var(--muted)}.svcProvEntry b{font-size:16px;font-weight:900}.svcProvEntry em{font-style:normal;font-size:12.5px;color:var(--muted)}.svcProvEntry .go{flex:0 0 auto;font-size:24px;font-weight:700;color:#7c5cff}.svcProvEntry:active{transform:scale(.99)}.svcProvEntry:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}html[data-theme="light"] .svcProvEntry{background:#f3effe;border-color:#c9bbff}html[data-theme="light"] .svcProvEntry .go{color:#5b3fd6}</style>
