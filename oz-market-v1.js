@@ -468,6 +468,21 @@ var SUBMIT={
 async function homeData(){if(ST.home&&Date.now()-ST.homeAt<60000)return ST.home;ST.home=await rpc('oz_home',{});ST.homeAt=Date.now();return ST.home}
 ST.home=null;ST.homeAt=0;
 
+/* G1: "Tekrar sipariş ver" — son teslim edilen siparişin ürünleri (en fazla 6). Yalnız mevcut okuma RPC'leri:
+   oz_my_orders (ana ekranda zaten çağrılıyor) → oz_order_detail (product_id) → oz_product_detail (güncel fiyat/stok).
+   Yayından kalkmış ürün atlanır; hiç ürün kalmazsa ya da bir hata olursa şerit hiç görünmez. */
+async function reorderRail(orders,t){
+  var o=orders.filter(function(x){return x&&(x.status==='delivered'||x.status==='completed')})[0];if(!o)return;
+  try{
+    var d=await rpc('oz_order_detail',{p_order:o.id});if(!alive(t))return;
+    var seen={},ids=[];ordItems(d&&d.items).forEach(function(x){var k=x.product_id&&String(x.product_id);if(k&&!seen[k]){seen[k]=1;ids.push(k)}});ids=ids.slice(0,6);if(!ids.length)return;
+    var ps=await Promise.all(ids.map(function(id){return rpc('oz_product_detail',{p_id:id}).catch(function(){return null})}));if(!alive(t))return;
+    var l=ps.filter(function(p){return p&&p.id}).map(function(p){var vs=arr(p.variants).filter(function(v){return v.is_active!==false});var v=vs.filter(function(x){return num(x.stock)>0})[0]||vs[0]||{};
+      return {id:p.id,name:p.name,images:arr(p.images),price_kurus:num(v.price_kurus),compare_at_kurus:num(v.compare_at_kurus),in_stock:vs.some(function(x){return num(x.stock)>0})}});
+    var box=D.getElementById('ozReo');if(!l.length||!box)return;
+    box.innerHTML='<div class="ozSecH"><h2>Tekrar sipariş ver</h2></div><div class="ozKrs" role="list" aria-label="Tekrar sipariş ver">'+l.map(krCard).join('')+'</div>';
+  }catch(e){}
+}
 /* ====================== Alıcı · ana ekran ====================== */
 VIEWS_EXTRA({
   home:async function(a,t){
@@ -485,10 +500,10 @@ VIEWS_EXTRA({
       h+=empty(ico('leaf',36),'Doğal ürünler yolda','Üreticiler ürünlerini ekledikçe burada görünecek.',S().seller_signup_enabled?'<button type="button" class="ozBtn pri" data-a="nav" data-k="seller">Üretici misin? Satıcı ol</button>':'');
       paint(h);startHero(t);return;
     }
-    /* F2: "Yeni ürünler" yatay şerit (en fazla 10); Tümü → ortak liste sayfası (Sırala orada) */
-    var nw=arr(d.newest).slice(0,10);
-    if(nw.length)h+='<div class="ozSecH ozNwH"><h2>Yeni ürünler</h2><button type="button" class="ozLink" data-a="nav" data-k="plist" data-sort="new">Tümü ›</button></div><div class="ozKrs" role="list">'+nw.map(krCard).join('')+'</div>';
+    /* G1: "Yeni ürünler" şeridi kaldırıldı. Yerine yalnız teslim edilmiş siparişi olan girişli kullanıcıya "Tekrar sipariş ver" (sonradan dolar). */
+    h+='<div id="ozReo"></div>';
     paint(h);startHero(t);startFade(t);
+    reorderRail(arr(r[3]),t);
   },
 
   /* F5: ortak ürün liste sayfası — kategori (üretici içinde), üreticinin tüm ürünleri, Keşfet "Yeni ürünler · Tümü" */
