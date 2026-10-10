@@ -2340,6 +2340,23 @@ html:root .ozGc .ft{grid-row:3;align-self:end;display:flex;align-items:flex-end;
 html:root .ozGc .ft .pr{flex:1 1 auto;min-width:0;padding-bottom:8px}
 html:root .ozGc .ac{position:static;flex:none;margin:0 -2px -2px 0}
 html:root .ozGc,html:root .ozKr,html:root #ozRoot button,html:root #ozNav button,html:root .ozOv button,html:root .ozPrd2,html:root .ozRcC{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+/*OZ T3 ürün liste kartı renkleri (Tüm ürünler/kategori, arama, favoriler; aynı .ozGc): zemin sayfadan bir ton açık kahve, ince
+  bronz kenar; fotoğraf alanı aynı. Ad krem, açıklama/seçenek soluk krem, fiyat ve yıldız altın, birim fiyat soluk; kalp krem
+  çizgi / doluyken altın; "+" altın çizgili, içi şeffaf. Tüm yazı/zemin çiftleri WCAG AA (t3-renk testi hesaplar).*/
+html:root .ozGc{background:#3A2D20;border:1px solid #8A6B3E;color:#F6ECDC}
+html:root .ozGc .nm{color:#F6ECDC}
+html:root .ozGc .ds{color:#D9C9AE}
+html:root .ozGc .pr b{color:#F2C14E}
+html:root .ozGc .pr s{color:#BFAE92}
+html:root .ozGc .pr small.u{color:#BFAE92!important}
+html:root .ozGc .pr small.u.ov{color:#D9C9AE!important}
+html:root .ozGc .tr .rt{color:#F2C14E}html:root .ozGc .tr .rt small{color:#D9C9AE}
+html:root .ozGc .tr .ozFav{color:#F6ECDC}
+html:root .ozGc .tr .ozFav.on{color:#F2C14E}
+html:root .ozGc .ozPlus{background:radial-gradient(circle,transparent 13.5px,#F2C14E 14px,#F2C14E 15.5px,transparent 16px);box-shadow:none;color:#F2C14E}
+html:root .ozGc .ozPlus:disabled{background:radial-gradient(circle,transparent 13.5px,#6B5A44 14px,#6B5A44 15.5px,transparent 16px);box-shadow:none;color:#A8987F}
+html:root .ozGc .ozPStep{background:transparent;color:#F2C14E;box-shadow:inset 0 0 0 1.5px #F2C14E}
+html:root .ozGc .ozPlus .bd{background:#1F6F43;color:#fff}
 /*K21-BITIS*/
 </style>
 <style id="svcProvEntryCss">.svcProvEntry{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;border-radius:16px;border:1.5px solid rgba(124,92,255,.45);background:rgba(124,92,255,.10);color:var(--text);font:inherit;text-align:left;cursor:pointer}.svcProvEntry .ic{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:rgba(124,92,255,.18)}.svcProvEntry .tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}.svcProvEntry small{font-size:12px;font-weight:700;color:var(--muted)}.svcProvEntry b{font-size:16px;font-weight:900}.svcProvEntry em{font-style:normal;font-size:12.5px;color:var(--muted)}.svcProvEntry .go{flex:0 0 auto;font-size:24px;font-weight:700;color:#7c5cff}.svcProvEntry:active{transform:scale(.99)}.svcProvEntry:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}html[data-theme="light"] .svcProvEntry{background:#f3effe;border-color:#c9bbff}html[data-theme="light"] .svcProvEntry .go{color:#5b3fd6}</style>
