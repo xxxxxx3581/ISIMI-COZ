@@ -337,12 +337,17 @@ ACT_EXTRA({
   })}
 });
 function ppLines(pid){return cartGet().filter(function(x){return String(x.product_id)===String(pid)})}
+/* G2-1: kart kontrolü. Sepette yoksa "+". Tek seçenekli üründe sepete girince "− n +" (− 1'de çıkarır, + stokta durur).
+   Birden çok seçenekli üründe (ya da birden çok seçeneği sepetteyse) "+" paneli açmaya devam eder, üstünde küçük adet rozeti.
+   Seçenek sayısı / stok: sepet satırına eklenirken yazılan nv/stock, yoksa bu oturumda okunan ürün detayı (ST.pnv). */
+function ppMulti(pid,ls){var k=String(pid);return ls.length>1||ls.some(function(x){return num(x.nv)>1})||num((ST.pnv||{})[k])>1}
 function ppCtrl(p){
-  if(p.in_stock===false)return '<button type="button" class="ozPlus" disabled aria-label="Tükendi">+</button>';
-  var ls=ppLines(p.id);
-  if(ls.length===1)return '<span class="ozPStep" role="group" aria-label="Adet"><button type="button" data-a="ppQty" data-v="'+E(ls[0].variant_id)+'" data-d="-1" aria-label="Azalt">−</button><b>'+num(ls[0].qty)+'</b><button type="button" data-a="ppQty" data-v="'+E(ls[0].variant_id)+'" data-d="1" aria-label="Bir tane daha">+</button></span>';
-  var n=ls.reduce(function(k,x){return k+num(x.qty)},0);
-  return '<button type="button" class="ozPlus'+(n?' in':'')+'" data-a="ppPlus" data-id="'+E(p.id)+'" aria-label="'+(n?n+' adet sepette, ekle':'Sepete ekle')+'">'+(n||'+')+'</button>';
+  var ls=ppLines(p.id);var n=ls.reduce(function(k,x){return k+num(x.qty)},0);
+  if(!n)return p.in_stock===false?'<button type="button" class="ozPlus" disabled aria-label="Tükendi">+</button>':'<button type="button" class="ozPlus" data-a="ppPlus" data-id="'+E(p.id)+'" aria-label="Sepete ekle">+</button>';
+  if(ppMulti(p.id,ls))return '<button type="button" class="ozPlus in" data-a="ppPlus" data-id="'+E(p.id)+'" aria-label="'+n+' adet sepette, seçenek seç">+<i class="bd" aria-hidden="true">'+(n>9?'9+':n)+'</i></button>';
+  var l=ls[0],q=num(l.qty),mx=Math.min(99,l.stock!=null?num(l.stock):99);
+  return '<span class="ozPStep" role="group" aria-label="Adet"><button type="button" data-a="ppQty" data-v="'+E(l.variant_id)+'" data-d="-1" aria-label="'+(q<=1?'Sepetten çıkar':'Azalt')+'">−</button><b aria-live="polite">'+q+'</b>'+
+    '<button type="button" data-a="ppQty" data-v="'+E(l.variant_id)+'" data-d="1" aria-label="Bir tane daha"'+(q>=mx?' disabled':'')+'>+</button></span>';
 }
 /* F2: Keşfet şeridi için küçük kart (beyaz zemin, koyu yazı, F6 "+") */
 function krCard(p){ST.rows=ST.rows||{};ST.rows[String(p.id)]=p;var im=httpsUrl(p.image)||httpsUrl(arr(p.images)[0]);var price=num(p.price_kurus),cmp=num(p.compare_at_kurus);
@@ -392,13 +397,15 @@ function pvOpen(imgs,start){if(!imgs.length)return;var ov=D.createElement('div')
 function ppRefresh(){var m=ST.rows||{},pl=(ST.pp&&ST.pp.list)||[];qa('#ozRoot [data-pid]').forEach(function(c){var p=m[c.dataset.pid]||pl.filter(function(x){return String(x.id)===c.dataset.pid})[0];var ac=qs('.ac',c);if(p&&ac)ac.innerHTML=ppCtrl(p)});ppBar()}
 function ppBar(){stripSync()}
 ACT_EXTRA({
-  ppQty:function(b){var v=b.dataset.v;cartSetQty(v,cartQty(v)+num(b.dataset.d));ppRefresh()},
+  ppQty:function(b){var v=b.dataset.v;var l=cartGet().filter(function(x){return x.variant_id===v})[0];var q=cartQty(v)+num(b.dataset.d);
+    if(l&&l.stock!=null&&q>num(l.stock)){toast('Stoktaki tüm adetler sepetinde.');return}cartSetQty(v,q);ppRefresh()},
   /* "+": seçeneksiz (tek seçenekli) ürün doğrudan sepete; birden çok seçenekte (250 g / 500 g / 1 kg…) alt panelde seçtirir.
      Fiyat burada yalnız gösterim; sipariş tutarı sunucuda varyanttan hesaplanır (oz_quote / oz_place_order). */
   ppPlus:async function(b){
     var id=b.dataset.id;
     await busy(b,async function(){
       var d=await rpc('oz_product_detail',{p_id:id});var vs=arr(d&&d.variants).filter(function(v){return v.is_active!==false});
+      ST.pnv=ST.pnv||{};if(d&&d.id)ST.pnv[String(d.id)]=vs.length;
       if(!d||!vs.length){openProduct(id);return}
       if(vs.length===1){if(!(num(vs[0].stock)>0)){toast('Bu ürün şu anda stokta yok.');return}ppAddVar(d,vs[0]);return}
       ST.pick={d:d,vs:vs};
@@ -411,7 +418,7 @@ ACT_EXTRA({
 function ppAddVar(d,v){
   var have=cartQty(v.id);if(have>=num(v.stock)){toast('Stoktaki tüm adetler sepetinde.');return}
   var sel=d.seller||{};
-  cartAdd({variant_id:v.id,product_id:d.id,name:d.name,label:v.label||'',image:arr(d.images)[0]||null,price_kurus:num(v.price_kurus),seller_id:sel.id||null,seller_name:sel.display_name||''},1);
+  cartAdd({variant_id:v.id,product_id:d.id,name:d.name,label:v.label||'',image:arr(d.images)[0]||null,price_kurus:num(v.price_kurus),seller_id:sel.id||null,seller_name:sel.display_name||'',stock:num(v.stock),nv:arr(d.variants).filter(function(x){return x.is_active!==false}).length},1);
   ppRefresh();toast('Sepete eklendi'+(v.label?': '+v.label:''));
 }
 /* K30: üretici kartı (oz_producers kaydı). wide: Üreticiler sekmesindeki geniş hâl */
@@ -734,7 +741,7 @@ ACT_EXTRA({
   addCart:function(){
     var pd=ST.pd;if(!pd)return;var p=pd.p;var v=arr(p.variants).filter(function(x){return x.id===pd.sel})[0];if(!v)return;
     var sel=p.seller||{};
-    cartAdd({variant_id:v.id,product_id:p.id,name:p.name,label:v.label||'',image:arr(p.images)[0]||null,price_kurus:num(v.price_kurus),seller_id:sel.id||null,seller_name:sel.display_name||''},pd.qty);
+    cartAdd({variant_id:v.id,product_id:p.id,name:p.name,label:v.label||'',image:arr(p.images)[0]||null,price_kurus:num(v.price_kurus),seller_id:sel.id||null,seller_name:sel.display_name||'',stock:num(v.stock),nv:arr(p.variants).filter(function(x){return x.is_active!==false}).length},pd.qty);ppRefresh();
     /* F7: panel kapanır; liste ekranında "Sepeti gör" çubuğu kısa vurgu yapar */
     pd.qty=1;closeSheet();stripSync();var st=D.getElementById('ozCStrip');
     if(st){st.classList.remove('hi');void st.offsetWidth;st.classList.add('hi')}else toast('Sepete eklendi');

@@ -25,12 +25,15 @@ const {chromium,open,enter}=require('./harness.js');
  // sahte oz_product_detail tek kayıt döndürür: tıklanan kartın ürünü olsun
  await p.evaluate(()=>{const D=window.__OZ_FX.R.oz_product_detail;D.id='p1';D.name='Çam balı 1'});
  await p.click(sel+' .ac .ozPlus');await p.waitForTimeout(800);
- if(await p.$('.ozOv .ozOpt'))await p.click('.ozOv .ozOpt:not([disabled])');await p.waitForTimeout(600);
+ const multi=!!(await p.$('.ozOv .ozOpt'));
+ if(multi)await p.click('.ozOv .ozOpt:not([disabled])');await p.waitForTimeout(600);
  const s1=await strip();
  ok(s1&&/Sepeti gör/.test(s1.t)&&/^1\b/.test(s1.t),'ekleyince şerit "1 … Sepeti gör" göstermeli: '+JSON.stringify(s1));
  ok(s1&&s1.bottom<=s1.navTop,'şerit alt menünün üstünde olmalı');
  ok(s1&&s1.onTop,'şerit görünür (üstü kapalı değil) olmalı');
- ok(await p.evaluate(s=>{const q=document.querySelector(s+' .ac .ozPStep b');return q&&q.textContent==='1'},sel),'kartta "+" adet kontrolüne (1) dönmeli');
+ // G2-1: tek seçenekte "− 1 +", çok seçenekte "+" üstünde adet rozeti 1 (sahte ürün 3 seçenekli → rozet)
+ ok(multi,'sahte ürün çok seçenekli olmalı (seçenek paneli açılmalı)');
+ ok(await p.evaluate(s=>{const b=document.querySelector(s+' .ac .ozPlus .bd');return !!b&&b.textContent==='1'&&!document.querySelector(s+' .ac .ozPStep')},sel),'çok seçenekli kartta "+" üstünde adet rozeti (1) olmalı');
 
  await p.click(sel+' .im .sc');await p.waitForTimeout(1100);
  ok(await p.evaluate(()=>!!document.querySelector('.ozOv.ozPdS')),'fotoğrafa dokununca ürün paneli açılmalı');
