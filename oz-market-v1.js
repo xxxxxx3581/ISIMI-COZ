@@ -341,6 +341,10 @@ function ppCtrl(p){
   var n=ls.reduce(function(k,x){return k+num(x.qty)},0);
   return '<button type="button" class="ozPlus'+(n?' in':'')+'" data-a="ppPlus" data-id="'+E(p.id)+'" aria-label="'+(n?n+' adet sepette, ekle':'Sepete ekle')+'">'+(n||'+')+'</button>';
 }
+/* F2: Keşfet şeridi için küçük kart (beyaz zemin, koyu yazı, F6 "+") */
+function krCard(p){ST.rows=ST.rows||{};ST.rows[String(p.id)]=p;var im=httpsUrl(p.image)||httpsUrl(arr(p.images)[0]);var price=num(p.price_kurus),cmp=num(p.compare_at_kurus);
+  return '<div class="ozKr" role="listitem" data-pid="'+E(p.id)+'"><button type="button" class="im" data-a="nav" data-k="product" data-id="'+E(p.id)+'" aria-label="'+E(p.name)+'">'+pic(im,p.name)+(p.in_stock===false?'<span class="so">Tükendi</span>':'')+'</button>'+
+    '<button type="button" class="nm" data-a="nav" data-k="product" data-id="'+E(p.id)+'">'+E(p.name)+'</button><div class="ft"><span class="pr"><b>'+TL(price)+'</b>'+(cmp>price?'<s>'+TL(cmp)+'</s>':'')+'</span><span class="ac">'+ppCtrl(p)+'</span></div></div>'}
 /* F6: liste ürün kartı — solda kaydırmalı foto (dokununca tam ekran), sağda ad, kısa açıklama, özet, puan; altta fiyat + beyaz "+".
    Gövde veya "Detay ›" ürün panelini (F7) açar. Ek alanlar (açıklama, net miktar, raf ömrü) plEnrich ile tek GET'ten gelir; yoksa gizli. */
 function plCard(p){ST.rows=ST.rows||{};ST.rows[String(p.id)]=p;
@@ -497,10 +501,10 @@ VIEWS_EXTRA({
       h+=empty(ico('leaf',36),'Doğal ürünler yolda','Üreticiler ürünlerini ekledikçe burada görünecek.',S().seller_signup_enabled?'<button type="button" class="ozBtn pri" data-a="nav" data-k="seller">Üretici misin? Satıcı ol</button>':'');
       paint(h);startHero(t);return;
     }
-    var sort=a.sort||'new';
-    if(any)h+='<div class="ozSecH"><h2>Ürünler</h2>'+sortSel(sort)+'</div><div id="ozRes">'+skel(2)+'</div>';
+    /* F2: "Yeni ürünler" yatay şerit (en fazla 10); Tümü → ortak liste sayfası (Sırala orada) */
+    var nw=arr(d.newest).slice(0,10);
+    if(nw.length)h+='<div class="ozSecH ozNwH"><h2>Yeni ürünler</h2><button type="button" class="ozLink" data-a="nav" data-k="plist" data-sort="new">Tümü ›</button></div><div class="ozKrs" role="list">'+nw.map(krCard).join('')+'</div>';
     paint(h);startHero(t);startFade(t);
-    if(any){ST.sr={a:{sort:sort},list:[],offset:0,more:false,rows:1};await searchMore(t)}
   },
 
   /* F5: ortak ürün liste sayfası — kategori (üretici içinde), üreticinin tüm ürünleri, Keşfet "Yeni ürünler · Tümü" */
