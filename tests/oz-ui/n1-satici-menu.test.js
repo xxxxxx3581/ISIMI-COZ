@@ -20,7 +20,7 @@ const {chromium,open,enter}=require('./harness.js');
  await p.evaluate(()=>OZ.go('seller',{tab:'ozet'}));await p.waitForTimeout(1500);
  let n=await nav();sellerOk(n,'ozet','Siparişler');
  ok(n.border==='rgb(201, 163, 58)'&&n.curBg==='rgb(242, 180, 49)'&&n.h>=56,'satıcı menüsü görünümü (altın çizgi, dolu altın seçili, 56px): '+JSON.stringify(n));
- ok(n.so==='3'&&n.sq==='2','rozetler: Siparişler yeni+bekleyen 3, Sorular yanıtsız 2: '+JSON.stringify({so:n.so,sq:n.sq}));
+ ok(n.so===null&&n.sq==='2','rozetler: Siparişler (AC2: panelde görülen siparişler sayılmaz → yok), Sorular yanıtsız 2: '+JSON.stringify({so:n.so,sq:n.sq}));
  await click(p,'#ozRoot [data-a=soTab][data-st=past]');sellerOk(await nav(),'ozet','Geçmiş siparişler');
  await click(p,'#ozNav [data-tab=urunler]');sellerOk(await nav(),'urunler','Ürünler');
  await click(p,'#ozRoot .ozSpEd',1500);n=await nav();sellerOk(n,'urunler','Ürün düzenle');

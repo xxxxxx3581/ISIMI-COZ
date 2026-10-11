@@ -1742,12 +1742,6 @@ html:root .ozSoCnt.k4{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
 html:root .ozSoCnt.k4 .c{min-height:60px;padding:8px}
 html:root .ozSoCnt.k4 .c small{font-size:10.5px;letter-spacing:-.2px;overflow-wrap:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}html:root .ozSoCnt.k4 .c{padding:8px 6px}
 html:root .ozSoMore{margin:0 0 4px;gap:6px}html:root .ozSoMore .ozRowBtn{min-height:44px;padding:6px 12px}html:root .ozSoMore .ozRowBtn small{display:none}html:root .ozSoMore .ozRowBtn b{font-size:14px}
-/*OZ P3.2 yeni sipariş ışığı*/
-html:root .ozPulse{position:relative}
-html:root .ozPulse::after{content:"";position:absolute;top:6px;right:calc(50% - 18px);width:10px;height:10px;border-radius:50%;background:#F7D24A;box-shadow:0 0 0 0 rgba(247,210,74,.6);animation:ozPulse 1.8s ease-in-out infinite;pointer-events:none}
-html:root .ozRowBtn.ozPulse::after{top:50%;right:38px;margin-top:-5px}
-@keyframes ozPulse{0%{box-shadow:0 0 0 0 rgba(247,210,74,.55);opacity:1}70%{box-shadow:0 0 0 8px rgba(247,210,74,0);opacity:.75}100%{box-shadow:0 0 0 0 rgba(247,210,74,0);opacity:1}}
-@media (prefers-reduced-motion:reduce){html:root .ozPulse::after{animation:none}}
 /*OZ P4.1 seçenek alt paneli*/
 html:root .ozOpts{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
 html:root .ozOpt{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-height:64px;padding:10px 12px;border:1px solid #54422D;border-radius:14px;background:#3A2D20;color:#F6ECDC;font:inherit;text-align:left;cursor:pointer}
@@ -1798,11 +1792,6 @@ html:root .ozAdr>summary span{flex:1;min-width:0;white-space:nowrap;overflow:hid
 html:root .ozAdr>summary:after{content:"›";font-size:18px;color:#CDBB9F;transition:transform .2s}
 html:root .ozAdr[open]>summary:after{transform:rotate(90deg)}
 html:root .ozAdr>div{padding:0 12px 10px;font-size:13.5px;line-height:1.5;color:#E9DCC4;overflow-wrap:anywhere}
-/*OZ C6 bekleyen sipariş uyarısı: turuncu-kırmızı nabız + sayı*/
-html:root .ozPulse::after{content:attr(data-n);display:grid;place-items:center;width:auto;min-width:20px;height:20px;padding:0 5px;box-sizing:border-box;top:2px;right:calc(50% - 26px);border-radius:10px;background:#E5582F;color:#fff;font:800 11.5px/1 system-ui,sans-serif;box-shadow:0 0 0 0 rgba(229,88,47,.7);animation:ozPulse2 1.4s ease-out infinite}
-html:root .ozRowBtn.ozPulse::after{top:50%;right:40px;margin-top:-10px}
-@keyframes ozPulse2{0%{box-shadow:0 0 0 0 rgba(229,88,47,.75)}70%{box-shadow:0 0 0 10px rgba(229,88,47,0)}100%{box-shadow:0 0 0 0 rgba(229,88,47,0)}}
-@media (prefers-reduced-motion:reduce){html:root .ozPulse::after{animation:none;box-shadow:0 0 0 3px rgba(229,88,47,.45)}}
 /*OZ C7 üretici sayfası puan alanı*/
 html:root .ozPP .nmr{flex-wrap:nowrap;align-items:center;justify-content:space-between;gap:10px}
 html:root .ozPP .nmr .nl{flex:1;min-width:0}
@@ -2464,6 +2453,17 @@ html:root .ozPastR .tx{display:flex;flex-direction:column;gap:2px}html:root .ozP
 html:root .ozDlv{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:4px 0 2px}
 html:root .ozDlv .ok{display:grid;place-items:center;width:64px;height:64px;border-radius:50%;background:#5FCB8A;color:#1F160E;font:900 36px/1 system-ui,sans-serif}
 html:root .ozDlv>b{font-size:20px;color:#9BE3B9}html:root .ozDlv .ozP{margin:0}html:root .ozDlv .ozRow2{width:100%;justify-content:center}
+/*OZ AC2 dikkat rozeti — tek yapı (eski P3/C6 .ozPulse yerine): mavi = kargoda/teslim onayı bekleyen (müşteri), turuncu = yeni/hazırlanacak (satıcı).
+  Nabız halkası; hareket azaltılmışsa sabit parlak halka. Etiket rengi de vurgulanır.*/
+html:root .ozAttnB{--ab:#F0A04B;--ar:240,160,75;min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:var(--ab);color:#1F160E;font:900 11.5px/20px system-ui,sans-serif;box-shadow:0 0 0 0 rgba(var(--ar),.8);animation:ozAttnP 1.5s ease-out infinite;pointer-events:none;z-index:1}
+html:root .ozAttnB.s{--ab:#6FB3E8;--ar:111,179,232}
+html:root .ozNavB .ozBdg.ozAttnB{top:1px;right:calc(50% - 27px)}
+html:root body.ozSellerNav .ozNavB .ozBdg.ozAttnB,html:root body.ozSellerNav .ozNavB[aria-current=page] .ozBdg.ozAttnB{background:var(--ab);color:#1F160E}
+html:root .ozRowBtn>.ozAttnB{position:static;flex:none;margin-left:auto}
+@keyframes ozAttnP{0%{box-shadow:0 0 0 0 rgba(var(--ar),.85)}70%{box-shadow:0 0 0 9px rgba(var(--ar),0)}100%{box-shadow:0 0 0 0 rgba(var(--ar),0)}}
+@media (prefers-reduced-motion:reduce){html:root .ozAttnB{animation:none;box-shadow:0 0 0 3px rgba(var(--ar),.6)}}
+html:root body:not(.ozSellerNav) .ozNavB.ozAttnOn.s .l{color:#9FD0F5;opacity:1}html:root body:not(.ozSellerNav) .ozNavB.ozAttnOn.n .l{color:#F7B979;opacity:1}
+html:root body.ozSellerNav .ozNavB.ozAttnOn.n:not([aria-current=page]) .l{color:#F7B979}
 /*K21-BITIS*/
 </style>
 <style id="svcProvEntryCss">.svcProvEntry{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;border-radius:16px;border:1.5px solid rgba(124,92,255,.45);background:rgba(124,92,255,.10);color:var(--text);font:inherit;text-align:left;cursor:pointer}.svcProvEntry .ic{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:rgba(124,92,255,.18)}.svcProvEntry .tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}.svcProvEntry small{font-size:12px;font-weight:700;color:var(--muted)}.svcProvEntry b{font-size:16px;font-weight:900}.svcProvEntry em{font-style:normal;font-size:12.5px;color:var(--muted)}.svcProvEntry .go{flex:0 0 auto;font-size:24px;font-weight:700;color:#7c5cff}.svcProvEntry:active{transform:scale(.99)}.svcProvEntry:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}html[data-theme="light"] .svcProvEntry{background:#f3effe;border-color:#c9bbff}html[data-theme="light"] .svcProvEntry .go{color:#5b3fd6}</style>
