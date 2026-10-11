@@ -14,13 +14,13 @@ const {chromium,open,enter}=require('./harness.js');
   await enter(p);await p.waitForTimeout(1300);
   const g=await p.evaluate(()=>{const R=s=>{const e=typeof s==='string'?document.querySelector(s):s;if(!e)return null;const r=e.getBoundingClientRect();return {t:Math.round(r.top),b:Math.round(r.bottom),h:Math.round(r.height)}};
    const heads=[...document.querySelectorAll('#ozRoot .ozSecH')];const hd=t=>heads.find(x=>x.querySelector('h2').textContent===t);
-   const pr=hd('Üreticiler'),kt=hd('Kategoriler');const kl=kt&&kt.querySelector('.ozLink');
+   const pr=hd('Satıcılar'),kt=hd('Kategoriler');const kl=kt&&kt.querySelector('.ozLink');
    return {scroll:Math.round(scrollY),nav:R('#ozNav'),band:!!document.querySelector('#ozRoot .ozOBand'),pr:pr?R(pr.querySelector('h2')):null,card:R('#ozRoot .ozPrds3 .ozPrd2'),
     inp:R('#ozRoot .ozSearch .ozIn'),btn:R('#ozRoot .ozSearch .ozBtn'),hero:R('#ozRoot .ozHs'),slides:document.querySelectorAll('#ozHeroT .ozHs').length,chip:(document.getElementById('ozHeroN')||{}).textContent,
     cat:R('#ozRoot .ozCts .ozCt .b'),kt:kt?R(kt.querySelector('h2')):null,kl:kl?R(kl):null}});
   ok(g.scroll===0,'ilk ekran (kaydırma yok)');
   if(h===844)ok(g.band,'sipariş bandı görünmeli');
-  ok(g.pr&&g.pr.b<=g.nav.t,'"Üreticiler" başlığı alt menünün üstünde tam görünmeli: '+JSON.stringify({pr:g.pr,nav:g.nav}));
+  ok(g.pr&&g.pr.b<=g.nav.t,'"Satıcılar" başlığı alt menünün üstünde tam görünmeli: '+JSON.stringify({pr:g.pr,nav:g.nav}));
   ok(g.card&&g.nav.t-g.card.t>=60,'ilk üretici kartının en az 60px\'i görünmeli: '+JSON.stringify({card:g.card,nav:g.nav}));
   ok(g.inp&&g.btn&&Math.abs(g.inp.t-g.btn.t)<=2&&g.inp.h<=44&&g.btn.h<=44,'arama + Ara tek ince satır: '+JSON.stringify({inp:g.inp,btn:g.btn}));
   ok(g.hero&&g.hero.h<=150&&g.slides===3&&g.chip==='1/3','hero ≈1/3 kısa, slider aynı: '+JSON.stringify({hero:g.hero,slides:g.slides,chip:g.chip}));

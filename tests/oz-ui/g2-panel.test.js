@@ -29,7 +29,7 @@ const {chromium,open,enter}=require('./harness.js');
   // M: iki seçenekli üründe başta seçim yok → fiyat seçenek satırlarında, alt çubukta "Seçenek seç"
   ok(base.gal&&base.name&&base.desc,'foto, ad, açıklama görünür olmalı: '+JSON.stringify(base));
   ok(!base.price&&/^Seçenek seç Sepete ekle$/.test(base.bar),'seçim yokken üst fiyat yok, alt çubukta "Seçenek seç": '+base.bar);
-  ok(/Onaylı üretici/.test(base.prod)&&/Üreticiyi gör ›/.test(base.prod),'üretici satırı olmalı: '+base.prod);
+  ok(/Onaylı satıcı/.test(base.prod)&&/Satıcıyı gör ›/.test(base.prod),'satıcı satırı olmalı: '+base.prod);
   ok(base.inf&&base.infOpen===false&&/Ürün bilgileri/.test(base.infTitle),'"Ürün bilgileri" kapalı başlamalı');
   await click(p,S+' .ozVar:nth-child(1)',300);
   const sel1=await p.evaluate(S=>{const o=document.querySelector(S);return {price:!!o.querySelector('.ozPrice b'),bar:o.querySelector('.ozPdBar').innerText.replace(/\s+/g,' ')}},S);
@@ -54,7 +54,7 @@ const {chromium,open,enter}=require('./harness.js');
   ok(b.add&&!b.step&&b.cart===0,'1\'de "−" çıkarmalı, "Sepete ekle" dönmeli: '+JSON.stringify(b));
   await p.evaluate(()=>{window.__OZ_FX.R.oz_producer_detail={id:'s1',display_name:'Yayla Üreticileri',city:'Muğla',product_count:6,categories:[{slug:'zeytinyagi',name:'Zeytinyağı',count:6}]}});
   await click(p,S+' .ozPdPr [data-a=pdSeller]',1200);
-  ok(await p.evaluate(()=>!document.querySelector('.ozOv.ozPdS')&&!!document.querySelector('#ozRoot .ozPP')),'"Üreticiyi gör" üretici sayfasını açmalı');
+  ok(await p.evaluate(()=>!document.querySelector('.ozOv.ozPdS')&&!!document.querySelector('#ozRoot .ozPP')),'"Satıcıyı gör" satıcı sayfasını açmalı');
  }
  // bilgi yoksa başlık gizli
  await p.evaluate(()=>{const d=window.__OZ_FX.R.oz_product_detail;['origin_city','origin_note','ingredients','shelf_life_days','storage_info','net_content','organic_cert'].forEach(k=>d[k]=null);d.allergens=[]});

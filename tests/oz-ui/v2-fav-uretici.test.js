@@ -1,8 +1,8 @@
-// V2: Favoriler ekranı "Favori üreticiler" — 390px, sahte veri (RPC sahte). Çalıştırma: node tests/oz-ui/v2-fav-uretici.test.js
+// V2: Favoriler ekranı "Favori satıcılar" (W1 adı) — 390px, sahte veri (RPC sahte). Çalıştırma: node tests/oz-ui/v2-fav-uretici.test.js
 // Doğrulanan: ürün favorilerinin üstünde "Favori üreticiler" (oz_my_favorite_sellers): kart başına logo ya da baş harf, ad,
 // "il · ilçe", yıldız + yorum sayısı, dolu kırmızı kalp; kahve zemin, ince bronz kenar, AA kontrast. Karta dokunma üretici
 // sayfasını açar; kalp onaysız çıkarır, liste anında güncellenir (oz_toggle_favorite_seller), hata olursa geri gelir.
-// Boşsa "Henüz favori üreticin yok."; ürün favorileri bölümü (kartlar, ürün boş durumu) aynı; 390px ve büyük yazıda taşma yok.
+// Boşsa "Henüz favori satıcın yok."; ürün favorileri bölümü (kartlar, ürün boş durumu) aynı; 390px ve büyük yazıda taşma yok.
 const {chromium,open,enter}=require('./harness.js');
 const SL=[{id:'s1',display_name:'Deneme Çiftliği',slug:'deneme',city:'İzmir',district:'Karabağlar',logo_url:'https://img.test/zeytin-zeytinyagi.jpg',rating_avg:5,rating_count:6,favorited_at:'2026-10-10T10:00:00Z'},
  {id:'s2',display_name:'Ege Kooperatifi Çok Uzun Bir Üretici Adı Örneği Burada',slug:'ege',city:'Muğla',district:null,logo_url:null,rating_avg:0,rating_count:0,favorited_at:'2026-10-09T10:00:00Z'}];
@@ -28,7 +28,7 @@ const BIG='html:root .ozFsC .tx b{font-size:22px!important}html:root .ozFsC .tx 
      inside:r.right<=391&&tr.right<=(hr?hr.left+1:r.right)&&[...c.querySelectorAll('.tx *')].every(e=>e.getBoundingClientRect().right<=tr.right+1)}}):[]}});
  await p.evaluate(()=>OZ.go('favs',{}));await p.waitForTimeout(1600);
  let s=await S();
- ok(s.heads[0]==='Favori üreticiler'&&s.order,'"Favori üreticiler" ürün favorilerinin üstünde: '+JSON.stringify(s.heads));
+ ok(s.heads[0]==='Favori satıcılar'&&s.order,'"Favori satıcılar" ürün favorilerinin üstünde: '+JSON.stringify(s.heads));
  ok(s.cards.length===2&&s.cards[0].id==='s1'&&s.cards[1].id==='s2','iki üretici kartı, sunucu sırası: '+JSON.stringify(s.cards.map(c=>c.id)));
  const c1=s.cards[0],c2=s.cards[1];
  ok(c1&&c1.logo&&/Deneme Çiftliği/.test(c1.t)&&/İzmir · Karabağlar/.test(c1.t)&&/★ 5,0 \(6 yorum\)/.test(c1.t),'kart 1: logo, ad, il · ilçe, yıldız + yorum: '+JSON.stringify(c1));
@@ -54,11 +54,11 @@ const BIG='html:root .ozFsC .tx b{font-size:22px!important}html:root .ozFsC .tx 
  ok(s.cards.length===1&&s.cards[0].id==='s1'&&/Favori güncellenemedi/.test(await p.evaluate(()=>document.body.innerText)),'hata olursa kart geri gelmeli + uyarı: '+JSON.stringify(s.cards.map(c=>c.id)));
  await p.evaluate(()=>{window.__OZ_FX.fail={}});
  await clk(p,'#ozFsS .ozFsC[data-sid=s1] [data-a=sFav]',700);s=await S();
- ok(s.cards.length===0&&s.empty==='Henüz favori üreticin yok.'&&s.prods==='p0,p1','son üretici çıkınca boş metin, ürünler aynı: '+JSON.stringify(s));
+ ok(s.cards.length===0&&s.empty==='Henüz favori satıcın yok.'&&s.prods==='p0,p1','son üretici çıkınca boş metin, ürünler aynı: '+JSON.stringify(s));
  // boş liste + ürün boş durumu aynı
  await p.evaluate(()=>{const R=window.__OZ_FX.R;R.oz_my_favorite_sellers=[];R.oz_my_favorites=[];OZ.go('home',{})});await p.waitForTimeout(800);
  await p.evaluate(()=>OZ.go('favs',{}));await p.waitForTimeout(1500);s=await S();
- ok(s.empty==='Henüz favori üreticin yok.'&&s.prodEmpty&&s.prods==='','boş durum: üretici metni + ürün boş durumu aynı: '+JSON.stringify(s));
+ ok(s.empty==='Henüz favori satıcın yok.'&&s.prodEmpty&&s.prods==='','boş durum: üretici metni + ürün boş durumu aynı: '+JSON.stringify(s));
  ok(!st.errors.length,'sayfa hatası olmamalı: '+st.errors.join(' | '));
  await br.close();
  if(fails.length){console.error('v2-fav-uretici BAŞARISIZ:\n - '+fails.join('\n - '));process.exit(1)}

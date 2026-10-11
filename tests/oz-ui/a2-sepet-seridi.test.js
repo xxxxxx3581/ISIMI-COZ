@@ -43,7 +43,7 @@ const {chromium,open,enter}=require('./harness.js');
  const s3=await strip();ok(s3&&s3.onTop,'panel kapanınca şerit yeniden görünmeli');
 
  await p.click('#ozNav [data-k=producers]');await p.waitForTimeout(900);
- ok(!!(await strip()),'Üreticiler\'de şerit olmalı');
+ ok(!!(await strip()),'Satıcılar\'da şerit olmalı');
  await p.click('#ozNav [data-k=cart]');await p.waitForTimeout(1100);
  ok(await strip()===null,'Sepet sayfasında şerit olmamalı');
  ok(await p.evaluate(()=>document.querySelectorAll('#ozRoot .ozCoG2 .ozCoL').length>0),'sepette eklenen ürün satırı olmalı');
