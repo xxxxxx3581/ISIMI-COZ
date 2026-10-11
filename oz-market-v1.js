@@ -333,9 +333,11 @@ var OZ_SPB='<svg class="yb yb1" viewBox="0 0 170 70" aria-hidden="true" focusabl
   '<g fill="#CFE7A8"><ellipse cx="148" cy="64" rx="11" ry="3.6" transform="rotate(-8 148 64)"/><ellipse cx="140" cy="50" rx="11" ry="3.6" transform="rotate(36 140 50)"/><ellipse cx="112" cy="52" rx="11" ry="3.6" transform="rotate(-14 112 52)"/>'+
   '<ellipse cx="106" cy="36" rx="11" ry="3.6" transform="rotate(30 106 36)"/><ellipse cx="76" cy="38" rx="10" ry="3.4" transform="rotate(-20 76 38)"/><ellipse cx="70" cy="22" rx="10" ry="3.4" transform="rotate(26 70 22)"/><ellipse cx="40" cy="20" rx="9" ry="3.2" transform="rotate(-24 40 20)"/></g>'+
   '<g fill="#7FA35A"><ellipse cx="124" cy="44" rx="3.6" ry="4.4"/><ellipse cx="88" cy="30" rx="3.4" ry="4.2"/></g></svg>';
+/* Z2: adın altında ince altın çizgi + kendi çizdiğimiz küçük zeytin yaprağı */
+var OZ_LEAF='<svg class="lf" viewBox="0 0 22 12" aria-hidden="true" focusable="false"><path d="M1 6.5C5 1.5 13 .5 21 3.5C16 9 8 10.5 1 6.5Z" fill="#C9DE9A"/><path d="M2.5 6.4C8 5 13.5 4.4 19.5 3.8" stroke="#6F8F45" stroke-width=".9" fill="none" stroke-linecap="round"/></svg>';
 function heroSpInner(h){var i=ST.heroSp||{};var nm=i.name||h.t,loc=i.loc||h.s;
   return OZ_SPB+'<span class="pz" aria-hidden="true"><i></i><i></i></span><div class="mk sp"><span class="slg">'+(i.logo?'<img src="'+E(i.logo)+'" alt="" decoding="async" onerror="this.remove()">':'')+'<i aria-hidden="true">'+E(initials(nm))+'</i></span><span class="spt">Sponsorlu</span></div>'+
-    '<div class="tx"><strong>'+E(nm)+'</strong><small>'+E(loc)+'</small></div><div class="tc"><span>✓ Onaylı satıcı</span><span class="cta">Ürünlerini keşfet ›</span></div>'+
+    '<div class="tx"><strong>'+E(nm)+'</strong><span class="nmr" aria-hidden="true"><i class="gl"></i>'+OZ_LEAF+'</span><small>'+E(loc)+'</small></div><div class="tc"><span>✓ Onaylı satıcı</span><span class="cta">Ürünlerini keşfet ›</span></div>'+
     (arr(i.imgs).length?'<div class="ph">'+i.imgs.slice(0,3).map(function(u,k){return '<img class="p'+(k+1)+'" src="'+E(u)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">'}).join('')+'</div>':'')}
 async function heroSpLoad(t){var h=HERO_SL.filter(function(x){return x.sp})[0];if(!h)return;
   if(!ST.heroSp){var r=await Promise.all([rpc('oz_producer_detail',{p_id:h.producerId}).catch(function(){return null}),rpc('oz_search_products',{p:{seller_id:h.producerId,sort:'new',limit:6,offset:0}}).catch(function(){return null})]);
