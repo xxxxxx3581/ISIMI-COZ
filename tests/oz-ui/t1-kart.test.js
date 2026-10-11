@@ -21,11 +21,11 @@ const BIG='html:root .ozGc .nm{font-size:22px!important}html:root .ozGc .ds{font
   R.oz_my_favorites=[{id:'p1'}];R.oz_toggle_favorite=true});
  await enter(p);await p.waitForTimeout(600);
  await p.evaluate(()=>OZ.go('plist',{seller:'s1'}));await p.waitForTimeout(1500);
- const C=()=>p.evaluate(()=>[...document.querySelectorAll('#ozRoot .ozGc')].map(c=>{const R=e=>e?e.getBoundingClientRect():null;const nm=c.querySelector('.nm'),tr=c.querySelector('.tr'),fv=c.querySelector('.tr [data-a=fav]'),rt=c.querySelector('.tr .rt'),pr=c.querySelector('.ft .opt .pl')||c.querySelector('.ft .pr'),ac=c.querySelector('.ac');
+ const C=()=>p.evaluate(()=>[...document.querySelectorAll('#ozRoot .ozGc')].map(c=>{const R=e=>e?e.getBoundingClientRect():null;const nm=c.querySelector('.nm'),tr=c.querySelector('.tr'),fv=c.querySelector('.tr [data-a=fav]'),rt=c.querySelector('.tr .rt'),pr=c.querySelector('.ft .pr'),ac=c.querySelector('.ac');
   const ov=(a,b)=>a&&b&&a.left<b.right-1&&b.left<a.right-1&&a.top<b.bottom-1&&b.top<a.bottom-1;
   const glyphs=e=>{if(!e)return [];const out=[];const w=document.createTreeWalker(e,NodeFilter.SHOW_TEXT);let t;const box=e.getBoundingClientRect();while((t=w.nextNode())){if(!t.nodeValue.trim())continue;const rg=document.createRange();rg.selectNodeContents(t);out.push(...[...rg.getClientRects()].filter(x=>x.width>0&&x.top<box.bottom-1&&x.bottom>box.top+1))}return out};
   const cr=R(c),fr=R(fv),rr=R(rt),ar=R(ac),pg=glyphs(pr),ng=glyphs(nm);
-  return {id:c.dataset.pid,fav:!!fv,on:!!fv&&fv.classList.contains('on'),rt:rt?rt.innerText.replace(/\s+/g,' ').trim():null,topRight:!!fr&&cr.right-fr.right<=14&&fr.top-cr.top<=14,rtUnder:!rr||(rr.top>=fr.bottom-2&&Math.abs(rr.right-fr.right)<=10),
+  return {ar:(c.querySelector('.ac .ozPlus')||{getAttribute:()=>null}).getAttribute('aria-label'),id:c.dataset.pid,fav:!!fv,on:!!fv&&fv.classList.contains('on'),rt:rt?rt.innerText.replace(/\s+/g,' ').trim():null,topRight:!!fr&&cr.right-fr.right<=14&&fr.top-cr.top<=14,rtUnder:!rr||(rr.top>=fr.bottom-2&&Math.abs(rr.right-fr.right)<=10),
    nmHit:ng.some(g=>ov(g,fr)||ov(g,rr)),pr:pr?pr.innerText.replace(/\s+/g,' ').trim():'',sameRow:!!ar&&(c.querySelector('.ft .pr')?glyphs(c.querySelector('.ft .pr')).some(g=>g.top<ar.bottom&&g.bottom>ar.top):pg.length>0&&pg.every(g=>g.bottom<=ar.top+1)),
    oldRow:!!c.querySelector(':scope > .rt'),sel:getComputedStyle(c).userSelect,nmSel:getComputedStyle(nm).userSelect,plusSel:ac&&ac.querySelector('button')?getComputedStyle(ac.querySelector('button')).userSelect:''}}));
  const by=l=>{const m={};l.forEach(x=>m[x.id]=x);return m};
@@ -39,8 +39,8 @@ const BIG='html:root .ozGc .nm{font-size:22px!important}html:root .ozGc .ds{font
   if(!big){
    ok(M.p1&&M.p1.on&&M.p0&&!M.p0.on,'favori dolu/boş durumu: '+JSON.stringify([M.p1&&M.p1.on,M.p0&&M.p0.on]));
    ok(M.p1&&M.p1.rt==='★ 5,0 (6)'&&M.p2&&M.p2.rt===null,'yıldız: yorumluda var, yorumsuzda yok: '+JSON.stringify([M.p1&&M.p1.rt,M.p2&&M.p2.rt]));
-   ok(M.p1&&M.p1.pr==='2 gramaj','bal (800gr + birimsiz 500) → "2 gramaj" (X1 kısa etiket): '+(M.p1&&M.p1.pr));
-   ok(M.p0&&M.p0.pr==='2 gramaj'&&M.p2&&M.p2.pr==='2 hacim'&&M.p3&&M.p3.pr==='2 seçenek','seçenek metinleri: '+JSON.stringify([M.p0&&M.p0.pr,M.p2&&M.p2.pr,M.p3&&M.p3.pr]));
+   ok(M.p1&&M.p1.ar==='Seçenek seç, 2 gramaj seçeneği','bal (800gr + birimsiz 500) → "2 gramaj seçeneği" (Z1: "+" ekran okuyucu etiketi): '+(M.p1&&M.p1.ar));
+   ok(M.p0&&M.p0.ar==='Seçenek seç, 2 gramaj seçeneği'&&M.p2&&M.p2.ar==='Seçenek seç, 2 hacim seçeneği'&&M.p3&&M.p3.ar==='Tükendi'&&M.p3.pr==='2 seçenek','seçenek metinleri ("+" etiketi; birimsizde düz "N seçenek"): '+JSON.stringify([M.p0&&M.p0.ar,M.p2&&M.p2.ar,M.p3&&M.p3.ar,M.p3&&M.p3.pr]));
    ok(L.every(c=>c.sel==='none'&&c.nmSel==='none'&&c.plusSel==='none'),'kart ve düğmelerde metin seçilmemeli: '+JSON.stringify(L.map(c=>[c.sel,c.nmSel,c.plusSel])));
    ok(await p.evaluate(()=>document.documentElement.scrollWidth<=390),'390px yatay taşma olmamalı');
   }

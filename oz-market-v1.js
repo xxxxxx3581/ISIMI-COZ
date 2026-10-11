@@ -459,8 +459,10 @@ function ppLines(pid){return cartGet().filter(function(x){return String(x.produc
 function ppMulti(pid,ls){var k=String(pid);return ls.length>1||ls.some(function(x){return num(x.nv)>1})||num((ST.pnv||{})[k])>1}
 function ppCtrl(p){
   var ls=ppLines(p.id);var n=ls.reduce(function(k,x){return k+num(x.qty)},0);
-  if(!n)return p.in_stock===false?'<button type="button" class="ozPlus" disabled aria-label="Tükendi">+</button>':'<button type="button" class="ozPlus" data-a="ppPlus" data-id="'+E(p.id)+'" aria-label="Sepete ekle">+</button>';
-  if(ppMulti(p.id,ls))return '<button type="button" class="ozPlus in" data-a="ppPlus" data-id="'+E(p.id)+'" aria-label="'+n+' adet sepette, seçenek seç">+<i class="bd" aria-hidden="true">'+(n>9?'9+':n)+'</i></button>';
+  /* Z1: seçenekli üründe "+" ekran okuyucuya seçenek sayısını söyler ("Seçenek seç, 3 gramaj seçeneği") */
+  var ot=Array.isArray(p.vars)&&p.vars.length>1?optText(p.vars,p.net_content):'';
+  if(!n)return p.in_stock===false?'<button type="button" class="ozPlus" disabled aria-label="Tükendi">+</button>':'<button type="button" class="ozPlus" data-a="ppPlus" data-id="'+E(p.id)+'" aria-label="'+(ot?'Seçenek seç, '+E(ot):'Sepete ekle')+'">+</button>';
+  if(ppMulti(p.id,ls))return '<button type="button" class="ozPlus in" data-a="ppPlus" data-id="'+E(p.id)+'" aria-label="'+n+' adet sepette, seçenek seç'+(ot?', '+E(ot):'')+'">+<i class="bd" aria-hidden="true">'+(n>9?'9+':n)+'</i></button>';
   var l=ls[0],q=num(l.qty),mx=Math.min(99,l.stock!=null?num(l.stock):99);
   return '<span class="ozPStep" role="group" aria-label="Adet"><button type="button" data-a="ppQty" data-v="'+E(l.variant_id)+'" data-d="-1" aria-label="'+(q<=1?'Sepetten çıkar':'Azalt')+'">−</button><b aria-live="polite">'+q+'</b>'+
     '<button type="button" data-a="ppQty" data-v="'+E(l.variant_id)+'" data-d="1" aria-label="Bir tane daha"'+(q>=mx?' disabled':'')+'>+</button></span>';
@@ -473,10 +475,9 @@ function unitWord(l){var m=/^\s*\d+(?:[.,]\d+)?\s*(g|gr|gram|kg|kilo|ml|l|lt|lit
    Birimi olmayan çıplak sayı etiketi ("500") diğer etiketlerin (yoksa net miktarın) birimini alır; birim dışı metin ya da
    ağırlık+hacim karışıksa "N seçenek". */
 function optDim(l){var t=String(l==null?'':l).trim();if(/^\d+(?:[.,]\d+)?$/.test(t))return '';var u=unitWord(t);return !u?'x':(u==='ml'||u==='lt')?'v':'w'}
-/* X1: short=true → liste kartı etiketi için kısa biçim ("N gramaj" / "N hacim" / "N seçenek"); ekran okuyucu tam ifadeyi alır */
-function optText(vs,net,short){var n=vs.length,ds=vs.map(function(v){return optDim(v.label)});var k=ds.filter(Boolean);
+function optText(vs,net){var n=vs.length,ds=vs.map(function(v){return optDim(v.label)});var k=ds.filter(Boolean);
   if(k.indexOf('x')>=0)return n+' seçenek';if(!k.length){var nd=net!=null&&String(net).trim()?optDim(net):'x';k=nd?[nd]:['x']}
-  var d=k[0];if(!k.every(function(x){return x===d}))return n+' seçenek';return n+(d==='w'?(short?' gramaj':' gramaj seçeneği'):d==='v'?(short?' hacim':' hacim seçeneği'):' seçenek')}
+  var d=k[0];if(!k.every(function(x){return x===d}))return n+' seçenek';return n+(d==='w'?' gramaj seçeneği':d==='v'?' hacim seçeneği':' seçenek')}
 function cardPrice(p,sFirst){
   var vs=Array.isArray(p.vars)?p.vars:null;var price=num(p.price_kurus),cmp=num(p.compare_at_kurus),sub='';
   if(vs&&vs.length>1)return '<small class="u ov" style="display:block;font-size:13px;font-weight:700;color:#6B5A44;white-space:nowrap">'+E(optText(vs,p.net_content))+'</small>'
@@ -505,9 +506,10 @@ function gcCard(p){ST.rows=ST.rows||{};ST.rows[String(p.id)]=p;
     '<div class="hd"><button type="button" class="nm" data-a="nav" data-k="product" data-id="'+id+'">'+E(p.name)+'</button><span class="tr">'+favBtn(p.id,isFav(p.id))+
     (rc?'<button type="button" class="rt" data-a="nav" data-k="product" data-rev="1" data-id="'+id+'" aria-label="'+rc+' değerlendirmeyi gör">★ '+num(p.rating_avg).toLocaleString('tr-TR',{minimumFractionDigits:1,maximumFractionDigits:1})+' <small>('+rc+')</small></button>':'')+'</span></div>'+
     (p.description?'<span class="ds">'+E(p.description)+'</span>':'')+
-    /* U2: çok seçenekte fiyat yerine altın etiket; dokununca "+" ile aynı küçük seçenek penceresi (ppPlus).
-       Y2: alt blok iki sütun — solda fiyat / birim fiyat, sağda (.oa) dikey: etiket "+"ın tam üstünde; tek fiyatlıda yalnız "+" (aynı x). */
-    '<div class="ft">'+(Array.isArray(p.vars)&&p.vars.length>1?(function(t){return t?'<span class="pr"><small class="u ufrom">'+E(t)+'</small></span>':''})(unitFrom(p.vars,p.net_content))+'<span class="oa"><button type="button" class="opt" data-a="ppPlus" data-id="'+id+'" aria-label="'+E(optText(p.vars,p.net_content))+'"'+(p.in_stock===false?' disabled':'')+'><span class="pl">'+E(optText(p.vars,p.net_content,1))+'</span></button>'+'<span class="ac">'+ppCtrl(p)+'</span></span>':'<span class="pr">'+cardPrice(p,1)+'</span><span class="oa"><span class="ac">'+ppCtrl(p)+'</span></span>')+'</div></div>'}
+    /* Z1: alt blok — solda fiyat (tek fiyatlı) ya da "≈ X ₺/kg'dan" (seçenekli; hesaplanamazsa düz "N seçenek"), sağ alt köşede yalnız "+"
+       (seçenekli üründe küçük seçenek penceresi; ekran okuyucu seçenek sayısını söyler, bkz. ppCtrl). */
+    '<div class="ft"><span class="pr">'+(Array.isArray(p.vars)&&p.vars.length>1?(function(t){return t?'<small class="u ufrom">'+E(t)+'</small>':'<small class="u nvp">'+p.vars.length+' seçenek</small>'})(unitFrom(p.vars,p.net_content)):cardPrice(p,1))+'</span>'+
+    '<span class="ac">'+ppCtrl(p)+'</span></div></div>'}
 /* kart açıklaması arama sonucunda yok: görünür ürünler için tek okuma (RLS: yalnız yayındaki ürünler). Hata olursa sessizce gizli. */
 async function gcEnrich(l){var ids=l.filter(function(x){return x&&x.id&&x.description===undefined}).map(function(x){return x.id});if(!ids.length)return;
   /* L: etkin seçenekler (oz_variants, RLS: yalnız yayındaki ürünler) — kartta "X ₺'den · N seçenek" / birim fiyat için */

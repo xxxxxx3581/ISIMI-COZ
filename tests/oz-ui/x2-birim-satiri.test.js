@@ -18,13 +18,13 @@ const VV=(pid,l)=>l.map(([label,tl],i)=>({product_id:pid,label,price_kurus:tl*10
   const M=await p.evaluate(()=>{const o={};[...document.querySelectorAll('#ozRoot .ozGc')].forEach(c=>{const u=c.querySelector('.ft .pr small.ufrom');const pr=c.querySelector('.ft .pr');
    const rgb=x=>x.match(/[\d.]+/g).map(Number);const lum=k=>{const f=x=>{x/=255;return x<=.03928?x/12.92:Math.pow((x+.055)/1.055,2.4)};return .2126*f(k[0])+.7152*f(k[1])+.0722*f(k[2])};
    const s=u?getComputedStyle(u):null;const col=s?rgb(s.color):null,bg=rgb(getComputedStyle(c).backgroundColor);
-   o[c.dataset.pid]={u:u?u.textContent:null,pr:pr?pr.innerText.replace(/\s+/g,' ').trim():null,opt:!!c.querySelector('.ft .opt'),fs:s?parseFloat(s.fontSize):0,fw:s?parseInt(s.fontWeight):0,
+   o[c.dataset.pid]={u:u?u.textContent:null,pr:pr?pr.innerText.replace(/\s+/g,' ').trim():null,opt:/^Seçenek seç, /.test((c.querySelector('.ac .ozPlus')||{getAttribute:()=>''}).getAttribute('aria-label')||''),fs:s?parseFloat(s.fontSize):0,fw:s?parseInt(s.fontWeight):0,
     gold:!!col&&col[0]>220&&col[1]>170&&col[2]<120,cr:col?+((Math.max(lum(col),lum(bg))+.05)/(Math.min(lum(col),lum(bg))+.05)).toFixed(2):0,one:u?u.getClientRects().length===1:true,in:u?u.getBoundingClientRect().right<=c.getBoundingClientRect().right:true}});return o});
   const t='['+where+'] ';
   ok(M.p0&&M.p0.u==="≈ 360 ₺/kg'dan",t+'zeytinyağı en düşük birim fiyat 360: '+JSON.stringify(M.p0));
   ok(M.p1&&M.p1.u==="≈ 1.200 ₺/kg'dan",t+'bal 1.200 (binlik ayırıcı): '+JSON.stringify(M.p1));
   ok(M.p3&&M.p3.u==="≈ 1.250 ₺/kg'dan",t+'birimi çözülemeyen "500" hesaba girmez: '+JSON.stringify(M.p3));
-  ok(M.p4&&M.p4.u===null&&M.p4.pr===null&&M.p4.opt,t+'hiçbiri çözülemiyorsa satır yok: '+JSON.stringify(M.p4));
+  ok(M.p4&&M.p4.u===null&&M.p4.pr==='2 seçenek'&&M.p4.opt,t+'hiçbiri çözülemiyorsa birim satırı yok, düz "2 seçenek" (Z1): '+JSON.stringify(M.p4));
   ok(M.p5&&M.p5.u===null&&M.p5.opt,t+'kg/L karışıksa satır yok: '+JSON.stringify(M.p5));
   ['p0','p1','p3'].forEach(k=>{const x=M[k]||{};ok(x.pr===x.u&&!/\d,\d\d/.test(x.pr||''),t+k+' seçenekli kartta toplam fiyat yok, kuruş yok: '+JSON.stringify(x));
    ok(x.fs===13&&!x.gold&&x.cr>=4.5&&x.one&&x.in,t+k+' soluk krem 13px, vurgusuz, AA, tek satır: '+JSON.stringify(x))});
