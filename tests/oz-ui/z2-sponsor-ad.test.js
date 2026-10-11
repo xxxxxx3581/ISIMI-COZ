@@ -27,7 +27,7 @@ const SID='41876174-05d7-421c-bac1-f2e8272d19e2';
   return {h:Math.round(sl.height),others:[...document.querySelectorAll('#ozHeroT .ozHs:not(.sp)')].map(x=>Math.round(x.getBoundingClientRect().height)),
    gap:Math.round(nm.getBoundingClientRect().top-mk.getBoundingClientRect().bottom),fs:parseFloat(ns.fontSize),ff:ns.fontFamily,brandFf:brand?getComputedStyle(brand).fontFamily:null,fw:ns.fontWeight,it:ns.fontStyle,ls:ns.letterSpacing,
    whole:nm.scrollWidth<=nm.clientWidth+1,glW:gl?Math.round(gl.getBoundingClientRect().width):0,gold:!!glc&&glc[0]>220&&glc[1]>170&&glc[2]<120,lf:!!lf&&lf.getBoundingClientRect().width>0,
-   order:R(nm).bottom<=gl.getBoundingClientRect().top+1&&gl.getBoundingClientRect().bottom<=R(loc).top+1&&R(loc).bottom<=tc.getBoundingClientRect().top+1,
+   order:!!gl&&R(nm).bottom<=gl.getBoundingClientRect().top+1&&gl.getBoundingClientRect().bottom<=R(loc).top+1&&R(loc).bottom<=tc.getBoundingClientRect().top+1,
    bind:txt.some(t=>ims.some(i=>ov(t,i))||ov(t,chip)||ov(t,mk.getBoundingClientRect())||ov(t,tc.getBoundingClientRect())),inSl:txt.every(t=>t.right<=sl.right&&t.bottom<=sl.bottom),
    crN:cr(rgb(ns.color)),crL:cr(rgb(getComputedStyle(loc).color)),page:document.documentElement.scrollWidth,dots:document.querySelectorAll('#ozHeroD i').length,chipT:document.getElementById('ozHeroN').textContent}});
  let g=await G();
