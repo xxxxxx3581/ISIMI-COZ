@@ -2221,6 +2221,13 @@ var ADMV={
     aPaint('<button type="button" class="pfxBtn pri" data-a="aCat">Kategori ekle</button>'+(l.length?l.map(function(c){return '<div class="pfxCard"><div class="pfxRow"><b>'+E(c.name)+'</b><span>'+(c.is_active===false?'<span class="ozTag">Pasif</span>':'<span class="ozTag ok">Aktif</span>')+(c.perishable?' <span class="ozTag warn">Çabuk bozulur</span>':'')+'</span></div><div class="pfxMuted">'+E(c.slug||'')+(c.sort!=null?' · sıra '+E(c.sort):'')+'</div>'+(c.image_url?'<img src="'+E(c.image_url)+'" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:10px;margin-top:8px">':'')+
       '<div class="pfxRow" style="margin-top:8px"><button type="button" class="pfxBtn" data-a="aCat" data-id="'+E(c.id)+'">Düzenle</button><button type="button" class="pfxBtn" data-a="aCatToggle" data-id="'+E(c.id)+'">'+(c.is_active===false?'Aktif yap':'Pasif yap')+'</button></div></div>'}).join(''):'<p class="pfxMuted">Kategori yok.</p>'));
   },
+  /* AB2: Keşfet slaytları (oz_admin_slides / oz_admin_slide_save / oz_admin_slide_delete; yalnız yönetici). Satıcı seçimi mevcut
+     oz_admin_list(sellers, approved) okumasıyla. */
+  oz_slides:async function(){
+    aPaint(aLoading());
+    var r=await Promise.all([rpc('oz_admin_slides',{}),rpc('oz_admin_list',{p_kind:'sellers',p_status:'approved',p_q:null,p_limit:200,p_offset:0}).catch(function(){return []})]);
+    ADM.slides=arr(r[0]).slice().sort(function(a,b){return num(a.sort_order)-num(b.sort_order)});ADM.slSellers=arr(r[1]);aSlPaint()
+  },
   oz_moderation:async function(){
     aPaint(aLoading());
     var r=await Promise.all([rpc('oz_admin_list',{p_kind:'reviews',p_status:null,p_q:null,p_limit:50,p_offset:0}),rpc('oz_admin_list',{p_kind:'questions',p_status:null,p_q:null,p_limit:50,p_offset:0})]);
@@ -2232,11 +2239,32 @@ var ADMV={
 };
 OZ.admin=async function(key,el){
   ADM.el=el;ADM.key=key;if(el)el.classList.add('ozAdm');
-  if(key!=='oz_sellers')ADM.detail=null;
+  if(key!=='oz_sellers')ADM.detail=null;if(key!=='oz_slides')ADM.slEdit=null;
   var fn=ADMV[key];if(!fn){aPaint('<p class="pfxMuted">Bölüm bulunamadı.</p>');return}
   try{await fn()}catch(e){aPaint(aErr(e))}
 };
 function aReload(){return OZ.admin(ADM.key,aEl())}
+/* AB2: slayt listesi + ekle/düzenle formu */
+function slDay(v){if(!v)return '';var d=new Date(v);if(isNaN(d))return '';return ('0'+d.getDate()).slice(-2)+'.'+('0'+(d.getMonth()+1)).slice(-2)+'.'+d.getFullYear()}
+function slIn(v){if(!v)return '';var d=new Date(v);if(isNaN(d))return '';return d.getFullYear()+'-'+('0'+(d.getMonth()+1)).slice(-2)+'-'+('0'+d.getDate()).slice(-2)}
+function slRange(x){if(!x.starts_at&&!x.ends_at)return 'süresiz';return (x.starts_at?slDay(x.starts_at):'…')+' → '+(x.ends_at?slDay(x.ends_at):'süresiz')}
+function aSlForm(){var e=ADM.slEdit;if(!e)return '<button type="button" class="pfxBtn pri" data-a="aSlNew">+ Slayt ekle</button>';
+  var ss=ADM.slSellers||[];var cur=e.producer_id?String(e.producer_id):'';
+  var opts=(cur&&!ss.some(function(x){return String(x.id)===cur})?[{id:cur,display_name:e.seller_name||cur}]:[]).concat(ss);
+  return '<div class="pfxCard ozSlF"><b>'+(e.id?'Slaytı düzenle':'Slayt ekle')+'</b>'+
+    '<label class="pfxLbl" for="ozSlSeller">Satıcı</label><select class="pfxSel" id="ozSlSeller"'+(e.id?' disabled':'')+'>'+(opts.length?'<option value="">Satıcı seç</option>'+opts.map(function(x){return '<option value="'+E(x.id)+'"'+(String(x.id)===cur?' selected':'')+'>'+E(x.display_name||x.id)+'</option>'}).join(''):'<option value="">Onaylı satıcı yok</option>')+'</select>'+
+    '<label class="pfxChk"><input type="checkbox" id="ozSlSp"'+(e.sponsored?' checked':'')+'> Sponsorlu</label>'+
+    '<label class="pfxLbl" for="ozSlOrd">Sıra</label><input class="pfxIn" id="ozSlOrd" type="number" inputmode="numeric" min="0" value="'+E(String(e.sort_order==null?0:e.sort_order))+'">'+
+    '<label class="pfxChk"><input type="checkbox" id="ozSlAct"'+(e.active===false?'':' checked')+'> Aktif</label>'+
+    '<p class="pfxMuted" style="margin:8px 0 0">Tarihler isteğe bağlı; boşsa süresiz.</p><div class="pfxRow"><div style="flex:1;min-width:130px"><label class="pfxLbl" for="ozSlFrom">Başlangıç</label><input class="pfxIn" id="ozSlFrom" type="date" value="'+E(slIn(e.starts_at))+'"></div>'+
+    '<div style="flex:1;min-width:130px"><label class="pfxLbl" for="ozSlTo">Bitiş</label><input class="pfxIn" id="ozSlTo" type="date" value="'+E(slIn(e.ends_at))+'"></div></div>'+
+    '<p class="ozWarn" id="ozSlErr" hidden></p><div class="pfxRow" style="margin-top:8px"><button type="button" class="pfxBtn pri" data-a="aSlSave">Kaydet</button><button type="button" class="pfxBtn" data-a="aSlCancel">Vazgeç</button></div></div>'}
+function aSlPaint(){var l=ADM.slides||[];
+  aPaint('<p class="pfxMuted ozSlNote">Slaytlar Keşfet ana sayfasında marka slaytlarından sonra görünür; en fazla 5.</p>'+aSlForm()+
+    (l.length?l.map(function(x){return '<div class="pfxCard ozSlC" data-id="'+E(x.id)+'"><div class="pfxRow"><b>'+E(x.seller_name||'—')+'</b>'+(x.sponsored?'<span class="ozTag ok">Sponsorlu</span>':'')+
+      '<span class="ozTag'+(x.active?'':' bad')+'">'+(x.active?'Aktif':'Kapalı')+'</span></div><div class="pfxMuted">Sıra: '+E(String(num(x.sort_order)))+' · '+E(slRange(x))+'</div>'+
+      '<div class="pfxRow" style="margin-top:8px"><button type="button" class="pfxBtn" data-a="aSlEdit" data-id="'+E(x.id)+'">Düzenle</button><button type="button" class="pfxBtn" data-a="aSlDel" data-id="'+E(x.id)+'">Sil</button></div></div>'}).join(''):'<p class="pfxMuted ozSlE">Henüz slayt yok.</p>'))}
+function slErr(m){var e=D.getElementById('ozSlErr');if(e){e.textContent=m;e.hidden=false}else toast(m)}
 async function sellerDetail(id){
   aPaint(aLoading());
   var d=await rpc('oz_admin_seller_detail',{p_id:id})||{};var s=d.seller||{};
@@ -2260,6 +2288,18 @@ function slugify(s){return String(s||'').toLocaleLowerCase('tr').replace(/ğ/g,'
 async function reasonBox(title,label,required){var v=await formBox(title,'<label for="ozAR">'+E(label)+'</label><textarea class="ozTa" id="ozAR" data-f="r" maxlength="500"></textarea>','Onayla',function(v){return required&&v.r.length<3?'Gerekçe yaz.':''});return v?v.r:null}
 ACT_EXTRA({
   aReload:function(){return aReload()},
+  aSlNew:function(){ADM.slEdit={sponsored:true,active:true,sort_order:(ADM.slides||[]).length+1};aSlPaint()},
+  aSlEdit:function(b){var x=(ADM.slides||[]).filter(function(y){return String(y.id)===b.dataset.id})[0];if(!x)return;ADM.slEdit=Object.assign({},x);aSlPaint()},
+  aSlCancel:function(){ADM.slEdit=null;aSlPaint()},
+  aSlSave:async function(b){var e=ADM.slEdit;if(!e)return;var pid=e.id?e.producer_id:val('ozSlSeller');if(!pid){slErr('Satıcı seç.');return}
+    var from=val('ozSlFrom'),to=val('ozSlTo');if(from&&to&&to<from){slErr('Bitiş tarihi başlangıçtan önce olamaz.');return}
+    var p={producer_id:pid,sponsored:!!(D.getElementById('ozSlSp')||{}).checked,sort_order:Math.max(0,Math.round(num(val('ozSlOrd')))),active:!!(D.getElementById('ozSlAct')||{}).checked,
+      starts_at:from?new Date(from+'T00:00:00').toISOString():null,ends_at:to?new Date(to+'T23:59:59').toISOString():null};
+    b.disabled=true;try{await rpc('oz_admin_slide_save',{p:p})}catch(x){b.disabled=false;slErr('Slayt kaydedilemedi: '+cleanMsg(x&&x.message||x));return}
+    ADM.slEdit=null;toast('Slayt kaydedildi');return aReload()},
+  aSlDel:async function(b){var id=b.dataset.id;if(!await confirmBox('Slaytı kaldır','Bu slayt kaldırılsın mı?','Kaldır',true))return;
+    try{await rpc('oz_admin_slide_delete',{p_id:id})}catch(x){toast('Slayt kaldırılamadı: '+cleanMsg(x&&x.message||x));return}
+    toast('Slayt kaldırıldı');return aReload()},
   aFilter:function(b){ADM.f[b.dataset.kind]={st:val('ozAdmSt'),q:val('ozAdmQ')};return aReload()},
   aTick:async function(b){await busy(b,async function(){var r=await rpc('oz_admin_ops_tick',{});var el=D.getElementById('ozAdmTick');if(el)el.innerHTML='<table class="pfxTbl" style="margin-top:8px">'+(r&&typeof r==='object'?Object.keys(r).map(function(k){return '<tr><th>'+E(kpiLabel(k))+'</th><td>'+E(kpiVal(k,r[k]))+'</td></tr>'}).join(''):'<tr><td>'+E(String(r))+'</td></tr>')+'</table>';toast('Bakım tamamlandı')})},
   aSetB:async function(b){

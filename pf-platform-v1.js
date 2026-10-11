@@ -593,7 +593,7 @@ var ADMIN={
   }
 };
 /* K25 · Özüne Dön yönetim sekmeleri: modül (oz-market-v1.js) yalnızca sekme açılınca tembel yüklenir; diğer sekmelere dokunmaz. */
-(function(){var OZT=[['oz_overview','Özet'],['oz_settings','Ayarlar'],['oz_sellers','Satıcılar'],['oz_products','Ürünler'],['oz_orders','Siparişler'],['oz_returns','İadeler'],['oz_payouts','Ödemeler'],['oz_categories','Kategoriler'],['oz_moderation','Moderasyon']];
+(function(){var OZT=[['oz_overview','Özet'],['oz_settings','Ayarlar'],['oz_sellers','Satıcılar'],['oz_products','Ürünler'],['oz_orders','Siparişler'],['oz_returns','İadeler'],['oz_payouts','Ödemeler'],['oz_categories','Kategoriler'],['oz_moderation','Moderasyon'],['oz_slides','Slaytlar']];
 OZT.forEach(function(t){TABS.push([t[0],'Özüne Dön · '+t[1],'ops']);ADM_ICON[t[0]]='🌿';ADMIN[t[0]]=async function(el){if(typeof window.ozLoad!=='function')throw new Error('Özüne Dön modülü yüklenemedi.');var oz=await window.ozLoad();await oz.admin(t[0],el)}});
 ADM_GROUPS.push(['Özüne Dön',OZT.map(function(t){return t[0]})]);})();
 PF._admGift=function(btn){var p=document.getElementById('pfxGp').value.trim(),a=+document.getElementById('pfxGa').value;if(!p||!a)return toast('Usta kimliği ve kredi tutarı gir.');var n=prompt('Not (isteğe bağlı)')||null;act(btn,async function(){await rpc('hz_admin_credit',{p_provider_id:p,p_amount_kurus:a,p_kind:'gift',p_note:n});toast('Kredi eklendi.');PF.openAdmin('revenue')})};
