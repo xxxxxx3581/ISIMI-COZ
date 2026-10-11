@@ -404,12 +404,15 @@ var RECENT_KEY='isimi_oz_recent';
 function recentAll(){try{var o=JSON.parse(localStorage.getItem(RECENT_KEY)||'{}');return o&&typeof o==='object'?o:{}}catch(e){return {}}}
 function recentAdd(p){try{var sid=p&&p.seller&&p.seller.id;if(!sid||!p.id)return;var all=recentAll();var vs=arr(p.variants).filter(function(v){return v.is_active!==false});
   var mn=vs.reduce(function(a,v){return a==null||num(v.price_kurus)<a?num(v.price_kurus):a},null);
-  var it={id:String(p.id),name:String(p.name||''),image:httpsUrl(arr(p.images)[0])||'',price_kurus:mn||0,nv:vs.length};
+  var it={id:String(p.id),name:String(p.name||''),image:httpsUrl(arr(p.images)[0])||'',price_kurus:mn||0,nv:vs.length,
+    /* X3: birim fiyat satırı için seçenek etiket/fiyatları ve net miktar (yalnız bu tarayıcıda) */
+    vs:vs.slice(0,12).map(function(v){return {label:String(v.label||''),price_kurus:num(v.price_kurus)}}),net:p.net_content||null};
   var l=arr(all[sid]).filter(function(x){return x&&String(x.id)!==it.id});l.unshift(it);all[sid]=l.slice(0,10);localStorage.setItem(RECENT_KEY,JSON.stringify(all))}catch(e){}}
-/* U3: yatay kahve kart (solda kare foto, sağda ad + fiyat / N seçenek); yalnız bu raf kullanır */
+/* U3: yatay kahve kart (solda kare foto, sağda ad + fiyat / N seçenek); yalnız bu raf kullanır.
+   X3: seçenekli üründe X2'nin unitFrom satırı ("≈ X ₺/kg'dan") + küçük "N seçenek" aynı satırda; tek fiyatlıda altın fiyat. */
 function recentStrip(sid){var l=arr(recentAll()[sid]).filter(function(x){return x&&x.id});if(!l.length)return '';
   return '<section class="ozPPx" aria-label="Son baktığın ürünler"><div class="ozSecH"><h2>Son baktığın ürünler</h2></div><div class="ozRcs" role="list">'+l.map(function(x){
-    return '<button type="button" class="ozRcC" role="listitem" data-a="nav" data-k="product" data-id="'+E(x.id)+'">'+pic(x.image,x.name)+'<span class="tx"><b>'+E(x.name)+'</b>'+(num(x.nv)>1?'<small class="nv">'+num(x.nv)+' seçenek</small>':'<small>'+TL(x.price_kurus)+'</small>')+'</span></button>'}).join('')+'</div></section>'}
+    return '<button type="button" class="ozRcC" role="listitem" data-a="nav" data-k="product" data-id="'+E(x.id)+'">'+pic(x.image,x.name)+'<span class="tx"><b>'+E(x.name)+'</b>'+(num(x.nv)>1?(function(u){return '<span class="pl2">'+(u?'<small class="uf">'+E(u)+'</small>':'')+'<small class="nv">'+num(x.nv)+' seçenek</small></span>'})(unitFrom(x.vs,x.net)):'<small>'+TL(x.price_kurus)+'</small>')+'</span></button>'}).join('')+'</div></section>'}
 /* Q1-3: "Müşteri yorumları" — oz_producer_reviews (mevcut okuma), en yeni önce, en fazla 10.
    R3: ürün adı yorumun product_id'siyle o ürünün panelini açar (ad eşleştirme yok); product_id yoksa (eski veri) ad dokunulamaz. */
 function revStrip(l){l=arr(l).slice().sort(function(a,b){return String(b.created_at||'').localeCompare(String(a.created_at||''))}).slice(0,10);if(!l.length)return '';
