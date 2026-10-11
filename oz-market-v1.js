@@ -461,9 +461,10 @@ function unitWord(l){var m=/^\s*\d+(?:[.,]\d+)?\s*(g|gr|gram|kg|kilo|ml|l|lt|lit
    Birimi olmayan çıplak sayı etiketi ("500") diğer etiketlerin (yoksa net miktarın) birimini alır; birim dışı metin ya da
    ağırlık+hacim karışıksa "N seçenek". */
 function optDim(l){var t=String(l==null?'':l).trim();if(/^\d+(?:[.,]\d+)?$/.test(t))return '';var u=unitWord(t);return !u?'x':(u==='ml'||u==='lt')?'v':'w'}
-function optText(vs,net){var n=vs.length,ds=vs.map(function(v){return optDim(v.label)});var k=ds.filter(Boolean);
+/* X1: short=true → liste kartı etiketi için kısa biçim ("N gramaj" / "N hacim" / "N seçenek"); ekran okuyucu tam ifadeyi alır */
+function optText(vs,net,short){var n=vs.length,ds=vs.map(function(v){return optDim(v.label)});var k=ds.filter(Boolean);
   if(k.indexOf('x')>=0)return n+' seçenek';if(!k.length){var nd=net!=null&&String(net).trim()?optDim(net):'x';k=nd?[nd]:['x']}
-  var d=k[0];if(!k.every(function(x){return x===d}))return n+' seçenek';return n+(d==='w'?' gramaj seçeneği':d==='v'?' hacim seçeneği':' seçenek')}
+  var d=k[0];if(!k.every(function(x){return x===d}))return n+' seçenek';return n+(d==='w'?(short?' gramaj':' gramaj seçeneği'):d==='v'?(short?' hacim':' hacim seçeneği'):' seçenek')}
 function cardPrice(p,sFirst){
   var vs=Array.isArray(p.vars)?p.vars:null;var price=num(p.price_kurus),cmp=num(p.compare_at_kurus),sub='';
   if(vs&&vs.length>1)return '<small class="u ov" style="display:block;font-size:13px;font-weight:700;color:#6B5A44;white-space:nowrap">'+E(optText(vs,p.net_content))+'</small>'
@@ -493,7 +494,7 @@ function gcCard(p){ST.rows=ST.rows||{};ST.rows[String(p.id)]=p;
     (rc?'<button type="button" class="rt" data-a="nav" data-k="product" data-rev="1" data-id="'+id+'" aria-label="'+rc+' değerlendirmeyi gör">★ '+num(p.rating_avg).toLocaleString('tr-TR',{minimumFractionDigits:1,maximumFractionDigits:1})+' <small>('+rc+')</small></button>':'')+'</span></div>'+
     (p.description?'<span class="ds">'+E(p.description)+'</span>':'')+
     /* U2: çok seçenekte fiyat yerine "+"ın hemen solunda altın etiket; dokununca "+" ile aynı küçük seçenek penceresi (ppPlus) */
-    '<div class="ft">'+(Array.isArray(p.vars)&&p.vars.length>1?'<button type="button" class="opt" data-a="ppPlus" data-id="'+id+'"'+(p.in_stock===false?' disabled':'')+'>'+E(optText(p.vars,p.net_content))+'</button>':'<span class="pr">'+cardPrice(p,1)+'</span>')+
+    '<div class="ft">'+(Array.isArray(p.vars)&&p.vars.length>1?'<button type="button" class="opt" data-a="ppPlus" data-id="'+id+'" aria-label="'+E(optText(p.vars,p.net_content))+'"'+(p.in_stock===false?' disabled':'')+'><span class="pl">'+E(optText(p.vars,p.net_content,1))+'</span></button>':'<span class="pr">'+cardPrice(p,1)+'</span>')+
     '<span class="ac">'+ppCtrl(p)+'</span></div></div>'}
 /* kart açıklaması arama sonucunda yok: görünür ürünler için tek okuma (RLS: yalnız yayındaki ürünler). Hata olursa sessizce gizli. */
 async function gcEnrich(l){var ids=l.filter(function(x){return x&&x.id&&x.description===undefined}).map(function(x){return x.id});if(!ids.length)return;

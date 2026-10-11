@@ -39,8 +39,8 @@ const BIG='html:root .ozGc .nm{font-size:22px!important}html:root .ozGc .ds{font
   if(!big){
    ok(M.p1&&M.p1.on&&M.p0&&!M.p0.on,'favori dolu/boş durumu: '+JSON.stringify([M.p1&&M.p1.on,M.p0&&M.p0.on]));
    ok(M.p1&&M.p1.rt==='★ 5,0 (6)'&&M.p2&&M.p2.rt===null,'yıldız: yorumluda var, yorumsuzda yok: '+JSON.stringify([M.p1&&M.p1.rt,M.p2&&M.p2.rt]));
-   ok(M.p1&&M.p1.pr==='2 gramaj seçeneği','bal (800gr + birimsiz 500) → "2 gramaj seçeneği": '+(M.p1&&M.p1.pr));
-   ok(M.p0&&M.p0.pr==='2 gramaj seçeneği'&&M.p2&&M.p2.pr==='2 hacim seçeneği'&&M.p3&&M.p3.pr==='2 seçenek','seçenek metinleri: '+JSON.stringify([M.p0&&M.p0.pr,M.p2&&M.p2.pr,M.p3&&M.p3.pr]));
+   ok(M.p1&&M.p1.pr==='2 gramaj','bal (800gr + birimsiz 500) → "2 gramaj" (X1 kısa etiket): '+(M.p1&&M.p1.pr));
+   ok(M.p0&&M.p0.pr==='2 gramaj'&&M.p2&&M.p2.pr==='2 hacim'&&M.p3&&M.p3.pr==='2 seçenek','seçenek metinleri: '+JSON.stringify([M.p0&&M.p0.pr,M.p2&&M.p2.pr,M.p3&&M.p3.pr]));
    ok(L.every(c=>c.sel==='none'&&c.nmSel==='none'&&c.plusSel==='none'),'kart ve düğmelerde metin seçilmemeli: '+JSON.stringify(L.map(c=>[c.sel,c.nmSel,c.plusSel])));
    ok(await p.evaluate(()=>document.documentElement.scrollWidth<=390),'390px yatay taşma olmamalı');
   }
