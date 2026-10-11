@@ -2,17 +2,17 @@
 // Doğrulanan: slayt boyu diğer slaytlarla aynı (±1px); ad italik serif ve ≥1,4 × 15px; logo ≥1,3 × 30px, ince çerçeve; 2 özgün dal SVG'si
 // (%25-40 opaklık); ürün fotoğrafları ≥1,25 × 50px, ±4-6° dönük, slayt içinde, N/4 çipiyle çakışmaz; ad/il-ilçe AA (gradyanın en açık
 // tonuna karşı); "Sponsorlu", "Onaylı satıcı", "Ürünlerini keşfet ›", 4 nokta, "4/4"; dokununca satıcı sayfası; büyük yazıda binme yok;
-// koddaki "TEST slaytı" yorumu duruyor.
+// AB1: koddaki not "sponsorlu slayt veritabanından gelir" (TEST yorumu kalktı).
 const fs=require('fs'),path=require('path');
 const {chromium,open,enter}=require('./harness.js');
 const SID='41876174-05d7-421c-bac1-f2e8272d19e2';
 (async()=>{
  const br=await chromium.launch({executablePath:process.env.CHROMIUM||'/opt/pw-browsers/chromium'});
  const fails=[];const ok=(c,m)=>{if(!c)fails.push(m)};
- ok(/\/\/ TEST slaytı: canlıdan önce kaldır/.test(fs.readFileSync(path.join(__dirname,'..','..','oz-market-v1.js'),'utf8')),'"TEST slaytı" yorumu kalmalı');
+ {const src=fs.readFileSync(path.join(__dirname,'..','..','oz-market-v1.js'),'utf8');ok(/sponsorlu slayt veritabanından gelir/.test(src)&&!/TEST slaytı: canlıdan önce kaldır/.test(src),'AB1: "TEST slaytı" yorumu kalkmış, "sponsorlu slayt veritabanından gelir" notu olmalı')}
  const {p,st}=await open(br,{w:390,h:844,visible:true});
  await p.clock.install();
- await p.evaluate(sid=>{const R=window.__OZ_FX.R;R.oz_producer_detail={id:sid,display_name:'Deneme Çiftliği',city:'İzmir',district:'Karabağlar',logo_url:'https://img.test/zeytin-zeytinyagi.jpg',product_count:4,categories:[]};
+ await p.evaluate(sid=>{const R=window.__OZ_FX.R;R.oz_home_slides_active=[{id:'h1',producer_id:sid,sponsored:true,sort_order:1}];/* AB1: satıcı slaytı veritabanından (sahte) */R.oz_producer_detail={id:sid,display_name:'Deneme Çiftliği',city:'İzmir',district:'Karabağlar',logo_url:'https://img.test/zeytin-zeytinyagi.jpg',product_count:4,categories:[]};
   R.oz_search_products=R.oz_search_products.map((x,i)=>Object.assign({},x,{image:'https://img.test/'+['recel','bal-recel','konserve','kuru-yemis'][i%4]+'.jpg'}))},SID);
  await enter(p);await p.clock.runFor(1500);
  const seen=new Set();for(let i=0;i<14;i++){const c=await p.evaluate(()=>document.getElementById('ozHeroN').textContent);seen.add(c);if(c==='4/4'){await p.clock.runFor(700);break}await p.clock.runFor(1000)}

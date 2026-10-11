@@ -23,7 +23,7 @@ const {chromium,open,enter}=require('./harness.js');
   ok(g.pr&&g.pr.b<=g.nav.t,'"Satıcılar" başlığı alt menünün üstünde tam görünmeli: '+JSON.stringify({pr:g.pr,nav:g.nav}));
   ok(g.card&&g.nav.t-g.card.t>=60,'ilk üretici kartının en az 60px\'i görünmeli: '+JSON.stringify({card:g.card,nav:g.nav}));
   ok(g.inp&&g.btn&&Math.abs(g.inp.t-g.btn.t)<=2&&g.inp.h<=44&&g.btn.h<=44,'arama + Ara tek ince satır: '+JSON.stringify({inp:g.inp,btn:g.btn}));
-  ok(g.hero&&g.hero.h<=150&&g.slides===4&&g.chip==='1/4','hero ≈1/3 kısa, slider aynı (W2: 4 slayt): '+JSON.stringify({hero:g.hero,slides:g.slides,chip:g.chip}));
+  ok(g.hero&&g.hero.h<=150&&g.slides===3&&g.chip==='1/3','hero ≈1/3 kısa, slider aynı (AB1: veritabanı slaytı yokken 3 marka slaytı): '+JSON.stringify({hero:g.hero,slides:g.slides,chip:g.chip}));
   ok(g.cat&&g.cat.h<=64,'kategori ikonları küçük: '+JSON.stringify(g.cat));
   ok(g.kt&&g.kl&&g.kl.t<g.kt.b&&g.kl.b>g.kt.t,'"Tümünü gör" başlıkla aynı satırda: '+JSON.stringify({kt:g.kt,kl:g.kl}));
   ok(!st.errors.length,'sayfa hatası olmamalı: '+st.errors.join(' | '));

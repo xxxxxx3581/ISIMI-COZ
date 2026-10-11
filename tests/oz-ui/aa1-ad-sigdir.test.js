@@ -22,7 +22,7 @@ const BIG='html:root .ozBn.sp .tx small{font-size:17px!important}html:root .ozBn
  let tapped=false;
  for(const name of NAMES){
   const {p,st}=await open(br,{w:390,h:844,visible:true});
-  await p.evaluate(([sid,name])=>{const R=window.__OZ_FX.R;R.oz_producer_detail={id:sid,display_name:name,city:'İzmir',district:'Karabağlar',logo_url:'https://img.test/zeytin-zeytinyagi.jpg',product_count:4,categories:[]};
+  await p.evaluate(([sid,name])=>{const R=window.__OZ_FX.R;R.oz_home_slides_active=[{id:'h1',producer_id:sid,sponsored:true,sort_order:1}];/* AB1: satıcı slaytı veritabanından (sahte) */R.oz_producer_detail={id:sid,display_name:name,city:'İzmir',district:'Karabağlar',logo_url:'https://img.test/zeytin-zeytinyagi.jpg',product_count:4,categories:[]};
    R.oz_search_products=R.oz_search_products.map((x,i)=>Object.assign({},x,{image:'https://img.test/'+['recel','bal-recel','konserve','kuru-yemis'][i%4]+'.jpg'}))},[SID,name]);
   await enter(p);await p.waitForTimeout(1500);
   for(const [fn,css] of [['Georgia yığını',''],['DejaVu Serif',WIDE]]){

@@ -314,16 +314,11 @@ var OZ_WHEAT='<svg class="lg" viewBox="0 0 32 40" aria-hidden="true" focusable="
 var OZ_OLIVE='<svg class="br" viewBox="0 0 120 60" aria-hidden="true" focusable="false"><path d="M4 52C30 40 62 30 116 10" stroke="#9CC58A" stroke-width="2" fill="none" stroke-linecap="round"/><g fill="#9CC58A" opacity=".9"><ellipse cx="26" cy="38" rx="9" ry="3.4" transform="rotate(-38 26 38)"/><ellipse cx="34" cy="46" rx="9" ry="3.4" transform="rotate(14 34 46)"/><ellipse cx="52" cy="29" rx="9" ry="3.4" transform="rotate(-40 52 29)"/><ellipse cx="60" cy="37" rx="9" ry="3.4" transform="rotate(10 60 37)"/><ellipse cx="80" cy="20" rx="9" ry="3.4" transform="rotate(-42 80 20)"/><ellipse cx="88" cy="28" rx="9" ry="3.4" transform="rotate(8 88 28)"/></g><g fill="#3E5A2A"><ellipse cx="44" cy="40" rx="3.6" ry="4.6"/><ellipse cx="72" cy="30" rx="3.6" ry="4.6"/></g></svg>';
 /* K37: banner arka planında soluk, özgün zeytin dalı */
 var OZ_BRANCH='<svg class="bg" viewBox="0 0 400 220" aria-hidden="true" focusable="false"><path d="M-10 210C70 170 150 150 230 96S350 20 410 6" stroke="#CFE7C2" stroke-width="3" fill="none" stroke-linecap="round"/><g fill="#CFE7C2"><ellipse cx="40" cy="186" rx="22" ry="7" transform="rotate(-40 40 186)"/><ellipse cx="62" cy="196" rx="22" ry="7" transform="rotate(18 62 196)"/><ellipse cx="104" cy="160" rx="22" ry="7" transform="rotate(-48 104 160)"/><ellipse cx="128" cy="172" rx="22" ry="7" transform="rotate(12 128 172)"/><ellipse cx="176" cy="126" rx="22" ry="7" transform="rotate(-52 176 126)"/><ellipse cx="200" cy="138" rx="22" ry="7" transform="rotate(6 200 138)"/><ellipse cx="250" cy="80" rx="22" ry="7" transform="rotate(-50 250 80)"/><ellipse cx="276" cy="92" rx="22" ry="7" transform="rotate(4 276 92)"/><ellipse cx="326" cy="40" rx="20" ry="6.5" transform="rotate(-46 326 40)"/><ellipse cx="350" cy="50" rx="20" ry="6.5" transform="rotate(0 350 50)"/></g><g fill="#E6F2DD"><ellipse cx="88" cy="180" rx="8" ry="10"/><ellipse cx="158" cy="146" rx="8" ry="10"/><ellipse cx="232" cy="104" rx="8" ry="10"/></g></svg>';
-/* F1: slaytlar. producerId (isteğe bağlı) verilirse kısa dokunuş o üreticinin sayfasını açar; yoksa dokunuş akışı durdurur/sürdürür.
-   İleride oz_home_slides tablosundan gelecek (bkz. oz-slider-plan.sql); şimdilik kodda sabit. */
+/* F1: 3 marka slaytı (kodda sabit, her zaman çalışır). producerId verilirse kısa dokunuş o satıcının sayfasını açar; yoksa akışı durdurur/sürdürür.
+   AB1: sponsorlu / satıcı slaytları veritabanından gelir (oz_home_slides_active) ve marka slaytlarından sonra eklenir (heroSpLoad). */
 var HERO_SL=[{t:'Doğadan sofranıza',s:'Üreticiden doğrudan kapına.',img:['bal-recel','kuruyemis-meyve','recel'],producerId:null},
   {t:'Her kavanozda bir hikâye',s:'Anadolu\'nun köylerinden el emeği ürünler.',img:['recel','tursu-konserve','el-emegi'],producerId:null},
   {t:'Güvenilir satıcılar',s:'Başvurusu incelenen, onaylı satıcılardan.',img:['kuru-yemis','baharat-bitki-cay','bitki-cayi'],producerId:null}];
-// TEST slaytı: canlıdan önce kaldır veya gerçek reklam akışına bağla
-/* W2: "Sponsorlu" satıcı slaytı (Deneme Çiftliği, kimlik salt okuma sorgusuyla bulundu, kodda sabit). Dokunuş producerId ile satıcı
-   sayfası. Logo ve 2-3 ürün fotoğrafı mevcut okumalarla (oz_producer_detail, oz_search_products) sonradan doldurulur; okunamazsa yalnız metin. */
-var OZ_TEST_SELLER='41876174-05d7-421c-bac1-f2e8272d19e2';
-HERO_SL.push({sp:1,t:'Deneme Çiftliği',s:'İzmir · Karabağlar',img:[],producerId:OZ_TEST_SELLER});
 /* Y1: Sponsorlu slayta özgün zeytin dalları (kodla çizilmiş; satıcı kartındaki dal diliyle aynı): sol üst ve sağ alt, düşük opaklık */
 var OZ_SPB='<svg class="yb yb1" viewBox="0 0 170 70" aria-hidden="true" focusable="false"><path d="M-4 8C40 14 80 26 118 44S160 64 172 66" stroke="#B9D98F" stroke-width="2.2" fill="none" stroke-linecap="round"/>'+
   '<g fill="#CFE7A8"><ellipse cx="24" cy="6" rx="11" ry="3.6" transform="rotate(-18 24 6)"/><ellipse cx="30" cy="20" rx="11" ry="3.6" transform="rotate(32 30 20)"/><ellipse cx="58" cy="14" rx="11" ry="3.6" transform="rotate(-10 58 14)"/>'+
@@ -335,32 +330,46 @@ var OZ_SPB='<svg class="yb yb1" viewBox="0 0 170 70" aria-hidden="true" focusabl
   '<g fill="#7FA35A"><ellipse cx="124" cy="44" rx="3.6" ry="4.4"/><ellipse cx="88" cy="30" rx="3.4" ry="4.2"/></g></svg>';
 /* Z2: adın altında ince altın çizgi + kendi çizdiğimiz küçük zeytin yaprağı */
 var OZ_LEAF='<svg class="lf" viewBox="0 0 22 12" aria-hidden="true" focusable="false"><path d="M1 6.5C5 1.5 13 .5 21 3.5C16 9 8 10.5 1 6.5Z" fill="#C9DE9A"/><path d="M2.5 6.4C8 5 13.5 4.4 19.5 3.8" stroke="#6F8F45" stroke-width=".9" fill="none" stroke-linecap="round"/></svg>';
-function heroSpInner(h){var i=ST.heroSp||{};var nm=i.name||h.t,loc=i.loc||h.s;
-  return OZ_SPB+'<span class="pz" aria-hidden="true"><i></i><i></i></span><div class="mk sp"><span class="slg">'+(i.logo?'<img src="'+E(i.logo)+'" alt="" decoding="async" onerror="this.remove()">':'')+'<i aria-hidden="true">'+E(initials(nm))+'</i></span><span class="spt">Sponsorlu</span></div>'+
+/* AB1: satıcı slaytı içeriği (i: önbellekteki satıcı bilgisi; sponsored=true ise "Sponsorlu" etiketi) */
+function heroSpInner(i,sponsored){var nm=i.name,loc=i.loc;
+  return OZ_SPB+'<span class="pz" aria-hidden="true"><i></i><i></i></span><div class="mk sp"><span class="slg">'+(i.logo?'<img src="'+E(i.logo)+'" alt="" decoding="async" onerror="this.remove()">':'')+'<i aria-hidden="true">'+E(initials(nm))+'</i></span>'+(sponsored?'<span class="spt">Sponsorlu</span>':'')+'</div>'+
     '<div class="tx"><strong>'+E(nm)+'</strong><span class="nmr" aria-hidden="true"><i class="gl"></i>'+OZ_LEAF+'</span><small>'+E(loc)+'</small></div><div class="tc"><span>✓ Onaylı satıcı</span><span class="cta">Ürünlerini keşfet ›</span></div>'+
     (arr(i.imgs).length?'<div class="ph">'+i.imgs.slice(0,3).map(function(u,k){return '<img class="p'+(k+1)+'" src="'+E(u)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">'}).join('')+'</div>':'')}
 /* AA1: satıcı adı asla kesilmez — gerçek ölçümle sığdırma: tek satırda 26→16px (1px adım); sığmazsa en çok 2 satır (kelime sınırı,
    uzun tek kelime karakterden kırılır), yine 26px'ten küçültülür; 2 satırda altın çizgi/yaprak gizlenir. "…"/line-clamp yok.
    İlk çizimde, yazı tipleri yüklenince, pencere boyu ve yazı boyutu (il·ilçe satırı boyu) değişince yeniden çalışır. */
-function heroSpFit(){var s=qs('#ozHeroT .ozHs.sp');if(!s)return;var tx=qs('.tx',s),nm=qs('.tx strong',s);if(!tx||!nm)return;
+function heroSpFit(){qa('#ozHeroT .ozHs.sp').forEach(heroSpFit1)}
+function heroSpFit1(s){var tx=qs('.tx',s),nm=qs('.tx strong',s);if(!tx||!nm)return;
   var fits=function(){return nm.scrollWidth<=nm.clientWidth+.5&&tx.scrollHeight<=tx.clientHeight+.5};var f;
   s.classList.remove('two');for(f=26;f>=16;f--){nm.style.fontSize=f+'px';if(fits())return}
   s.classList.add('two');for(f=26;f>=10;f--){nm.style.fontSize=f+'px';var lh=parseFloat(getComputedStyle(nm).lineHeight)||f;
     if(Math.round((nm.getBoundingClientRect().height-2)/lh)<=2&&fits())return}}
-function heroSpWatch(){var s=qs('#ozHeroT .ozHs.sp');if(!s)return;heroSpFit();
+function heroSpWatch(){var ss=qa('#ozHeroT .ozHs.sp');if(!ss.length)return;heroSpFit();
   try{if(D.fonts&&D.fonts.ready)D.fonts.ready.then(heroSpFit)}catch(e){}
   if(!ST.heroSpRz){ST.heroSpRz=1;window.addEventListener('resize',function(){heroSpFit()})}
   try{if(ST.heroSpRO)ST.heroSpRO.disconnect();if(window.ResizeObserver){var raf=0;ST.heroSpRO=new ResizeObserver(function(){if(raf)return;raf=requestAnimationFrame(function(){raf=0;heroSpFit()})});
-    ST.heroSpRO.observe(s);var lc=qs('.tx small',s);if(lc)ST.heroSpRO.observe(lc)}}catch(e){}}
-async function heroSpLoad(t){var h=HERO_SL.filter(function(x){return x.sp})[0];if(!h)return;heroSpWatch();
-  if(!ST.heroSp){var r=await Promise.all([rpc('oz_producer_detail',{p_id:h.producerId}).catch(function(){return null}),rpc('oz_search_products',{p:{seller_id:h.producerId,sort:'new',limit:6,offset:0}}).catch(function(){return null})]);
-    var d=r[0]||{};ST.heroSp={name:d.display_name||'',loc:[d.city,d.district].filter(Boolean).join(' · '),logo:httpsUrl(d.logo_url)||'',
-      imgs:arr(r[1]).map(function(p){return httpsUrl(p.image)||httpsUrl(arr(p.images)[0])}).filter(Boolean).slice(0,3)}}
-  if(!alive(t))return;var el=qs('#ozHeroT .ozHs.sp');if(el){el.innerHTML=heroSpInner(h);heroSpWatch()}}
+    ss.forEach(function(s){ST.heroSpRO.observe(s);var lc=qs('.tx small',s);if(lc)ST.heroSpRO.observe(lc)})}}catch(e){}}
+/* AB1: sponsorlu slayt veritabanından gelir: oz_home_slides_active() (sort_order sırası; kodda sabit satıcı/test slaytı yok). Her satıcı için oz_producer_detail +
+   oz_search_products paralel ve satıcı başına bir kez okunur (ST.heroSp[satıcı]). Önce marka slaytları çizilir; satıcı slaytları hazır
+   olunca sona eklenir (görünen slayt değişmez). Liste okunamazsa ya da boşsa yalnız marka slaytları; satıcı okuması hatalıysa o slayt yok. */
+async function heroSpInfo(pid){ST.heroSp=ST.heroSp||{};var k=String(pid);if(ST.heroSp[k])return ST.heroSp[k];
+  var r=await Promise.all([rpc('oz_producer_detail',{p_id:k}),rpc('oz_search_products',{p:{seller_id:k,sort:'new',limit:6,offset:0}})]);
+  var d=r[0];if(!d||!d.id)throw new Error('satıcı yok');
+  var i={name:d.display_name||'Satıcı',loc:[d.city,d.district].filter(Boolean).join(' · '),logo:httpsUrl(d.logo_url)||'',
+    imgs:arr(r[1]).map(function(p){return httpsUrl(p.image)||httpsUrl(arr(p.images)[0])}).filter(Boolean).slice(0,3)};
+  ST.heroSp[k]=i;return i}
+async function heroSpLoad(t){var tr=D.getElementById('ozHeroT');if(!tr)return;
+  var l=[];try{l=arr(await rpc('oz_home_slides_active',{}))}catch(e){l=[]}
+  l=l.filter(function(x){return x&&x.producer_id}).sort(function(a,b){return num(a.sort_order)-num(b.sort_order)}).slice(0,5);if(!l.length)return;
+  var ok=await Promise.all(l.map(function(x){return heroSpInfo(x.producer_id).then(function(i){return {x:x,i:i}}).catch(function(){return null})}));
+  if(!alive(t)||!tr.isConnected)return;
+  ok.filter(Boolean).forEach(function(o){var el=D.createElement('div');el.className='ozHs ozBn sp';el.setAttribute('role','group');el.setAttribute('aria-roledescription','slayt');
+    el.dataset.pid=String(o.x.producer_id);if(o.x.sponsored)el.dataset.sp='1';el.innerHTML=heroSpInner(o.i,!!o.x.sponsored);tr.appendChild(el)});
+  if(tr.__oz&&tr.__oz.refresh)tr.__oz.refresh();heroSpWatch()}
 var HERO_MS={wait:2500,anim:500};  /* bekleme ve geçiş süresi tek yerde */
 function heroHtml(){
   var oe="var p=this.parentNode;this.remove();if(p&&!p.querySelector('img'))p.remove()";
-  var sl=HERO_SL.map(function(h,n){if(h.sp)return '<div class="ozHs ozBn sp" role="group" aria-roledescription="slayt" aria-label="'+(n+1)+' / '+HERO_SL.length+' · Sponsorlu"'+(h.producerId?' data-pid="'+E(h.producerId)+'"':'')+'>'+heroSpInner(h)+'</div>';
+  var sl=HERO_SL.map(function(h,n){
     return '<div class="ozHs ozBn" role="group" aria-roledescription="slayt" aria-label="'+(n+1)+' / '+HERO_SL.length+'"'+(h.producerId?' data-pid="'+E(h.producerId)+'"':'')+'>'+OZ_OLIVE+
     OZ_BRANCH+'<span class="pz" aria-hidden="true"><i></i><i></i></span><div class="mk">'+OZ_WHEAT+'<b>Özüne <em>Dön</em></b></div><div class="tx"><em>Doğal olanı keşfet.</em><strong>'+E(h.t)+'</strong><small>'+E(h.s)+'</small></div>'+
     '<div class="tc"><span>✓ Onaylı satıcı</span><span>🚚 Kapına kargo</span><span>🔒 Güvenli ödeme</span></div>'+
@@ -372,11 +381,13 @@ function heroHtml(){
    Kısa dokunuş: slayt üreticiye bağlıysa üretici sayfası; değilse durdur/sürdür (köşede "duraklatıldı" simgesi). */
 function startHero(t){
   var tr=D.getElementById('ozHeroT'),dt=D.getElementById('ozHeroD');if(!tr||!dt)return;
-  var n=tr.children.length,held=false,paused=false,anim=false,tm=null,down=null;
+  var n=tr.children.length,held=false,paused=false,anim=false,tm=null,down=null;  /* AB1: n slayt eklendikçe güncellenir (refresh) */
   var rm=false;try{rm=!!(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)}catch(e){}
   function idx(){return Math.round(tr.scrollLeft/Math.max(1,tr.clientWidth))}
   var cn=D.getElementById('ozHeroN');  /* G1: sağ alttaki "2/5" sayaç çipi */
   function dots(){var i=idx();qa('i',dt).forEach(function(x,j){x.classList.toggle('on',i===j)});if(cn)cn.textContent=(Math.min(i,n-1)+1)+'/'+n}
+  function refresh(){n=tr.children.length;if(dt.children.length!==n)dt.innerHTML=Array.apply(null,Array(n)).map(function(){return '<i></i>'}).join('');
+    [].forEach.call(tr.children,function(x,k){x.setAttribute('aria-label',(k+1)+' / '+n+(x.dataset.sp?' · Sponsorlu':''))});dots()}
   tr.addEventListener('scroll',dots,{passive:true});
   function go2(i){var w=tr.clientWidth,from=tr.scrollLeft,to=i*w;if(rm||!w){tr.scrollLeft=to;dots();return}
     anim=true;tr.style.scrollSnapType='none';var t0=performance.now();
@@ -390,7 +401,7 @@ function startHero(t){
     if(tap){var sl=tr.children[idx()];var pid=sl&&sl.dataset.pid;if(pid){go('store',{id:pid});return}setPause(!paused)}
     arm()}
   tr.addEventListener('pointerup',up,{passive:true});tr.addEventListener('pointercancel',up,{passive:true});
-  tr.__oz={state:function(){return {i:idx(),held:held,paused:paused}}};
+  tr.__oz={state:function(){return {i:idx(),held:held,paused:paused}},refresh:refresh};
   arm();
 }
 /* K35: üretici sayfası parçaları */

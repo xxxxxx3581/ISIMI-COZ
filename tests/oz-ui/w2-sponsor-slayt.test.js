@@ -10,7 +10,7 @@ const SID='41876174-05d7-421c-bac1-f2e8272d19e2';
  const fails=[];const ok=(c,m)=>{if(!c)fails.push(m)};
  const {p,st}=await open(br,{w:390,h:844,visible:true});
  await p.clock.install();
- await p.evaluate(sid=>{const R=window.__OZ_FX.R;R.oz_producer_detail={id:sid,display_name:'Deneme Çiftliği',city:'İzmir',district:'Karabağlar',logo_url:'https://img.test/zeytin-zeytinyagi.jpg',product_count:4,categories:[]};
+ await p.evaluate(sid=>{const R=window.__OZ_FX.R;R.oz_home_slides_active=[{id:'h1',producer_id:sid,sponsored:true,sort_order:1}];/* AB1: satıcı slaytı veritabanından (sahte) */R.oz_producer_detail={id:sid,display_name:'Deneme Çiftliği',city:'İzmir',district:'Karabağlar',logo_url:'https://img.test/zeytin-zeytinyagi.jpg',product_count:4,categories:[]};
   R.oz_search_products=R.oz_search_products.map((x,i)=>Object.assign({},x,{image:'https://img.test/'+['recel','bal-recel','konserve','kuru-yemis','icecekler','tursu-konserve'][i%6]+'.jpg'}))},SID);
  await enter(p);await p.clock.runFor(1500);
  const S=()=>p.evaluate(()=>{const tr=document.getElementById('ozHeroT');const sl=tr?[...tr.children]:[];
