@@ -319,10 +319,25 @@ var OZ_BRANCH='<svg class="bg" viewBox="0 0 400 220" aria-hidden="true" focusabl
 var HERO_SL=[{t:'Doğadan sofranıza',s:'Üreticiden doğrudan kapına.',img:['bal-recel','kuruyemis-meyve','recel'],producerId:null},
   {t:'Her kavanozda bir hikâye',s:'Anadolu\'nun köylerinden el emeği ürünler.',img:['recel','tursu-konserve','el-emegi'],producerId:null},
   {t:'Güvenilir satıcılar',s:'Başvurusu incelenen, onaylı satıcılardan.',img:['kuru-yemis','baharat-bitki-cay','bitki-cayi'],producerId:null}];
+// TEST slaytı: canlıdan önce kaldır veya gerçek reklam akışına bağla
+/* W2: "Sponsorlu" satıcı slaytı (Deneme Çiftliği, kimlik salt okuma sorgusuyla bulundu, kodda sabit). Dokunuş producerId ile satıcı
+   sayfası. Logo ve 2-3 ürün fotoğrafı mevcut okumalarla (oz_producer_detail, oz_search_products) sonradan doldurulur; okunamazsa yalnız metin. */
+var OZ_TEST_SELLER='41876174-05d7-421c-bac1-f2e8272d19e2';
+HERO_SL.push({sp:1,t:'Deneme Çiftliği',s:'İzmir · Karabağlar',img:[],producerId:OZ_TEST_SELLER});
+function heroSpInner(h){var i=ST.heroSp||{};var nm=i.name||h.t,loc=i.loc||h.s;
+  return OZ_OLIVE+OZ_BRANCH+'<span class="pz" aria-hidden="true"><i></i><i></i></span><div class="mk sp"><span class="slg">'+(i.logo?'<img src="'+E(i.logo)+'" alt="" decoding="async" onerror="this.remove()">':'')+'<i aria-hidden="true">'+E(initials(nm))+'</i></span><span class="spt">Sponsorlu</span></div>'+
+    '<div class="tx"><strong>'+E(nm)+'</strong><small>'+E(loc)+'</small></div><div class="tc"><span>✓ Onaylı satıcı</span><span class="cta">Ürünlerini keşfet ›</span></div>'+
+    (arr(i.imgs).length?'<div class="ph">'+i.imgs.slice(0,3).map(function(u,k){return '<img class="p'+(k+1)+'" src="'+E(u)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">'}).join('')+'</div>':'')}
+async function heroSpLoad(t){var h=HERO_SL.filter(function(x){return x.sp})[0];if(!h)return;
+  if(!ST.heroSp){var r=await Promise.all([rpc('oz_producer_detail',{p_id:h.producerId}).catch(function(){return null}),rpc('oz_search_products',{p:{seller_id:h.producerId,sort:'new',limit:6,offset:0}}).catch(function(){return null})]);
+    var d=r[0]||{};ST.heroSp={name:d.display_name||'',loc:[d.city,d.district].filter(Boolean).join(' · '),logo:httpsUrl(d.logo_url)||'',
+      imgs:arr(r[1]).map(function(p){return httpsUrl(p.image)||httpsUrl(arr(p.images)[0])}).filter(Boolean).slice(0,3)}}
+  if(!alive(t))return;var el=qs('#ozHeroT .ozHs.sp');if(el)el.innerHTML=heroSpInner(h)}
 var HERO_MS={wait:2500,anim:500};  /* bekleme ve geçiş süresi tek yerde */
 function heroHtml(){
   var oe="var p=this.parentNode;this.remove();if(p&&!p.querySelector('img'))p.remove()";
-  var sl=HERO_SL.map(function(h,n){return '<div class="ozHs ozBn" role="group" aria-roledescription="slayt" aria-label="'+(n+1)+' / '+HERO_SL.length+'"'+(h.producerId?' data-pid="'+E(h.producerId)+'"':'')+'>'+OZ_OLIVE+
+  var sl=HERO_SL.map(function(h,n){if(h.sp)return '<div class="ozHs ozBn sp" role="group" aria-roledescription="slayt" aria-label="'+(n+1)+' / '+HERO_SL.length+' · Sponsorlu"'+(h.producerId?' data-pid="'+E(h.producerId)+'"':'')+'>'+heroSpInner(h)+'</div>';
+    return '<div class="ozHs ozBn" role="group" aria-roledescription="slayt" aria-label="'+(n+1)+' / '+HERO_SL.length+'"'+(h.producerId?' data-pid="'+E(h.producerId)+'"':'')+'>'+OZ_OLIVE+
     OZ_BRANCH+'<span class="pz" aria-hidden="true"><i></i><i></i></span><div class="mk">'+OZ_WHEAT+'<b>Özüne <em>Dön</em></b></div><div class="tx"><em>Doğal olanı keşfet.</em><strong>'+E(h.t)+'</strong><small>'+E(h.s)+'</small></div>'+
     '<div class="tc"><span>✓ Onaylı satıcı</span><span>🚚 Kapına kargo</span><span>🔒 Güvenli ödeme</span></div>'+
     '<div class="ph">'+h.img.map(function(sg,k){return '<img class="p'+(k+1)+'" src="assets/oz-cat/'+sg+'.jpg" alt="" loading="'+(n?'lazy':'eager')+'" decoding="async" onerror="'+oe+'">'}).join('')+'</div></div>'});
@@ -659,11 +674,11 @@ VIEWS_EXTRA({
     else if(!prErr&&any)h+='<div class="ozSecH"><h2>Satıcılar</h2></div><p class="ozMuted" style="margin:0">Henüz satıcı yok.</p>';
     if(!any&&!prs.length){
       h+=empty(ico('leaf',36),'Doğal ürünler yolda','Satıcılar ürünlerini ekledikçe burada görünecek.',S().seller_signup_enabled?'<button type="button" class="ozBtn pri" data-a="nav" data-k="seller">Üretici misin? Satıcı ol</button>':'');
-      paint(h);startHero(t);return;
+      paint(h);startHero(t);heroSpLoad(t);return;
     }
     /* G1: "Yeni ürünler" şeridi kaldırıldı. Yerine yalnız teslim edilmiş siparişi olan girişli kullanıcıya "Tekrar sipariş ver" (sonradan dolar). */
     h+='<div id="ozReo"></div>';
-    paint(h);startHero(t);startFade(t);
+    paint(h);startHero(t);heroSpLoad(t);startFade(t);
     reorderRail(arr(r[3]),t);
   },
 
