@@ -324,8 +324,17 @@ var HERO_SL=[{t:'Doğadan sofranıza',s:'Üreticiden doğrudan kapına.',img:['b
    sayfası. Logo ve 2-3 ürün fotoğrafı mevcut okumalarla (oz_producer_detail, oz_search_products) sonradan doldurulur; okunamazsa yalnız metin. */
 var OZ_TEST_SELLER='41876174-05d7-421c-bac1-f2e8272d19e2';
 HERO_SL.push({sp:1,t:'Deneme Çiftliği',s:'İzmir · Karabağlar',img:[],producerId:OZ_TEST_SELLER});
+/* Y1: Sponsorlu slayta özgün zeytin dalları (kodla çizilmiş; satıcı kartındaki dal diliyle aynı): sol üst ve sağ alt, düşük opaklık */
+var OZ_SPB='<svg class="yb yb1" viewBox="0 0 170 70" aria-hidden="true" focusable="false"><path d="M-4 8C40 14 80 26 118 44S160 64 172 66" stroke="#B9D98F" stroke-width="2.2" fill="none" stroke-linecap="round"/>'+
+  '<g fill="#CFE7A8"><ellipse cx="24" cy="6" rx="11" ry="3.6" transform="rotate(-18 24 6)"/><ellipse cx="30" cy="20" rx="11" ry="3.6" transform="rotate(32 30 20)"/><ellipse cx="58" cy="14" rx="11" ry="3.6" transform="rotate(-10 58 14)"/>'+
+  '<ellipse cx="62" cy="31" rx="11" ry="3.6" transform="rotate(38 62 31)"/><ellipse cx="94" cy="28" rx="10" ry="3.4" transform="rotate(-4 94 28)"/><ellipse cx="96" cy="46" rx="10" ry="3.4" transform="rotate(42 96 46)"/><ellipse cx="128" cy="44" rx="9" ry="3.2" transform="rotate(6 128 44)"/></g>'+
+  '<g fill="#7FA35A"><ellipse cx="44" cy="22" rx="3.6" ry="4.4"/><ellipse cx="80" cy="34" rx="3.4" ry="4.2"/></g></svg>'+
+ '<svg class="yb yb2" viewBox="0 0 170 70" aria-hidden="true" focusable="false"><path d="M174 62C130 58 92 46 56 30S10 6 -2 4" stroke="#B9D98F" stroke-width="2.2" fill="none" stroke-linecap="round"/>'+
+  '<g fill="#CFE7A8"><ellipse cx="148" cy="64" rx="11" ry="3.6" transform="rotate(-8 148 64)"/><ellipse cx="140" cy="50" rx="11" ry="3.6" transform="rotate(36 140 50)"/><ellipse cx="112" cy="52" rx="11" ry="3.6" transform="rotate(-14 112 52)"/>'+
+  '<ellipse cx="106" cy="36" rx="11" ry="3.6" transform="rotate(30 106 36)"/><ellipse cx="76" cy="38" rx="10" ry="3.4" transform="rotate(-20 76 38)"/><ellipse cx="70" cy="22" rx="10" ry="3.4" transform="rotate(26 70 22)"/><ellipse cx="40" cy="20" rx="9" ry="3.2" transform="rotate(-24 40 20)"/></g>'+
+  '<g fill="#7FA35A"><ellipse cx="124" cy="44" rx="3.6" ry="4.4"/><ellipse cx="88" cy="30" rx="3.4" ry="4.2"/></g></svg>';
 function heroSpInner(h){var i=ST.heroSp||{};var nm=i.name||h.t,loc=i.loc||h.s;
-  return OZ_OLIVE+OZ_BRANCH+'<span class="pz" aria-hidden="true"><i></i><i></i></span><div class="mk sp"><span class="slg">'+(i.logo?'<img src="'+E(i.logo)+'" alt="" decoding="async" onerror="this.remove()">':'')+'<i aria-hidden="true">'+E(initials(nm))+'</i></span><span class="spt">Sponsorlu</span></div>'+
+  return OZ_SPB+'<span class="pz" aria-hidden="true"><i></i><i></i></span><div class="mk sp"><span class="slg">'+(i.logo?'<img src="'+E(i.logo)+'" alt="" decoding="async" onerror="this.remove()">':'')+'<i aria-hidden="true">'+E(initials(nm))+'</i></span><span class="spt">Sponsorlu</span></div>'+
     '<div class="tx"><strong>'+E(nm)+'</strong><small>'+E(loc)+'</small></div><div class="tc"><span>✓ Onaylı satıcı</span><span class="cta">Ürünlerini keşfet ›</span></div>'+
     (arr(i.imgs).length?'<div class="ph">'+i.imgs.slice(0,3).map(function(u,k){return '<img class="p'+(k+1)+'" src="'+E(u)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">'}).join('')+'</div>':'')}
 async function heroSpLoad(t){var h=HERO_SL.filter(function(x){return x.sp})[0];if(!h)return;
