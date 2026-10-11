@@ -2464,6 +2464,16 @@ html:root .ozRowBtn>.ozAttnB{position:static;flex:none;margin-left:auto}
 @media (prefers-reduced-motion:reduce){html:root .ozAttnB{animation:none;box-shadow:0 0 0 3px rgba(var(--ar),.6)}}
 html:root body:not(.ozSellerNav) .ozNavB.ozAttnOn.s .l{color:#9FD0F5;opacity:1}html:root body:not(.ozSellerNav) .ozNavB.ozAttnOn.n .l{color:#F7B979;opacity:1}
 html:root body.ozSellerNav .ozNavB.ozAttnOn.n:not([aria-current=page]) .l{color:#F7B979}
+/*OZ AC3 yeni durum uyarı bandı (üstten kayar, durum rengi, 8 sn) + satıcı ses anahtarı*/
+html:root .ozAlert{position:fixed;left:50%;top:calc(8px + env(safe-area-inset-top,0px));z-index:2147483100;display:flex;align-items:center;gap:10px;width:calc(100% - 24px);max-width:520px;min-height:56px;box-sizing:border-box;padding:10px 14px;border:0;border-left:6px solid var(--stc);border-radius:14px;background:#2A2017;color:#F6ECDC;font:inherit;text-align:left;cursor:pointer;box-shadow:0 10px 28px rgba(0,0,0,.45),0 0 0 2px var(--stc);transform:translate(-50%,-140%);transition:transform .32s cubic-bezier(.2,.8,.2,1)}
+html:root .ozAlert.on{transform:translate(-50%,0)}
+html:root .ozAlert .ic{flex:none;display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--stc);color:#1F160E;font-size:17px;font-weight:900}
+html:root .ozAlert .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}html:root .ozAlert .tx b{font-size:15px;line-height:1.25;overflow-wrap:anywhere}
+html:root .ozAlert .tx small{font-size:12.5px;color:#D8C8AE}html:root .ozAlert .x{flex:none;font-size:22px;color:var(--stc)}
+@media (prefers-reduced-motion:reduce){html:root .ozAlert{transition:none}}
+html:root .ozSndR{display:flex;justify-content:flex-end;margin:-4px 0 8px}
+html:root .ozSndT{min-height:32px;padding:4px 12px;border:1px solid #54422D;border-radius:999px;background:#3A2D20;color:#E9DCC4;font:700 12.5px/1 system-ui,sans-serif;cursor:pointer}
+html:root .ozSndT[aria-pressed=false]{color:#B8A68A}
 /*K21-BITIS*/
 </style>
 <style id="svcProvEntryCss">.svcProvEntry{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;border-radius:16px;border:1.5px solid rgba(124,92,255,.45);background:rgba(124,92,255,.10);color:var(--text);font:inherit;text-align:left;cursor:pointer}.svcProvEntry .ic{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:rgba(124,92,255,.18)}.svcProvEntry .tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}.svcProvEntry small{font-size:12px;font-weight:700;color:var(--muted)}.svcProvEntry b{font-size:16px;font-weight:900}.svcProvEntry em{font-style:normal;font-size:12.5px;color:var(--muted)}.svcProvEntry .go{flex:0 0 auto;font-size:24px;font-weight:700;color:#7c5cff}.svcProvEntry:active{transform:scale(.99)}.svcProvEntry:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}html[data-theme="light"] .svcProvEntry{background:#f3effe;border-color:#c9bbff}html[data-theme="light"] .svcProvEntry .go{color:#5b3fd6}</style>
