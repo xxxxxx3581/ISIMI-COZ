@@ -1,5 +1,5 @@
 // G2-3: sepette bedava kargo ilerlemesi — 390px, sahte veri. Çalıştırma: node tests/oz-ui/g2-kargo.test.js
-// Doğrulanan: eşik altında "Bedava kargo için X ₺ daha ekle" + doğru oranlı ince çubuk; eşiğe ulaşınca "Kargo bedava ✓";
+// Doğrulanan: eşik altında "Ücretsiz kargoya X ₺ kaldı" (W3 metni) + doğru oranlı ince çubuk; eşiğe ulaşınca "✓ Kargo ücretsiz";
 // eşik sabit değil üretici kaydından okunur (farklı eşikte farklı tutar); eşik yoksa hiçbir şey görünmez.
 const {chromium,open,enter}=require('./harness.js');
 const LINE={variant_id:'v1',product_id:'p0',name:'Zeytinyağı',label:'500 ml',price_kurus:65000,seller_id:'s1',seller_name:'Yayla',qty:1,stock:10,nv:1};
@@ -14,9 +14,9 @@ async function scen(br,fo,qty){
 (async()=>{
  const br=await chromium.launch({executablePath:process.env.CHROMIUM||'/opt/pw-browsers/chromium'});
  const fails=[];const ok=(c,m)=>{if(!c)fails.push(m)};
- let r=await scen(br,100000,1);ok(r.t==='Bedava kargo için 350,00 ₺ daha ekle'&&!r.ok&&r.w>=63&&r.w<=67,'1.000 ₺ eşik, 650 ₺ sepet: 350 ₺ + %65 çubuk: '+JSON.stringify(r));
- r=await scen(br,200000,1);ok(r.t==='Bedava kargo için 1.350,00 ₺ daha ekle'&&r.w>=31&&r.w<=34,'eşik üretici kaydından okunmalı (2.000 ₺): '+JSON.stringify(r));
- r=await scen(br,100000,2);ok(r.ok&&/Kargo bedava ✓/.test(r.t)&&r.w===null,'eşik aşılınca "Kargo bedava ✓": '+JSON.stringify(r));
+ let r=await scen(br,100000,1);ok(r.t==='Ücretsiz kargoya 350,00 ₺ kaldı'&&!r.ok&&r.w>=63&&r.w<=67,'1.000 ₺ eşik, 650 ₺ sepet: 350 ₺ + %65 çubuk: '+JSON.stringify(r));
+ r=await scen(br,200000,1);ok(r.t==='Ücretsiz kargoya 1.350,00 ₺ kaldı'&&r.w>=31&&r.w<=34,'eşik üretici kaydından okunmalı (2.000 ₺): '+JSON.stringify(r));
+ r=await scen(br,100000,2);ok(r.ok&&/✓ Kargo ücretsiz/.test(r.t)&&r.w===null,'eşik aşılınca "✓ Kargo ücretsiz" (W3 metni): '+JSON.stringify(r));
  r=await scen(br,null,1);ok(r.none,'eşik yoksa çubuk görünmemeli: '+JSON.stringify(r));
  r=await scen(br,0,1);ok(r.none,'eşik 0 ise çubuk görünmemeli: '+JSON.stringify(r));
  await br.close();

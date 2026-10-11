@@ -952,6 +952,9 @@ VIEWS_EXTRA({
     paint(pageHead('Sepetim')+skel(2,'line'));
     var q=null,qe=null;try{q=await rpc('oz_quote',{p_items:cartItemsParam()})}catch(e){qe=e}
     if(!alive(t))return;
+    /* W3: misafir sepetinde de satıcı eşiği (oz_producer_detail, mevcut okuma; yalnız gösterim) */
+    ST.sinfo=ST.sinfo||{};var need=arr(q&&q.groups).map(function(g){return g.seller_id}).filter(function(id){return id&&!ST.sinfo[id]});
+    if(need.length){var ds=await Promise.all(need.map(function(id){return rpc('oz_producer_detail',{p_id:id}).catch(function(){return null})}));if(!alive(t))return;need.forEach(function(id,i){if(ds[i])ST.sinfo[id]=ds[i]})}
     ST.quote=q;
     paint(pageHead('Sepetim',cartCount()+' ürün')+(qe?errBox(qe):'')+cartHtml(q,c));
   },
@@ -1036,7 +1039,7 @@ function cartHtml(q,c){
   var byV={};groups.forEach(function(g){arr(g.items).forEach(function(it){byV[it.variant_id]=it})});
   var h='';
   if(groups.length){
-    h+=groups.map(function(g){return '<div class="ozCard"><div class="ozRow2" style="justify-content:space-between"><b>'+E(g.seller_name||'Satıcı')+'</b>'+(num(g.handling_days)?'<span class="ozMuted">'+num(g.handling_days)+' iş gününde kargoda</span>':'')+'</div>'+
+    h+=groups.map(function(g){var si=(ST.sinfo||{})[g.seller_id]||{};return '<div class="ozCard">'+shipProg(si.free_ship_over_kurus,g)+'<div class="ozRow2" style="justify-content:space-between"><b>'+E(g.seller_name||'Satıcı')+'</b>'+(num(g.handling_days)?'<span class="ozMuted">'+num(g.handling_days)+' iş gününde kargoda</span>':'')+'</div>'+
       arr(g.items).map(function(it){return cartLine(it,num(it.stock))}).join('')+
       '<div class="ozLine"><span class="m">Ürünler</span><span>'+TL(g.subtotal_kurus)+'</span></div><div class="ozLine"><span class="m">Kargo</span><span>'+(num(g.shipping_kurus)?TL(g.shipping_kurus):'Bedava')+'</span></div></div>'}).join('');
   }
@@ -1073,12 +1076,14 @@ function consFlash(){var r=D.getElementById('ozConsR');if(!r)return;r.classList.
 function isDupErr(e){var m=String(e&&e.message||'');return /client_request_id/i.test(m)&&(/duplicate key|unique/i.test(m)||!!(e&&e.code==='23505'))}
 function dupDone(){cartSet([]);ST.crid=null;ST.co=null;ST.staleSeq=HSEQ;ST.staleUsed=true;toast('Bu sipariş zaten alındı, Siparişlerim\'den kontrol et.');NAV=NAV.filter(function(x){return x.k!=='checkout'&&x.k!=='cart'});go('orders',{})}
 /* E4: kompakt ödeme satırı — 52px foto, ad tek satır, gramaj · birim fiyat, küçük −/+, çöp ikonu */
-/* G2-3: üretici grubu başına bedava kargo ilerlemesi. Eşik üreticinin kaydından (oz_producer_detail.free_ship_over_kurus);
-   eşik yoksa hiçbir şey gösterilmez. Yalnız gösterim: kargo tutarı sunucuda (oz_quote / oz_place_order) hesaplanır. */
-function shipProg(fo,sub){fo=num(fo);sub=num(sub);if(!(fo>0))return '';
-  if(sub>=fo)return '<div class="ozShipP ok" role="status"><span>Kargo bedava ✓</span></div>';
-  var pc=Math.max(2,Math.min(100,Math.round(sub*100/fo)));
-  return '<div class="ozShipP" role="status"><span>Bedava kargo için <b>'+TL(fo-sub)+'</b> daha ekle</span><span class="bar" aria-hidden="true"><i style="width:'+pc+'%"></i></span></div>'}
+/* G2-3/W3: satıcı grubu başına ücretsiz kargo çubuğu (grubun üstünde). Eşik satıcı kaydından (oz_producer_detail.free_ship_over_kurus),
+   ara toplam oz_quote grubundan. Sunucu kuralı (oz_ship_fee): ara toplam ≥ eşik ise kargo 0. Eşik yok/0 ise çubuk yok; çubuk
+   yalnız oz_quote'un kargo tutarıyla tutarlıysa görünür (eşik altı → kargo > 0, eşik üstü → kargo 0). Yalnız gösterim. */
+function shipProg(fo,g){fo=num(fo);var sub=num(g&&g.subtotal_kurus),fee=num(g&&g.shipping_kurus);if(!(fo>0)||!g)return '';
+  if(sub>=fo)return fee?'':'<div class="ozShipP ok" role="status"><span><i aria-hidden="true">✓</i> Kargo ücretsiz</span></div>';
+  if(!fee)return '';
+  var pc=Math.max(2,Math.min(100,Math.floor(sub*100/fo)));
+  return '<div class="ozShipP" role="status"><span>Ücretsiz kargoya <b>'+TL(fo-sub)+'</b> kaldı</span><span class="bar" aria-hidden="true"><i style="width:'+pc+'%"></i></span></div>'}
 function coLine(it,stock){var q=num(it.qty);var max=Math.min(99,stock||0);
   return '<div class="ozCoL">'+pic(it.image,it.name)+'<span class="tx"><b>'+E(it.name)+'</b><small>'+(it.label?E(it.label)+' · ':'')+TL(it.unit_price_kurus)+'</small>'+(it.issue?'<small class="ozIssue">'+E(it.issue)+'</small>':'')+'</span>'+
     '<span class="q"><button type="button" data-a="cQty" data-id="'+E(it.variant_id)+'" data-d="-1" aria-label="Azalt">−</button><b>'+q+'</b><button type="button" data-a="cQty" data-id="'+E(it.variant_id)+'" data-d="1" aria-label="Artır"'+(q>=max?' disabled':'')+'>+</button></span>'+
@@ -1091,9 +1096,8 @@ function drawCheckout(){
   var orphan=co.q?c.filter(function(x){return !byV[x.variant_id]}):[];
   /* ürünler; H2: sayfa bütün olarak kayar, yalnız Toplam çubuğu altta yapışık */
   var itH=groups.map(function(g){var si=(ST.sinfo||{})[g.seller_id]||{};var fo=num(si.free_ship_over_kurus),sub=num(g.subtotal_kurus);
-    return '<div class="ozCoG2"><p class="hd"><b>'+E(g.seller_name||'Satıcı')+'</b>'+(num(g.handling_days)?'<span> · '+num(g.handling_days)+' iş gününde kargoda</span>':'')+'</p>'+
-    arr(g.items).map(function(it){return coLine(it,num(it.stock))}).join('')+
-    shipProg(fo,sub)+'</div>'}).join('');
+    return '<div class="ozCoG2">'+shipProg(fo,g)+'<p class="hd"><b>'+E(g.seller_name||'Satıcı')+'</b>'+(num(g.handling_days)?'<span> · '+num(g.handling_days)+' iş gününde kargoda</span>':'')+'</p>'+
+    arr(g.items).map(function(it){return coLine(it,num(it.stock))}).join('')+'</div>'}).join('');
   if(orphan.length)itH+='<div class="ozCoG2"><p class="hd"><b>Satışta olmayan ürünler</b></p>'+orphan.map(function(x){return coLine({variant_id:x.variant_id,name:x.name,label:x.label,image:x.image,unit_price_kurus:x.price_kurus,qty:x.qty,issue:'Artık satışta değil; sepetten çıkar.'},0)}).join('')+'</div>';
   if(!co.q)itH+=(co.qe?errBox(co.qe):'')+'<div class="ozCoG2">'+c.map(function(x){return coLine({variant_id:x.variant_id,name:x.name,label:x.label,image:x.image,unit_price_kurus:x.price_kurus,qty:x.qty},99)}).join('')+'</div>';
   if(issues.length)itH+='<div class="ozWarn">'+issues.map(function(i){return '<div>'+E(typeof i==='string'?(i==='unavailable'?'Bazı ürünler artık satışta değil.':i):(i.message||''))+'</div>'}).join('')+'</div>';
