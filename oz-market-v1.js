@@ -494,8 +494,7 @@ function gcCard(p){ST.rows=ST.rows||{};ST.rows[String(p.id)]=p;
     (rc?'<button type="button" class="rt" data-a="nav" data-k="product" data-rev="1" data-id="'+id+'" aria-label="'+rc+' değerlendirmeyi gör">★ '+num(p.rating_avg).toLocaleString('tr-TR',{minimumFractionDigits:1,maximumFractionDigits:1})+' <small>('+rc+')</small></button>':'')+'</span></div>'+
     (p.description?'<span class="ds">'+E(p.description)+'</span>':'')+
     /* U2: çok seçenekte fiyat yerine "+"ın hemen solunda altın etiket; dokununca "+" ile aynı küçük seçenek penceresi (ppPlus) */
-    '<div class="ft">'+(Array.isArray(p.vars)&&p.vars.length>1?'<button type="button" class="opt" data-a="ppPlus" data-id="'+id+'" aria-label="'+E(optText(p.vars,p.net_content))+'"'+(p.in_stock===false?' disabled':'')+'><span class="pl">'+E(optText(p.vars,p.net_content,1))+'</span></button>':'<span class="pr">'+cardPrice(p,1)+'</span>')+
-    '<span class="ac">'+ppCtrl(p)+'</span></div></div>'}
+    '<div class="ft">'+(Array.isArray(p.vars)&&p.vars.length>1?(function(t){return t?'<span class="pr"><small class="u ufrom">'+E(t)+'</small></span>':''})(unitFrom(p.vars,p.net_content))+'<span class="oa"><button type="button" class="opt" data-a="ppPlus" data-id="'+id+'" aria-label="'+E(optText(p.vars,p.net_content))+'"'+(p.in_stock===false?' disabled':'')+'><span class="pl">'+E(optText(p.vars,p.net_content,1))+'</span></button>'+'<span class="ac">'+ppCtrl(p)+'</span></span>':'<span class="pr">'+cardPrice(p,1)+'</span><span class="ac">'+ppCtrl(p)+'</span>')+'</div></div>'}
 /* kart açıklaması arama sonucunda yok: görünür ürünler için tek okuma (RLS: yalnız yayındaki ürünler). Hata olursa sessizce gizli. */
 async function gcEnrich(l){var ids=l.filter(function(x){return x&&x.id&&x.description===undefined}).map(function(x){return x.id});if(!ids.length)return;
   /* L: etkin seçenekler (oz_variants, RLS: yalnız yayındaki ürünler) — kartta "X ₺'den · N seçenek" / birim fiyat için */
@@ -827,8 +826,15 @@ function qtyOf(txt){var m=/^\s*(\d+(?:[.,]\d+)?)\s*(g|gr|gram|kg|kilo|ml|l|lt|li
   if(u==='g'||u==='gr'||u==='gram')return {q:n/1000,u:'kg'};if(u==='kg'||u==='kilo')return {q:n,u:'kg'};if(u==='ml')return {q:n/1000,u:'L'};return {q:n,u:'L'}}
 /* S1: tam 1 L / 1 kg'da da gösterilir (önceden gizleniyordu). Paket başına 50 L/kg üstü gerçekçi değildir (ör. canlıdaki
    "1000 lt" kaydı, büyük olasılıkla 1000 ml): yanıltıcı "≈ 0,09 ₺/L" yerine birim fiyat hiç gösterilmez. */
-function unitPrice(p,v){var vs=arr(p.variants);var q=qtyOf(v.label)||(vs.length===1?qtyOf(p.net_content):null);if(!q||!(num(v.price_kurus)>0))return '';
-  if(q.q>50)return '';var k=Math.round(num(v.price_kurus)/q.q);return '≈ '+TL(k)+'/'+q.u}
+/* X2: sayısal çekirdek (kuruş / kg|L); unitPrice ve unitFrom aynı hesabı kullanır */
+function unitK(p,v){var vs=arr(p.variants);var q=qtyOf(v.label)||(vs.length===1?qtyOf(p.net_content):null);if(!q||!(num(v.price_kurus)>0))return null;
+  if(q.q>50)return null;return {k:Math.round(num(v.price_kurus)/q.q),u:q.u}}
+function unitPrice(p,v){var r=unitK(p,v);return r?'≈ '+TL(r.k)+'/'+r.u:''}
+/* X2: seçenekli üründe en düşük birim fiyat — "≈ 360 ₺/kg'dan" / "≈ 45 ₺/L'den" (tam sayı TL, binlik ayırıcı). Birimi çözülemeyen
+   seçenek hesaba girmez; hiçbiri çözülemez ya da kg ile L karışıksa satır yok (tahmin yok). Toplam fiyat gösterilmez. */
+function unitFrom(vs,net){var l=arr(vs).map(function(v){return unitK({variants:vs,net_content:net},v)}).filter(Boolean);if(!l.length)return '';
+  var u=l[0].u;if(!l.every(function(x){return x.u===u}))return '';var mn=Math.min.apply(null,l.map(function(x){return x.k}));
+  return '≈ '+Math.round(mn/100).toLocaleString('tr-TR')+' ₺/'+u+(u==='kg'?'\'dan':'\'den')}
 
 /* K27: organik / menşe / sertifika bilgileri satıcı beyanıdır */
 var CLAIM='<span class="ozClaim">Satıcı beyanı – platform tarafından doğrulanmadı</span>';

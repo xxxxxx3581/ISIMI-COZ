@@ -38,7 +38,7 @@ const BIG='html:root .ozGc .nm{font-size:22px!important}html:root .ozGc .ds{font
    ok(x.sameRow&&x.gap>=0&&x.gap<=12,t+k+' etiket "+"ın hemen solunda, aynı satırda (≤12px): '+JSON.stringify(x));
    ok(x.h>=44&&x.vh<=28&&x.gold&&x.goldBorder&&x.ratio>=4.5,t+k+' etiket dokunma ≥44px, görsel ≤28px (X1), altın yazı/kenar, AA: '+JSON.stringify(x));
    ok(!x.hit&&x.inside,t+k+' etiket çakışmamalı/taşmamalı: '+JSON.stringify(x));
-   ok(x.pr===null,t+k+' çok seçenekte ayrı fiyat/seçenek yazısı olmamalı: '+x.pr)});
+   ok(x.pr===null||/^≈ [\d.]+ ₺\/(kg'dan|L'den)$/.test(x.pr.replace(/\s+/g,' ').trim()),t+k+' çok seçenekte toplam fiyat yok (yalnız X2 birim fiyat satırı): '+x.pr)});
   ok(M.p2&&M.p2.opt===null&&/90,00\s₺/.test(M.p2.pr||''),t+'tek fiyatlı üründe etiket yok, fiyat aynı: '+JSON.stringify(M.p2));
   ok(await p.evaluate(()=>document.documentElement.scrollWidth<=390),t+'390px taşma olmamalı');
  }

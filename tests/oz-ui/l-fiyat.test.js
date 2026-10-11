@@ -21,8 +21,8 @@ const V=[{product_id:'p0',label:'3kg',price_kurus:120000,compare_at_kurus:null,s
  const kr=await pr('#ozReo .ozKr[data-pid=p0] .pr');
  ok(kr==='2 gramaj seçeneği'&&!/₺/.test(kr),'Keşfet kartında seçenekli üründe fiyat olmamalı: '+kr);
  await p.evaluate(()=>OZ.go('plist',{seller:'s1'}));await p.waitForTimeout(1300);
- const c={};for(const id of ['p0','p1','p2','p3','p4'])c[id]=await pr('.ozGc[data-pid='+id+'] .ft :is(.pr,.opt)');
- ok(c.p0==='2 gramaj'&&!/₺/.test(c.p0),'zeytinyağı (3kg/5kg) kartında fiyat olmamalı: '+c.p0);
+ const c={};for(const id of ['p0','p1','p2','p3','p4']){c[id]=await p.evaluate(id=>{const c=document.querySelector('.ozGc[data-pid='+id+']');const e=c&&(c.querySelector('.ft .opt .pl')||c.querySelector('.ft .pr'));return e?e.innerText.replace(/\s+/g,' ').trim():null},id);c[id+'u']=await pr('.ozGc[data-pid='+id+'] .ft .pr')}
+ ok(c.p0==='2 gramaj'&&!/₺/.test(c.p0)&&/^≈ [\d.]+ ₺\/kg'dan$/.test(c.p0u||''),'zeytinyağı (3kg/5kg) kartında fiyat olmamalı: '+c.p0);
  ok(c.p1==='3 gramaj'&&!/₺/.test(c.p1),'reçel kartında fiyat/eski fiyat olmamalı: '+c.p1);
  ok(c.p2==='1.200,00 ₺ 1.000,00 ₺ ≈ 1.250,00 ₺/kg','bal tek seçenek (indirim + birim fiyat): '+c.p2);
  ok(c.p4==='450,00 ₺','miktarı okunamayan tek seçenekte birim fiyat olmamalı: '+c.p4);
