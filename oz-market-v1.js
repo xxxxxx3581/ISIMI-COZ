@@ -339,11 +339,24 @@ function heroSpInner(h){var i=ST.heroSp||{};var nm=i.name||h.t,loc=i.loc||h.s;
   return OZ_SPB+'<span class="pz" aria-hidden="true"><i></i><i></i></span><div class="mk sp"><span class="slg">'+(i.logo?'<img src="'+E(i.logo)+'" alt="" decoding="async" onerror="this.remove()">':'')+'<i aria-hidden="true">'+E(initials(nm))+'</i></span><span class="spt">Sponsorlu</span></div>'+
     '<div class="tx"><strong>'+E(nm)+'</strong><span class="nmr" aria-hidden="true"><i class="gl"></i>'+OZ_LEAF+'</span><small>'+E(loc)+'</small></div><div class="tc"><span>✓ Onaylı satıcı</span><span class="cta">Ürünlerini keşfet ›</span></div>'+
     (arr(i.imgs).length?'<div class="ph">'+i.imgs.slice(0,3).map(function(u,k){return '<img class="p'+(k+1)+'" src="'+E(u)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">'}).join('')+'</div>':'')}
-async function heroSpLoad(t){var h=HERO_SL.filter(function(x){return x.sp})[0];if(!h)return;
+/* AA1: satıcı adı asla kesilmez — gerçek ölçümle sığdırma: tek satırda 26→16px (1px adım); sığmazsa en çok 2 satır (kelime sınırı,
+   uzun tek kelime karakterden kırılır), yine 26px'ten küçültülür; 2 satırda altın çizgi/yaprak gizlenir. "…"/line-clamp yok.
+   İlk çizimde, yazı tipleri yüklenince, pencere boyu ve yazı boyutu (il·ilçe satırı boyu) değişince yeniden çalışır. */
+function heroSpFit(){var s=qs('#ozHeroT .ozHs.sp');if(!s)return;var tx=qs('.tx',s),nm=qs('.tx strong',s);if(!tx||!nm)return;
+  var fits=function(){return nm.scrollWidth<=nm.clientWidth+.5&&tx.scrollHeight<=tx.clientHeight+.5};var f;
+  s.classList.remove('two');for(f=26;f>=16;f--){nm.style.fontSize=f+'px';if(fits())return}
+  s.classList.add('two');for(f=26;f>=10;f--){nm.style.fontSize=f+'px';var lh=parseFloat(getComputedStyle(nm).lineHeight)||f;
+    if(Math.round((nm.getBoundingClientRect().height-2)/lh)<=2&&fits())return}}
+function heroSpWatch(){var s=qs('#ozHeroT .ozHs.sp');if(!s)return;heroSpFit();
+  try{if(D.fonts&&D.fonts.ready)D.fonts.ready.then(heroSpFit)}catch(e){}
+  if(!ST.heroSpRz){ST.heroSpRz=1;window.addEventListener('resize',function(){heroSpFit()})}
+  try{if(ST.heroSpRO)ST.heroSpRO.disconnect();if(window.ResizeObserver){var raf=0;ST.heroSpRO=new ResizeObserver(function(){if(raf)return;raf=requestAnimationFrame(function(){raf=0;heroSpFit()})});
+    ST.heroSpRO.observe(s);var lc=qs('.tx small',s);if(lc)ST.heroSpRO.observe(lc)}}catch(e){}}
+async function heroSpLoad(t){var h=HERO_SL.filter(function(x){return x.sp})[0];if(!h)return;heroSpWatch();
   if(!ST.heroSp){var r=await Promise.all([rpc('oz_producer_detail',{p_id:h.producerId}).catch(function(){return null}),rpc('oz_search_products',{p:{seller_id:h.producerId,sort:'new',limit:6,offset:0}}).catch(function(){return null})]);
     var d=r[0]||{};ST.heroSp={name:d.display_name||'',loc:[d.city,d.district].filter(Boolean).join(' · '),logo:httpsUrl(d.logo_url)||'',
       imgs:arr(r[1]).map(function(p){return httpsUrl(p.image)||httpsUrl(arr(p.images)[0])}).filter(Boolean).slice(0,3)}}
-  if(!alive(t))return;var el=qs('#ozHeroT .ozHs.sp');if(el)el.innerHTML=heroSpInner(h)}
+  if(!alive(t))return;var el=qs('#ozHeroT .ozHs.sp');if(el){el.innerHTML=heroSpInner(h);heroSpWatch()}}
 var HERO_MS={wait:2500,anim:500};  /* bekleme ve geçiş süresi tek yerde */
 function heroHtml(){
   var oe="var p=this.parentNode;this.remove();if(p&&!p.querySelector('img'))p.remove()";

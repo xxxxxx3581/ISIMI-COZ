@@ -33,7 +33,7 @@ const SID='41876174-05d7-421c-bac1-f2e8272d19e2';
  let g=await G();
  ok(g&&g.h===g.others[0],'slayt boyu aynı: '+JSON.stringify(g&&[g.h,g.others]));
  ok(g&&g.gap>=4&&g.gap<=12,'ad logo/Sponsorlu satırının hemen altında (≈8px): '+(g&&g.gap));
- ok(g&&g.fs>=30&&g.ff===g.brandFf&&/Georgia/.test(g.ff)&&g.fw==='700'&&g.it==='italic'&&g.ls==='0.5px','ad ≥30px, "Özüne Dön" serif ailesi, 700, italik, +0.5px: '+JSON.stringify(g&&[g.fs,g.ff,g.brandFf,g.fw,g.it,g.ls]));
+ ok(g&&g.fs>=16&&g.fs<=26&&g.ff===g.brandFf&&/Georgia/.test(g.ff)&&g.fw==='700'&&g.it==='italic'&&g.ls==='0.5px','ad 16-26px (AA1: ölçümle sığdırılır), "Özüne Dön" serif ailesi, 700, italik, +0.5px: '+JSON.stringify(g&&[g.fs,g.ff,g.brandFf,g.fw,g.it,g.ls]));
  ok(g&&g.whole,'ad kesilmeden sığmalı');
  ok(g&&g.glW>=48&&g.glW<=64&&g.gold&&g.lf,'altın çizgi (48-64px) ve yaprak SVG: '+JSON.stringify(g&&[g.glW,g.gold,g.lf]));
  ok(g&&g.order,'sıra: ad → çizgi/yaprak → il · ilçe → çipler');

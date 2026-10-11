@@ -2433,11 +2433,14 @@ html:root .ozGc .ft .pr{flex:1 1 auto;min-width:0;max-width:none;padding-bottom:
 /*Z1: etiket kalktı — "+" sağ alt köşede (tek fiyatlı/seçenekli aynı); seçenekte birim fiyat yoksa düz "N seçenek" (soluk krem 13px)*/
 html:root .ozGc .ac{margin:0 -4px -2px 0}
 html:root .ozGc .ft .pr small.u.nvp{display:block;color:#D9C9AE!important;font-size:13px!important;font-weight:600!important;white-space:nowrap!important}
-/*OZ Z2 Sponsorlu slayt satıcı adı: logo/Sponsorlu satırının ≈8px altında, mevcut "Özüne Dön" italik serifiyle 30px/700, krem, yumuşak gölge,
-  +0.5px harf aralığı, tek satır (uzunsa …); altında 56px ince altın çizgi + özgün yaprak; sonra il · ilçe. Fotoğraf kümesi daraltıldı (64px aynı).*/
+/*OZ Z2 Sponsorlu slayt satıcı adı: logo/Sponsorlu satırının ≈8px altında, mevcut "Özüne Dön" italik serifiyle (AA1: 26px'ten ölçümle küçülür)/700, krem, yumuşak gölge,
+  +0.5px harf aralığı, kesilmez (AA1); altında 56px ince altın çizgi + özgün yaprak; sonra il · ilçe. Fotoğraf kümesi daraltıldı (64px aynı).*/
 html:root .ozBn .mk.sp{top:4px}
 html:root .ozBn.sp .tx{top:52px;bottom:34px;width:calc(100% - 130px);max-height:none;justify-content:flex-start;gap:0;overflow:hidden}
-html:root .ozBn.sp .tx strong{font:italic 700 30px/1 Georgia,"Times New Roman","Noto Serif",serif;letter-spacing:.5px;color:#FFF6E5;text-shadow:0 2px 6px rgba(0,0,0,.35);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;-webkit-line-clamp:unset;padding-bottom:2px}
+html:root .ozBn.sp .tx strong{flex:none;font:italic 700 26px/1 Georgia,"Times New Roman","Noto Serif",serif;letter-spacing:.5px;color:#FFF6E5;text-shadow:0 2px 6px rgba(0,0,0,.35);display:block;white-space:nowrap;overflow:hidden;text-overflow:clip;-webkit-line-clamp:unset;padding-bottom:2px}
+/*AA1: ad gerçek ölçümle sığdırılır (heroSpFit); 2 satır kipinde sarılır, altın çizgi/yaprak gizlenir*/
+html:root .ozBn.sp.two .tx strong{white-space:normal;overflow-wrap:break-word;word-break:normal;line-height:1.04}
+html:root .ozBn.sp.two .nmr{display:none}
 html:root .ozBn.sp .nmr{display:flex;align-items:center;gap:4px;height:8px;margin:2px 0 3px}
 html:root .ozBn.sp .nmr .gl{display:block;width:56px;height:1.5px;border-radius:1px;background:linear-gradient(90deg,#F2C14E,rgba(242,193,78,.55))}
 html:root .ozBn.sp .nmr .lf{display:block;width:16px;height:9px}
