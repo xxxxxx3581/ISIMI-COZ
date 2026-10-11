@@ -26,7 +26,7 @@ const BIG='html:root .ozGc .nm{font-size:22px!important}html:root .ozGc .ds{font
   const glyphs=e=>{if(!e)return [];const out=[];const w=document.createTreeWalker(e,NodeFilter.SHOW_TEXT);let t;const box=e.getBoundingClientRect();while((t=w.nextNode())){if(!t.nodeValue.trim())continue;const rg=document.createRange();rg.selectNodeContents(t);out.push(...[...rg.getClientRects()].filter(x=>x.width>0&&x.top<box.bottom-1&&x.bottom>box.top+1))}return out};
   const cr=R(c),fr=R(fv),rr=R(rt),ar=R(ac),pg=glyphs(pr),ng=glyphs(nm);
   return {id:c.dataset.pid,fav:!!fv,on:!!fv&&fv.classList.contains('on'),rt:rt?rt.innerText.replace(/\s+/g,' ').trim():null,topRight:!!fr&&cr.right-fr.right<=14&&fr.top-cr.top<=14,rtUnder:!rr||(rr.top>=fr.bottom-2&&Math.abs(rr.right-fr.right)<=10),
-   nmHit:ng.some(g=>ov(g,fr)||ov(g,rr)),pr:pr?pr.innerText.replace(/\s+/g,' ').trim():'',sameRow:!!ar&&pg.length>0&&pg.some(g=>g.top<ar.bottom&&g.bottom>ar.top),
+   nmHit:ng.some(g=>ov(g,fr)||ov(g,rr)),pr:pr?pr.innerText.replace(/\s+/g,' ').trim():'',sameRow:!!ar&&(c.querySelector('.ft .pr')?glyphs(c.querySelector('.ft .pr')).some(g=>g.top<ar.bottom&&g.bottom>ar.top):pg.length>0&&pg.every(g=>g.bottom<=ar.top+1)),
    oldRow:!!c.querySelector(':scope > .rt'),sel:getComputedStyle(c).userSelect,nmSel:getComputedStyle(nm).userSelect,plusSel:ac&&ac.querySelector('button')?getComputedStyle(ac.querySelector('button')).userSelect:''}}));
  const by=l=>{const m={};l.forEach(x=>m[x.id]=x);return m};
  for(const big of [false,true]){

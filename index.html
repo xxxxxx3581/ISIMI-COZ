@@ -2437,6 +2437,17 @@ html:root .ozBn.sp .ph img{width:64px;height:64px;border:2px solid #fff;border-r
 html:root .ozBn.sp .ph .p1{left:0;right:auto;top:8px;bottom:auto;transform:rotate(-5deg);z-index:1}
 html:root .ozBn.sp .ph .p2{right:0;left:auto;top:0;bottom:auto;transform:rotate(5deg);z-index:2}
 html:root .ozBn.sp .ph .p3{left:46px;right:auto;top:auto;bottom:0;transform:rotate(4deg);z-index:3}
+/*OZ Y2 liste kartı: fotoğraf yüksekliği yazı bloğunu izler (kart en az 146px → foto ≥120px, en çok 200px, cover); iç boşluk 12px, foto-metin arası 12px.
+  Alt blok iki sütun: sol fiyat / "≈ X ₺/kg'dan", sağ sütun (84px) dikey: etiket (görsel ≈26px, dokunma alanı yukarı doğru 44px) "+"ın tam üstünde ortalı.*/
+html:root .ozGc{padding:12px;column-gap:12px;min-height:146px}
+html:root .ozGc .im{align-self:stretch;height:auto;aspect-ratio:auto;min-height:0;max-height:200px;contain:size}
+html:root .ozGc .ft{flex-wrap:nowrap;align-items:flex-end;justify-content:space-between;gap:4px;padding-top:2px}
+html:root .ozGc .ft .pr,html:root .ozGc .ft:has(.opt) .pr{flex:1 1 auto;min-width:0;max-width:none;padding-bottom:4px}
+html:root .ozGc .ft .pr small.u.ufrom{white-space:normal!important;letter-spacing:-.02em}
+html:root .ozGc .ft .oa{flex:none;min-width:84px;margin:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:8px}
+html:root .ozGc .ft .oa .opt{align-self:center;margin:-18px 0 0;min-height:44px;padding:18px 0 0;align-items:flex-end}
+html:root .ozGc .ft .oa .opt .pl{padding:3px 8px}
+html:root .ozGc .ft .oa .ac{margin:0}
 /*K21-BITIS*/
 </style>
 <style id="svcProvEntryCss">.svcProvEntry{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;border-radius:16px;border:1.5px solid rgba(124,92,255,.45);background:rgba(124,92,255,.10);color:var(--text);font:inherit;text-align:left;cursor:pointer}.svcProvEntry .ic{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:rgba(124,92,255,.18)}.svcProvEntry .tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}.svcProvEntry small{font-size:12px;font-weight:700;color:var(--muted)}.svcProvEntry b{font-size:16px;font-weight:900}.svcProvEntry em{font-style:normal;font-size:12.5px;color:var(--muted)}.svcProvEntry .go{flex:0 0 auto;font-size:24px;font-weight:700;color:#7c5cff}.svcProvEntry:active{transform:scale(.99)}.svcProvEntry:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}html[data-theme="light"] .svcProvEntry{background:#f3effe;border-color:#c9bbff}html[data-theme="light"] .svcProvEntry .go{color:#5b3fd6}</style>

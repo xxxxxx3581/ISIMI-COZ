@@ -21,7 +21,7 @@ const BIG='html:root .ozGc .nm{font-size:22px!important}html:root .ozGc .ds{font
   const lum=k=>{const f=x=>{x/=255;return x<=.03928?x/12.92:Math.pow((x+.055)/1.055,2.4)};return .2126*f(k.r)+.7152*f(k.g)+.0722*f(k.b)};const bg=mix(rgb(s.backgroundColor),rgb(getComputedStyle(c).backgroundColor));const col=rgb(s.color);
   const ov=(x,y)=>x.left<y.right-1&&y.left<x.right-1&&x.top<y.bottom-1&&y.top<x.bottom-1;const nm=c.querySelector('.nm').getBoundingClientRect(),ds=c.querySelector('.ds');
   o[c.dataset.pid]={t:pl.textContent,aria:b.getAttribute('aria-label'),vh:Math.round(v.height),hh:Math.round(r.height),hw:Math.round(r.width),vw:Math.round(v.width),fs:parseFloat(s.fontSize),
-   gold:col.r>220&&col.g>170&&col.b<120,bd:s.borderTopColor,cr:+((lum(col)+.05)/(lum(bg)+.05)).toFixed(2),gap:Math.round(a.left-r.right),row:v.top<a.bottom&&v.bottom>a.top,
+   gold:col.r>220&&col.g>170&&col.b<120,bd:s.borderTopColor,cr:+((lum(col)+.05)/(lum(bg)+.05)).toFixed(2),gap:Math.round(a.left-r.right),row:v.top<a.bottom&&v.bottom>a.top,ab:v.bottom<=a.top+1&&Math.abs((v.left+v.right)/2-(a.left+a.right)/2)<=2,
    hit:ov(v,a)||ov(v,nm)||(ds&&ov(v,ds.getBoundingClientRect())),inside:r.right<=c.getBoundingClientRect().right+1}});return o});
  let M=await G();
  ok(M.p0&&M.p0.t==='3 gramaj'&&M.p1&&M.p1.t==='2 hacim'&&M.p4&&M.p4.t==='2 seçenek','kısa metinler: '+JSON.stringify([M.p0&&M.p0.t,M.p1&&M.p1.t,M.p4&&M.p4.t]));
@@ -30,7 +30,7 @@ const BIG='html:root .ozGc .nm{font-size:22px!important}html:root .ozGc .ds{font
   ok(x.vh>=22&&x.vh<=28&&x.fs===13,k+' görsel ≤28px, 13px yazı: '+JSON.stringify(x));
   ok(x.hh>=44&&x.hh>=x.vh&&x.hw>=x.vw,k+' dokunma alanı ≥44px, görselden küçük değil: '+JSON.stringify(x));
   ok(x.gold&&/242, 193, 78/.test(x.bd)&&x.cr>=4.5,k+' altın yazı/kenar, AA: '+JSON.stringify(x));
-  ok(x.row&&x.gap>=0&&x.gap<=12&&!x.hit&&x.inside,k+' "+"ın hemen solunda, aynı satır, binme yok: '+JSON.stringify(x))});
+  ok(x.ab&&!x.hit&&x.inside,k+' etiket "+"ın tam üstünde ve ortalı (Y2), binme yok: '+JSON.stringify(x))});
  // tıklama → küçük pencere
  try{await p.click('.ozGc[data-pid=p0] .ft .opt',{timeout:3000})}catch(e){fails.push('etiket tıklanamadı')}await p.waitForTimeout(900);
  ok(await p.evaluate(()=>!!document.querySelector('.ozOv.ozPkS')&&!document.querySelector('.ozOv.ozPdS')&&!!document.querySelector('#ozRoot .ozPlH')),'etiket küçük seçenek penceresini açmalı, kartı açmamalı');

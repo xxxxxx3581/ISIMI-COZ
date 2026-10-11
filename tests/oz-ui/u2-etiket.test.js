@@ -26,16 +26,16 @@ const BIG='html:root .ozGc .nm{font-size:22px!important}html:root .ozGc .ds{font
   if(o){const s=getComputedStyle(o.querySelector('.pl')||o);const cbg=rgb(getComputedStyle(c).backgroundColor);const bg=mix(rgb(s.backgroundColor),cbg);col=rgb(s.color);ratio=+cr(mix(col,bg),bg).toFixed(2);bd=rgb(s.borderTopColor)}
   const others=['.nm','.ds','.tr','.ft .pr'].flatMap(q=>glyphs(c.querySelector(q)));
   return {id:c.dataset.pid,opt:o?o.textContent:null,dis:!!o&&o.disabled,pr:(c.querySelector('.ft .pr')||{}).innerText||null,
-   gap:or&&ar?Math.round(ar.left-or.right):null,sameRow:!!(or&&ar&&or.top<ar.bottom&&or.bottom>ar.top),above:!!(or&&ar&&or.bottom<=ar.top+1&&Math.abs(or.right-ar.right)<=14),
+   gap:or&&ar?Math.round(ar.left-or.right):null,above2:!!(or&&ar&&or.bottom<=ar.top+1&&Math.abs((or.left+or.right)/2-(ar.left+ar.right)/2)<=2),sameRow:!!(or&&ar&&or.top<ar.bottom&&or.bottom>ar.top),above:!!(or&&ar&&or.bottom<=ar.top+1&&Math.abs(or.right-ar.right)<=14),
    h:or?Math.round(or.height):0,vh:o?Math.round((o.querySelector('.pl')||o).getBoundingClientRect().height):0,ratio,gold:!!col&&col.r>220&&col.g>170&&col.b<120,goldBorder:!!bd&&bd.r>220&&bd.g>170&&bd.b<120,
-   hit:!!o&&(ov(or,ar)||others.some(g=>ov(g,or))),inside:!or||(or.left>=cr0.left&&or.right<=cr0.right+1&&or.bottom<=cr0.bottom+1)}}));
+   hit:!!o&&(ov(or,ar)||others.some(g=>ov(g,(o.querySelector('.pl')||o).getBoundingClientRect()))),inside:!or||(or.left>=cr0.left&&or.right<=cr0.right+1&&or.bottom<=cr0.bottom+1)}}));
  for(const [where,go] of [['Tüm ürünler',()=>OZ.go('plist',{seller:'s1'})],['Arama',()=>OZ.go('search',{q:'a'})]]){
   await p.evaluate(go);await p.waitForTimeout(1500);
   const L=await G();const M={};L.forEach(x=>M[x.id]=x);const t='['+where+'] ';
   ok(M.p0&&M.p0.opt==='3 gramaj'&&M.p1&&M.p1.opt==='2 hacim'&&M.p4&&M.p4.opt==='2 seçenek','etiket metinleri: '+JSON.stringify([M.p0&&M.p0.opt,M.p1&&M.p1.opt,M.p4&&M.p4.opt]));
   ok(M.p3&&M.p3.opt==='2 gramaj'&&M.p3.dis&&M.p3.ratio>=4.5,t+'stoksuz üründe etiket pasif ve okunur: '+JSON.stringify(M.p3));
   ['p0','p1','p4'].forEach(k=>{const x=M[k];if(!x){fails.push(t+k+' yok');return}
-   ok(x.sameRow&&x.gap>=0&&x.gap<=12,t+k+' etiket "+"ın hemen solunda, aynı satırda (≤12px): '+JSON.stringify(x));
+   ok(x.above2,t+k+' etiket "+"ın tam üstünde ve ortalı (Y2): '+JSON.stringify(x));
    ok(x.h>=44&&x.vh<=28&&x.gold&&x.goldBorder&&x.ratio>=4.5,t+k+' etiket dokunma ≥44px, görsel ≤28px (X1), altın yazı/kenar, AA: '+JSON.stringify(x));
    ok(!x.hit&&x.inside,t+k+' etiket çakışmamalı/taşmamalı: '+JSON.stringify(x));
    ok(x.pr===null||/^≈ [\d.]+ ₺\/(kg'dan|L'den)$/.test(x.pr.replace(/\s+/g,' ').trim()),t+k+' çok seçenekte toplam fiyat yok (yalnız X2 birim fiyat satırı): '+x.pr)});
@@ -56,7 +56,7 @@ const BIG='html:root .ozGc .nm{font-size:22px!important}html:root .ozGc .ds{font
  // büyük yazı
  await p.addStyleTag({content:BIG});await p.waitForTimeout(300);
  const L=await G();
- L.filter(x=>x.opt).forEach(x=>{ok(!x.hit&&x.inside,'[büyük yazı] '+x.id+' çakışma/taşma olmamalı: '+JSON.stringify(x));ok((x.sameRow&&x.gap>=0&&x.gap<=12)||x.above,'[büyük yazı] '+x.id+' etiket "+"ın solunda ya da hemen üstünde sağa hizalı: '+JSON.stringify(x))});
+ L.filter(x=>x.opt).forEach(x=>{ok(!x.hit&&x.inside,'[büyük yazı] '+x.id+' çakışma/taşma olmamalı: '+JSON.stringify(x));ok(x.above2,'[büyük yazı] '+x.id+' etiket "+"ın solunda ya da hemen üstünde sağa hizalı: '+JSON.stringify(x))});
  ok(!st.errors.length,'sayfa hatası olmamalı: '+st.errors.join(' | '));
  await br.close();
  if(fails.length){console.error('u2-etiket BAŞARISIZ:\n - '+fails.join('\n - '));process.exit(1)}

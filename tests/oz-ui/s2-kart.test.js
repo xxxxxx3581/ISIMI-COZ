@@ -28,8 +28,8 @@ const BIG='html:root .ozGc .nm{font-size:22px!important}html:root .ozGc .ds{font
   ok(g.cards.length>=3,tag+'kart sayısı');
   g.cards.forEach((c,i)=>{
    ok(Math.abs(c.w-g.lw)<=2,tag+'kart '+i+' tam satır genişliği olmalı: '+c.w+' / '+g.lw);
-   ok(c.photoLeft<=12&&c.square&&c.textRight>=6,tag+'kart '+i+' foto solda kare, metin sağda: '+JSON.stringify(c));
-   ok(c.plusR<=12&&c.plusB<=12,tag+'kart '+i+' "+" sağ alt köşede: '+JSON.stringify({r:c.plusR,b:c.plusB}));
+   ok(c.photoLeft<=13&&c.textRight>=6,tag+'kart '+i+' foto solda (Y2: yükseklik metni izler, kare değil), metin sağda: '+JSON.stringify(c));
+   ok(c.plusR<=48&&c.plusB<=16,tag+'kart '+i+' "+" sağ altta (Y2: sağ sütun ortası): '+JSON.stringify({r:c.plusR,b:c.plusB}));
    ok(!c.plusHitsText&&!c.textsOverlap&&c.inside,tag+'kart '+i+' yazılar üst üste binmemeli / taşmamalı: '+JSON.stringify(c));
    ok(c.dsLines<=2,tag+'kart '+i+' açıklama en çok 2 satır: '+c.dsLines);
   });
