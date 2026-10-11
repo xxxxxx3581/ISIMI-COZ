@@ -1,0 +1,35 @@
+// AC4: canlıya geçiş sürüm hazırlığı (dosya + tarayıcı). Çalıştırma: node tests/oz-ui/ac4-surum.test.js
+// Doğrulanan: W2 CSS yorumunda "TEST" kalmadı (Özüne Dön CSS bloğunda hiç "TEST" yok); oz-market-v1.js sürüm parametresi ?v=2 ve TEK yerde
+// (eski ?v=1 yok; manifest/sw/başka dosyada başvuru yok); CSS çıktısı değişmedi: Özüne Dön stil bloğunun yorumsuz hali geri dönüş noktasıyla
+// (git 4fca025) birebir aynı, tarayıcıdaki kural sayısı ve bildirimleri aynı; modül gerçekten ?v=2 ile yükleniyor.
+const fs=require('fs'),path=require('path'),cp=require('child_process');
+const {chromium,open,enter}=require('./harness.js');
+const ROOT=path.resolve(__dirname,'../..');
+const cur=fs.readFileSync(path.join(ROOT,'index.html'),'utf8');
+const base=cp.execSync('git show 4fca025:index.html',{cwd:ROOT,encoding:'utf8',maxBuffer:64<<20});
+const blk=s=>{const a=s.indexOf('/*K21-BASLA*/'),b=s.indexOf('/*K21-BITIS*/');return s.slice(a,b)};
+const nocom=s=>s.replace(/\/\*[\s\S]*?\*\//g,'');
+(async()=>{
+ const fails=[];const ok=(c,m)=>{if(!c)fails.push(m)};
+ ok(!/TEST/.test(blk(cur)),'Özüne Dön CSS bloğunda "TEST" kalmamalı: '+(blk(cur).match(/.{0,40}TEST.{0,20}/)||[''])[0]);
+ ok(/\/\*OZ W2 hero "Sponsorlu" satıcı slaytı[^*]*:/.test(cur),'W2 yorumu nötr biçimde durmalı');
+ const v=cur.match(/oz-market-v1\.js\?v=\d+/g)||[];ok(v.length===1&&v[0]==='oz-market-v1.js?v=2','sürüm parametresi tek yerde ?v=2: '+JSON.stringify(v));
+ const others=['manifest.json','sw.js','food-sw.js','pf-platform-v1.js','a7-food-v1.js'].filter(f=>fs.existsSync(path.join(ROOT,f))&&/oz-market-v1\.js\?/.test(fs.readFileSync(path.join(ROOT,f),'utf8')));
+ ok(!others.length,'başka dosyada sürümlü başvuru olmamalı: '+others);
+ ok(nocom(blk(cur))===nocom(blk(base)),'Özüne Dön CSS (yorumsuz) değişmemeli');
+ ok(nocom(cur.replace('oz-market-v1.js?v=2','oz-market-v1.js?v=1'))===nocom(base),'index.html’de sürüm ve yorum dışında değişiklik olmamalı');
+ const br=await chromium.launch({executablePath:process.env.CHROMIUM||'/opt/pw-browsers/chromium'});
+ const {p,st}=await open(br,{w:390,h:844});
+ await enter(p);
+ const css=await p.evaluate(()=>{const out=[];for(const sh of document.styleSheets){let r;try{r=sh.cssRules}catch(e){continue}for(const x of r)out.push(x.cssText)}return out.filter(t=>/oz|Oz/.test(t))});
+ const src=await p.evaluate(()=>[...document.scripts].map(s=>s.getAttribute('src')||'').filter(s=>/oz-market/.test(s)));
+ ok(src.length===1&&src[0]==='./oz-market-v1.js?v=2','modül ?v=2 ile yüklenmeli: '+JSON.stringify(src));
+ await p.setContent(base.replace(/<script[\s\S]*?<\/script>/g,''));const css0=await p.evaluate(()=>{const out=[];for(const sh of document.styleSheets){let r;try{r=sh.cssRules}catch(e){continue}for(const x of r)out.push(x.cssText)}return out.filter(t=>/oz|Oz/.test(t))});
+ await p.setContent(cur.replace(/<script[\s\S]*?<\/script>/g,''));const css1=await p.evaluate(()=>{const out=[];for(const sh of document.styleSheets){let r;try{r=sh.cssRules}catch(e){continue}for(const x of r)out.push(x.cssText)}return out.filter(t=>/oz|Oz/.test(t))});
+ ok(css1.length>100&&css1.length===css0.length&&css1.join('\n')===css0.join('\n'),'CSS kural sayısı/bildirimleri aynı olmalı: '+css0.length+' → '+css1.length);
+ ok(css.length>100,'yüklü sayfada Özüne Dön kuralları var: '+css.length);
+ ok(!st.errors.length,'sayfa hatası: '+st.errors.join(' | '));
+ await br.close();
+ if(fails.length){console.error('ac4-surum BAŞARISIZ:\n - '+fails.join('\n - '));process.exit(1)}
+ console.log('ac4-surum: tüm kontroller geçti');process.exit(0);
+})().catch(e=>{console.error('ac4-surum HATA:',e);process.exit(1)});
