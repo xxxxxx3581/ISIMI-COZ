@@ -1,4 +1,5 @@
 // AD1: ürün listesi "Izgara / Liste" görünümü — 390px, sahte RPC. Çalıştırma: node tests/oz-ui/ad1-izgara.test.js
+// AF1: yalnız konum/seçici beklentileri güncellendi — "+" artık fotoğrafın dışında üst şeritte (44×36 dokunma), alt satır kısa ("2 hacim").
 // Doğrulanan: varsayılan Izgara (satıcı ürün listesi, arama, favoriler); 390px'te 3 sütun, 10px boşluk; kare foto (cover, ortalı);
 // "+" fotoğrafın sağ üstünde, dokunma alanı ≥44px, görsel ~31px, kart dışına taşmaz; kartta kalp/yıldız/açıklama/nokta yok;
 // "+" tıklaması paneli açmaz, karta dokunuş "+" eklemez (panel açılır); seçenekli üründe "+" küçük seçenek penceresi; tek fiyatlıda
@@ -43,11 +44,11 @@ const {chromium,open,enter,overflow}=require('./harness.js');
  let c0=await C('p0'),c2=await C('p2'),c3=await C('p3');
  ok(c0&&c2&&c3,'kartlar bulunmalı');
  if(c0&&c2&&c3){
-  ok(c2.pw>=44&&c2.ph>=44&&c2.vis==='31px'&&c2.tr<=1&&c2.tt<=1&&c2.inCard,'"+" foto sağ üstte, ≥44px dokunma, ~31px görsel, kart içinde: '+JSON.stringify(c2));
+  ok(c2.pw>=44&&c2.ph>=36&&c2.tt<=-28&&c2.tr<=-6&&c2.inCard,'"+" kartın sağ üstünde, fotoğrafın üstündeki şeritte (dışında), ≥44×36 dokunma, kart içinde: '+JSON.stringify(c2));
   ok(c2.sq&&c0.sq&&c0.fit==='cover 50% 50%','kare foto, cover, ortalı: '+c0.fit);
   ok(/^Ezine peyniri 2, 899,90\s₺$/.test(c2.go)&&c2.plus==='Sepete ekle','aria: kart "ad, fiyat", "+" "Sepete ekle": '+c2.go+' / '+c2.plus);
   ok(/899,90/.test(c2.pr)&&/₺\/kg/.test(c2.up)&&c2.nt==='500 g','tek fiyatlı: fiyat + ≈ birim + net miktar: '+JSON.stringify([c2.pr,c2.up,c2.nt]));
-  ok(/^≈ .+ ₺\/L'd[ae]n$/.test(c0.pr)&&/^Seçenek seç, 2 hacim seçeneği$/.test(c0.plus)&&c0.nt==='2 hacim seçeneği','seçenekli: "≈ X ₺/L\'dan" + seçenek bilgisi, "+" aria: '+JSON.stringify([c0.pr,c0.plus,c0.nt]));
+  ok(/^≈ .+ ₺\/L'd[ae]n$/.test(c0.pr)&&/^Seçenek seç, 2 hacim seçeneği$/.test(c0.plus)&&c0.nt==='2 hacim','seçenekli: "≈ X ₺/L\'dan" + seçenek bilgisi, "+" aria: '+JSON.stringify([c0.pr,c0.plus,c0.nt]));
   ok(c3.dis&&c3.so==='Tükendi'&&+c3.op<.6&&c3.pw>=44,'stoksuz: "+" pasif ama görünür, "Tükendi", soluk foto: '+JSON.stringify(c3));
   ok(c2.aa.every(x=>x>=4.5)&&c0.aa.every(x=>x>=4.5),'AA kontrast (fiyat, ad, soluk satırlar): '+JSON.stringify([c2.aa,c0.aa]));
   ok(c2.border==='rgb(138, 107, 62)'&&parseFloat(c2.rad)>=14&&parseFloat(c2.rad)<=16,'bronz kenar, 14-16px köşe: '+c2.border+' '+c2.rad);

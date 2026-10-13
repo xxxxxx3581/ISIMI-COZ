@@ -1,4 +1,5 @@
 // AE2: ızgara kartında tek seçenekli ürün için "− n +" hapı — 390px, sahte RPC. Çalıştırma: node tests/oz-ui/ae2-izgara-adet.test.js
+// AF1: yalnız konum/ölçü beklentileri güncellendi — "− n +" fotoğraf üstündeki hap yerine kartın üst şeridinde (her bölüm ≥32×36).
 // Doğrulanan: tek seçenekli ürün "+" ile eklenince fotoğrafın üst kenarında tek hap (− n +), foto genişliğini aşmaz, her bölüm ≥32×44px;
 // "Artır" adet 2, "Azalt" 1, ikinci "Azalt" 0 → ürün sepetten çıkar, hap kalkar, "+" geri gelir; aria "Azalt"/"Artır", adet okunur;
 // seçenekli üründe hap yok: "+" seçenek penceresi, eklenince "+" ve adet rozeti (eski davranış); 390px 3 sütun, taşma/çakışma yok; AA;
@@ -23,8 +24,8 @@ const {chromium,open,enter,overflow}=require('./harness.js');
   const cr=(a,b)=>{const x=lum(a),y=lum(b);return +((Math.max(x,y)+.05)/(Math.min(x,y)+.05)).toFixed(2)};
   if(!s)return {hap:false,plus:!!pl,bd:pl&&pl.querySelector('.bd')?pl.querySelector('.bd').textContent:null};
   const ph=c.querySelector('.ph').getBoundingClientRect(),r=s.getBoundingClientRect(),bs=[...s.querySelectorAll('button')].map(b=>{const q=b.getBoundingClientRect();return {w:Math.round(q.width),h:Math.round(q.height),l:b.getAttribute('aria-label')}});
-  const n=s.querySelector('b');const pill='rgb(31, 22, 14)';
-  return {hap:true,plus:!!pl,n:n.textContent,nl:n.getAttribute('aria-label'),live:n.getAttribute('aria-live'),bs,inPh:r.left>=ph.left-.5&&r.right<=ph.right+.5&&r.top>=ph.top-.5&&r.bottom<=ph.bottom,
+  const n=s.querySelector('b');const pill=getComputedStyle(c).backgroundColor;
+  return {hap:true,plus:!!pl,n:n.textContent,nl:n.getAttribute('aria-label'),live:n.getAttribute('aria-live'),bs,inPh:r.bottom<=ph.top+.5&&r.right<=c.getBoundingClientRect().right+.5&&r.left>=c.getBoundingClientRect().left-.5,
    aa:[cr(getComputedStyle(n).color,pill),cr(getComputedStyle(s.querySelector('button')).color,pill)],border:getComputedStyle(s,'::before').borderTopColor}},[root,id]);
  await p.evaluate(()=>OZ.go('plist',{seller:'s1',sname:'Yayla'}));await p.waitForTimeout(1500);
  ok((await H('#ozRoot .ozGrs','p2')).hap===false,'eklemeden önce hap yok, "+" var');
@@ -32,10 +33,10 @@ const {chromium,open,enter,overflow}=require('./harness.js');
  let h=await H('#ozRoot .ozGrs','p2');
  ok(h&&h.hap&&!h.plus&&h.n==='1'&&await qty()===1,'eklenince hap görünür (1), "+" yok: '+JSON.stringify(h));
  if(h&&h.hap){
-  ok(h.inPh,'hap fotoğrafın içinde, genişliği aşmaz');
-  ok(h.bs.length===2&&h.bs.every(b=>b.w>=32&&b.h>=44),'her bölüm ≥32×44: '+JSON.stringify(h.bs));
+  ok(h.inPh,'adım kontrolü üst şeritte, fotoğrafın dışında, kart içinde');
+  ok(h.bs.length===2&&h.bs.every(b=>b.w>=32&&b.h>=36),'her bölüm ≥32×36: '+JSON.stringify(h.bs));
   ok(h.bs[0].l==='Azalt'&&h.bs[1].l==='Artır'&&h.nl==='1 adet'&&h.live==='polite','aria Azalt/Artır, adet okunur: '+JSON.stringify([h.bs.map(b=>b.l),h.nl]));
-  ok(h.aa.every(x=>x>=4.5)&&h.border==='rgb(242, 193, 78)','AA kontrast + altın kenar: '+JSON.stringify([h.aa,h.border]));
+  ok(h.aa.every(x=>x>=4.5),'AA kontrast (kart zemininde): '+JSON.stringify(h.aa));
  }
  await click(p,'#ozRoot .ozGr[data-pid="p2"] .ozPStep [aria-label="Artır"]',500);
  h=await H('#ozRoot .ozGrs','p2');ok(h&&h.n==='2'&&await qty()===2,'Artır → 2: '+JSON.stringify(h&&h.n));

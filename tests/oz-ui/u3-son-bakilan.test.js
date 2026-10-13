@@ -1,4 +1,5 @@
 // U3: üretici sayfası "Son baktığın ürünler" rafı yatay kahve kart — 390px, sahte veri. Çalıştırma: node tests/oz-ui/u3-son-bakilan.test.js
+// AF1: yalnız ölçü beklentileri güncellendi (kartın üstünde 28px şerit + 8px iç boşluk).
 // AD2: raf artık AD1 ızgara kartını kullanır → yalnız seçiciler (.ozGrH/.ozGr/.ph/.nm/.pr/.go) ve beklenen ölçüler (118px kare kart, foto üstte, yazı altında) güncellendi.
 // Doğrulanan: kart ≈280px genişlik, liste kartından belirgin kısa; solda kare foto (filtre/karartma yok), sağda ad (≤2 satır)
 // ve fiyat / "N seçenek"; kahve zemin (beyaz değil), ince bronz kenar; ad/fiyat/seçenek yazıları AA (≥4.5:1). Raf yatay kayar,
@@ -29,10 +30,10 @@ const {chromium,open,enter}=require('./harness.js');
     nameCr:cr(rgb(getComputedStyle(b).color),bg),smCr:cr(rgb(getComputedStyle(sm).color),bg),filt:img?getComputedStyle(img).filter+'|'+getComputedStyle(img).opacity+'|'+getComputedStyle(pi).filter+'|'+getComputedStyle(pi).opacity:'none|1|none|1'}})}});
  ok(g&&g.cards.length===4,'raf 4 kart göstermeli: '+JSON.stringify(g&&g.cards.length));
  if(g){
-  const lc=320;/* AD2: ızgara kartı (118px kare foto + 4 satır) */
+  const lc=340;/* AD2/AF1: ızgara kartı (üst şerit + 118px kare foto + 4 satır) */
   g.cards.forEach(c=>{const t='['+c.id+'] ';
    ok(c.w===118,t+'genişlik 118px: '+c.w);ok(c.h<=lc*0.75,t+'yükseklik liste kartından belirgin kısa: '+c.h);
-   ok(c.photoLeft<=10&&c.sq&&c.textRight>=6,t+'üstte kare foto, yazı altında: '+JSON.stringify(c));ok(c.under>=-1&&c.lines<=2,t+'ad ≤2 satır, fiyat/seçenek adın üstünde: '+JSON.stringify([c.lines,c.under]));
+   ok(c.photoLeft<=40&&c.sq&&c.textRight>=6,t+'üstte kare foto, yazı altında: '+JSON.stringify(c));ok(c.under>=-1&&c.lines<=2,t+'ad ≤2 satır, fiyat/seçenek adın üstünde: '+JSON.stringify([c.lines,c.under]));
    ok(c.bgL<0.1&&c.bw>=0.5&&c.bw<=2&&c.bd.r>c.bd.b+30,t+'kahve zemin, ince bronz kenar: '+JSON.stringify([c.bgL,c.bd,c.bw]));
    ok(c.nameCr>=4.5&&c.smCr>=4.5,t+'AA kontrast: '+JSON.stringify([c.nameCr,c.smCr]));ok(c.filt==='none|1|none|1',t+'foto filtresiz: '+c.filt)});
   ok(/3 seçenek$/.test(g.cards[2].txt)&&/90,00\s₺$/.test(g.cards[1].txt),'fiyat ya da N seçenek: '+JSON.stringify(g.cards.map(c=>c.txt)));
