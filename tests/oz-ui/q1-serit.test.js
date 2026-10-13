@@ -1,4 +1,5 @@
 // Q1-3: üretici sayfası alt şeritleri — 390px, sahte veri. Çalıştırma: node tests/oz-ui/q1-serit.test.js
+// AD2: raf AD1 ızgara kartını kullanır → yalnız seçici (.ozGr/.go, data-pid) ve metin sırası beklentisi (fiyat/birim, ad, seçenek bilgisi) güncellendi.
 // Doğrulanan: "Son baktığın ürünler" yalnız bu üreticinin baktığın ürünleri (en yeni önce, en fazla 10; foto, ad, fiyat ya da
 // "N seçenek"); kayıt yalnız localStorage, boşsa şerit yok, localStorage hata verirse sayfa yine açılır. "Müşteri yorumları"
 // en yeni önce, en fazla 10; yıldız, ürün adı, tarih, varsa metin; ürün adı ürün panelini açar; yorum yoksa şerit yok.
@@ -16,7 +17,7 @@ const {chromium,open,enter}=require('./harness.js');
  const goStore=async()=>{await p.evaluate(()=>OZ.go('store',{id:'s1'}));await p.waitForTimeout(1500)};
  const S=()=>p.evaluate(()=>{const secs=[...document.querySelectorAll('#ozRoot .ozPP .ozPPx')];const cats=document.querySelector('#ozRoot .ozPPCats');
   const g=t=>secs.find(x=>x.querySelector('h2').textContent===t);const rc=g('Son baktığın ürünler'),rv=g('Müşteri yorumları');
-  return {rc:rc?[...rc.querySelectorAll('.ozRcC')].map(c=>c.dataset.id+'|'+c.innerText.replace(/\s+/g,' ').trim()):null,rv:rv?[...rv.querySelectorAll('.ozRvC')].map(c=>c.innerText.replace(/\s+/g,' ').trim()):null,
+  return {rc:rc?[...rc.querySelectorAll('.ozGr')].map(c=>c.dataset.pid+'|'+c.querySelector('.go').innerText.replace(/\s+/g,' ').trim()):null,rv:rv?[...rv.querySelectorAll('.ozRvC')].map(c=>c.innerText.replace(/\s+/g,' ').trim()):null,
    rvBtn:rv?rv.querySelectorAll('.pn[data-id]').length:0,below:secs.length?secs.every(x=>cats&&(cats.compareDocumentPosition(x)&Node.DOCUMENT_POSITION_FOLLOWING)):true}});
  await goStore();let s=await S();
  ok(s.rc===null&&s.rv===null,'ilk ziyaret, yorum yok: iki şerit de görünmemeli: '+JSON.stringify(s));
@@ -27,7 +28,7 @@ const {chromium,open,enter}=require('./harness.js');
  await click(p,'.ozGc[data-pid=p0] .sc',1200);await p.keyboard.press('Escape');await p.waitForTimeout(300);
  await p.evaluate(rev=>{window.__OZ_FX.R.oz_producer_reviews=rev},REV);
  await goStore();s=await S();
- ok(s.rc&&s.rc.length===2&&/^p0\|(🌿 )?Erken hasat 0 650,00 ₺$/.test(s.rc[0])&&/^p1\|(🌿 )?Çam balı 1 ≈ 1\.040 ₺\/L'den 3 seçenek$/.test(s.rc[1]),'son bakılanlar en yeni önce, fiyat ya da N seçenek: '+JSON.stringify(s.rc));
+ ok(s.rc&&s.rc.length===2&&/^p0\|(E )?650,00 ₺ (≈ \S+ ₺\/L )?Erken hasat 0( 1 L)?$/.test(s.rc[0])&&/^p1\|(Ç )?≈ 1\.040 ₺\/L'den Çam balı 1 3 (hacim )?seçene(k|ği)$/.test(s.rc[1]),'son bakılanlar en yeni önce, fiyat ya da N seçenek: '+JSON.stringify(s.rc));
  ok(s.rv&&s.rv.length===10,'yorumlar en fazla 10: '+(s.rv&&s.rv.length));
  ok(s.rv&&/Çam balı 1/.test(s.rv[0])&&/5 Eki 2026|5 Ekim 2026/.test(s.rv[0])&&/Geç geldi\./.test(s.rv[1])&&/Harika bal\./.test(s.rv[2]),'yorumlar en yeni önce, ürün adı, tarih, metin: '+JSON.stringify((s.rv||[]).slice(0,3)));
  ok(s.below,'şeritler kategori ikonlarının altında olmalı');

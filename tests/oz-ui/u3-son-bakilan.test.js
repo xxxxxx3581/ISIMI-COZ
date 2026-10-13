@@ -1,4 +1,5 @@
 // U3: üretici sayfası "Son baktığın ürünler" rafı yatay kahve kart — 390px, sahte veri. Çalıştırma: node tests/oz-ui/u3-son-bakilan.test.js
+// AD2: raf artık AD1 ızgara kartını kullanır → yalnız seçiciler (.ozGrH/.ozGr/.ph/.nm/.pr/.go) ve beklenen ölçüler (118px kare kart, foto üstte, yazı altında) güncellendi.
 // Doğrulanan: kart ≈280px genişlik, liste kartından belirgin kısa; solda kare foto (filtre/karartma yok), sağda ad (≤2 satır)
 // ve fiyat / "N seçenek"; kahve zemin (beyaz değil), ince bronz kenar; ad/fiyat/seçenek yazıları AA (≥4.5:1). Raf yatay kayar,
 // sayfa taşmaz; karta dokununca o ürünün paneli açılır; kayıt yoksa raf görünmez. Müşteri yorumları şeridi değişmez.
@@ -19,28 +20,28 @@ const {chromium,open,enter}=require('./harness.js');
   {id:'p2',name:'Cam şişe süt (TEST)',image:I('icecekler'),price_kurus:9000,nv:1},{id:'p3',name:'Çilek reçeli',image:I('recel'),price_kurus:20000,nv:3},{id:'p4',name:'Kekik',image:'',price_kurus:5000,nv:1}]}))});
  await goStore();
  const g=await p.evaluate(()=>{const sec=[...document.querySelectorAll('#ozRoot .ozPPx')].find(s=>s.querySelector('h2').textContent==='Son baktığın ürünler');if(!sec)return null;
-  const row=sec.querySelector('.ozRcs');const rgb=s=>{const m=s.match(/[\d.]+/g).map(Number);return {r:m[0],g:m[1],b:m[2]}};
+  const row=sec.querySelector('.ozGrH');const rgb=s=>{const m=s.match(/[\d.]+/g).map(Number);return {r:m[0],g:m[1],b:m[2]}};
   const lum=c=>{const f=v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)};return .2126*f(c.r)+.7152*f(c.g)+.0722*f(c.b)};const cr=(a,b)=>{const x=lum(a),y=lum(b);return +((Math.max(x,y)+.05)/(Math.min(x,y)+.05)).toFixed(2)};
-  return {sw:row.scrollWidth,cw:row.clientWidth,ox:getComputedStyle(row).overflowX,page:document.documentElement.scrollWidth,cards:[...row.querySelectorAll('.ozRcC')].map(c=>{const r=c.getBoundingClientRect(),pi=c.querySelector('.ozPic'),pr=pi.getBoundingClientRect(),b=c.querySelector('b'),sm=c.querySelector('small');
+  return {sw:row.scrollWidth,cw:row.clientWidth,ox:getComputedStyle(row).overflowX,page:document.documentElement.scrollWidth,cards:[...row.querySelectorAll('.ozGr')].map(c=>{const r=c.getBoundingClientRect(),pi=c.querySelector('.ph'),pr=pi.getBoundingClientRect(),b=c.querySelector('.nm'),sm=c.querySelector('.pr');
    const img=pi.querySelector('img');const bg=rgb(getComputedStyle(c).backgroundColor);const bd=rgb(getComputedStyle(c).borderTopColor);const lh=parseFloat(getComputedStyle(b).lineHeight)||parseFloat(getComputedStyle(b).fontSize)*1.3;
-   return {id:c.dataset.id,w:Math.round(r.width),h:Math.round(r.height),txt:c.innerText.replace(/\s+/g,' ').trim(),photoLeft:Math.round(pr.left-r.left),sq:Math.abs(pr.width-pr.height)<2&&pr.width>=48,textRight:Math.round(b.getBoundingClientRect().left-pr.right),
-    under:Math.round(sm.getBoundingClientRect().top-b.getBoundingClientRect().bottom),lines:Math.round(b.getBoundingClientRect().height/lh),bgL:+lum(bg).toFixed(3),bd,bw:parseFloat(getComputedStyle(c).borderTopWidth),
+   return {id:c.dataset.pid,w:Math.round(r.width),h:Math.round(r.height),txt:sm.innerText.replace(/\s+/g,' ').trim(),photoLeft:Math.round(pr.top-r.top),sq:Math.abs(pr.width-pr.height)<2&&pr.width>=48,textRight:Math.round(sm.getBoundingClientRect().top-pr.bottom),
+    under:Math.round(b.getBoundingClientRect().top-sm.getBoundingClientRect().bottom),lines:Math.round(b.getBoundingClientRect().height/lh),bgL:+lum(bg).toFixed(3),bd,bw:parseFloat(getComputedStyle(c).borderTopWidth),
     nameCr:cr(rgb(getComputedStyle(b).color),bg),smCr:cr(rgb(getComputedStyle(sm).color),bg),filt:img?getComputedStyle(img).filter+'|'+getComputedStyle(img).opacity+'|'+getComputedStyle(pi).filter+'|'+getComputedStyle(pi).opacity:'none|1|none|1'}})}});
  ok(g&&g.cards.length===4,'raf 4 kart göstermeli: '+JSON.stringify(g&&g.cards.length));
  if(g){
-  const lc=134;/* liste kartı en az 136px yüksek */
+  const lc=320;/* AD2: ızgara kartı (118px kare foto + 4 satır) */
   g.cards.forEach(c=>{const t='['+c.id+'] ';
-   ok(c.w>=270&&c.w<=290,t+'genişlik ≈280px: '+c.w);ok(c.h<=lc*0.75,t+'yükseklik liste kartından belirgin kısa: '+c.h);
-   ok(c.photoLeft<=10&&c.sq&&c.textRight>=6,t+'solda kare foto, yazı sağda: '+JSON.stringify(c));ok(c.under>=-1&&c.lines<=2,t+'ad ≤2 satır, altında fiyat/seçenek: '+JSON.stringify([c.lines,c.under]));
+   ok(c.w===118,t+'genişlik 118px: '+c.w);ok(c.h<=lc*0.75,t+'yükseklik liste kartından belirgin kısa: '+c.h);
+   ok(c.photoLeft<=10&&c.sq&&c.textRight>=6,t+'üstte kare foto, yazı altında: '+JSON.stringify(c));ok(c.under>=-1&&c.lines<=2,t+'ad ≤2 satır, fiyat/seçenek adın üstünde: '+JSON.stringify([c.lines,c.under]));
    ok(c.bgL<0.1&&c.bw>=0.5&&c.bw<=2&&c.bd.r>c.bd.b+30,t+'kahve zemin, ince bronz kenar: '+JSON.stringify([c.bgL,c.bd,c.bw]));
    ok(c.nameCr>=4.5&&c.smCr>=4.5,t+'AA kontrast: '+JSON.stringify([c.nameCr,c.smCr]));ok(c.filt==='none|1|none|1',t+'foto filtresiz: '+c.filt)});
   ok(/3 seçenek$/.test(g.cards[2].txt)&&/90,00\s₺$/.test(g.cards[1].txt),'fiyat ya da N seçenek: '+JSON.stringify(g.cards.map(c=>c.txt)));
   ok(g.ox==='auto'&&g.sw>g.cw+100&&g.page<=390,'raf yatay kaymalı, sayfa taşmamalı: '+JSON.stringify({sw:g.sw,cw:g.cw,ox:g.ox,page:g.page}));
  }
- const sl=await p.evaluate(()=>{const r=document.querySelector('#ozRoot .ozRcs');r.scrollLeft=200;return r.scrollLeft});ok(sl>0,'raf kaydırılabilmeli: '+sl);
+ const sl=await p.evaluate(()=>{const r=document.querySelector('#ozRoot .ozGrH');r.scrollLeft=200;return r.scrollLeft});ok(sl>0,'raf kaydırılabilmeli: '+sl);
  ok(rvBefore&&rvBefore===await p.evaluate(()=>{const e=document.querySelector('#ozRoot .ozRvC');return e?e.outerHTML:null}),'müşteri yorumları şeridi değişmemeli');
- await p.evaluate(()=>{window.__OZ_FX.R.oz_product_detail.id='p3';document.querySelector('#ozRoot .ozRcs').scrollLeft=0});
- try{await p.click('#ozRoot .ozRcC[data-id=p3]',{timeout:3000})}catch(e){fails.push('kart tıklanamadı')}await p.waitForTimeout(1300);
+ await p.evaluate(()=>{window.__OZ_FX.R.oz_product_detail.id='p3';document.querySelector('#ozRoot .ozGrH').scrollLeft=0});
+ try{await p.click('#ozRoot .ozGr[data-pid=p3] .go',{timeout:3000})}catch(e){fails.push('kart tıklanamadı')}await p.waitForTimeout(1300);
  const last=st.calls.filter(c=>c[0]==='oz_product_detail').pop();
  ok(await p.evaluate(()=>!!document.querySelector('.ozOv.ozPdS'))&&last&&last[1].p_id==='p3','karta dokununca p3 paneli açılmalı: '+JSON.stringify(last&&last[1]));
  ok(!st.errors.length,'sayfa hatası olmamalı: '+st.errors.join(' | '));

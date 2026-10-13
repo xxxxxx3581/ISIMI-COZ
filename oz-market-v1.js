@@ -444,11 +444,13 @@ function recentAdd(p){try{var sid=p&&p.seller&&p.seller.id;if(!sid||!p.id)return
     /* X3: birim fiyat satırı için seçenek etiket/fiyatları ve net miktar (yalnız bu tarayıcıda) */
     vs:vs.slice(0,12).map(function(v){return {label:String(v.label||''),price_kurus:num(v.price_kurus)}}),net:p.net_content||null};
   var l=arr(all[sid]).filter(function(x){return x&&String(x.id)!==it.id});l.unshift(it);all[sid]=l.slice(0,10);localStorage.setItem(RECENT_KEY,JSON.stringify(all))}catch(e){}}
-/* U3: yatay kahve kart (solda kare foto, sağda ad + fiyat / N seçenek); yalnız bu raf kullanır.
-   X3: seçenekli üründe X2'nin unitFrom satırı ("≈ X ₺/kg'dan") + küçük "N seçenek" aynı satırda; tek fiyatlıda altın fiyat. */
+/* AD2: "Son baktığın ürünler" rafı AD1 ızgara kartını (gridCard, paylaşılan) kullanır — yatay kaydırmalı 118px kareler; veri, sıra ve
+   localStorage davranışı aynı (üretici başına en çok 10). Kayıtta stok yok → "+" etkin, stok/seçenek ppPlus'ta ürün okunarak denetlenir.
+   Kayıtta seçenek etiket/fiyatları (vs) yoksa (eski kayıt) yalnız "N seçenek" yazılır, tahmin yapılmaz. */
 function recentStrip(sid){var l=arr(recentAll()[sid]).filter(function(x){return x&&x.id});if(!l.length)return '';
-  return '<section class="ozPPx" aria-label="Son baktığın ürünler"><div class="ozSecH"><h2>Son baktığın ürünler</h2></div><div class="ozRcs" role="list">'+l.map(function(x){
-    return '<button type="button" class="ozRcC" role="listitem" data-a="nav" data-k="product" data-id="'+E(x.id)+'">'+pic(x.image,x.name)+'<span class="tx"><b>'+E(x.name)+'</b>'+(num(x.nv)>1?(function(u){return '<span class="pl2">'+(u?'<small class="uf">'+E(u)+'</small>':'')+'<small class="nv">'+num(x.nv)+' seçenek</small></span>'})(unitFrom(x.vs,x.net)):'<small>'+TL(x.price_kurus)+'</small>')+'</span></button>'}).join('')+'</div></section>'}
+  return '<section class="ozPPx" aria-label="Son baktığın ürünler"><div class="ozSecH"><h2>Son baktığın ürünler</h2></div><div class="ozGrH" role="list">'+l.map(function(x){
+    var vs=Array.isArray(x.vs)&&x.vs.length?x.vs:null,nv=num(x.nv);
+    return gridCard({id:x.id,name:x.name,image:x.image,price_kurus:num(x.price_kurus),nv:nv,vars:vs&&(nv>1||vs.length===1)?vs:null,net_content:x.net||null})}).join('')+'</div></section>'}
 /* Q1-3: "Müşteri yorumları" — oz_producer_reviews (mevcut okuma), en yeni önce, en fazla 10.
    R3: ürün adı yorumun product_id'siyle o ürünün panelini açar (ad eşleştirme yok); product_id yoksa (eski veri) ad dokunulamaz. */
 function revStrip(l){l=arr(l).slice().sort(function(a,b){return String(b.created_at||'').localeCompare(String(a.created_at||''))}).slice(0,10);if(!l.length)return '';
