@@ -484,12 +484,14 @@ function ppLines(pid){return cartGet().filter(function(x){return String(x.produc
    Birden çok seçenekli üründe (ya da birden çok seçeneği sepetteyse) "+" paneli açmaya devam eder, üstünde küçük adet rozeti.
    Seçenek sayısı / stok: sepet satırına eklenirken yazılan nv/stock, yoksa bu oturumda okunan ürün detayı (ST.pnv). */
 function ppMulti(pid,ls){var k=String(pid);return ls.length>1||ls.some(function(x){return num(x.nv)>1})||num((ST.pnv||{})[k])>1}
-function ppCtrl(p){
+function ppCtrl(p,cp){
   var ls=ppLines(p.id);var n=ls.reduce(function(k,x){return k+num(x.qty)},0);
   /* Z1: seçenekli üründe "+" ekran okuyucuya seçenek sayısını söyler ("Seçenek seç, 3 gramaj seçeneği") */
   var ot=Array.isArray(p.vars)&&p.vars.length>1?optText(p.vars,p.net_content):'';
   if(!n)return p.in_stock===false?'<button type="button" class="ozPlus" disabled aria-label="Tükendi">+</button>':'<button type="button" class="ozPlus" data-a="ppPlus" data-id="'+E(p.id)+'" aria-label="'+(ot?'Seçenek seç, '+E(ot):'Sepete ekle')+'">+</button>';
   if(ppMulti(p.id,ls))return '<button type="button" class="ozPlus in" data-a="ppPlus" data-id="'+E(p.id)+'" aria-label="'+n+' adet sepette, seçenek seç'+(ot?', '+E(ot):'')+'">+<i class="bd" aria-hidden="true">'+(n>9?'9+':n)+'</i></button>';
+  /* AD1: ızgara kartında (cp) adım düğmesi yok — "+" kalır, adet rozeti gösterir; dokunuş bir tane daha ekler (ppPlus, stok sınırı ppAddVar'da) */
+  if(cp)return '<button type="button" class="ozPlus in" data-a="ppPlus" data-id="'+E(p.id)+'" aria-label="Sepete ekle, sepette '+n+' adet">+<i class="bd" aria-hidden="true">'+(n>9?'9+':n)+'</i></button>';
   var l=ls[0],q=num(l.qty),mx=Math.min(99,l.stock!=null?num(l.stock):99);
   return '<span class="ozPStep" role="group" aria-label="Adet"><button type="button" data-a="ppQty" data-v="'+E(l.variant_id)+'" data-d="-1" aria-label="'+(q<=1?'Sepetten çıkar':'Azalt')+'">−</button><b aria-live="polite">'+q+'</b>'+
     '<button type="button" data-a="ppQty" data-v="'+E(l.variant_id)+'" data-d="1" aria-label="Bir tane daha"'+(q>=mx?' disabled':'')+'>+</button></span>';
@@ -537,6 +539,30 @@ function gcCard(p){ST.rows=ST.rows||{};ST.rows[String(p.id)]=p;
        (seçenekli üründe küçük seçenek penceresi; ekran okuyucu seçenek sayısını söyler, bkz. ppCtrl). */
     '<div class="ft"><span class="pr">'+(Array.isArray(p.vars)&&p.vars.length>1?(function(t){return t?'<small class="u ufrom">'+E(t)+'</small>':'<small class="u nvp">'+p.vars.length+' seçenek</small>'})(unitFrom(p.vars,p.net_content)):cardPrice(p,1))+'</span>'+
     '<span class="ac">'+ppCtrl(p)+'</span></div></div>'}
+/* AD1: ürün listesi görünümü — "Izgara" (varsayılan) / "Liste" (gcCard, Z1 hâli, değişmedi). Seçim kullanıcı başına localStorage
+   (isimi_oz_view_<uid|misafir>); okunamazsa Izgara. Tüm ürünler / kategori / satıcı ürün listesi / arama / favori ürünler aynı prodList'i kullanır. */
+function vwKey(){return 'isimi_oz_view_'+(uid()||'misafir')}
+function vwGet(){try{return localStorage.getItem(vwKey())==='list'?'list':'grid'}catch(e){return 'grid'}}
+var VW_IC={grid:'<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>',
+  list:'<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><rect x="3" y="4" width="6" height="6" rx="1.6"/><rect x="11" y="5.5" width="10" height="3" rx="1.5"/><rect x="3" y="14" width="6" height="6" rx="1.6"/><rect x="11" y="15.5" width="10" height="3" rx="1.5"/></svg>'};
+function vwSw(){var v=vwGet();return '<span class="ozVw" role="group" aria-label="Görünüm">'+[['grid','Izgara görünümü'],['list','Liste görünümü']].map(function(x){var on=v===x[0];
+  return '<button type="button" class="'+(on?'on':'')+'" data-a="vwSet" data-v="'+x[0]+'" aria-pressed="'+on+'" aria-label="'+x[1]+'">'+VW_IC[x[0]]+'</button>'}).join('')+'</span>'}
+function prodList(l,src){var g=vwGet()==='grid';return '<div class="'+(g?'ozGrs':'ozGcs')+'" role="list" data-pl="'+E(src)+'">'+arr(l).map(function(p){return g?gridCard(p):gcCard(p)}).join('')+'</div>'}
+/* AD1/AD2: sade ızgara kartı (paylaşılan bileşen: ürün listeleri + "Son baktığın ürünler" rafı). Kare foto (cover, ortalı); sağ üstte
+   "+" (ppCtrl, cp: adım düğmesi yerine adet rozeti); altında fiyat ya da "≈ X ₺/kg'dan" (unitFrom; yoksa "N seçenek"), tek fiyatlıda
+   ≈ birim fiyat (unitPrice), ad (2 satır), net miktar / seçenek bilgisi. Kalp, yıldız, açıklama, foto noktaları yok; karta dokunuş ürün paneli.
+   p.nv: seçenek sayısı biliniyor ama seçenekler eksikse (son bakılan kaydı) kullanılır. */
+function grInit(n){var c=String(n||'').trim().charAt(0);return c?c.toLocaleUpperCase('tr'):'·'}
+function gridCard(p){ST.rows=ST.rows||{};ST.rows[String(p.id)]=p;
+  var im=httpsUrl(p.image)||httpsUrl(arr(p.images)[0]),id=E(p.id),vs=Array.isArray(p.vars)?p.vars:null,nv=Math.max(num(p.nv),vs?vs.length:0),so=p.in_stock===false;
+  var pr,up='',nt='',ap;
+  if(nv>1){var u=vs?unitFrom(vs,p.net_content):'';pr=u?'<span class="uf">'+E(u)+'</span>':'<span class="nvp">'+nv+' seçenek</span>';ap=u||nv+' seçenek';nt=u&&vs?optText(vs,p.net_content):''}
+  else{var v=vs&&vs.length===1?vs[0]:null,k=v?num(v.price_kurus):num(p.price_kurus);pr='<b>'+TL(k)+'</b>';ap=TL(k);
+    up=v?unitPrice({variants:vs,net_content:p.net_content},v):'';nt=p.net_content||(v&&v.label)||''}
+  return '<div class="ozGr'+(so?' out':'')+'" role="listitem" data-pid="'+id+'"><button type="button" class="go" data-a="nav" data-k="product" data-id="'+id+'" aria-label="'+E(String(p.name||'')+', '+ap+(so?', tükendi':''))+'">'+
+    '<span class="ph">'+(im?'<img src="'+E(im)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">':'')+'<i aria-hidden="true">'+E(grInit(p.name))+'</i>'+(so?'<span class="so">Tükendi</span>':'')+'</span>'+
+    '<span class="pr">'+pr+'</span><small class="up">'+E(up)+'</small><span class="nm">'+E(p.name||'')+'</span><small class="nt">'+E(nt)+'</small></button>'+
+    '<span class="ac">'+ppCtrl(p,1)+'</span></div>'}
 /* kart açıklaması arama sonucunda yok: görünür ürünler için tek okuma (RLS: yalnız yayındaki ürünler). Hata olursa sessizce gizli. */
 async function gcEnrich(l){var ids=l.filter(function(x){return x&&x.id&&x.description===undefined}).map(function(x){return x.id});if(!ids.length)return;
   /* L: etkin seçenekler (oz_variants, RLS: yalnız yayındaki ürünler) — kartta "X ₺'den · N seçenek" / birim fiyat için */
@@ -557,7 +583,7 @@ function pvOpen(imgs,start){if(!imgs.length)return;var ov=D.createElement('div')
   sc.addEventListener('scroll',function(){if(!dt)return;var i=Math.round(sc.scrollLeft/Math.max(1,sc.clientWidth));qa('i',dt).forEach(function(x,j){x.classList.toggle('on',i===j)})},{passive:true});
   function close(){ov.remove();D.removeEventListener('keydown',esc,true)}function esc(e){if(e.key==='Escape'){e.stopImmediatePropagation();close()}}
   qs('.x',ov).addEventListener('click',close);D.addEventListener('keydown',esc,true);try{qs('.x',ov).focus()}catch(e){}}
-function ppRefresh(){var m=ST.rows||{},pl=(ST.pp&&ST.pp.list)||[];qa('#ozRoot [data-pid]').forEach(function(c){var p=m[c.dataset.pid]||pl.filter(function(x){return String(x.id)===c.dataset.pid})[0];var ac=qs('.ac',c);if(p&&ac)ac.innerHTML=ppCtrl(p)});ppBar()}
+function ppRefresh(){var m=ST.rows||{},pl=(ST.pp&&ST.pp.list)||[];qa('#ozRoot [data-pid]').forEach(function(c){var p=m[c.dataset.pid]||pl.filter(function(x){return String(x.id)===c.dataset.pid})[0];var ac=qs('.ac',c);if(p&&ac)ac.innerHTML=ppCtrl(p,c.classList.contains('ozGr'))});ppBar()}
 function ppBar(){stripSync()}
 ACT_EXTRA({
   ppQty:function(b){var v=b.dataset.v;var l=cartGet().filter(function(x){return x.variant_id===v})[0];var q=cartQty(v)+num(b.dataset.d);
@@ -566,6 +592,10 @@ ACT_EXTRA({
      Fiyat burada yalnız gösterim; sipariş tutarı sunucuda varyanttan hesaplanır (oz_quote / oz_place_order). */
   /* O1: seçenekli üründe "+" listenin üstünde KÜÇÜK seçenek penceresi açar (tam panel değil); seçim → "Sepete ekle" →
      pencere kapanır, kart adet rozeti gösterir, sayfa değişmez. Seçeneksiz / tek seçenekli ürün doğrudan sepete. */
+  /* AD1: Izgara / Liste — seçimi kaydet, sayfadaki listeyi aynı veriden yeniden çiz (yeni okuma yok) */
+  vwSet:function(b){var v=b.dataset.v==='list'?'list':'grid';try{localStorage.setItem(vwKey(),v)}catch(e){}
+    qa('#ozRoot .ozVw button').forEach(function(x){var on=x.dataset.v===v;x.classList.toggle('on',on);x.setAttribute('aria-pressed',String(on))});
+    qa('#ozRoot [data-pl]').forEach(function(el){var src=el.dataset.pl==='fav'?ST.favList:(ST.sr&&ST.sr.list);if(src)el.outerHTML=prodList(src,el.dataset.pl)})},
   ppPlus:async function(b){
     var id=b.dataset.id;
     await busy(b,async function(){
@@ -738,7 +768,7 @@ VIEWS_EXTRA({
     var title=a.cat?cn+(a.sname?' · '+a.sname:''):a.seller?'Tüm ürünler'+(a.sname?' · '+a.sname:''):'Yeni ürünler';
     var sort=a.sort||'new';
     paint('<div class="ozPlH"><button type="button" class="ozIc" data-a="back" aria-label="Geri">'+ico('back')+'</button><div class="tx"><h1>'+E(title)+'</h1><small id="ozPlN"></small></div></div>'+chips+
-      (a.seller&&a.cat?'':'<div class="ozPlS">'+sortSel(sort)+'</div>')+'<div id="ozRes">'+skel(2,'line')+'</div>');
+      '<div class="ozPlS">'+(a.seller&&a.cat?'':sortSel(sort))+vwSw()+'</div><div id="ozRes">'+skel(2,'line')+'</div>');
     ST.sr={a:{sort:sort,cat:a.cat||'',seller:a.seller||''},list:[],offset:0,more:false,cards:1,noCount:1,
       emptyH:empty(ico('box',36),a.seller&&a.cat?'Bu satıcının bu kategoride ürünü yok':a.cat?'Bu kategoride ürün yok':'Henüz ürün yok',a.seller?'Diğer kategorilere göz atabilirsin.':'')};
     await loadFavs();
@@ -755,7 +785,7 @@ VIEWS_EXTRA({
       (cat?'<button type="button" class="ozChip on x" data-a="srchClear" data-f="cat" aria-label="Kategori filtresini kaldır: '+E(cn)+'">'+E(cn)+' ✕</button>':'')+
       (sort!=='new'?'<button type="button" class="ozChip on x" data-a="srchClear" data-f="sort" aria-label="Sıralamayı kaldır: '+E(sortName(sort))+'">'+E(sortName(sort))+' ✕</button>':'');
     var head=searchForm(q)+(applied?'<div class="ozWrap ozApplied" aria-label="Uygulanan seçimler">'+applied+'</div>':'')+
-      (cats.length&&!cat?'<div class="ozChips" role="group" aria-label="Kategori">'+cats.map(function(c){return '<button type="button" class="ozChip" data-a="srchCat" data-cat="'+E(c.slug)+'">'+E(c.name)+'</button>'}).join('')+'</div>':'')+sortChips(sort);
+      (cats.length&&!cat?'<div class="ozChips" role="group" aria-label="Kategori">'+cats.map(function(c){return '<button type="button" class="ozChip" data-a="srchCat" data-cat="'+E(c.slug)+'">'+E(c.name)+'</button>'}).join('')+'</div>':'')+'<div class="ozSrtR">'+sortChips(sort)+vwSw()+'</div>';
     paint(head+'<div id="ozRes">'+skel(2)+'</div>');
     ST.sr={a:{q:q,cat:cat,sort:sort},list:[],offset:0,more:false,cards:1};
     await loadFavs();
@@ -811,8 +841,8 @@ VIEWS_EXTRA({
     if(ST.fsl){ST.sfav=new Set(ST.fsl.map(function(x){return String(x.id)}));ST.sfavAll=true}
     ST.fav=new Set(l.map(function(x){return String(x.id)}));
     /* O1: favoriler de liste kartıyla (fiyat/seçenek gösterimi ve "+" aynı) */
-    await gcEnrich(l);if(!alive(t))return;
-    paint(pageHead('Favorilerim',l.length?l.length+' ürün':'')+(ST.fsl?'<section class="ozFsS" id="ozFsS" aria-label="Favori satıcılar">'+favSellersHtml(ST.fsl)+'</section><div class="ozSecH"><h2>Favori ürünler</h2></div>':'')+(l.length?'<div class="ozGcs" role="list">'+l.map(gcCard).join('')+'</div>':empty(ico('heart',36),'Favorin yok','Ürünlerdeki kalbe dokunarak favorilerine ekleyebilirsin.','<button type="button" class="ozBtn pri" data-a="nav" data-k="home">Ürünlere göz at</button>')));
+    await gcEnrich(l);if(!alive(t))return;ST.favList=l;
+    paint(pageHead('Favorilerim',l.length?l.length+' ürün':'')+(ST.fsl?'<section class="ozFsS" id="ozFsS" aria-label="Favori satıcılar">'+favSellersHtml(ST.fsl)+'</section><div class="ozSecH"><h2>Favori ürünler</h2>'+(l.length?vwSw():'')+'</div>':l.length?'<div class="ozPlS">'+vwSw()+'</div>':'')+(l.length?prodList(l,'fav'):empty(ico('heart',36),'Favorin yok','Ürünlerdeki kalbe dokunarak favorilerine ekleyebilirsin.','<button type="button" class="ozBtn pri" data-a="nav" data-k="home">Ürünlere göz at</button>')));
   },
 
   /* ====================== Hesap menüsü ====================== */
@@ -851,7 +881,7 @@ async function searchMore(t){
     sr.list=sr.list.concat(l);sr.offset+=l.length;sr.more=l.length>=LIM;
     var box=D.getElementById('ozRes');if(!box)return;
     var cn=D.getElementById('ozPlN');if(cn)cn.textContent=sr.list.length+(sr.more?'+':'')+' ürün';
-    box.innerHTML=sr.list.length?(sr.noCount?'':'<p class="ozMuted" style="margin:0 0 8px">'+sr.list.length+(sr.more?'+':'')+' ürün</p>')+(sr.cards?'<div class="ozGcs" role="list">'+sr.list.map(gcCard).join('')+'</div>':'<div class="ozGrid">'+sr.list.map(card).join('')+'</div>')+(sr.more?'<button type="button" class="ozBtn wide" id="ozMore" data-a="more" style="margin-top:12px">Daha fazla göster</button>':''):
+    box.innerHTML=sr.list.length?(sr.noCount?'':'<p class="ozMuted" style="margin:0 0 8px">'+sr.list.length+(sr.more?'+':'')+' ürün</p>')+(sr.cards?prodList(sr.list,'sr'):'<div class="ozGrid">'+sr.list.map(card).join('')+'</div>')+(sr.more?'<button type="button" class="ozBtn wide" id="ozMore" data-a="more" style="margin-top:12px">Daha fazla göster</button>':''):
       (sr.emptyH||empty(ico('search',36),'Sonuç bulunamadı',a.seller?'Bu satıcının şu anda satışta ürünü yok.':'Farklı bir kelime ya da kategori deneyebilirsin.'));
   }catch(e){var b=D.getElementById('ozRes');if(b&&alive(t))b.innerHTML=errBox(e)}
 }

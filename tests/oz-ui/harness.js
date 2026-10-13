@@ -66,7 +66,8 @@ function fixtures(o){o=o||{};
  };
  return {R,T,quote};
 }
-async function open(br,{w,h,logged=true,fx={},dsf=1,visible=false}={}){
+/* AD1: ürün listesi varsayılanı artık Izgara; AD öncesi testler Liste kartını (gcCard) dener → tercih boşsa 'list' yazılır. view:'' gerçek varsayılanı bırakır. */
+async function open(br,{w,h,logged=true,fx={},dsf=1,visible=false,view='list'}={}){
  const ctx=await br.newContext({viewport:{width:w,height:h},deviceScaleFactor:dsf});
  const p=await ctx.newPage();const st={errors:[],calls:[],posts:[]};
  p.on('pageerror',e=>st.errors.push('pageerror: '+e.message));
@@ -78,9 +79,10 @@ async function open(br,{w,h,logged=true,fx={},dsf=1,visible=false}={}){
   if(u.includes('/storage/v1/object/')){st.posts.push(u);return r.fulfill({status:200,contentType:'application/json',body:'{"Key":"x"}'})}
   if(u.includes('rest/v1'))return r.fulfill({status:200,contentType:'application/json',body:'[]'});
   return r.fulfill({status:200,body:''});});
- await p.addInitScript(([logged,visible])=>{const n=Math.floor(Date.now()/1000);
+ await p.addInitScript(([logged,visible,view])=>{const n=Math.floor(Date.now()/1000);
+  if(view)['00000000-0000-0000-0000-000000000001','misafir'].forEach(u=>{const k='isimi_oz_view_'+u;if(localStorage.getItem(k)==null)localStorage.setItem(k,view)});
   if(logged)localStorage.setItem('isimi_coz_auth_session',JSON.stringify({access_token:'t',refresh_token:'r',expires_at:n+3600,user:{id:'00000000-0000-0000-0000-000000000001',email:'test@ornek.com'}}));
-  if(!visible)Object.defineProperty(document,'hidden',{get:()=>true});},[logged,visible]);
+  if(!visible)Object.defineProperty(document,'hidden',{get:()=>true});},[logged,visible,view]);
  if(!BASE)await serve();await p.goto(BASE+'/index.html');await p.waitForTimeout(1200);
  const F=fixtures(fx);
  await p.exposeFunction('__ozLog',(fn,a)=>{st.calls.push([fn,a])});
