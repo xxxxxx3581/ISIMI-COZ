@@ -1,4 +1,5 @@
 // AG1: ızgara kartı — çerçevesiz/zeminsiz, bitişik, TEMİZ fotoğraf; "+" fotoğrafın hemen altında fiyatın sağında. 390px, sahte RPC.
+// AH1: yalnız aralık/köşe beklentileri güncellendi — ürün ızgarasında sütun arası 0 (bitişik foto bandı), satır kenarı köşe sınıfları (cl/cr).
 // Çalıştırma: node tests/oz-ui/ag1-izgara-temiz.test.js
 // Doğrulanan: kartta kenarlık/zemin/köşe/iç boşluk yok, üst şerit yok; ızgara sütun arası 6px, satır arası 12px; foto hücreyi tam doldurur,
 // kare, 10px köşe; foto üzerinde düğme/rozet/sayı yok (yalnız stoksuzda sol altta "Tükendi"); "+" fotoğrafın altındaki satırda (≈6px),
@@ -47,7 +48,7 @@ const {chromium,open,enter,overflow}=require('./harness.js');
    aa:[cr(col('.pr b')||col('.pr .uf')||col('.pr .nvp'),page),cr(col('.nm'),page),cr(col('.up'),page),cr(col('.nt'),page),pl?cr(ps.color,page):99]}},[root,id]);
  const L='#ozRoot .ozGrs';
  const gr=await p.evaluate(()=>{const g=document.querySelector('#ozRoot .ozGrs');const s=getComputedStyle(g);return {cols:s.gridTemplateColumns.split(' ').length,cg:s.columnGap,rg:s.rowGap}});
- ok(gr.cols===3&&gr.cg==='6px'&&gr.rg==='12px','390px 3 sütun, sütun arası 6px, satır arası 12px: '+JSON.stringify(gr));
+ ok(gr.cols===3&&gr.cg==='0px'&&gr.rg==='12px','390px 3 sütun, sütun arası 0px, satır arası 12px: '+JSON.stringify(gr));
  let m=await M(L,'m1'),z=await M(L,'z1'),b=await M(L,'b1');
  ok(m&&z&&b,'kartlar');
  if(m){

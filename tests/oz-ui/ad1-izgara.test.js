@@ -1,4 +1,5 @@
 // AD1: ürün listesi "Izgara / Liste" görünümü — 390px, sahte RPC. Çalıştırma: node tests/oz-ui/ad1-izgara.test.js
+// AH1: yalnız aralık/köşe beklentileri güncellendi — ürün ızgarasında sütun arası 0 (bitişik foto bandı), satır kenarı köşe sınıfları (cl/cr).
 // AG1: yalnız konum/ölçü/seçici beklentileri güncellendi — kart çerçevesiz/zeminsiz, "+" fotoğrafın ALTINDA fiyatın sağında (44×44), seçenekli fiyat "≈ X ₺" + "/kg'dan".
 // AF1: yalnız konum/seçici beklentileri güncellendi — "+" artık fotoğrafın dışında üst şeritte (44×36 dokunma), alt satır kısa ("2 hacim").
 // Doğrulanan: varsayılan Izgara (satıcı ürün listesi, arama, favoriler); 390px'te 3 sütun, 10px boşluk; kare foto (cover, ortalı);
@@ -28,7 +29,7 @@ const {chromium,open,enter,overflow}=require('./harness.js');
   return {cols,gap:cs.columnGap,n:cards.length,lap,row0,extra:cards.some(c=>c.querySelector('.ozFav,.rt,.ds,.dt')),
    sw:document.scrollingElement.scrollWidth-document.scrollingElement.clientWidth}});
  let g=await G();
- ok(!g.none&&g.cols===3&&g.gap==='6px'&&g.n===6,'varsayılan Izgara, 390px 3 sütun, 6px: '+JSON.stringify(g));
+ ok(!g.none&&g.cols===3&&g.gap==='0px'&&g.n===6,'varsayılan Izgara, 390px 3 sütun, sütun arası 0: '+JSON.stringify(g));
  ok(!g.extra,'ızgara kartında kalp/yıldız/açıklama/nokta olmamalı');ok(!g.lap&&g.sw<=0,'üst üste binme/taşma yok');
  ok(g.row0&&g.row0.every(h=>h===g.row0[0]),'aynı satırda kart yükseklikleri eşit: '+JSON.stringify(g.row0));
  const C=id=>p.evaluate(id=>{const c=document.querySelector('#ozRoot .ozGr[data-pid="'+id+'"]');if(!c)return null;

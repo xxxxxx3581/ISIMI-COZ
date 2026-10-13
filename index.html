@@ -2527,6 +2527,20 @@ html:root .ozGr .ac .ozPStep.gp button .pg{width:14px;height:14px}
 html:root .ozGr .ac .ozPStep.gp button:disabled{color:#8A7A60;cursor:not-allowed}
 html:root .ozGr .ac .ozPStep.gp button:focus-visible{outline:2px solid #F7D24A;outline-offset:-3px;border-radius:8px}
 html:root .ozGr .ac .ozPStep.gp b{display:flex;align-items:center;justify-content:center;min-width:10px;padding:0;color:#F6ECDC;font:800 13px/1 system-ui,sans-serif;background:none}
+/*OZ AH1 ürün ızgarası (.ozGrs) bitişik foto bandı: sütun arası 0 (çizgi/kenarlık/gölge yok), satır arası 12px. Köşeler JS ile: satırın ilk kartı
+  .cl → yalnız sol köşeler 10px, son kartı .cr → yalnız sağ köşeler 10px (tek kart: dördü), aradakiler 0. Yazı blokları foto kenarından 6px içeride
+  (ilk sütunda sol 2px, son sütunda sağ 2px); "+" kendi sütununda. "Son baktığın ürünler" rafı (.ozGrH) değişmez.*/
+html:root .ozGrs{column-gap:0;row-gap:12px}
+html:root .ozGrs .ozGr .ph{border-radius:0}
+html:root .ozGrs .ozGr.cl .ph{border-top-left-radius:10px;border-bottom-left-radius:10px}
+html:root .ozGrs .ozGr.cr .ph{border-top-right-radius:10px;border-bottom-right-radius:10px}
+html:root .ozGrs .ozGr .so{left:6px;bottom:6px}
+html:root .ozGrs .ozGr .prw{padding-left:6px;padding-right:44px}html:root .ozGrs .ozGr.bdg .prw{padding-right:44px}html:root .ozGrs .ozGr.st .prw{padding-right:88px}
+html:root .ozGrs .ozGr .nm,html:root .ozGrs .ozGr .nt{margin-left:6px;margin-right:6px}
+html:root .ozGrs .ozGr .ac .ozPlus.gq{padding-right:6px}html:root .ozGrs .ozGr .ac .ozPStep.gp{padding-right:6px}
+html:root .ozGrs .ozGr.cl .prw{padding-left:2px}html:root .ozGrs .ozGr.cl .nm,html:root .ozGrs .ozGr.cl .nt{margin-left:2px}
+html:root .ozGrs .ozGr.cr.st .prw{padding-right:84px}
+html:root .ozGrs .ozGr.cr .nm,html:root .ozGrs .ozGr.cr .nt{margin-right:2px}html:root .ozGrs .ozGr.cr .ac .ozPlus.gq,html:root .ozGrs .ozGr.cr .ac .ozPStep.gp{padding-right:2px}
 /*K21-BITIS*/
 </style>
 <style id="svcProvEntryCss">.svcProvEntry{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;border-radius:16px;border:1.5px solid rgba(124,92,255,.45);background:rgba(124,92,255,.10);color:var(--text);font:inherit;text-align:left;cursor:pointer}.svcProvEntry .ic{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:rgba(124,92,255,.18)}.svcProvEntry .tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}.svcProvEntry small{font-size:12px;font-weight:700;color:var(--muted)}.svcProvEntry b{font-size:16px;font-weight:900}.svcProvEntry em{font-style:normal;font-size:12.5px;color:var(--muted)}.svcProvEntry .go{flex:0 0 auto;font-size:24px;font-weight:700;color:#7c5cff}.svcProvEntry:active{transform:scale(.99)}.svcProvEntry:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}html[data-theme="light"] .svcProvEntry{background:#f3effe;border-color:#c9bbff}html[data-theme="light"] .svcProvEntry .go{color:#5b3fd6}</style>

@@ -1,4 +1,5 @@
 // AD2: "Son baktığın ürünler" rafı AD1 ızgara kartıyla — 390px, sahte RPC. Çalıştırma: node tests/oz-ui/ad2-raf-izgara.test.js
+// AH1: yalnız aralık/köşe beklentileri güncellendi — ürün ızgarasında sütun arası 0 (bitişik foto bandı), satır kenarı köşe sınıfları (cl/cr).
 // AG1: yalnız konum/ölçü/seçici beklentileri güncellendi — kart çerçevesiz/zeminsiz, "+" fotoğrafın ALTINDA fiyatın sağında (44×44), seçenekli fiyat "≈ X ₺" + "/kg'dan".
 // AF1: yalnız beklenti güncellendi — kart alt satırı kısa biçimde ("2 hacim").
 // Doğrulanan: raf kartları AD1'in ürün listesi kartıyla AYNI bileşen (aynı sınıf/iç yapı: .ozGr > .go(.ph,.pr,.up,.nm,.nt) + .ac "+"),
@@ -26,7 +27,7 @@ const REC={s1:[
  ok(await p.evaluate(()=>!/Yeni ürünler/.test(document.getElementById('ozRoot').innerText)),'ana ekranda ayrı "Yeni ürünler" rafı yok (G1)');
  // ürün listesindeki ızgara kartının iç yapısı (referans)
  await p.evaluate(()=>OZ.go('plist',{seller:'s1',sname:'Yayla'}));await p.waitForTimeout(1500);
- const sig=sel=>p.evaluate(sel=>{const c=document.querySelector(sel);if(!c)return null;const k=e=>e.tagName.toLowerCase()+'.'+[...e.classList].join('.');
+ const sig=sel=>p.evaluate(sel=>{const c=document.querySelector(sel);if(!c)return null;const k=e=>e.tagName.toLowerCase()+'.'+[...e.classList].filter(x=>x!=='cl'&&x!=='cr').join('.');
   return k(c)+'>'+[...c.children].map(x=>k(x)+'('+[...x.children].map(k).join(',')+')').join('|')},sel);
  const ref=await sig('#ozRoot .ozGrs .ozGr[data-pid="p2"]');
  await p.evaluate(()=>OZ.go('store',{id:'s1'}));await p.waitForTimeout(1800);
