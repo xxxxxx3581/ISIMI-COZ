@@ -1946,6 +1946,7 @@ var SP={
       h+='<button type="button" class="ozRowBtn ozPastR" data-a="soTab" data-st="past"><span class="tx"><b>Geçmiş siparişler</b>'+(num(o.delivered)?'<small class="ozPastN">'+num(o.delivered)+' teslim edilen</small>':'')+'</span><span class="ch" aria-hidden="true">›</span></button>';
     }
     var b=D.getElementById('ozSP');if(b)b.innerHTML=h;  /* E5: "Yeni ürün ekle" Ürünler sekmesinde */
+    soFocusApply();
   },
   urunler:async function(d,t){
     var sid=sellerId();
@@ -2037,6 +2038,15 @@ function pastOrders(){return Promise.all(PAST_ST.map(function(x){return rpc('oz_
 /* K37: satıcı sipariş grupları [anahtar, ad, renk, durumlar] ve 5 adımlı çubuk */
 var SG=[['new','Yeni','c1',['new']],['prep','Hazırlanıyor','c2',['accepted','packed']],['ship','Kargoda','c4',['shipped']],['issue','Sorunlu','c6',['return_requested']]];
 var SG_BY={};SG.forEach(function(g){SG_BY[g[0]]=g});
+/* AE1: durum ilerletince (Kabul et / Hazırlandı / Kargoya ver) sipariş kaybolmaz: panelde bir durum süzgeci açıksa siparişin YENİ
+   durumunun grubuna geçilir; süzgeçsiz görünümde sipariş zaten yeni bölümünde. Çizimden sonra kart ekrana kaydırılır ve kısa vurgulanır.
+   Sayaçlar ve AC2 rozetleri yeniden çizimde sunucudan (oz_seller_dashboard / oz_seller_orders) gelir. */
+function sgOf(st){for(var i=0;i<SG.length;i++)if(SG[i][3].indexOf(st)>=0)return SG[i][0];return ''}
+function soFollow(id,st){var c=cur();if(c.k==='seller'&&/^(ozet|siparisler)?$/.test((c.a&&c.a.tab)||'')&&c.a&&c.a.st){var g=sgOf(st);c.a=Object.assign({},c.a,{st:g||''})}ST.soFocus=String(id)}
+function soFocusApply(){var id=ST.soFocus;if(!id)return;ST.soFocus=null;var el=qs('#ozSP .ozSoC[data-oid="'+id+'"]');if(!el)return;
+  el.classList.add('ozSoHl');try{el.scrollIntoView({block:'center'})}catch(e){}setTimeout(function(){el.classList.remove('ozSoHl')},2600)}
+/* AE1: "Kargoya ver" formunda bu satıcının son kullandığı kargo firması (kullanıcıya özel localStorage; okunamazsa boş). Takip no her seferinde boş. */
+function lastCarrier(v){var u=uid();if(!u)return '';var k='isimi_oz_carrier_'+u;try{if(v!=null){localStorage.setItem(k,String(v).slice(0,40));return v}return localStorage.getItem(k)||''}catch(e){return ''}}
 var SO_STEPS=['Yeni','Hazırlanıyor','Kargoya hazır','Yolda','Teslim'];
 function soSteps(st){var i={new:0,accepted:1,packed:2,shipped:3,delivered:4,completed:4}[st];if(i==null)return '';
   return '<ol class="ozSteps" aria-label="Sipariş adımı: '+E(SO_STEPS[i])+'">'+SO_STEPS.map(function(x,k){return '<li class="'+(k<i?'ok':k===i?'cur':'')+'"><i></i><span>'+E(x)+'</span></li>'}).join('')+'</ol>'}
@@ -2232,10 +2242,10 @@ ACT_EXTRA({
     for(var i=0;i<vs.length;i++){var n=Number(v[vs[i].id]);if(n!==num(vs[i].stock))await rpc('oz_variant_set_stock',{p_variant:vs[i].id,p_stock:n})}
     toast('Stok güncellendi');draw();
   },
-  soAct:async function(b){await busy(b,async function(){await rpc('oz_transition_order',{p_order:b.dataset.id,p_action:b.dataset.act,p:{}});toast(b.dataset.act==='accept'?'Sipariş kabul edildi — sırada "Hazırlandı"':'Sipariş hazırlandı — sırada "Kargoya ver"');draw()})},
+  soAct:async function(b){await busy(b,async function(){await rpc('oz_transition_order',{p_order:b.dataset.id,p_action:b.dataset.act,p:{}});soFollow(b.dataset.id,{accept:'accepted',pack:'packed'}[b.dataset.act]);toast(b.dataset.act==='accept'?'Sipariş kabul edildi — sırada "Hazırlandı"':'Sipariş hazırlandı — sırada "Kargoya ver"');draw()})},
   soShip:async function(b){
-    var v=await formBox('Kargoya ver','<label for="ozShC">Kargo firması</label><input class="ozIn" id="ozShC" data-f="carrier" list="ozCarriers" maxlength="40"><datalist id="ozCarriers">'+CARRIERS.map(function(c){return '<option value="'+E(c)+'">'}).join('')+'</datalist><label for="ozShN">Takip numarası</label><input class="ozIn" id="ozShN" data-f="no" maxlength="60"><label for="ozShU">Takip bağlantısı (isteğe bağlı)</label><input class="ozIn" id="ozShU" data-f="url" type="url" inputmode="url" placeholder="https://" maxlength="300">','Kargoya verildi',function(v){if(v.carrier.length<2)return 'Kargo firmasını yaz.';if(v.no.length<3)return 'Takip numarasını yaz.';if(v.url&&!/^https?:\/\/\S+$/i.test(v.url))return 'Bağlantı https:// ile başlamalı.';return ''});
-    if(!v)return;await rpc('oz_transition_order',{p_order:b.dataset.id,p_action:'ship',p:{carrier:v.carrier,tracking_no:v.no,tracking_url:v.url||null}});toast('Sipariş kargoya verildi; alıcıya takip bilgisi gönderildi');draw();
+    var v=await formBox('Kargoya ver','<label for="ozShC">Kargo firması</label><input class="ozIn" id="ozShC" data-f="carrier" list="ozCarriers" maxlength="40" value="'+E(lastCarrier())+'"><datalist id="ozCarriers">'+CARRIERS.map(function(c){return '<option value="'+E(c)+'">'}).join('')+'</datalist><label for="ozShN">Takip numarası</label><input class="ozIn" id="ozShN" data-f="no" maxlength="60"><label for="ozShU">Takip bağlantısı (isteğe bağlı)</label><input class="ozIn" id="ozShU" data-f="url" type="url" inputmode="url" placeholder="https://" maxlength="300">','Kargoya verildi',function(v){if(v.carrier.length<2)return 'Kargo firmasını yaz.';if(v.no.length<3)return 'Takip numarasını yaz.';if(v.url&&!/^https?:\/\/\S+$/i.test(v.url))return 'Bağlantı https:// ile başlamalı.';return ''});
+    if(!v)return;await rpc('oz_transition_order',{p_order:b.dataset.id,p_action:'ship',p:{carrier:v.carrier,tracking_no:v.no,tracking_url:v.url||null}});lastCarrier(v.carrier);soFollow(b.dataset.id,'shipped');toast('Sipariş kargoya verildi; alıcıya takip bilgisi gönderildi');draw();
   },
   soCancel:async function(b){
     var rej=!!b.dataset.rej;
