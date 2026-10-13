@@ -492,11 +492,10 @@ function ppCtrl(p,cp){
   var ot=Array.isArray(p.vars)&&p.vars.length>1?optText(p.vars,p.net_content):'';
   if(!n)return p.in_stock===false?'<button type="button" class="ozPlus" disabled aria-label="Tükendi">+</button>':'<button type="button" class="ozPlus" data-a="ppPlus" data-id="'+E(p.id)+'" aria-label="'+(ot?'Seçenek seç, '+E(ot):'Sepete ekle')+'">+</button>';
   if(ppMulti(p.id,ls))return '<button type="button" class="ozPlus in" data-a="ppPlus" data-id="'+E(p.id)+'" aria-label="'+n+' adet sepette, seçenek seç'+(ot?', '+E(ot):'')+'">+<i class="bd" aria-hidden="true">'+(n>9?'9+':n)+'</i></button>';
-  /* AD1: ızgara kartında (cp) adım düğmesi yok — "+" kalır, adet rozeti gösterir; dokunuş bir tane daha ekler (ppPlus, stok sınırı ppAddVar'da) */
-  if(cp)return '<button type="button" class="ozPlus in" data-a="ppPlus" data-id="'+E(p.id)+'" aria-label="Sepete ekle, sepette '+n+' adet">+<i class="bd" aria-hidden="true">'+(n>9?'9+':n)+'</i></button>';
   var l=ls[0],q=num(l.qty),mx=Math.min(99,l.stock!=null?num(l.stock):99);
-  return '<span class="ozPStep" role="group" aria-label="Adet"><button type="button" data-a="ppQty" data-v="'+E(l.variant_id)+'" data-d="-1" aria-label="'+(q<=1?'Sepetten çıkar':'Azalt')+'">−</button><b aria-live="polite">'+q+'</b>'+
-    '<button type="button" data-a="ppQty" data-v="'+E(l.variant_id)+'" data-d="1" aria-label="Bir tane daha"'+(q>=mx?' disabled':'')+'>+</button></span>';
+  /* AE2: aynı adım kontrolü ızgara kartında da (cp): fotoğrafın üst kenarında tek hap (.gp); etiketler "Azalt" / "Artır", adet okunur */
+  return '<span class="ozPStep'+(cp?' gp':'')+'" role="group" aria-label="'+(cp?'Sepetteki adet':'Adet')+'"><button type="button" data-a="ppQty" data-v="'+E(l.variant_id)+'" data-d="-1" aria-label="'+(cp?'Azalt':q<=1?'Sepetten çıkar':'Azalt')+'">−</button><b aria-live="polite"'+(cp?' aria-label="'+q+' adet"':'')+'>'+q+'</b>'+
+    '<button type="button" data-a="ppQty" data-v="'+E(l.variant_id)+'" data-d="1" aria-label="'+(cp?'Artır':'Bir tane daha')+'"'+(q>=mx?' disabled':'')+'>+</button></span>';
 }
 /* L/M: kart fiyat bloğu. Seçenekler (oz_variants, etkin olanlar) biliniyorsa: birden çoksa kartta FİYAT YOK, yalnız
    "N seçenek · birim" (fiyatlar ürün panelinde); tek seçenekte fiyat (+ indirim çizili) + "≈ X ₺/kg|L" (unitPrice; miktar
@@ -551,7 +550,7 @@ function vwSw(){var v=vwGet();return '<span class="ozVw" role="group" aria-label
   return '<button type="button" class="'+(on?'on':'')+'" data-a="vwSet" data-v="'+x[0]+'" aria-pressed="'+on+'" aria-label="'+x[1]+'">'+VW_IC[x[0]]+'</button>'}).join('')+'</span>'}
 function prodList(l,src){var g=vwGet()==='grid';return '<div class="'+(g?'ozGrs':'ozGcs')+'" role="list" data-pl="'+E(src)+'">'+arr(l).map(function(p){return g?gridCard(p):gcCard(p)}).join('')+'</div>'}
 /* AD1/AD2: sade ızgara kartı (paylaşılan bileşen: ürün listeleri + "Son baktığın ürünler" rafı). Kare foto (cover, ortalı); sağ üstte
-   "+" (ppCtrl, cp: adım düğmesi yerine adet rozeti); altında fiyat ya da "≈ X ₺/kg'dan" (unitFrom; yoksa "N seçenek"), tek fiyatlıda
+   "+" (ppCtrl, cp: tek seçenekli üründe eklenince üst kenarda − n + hapı, seçenekli üründe + ve rozet); altında fiyat ya da "≈ X ₺/kg'dan" (unitFrom; yoksa "N seçenek"), tek fiyatlıda
    ≈ birim fiyat (unitPrice), ad (2 satır), net miktar / seçenek bilgisi. Kalp, yıldız, açıklama, foto noktaları yok; karta dokunuş ürün paneli.
    p.nv: seçenek sayısı biliniyor ama seçenekler eksikse (son bakılan kaydı) kullanılır. */
 function grInit(n){var c=String(n||'').trim().charAt(0);return c?c.toLocaleUpperCase('tr'):'·'}

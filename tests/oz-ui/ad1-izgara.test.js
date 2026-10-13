@@ -32,7 +32,7 @@ const {chromium,open,enter,overflow}=require('./harness.js');
  const C=id=>p.evaluate(id=>{const c=document.querySelector('#ozRoot .ozGr[data-pid="'+id+'"]');if(!c)return null;
   function lum(x){const m=x.match(/[\d.]+/g).map(Number);const f=v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)};return .2126*f(m[0])+.7152*f(m[1])+.0722*f(m[2])}
   const cr=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05)};const bg=getComputedStyle(c).backgroundColor;
-  const ph=c.querySelector('.ph'),im=ph.querySelector('img'),pl=c.querySelector('.ac .ozPlus');const pr=ph.getBoundingClientRect(),br=pl.getBoundingClientRect(),cr0=c.getBoundingClientRect();
+  const ph=c.querySelector('.ph'),im=ph.querySelector('img'),pl=c.querySelector('.ac .ozPlus')||c.querySelector('.ac .ozPStep [data-d="1"]');const pr=ph.getBoundingClientRect(),br=pl.getBoundingClientRect(),cr0=c.getBoundingClientRect();
   const q=s=>c.querySelector(s);const t=s=>(q(s)||{}).textContent||'';const col=s=>q(s)?getComputedStyle(q(s)).color:bg;
   return {go:q('.go').getAttribute('aria-label'),plus:pl.getAttribute('aria-label'),dis:pl.disabled,pw:Math.round(br.width),ph:Math.round(br.height),vis:getComputedStyle(pl,'::before').width,
    tr:Math.round(pr.right-br.right),tt:Math.round(br.top-pr.top),inCard:br.right<=cr0.right+.5&&br.top>=cr0.top-.5,sq:Math.abs(pr.width-pr.height)<1.5,
@@ -62,8 +62,9 @@ const {chromium,open,enter,overflow}=require('./harness.js');
  const cartN=()=>p.evaluate(()=>{try{return JSON.parse(localStorage.getItem('isimi_oz_cart')||'[]').reduce((n,x)=>n+x.qty,0)}catch(e){return -1}});
  await click(p,'#ozRoot .ozGr[data-pid="p2"] .ac .ozPlus',1100);
  ok(await cartN()===1&&!(await p.evaluate(()=>!!document.querySelector('.ozOv.ozPdS'))),'tek fiyatlı "+" sepete 1 ekler, panel açmaz');
- await click(p,'#ozRoot .ozGr[data-pid="p2"] .ac .ozPlus',1100);
- c2=await C('p2');ok(await cartN()===2&&c2&&c2.bd==='2'&&/sepette 2 adet/.test(c2.plus),'ikinci "+" adet 2, rozet 2: '+JSON.stringify(c2&&[c2.bd,c2.plus]));
+ await click(p,'#ozRoot .ozGr[data-pid="p2"] .ac .ozPStep [data-d="1"]',1100);
+ /* AE2: tek fiyatlı ürün eklenince "+" yerine "− n +" hapı; ikinci ekleme hapın "Artır"ı (yalnız beklenti güncellendi) */
+ c2=await C('p2');ok(await cartN()===2&&c2&&c2.plus==='Artır'&&(await p.evaluate(()=>(document.querySelector('#ozRoot .ozGr[data-pid="p2"] .ozPStep b')||{}).textContent))==='2','ikinci ekleme adet 2, hapta 2: '+JSON.stringify(c2&&[c2.bd,c2.plus]));
  // karta dokunuş → panel, "+" eklemez
  await click(p,'#ozRoot .ozGr[data-pid="p4"] .go',1300);
  ok(await p.evaluate(()=>!!document.querySelector('.ozOv.ozPdS'))&&await cartN()===2,'karta dokunuş paneli açmalı, sepete eklememeli');
