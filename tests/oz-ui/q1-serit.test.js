@@ -1,4 +1,5 @@
 // Q1-3: üretici sayfası alt şeritleri — 390px, sahte veri. Çalıştırma: node tests/oz-ui/q1-serit.test.js
+// AG1: yalnız konum/ölçü/seçici beklentileri güncellendi — kart çerçevesiz/zeminsiz, "+" fotoğrafın ALTINDA fiyatın sağında (44×44), seçenekli fiyat "≈ X ₺" + "/kg'dan".
 // AF1: yalnız metin beklentisi güncellendi — alt satır kısa biçimde ("3 hacim").
 // AD2: raf AD1 ızgara kartını kullanır → yalnız seçici (.ozGr/.go, data-pid) ve metin sırası beklentisi (fiyat/birim, ad, seçenek bilgisi) güncellendi.
 // Doğrulanan: "Son baktığın ürünler" yalnız bu üreticinin baktığın ürünleri (en yeni önce, en fazla 10; foto, ad, fiyat ya da
@@ -29,7 +30,7 @@ const {chromium,open,enter}=require('./harness.js');
  await click(p,'.ozGc[data-pid=p0] .sc',1200);await p.keyboard.press('Escape');await p.waitForTimeout(300);
  await p.evaluate(rev=>{window.__OZ_FX.R.oz_producer_reviews=rev},REV);
  await goStore();s=await S();
- ok(s.rc&&s.rc.length===2&&/^p0\|(E )?650,00 ₺ (≈ \S+ ₺\/L )?Erken hasat 0( 1 L)?$/.test(s.rc[0])&&/^p1\|(Ç )?≈ 1\.040 ₺\/L'den Çam balı 1 3 (hacim|(hacim )?seçene(k|ği))$/.test(s.rc[1]),'son bakılanlar en yeni önce, fiyat ya da N seçenek: '+JSON.stringify(s.rc));
+ ok(s.rc&&s.rc.length===2&&/^p0\|(E )?650,00 ₺ (≈ \S+ ₺\/L )?Erken hasat 0( 1 L)?$/.test(s.rc[0])&&/^p1\|(Ç )?≈ 1\.040 ₺ ?\/L'den Çam balı 1 3 (hacim|(hacim )?seçene(k|ği))$/.test(s.rc[1]),'son bakılanlar en yeni önce, fiyat ya da N seçenek: '+JSON.stringify(s.rc));
  ok(s.rv&&s.rv.length===10,'yorumlar en fazla 10: '+(s.rv&&s.rv.length));
  ok(s.rv&&/Çam balı 1/.test(s.rv[0])&&/5 Eki 2026|5 Ekim 2026/.test(s.rv[0])&&/Geç geldi\./.test(s.rv[1])&&/Harika bal\./.test(s.rv[2]),'yorumlar en yeni önce, ürün adı, tarih, metin: '+JSON.stringify((s.rv||[]).slice(0,3)));
  ok(s.below,'şeritler kategori ikonlarının altında olmalı');

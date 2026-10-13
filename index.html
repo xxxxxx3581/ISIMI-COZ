@@ -2490,37 +2490,43 @@ html:root .ozGrH>.ozGr{flex:0 0 118px;width:118px;scroll-snap-align:start}
 /*OZ AE1 durum ilerletilen sipariş kısa vurgusu*/
 html:root .ozSoC.ozSoHl{box-shadow:0 0 0 3px #F7D24A;transition:box-shadow .3s}
 @media (prefers-reduced-motion:reduce){html:root .ozSoC.ozSoHl{transition:none}}
-/*OZ AF1 ızgara kartı yerleşimi (ürün listeleri + "Son baktığın ürünler"): iç boşluk 8px; ÜST ŞERİT 28px (sağda sade altın "+" /
-  adet / "− n +", fotoğrafın DIŞINDA; dokunma alanı şerit + üst iç boşluk = 36px yükseklik); kare foto 10px köşe; fiyat 14px, birim 11px,
-  ad 12px (2 satır), net/seçenek 11px. Yazılar rem: kök yazı büyüyünce sütun 2'ye düşer. Liste kartı (.ozGc) değişmedi.*/
-html:root .ozGr{position:relative;min-width:0;box-sizing:border-box;border:1px solid #8A6B3E;border-radius:15px;background:#3A2D20;overflow:hidden}
-html:root .ozGr .go{display:flex;flex-direction:column;width:100%;height:100%;min-width:0;box-sizing:border-box;padding:8px;border:0;background:none;color:#F6ECDC;font:inherit;text-align:left;cursor:pointer}
-html:root .ozGr .go:focus-visible{outline:2px solid #F7D24A;outline-offset:-2px;border-radius:15px}
-html:root .ozGr .tp{display:block;flex:none;height:28px}
+/*OZ AG1 ızgara kartı (ürün listeleri + "Son baktığın ürünler"): çerçeve/zemin/köşe/iç boşluk YOK; sütun arası 6px, satır arası 12px.
+  Kare foto (hücreyi doldurur, 10px köşe; üzerinde yalnız "Tükendi"). Fotoğrafın hemen altında (6px) 44px'lik satır: solda fiyat 14px + birim 11px,
+  sağda sade altın "+" (16px glif, 44×44 dokunma) / adet / "− n +" (14px glif, 32×44). .ac katmanı padding-top:calc(100% + 6px) ile fotoğrafın
+  altına iner, fotoğraf alanında tıklamayı geçirir (pointer-events). Ad 12px (2 satır), miktar 11px. Liste kartı (.ozGc) değişmedi.*/
+html:root .ozGrs{gap:12px 6px}
+html:root .ozGrH{gap:6px}
+html:root .ozGr{position:relative;min-width:0;box-sizing:border-box;padding:0;border:0;border-radius:0;background:none;overflow:visible}
+html:root .ozGr .go{display:flex;flex-direction:column;width:100%;height:100%;min-width:0;box-sizing:border-box;margin:0;padding:0;border:0;border-radius:10px;background:none;color:#F6ECDC;font:inherit;text-align:left;cursor:pointer}
+html:root .ozGr .go:focus-visible{outline:2px solid #F7D24A;outline-offset:2px}
 html:root .ozGr .ph{position:relative;display:block;flex:none;width:100%;aspect-ratio:1/1;border-radius:10px;background:#4A3A27;overflow:hidden}
 html:root .ozGr .ph img{position:absolute;inset:0;z-index:1;display:block;width:100%;height:100%;object-fit:cover;object-position:center}
 html:root .ozGr .ph i{position:absolute;inset:0;display:grid;place-items:center;font:700 1.75rem/1 Georgia,"DejaVu Serif",serif;font-style:normal;color:#CDBB9F}
 html:root .ozGr.out .ph img{opacity:.42}
-html:root .ozGr .so{position:absolute;left:5px;bottom:5px;z-index:2;padding:2px 7px;border-radius:999px;background:#1F160E;color:#F6ECDC;font:700 .6875rem/1.35 system-ui,sans-serif}
-html:root .ozGr .pr{display:block;margin:7px 0 0;min-height:1.25rem;font-size:.875rem;line-height:1.3;color:#F2C14E;overflow-wrap:anywhere}
-html:root .ozGr .pr b{font-weight:800;white-space:nowrap}html:root .ozGr .pr .uf{font-size:.8125rem;font-weight:800}html:root .ozGr .pr .nvp{font-size:.8125rem;font-weight:700;color:#E9DCC4}
-html:root .ozGr .up,html:root .ozGr .nt{display:block;margin:1px 0 0;min-height:.95rem;font-size:.6875rem;line-height:1.35;color:#CDBB9F;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-html:root .ozGr .nm{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;margin:3px 0 0;min-height:2.6em;font-size:.75rem;line-height:1.3;font-weight:600;color:#F6ECDC;overflow-wrap:anywhere}
-html:root .ozGr .nt{margin-top:2px}
-html:root .ozGr .ac{position:absolute;top:0;right:0;z-index:3;display:flex;justify-content:flex-end;align-items:stretch;height:36px;max-width:100%}
-html:root .ozGr .ac .ozPlus.gq,html:root .ozGr .ac .ozPlus.gq:disabled{position:relative;display:inline-flex;width:auto;background-clip:border-box;align-items:center;justify-content:flex-end;gap:6px;box-sizing:border-box;min-width:44px;height:36px;margin:0;padding:6px 10px 0 4px;border:0;border-radius:0;background:none;box-shadow:none;color:#F2C14E;font:800 12px/1 system-ui,sans-serif;cursor:pointer}
+html:root .ozGr .so{position:absolute;left:5px;bottom:5px;z-index:2;padding:2px 7px;border-radius:999px;background:#3A2D20;color:#F6ECDC;font:700 .6875rem/1.35 system-ui,sans-serif}
+html:root .ozGr .prw{display:flex;flex-direction:column;justify-content:center;min-width:0;min-height:44px;margin:6px 0 0;padding:0 44px 0 2px;box-sizing:border-box}
+html:root .ozGr.bdg .prw{padding-right:46px}html:root .ozGr.st .prw{padding-right:86px}
+html:root .ozGr .pr{display:block;min-width:0;font-size:.875rem;line-height:1.25;color:#F2C14E;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html:root .ozGr .pr b{font-weight:800}html:root .ozGr .pr .uf{font-size:.8125rem;font-weight:800}html:root .ozGr .pr .nvp{font-size:.8125rem;font-weight:700;color:#E9DCC4}
+html:root .ozGr .up,html:root .ozGr .nt{display:block;min-width:0;min-height:.9rem;font-size:.6875rem;line-height:1.3;color:#CDBB9F;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html:root .ozGr .nm{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;margin:2px 0 0 2px;min-height:2.6em;font-size:.75rem;line-height:1.3;font-weight:600;color:#F6ECDC;overflow-wrap:anywhere}
+html:root .ozGr .nt{margin:1px 0 0 2px}
+html:root .ozGr .ac{position:absolute;top:0;left:0;right:0;z-index:3;box-sizing:border-box;height:auto;padding-top:calc(100% + 6px);display:flex;justify-content:flex-end;align-items:flex-start;pointer-events:none}
+html:root .ozGr .ac>*{pointer-events:auto}
+html:root .ozGr .ac .ozPlus.gq,html:root .ozGr .ac .ozPlus.gq:disabled{position:relative;display:inline-flex;align-items:center;justify-content:flex-end;gap:4px;box-sizing:border-box;width:auto;min-width:44px;height:44px;margin:0;padding:0;border:0;border-radius:0;background:none;background-clip:border-box;box-shadow:none;color:#F2C14E;font:800 12px/1 system-ui,sans-serif;cursor:pointer}
 html:root .ozGr .ac .ozPlus.gq::before,html:root .ozGr .ac .ozPlus.gq::after{content:none}
-html:root .ozGr .ac .ozPlus.gq .pg{display:block;flex:none;width:15px;height:15px}
+html:root .ozGr .ac .ozPlus.gq .pg{display:block;flex:none;width:16px;height:16px}
 html:root .ozGr .ac .ozPlus.gq:disabled{color:#8A7A60;cursor:not-allowed;opacity:.7}
 html:root .ozGr .ac .ozPlus.gq .bd{position:static;display:inline-block;min-width:18px;height:18px;padding:0 5px;box-sizing:border-box;border-radius:9px;background:#F2C14E;color:#1F160E;font:800 11px/18px system-ui,sans-serif;font-style:normal;text-align:center}
 html:root .ozGr .ac .ozPlus.gq:focus-visible{outline:2px solid #F7D24A;outline-offset:-3px;border-radius:8px}
-html:root .ozGr .ac .ozPStep.gp{position:relative;display:flex;align-items:stretch;gap:0;height:36px;margin:0;padding:0 2px 0 0;border:0;border-radius:0;background:none;box-shadow:none}
+html:root .ozGr .ac .ozPStep.gp{position:relative;display:flex;align-items:center;gap:5px;height:44px;margin:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none}
 html:root .ozGr .ac .ozPStep.gp::before{content:none}
-html:root .ozGr .ac .ozPStep.gp button{display:flex;align-items:center;justify-content:center;flex:0 0 32px;width:32px;min-width:32px;height:36px;min-height:36px;margin:0;padding:6px 0 0;border:0;border-radius:0;background:none;box-shadow:none;color:#F2C14E;cursor:pointer}
-html:root .ozGr .ac .ozPStep.gp button .pg{width:15px;height:15px}
+html:root .ozGr .ac .ozPStep.gp button{display:flex;align-items:center;justify-content:center;flex:0 0 32px;width:32px;min-width:32px;height:44px;min-height:44px;margin:0;padding:0;border:0;border-radius:0;background:none;box-shadow:none;color:#F2C14E;cursor:pointer}
+html:root .ozGr .ac .ozPStep.gp button:last-child{justify-content:flex-end}
+html:root .ozGr .ac .ozPStep.gp button .pg{width:14px;height:14px}
 html:root .ozGr .ac .ozPStep.gp button:disabled{color:#8A7A60;cursor:not-allowed}
 html:root .ozGr .ac .ozPStep.gp button:focus-visible{outline:2px solid #F7D24A;outline-offset:-3px;border-radius:8px}
-html:root .ozGr .ac .ozPStep.gp b{display:flex;align-items:center;justify-content:center;min-width:16px;padding:6px 1px 0;color:#F6ECDC;font:800 13px/1 system-ui,sans-serif;background:none}
+html:root .ozGr .ac .ozPStep.gp b{display:flex;align-items:center;justify-content:center;min-width:10px;padding:0;color:#F6ECDC;font:800 13px/1 system-ui,sans-serif;background:none}
 /*K21-BITIS*/
 </style>
 <style id="svcProvEntryCss">.svcProvEntry{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;border-radius:16px;border:1.5px solid rgba(124,92,255,.45);background:rgba(124,92,255,.10);color:var(--text);font:inherit;text-align:left;cursor:pointer}.svcProvEntry .ic{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:rgba(124,92,255,.18)}.svcProvEntry .tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}.svcProvEntry small{font-size:12px;font-weight:700;color:var(--muted)}.svcProvEntry b{font-size:16px;font-weight:900}.svcProvEntry em{font-style:normal;font-size:12.5px;color:var(--muted)}.svcProvEntry .go{flex:0 0 auto;font-size:24px;font-weight:700;color:#7c5cff}.svcProvEntry:active{transform:scale(.99)}.svcProvEntry:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}html[data-theme="light"] .svcProvEntry{background:#f3effe;border-color:#c9bbff}html[data-theme="light"] .svcProvEntry .go{color:#5b3fd6}</style>

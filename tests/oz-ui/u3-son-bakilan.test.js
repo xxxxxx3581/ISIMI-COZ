@@ -1,4 +1,5 @@
 // U3: üretici sayfası "Son baktığın ürünler" rafı yatay kahve kart — 390px, sahte veri. Çalıştırma: node tests/oz-ui/u3-son-bakilan.test.js
+// AG1: yalnız konum/ölçü/seçici beklentileri güncellendi — kart çerçevesiz/zeminsiz, "+" fotoğrafın ALTINDA fiyatın sağında (44×44), seçenekli fiyat "≈ X ₺" + "/kg'dan".
 // AF1: yalnız ölçü beklentileri güncellendi (kartın üstünde 28px şerit + 8px iç boşluk).
 // AD2: raf artık AD1 ızgara kartını kullanır → yalnız seçiciler (.ozGrH/.ozGr/.ph/.nm/.pr/.go) ve beklenen ölçüler (118px kare kart, foto üstte, yazı altında) güncellendi.
 // Doğrulanan: kart ≈280px genişlik, liste kartından belirgin kısa; solda kare foto (filtre/karartma yok), sağda ad (≤2 satır)
@@ -34,7 +35,7 @@ const {chromium,open,enter}=require('./harness.js');
   g.cards.forEach(c=>{const t='['+c.id+'] ';
    ok(c.w===118,t+'genişlik 118px: '+c.w);ok(c.h<=lc*0.75,t+'yükseklik liste kartından belirgin kısa: '+c.h);
    ok(c.photoLeft<=40&&c.sq&&c.textRight>=6,t+'üstte kare foto, yazı altında: '+JSON.stringify(c));ok(c.under>=-1&&c.lines<=2,t+'ad ≤2 satır, fiyat/seçenek adın üstünde: '+JSON.stringify([c.lines,c.under]));
-   ok(c.bgL<0.1&&c.bw>=0.5&&c.bw<=2&&c.bd.r>c.bd.b+30,t+'kahve zemin, ince bronz kenar: '+JSON.stringify([c.bgL,c.bd,c.bw]));
+   ok(c.bgL<0.1&&c.bw===0,t+'çerçevesiz, zeminsiz kart (sayfa kahvesi): '+JSON.stringify([c.bgL,c.bd,c.bw]));
    ok(c.nameCr>=4.5&&c.smCr>=4.5,t+'AA kontrast: '+JSON.stringify([c.nameCr,c.smCr]));ok(c.filt==='none|1|none|1',t+'foto filtresiz: '+c.filt)});
   ok(/3 seçenek$/.test(g.cards[2].txt)&&/90,00\s₺$/.test(g.cards[1].txt),'fiyat ya da N seçenek: '+JSON.stringify(g.cards.map(c=>c.txt)));
   ok(g.ox==='auto'&&g.sw>g.cw+100&&g.page<=390,'raf yatay kaymalı, sayfa taşmamalı: '+JSON.stringify({sw:g.sw,cw:g.cw,ox:g.ox,page:g.page}));

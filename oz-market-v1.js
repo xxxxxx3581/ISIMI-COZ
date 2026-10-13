@@ -562,7 +562,8 @@ var VW_IC={grid:'<svg width="20" height="20" viewBox="0 0 24 24" fill="currentCo
 function vwSw(){var v=vwGet();return '<span class="ozVw" role="group" aria-label="Görünüm">'+[['grid','Izgara görünümü'],['list','Liste görünümü']].map(function(x){var on=v===x[0];
   return '<button type="button" class="'+(on?'on':'')+'" data-a="vwSet" data-v="'+x[0]+'" aria-pressed="'+on+'" aria-label="'+x[1]+'">'+VW_IC[x[0]]+'</button>'}).join('')+'</span>'}
 function prodList(l,src){var g=vwGet()==='grid';return '<div class="'+(g?'ozGrs':'ozGcs')+'" role="list" data-pl="'+E(src)+'">'+arr(l).map(function(p){return g?gridCard(p):gcCard(p)}).join('')+'</div>'}
-/* AF1: kart düzeni yukarıdan aşağı — üst şerit (28px; sağda "+" / adet / "− n +", fotoğrafın DIŞINDA), kare foto, fiyat, ad, net/seçenek.
+/* AG1: çerçevesiz/zeminsiz kart — kare foto (üzerinde yalnız "Tükendi"), hemen altında tek satır: solda fiyat + ≈ birim, sağda "+" /
+   adet / "− n +" (fotoğrafın DIŞINDA); sonra ad (2 satır) ve miktar/seçenek. (AF1'in üst şeridi kaldırıldı.)
    AD1/AD2: sade ızgara kartı (paylaşılan bileşen: ürün listeleri + "Son baktığın ürünler" rafı). Kare foto (cover, ortalı); sağ üstte
    "+" (ppCtrl, cp: tek seçenekli üründe eklenince üst kenarda − n + hapı, seçenekli üründe + ve rozet); altında fiyat ya da "≈ X ₺/kg'dan" (unitFrom; yoksa "N seçenek"), tek fiyatlıda
    ≈ birim fiyat (unitPrice), ad (2 satır), net miktar / seçenek bilgisi. Kalp, yıldız, açıklama, foto noktaları yok; karta dokunuş ürün paneli.
@@ -571,13 +572,17 @@ function grInit(n){var c=String(n||'').trim().charAt(0);return c?c.toLocaleUpper
 function gridCard(p){ST.rows=ST.rows||{};ST.rows[String(p.id)]=p;
   var im=httpsUrl(p.image)||httpsUrl(arr(p.images)[0]),id=E(p.id),vs=Array.isArray(p.vars)?p.vars:null,nv=Math.max(num(p.nv),vs?vs.length:0),so=p.in_stock===false;
   var pr,up='',nt='',ap;
-  if(nv>1){var u=vs?unitFrom(vs,p.net_content):'';pr=u?'<span class="uf">'+E(u)+'</span>':'<span class="nvp">'+nv+' seçenek</span>';ap=u||nv+' seçenek';nt=u&&vs?optText(vs,p.net_content).replace(/ (gramaj|hacim) seçeneği$/,' $1'):''}  /* AF1: kısa — "3 gramaj", "2 hacim", "3 seçenek" */
+  /* AG1: seçenekli fiyat iki satır — "≈ X ₺" (13px) ve altında "/kg'dan" (11px) */
+  if(nv>1){var u=vs?unitFrom(vs,p.net_content):'',uk=u?u.indexOf('/'):-1;pr=u?'<span class="uf">'+E(uk>0?u.slice(0,uk).trim():u)+'</span>':'<span class="nvp">'+nv+' seçenek</span>';up=uk>0?u.slice(uk):'';ap=u||nv+' seçenek';nt=u&&vs?optText(vs,p.net_content).replace(/ (gramaj|hacim) seçeneği$/,' $1'):''}  /* AF1: kısa — "3 gramaj", "2 hacim", "3 seçenek" */
   else{var v=vs&&vs.length===1?vs[0]:null,k=v?num(v.price_kurus):num(p.price_kurus);pr='<b>'+TL(k)+'</b>';ap=TL(k);
     up=v?unitPrice({variants:vs,net_content:p.net_content},v):'';nt=p.net_content||(v&&v.label)||''}
-  return '<div class="ozGr'+(so?' out':'')+'" role="listitem" data-pid="'+id+'"><button type="button" class="go" data-a="nav" data-k="product" data-id="'+id+'" aria-label="'+E(String(p.name||'')+', '+ap+(so?', tükendi':''))+'">'+
-    '<span class="tp" aria-hidden="true"></span><span class="ph">'+(im?'<img src="'+E(im)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">':'')+'<i aria-hidden="true">'+E(grInit(p.name))+'</i>'+(so?'<span class="so">Tükendi</span>':'')+'</span>'+
-    '<span class="pr">'+pr+'</span><small class="up">'+E(up)+'</small><span class="nm">'+E(p.name||'')+'</span><small class="nt">'+E(nt)+'</small></button>'+
-    '<span class="ac">'+ppCtrl(p,1)+'</span></div>'}
+  var ctl=ppCtrl(p,1);
+  return '<div class="ozGr'+(so?' out':'')+grSt(ctl)+'" role="listitem" data-pid="'+id+'"><button type="button" class="go" data-a="nav" data-k="product" data-id="'+id+'" aria-label="'+E(String(p.name||'')+', '+ap+(so?', tükendi':''))+'">'+
+    '<span class="ph">'+(im?'<img src="'+E(im)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">':'')+'<i aria-hidden="true">'+E(grInit(p.name))+'</i>'+(so?'<span class="so">Tükendi</span>':'')+'</span>'+
+    '<span class="prw"><span class="pr">'+pr+'</span><small class="up">'+E(up)+'</small></span><span class="nm">'+E(p.name||'')+'</span><small class="nt">'+E(nt)+'</small></button>'+
+    '<span class="ac">'+ctl+'</span></div>'}
+/* AG1: sağ sütundaki kontrolün genişliğine göre fiyat bloğu sola daralır (yalnız "+" / adet + "+" / "− n +") */
+function grSt(h){return /ozPStep/.test(h)?' st':/class="bd"/.test(h)?' bdg':''}
 /* kart açıklaması arama sonucunda yok: görünür ürünler için tek okuma (RLS: yalnız yayındaki ürünler). Hata olursa sessizce gizli. */
 async function gcEnrich(l){var ids=l.filter(function(x){return x&&x.id&&x.description===undefined}).map(function(x){return x.id});if(!ids.length)return;
   /* L: etkin seçenekler (oz_variants, RLS: yalnız yayındaki ürünler) — kartta "X ₺'den · N seçenek" / birim fiyat için */
@@ -598,7 +603,7 @@ function pvOpen(imgs,start){if(!imgs.length)return;var ov=D.createElement('div')
   sc.addEventListener('scroll',function(){if(!dt)return;var i=Math.round(sc.scrollLeft/Math.max(1,sc.clientWidth));qa('i',dt).forEach(function(x,j){x.classList.toggle('on',i===j)})},{passive:true});
   function close(){ov.remove();D.removeEventListener('keydown',esc,true)}function esc(e){if(e.key==='Escape'){e.stopImmediatePropagation();close()}}
   qs('.x',ov).addEventListener('click',close);D.addEventListener('keydown',esc,true);try{qs('.x',ov).focus()}catch(e){}}
-function ppRefresh(){var m=ST.rows||{},pl=(ST.pp&&ST.pp.list)||[];qa('#ozRoot [data-pid]').forEach(function(c){var p=m[c.dataset.pid]||pl.filter(function(x){return String(x.id)===c.dataset.pid})[0];var ac=qs('.ac',c);if(p&&ac)ac.innerHTML=ppCtrl(p,c.classList.contains('ozGr'))});ppBar()}
+function ppRefresh(){var m=ST.rows||{},pl=(ST.pp&&ST.pp.list)||[];qa('#ozRoot [data-pid]').forEach(function(c){var p=m[c.dataset.pid]||pl.filter(function(x){return String(x.id)===c.dataset.pid})[0];var ac=qs('.ac',c);if(p&&ac){var g=c.classList.contains('ozGr'),h=ppCtrl(p,g);ac.innerHTML=h;if(g){c.classList.remove('st','bdg');var k=grSt(h).trim();if(k)c.classList.add(k)}}});ppBar()}
 function ppBar(){stripSync()}
 ACT_EXTRA({
   ppQty:function(b){var v=b.dataset.v;var l=cartGet().filter(function(x){return x.variant_id===v})[0];var q=cartQty(v)+num(b.dataset.d);

@@ -1,4 +1,5 @@
 // AF1: ızgara kartı yerleşimi — "+" fotoğrafın DIŞINDA, kartın sağ üstündeki ince şeritte sade altın glif. 390px, sahte RPC.
+// AG1: yalnız konum/ölçü/seçici beklentileri güncellendi — kart çerçevesiz/zeminsiz, "+" fotoğrafın ALTINDA fiyatın sağında (44×44), seçenekli fiyat "≈ X ₺" + "/kg'dan".
 // Çalıştırma: node tests/oz-ui/af1-izgara-serit.test.js
 // Doğrulanan: "+" border-radius 0, border yok, zemin yok, glif ≤16px; "+" kartın sağ üstünde ve fotoğrafın üstünde (fotoğraf kutusunun
 // dışında; fotoğraf üzerinde hiçbir düğme yok); dokunma alanı ≥44×36 ve kart içinde; "+" paneli açmaz, kart gövdesi "+" eklemez;
@@ -34,10 +35,10 @@ const {chromium,open,enter,overflow}=require('./harness.js');
   const col=s=>{const e=c.querySelector(s);return e?getComputedStyle(e).color:bg};
   return {h:Math.round(R0.height),phTop:Math.round(P.top-R0.top),phW:Math.round(P.width),phH:Math.round(P.height),phRad:getComputedStyle(ph).borderTopLeftRadius,pad:getComputedStyle(go).paddingTop+'/'+getComputedStyle(go).paddingLeft,
    btnOnPhoto:[...ph.querySelectorAll('button,[data-a]')].length,
-   ctl:Q?{w:Math.round(Q.width),h:Math.round(Q.height),right:Math.round(R0.right-Q.right),top:Math.round(Q.top-R0.top),below:Math.round(P.top-Q.bottom),inCard:Q.left>=R0.left-.5&&Q.right<=R0.right+.5}:null,
+   ctl:Q?{w:Math.round(Q.width),h:Math.round(Q.height),right:Math.round(R0.right-Q.right),top:Math.round(Q.top-R0.top),below:Math.round(Q.top-P.bottom),inCard:Q.left>=R0.left-.5&&Q.right<=R0.right+.5}:null,
    plus:pl?{rad:cs.borderTopLeftRadius,bw:cs.borderTopWidth,bg:cs.backgroundColor,shadow:cs.boxShadow,gw:G?Math.round(G.width):99,gh:G?Math.round(G.height):99,dis:pl.disabled,op:+cs.opacity,label:pl.getAttribute('aria-label'),color:cs.color}:null,
-   bd:B?{t:bd.textContent,w:Math.round(B.width),h:Math.round(B.height),leftOfGlyph:G?B.right<=G.left:false,aboveP:B.bottom<=P.top+.5}:null,
-   step:stp?{n:stp.querySelector('b').textContent,bs:[...stp.querySelectorAll('button')].map(b=>{const r=b.getBoundingClientRect();return {w:Math.round(r.width),h:Math.round(r.height),l:b.getAttribute('aria-label'),below:Math.round(P.top-r.bottom)}})}:null,
+   bd:B?{t:bd.textContent,w:Math.round(B.width),h:Math.round(B.height),leftOfGlyph:G?B.right<=G.left:false,aboveP:B.top>=P.bottom-.5}:null,
+   step:stp?{n:stp.querySelector('b').textContent,bs:[...stp.querySelectorAll('button')].map(b=>{const r=b.getBoundingClientRect();return {w:Math.round(r.width),h:Math.round(r.height),l:b.getAttribute('aria-label'),below:Math.round(r.top-P.bottom)}})}:null,
    so:S?{t:so.textContent,l:Math.round(S.left-P.left),b:Math.round(P.bottom-S.bottom)}:null,op:(ph.querySelector('img')?+getComputedStyle(ph.querySelector('img')).opacity:1),
    aa:[cr(col('.pr b')!==bg?col('.pr b'):col('.pr .uf'),bg),cr(col('.nm'),bg),cr(col('.up'),bg),cr(col('.nt'),bg),pl?cr(getComputedStyle(pl).color,bg):99]}},[root,id]);
  const L='#ozRoot .ozGrs';
@@ -46,10 +47,10 @@ const {chromium,open,enter,overflow}=require('./harness.js');
  if(m){
   ok(m.plus&&m.plus.rad==='0px'&&m.plus.bw==='0px'&&/rgba\(0, 0, 0, 0\)|transparent/.test(m.plus.bg)&&m.plus.shadow==='none','"+" çerçevesiz, köşesiz, zeminsiz: '+JSON.stringify(m.plus));
   ok(m.plus&&m.plus.gw<=16&&m.plus.gh<=16&&m.plus.gw>=12,'glif 12-16px: '+JSON.stringify(m.plus&&[m.plus.gw,m.plus.gh]));
-  ok(m.ctl&&m.ctl.right<=1&&m.ctl.top<=1&&m.ctl.below>=0&&m.ctl.inCard,'"+" kartın sağ üstünde, fotoğrafın DIŞINDA (üstünde): '+JSON.stringify(m.ctl));
-  ok(m.ctl&&m.ctl.w>=44&&m.ctl.h>=36,'dokunma alanı ≥44×36: '+JSON.stringify(m.ctl));
+  ok(m.ctl&&m.ctl.right<=1&&m.ctl.below>=0&&m.ctl.below<=8&&m.ctl.inCard,'"+" sağda, fotoğrafın DIŞINDA (hemen altında): '+JSON.stringify(m.ctl));
+  ok(m.ctl&&m.ctl.w>=44&&m.ctl.h>=44,'dokunma alanı ≥44×44: '+JSON.stringify(m.ctl));
   ok(m.btnOnPhoto===0,'fotoğraf üzerinde düğme yok');
-  ok(m.pad==='8px/8px'&&m.phRad==='10px'&&Math.abs(m.phW-m.phH)<=1,'iç boşluk 8px, kare foto 10px köşe: '+JSON.stringify([m.pad,m.phRad,m.phW,m.phH]));
+  ok(m.pad==='0px/0px'&&m.phRad==='10px'&&Math.abs(m.phW-m.phH)<=1,'iç boşluk 8px, kare foto 10px köşe: '+JSON.stringify([m.pad,m.phRad,m.phW,m.phH]));
   ok(m.plus&&m.plus.label==='Sepete ekle'&&z.plus&&/^Seçenek seç, 3 gramaj seçeneği$/.test(z.plus.label),'aria aynı: '+JSON.stringify([m.plus&&m.plus.label,z.plus&&z.plus.label]));
   ok([m,z].every(x=>x.aa.every(v=>v>=4.5)),'AA (fiyat, ad, birim, alt satır, "+"): '+JSON.stringify([m.aa,z.aa]));
  }
@@ -63,7 +64,7 @@ const {chromium,open,enter,overflow}=require('./harness.js');
  await click(p,L+' .ozGr[data-pid=m1] .ac .ozPlus',1100);
  ok(!(await p.evaluate(()=>!!document.querySelector('.ozOv.ozPdS')))&&await qty()===1,'"+" paneli açmaz, sepete ekler');
  m=await M(L,'m1');
- ok(m&&m.step&&m.step.n==='1'&&m.step.bs.length===2&&m.step.bs.every(x=>x.w>=32&&x.h>=36&&x.below>=0),'tek seçenekli: "− n +" aynı şeritte, her bölüm ≥32×36: '+JSON.stringify(m&&m.step));
+ ok(m&&m.step&&m.step.n==='1'&&m.step.bs.length===2&&m.step.bs.every(x=>x.w>=32&&x.h>=44&&x.below>=0),'tek seçenekli: "− n +" aynı şeritte, her bölüm ≥32×36: '+JSON.stringify(m&&m.step));
  ok(m&&m.h===h0&&m.phTop===p0&&m.ctl&&m.ctl.right<=3&&m.ctl.inCard,'şerit/kart yüksekliği ve foto konumu değişmez, sağa hizalı: '+JSON.stringify(m&&{h:m.h,h0,ph:m.phTop,p0,ctl:m.ctl}));
  await click(p,L+' .ozGr[data-pid=m1] .ozPStep [aria-label="Azalt"]',500);
  m=await M(L,'m1');ok(m&&!m.step&&m.plus&&!m.plus.dis&&await qty()===0,'0 → sepetten çıkar, tek "+" geri');
@@ -88,7 +89,7 @@ const {chromium,open,enter,overflow}=require('./harness.js');
  await p.evaluate(()=>{localStorage.setItem('isimi_oz_recent',JSON.stringify({s1:[{id:'m1',name:'Cam şişe günlük süt',image:'https://img.test/icecekler.jpg',price_kurus:9000,nv:1,vs:[{label:'1 L',price_kurus:9000}],net:'1 L'}]}))});
  await p.evaluate(()=>OZ.go('store',{id:'s1'}));await p.waitForTimeout(1600);
  const r=await M('#ozPPRc','m1');
- ok(r&&r.plus&&r.plus.rad==='0px'&&r.ctl&&r.ctl.below>=0&&r.btnOnPhoto===0&&r.pad==='8px/8px','"Son baktığın ürünler" rafında aynı kart ve "+" yerleşimi: '+JSON.stringify(r&&{plus:r.plus,ctl:r.ctl}));
+ ok(r&&r.plus&&r.plus.rad==='0px'&&r.ctl&&r.ctl.below>=0&&r.btnOnPhoto===0&&r.pad==='0px/0px','"Son baktığın ürünler" rafında aynı kart ve "+" yerleşimi: '+JSON.stringify(r&&{plus:r.plus,ctl:r.ctl}));
  ok(!st.errors.length,'sayfa hatası: '+st.errors.join(' | '));
  await br.close();
  if(fails.length){console.error('af1-izgara-serit BAŞARISIZ:\n - '+fails.join('\n - '));process.exit(1)}

@@ -1,4 +1,5 @@
 // X3: "Son baktığın ürünler" kartında fiyat — 390px, sahte veri. Çalıştırma: node tests/oz-ui/x3-son-fiyat.test.js
+// AG1: yalnız konum/ölçü/seçici beklentileri güncellendi — kart çerçevesiz/zeminsiz, "+" fotoğrafın ALTINDA fiyatın sağında (44×44), seçenekli fiyat "≈ X ₺" + "/kg'dan".
 // AF1: yalnız beklenti güncellendi — alt satır kısa biçimde ("3 gramaj").
 // AD2: raf AD1 ızgara kartını kullanır → yalnız seçiciler (.ozGr/.nm/.pr .uf/.nt/.pr .nvp/.pr b/.go) ve beklenenler (seçenek satırı "3 gramaj seçeneği", kart ≤ 260px) güncellendi.
 // Doğrulanan: tek fiyatlı üründe altın fiyat; seçenekli üründe X2'nin satırı ("≈ 360 ₺/kg'dan", aynı unitFrom) + küçük "N seçenek";
@@ -32,7 +33,7 @@ const {chromium,open,enter}=require('./harness.js');
     crs:[b,uf,nv,pr].filter(Boolean).map(e=>cr(rgb(getComputedStyle(e).color),bg)),
     inside:[...c.querySelectorAll('.go *')].every(e=>e.getBoundingClientRect().right<=r.right+1)}});return {o,page:document.documentElement.scrollWidth}});
  const O=M.o;
- ok(O.p0&&O.p0.uf==="≈ 360 ₺/kg'dan"&&O.p0.nv==='3 gramaj'&&O.p0.pr===null,'seçenekli: "≈ 360 ₺/kg\'dan" + "3 gramaj seçeneği", toplam fiyat yok: '+JSON.stringify(O.p0));
+ ok(O.p0&&O.p0.uf==="≈ 360 ₺"&&O.p0.nv==='3 gramaj'&&O.p0.pr===null,'seçenekli: "≈ 360 ₺/kg\'dan" + "3 gramaj seçeneği", toplam fiyat yok: '+JSON.stringify(O.p0));
  ok(O.p0&&O.p0.nvFs<O.p0.ufFs&&O.p0.ufFs===13,'"N seçenek" küçük kalmalı: '+JSON.stringify(O.p0));
  ok(O.p2&&O.p2.pr==='90,00 ₺'&&O.p2.gold&&O.p2.uf===null,'tek fiyatlı: altın fiyat: '+JSON.stringify(O.p2));
  ok(O.p3&&O.p3.uf===null&&O.p3.nv==='2 seçenek'&&O.p3.pr===null,'birimi çözülemeyen: yalnız "2 seçenek": '+JSON.stringify(O.p3));
