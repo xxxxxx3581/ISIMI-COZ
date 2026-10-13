@@ -3265,7 +3265,7 @@ function hmGo(key){
 function hmSoon(){ try{ v2Toast('Özüne Dön çok yakında!'); }catch(e){} }
 /*K21-JS-BASLA*/ /* Özüne Dön: modül tembel yüklenir; pazar kapalıysa (veya hata olursa) yalnızca hmSoon() gösterilir. */
 var OZ_LOADING=null, OZ_TAP=false;
-function ozLoad(){ if(window.OZ&&window.OZ.__v) return Promise.resolve(window.OZ); if(OZ_LOADING) return OZ_LOADING; OZ_LOADING=new Promise(function(res,rej){ var s=document.createElement('script'); s.src='./oz-market-v1.js?v=2'; s.async=true; s.onload=function(){ if(window.OZ&&window.OZ.__v) res(window.OZ); else { OZ_LOADING=null; rej(new Error('Özüne Dön yüklenemedi.')); } }; s.onerror=function(){ OZ_LOADING=null; s.remove(); rej(new Error('Özüne Dön yüklenemedi.')); }; document.head.appendChild(s); }); return OZ_LOADING; }
+function ozLoad(){ if(window.OZ&&window.OZ.__v) return Promise.resolve(window.OZ); if(OZ_LOADING) return OZ_LOADING; OZ_LOADING=new Promise(function(res,rej){ var s=document.createElement('script'); s.src='./oz-market-v1.js?v=2'; s.async=true; s.onload=function(){ if(window.OZ&&window.OZ.__v) res(window.OZ); else { OZ_LOADING=null; rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); } }; s.onerror=function(){ OZ_LOADING=null; s.remove(); rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); }; document.head.appendChild(s); }); return OZ_LOADING; }
 window.ozLoad=ozLoad;
 function ozTap(){ if(OZ_TAP) return; OZ_TAP=true; ozLoad().then(function(oz){ return oz.tryEnter(); }).then(function(ok){ if(!ok) hmSoon(); }).catch(function(){ hmSoon(); }).then(function(){ OZ_TAP=false; }); }
 /*K21-JS-BITIS*/

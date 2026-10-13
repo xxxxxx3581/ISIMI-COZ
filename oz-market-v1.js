@@ -40,23 +40,30 @@ function val(id){var el=D.getElementById(id);return el?String(el.value||'').trim
 function checked(id){var el=D.getElementById(id);return !!(el&&el.checked)}
 
 /* Sunucu hataları "PF_STATE: …", "PF_INPUT: …", "PF_AUTH: …" ile gelir; önek atılır. */
+/* AE3: kullanıcıya yalnız anlaşılır Türkçe. Uygulamanın kendi sunucu mesajları (PF_/OZ_ önekli ya da Türkçe harfli, teknik ifade içermeyen)
+   aynen geçer; tanınmayan (İngilizce / ham veritabanı) hata genel metne döner, ayrıntı yalnız console.warn ile kaydedilir. */
+var MSG_GEN='Bir sorun oluştu. Lütfen biraz sonra tekrar dene.';
 function cleanMsg(m){
-  m=String(m||'').replace(/^(PF|OZ)_[A-Z]+:\s*/,'');
+  var raw=String(m||''),pre=/^(PF|OZ)_[A-Z]+:\s*/.test(raw);m=raw.replace(/^(PF|OZ)_[A-Z]+:\s*/,'');
   if(/Failed to fetch|NetworkError|Load failed/i.test(m))return 'Bağlantı sorunu. İnternetini kontrol edip tekrar dene.';
   if(/permission denied|row-level security/i.test(m))return 'Bu işlem için yetkin yok.';
-  if(/Could not find the function|PGRST202|schema cache/i.test(m))return 'Bu özellik şu anda kullanılamıyor.';
-  return m||'Beklenmeyen bir hata oluştu.';
+  if(/Could not find the function|PGRST202|schema cache/i.test(m))return 'Bu özellik şu an açık değil. Biraz sonra tekrar dene.';
+  if(!m)return MSG_GEN;
+  var tech=/violates|constraint|duplicate key|invalid input|syntax|relation |column |function |null value|JWT|PGRST|SQLSTATE|\bP0\d{3}\b|exception|undefined|TypeError|\berror\b/i.test(m);
+  if((pre||/[çğıöşüÇĞİÖŞÜ]/.test(m))&&!tech)return m;
+  try{console.warn('[Özüne Dön] sunucu hatası:',raw)}catch(e){}
+  return MSG_GEN;
 }
 function isAuthErr(e){var m=String(e&&e.message||'');return !!(e&&(e.code==='NOAUTH'||e.status===401||/PF_AUTH|JWT|jwt expired|giriş yapmalısın|oturum/i.test(m)))}
 function wrapErr(e){var raw=String(e&&e.message||e||'');var er=new Error(cleanMsg(raw));er.code=e&&e.code;er.status=e&&e.status;er.auth=isAuthErr(e);er.pf=/^(PF|OZ)_[A-Z]+:/.test(raw);return er}
 /* Beklenmeyen ham veritabanı hatası: HTTP hatası olup PF_ önekli (RAISE EXCEPTION → SQLSTATE P0001) olmayan, oturum hatası da olmayan (ör. 23505, 22P02). */
 function isRawDbErr(e){return !!e&&!e.auth&&!e.pf&&e.code!=='P0001'&&num(e.status)>=400}
 async function rpc(fn,args){
-  if(!window.PF||typeof PF.rpc!=='function')throw new Error('Platform katmanı yüklenemedi. Sayfayı yenileyip tekrar dene.');
+  if(!window.PF||typeof PF.rpc!=='function')throw new Error('Bağlantı kurulamadı. Sayfayı yenileyip tekrar dene.');
   try{return await PF.rpc(fn,args||{},{auth:false})}catch(e){throw wrapErr(e)}
 }
 async function get(path){
-  if(!window.PF||typeof PF.get!=='function')throw new Error('Platform katmanı yüklenemedi. Sayfayı yenileyip tekrar dene.');
+  if(!window.PF||typeof PF.get!=='function')throw new Error('Bağlantı kurulamadı. Sayfayı yenileyip tekrar dene.');
   try{return await PF.get(path)}catch(e){throw wrapErr(e)}
 }
 function inList(ids){return '('+ids.map(function(x){return encodeURIComponent(String(x))}).join(',')+')'}
@@ -1744,8 +1751,11 @@ async function compressImage(file){
 }
 async function storagePut(bucket,path,body,type){
   var tk=await token();if(!tk){var e=new Error('Giriş yapmalısın.');e.auth=true;throw e}
-  var r=await fetch(sbUrl()+'/storage/v1/object/'+bucket+'/'+path,{method:'POST',headers:{Authorization:'Bearer '+tk,apikey:sbKey(),'Content-Type':type,'x-upsert':'false'},body:body});
-  if(!r.ok){var m='';try{var j=await r.json();m=j.message||j.error||''}catch(e){}throw new Error(m||'Yükleme başarısız.')}
+  /* AE3: depolama / ağ hatasının ham (İngilizce) metni ekrana yazılmaz; ayrıntı console.warn */
+  var um=bucket==='oz-images'?'Fotoğraf yüklenemedi. İnternetini kontrol edip tekrar dene.':'Belge yüklenemedi. İnternetini kontrol edip tekrar dene.';
+  var r;try{r=await fetch(sbUrl()+'/storage/v1/object/'+bucket+'/'+path,{method:'POST',headers:{Authorization:'Bearer '+tk,apikey:sbKey(),'Content-Type':type,'x-upsert':'false'},body:body})}
+  catch(e){try{console.warn('[Özüne Dön] yükleme hatası:',e&&e.message)}catch(_){}throw new Error(um)}
+  if(!r.ok){var m='';try{var j=await r.json();m=j.message||j.error||''}catch(e){}try{console.warn('[Özüne Dön] yükleme hatası:',r.status,m)}catch(_){}throw new Error(um)}
 }
 function publicUrl(bucket,path){return sbUrl()+'/storage/v1/object/public/'+bucket+'/'+path}
 /* oz-images/<seller_id|cat>/<uuid>.jpg → tam public URL */
@@ -2267,7 +2277,7 @@ ACT_EXTRA({
 });
 Object.assign(FILES,{
   doc:async function(f){var s=await sellerRow();if(!s)throw new Error('Önce mağaza bilgilerini kaydet.');var type=val('ozDocT')||'other';toast('Belge yükleniyor…');var path=await uploadDoc(s.id,f);await rpc('oz_seller_add_document',{p_type:type,p_path:path,p_name:f.name.slice(0,120),p_mime:f.type,p_size:f.size});toast('Belge yüklendi');draw()},
-  pimg:async function(f){var sid=sellerId();if(!sid)throw new Error('Satıcı kaydın bulunamadı.');pfRead();toast('Fotoğraf yükleniyor…');var u=await uploadImage(sid,f);ST.pf.images.push(u);drawProductForm()},
+  pimg:async function(f){var sid=sellerId();if(!sid)throw new Error('Satıcı hesabın bulunamadı. Çıkış yapıp tekrar giriş yapmayı dene.');pfRead();toast('Fotoğraf yükleniyor…');var u=await uploadImage(sid,f);ST.pf.images.push(u);drawProductForm()},
   logo:async function(f){await storeImage(f,'logo_url')},
   cover:async function(f){await storeImage(f,'cover_url')}
 });
@@ -2462,7 +2472,7 @@ ACT_EXTRA({
   },
   aSeller:function(b){ADM.detail={kind:'seller',id:b.dataset.id};return aReload()},
   aSellerBack:function(){ADM.detail=null;return aReload()},
-  aDocView:async function(b){if(!b.dataset.p){toast('Belge yolu bulunamadı.');return}await busy(b,async function(){var u=await signedUrl('oz-docs',b.dataset.p);window.open(u,'_blank','noopener')})},
+  aDocView:async function(b){if(!b.dataset.p){toast('Belge açılamadı. Lütfen tekrar dene.');return}await busy(b,async function(){var u=await signedUrl('oz-docs',b.dataset.p);window.open(u,'_blank','noopener')})},
   aDoc:async function(b){var ok=b.dataset.ok==='1';var r=null;if(!ok){r=await reasonBox('Belgeyi reddet','Ret gerekçesi (satıcı görür)',true);if(r===null)return}await rpc('oz_admin_review_document',{p_id:b.dataset.id,p_approve:ok,p_reason:r});toast(ok?'Belge onaylandı':'Belge reddedildi');await aReload()},
   aSDec:async function(b){
     var d=b.dataset.d;var bps=null,r=null;
