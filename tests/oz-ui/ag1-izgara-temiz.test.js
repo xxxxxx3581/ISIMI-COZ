@@ -40,7 +40,7 @@ const {chromium,open,enter,overflow}=require('./harness.js');
    h:Math.round(R0.height),phFill:Math.abs(P.width-R0.width)<.6&&Math.abs(P.left-R0.left)<.6&&Math.abs(P.top-R0.top)<.6,sq:Math.abs(P.width-P.height)<1,phRad:getComputedStyle(ph).borderTopLeftRadius,
    onPhoto:[...ph.querySelectorAll('*')].filter(e=>!e.matches('img,i,.so')).length+[...c.querySelectorAll('button,.bd,.ozPStep')].filter(e=>{const r=e.getBoundingClientRect();return r.top<P.bottom-.5&&r.bottom>P.top&&!ph.contains(e)&&e!==go}).length,
    ctl:Q?{w:Math.round(Q.width),h:Math.round(Q.height),gapTop:Math.round(Q.top-P.bottom),right:Math.round(R0.right-Q.right),inCard:Q.left>=R0.left-.5&&Q.right<=R0.right+.5,overName:Q.bottom>nm.top+.5,
-    vc:Math.abs((Q.top+Q.bottom)/2-(W.top+W.bottom)/2)<2.5,rightOfPrice:Q.left>=pr.getBoundingClientRect().right-.5}:null,
+    vc:Math.abs((Q.top+Q.bottom)/2-(W.top+W.bottom)/2)<2.5,rightOfPrice:(()=>{const r=document.createRange();r.selectNodeContents(pr);return Q.left>=r.getBoundingClientRect().right-.5})()}:null,
    plus:pl?{rad:ps.borderTopLeftRadius,bw:ps.borderTopWidth,bg:ps.backgroundColor,gw:G?Math.round(G.width):99,gh:G?Math.round(G.height):99,dis:pl.disabled,op:+ps.opacity,label:pl.getAttribute('aria-label')}:null,
    bd:B?{t:bd.textContent,left:G?B.right<=G.left:false}:null,prFull:pr.scrollWidth<=pr.clientWidth+.5,prOverflowOk:prw.scrollWidth<=prw.clientWidth+.5,
    step:stp?{n:stp.querySelector('b').textContent,bs:[...stp.querySelectorAll('button')].map(b=>{const r=b.getBoundingClientRect();return [Math.round(r.width),Math.round(r.height)]})}:null,
@@ -71,8 +71,8 @@ const {chromium,open,enter,overflow}=require('./harness.js');
  await click(p,L+' .ozGr[data-pid=m1] .ac .ozPlus',1100);
  ok(!(await p.evaluate(()=>!!document.querySelector('.ozOv.ozPdS')))&&await qty()===1,'"+" paneli açmaz, sepete ekler');
  m=await M(L,'m1');
- ok(m&&m.step&&m.step.n==='1'&&m.step.bs.every(x=>x[0]>=32&&x[1]>=44)&&m.ctl.right<=1&&m.ctl.gapTop>=4&&m.ctl.gapTop<=8&&m.ctl.inCard,'tek seçenekli: "− n +" aynı sağ sütunda, her bölüm ≥32×44: '+JSON.stringify(m&&{s:m.step,c:m.ctl}));
- ok(m&&m.h===h0&&m.prOverflowOk&&m.onPhoto===0,'kart yüksekliği değişmez, fiyat bloğu taşmaz: '+JSON.stringify(m&&[m.h,h0]));
+ ok(m&&m.step&&m.step.n==='1'&&m.step.bs.every(x=>x[0]>=32&&x[1]>=40)&&m.ctl.right<=1&&m.ctl.gapTop>=30&&m.ctl.inCard,'tek seçenekli (AI1: fiyat/birim satırının altında kendi satırı): "− n +" sağda, her bölüm ≥32×40: '+JSON.stringify(m&&{s:m.step,c:m.ctl}));
+ ok(m&&m.h>h0&&m.h-h0<=48&&m.prOverflowOk&&m.onPhoto===0,'AI1: adımlı kart ≤48px uzar, fiyat bloğu taşmaz: '+JSON.stringify(m&&[m.h,h0]));
  await click(p,L+' .ozGr[data-pid=m1] .ozPStep [aria-label="Azalt"]',500);
  m=await M(L,'m1');ok(m&&!m.step&&m.plus&&await qty()===0&&m.prFull,'0 → tek "+" geri, fiyat yeniden tam');
  await click(p,L+' .ozGr[data-pid=z1] .ac .ozPlus',1100);

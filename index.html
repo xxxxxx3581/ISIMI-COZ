@@ -2541,6 +2541,20 @@ html:root .ozGrs .ozGr .ac .ozPlus.gq{padding-right:6px}html:root .ozGrs .ozGr .
 html:root .ozGrs .ozGr.cl .prw{padding-left:2px}html:root .ozGrs .ozGr.cl .nm,html:root .ozGrs .ozGr.cl .nt{margin-left:2px}
 html:root .ozGrs .ozGr.cr.st .prw{padding-right:84px}
 html:root .ozGrs .ozGr.cr .nm,html:root .ozGrs .ozGr.cr .nt{margin-right:2px}html:root .ozGrs .ozGr.cr .ac .ozPlus.gq,html:root .ozGrs .ozGr.cr .ac .ozPStep.gp{padding-right:2px}
+/*OZ AI1 ızgara düzeltmeleri. A1: masaüstü/tablette (≥720px) sütun en az 150px (önceden 7-8 sütun × ~105px, fiyat kesiliyordu).
+  A3: fiyat satırı yalnız kendi sağındaki "+" payı kadar daralır (30px; seçenek rozetli 44px); birim fiyat satırı kartın tam genişliğini kullanır
+  ("≈ 1.470,59 ₺/kg" kesilmez). A2: sepette olan tek seçenekli üründe "− n +" fiyatın yanında ya da hemen altında DEĞİL, kartın EN ALTINDA,
+  ürün adı ve gramaj (net miktar) satırlarından sonra, sağa hizalı (40px yükseklik) durur. Fiyat/birim satırı sıkışmaz, komşu kartlarla
+  ürün adı hizası bozulmaz; yalnız adımlı kartın altına 40px eklenir. Yalnız .ozGrs; liste kartı ve "Son baktığın ürünler" rafı değişmez.*/
+@media (min-width:720px){html:root .ozGrs{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}}
+html:root .ozGrs .ozGr .prw,html:root .ozGrs .ozGr.bdg .prw,html:root .ozGrs .ozGr.st .prw,html:root .ozGrs .ozGr.cr.st .prw{padding-right:0}
+html:root .ozGrs .ozGr .pr{padding-right:30px}
+html:root .ozGrs .ozGr.bdg .pr{padding-right:46px}
+html:root .ozGrs .ozGr.st .pr{padding-right:0}
+html:root .ozGrs .ozGr.st .go{padding-bottom:40px}
+html:root .ozGrs .ozGr.st .ac{top:auto;bottom:0;padding-top:0;align-items:flex-end}
+html:root .ozGrs .ozGr.st .ac .ozPStep.gp{height:40px}
+html:root .ozGrs .ozGr.st .ac .ozPStep.gp button{height:40px;min-height:40px}
 /*K21-BITIS*/
 </style>
 <style id="svcProvEntryCss">.svcProvEntry{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;border-radius:16px;border:1.5px solid rgba(124,92,255,.45);background:rgba(124,92,255,.10);color:var(--text);font:inherit;text-align:left;cursor:pointer}.svcProvEntry .ic{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:rgba(124,92,255,.18)}.svcProvEntry .tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}.svcProvEntry small{font-size:12px;font-weight:700;color:var(--muted)}.svcProvEntry b{font-size:16px;font-weight:900}.svcProvEntry em{font-style:normal;font-size:12.5px;color:var(--muted)}.svcProvEntry .go{flex:0 0 auto;font-size:24px;font-weight:700;color:#7c5cff}.svcProvEntry:active{transform:scale(.99)}.svcProvEntry:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}html[data-theme="light"] .svcProvEntry{background:#f3effe;border-color:#c9bbff}html[data-theme="light"] .svcProvEntry .go{color:#5b3fd6}</style>

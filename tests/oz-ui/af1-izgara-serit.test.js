@@ -64,8 +64,8 @@ const {chromium,open,enter,overflow}=require('./harness.js');
  await click(p,L+' .ozGr[data-pid=m1] .ac .ozPlus',1100);
  ok(!(await p.evaluate(()=>!!document.querySelector('.ozOv.ozPdS')))&&await qty()===1,'"+" paneli açmaz, sepete ekler');
  m=await M(L,'m1');
- ok(m&&m.step&&m.step.n==='1'&&m.step.bs.length===2&&m.step.bs.every(x=>x.w>=32&&x.h>=44&&x.below>=0),'tek seçenekli: "− n +" aynı şeritte, her bölüm ≥32×36: '+JSON.stringify(m&&m.step));
- ok(m&&m.h===h0&&m.phTop===p0&&m.ctl&&m.ctl.right<=3&&m.ctl.inCard,'şerit/kart yüksekliği ve foto konumu değişmez, sağa hizalı: '+JSON.stringify(m&&{h:m.h,h0,ph:m.phTop,p0,ctl:m.ctl}));
+ ok(m&&m.step&&m.step.n==='1'&&m.step.bs.length===2&&m.step.bs.every(x=>x.w>=32&&x.h>=40&&x.below>=0),'tek seçenekli (AI1: fiyatın altındaki kendi satırında): "− n +" her bölüm ≥32×40: '+JSON.stringify(m&&m.step));
+ ok(m&&m.h>h0&&m.h-h0<=48&&m.phTop===p0&&m.ctl&&m.ctl.right<=3&&m.ctl.inCard,'AI1: adımlı kart ≤48px uzar (adım kendi satırında), foto konumu değişmez, sağa hizalı: '+JSON.stringify(m&&{h:m.h,h0,ph:m.phTop,p0,ctl:m.ctl}));
  await click(p,L+' .ozGr[data-pid=m1] .ozPStep [aria-label="Azalt"]',500);
  m=await M(L,'m1');ok(m&&!m.step&&m.plus&&!m.plus.dis&&await qty()===0,'0 → sepetten çıkar, tek "+" geri');
  // seçenekli

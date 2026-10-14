@@ -12,7 +12,7 @@ async function run(br,empty,fails){
  await enter(p);await p.waitForTimeout(600);await p.evaluate(()=>OZ.go('seller',{tab:'ozet'}));await p.waitForTimeout(1500);
  const r=await p.evaluate(()=>{const sp=document.getElementById('ozSP');const cnt=sp.querySelector('.ozSoCnt');const ed=sp.querySelector('.ozSpEdit');const add=sp.querySelector('.ozSpAdd');
   const er=ed&&ed.getBoundingClientRect(),sr=sp.getBoundingClientRect();
-  return {after:!!cnt&&!!ed&&cnt.nextElementSibling===ed.parentNode,txt:ed?ed.innerText.replace(/\s+/g,' ').trim():'',full:er?Math.abs(er.width-sr.width)<2:false,border:ed?getComputedStyle(ed).borderTopColor:'',
+  return {after:!!cnt&&!!ed&&(()=>{let n=cnt.nextElementSibling;if(n&&n.classList.contains('ozSndR'))n=n.nextElementSibling;/* AC3: araya yalnız küçük ses anahtarı satırı girer */return n===ed.parentNode})(),txt:ed?ed.innerText.replace(/\s+/g,' ').trim():'',full:er?Math.abs(er.width-sr.width)<2:false,border:ed?getComputedStyle(ed).borderTopColor:'',
    add:add?add.innerText.trim():'',empty:/Bekleyen iş yok/.test(sp.innerText)}});
  ok(r.after,'kısayol sayaç kartlarının hemen altında olmalı');
  ok(r.txt==='Ürünlerimi düzenle 3 ürün · 2 yayında ›','kart metni: '+r.txt);
