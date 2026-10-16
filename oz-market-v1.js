@@ -632,12 +632,23 @@ ACT_EXTRA({
       ST.pick={d:d,vs:vs,sel:null};pkOpen();
     });
   },
+  pkQty:function(b){var pk=ST.pick;if(!pk)return;var id=b.dataset.v,vr=pk.vs.filter(function(x){return String(x.id)===String(id)})[0];if(!vr)return;
+    var q=cartQty(vr.id)+num(b.dataset.d);if(q>num(vr.stock)){toast('Stoktaki tüm adetler sepetinde.');return}
+    cartSetQty(vr.id,q);ppRefresh();pkRender()},
   pkSel:function(b){var pk=ST.pick;if(!pk)return;pk.sel=b.dataset.v;pkRender()},
   pkAdd:function(){var pk=ST.pick;if(!pk)return;var v=pk.vs.filter(function(x){return String(x.id)===String(pk.sel)})[0];if(!v)return;
     if(cartQty(v.id)>=num(v.stock)){toast('Stoktaki tüm adetler sepetinde.');return}closeSheet();ppAddVar(pk.d,v)}
 });
 /* O1: küçük seçenek penceresi (yarım ekrandan kısa): ad + küçük foto, seçenek satırları (etiket, fiyat, çizili eski fiyat,
    ≈ birim fiyat); başta seçim yok → "Seçenek seç" + pasif düğme; seçince fiyat + "Sepete ekle". */
+/* AI2: seçili seçenek sepetteyse alt çubukta "Sepete ekle" yerine yalnız o seçeneğin "− n +" kontrolü (ayrı ayrı; sıfırda yalnız o seçenek çıkar). Sepette değilse "Sepete ekle" aynen. */
+function pkCtl(v){
+  var q=v?cartQty(v.id):0;
+  if(!v||!q)return '<button type="button" class="ozBtn pri" data-a="pkAdd"'+(v?'':' disabled aria-disabled="true"')+'>Sepete ekle</button>';
+  var mx=Math.min(99,num(v.stock));
+  return '<span class="ozPStep pk" role="group" aria-label="'+E(v.label||'Seçenek')+' adedi"><button type="button" data-a="pkQty" data-v="'+E(v.id)+'" data-d="-1" aria-label="'+(q<=1?'Sepetten çıkar':'Azalt')+'">−</button><b aria-live="polite" aria-label="'+q+' adet">'+q+'</b>'+
+    '<button type="button" data-a="pkQty" data-v="'+E(v.id)+'" data-d="1" aria-label="Bir tane daha"'+(q>=mx?' disabled':'')+'>+</button></span>';
+}
 function pkOpen(){var pk=ST.pick;if(!pk)return;sheet('Seçenek seç','',{noFocus:true,cls:'ozPkS'});pkRender()}
 function pkRender(){
   var pk=ST.pick,ov=qs('.ozOv.ozPkS');if(!pk||!ov)return;var d=pk.d,im=httpsUrl(arr(d.images)[0]);
@@ -646,7 +657,7 @@ function pkRender(){
     var out=num(x.stock)<=0,on=v&&x.id===v.id,cm=num(x.compare_at_kurus),pr=num(x.price_kurus),u=unitPrice(d,x),inC=cartQty(x.id);
     return '<button type="button" class="ozPkO'+(on?' on':'')+'" role="radio" aria-checked="'+!!on+'" data-a="pkSel" data-v="'+E(x.id)+'"'+(out?' disabled':'')+'><span class="l">'+E(x.label||'Standart')+(inC?' <i>Sepette '+inC+'</i>':'')+'</span>'+
       '<span class="p">'+(out?'<small>Tükendi</small>':'<b>'+TL(pr)+'</b>'+(cm>pr?'<s>'+TL(cm)+'</s>':'')+(u?'<small>'+E(u)+'</small>':''))+'</span></button>'}).join('')+'</div>'+
-    '<div class="ozPkBar"><span class="pp">'+(v?'<b>'+TL(v.price_kurus)+'</b>':'<b class="pk">Seçenek seç</b>')+'</span><button type="button" class="ozBtn pri" data-a="pkAdd"'+(v?'':' disabled aria-disabled="true"')+'>Sepete ekle</button></div>';
+    '<div class="ozPkBar"><span class="pp">'+(v?'<b>'+TL(v.price_kurus)+'</b>':'<b class="pk">Seçenek seç</b>')+'</span>'+pkCtl(v)+'</div>';
   var b=qs('.ozShB',ov);if(b)b.innerHTML=h;
 }
 function ppAddVar(d,v){

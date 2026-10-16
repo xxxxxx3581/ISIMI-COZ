@@ -20,6 +20,8 @@ const MULTI=[{id:'r8',label:'800gr',price_kurus:50000,compare_at_kurus:70000,sto
    r.on=pk.querySelectorAll('.ozPkO.on').length;r.bar=pk.querySelector('.ozPkBar .pp').innerText.replace(/\s+/g,' ').trim();r.dis=b?b.disabled:null}
   r.cart=JSON.parse(localStorage.getItem('isimi_oz_cart')||'[]').map(x=>x.variant_id+':'+x.qty).join(',');return r});
  async function flow(where,cardSel){
+  /* sahte veride üç ürün aynı seçenek kimliklerini (r5…) paylaşır; her akış sepetsiz başlar ki "Sepete ekle" yolu bağımsız sınansın (gerçekte seçenek kimlikleri ürüne özgüdür). */
+  await p.evaluate(()=>localStorage.removeItem('isimi_oz_cart'));
   if(!await click(p,cardSel+' .ac .ozPlus',900))return;
   const y0=await p.evaluate(()=>scrollY);  /* tıklama öncesi otomatik kaydırma sayılmaz; pencere açıkken konum */
   let s=await state();
