@@ -1,4 +1,5 @@
 // R2: üretici sayfası üst şeridi satıcının vitrin sırasıyla — 390px, sahte veri, sahte zamanlayıcı. Çalıştırma: node tests/oz-ui/r2-slider.test.js
+// AJ1 P3: ana sayfadaki "Öne çıkan ürünler" de GET oz_products okuyor → sayım yalnız üretici sayfası açılışından itibaren (st.mark); beklentiler aynı.
 // Doğrulanan: oz_producer_detail.showcase_ids doluysa şeritte yalnız o ürünler, o sırayla (son 12 üründe olmayan vitrin ürünü
 // oz_products okumasıyla tamamlanır; bulunamayan / null / boş id atlanır). Boş ya da alan yoksa eski davranış (son ürünler).
 // Tek vitrin ürünü: akış, nokta, çip yok. Keşfet üretici kartı ve Üreticiler sekmesi sunucu sırasını korur (ek süzme yok).
@@ -15,12 +16,12 @@ const LAST=[P('b1','recel'),P('b2','bal-recel'),P('b3','kuru-yemis'),P('b4','kon
   await p.evaluate(([ids,last,extra])=>{const R=window.__OZ_FX.R;const d={id:'s1',display_name:'Yayla Üreticileri',city:'Muğla',cover_url:'https://img.test/bal-recel.jpg',product_count:6,categories:[{slug:'bal',name:'Bal',count:1}]};
    if(ids!==undefined)d.showcase_ids=ids;R.oz_producer_detail=d;R.oz_search_products=last;window.__OZ_FX.T.oz_products=extra||[]},[ids,LAST,extra]);
   await enter(p);await p.clock.runFor(1500);
-  await p.evaluate(()=>OZ.go('store',{id:'s1'}));await p.clock.runFor(1500);
+  st.mark=st.calls.length;await p.evaluate(()=>OZ.go('store',{id:'s1'}));await p.clock.runFor(1500);
   return {p,st};
  }
  const S=p=>p.evaluate(()=>{const tr=document.getElementById('ozPPS');return {pids:tr?[...tr.children].map(x=>x.dataset.pid).join(','):'',i:tr&&tr.__oz?tr.__oz.state().i:null,
   chip:(document.getElementById('ozPPN')||{}).textContent||null,dots:document.querySelectorAll('#ozPPD i').length}});
- const getP=st=>st.calls.filter(c=>c[0]==='GET oz_products');
+ const getP=st=>st.calls.slice(st.mark||0).filter(c=>c[0]==='GET oz_products');
  // vitrin dolu: son ürünlerde olan + olmayan (b9) + bulunamayan + null + boş
  let {p,st}=await page(['b3','yok-1','b9',null,'','b1'],[{id:'b9',name:'Ürün b9',status:'published',images:[IMG('tahin-pekmez')]}]);
  let s=await S(p);

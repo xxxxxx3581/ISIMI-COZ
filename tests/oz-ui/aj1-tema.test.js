@@ -2,7 +2,8 @@
 // Doğrulanan: depolama yokken krem (zemin rgb(246,240,227)); Hesabım › Görünüm koyuya (rgb(43,33,24)) ve geri geçirir, seçim kalıcı;
 // iki temada AA ≥4.5 (başlık, ikincil metin, ürün adı, fiyat, marka, alt menü etiketleri, sıralama seçici, ödeme düğmesi; etkin zemin
 // üst öğe zeminleri karıştırılarak hesaplanır); 320/360/390/430/768/1280 px × iki tema × (Keşfet, liste, sepet, siparişler, sipariş,
-// satıcı, hesap): yatay taşma 0 ve alt menü düğmeleri ≥44px.
+// satıcı, hesap): yatay taşma 0 ve alt menü düğmeleri ≥44px. P3: sepet satır tutarı + özet (2.550,00 ₺, kargo Ücretsiz), ≥900px iki sütun,
+// ürün detayı "'den başlayan" (seçimden önce .ozPrice yok), teslim düğmesi ikincil, "Öne çıkan ürünler" satıcıların altında.
 const {chromium,open,enter}=require('./harness.js');
 (async()=>{
  const br=await chromium.launch({executablePath:process.env.CHROMIUM||'/opt/pw-browsers/chromium'});
@@ -42,6 +43,27 @@ const {chromium,open,enter}=require('./harness.js');
   await go('hesap');v=await AA([['başlık','#ozRoot .ozHead h1'],['satır','#ozRoot .ozRowBtn b'],['satır alt','#ozRoot .ozRowBtn small'],['alt menü','#ozNav .ozNavB .l']]);ok(!v.length,'['+th+'] hesap AA: '+v.join(' | '));
   await go('satici');v=await AA([['satıcı menü','#ozNav .ozNavB .l'],['başlık','#ozRoot h2']]);ok(!v.length,'['+th+'] satıcı AA: '+v.join(' | '));
  }
+ // AJ1 P3: alıcı akışı — sepet satır tutarı + özet (oz_quote yanıtından), ürün detayı "'den başlayan", teslim düğmesi ikincil, ana sayfa "Öne çıkan ürünler" satıcıların altında
+ await setTheme('light');await p.setViewportSize({width:390,height:844});
+ await go('sepet');
+ const co=await p.evaluate(()=>({lt:[...document.querySelectorAll('#ozRoot .ozCoL .lt')].map(x=>x.textContent.replace(/\s/g,' ')),
+  sum:[...document.querySelectorAll('#ozRoot .ozCoSum>div')].map(d=>d.innerText.replace(/\s+/g,' ').trim()),inMain:!!document.querySelector('#ozRoot .ozCoMain > .ozCoItems + .ozCoSum')}));
+ ok(co.lt.join('|')==='1.300,00 ₺|1.250,00 ₺','satır tutarları (.lt): '+JSON.stringify(co.lt));
+ ok(co.inMain&&co.sum.join('|')==='Ara toplam 2.550,00 ₺|Kargo Ücretsiz|Genel toplam 2.550,00 ₺','özet (2×650 + 1.250 = 2.550,00 ₺, kargo Ücretsiz): '+JSON.stringify(co.sum));
+ await p.setViewportSize({width:1280,height:844});await go('sepet');
+ const co2=await p.evaluate(()=>{const it=document.querySelector('#ozRoot .ozCoItems').getBoundingClientRect(),sm=document.querySelector('#ozRoot .ozCoSum').getBoundingClientRect(),fx=document.querySelector('#ozRoot .ozCoFix').getBoundingClientRect();
+  return {two:sm.left>it.right-1&&Math.abs(sm.top-it.top)<4,fixUnder:fx.top>=sm.bottom-1&&Math.abs(fx.left-sm.left)<2}});
+ ok(co2.two&&co2.fixUnder,'≥900px iki sütun: solda ürünler, sağda özet + altında adres/ödeme: '+JSON.stringify(co2));
+ await p.setViewportSize({width:390,height:844});
+ await go('liste');await p.click('#ozRoot .ozGrs .ozGr[data-pid=p0] .go').catch(()=>fails.push('ürün paneli açılamadı'));await p.waitForTimeout(1200);
+ const pf=await p.evaluate(()=>{const o=document.querySelector('.ozOv.ozPdS');if(!o)return null;const f=o.querySelector('.ozPrFrom');return {txt:f?f.innerText.replace(/\s+/g,' '):null,price:!!o.querySelector('.ozPrice b')}});
+ ok(pf&&pf.txt==="650,00 ₺'den başlayan fiyatlarla · seçeneğini seç"&&!pf.price,'ürün detayı: seçimden önce "\'den başlayan", .ozPrice b yok: '+JSON.stringify(pf));
+ await p.evaluate(()=>{document.querySelectorAll('.ozOv').forEach(x=>x.remove())});
+ await go('siparis');const dl=await p.evaluate(()=>{const b=document.querySelector('#ozRoot [data-a=ordDeliver]');return b?b.className:null});
+ ok(dl==='ozBtn','"Siparişim elime ulaştı" birincil değil: '+dl);
+ await go('kesfet');await p.waitForTimeout(600);
+ const hp=await p.evaluate(()=>{const b=document.getElementById('ozHP'),pr=document.querySelector('#ozRoot .ozPrds3');return {h:b&&b.querySelector('h2')?b.querySelector('h2').textContent:null,n:b?b.querySelectorAll('.ozGr,.ozGc').length:0,after:!!(b&&pr&&(pr.compareDocumentPosition(b)&Node.DOCUMENT_POSITION_FOLLOWING))}});
+ ok(hp.h==='Öne çıkan ürünler'&&hp.n>0&&hp.after,'ana sayfa "Öne çıkan ürünler" satıcı kartlarının altında: '+JSON.stringify(hp));
  // genişlik × tema × ekran: taşma 0, alt menü düğmeleri ≥44px
  let n=0;
  for(const th of ['light','dark']){await setTheme(th);
