@@ -27,7 +27,8 @@ const L=p=>p.evaluate(()=>{const el=document.getElementById('pfxAdm');if(!el)ret
  let {p,st}=await page(br,SL);
  // menüde sekme var
  await p.evaluate(()=>PF.openAdmin());await p.waitForTimeout(800);
- ok(await p.evaluate(()=>[...document.querySelectorAll('.pfxMenu button')].some(b=>/Özüne Dön · Slaytlar/.test(b.textContent))),'yönetim menüsünde "Özüne Dön · Slaytlar" olmalı');
+ /* AJ2-E: yönetim ana listesinde Özüne Dön sekmeleri tek kartta kısa adlı düğmeler; tam ad aria-label'da (eski: düğme metni "Özüne Dön · Slaytlar") */
+ ok(await p.evaluate(()=>[...document.querySelectorAll('.pfxMenu button')].some(b=>/Özüne Dön · Slaytlar/.test(b.getAttribute('aria-label')||b.textContent)&&b.dataset.tab==='oz_slides')),'yönetim menüsünde "Özüne Dön · Slaytlar" olmalı');
  await openSl(p);let g=await L(p);
  ok(g&&g.note==='Slaytlar Keşfet ana sayfasında marka slaytlarından sonra görünür; en fazla 5.','üst açıklama: '+JSON.stringify(g&&g.note));
  ok(g&&g.cards.length===2&&/^Deneme Çiftliği Sponsorlu Aktif Sıra: 1 · 01\.10\.2026 → 31\.10\.2026/.test(g.cards[0])&&/^Ege Kooperatifi Kapalı Sıra: 2 · süresiz/.test(g.cards[1])&&!/Sponsorlu/.test(g.cards[1]),'liste (sıraya göre, rozetler, tarih): '+JSON.stringify(g&&g.cards));
