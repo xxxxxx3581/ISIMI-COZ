@@ -898,6 +898,7 @@ VIEWS_EXTRA({
       row('pin','Adreslerim','Teslimat adreslerini yönet','nav',{k:'addresses'})+
       sellerRow+
       (s.is_admin?row('leaf','Özüne Dön yönetimi','Satıcı, ürün, sipariş ve ayarlar','admin'):'')+
+      row('sun','Görünüm',themeGet()==='light'?'Açık tema (krem) · koyuya geç':'Koyu tema · açığa (krem) geç','ozTheme')+
       row('out','Çıkış yap','Bu cihazdaki oturumu kapat','ozLogout')+'</div>'+homeRow);
     newDotSync();
   }
@@ -1677,7 +1678,10 @@ function navSync(){
   qa('#ozNav .ozNavB').forEach(function(b){var on=mode==='seller'?b.dataset.tab===sellerTabOf(c):TAB_OF[k]===b.dataset.k;if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
   fitBars();
 }
-function ensureWorld(){
+/* AJ1 P2: tema — krem varsayılan; koyu yalnız Hesabım › Görünüm ile (isimi_oz_theme='dark'). Okunamazsa krem. */
+function themeGet(){try{return localStorage.getItem('isimi_oz_theme')==='dark'?'dark':'light'}catch(e){return 'light'}}
+function themeApply(){D.body.classList.toggle('ozLt',themeGet()==='light')}
+function ensureWorld(){themeApply();
   if(!D.getElementById('ozRoot')){
     if(typeof app==='function')app('<div id="ozRoot" class="oz"></div>');
     else{var a=D.getElementById('app');if(a)a.innerHTML='<div id="ozRoot" class="oz"></div>'}
@@ -1688,7 +1692,7 @@ function ensureWorld(){
   if(logged())pollStart();  /* AC3 */
   if(!D.getElementById('ozStrip')){var s=D.createElement('div');s.id='ozStrip';s.className='ozStrip';s.setAttribute('role','status');s.hidden=true;s.textContent='Yönetici önizleme · Pazar herkese kapalı';D.body.appendChild(s)}
 }
-function leaveWorld(){pollStop();alertHide();if(FIT.ro){try{FIT.ro.disconnect()}catch(e){}FIT.ro=null}D.body.classList.remove('ozWorld','ozPre','ozNavOn','ozSellerNav');['ozTop','ozStrip','ozNav'].forEach(function(id){var e=D.getElementById(id);if(e)e.remove()});closeSheet();fitBars()}
+function leaveWorld(){pollStop();alertHide();if(FIT.ro){try{FIT.ro.disconnect()}catch(e){}FIT.ro=null}D.body.classList.remove('ozWorld','ozPre','ozNavOn','ozSellerNav','ozLt');['ozTop','ozStrip','ozNav'].forEach(function(id){var e=D.getElementById(id);if(e)e.remove()});closeSheet();fitBars()}
 function exitWorld(){NAV=[];leaveWorld();try{showHome()}catch(e){}}
 function topSync(){
   var s=S();var strip=D.getElementById('ozStrip');
@@ -2237,6 +2241,7 @@ ACT_EXTRA({
   /* N1-5: sekme değişince sayfa başa döner (uzun sekmeden kısa sekmeye geçişte başlık üst çubuğun altında kalmasın) */
   sTab:function(b){var a={tab:b.dataset.tab};if(b.dataset.st!=null)a.st=b.dataset.st;if(b.dataset.low)a.low=1;var c=cur();if(c.k!=='seller'){go('seller',a);return}c.a=a;c.sy=0;try{window.scrollTo(0,0)}catch(e){}draw()},
   spCat:function(b){var c=cur();c.a=Object.assign({},c.a,{tab:'urunler',cat:b.dataset.cat||''});hSync();draw()},
+  ozTheme:function(){try{localStorage.setItem('isimi_oz_theme',themeGet()==='light'?'dark':'light')}catch(e){}themeApply();draw()},
   sndToggle:function(b){var on=!sndOn();try{localStorage.setItem('isimi_oz_sound',on?'1':'0')}catch(e){}b.setAttribute('aria-pressed',String(on));b.textContent=on?'🔔 Ses: açık':'🔕 Ses: kapalı';toast(on?'Uyarı sesi açık':'Uyarı sesi kapalı')},
   soTab:function(b){var c=cur();var k=b.dataset.st||'';var now=(c.a&&c.a.st)||'';c.a=Object.assign({},c.a,{tab:'ozet',st:now===k?'':k});draw()},
   storeSave:function(b){return saveStore(b)},
