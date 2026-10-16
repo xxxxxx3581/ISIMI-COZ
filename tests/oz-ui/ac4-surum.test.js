@@ -5,11 +5,13 @@
 // AJ1 P8: referans, tasarım çalışmasının (AJ1 Paket 1–7) son commit'i dbd46f0'a taşındı (eski: 4fca025, AJ1 öncesi canlı noktası).
 // dbd46f0 zaten ?v=2 içerdiği için "?v=2→?v=1" yer değiştirmesi kalktı; index.html doğrudan karşılaştırılır. Canlıya geçişte JS değiştiği
 // için ?v=3 yapılacak ve bu test aynı commit'te güncellenecek.
+// AJ2: referans AJ2'nin (Paket A, B, C2 ve "Ürünleri değerlendir" tam genişlik) son tasarım commit'i 4671ffc'ye tek sefer taşındı
+// (önceki: dbd46f0). 4671ffc de ?v=2 içerir; doğrudan karşılaştırma ve diğer tüm kontroller aynen.
 const fs=require('fs'),path=require('path'),cp=require('child_process');
 const {chromium,open,enter}=require('./harness.js');
 const ROOT=path.resolve(__dirname,'../..');
 const cur=fs.readFileSync(path.join(ROOT,'index.html'),'utf8');
-const base=cp.execSync('git show dbd46f0:index.html',{cwd:ROOT,encoding:'utf8',maxBuffer:64<<20});
+const base=cp.execSync('git show 4671ffc:index.html',{cwd:ROOT,encoding:'utf8',maxBuffer:64<<20});
 const blk=s=>{const a=s.indexOf('/*K21-BASLA*/'),b=s.indexOf('/*K21-BITIS*/');return s.slice(a,b)};
 const nocom=s=>s.replace(/\/\*[\s\S]*?\*\//g,'');
 (async()=>{
