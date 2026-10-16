@@ -523,10 +523,10 @@ function optText(vs,net){var n=vs.length,ds=vs.map(function(v){return optDim(v.l
   var d=k[0];if(!k.every(function(x){return x===d}))return n+' seçenek';return n+(d==='w'?' gramaj seçeneği':d==='v'?' hacim seçeneği':' seçenek')}
 function cardPrice(p,sFirst){
   var vs=Array.isArray(p.vars)?p.vars:null;var price=num(p.price_kurus),cmp=num(p.compare_at_kurus),sub='';
-  if(vs&&vs.length>1)return '<small class="u ov" style="display:block;font-size:13px;font-weight:700;color:#6B5A44;white-space:nowrap">'+E(optText(vs,p.net_content))+'</small>'
+  if(vs&&vs.length>1)return '<small class="u ov" style="display:block;font-size:13px;font-weight:700;color:var(--oz-x6B5A44T);white-space:nowrap">'+E(optText(vs,p.net_content))+'</small>'
   if(vs&&vs.length===1){var v=vs[0];price=num(v.price_kurus);cmp=num(v.compare_at_kurus);sub=unitPrice({variants:vs,net_content:p.net_content},v)}
   var b='<b>'+TL(price)+'</b>',st=cmp>price?'<s>'+TL(cmp)+'</s>':'';
-  return (sFirst?st+b:b+st)+(sub?'<small class="u" style="display:block;font-size:11.5px;font-weight:600;color:#8E7E66;white-space:nowrap">'+E(sub)+'</small>':'')}
+  return (sFirst?st+b:b+st)+(sub?'<small class="u" style="display:block;font-size:11.5px;font-weight:600;color:var(--oz-x8E7E66T);white-space:nowrap">'+E(sub)+'</small>':'')}
 /* F2: Keşfet şeridi için küçük kart (beyaz zemin, koyu yazı, F6 "+") */
 function krCard(p){ST.rows=ST.rows||{};ST.rows[String(p.id)]=p;var im=httpsUrl(p.image)||httpsUrl(arr(p.images)[0]);var price=num(p.price_kurus),cmp=num(p.compare_at_kurus);
   return '<div class="ozKr" role="listitem" data-pid="'+E(p.id)+'"><button type="button" class="im" data-a="nav" data-k="product" data-id="'+E(p.id)+'" aria-label="'+E(p.name)+'">'+pic(im,p.name)+(p.in_stock===false?'<span class="so">Tükendi</span>':'')+'</button>'+
@@ -1001,7 +1001,7 @@ function pdRender(){
   var act=pick?'<button type="button" class="ozBtn pri" disabled aria-disabled="true">Sepete ekle</button>':!v||stock<=0?'<button type="button" class="ozBtn" disabled>Stokta yok</button>':
     inCart?'<span class="ozPStep ozPdStep" role="group" aria-label="Sepetteki adet"><button type="button" data-a="pdStep" data-d="-1" aria-label="'+(inCart<=1?'Sepetten çıkar':'Azalt')+'">−</button><b aria-live="polite">'+inCart+'</b><button type="button" data-a="pdStep" data-d="1" aria-label="Bir tane daha"'+(inCart>=Math.min(99,stock)?' disabled':'')+'>+</button></span>':
     '<button type="button" class="ozBtn pri" data-a="addCart">Sepete ekle</button>';
-  var bar='<div class="ozPdBar"><span class="pp">'+(pick?'<b class="pk" style="font-size:16px;color:#CDBB9F">Seçenek seç</b>':'<b>'+(v?TL(price):'—')+'</b>'+(v&&cmp>price?'<s>'+TL(cmp)+'</s>':''))+'</span>'+act+'</div>';
+  var bar='<div class="ozPdBar"><span class="pp">'+(pick?'<b class="pk" style="font-size:16px;color:var(--oz-muted)">Seçenek seç</b>':'<b>'+(v?TL(price):'—')+'</b>'+(v&&cmp>price?'<s>'+TL(cmp)+'</s>':''))+'</span>'+act+'</div>';
   var b=qs('.ozShB',ov);if(!b)return;var keep=b.scrollTop,openInf=!!qs('.ozPdInf[open]',b);
   b.innerHTML=gal+head+prod+desc+vars+pdFeat(p)+ship+bar;
   /* O2: alt çubuk panelin altına sabit; içerik alanına çubuk yüksekliği kadar alt boşluk → son seçenek/bilgi çubuğun altında kalmaz */
@@ -1934,7 +1934,7 @@ function spUrunRender(){
       var pv=vs.filter(function(v){return v.product_id===p.id});var stock=pv.reduce(function(n,v){return n+num(v.stock)},0);
       var st=p.is_hidden?'hidden':p.status;var low=pv.some(function(v){return v.is_active!==false&&num(v.stock)<=3});
       var act=pv.filter(function(v){return v.is_active!==false});var prc=act.length===1?TL(act[0].price_kurus):act.length>1?act.length+' seçenek':'Seçenek yok';
-      return '<div class="ozCard ozSpRow" style="margin:0" data-pid="'+E(p.id)+'"><div class="ozCI" style="border:0;padding:0">'+pic(arr(p.images)[0],p.name)+'<div class="tx"><b>'+E(p.name||'Adsız ürün')+'</b><span class="pr">'+E(prc)+'</span><small>'+stock+' stok'+(low?' · <span style="color:#F7D24A">düşük stok</span>':'')+'</small><div style="margin-top:4px">'+stTag(PROD_ST,st)+'</div></div>'+
+      return '<div class="ozCard ozSpRow" style="margin:0" data-pid="'+E(p.id)+'"><div class="ozCI" style="border:0;padding:0">'+pic(arr(p.images)[0],p.name)+'<div class="tx"><b>'+E(p.name||'Adsız ürün')+'</b><span class="pr">'+E(prc)+'</span><small>'+stock+' stok'+(low?' · <span style="color:var(--oz-sun)">düşük stok</span>':'')+'</small><div style="margin-top:4px">'+stTag(PROD_ST,st)+'</div></div>'+
         '<button type="button" class="ozBtn sun ozSpEd" data-a="spGo" data-id="'+E(p.id)+'">'+ico('tag',16)+'<span>Düzenle</span></button></div>'+
         ((p.status_reason||p.reject_reason)&&p.status==='rejected'?'<div class="ozWarn">Gerekçe: '+E(p.status_reason||p.reject_reason)+'</div>':'')+
         (p.status==='published'?(p.showcase_order!=null?'<div class="ozSpVB"><button type="button" class="ozBtn sm" data-a="spVit" data-op="rm" data-id="'+E(p.id)+'">Vitrinden çıkar</button></div>':
