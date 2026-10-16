@@ -6,6 +6,7 @@
 // ürün detayı "'den başlayan" (seçimden önce .ozPrice yok), teslim düğmesi ikincil, "Öne çıkan ürünler" satıcıların altında.
 // P7: sonuçsuz aramada kategoriler + "Öne çıkan ürünler"; "Sıradaki adım"; kargo/iade/satıcı bloğu; adet sınırı açıklaması (50 / stok);
 // stok −/+ (kayıt yalnız "Kaydet" ile); sayaç süzme; ürün paneli hatasında "Tekrar dene"; panel odağı; 320px ödeme çubuğu toplamı.
+// AJ2-B: sipariş detayında takip düğmesi orman yeşili, "İade talebi oluştur" kehribar (.ozRet), iki temada AA.
 const {chromium,open,enter}=require('./harness.js');
 (async()=>{
  const br=await chromium.launch({executablePath:process.env.CHROMIUM||'/opt/pw-browsers/chromium'});
@@ -119,6 +120,18 @@ const {chromium,open,enter}=require('./harness.js');
  ok(await p.evaluate(()=>!!document.querySelector('.ozOv.ozPdS .ozPName')),'"Tekrar dene" ürünü yükler');
  await p.keyboard.press('Escape');await p.waitForTimeout(300);
  ok(await p.evaluate(()=>!document.querySelector('.ozOv')&&!!document.activeElement&&!!document.activeElement.closest('.ozGr[data-pid=p0]')),'Esc ile kapanınca odak ürün kartına döner');
+ // AJ2-B: sipariş detayı — "Kargo firmasının sayfasında takip et" orman yeşili dolgu + beyaz kalın; "İade talebi oluştur" (.ozRet) kehribar;
+ // iki temada AA ≥4.5 (etkin zemin), "Kopyala"dan farklı zemin, "Siparişim elime ulaştı" birincil değil
+ const od0=await p.evaluate(()=>{const R=window.__OZ_FX.R,d=R.oz_order_detail,k=JSON.stringify({o:d.order,c:d.can_return,r:d.return});
+  d.order=Object.assign({},d.order,{status:'delivered',carrier:'Aras Kargo',tracking_no:'578764456'});d.can_return=true;d.return=null;return k});
+ for(const th of ['light','dark']){await setTheme(th);await go('siparis');
+  const b=await p.evaluate(()=>{const f=s=>{const e=document.querySelector(s);if(!e)return null;const c=getComputedStyle(e);return {cls:e.className,bg:c.backgroundColor,c:c.color,fw:c.fontWeight,bc:c.borderTopColor}};
+   return {ret:f('#ozRoot [data-a=ordReturn]'),trk:f('#ozRoot .ozTrkGo'),cp:f('#ozRoot .ozTrkC .cp')}});
+  const acc=th==='light'?'rgb(31, 107, 69)':'rgb(40, 128, 79)',sun=th==='light'?'rgb(138, 90, 0)':'rgb(247, 210, 74)';
+  ok(b.trk&&b.trk.bg===acc&&b.trk.c==='rgb(255, 255, 255)'&&+b.trk.fw>=700,'['+th+'] takip düğmesi orman yeşili + beyaz kalın: '+JSON.stringify(b.trk));
+  ok(b.ret&&/\bozRet\b/.test(b.ret.cls)&&b.ret.bg==='rgba(242, 193, 78, 0.28)'&&b.ret.c===sun&&b.cp&&b.ret.bg!==b.cp.bg,'['+th+'] iade düğmesi kehribar (.ozRet), Kopyala\'dan ayrı: '+JSON.stringify([b.ret,b.cp&&b.cp.bg]));
+  const v=await AA([['iade','#ozRoot [data-a=ordReturn]'],['takip','#ozRoot .ozTrkGo']]);ok(!v.length,'['+th+'] sipariş düğmeleri AA: '+v.join(' | '))}
+ await p.evaluate(k=>{const d=window.__OZ_FX.R.oz_order_detail,x=JSON.parse(k);d.order=x.o;d.can_return=x.c;d.return=x.r},od0);
  // genişlik × tema × ekran: taşma 0, alt menü düğmeleri ≥44px
  let n=0;
  for(const th of ['light','dark']){await setTheme(th);
