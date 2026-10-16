@@ -1,12 +1,15 @@
 // AC4: canlıya geçiş sürüm hazırlığı (dosya + tarayıcı). Çalıştırma: node tests/oz-ui/ac4-surum.test.js
 // Doğrulanan: W2 CSS yorumunda "TEST" kalmadı (Özüne Dön CSS bloğunda hiç "TEST" yok); oz-market-v1.js sürüm parametresi ?v=2 ve TEK yerde
-// (eski ?v=1 yok; manifest/sw/başka dosyada başvuru yok); CSS çıktısı değişmedi: Özüne Dön stil bloğunun yorumsuz hali geri dönüş noktasıyla
-// (git 4fca025) birebir aynı, tarayıcıdaki kural sayısı ve bildirimleri aynı; modül gerçekten ?v=2 ile yükleniyor.
+// (eski ?v=1 yok; manifest/sw/başka dosyada başvuru yok); CSS çıktısı değişmedi: Özüne Dön stil bloğunun yorumsuz hali referans noktasıyla
+// birebir aynı, tarayıcıdaki kural sayısı ve bildirimleri aynı; modül gerçekten ?v=2 ile yükleniyor.
+// AJ1 P8: referans, tasarım çalışmasının (AJ1 Paket 1–7) son commit'i dbd46f0'a taşındı (eski: 4fca025, AJ1 öncesi canlı noktası).
+// dbd46f0 zaten ?v=2 içerdiği için "?v=2→?v=1" yer değiştirmesi kalktı; index.html doğrudan karşılaştırılır. Canlıya geçişte JS değiştiği
+// için ?v=3 yapılacak ve bu test aynı commit'te güncellenecek.
 const fs=require('fs'),path=require('path'),cp=require('child_process');
 const {chromium,open,enter}=require('./harness.js');
 const ROOT=path.resolve(__dirname,'../..');
 const cur=fs.readFileSync(path.join(ROOT,'index.html'),'utf8');
-const base=cp.execSync('git show 4fca025:index.html',{cwd:ROOT,encoding:'utf8',maxBuffer:64<<20});
+const base=cp.execSync('git show dbd46f0:index.html',{cwd:ROOT,encoding:'utf8',maxBuffer:64<<20});
 const blk=s=>{const a=s.indexOf('/*K21-BASLA*/'),b=s.indexOf('/*K21-BITIS*/');return s.slice(a,b)};
 const nocom=s=>s.replace(/\/\*[\s\S]*?\*\//g,'');
 (async()=>{
@@ -17,7 +20,7 @@ const nocom=s=>s.replace(/\/\*[\s\S]*?\*\//g,'');
  const others=['manifest.json','sw.js','food-sw.js','pf-platform-v1.js','a7-food-v1.js'].filter(f=>fs.existsSync(path.join(ROOT,f))&&/oz-market-v1\.js\?/.test(fs.readFileSync(path.join(ROOT,f),'utf8')));
  ok(!others.length,'başka dosyada sürümlü başvuru olmamalı: '+others);
  ok(nocom(blk(cur))===nocom(blk(base)),'Özüne Dön CSS (yorumsuz) değişmemeli');
- ok(nocom(cur.replace('oz-market-v1.js?v=2','oz-market-v1.js?v=1'))===nocom(base),'index.html’de sürüm ve yorum dışında değişiklik olmamalı');
+ ok(nocom(cur)===nocom(base),'index.html’de sürüm ve yorum dışında değişiklik olmamalı');
  const br=await chromium.launch({executablePath:process.env.CHROMIUM||'/opt/pw-browsers/chromium'});
  const {p,st}=await open(br,{w:390,h:844});
  await enter(p);
