@@ -3681,12 +3681,18 @@ async function hmHeroLoad(){
     var map={}; if(base) map[4]=base.storage_path; sl.forEach(function(x,i){ map[i]=x.storage_path; });
     var imgs=document.querySelectorAll('.hmMo img[data-hm]');
     for(var k=0;k<imgs.length;k++){ var p=map[imgs[k].getAttribute('data-hm')]; if(p) imgs[k].src=U(p); }
+    /* AJ2-F: kutucuk görselleri (panel › Ana ekran fotoğrafları › Kutucuk görselleri). Yemek yalnız kutucuk; diğerleri kutucuk + afiş kapağı.
+       Kayıt yoksa images/home/… kalır; yüklenen dosya açılamazsa hmImgErr data-f yedeğine döner. */
+    var TM={tile_food:['food',0],tile_market:['market',1],tile_ilan:['listings',1],tile_hizmet:['services',1]};
+    rows.forEach(function(x){ var m=x&&TM[x.role]; if(!m||!x.storage_path) return;
+      var q='.hmTile[data-k="'+m[0]+'"] img[data-ht]'+(m[1]?',.hmSl[data-k="'+m[0]+'"] img[data-ht]':'');
+      document.querySelectorAll(q).forEach(function(i){ i.src=U(x.storage_path); }); });
   }catch(e){}
 }
 function hmSlide(k){ if(k==='market'){ ozTap(); return; } hmGo(k); }
 function hmSliderHtml(brand){
   var P='images/home/';
-  function im(f,cls,st){ return '<img'+(cls?' class="'+cls+'"':'')+' src="'+P+f+'" alt="" loading="lazy"'+(st?' style="'+st+'"':'')+' onerror="this.remove()">'; }
+  function im(f,cls,st,ht){ return '<img'+(cls?' class="'+cls+'"':'')+(ht?' data-ht="'+ht+'" data-f="'+P+f+'"':'')+' src="'+P+f+'" alt="" loading="lazy"'+(st?' style="'+st+'"':'')+' onerror="'+(ht?'hmImgErr(this)':'this.remove()')+'">'; }
   function mo(n,f,st){ return '<img data-hm="'+n+'" data-f="'+P+f+'" src="'+P+f+'" alt="" loading="lazy" style="'+st+'" onerror="hmImgErr(this)">'; }
   function food(){
     return '<button type="button" class="hmSl food" data-k="food" onclick="hmSlide(this.dataset.k)">'+
@@ -3694,7 +3700,7 @@ function hmSliderHtml(brand){
       '<span class="tx"><span class="h">Bugün<br>ne yesek?</span><span class="s">Kapında teslim.</span><span class="b">Restoranlar</span><span class="hmAktif">Aktif</span></span></button>';
   }
   function cover(k,img,h,s,soon){
-    return '<button type="button" class="hmSl" data-k="'+k+'" onclick="hmSlide(this.dataset.k)">'+im(img,'bg')+
+    return '<button type="button" class="hmSl" data-k="'+k+'" onclick="hmSlide(this.dataset.k)">'+im(img,'bg','',k)+
       '<span class="tx"><span class="h">'+h+'</span><span class="s">'+s+'</span>'+(soon?'<span class="b soon">Yakında</span>':'')+'</span></button>';
   }
   return '<div class="hmSlider"><div class="hmTrack">'+
@@ -3709,7 +3715,7 @@ function hmHomeHtml(){
   var I=function(d,s){ return '<svg width="'+(s||24)+'" height="'+(s||24)+'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>'; };
   var tile=function(k,img,t,s,soon,fn){
     return '<button type="button" class="hmTile" data-k="'+k+'" onclick="'+fn+'">'+
-      '<img src="images/home/'+img+'" alt="" loading="lazy" onerror="this.remove()">'+
+      '<img data-ht="'+k+'" data-f="images/home/'+img+'" src="images/home/'+img+'" alt="" loading="lazy" onerror="hmImgErr(this)">'+
       (soon?'<span class="hmSoon">Yakında</span>':'')+
       '<span class="tx"><b>'+t+'</b><small>'+s+'</small></span></button>';
   };

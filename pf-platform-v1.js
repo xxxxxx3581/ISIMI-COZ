@@ -635,7 +635,15 @@ var ADMIN={
         '<button type="button" class="pfxBtn" onclick="PF._heroToggle(\''+esc(r.id)+'\','+(!r.is_active)+',this)">'+(r.is_active?'Gizle':'Göster')+'</button>'+
         '<button type="button" class="pfxBtn" onclick="PF._heroName('+i+',this)">✎ Ad</button>'+
         '<button type="button" class="pfxBtn" onclick="PF._heroDel(\''+esc(r.id)+'\',this)">Sil</button></div></div></div>'}).join(''):'<p class="pfxMuted">Henüz kayan fotoğraf yok.</p>')+
-      '<div class="pfxRow" style="margin-top:10px;flex-wrap:wrap"><input type="file" accept="image/jpeg,image/png,image/webp" id="pfxHeroS" style="max-width:190px"><input class="pfxIn" id="pfxHeroN" maxlength="24" placeholder="Yemek adı (örn. İskender)" style="max-width:190px"><button type="button" class="pfxBtn" onclick="PF._heroUp(\'slide\',this)">Ekle</button></div></div>';
+      '<div class="pfxRow" style="margin-top:10px;flex-wrap:wrap"><input type="file" accept="image/jpeg,image/png,image/webp" id="pfxHeroS" style="max-width:190px"><input class="pfxIn" id="pfxHeroN" maxlength="24" placeholder="Yemek adı (örn. İskender)" style="max-width:190px"><button type="button" class="pfxBtn" onclick="PF._heroUp(\'slide\',this)">Ekle</button></div></div>'+
+      /* AJ2-F: ana ekran kutucuk görselleri (rol tile_*; her rolde tek aktif kayıt) */
+      '<div class="pfxCard" id="pfxTiles"><b>Kutucuk görselleri</b><p class="pfxMuted" style="margin:4px 0 0">Ana ekrandaki dört kutucuğun fotoğrafı. Özüne Dön, İlanlar ve İşimi Hallet için yüklenen fotoğraf kayan afişte de görünür; Yemek afişi yukarıdaki fotoğraflarla kalır. Yüklenmemişse varsayılan görsel görünür.</p>'+
+      HERO_TILES.map(function(t){var r=rows.find(function(x){return x.role===t[0]&&x.is_active});
+        return '<div class="pfxRow" data-tile="'+t[0]+'" style="margin-top:8px"><img alt="" src="'+esc(r?pub(r.storage_path):'images/home/'+t[2])+'" style="width:86px;height:58px;object-fit:cover;border-radius:10px;flex:0 0 auto">'+
+          '<div><div style="margin-bottom:4px"><b>'+t[1]+'</b> <span class="pfxMuted">· '+(r?'Yüklenen görsel':'Varsayılan')+'</span></div><div class="pfxRow" style="flex-wrap:wrap;gap:6px">'+
+          '<input type="file" accept="image/jpeg,image/png,image/webp" id="pfxTl_'+t[0]+'" hidden onchange="PF._tileUp(\''+t[0]+'\',this)">'+
+          '<button type="button" class="pfxBtn" id="pfxTlB_'+t[0]+'" onclick="document.getElementById(\'pfxTl_'+t[0]+'\').click()">Değiştir</button>'+
+          '<button type="button" class="pfxBtn" '+(r?'':'disabled ')+'onclick="PF._tileReset(\''+t[0]+'\',this)">Varsayılana dön</button></div></div></div>'}).join('')+'</div>';
   },
   dispatch:async function(el){
     var s=await rpc('pf_admin_dispatch_status',{});
@@ -709,6 +717,22 @@ PF._heroUp=function(role,btn){var inp=document.getElementById(role==='base'?'pfx
     try{await rpc('pf_admin_hero_add',role==='slide'?{p_role:role,p_path:path,p_caption:(document.getElementById('pfxHeroN')||{}).value||null}:{p_role:role,p_path:path})}catch(e){await heroRemoveFile(path);throw e}
     if(role==='base')for(var i=0;i<old.length;i++){try{var op=await rpc('pf_admin_hero_delete',{p_id:old[i].id});await heroRemoveFile(op)}catch(e){}}
     toast('Fotoğraf kaydedildi.');PF.openAdmin('hero')})};
+/* AJ2-F: kutucuk görseli yükle / varsayılana dön — heroResize + home-hero deposu + pf_admin_hero_* (ops); eski dosya silinir */
+var HERO_TILES=[['tile_food','Yemek','yemek.jpg'],['tile_market','Özüne Dön','market.jpg'],['tile_ilan','İlanlar','ilanlar.jpg'],['tile_hizmet','İşimi Hallet','hizmet.jpg']];
+PF._tileUp=function(role,inp){var f=inp&&inp.files&&inp.files[0];if(!f)return;inp.value='';
+  act(document.getElementById('pfxTlB_'+role),async function(){
+    if(['image/jpeg','image/png','image/webp'].indexOf(f.type)<0)throw new Error('JPG, PNG veya WEBP yükleyebilirsin.');
+    var old=(await rpc('pf_admin_hero_list',{})||[]).filter(function(r){return r.role===role});
+    var blob=await heroResize(f),path='tile-'+Date.now()+'-'+Math.random().toString(36).slice(2,8)+'.jpg',t=await tok();
+    var r=await fetch(SBURL()+'/storage/v1/object/home-hero/'+path,{method:'POST',headers:{apikey:SBKEY(),Authorization:'Bearer '+t,'Content-Type':'image/jpeg','x-upsert':'false'},body:blob});
+    if(!r.ok){var j=await r.json().catch(function(){return {}});throw new Error(clean(j.message||j.error||'Yükleme başarısız.'))}
+    try{await rpc('pf_admin_hero_add',{p_role:role,p_path:path})}catch(e){await heroRemoveFile(path);throw e}
+    for(var i=0;i<old.length;i++){try{var op=await rpc('pf_admin_hero_delete',{p_id:old[i].id});await heroRemoveFile(op)}catch(e){}}
+    window.__v2HeroCache=null;toast('Kutucuk görseli kaydedildi.');PF.openAdmin('hero')})};
+PF._tileReset=function(role,btn){if(!confirm('Bu kutucuk varsayılan görsele dönsün mü? Yüklenen fotoğraf silinir.'))return;
+  act(btn,async function(){var old=(await rpc('pf_admin_hero_list',{})||[]).filter(function(r){return r.role===role});
+    for(var i=0;i<old.length;i++){var p=await rpc('pf_admin_hero_delete',{p_id:old[i].id});await heroRemoveFile(p)}
+    window.__v2HeroCache=null;toast('Varsayılan görsele dönüldü.');PF.openAdmin('hero')})};
 PF._heroMove=function(i,d,btn){var a=ADM.hero||[],x=a[i],y=a[i+d];if(!x||!y)return;act(btn,async function(){await rpc('pf_admin_hero_update',{p_id:x.id,p_sort:i+d});await rpc('pf_admin_hero_update',{p_id:y.id,p_sort:i});PF.openAdmin('hero')})};
 PF._heroName=function(i,btn){var r=(ADM.hero||[])[i];if(!r)return;var n=prompt('Yemek adı (en fazla 24 karakter, boş bırakırsan silinir)',r.caption||'');if(n===null)return;n=n.trim();if(n.length>24)return toast('Ad en fazla 24 karakter olabilir.');act(btn,async function(){await rpc('pf_admin_hero_update',{p_id:r.id,p_caption:n});PF.openAdmin('hero')})};
 PF._heroToggle=function(id,on,btn){act(btn,async function(){await rpc('pf_admin_hero_update',{p_id:id,p_active:on});PF.openAdmin('hero')})};

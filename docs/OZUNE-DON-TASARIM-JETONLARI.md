@@ -98,3 +98,14 @@ Krem tercihte fotoğraf üstü beyaz yazılar için karo ve afiş geçişleri ko
 
 1. **Ayardan:** Hesabım › Görünüm → "Koyu" (veya Özüne Dön › Hesabım › Görünüm). Ana ekran C2 öncesi koyu görünüme döner; yalnız o tarayıcı için geçerlidir.
 2. **Koddan:** `git revert dfb9884`. Krem ana ekran, `data-hm-theme` özniteliği ve Hesabım › Görünüm satırı kalkar. Bu commit'ten sonraki AJ2 commit'leri (`4671ffc` "Ürünleri değerlendir" tam genişlik, `bf62b0e` ac4 referansı) ayrı dosya bölgelerine dokunur. Revert sonrası `ac4-surum` testinin referansı yeniden sabitlenmelidir; bu testin karşılaştırdığı `index.html` değişir.
+
+## Ana ekran kutucuk görselleri (AJ2-F)
+
+| Konu | Değer |
+|---|---|
+| Panel | Yönetim › İçerik ve kullanıcılar › Ana ekran fotoğrafları › "Kutucuk görselleri" (yetki `ops`) |
+| Roller (`home_hero_slides.role`) | `tile_food` (Yemek, yalnız kutucuk), `tile_market`, `tile_ilan`, `tile_hizmet` (kutucuk + afiş kapağı) |
+| Kural | Her rolde tek aktif kayıt (`home_hero_one_active_tile`); yeni yüklemede eski kayıt ve dosya silinir |
+| Ana ekran | `hmHeroLoad()` aynı `home_hero_list` okumasıyla kutucuk görselini yazar; kayıt yoksa `images/home/…`, dosya açılamazsa `hmImgErr` yedeği |
+| SQL | `docs/sql/paket-f-kutucuk-uygula.sql` (uygulandı), geri alma `docs/sql/paket-f-kutucuk-geri-al.sql` |
+| Test | `tests/oz-ui/aj5-kutucuk-gorsel.test.js` |
