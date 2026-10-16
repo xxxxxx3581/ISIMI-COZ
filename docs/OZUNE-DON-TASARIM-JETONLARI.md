@@ -75,3 +75,26 @@ P6 erişilebilirlik düzeltmeleri de sabit değerdir (her iki temada aynı zemin
 - `tests/oz-ui/aj1-tema.test.js`: iki tema, AA, 320/360/390/430/768/1280 px × 7 ekran taşma ve alt menü ≥44 px, P3 ve P7 davranışları.
 - `tests/oz-ui/harness.js`: `theme` seçeneği (`'dark'` varsayılan; `''` = uygulama varsayılanı, yani krem).
 - `tests/oz-ui/ac4-surum.test.js`: CSS referansı `dbd46f0` (AJ1 son tasarım commit'i).
+
+## Ana ekran teması (AJ2-C2)
+
+İşimi Çöz platform ana ekranı (afiş, Yemek / Özüne Dön / İlanlar / İşini Hallet karoları, Kısayollar, En son gezdiklerim, alt menü hapı) Özüne Dön krem paletini kullanır; eski koyu kahve görünüm kalıcı olarak korunur ve tercihle seçilir.
+
+| Konu | Değer |
+|---|---|
+| Geri dönüş noktası (C2 öncesi) | `1fd7169` |
+| C2 commit'i | `dfb9884` |
+| Kapsam seçicisi | `html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx)` — yalnız ana ekran (`#app` içinde `.v2Home.hmx` varken) |
+| CSS bloğu | `index.html` içinde `/*AJ2C-BASLA*/ … /*AJ2C-BITIS*/` (K21 Özüne Dön bloğunun hemen önünde) |
+| Tercih anahtarı | `localStorage['isimi_oz_theme']` — Özüne Dön Görünüm tercihiyle AYNI anahtar. `'dark'` → koyu (C2 öncesiyle piksel düzeyinde aynı); yok veya başka değer → krem |
+| Tercihin uygulanışı | `<html data-hm-theme="light|dark">`: sayfa başındaki tema satırı ve `showHome()` içindeki `hmThemeSync()` yazar |
+| Ayar | Hesabım › "Görünüm: Açık (krem) / Koyu" satırı ve Özüne Dön › Hesabım › Görünüm (ikisi aynı anahtarı çevirir) |
+| Etkilenmeyenler | Yemek, İlanlar, İşini Hallet, Hesabım (yeni satır dışında) ve Özüne Dön; paylaşılan sınıf/değişkenlere (`fdwHome`, `:root`, `--v2-*` vb.) dokunulmadı |
+| Test | `tests/oz-ui/aj2-anasayfa.test.js` |
+
+Krem tercihte fotoğraf üstü beyaz yazılar için karo ve afiş geçişleri koyulaştırıldı (en açık piksele karşı AA ≥4.5). Koyu tercih bilinçli olarak C2 öncesiyle aynıdır; oradaki fotoğraf üstü kontrast test çıktısında bilgi olarak yazdırılır.
+
+### Geri alma yolları
+
+1. **Ayardan:** Hesabım › Görünüm → "Koyu" (veya Özüne Dön › Hesabım › Görünüm). Ana ekran C2 öncesi koyu görünüme döner; yalnız o tarayıcı için geçerlidir.
+2. **Koddan:** `git revert dfb9884`. Krem ana ekran, `data-hm-theme` özniteliği ve Hesabım › Görünüm satırı kalkar. Bu commit'ten sonraki AJ2 commit'leri (`4671ffc` "Ürünleri değerlendir" tam genişlik, `bf62b0e` ac4 referansı) ayrı dosya bölgelerine dokunur. Revert sonrası `ac4-surum` testinin referansı yeniden sabitlenmelidir; bu testin karşılaştırdığı `index.html` değişir.
