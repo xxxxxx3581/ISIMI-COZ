@@ -1,5 +1,6 @@
 // AG1: ızgara kartı — çerçevesiz/zeminsiz, bitişik, TEMİZ fotoğraf; "+" fotoğrafın hemen altında fiyatın sağında. 390px, sahte RPC.
 // AH1: yalnız aralık/köşe beklentileri güncellendi — ürün ızgarasında sütun arası 0 (bitişik foto bandı), satır kenarı köşe sınıfları (cl/cr).
+// AJ2-D2: telefonda sütun arası 12px, büyük yazıda da 3 sütun (eski: 16px, 2 sütun).
 // AJ2-D: ızgarada sütun arası 16px, satır arası 20px, foto çerçevesi 18px köşe; "+" çerçevenin SAĞ ÜST köşesinde (24px krem daire merkezi
 // köşede, yarısı dışarıda, fotoğrafa binmez, 44×44 dokunma, komşu karta değmez; kontrast dairenin zeminine karşı); "Tükendi" sol üstte.
 // AJ2-A: ürün ızgarasında (.ozGrs) sütun arası 10px, satır arası 16px, foto köşesi 14px; "+" fotoğrafın sağ üst köşesinde (44×44 dokunma,
@@ -58,7 +59,7 @@ const {chromium,open,enter,overflow}=require('./harness.js');
    aa:[cr(col('.pr b')||col('.pr .uf')||col('.pr .nvp'),page),cr(col('.nm'),page),cr(col('.up'),page),cr(col('.nt'),page),pl?cr(ps.color,g&&getComputedStyle(g).backgroundColor!=='rgba(0, 0, 0, 0)'?getComputedStyle(g).backgroundColor:page):99]}},[root,id]);
  const L='#ozRoot .ozGrs';
  const gr=await p.evaluate(()=>{const g=document.querySelector('#ozRoot .ozGrs');const s=getComputedStyle(g);return {cols:s.gridTemplateColumns.split(' ').length,cg:s.columnGap,rg:s.rowGap}});
- ok(gr.cols===3&&gr.cg==='16px'&&gr.rg==='20px','390px 3 sütun, sütun arası 16px, satır arası 20px: '+JSON.stringify(gr));
+ ok(gr.cols===3&&gr.cg==='12px'&&gr.rg==='20px','390px 3 sütun, sütun arası 12px, satır arası 20px: '+JSON.stringify(gr));
  let m=await M(L,'m1'),z=await M(L,'z1'),b=await M(L,'b1');
  ok(m&&z&&b,'kartlar');
  if(m){
@@ -94,7 +95,7 @@ const {chromium,open,enter,overflow}=require('./harness.js');
  const g2=await p.evaluate(()=>{const gr=document.querySelector('#ozRoot .ozGrs');const cs=[...gr.querySelectorAll('.ozGr')];const rs=cs.map(c=>c.getBoundingClientRect());let lap=false;
   rs.forEach((a,i)=>rs.forEach((b,j)=>{if(i<j&&a.left<b.right-1&&b.left<a.right-1&&a.top<b.bottom-1&&b.top<a.bottom-1)lap=true}));
   return {cols:getComputedStyle(gr).gridTemplateColumns.split(' ').length,lap,sw:document.scrollingElement.scrollWidth-document.scrollingElement.clientWidth}});
- ok(g2.cols===2&&!g2.lap&&g2.sw<=0,'büyük yazıda 2 sütun, çakışma/taşma yok: '+JSON.stringify(g2));
+ ok(g2.cols===3&&!g2.lap&&g2.sw<=0,'büyük yazıda da 3 sütun (telefon), çakışma/taşma yok: '+JSON.stringify(g2));
  await p.evaluate(()=>{document.documentElement.style.fontSize=''});
  await p.evaluate(()=>{localStorage.setItem('isimi_oz_recent',JSON.stringify({s1:[{id:'m1',name:'Cam şişe günlük süt',image:'https://img.test/icecekler.jpg',price_kurus:9000,nv:1,vs:[{label:'1 L',price_kurus:9000}],net:'1 L'}]}))});
  await p.evaluate(()=>OZ.go('store',{id:'s1'}));await p.waitForTimeout(1600);

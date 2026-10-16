@@ -2652,6 +2652,32 @@ html:root .ozGrs .ozGr.st .go{padding-bottom:40px}
 html:root .ozGrs .ozGr.st .ac{top:auto;bottom:0;left:0;right:0;width:auto;height:auto;padding:0;align-items:flex-end}
 html:root .ozGrs .ozGr.st .ac .ozPStep.gp{height:40px;padding-right:0}
 html:root .ozGrs .ozGr.st .ac .ozPStep.gp button{height:40px;min-height:40px}
+/*OZ AJ2-D2 telefonda ızgara: 320–719px'te yazı boyutundan bağımsız SABİT 3 sütun (320 altı 2), sütun arası 12px, satır arası 20px. Kart yazı ölçeği
+  F = min(1rem, (100vw − 48px)/19.8) → büyük sistem yazısında da 3 sütunda ad 2 satırda kalır, fiyat taşmaz (≥720px: F = 1rem, eski davranış).
+  Yazı bloğu sabit yükseklik (em): ad 2 satır → miktar + "★ 4,9 (23)" / "Yeni" → fiyat → ikincil satır; aynı sıradaki kartlarda bire bir hizalı.
+  Puan alanı .rvw > .rvb: kartın puan satırının üstüne gelen görünmez 44px'lik düğme (yorumlar görünümü). Yalnız .ozGr.g2 (ızgara kartı).*/
+@media (max-width:719px){html:root .ozGrs{grid-template-columns:repeat(3,minmax(0,1fr));column-gap:12px;row-gap:20px}}
+@media (max-width:319px){html:root .ozGrs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+html:root .ozGrs .ozGr.g2{font-size:1rem}
+@media (max-width:719px){html:root .ozGrs .ozGr.g2{font-size:min(1rem,calc((100vw - 48px) / 19.8))}}
+html:root .ozGrs .ozGr.g2 .nm{order:1;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;box-sizing:content-box;height:2.6em;min-height:0;margin:.75em 2px 0;font-size:.8125em;line-height:1.3}
+html:root .ozGrs .ozGr.g2 .mr{order:2;display:flex;align-items:center;justify-content:space-between;gap:4px;height:1.5em;margin:.25em 2px 0;min-width:0}
+html:root .ozGrs .ozGr.g2 .mr .nt{order:0;flex:1 1 auto;min-width:0;min-height:0;margin:0;font-size:.6875em;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html:root .ozGrs .ozGr.g2 .rt{flex:none;font-size:.6875em;line-height:1.3;white-space:nowrap;color:var(--oz-muted)}
+html:root .ozGrs .ozGr.g2 .rt i{font-style:normal;color:var(--oz-sun)}
+html:root .ozGrs .ozGr.g2 .rt b{font-weight:800;color:var(--oz-text)}
+html:root .ozGrs .ozGr.g2 .rt small{font-size:1em;color:var(--oz-muted)}
+html:root .ozGrs .ozGr.g2 .nw{flex:none;padding:1px 6px;border-radius:999px;background:color-mix(in srgb,var(--oz-acc2) 8%,transparent);color:var(--oz-acc2);font-size:.625em;font-weight:800;line-height:1.3}
+html:root .ozGrs .ozGr.g2 .prw{order:3;margin:.25em 0 0;padding:0 2px}
+html:root .ozGrs .ozGr.g2 .pr{display:block;height:1.3em;font-size:.9375em;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:clip}
+html:root .ozGrs .ozGr.g2 .pr .dn{font-size:.72em;font-weight:800}
+html:root .ozGrs .ozGr.g2 .pr .nvp{font-size:.8em}
+html:root .ozGrs .ozGr.g2 .up{display:flex;gap:4px;height:1.3em;min-height:0;font-size:.6875em;line-height:1.3;white-space:nowrap;color:var(--oz-muted)}
+html:root .ozGrs .ozGr.g2 .up .op{flex:none;color:var(--oz-muted)}
+html:root .ozGrs .ozGr.g2 .up .ue{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
+html:root .ozGrs .ozGr.g2 .rvw{position:absolute;top:0;left:45%;right:0;z-index:2;box-sizing:border-box;padding-top:calc(100% + 3.72em - 22px);pointer-events:none}
+html:root .ozGrs .ozGr.g2 .rvb{display:block;width:100%;height:44px;margin:0;padding:0;border:0;border-radius:10px;background:none;cursor:pointer;pointer-events:auto}
+html:root .ozGrs .ozGr.g2 .rvb:focus-visible{outline:2px solid var(--oz-acc);outline-offset:-2px}
 /*OZ AI2 seçenek penceresi alt çubuğu: seçili seçenek sepetteyse "− n +" (44px dokunma alanı); yalnız .ozPkBar.*/
 html:root .ozPkBar .ozPStep.pk{height:44px;min-width:132px;justify-content:space-between}
 html:root .ozPkBar .ozPStep.pk button{width:44px;height:44px;font-size:22px}

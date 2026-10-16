@@ -1,4 +1,5 @@
 // AH1: ürün ızgarası foto düzeni — 390px, sahte RPC. Çalıştırma: node tests/oz-ui/ah1-izgara-bant.test.js
+// AJ2-D2: telefonda sütun arası 12px ve büyük yazıda da 3 sütun (eski: 16px, büyük yazıda 2 sütun).
 // AJ2-D (bilinçli tasarım değişikliği): sütun arası 16px; foto çerçevesi 18px köşe ve neredeyse görünmez 1px çizgi (sayfa zeminine karşı
 // kontrast <1.2; gölge/outline yok); "+" çerçevenin sağ üst köşesinden 11px dışarı taşar → "kendi sütununda" yerine "komşu karta değmez";
 // "Tükendi" sol üstte çerçevenin içinde. Kart/düğme/fotoğrafta kenarlık/gölge/outline yok şartı aynen.
@@ -33,11 +34,11 @@ const {chromium,open,enter,overflow}=require('./harness.js');
       const b=P(getComputedStyle(document.body).backgroundColor),k=P(s.borderTopColor),a=k.length>3?k[3]:1,m=[0,1,2].map(i=>k[i]*a+b[i]*(1-a));const x=L(m),y=L(b);const r=(Math.max(x,y)+.05)/(Math.min(x,y)+.05);return r<1.2?'ok':'belirgin '+r.toFixed(2)})(),
      ctlIn:ctl.left>=R.left-.01&&(()=>{const nx=[...c.parentElement.children].find(x=>x!==c&&Math.abs(x.getBoundingClientRect().top-R.top)<2&&x.getBoundingClientRect().left>R.left);return nx?ctl.right<=nx.getBoundingClientRect().left-.5:ctl.right<=innerWidth})(),pl:prw.paddingLeft,nmL:nm.marginLeft,nmR:nm.marginRight,
      so:so?[Math.round(so.getBoundingClientRect().left-P.left),Math.round(so.getBoundingClientRect().top-P.top)]:null}}))}});
- const chk=(g,n,where)=>{ok(g&&g.cols===n&&g.cg==='16px','['+where+'] '+n+' sütun, sütun arası 16px: '+JSON.stringify(g&&[g.cols,g.cg]));if(!g)return;
+ const chk=(g,n,where)=>{ok(g&&g.cols===n&&g.cg==='12px','['+where+'] '+n+' sütun, sütun arası 12px: '+JSON.stringify(g&&[g.cols,g.cg]));if(!g)return;
   g.rows.forEach((r,ri)=>{ok(r.every(c=>c.h===r[0].h),'['+where+'] satır '+ri+' kart yükseklikleri eşit');
    r.forEach((c,i)=>{const want='18,18,18,18';
     ok(c.rad===want,'['+where+'] '+c.id+' köşeler '+want+': '+c.rad);ok(!c.deco,'['+where+'] '+c.id+' kenarlık/gölge/outline yok');ok(c.frame==='ok','['+where+'] '+c.id+' foto çerçevesi neredeyse görünmez: '+c.frame);ok(c.ctlIn,'['+where+'] '+c.id+' "+"/adım alanı komşu karta değmez');
-    if(i>0)ok(Math.abs(c.L-r[i-1].Rt-16)<0.01,'['+where+'] '+r[i-1].id+'→'+c.id+' foto çerçeveleri arası 16px: '+(c.L-r[i-1].Rt));
+    if(i>0)ok(Math.abs(c.L-r[i-1].Rt-12)<0.01,'['+where+'] '+r[i-1].id+'→'+c.id+' foto çerçeveleri arası 12px: '+(c.L-r[i-1].Rt));
     if(n===3&&r.length===3){ok(c.pl==='2px'&&c.nmL==='2px'&&c.nmR==='2px','['+where+'] '+c.id+' yazı iç boşluğu 2px: '+[c.pl,c.nmL,c.nmR])}
     if(c.so)ok(c.so[0]>=7&&c.so[0]<=16&&c.so[1]>=7&&c.so[1]<=16,'['+where+'] "Tükendi" sol üstte çerçevenin içinde: '+c.so)})})};
  let g=await G();chk(g,3,'390px');
@@ -50,8 +51,8 @@ const {chromium,open,enter,overflow}=require('./harness.js');
  await p.evaluate(()=>{const x=document.querySelector('.ozOv [data-a=sheetClose]');if(x)x.click()});await p.waitForTimeout(400);
  // büyük yazı → 2 sütun, aynı kural
  await p.evaluate(()=>{document.documentElement.style.fontSize='24px'});await p.waitForTimeout(500);
- g=await G();chk(g,2,'büyük yazı');
- ok(g&&g.rows[g.rows.length-1].length===1&&g.rows[g.rows.length-1][0].rad==='18,18,18,18','2 sütunda son tek ürün dört köşe 18px');
+ g=await G();chk(g,3,'büyük yazı');
+ ok(g&&g.rows[g.rows.length-1].length===1&&g.rows[g.rows.length-1][0].rad==='18,18,18,18','büyük yazıda (3 sütun) son tek ürün dört köşe 18px');
  await p.evaluate(()=>{document.documentElement.style.fontSize=''});await p.waitForTimeout(400);
  // raf eskisi gibi
  await p.evaluate(()=>{localStorage.setItem('isimi_oz_recent',JSON.stringify({s1:[0,1,2].map(i=>({id:'q'+i,name:'Ürün '+i,image:'https://img.test/recel.jpg',price_kurus:9000,nv:1}))}))});

@@ -4,6 +4,7 @@
 // 44×44 dokunma, tamamen fotoğrafın içinde (fiyat/ada binmez)"; görünür daire 26px ≤ foto alanının %6'sı; "+" kontrastı dairenin zeminine
 // karşı ≥4.5; seçenek sayısı rozeti dairenin solunda fotoğrafın üst kenarında (orta kısmı örtmez); foto köşesi 14px. "+" düğmesinin kendisi
 // köşesiz/çerçevesiz/zeminsiz, kart zemini/gölgesi yok, "Tükendi" ve "Son baktığın ürünler" rafı kontrolleri aynen.
+// AJ2-D2: telefonda büyük yazıda da 3 sütun (eski: 2).
 // AJ2-D: ürün ızgarasında (.ozGrs) "+" çerçevenin SAĞ ÜST köşesine, yarısı dışarıda — konum kontrolü "fotoğrafın içinde sağ üstte, 26px daire"
 // yerine "24px krem daire merkezi çerçeve köşesinde (≤3px), fotoğrafa binmez, 44×44 dokunma, komşu karta değmez"; foto köşesi 18px (çerçeve);
 // "+" kontrastı dairenin (svg) zeminine karşı; "Tükendi" sol üstte; büyük yazıda "+" komşu karta değmez. Diğer kontroller aynen.
@@ -97,7 +98,7 @@ const {chromium,open,enter,overflow}=require('./harness.js');
   const inside=cs.every(c=>{const r=c.getBoundingClientRect(),b=c.querySelector('.ac .ozPlus,.ac .ozPStep');if(!b)return true;const a=b.getBoundingClientRect();
    const nx=cs.find(x=>x!==c&&Math.abs(x.getBoundingClientRect().top-r.top)<2&&x.getBoundingClientRect().left>r.left);return a.left>=r.left-.5&&(nx?a.right<=nx.getBoundingClientRect().left-.5:a.right<=innerWidth)});
   return {cols:getComputedStyle(gr).gridTemplateColumns.split(' ').length,lap,inside,sw:document.scrollingElement.scrollWidth-document.scrollingElement.clientWidth}});
- ok(g.cols===2&&!g.lap&&g.inside&&g.sw<=0,'büyük yazıda 2 sütun, çakışma/taşma yok, "+" komşu karta değmez: '+JSON.stringify(g));
+ ok(g.cols===3&&!g.lap&&g.inside&&g.sw<=0,'büyük yazıda da 3 sütun (telefon), çakışma/taşma yok, "+" komşu karta değmez: '+JSON.stringify(g));
  await p.evaluate(()=>{document.documentElement.style.fontSize=''});
  // Son baktığın ürünler rafında aynı kart
  await p.evaluate(()=>{localStorage.setItem('isimi_oz_recent',JSON.stringify({s1:[{id:'m1',name:'Cam şişe günlük süt',image:'https://img.test/icecekler.jpg',price_kurus:9000,nv:1,vs:[{label:'1 L',price_kurus:9000}],net:'1 L'}]}))});

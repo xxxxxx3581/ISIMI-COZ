@@ -1,4 +1,6 @@
 // AD1: ürün listesi "Izgara / Liste" görünümü — 390px, sahte RPC. Çalıştırma: node tests/oz-ui/ad1-izgara.test.js
+// AJ2-D2: telefonda (320–719px) yazı boyutundan bağımsız sabit 3 sütun, sütun arası 12px → büyük yazıda da 3 sütun; ızgara kartında puan
+// ("★ 4,9 (23)" / "Yeni") bilerek var (kalp/açıklama/nokta hâlâ yok); seçenekli fiyat "650,00 ₺'den" + ikincil satır "≈ … ₺/L'den".
 // AJ2-D: yalnız aralık ve "+" konumu güncellendi — sütun arası 16px; "+" çerçevenin SAĞ ÜST köşesinde, görünür 24px krem daire merkezi
 // köşede (yarısı dışarıda, fotoğrafa binmez), dokunma 44×44, komşu karta değmez.
 // AJ2-A: yalnız aralık ve "+" konumu güncellendi — sütun arası 10px (bitişik bant kalktı); "+" fotoğrafın sağ üst köşesinde
@@ -30,11 +32,11 @@ const {chromium,open,enter,overflow}=require('./harness.js');
   const cs=getComputedStyle(g);const cols=cs.gridTemplateColumns.split(' ').length;const cards=[...g.querySelectorAll('.ozGr')];
   const rs=cards.map(c=>c.getBoundingClientRect());let lap=false;rs.forEach((a,i)=>rs.forEach((b,j)=>{if(i<j&&a.left<b.right-1&&b.left<a.right-1&&a.top<b.bottom-1&&b.top<a.bottom-1)lap=true}));
   const row0=rs.filter(r=>Math.abs(r.top-rs[0].top)<2).map(r=>Math.round(r.height));
-  return {cols,gap:cs.columnGap,n:cards.length,lap,row0,extra:cards.some(c=>c.querySelector('.ozFav,.rt,.ds,.dt')),
+  return {cols,gap:cs.columnGap,n:cards.length,lap,row0,extra:cards.some(c=>c.querySelector('.ozFav,.ds,.dt')||[...c.querySelectorAll('.rt')].some(r=>!r.closest('.mr'))),
    sw:document.scrollingElement.scrollWidth-document.scrollingElement.clientWidth}});
  let g=await G();
- ok(!g.none&&g.cols===3&&g.gap==='16px'&&g.n===6,'varsayılan Izgara, 390px 3 sütun, sütun arası 16px: '+JSON.stringify(g));
- ok(!g.extra,'ızgara kartında kalp/yıldız/açıklama/nokta olmamalı');ok(!g.lap&&g.sw<=0,'üst üste binme/taşma yok');
+ ok(!g.none&&g.cols===3&&g.gap==='12px'&&g.n===6,'varsayılan Izgara, 390px 3 sütun, sütun arası 12px: '+JSON.stringify(g));
+ ok(!g.extra,'ızgara kartında kalp/açıklama/nokta olmamalı (yıldız yalnız puan satırında)');ok(!g.lap&&g.sw<=0,'üst üste binme/taşma yok');
  ok(g.row0&&g.row0.every(h=>h===g.row0[0]),'aynı satırda kart yükseklikleri eşit: '+JSON.stringify(g.row0));
  const C=id=>p.evaluate(id=>{const c=document.querySelector('#ozRoot .ozGr[data-pid="'+id+'"]');if(!c)return null;
   function lum(x){const m=x.match(/[\d.]+/g).map(Number);const f=v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)};return .2126*f(m[0])+.7152*f(m[1])+.0722*f(m[2])}
@@ -54,7 +56,7 @@ const {chromium,open,enter,overflow}=require('./harness.js');
   ok(c2.sq&&c0.sq&&c0.fit==='cover 50% 50%','kare foto, cover, ortalı: '+c0.fit);
   ok(/^Ezine peyniri 2, 899,90\s₺$/.test(c2.go)&&c2.plus==='Sepete ekle','aria: kart "ad, fiyat", "+" "Sepete ekle": '+c2.go+' / '+c2.plus);
   ok(/899,90/.test(c2.pr)&&/₺\/kg/.test(c2.up)&&c2.nt==='500 g','tek fiyatlı: fiyat + ≈ birim + net miktar: '+JSON.stringify([c2.pr,c2.up,c2.nt]));
-  ok(/^≈ .+ ₺$/.test(c0.pr)&&/^\/L'd[ae]n$/.test(c0.up)&&/^Seçenek seç, 2 hacim seçeneği$/.test(c0.plus)&&c0.nt==='2 hacim','seçenekli: "≈ X ₺/L\'dan" + seçenek bilgisi, "+" aria: '+JSON.stringify([c0.pr,c0.plus,c0.nt]));
+  ok(/^650,00\s₺'den$/.test(c0.pr)&&/^≈ .+ ₺\/L'd[ae]n$/.test(c0.up)&&/^Seçenek seç, 2 hacim seçeneği$/.test(c0.plus)&&c0.nt==='2 hacim','seçenekli: "650,00 ₺\'den" + "≈ … ₺/L\'den" + seçenek bilgisi, "+" aria: '+JSON.stringify([c0.pr,c0.up,c0.plus,c0.nt]));
   ok(c3.dis&&c3.so==='Tükendi'&&+c3.op<.6&&c3.pw>=44,'stoksuz: "+" pasif ama görünür, "Tükendi", soluk foto: '+JSON.stringify(c3));
   ok(c2.aa.every(x=>x>=4.5)&&c0.aa.every(x=>x>=4.5),'AA kontrast (fiyat, ad, soluk satırlar): '+JSON.stringify([c2.aa,c0.aa]));
   ok(c2.rad==='0px','çerçevesiz kart, köşesiz: '+c2.border+' '+c2.rad);
@@ -93,7 +95,7 @@ const {chromium,open,enter,overflow}=require('./harness.js');
  // büyük yazı → 2 sütun
  await p.evaluate(()=>OZ.go('plist',{seller:'s1',sname:'Yayla Üreticileri'}));await p.waitForTimeout(1500);
  await p.evaluate(()=>{document.documentElement.style.fontSize='24px'});await p.waitForTimeout(300);
- g=await G();ok(g.cols===2&&!g.lap&&g.sw<=0,'büyük yazıda 2 sütun, taşma/üst üste binme yok: '+JSON.stringify(g));
+ g=await G();ok(g.cols===3&&!g.lap&&g.sw<=0,'büyük yazıda da 3 sütun (telefon), taşma/üst üste binme yok: '+JSON.stringify(g));
  await p.evaluate(()=>{document.documentElement.style.fontSize=''});
  ok(!st.errors.length,'sayfa hatası: '+st.errors.join(' | '));
  // yenileme: Liste seç → sayfayı yenile → (sahte veri olmadan) liste sayfasında anahtar "Liste" seçili gelir

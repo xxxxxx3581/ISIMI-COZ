@@ -567,7 +567,7 @@ var VW_IC={grid:'<svg width="20" height="20" viewBox="0 0 24 24" fill="currentCo
   list:'<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><rect x="3" y="4" width="6" height="6" rx="1.6"/><rect x="11" y="5.5" width="10" height="3" rx="1.5"/><rect x="3" y="14" width="6" height="6" rx="1.6"/><rect x="11" y="15.5" width="10" height="3" rx="1.5"/></svg>'};
 function vwSw(){var v=vwGet();return '<span class="ozVw" role="group" aria-label="Görünüm">'+[['grid','Izgara görünümü'],['list','Liste görünümü']].map(function(x){var on=v===x[0];
   return '<button type="button" class="'+(on?'on':'')+'" data-a="vwSet" data-v="'+x[0]+'" aria-pressed="'+on+'" aria-label="'+x[1]+'">'+VW_IC[x[0]]+'</button>'}).join('')+'</span>'}
-function prodList(l,src){var g=vwGet()==='grid';return '<div class="'+(g?'ozGrs':'ozGcs')+'" role="list" data-pl="'+E(src)+'">'+arr(l).map(function(p){return g?gridCard(p):gcCard(p)}).join('')+'</div>'}
+function prodList(l,src){var g=vwGet()==='grid';return '<div class="'+(g?'ozGrs':'ozGcs')+'" role="list" data-pl="'+E(src)+'">'+arr(l).map(function(p){return g?gridCard(p,1):gcCard(p)}).join('')+'</div>'}
 /* AG1: çerçevesiz/zeminsiz kart — kare foto (üzerinde yalnız "Tükendi"), hemen altında tek satır: solda fiyat + ≈ birim, sağda "+" /
    adet / "− n +" (fotoğrafın DIŞINDA); sonra ad (2 satır) ve miktar/seçenek. (AF1'in üst şeridi kaldırıldı.)
    AD1/AD2: sade ızgara kartı (paylaşılan bileşen: ürün listeleri + "Son baktığın ürünler" rafı). Kare foto (cover, ortalı); sağ üstte
@@ -575,7 +575,31 @@ function prodList(l,src){var g=vwGet()==='grid';return '<div class="'+(g?'ozGrs'
    ≈ birim fiyat (unitPrice), ad (2 satır), net miktar / seçenek bilgisi. Kalp, yıldız, açıklama, foto noktaları yok; karta dokunuş ürün paneli.
    p.nv: seçenek sayısı biliniyor ama seçenekler eksikse (son bakılan kaydı) kullanılır. */
 function grInit(n){var c=String(n||'').trim().charAt(0);return c?c.toLocaleUpperCase('tr'):'·'}
-function gridCard(p){ST.rows=ST.rows||{};ST.rows[String(p.id)]=p;
+/* AJ2-D2: ızgara (.ozGrs) kartı — ad (2 satır) → miktar + "★ 4,9 (23)" / "Yeni" → fiyat → ikincil satır (eski fiyat + birim). Yalnız mevcut veri:
+   p.rating_avg/rating_count (arama sonucu), seçenekler (gcEnrich → vars). Seçenekli üründe en düşük seçenek fiyatı "X ₺'den"; seçenek verisi yoksa "N seçenek".
+   Puan alanı ayrı, görünmez 44px'lik düğme (data-rev → ürün paneli yorumlarla açılır). "Son baktığın ürünler" rafı (g yok) eski kartı kullanır. */
+function tlShort(k){k=num(k);return k%100===0?(k/100).toLocaleString('tr-TR')+'\u00a0₺':TL(k)}
+function gridCard2(p){ST.rows=ST.rows||{};ST.rows[String(p.id)]=p;
+  var im=httpsUrl(p.image)||httpsUrl(arr(p.images)[0]),id=E(p.id),vs=Array.isArray(p.vars)?p.vars:null,nv=Math.max(num(p.nv),vs?vs.length:0),so=p.in_stock===false;
+  var pr,ue='',op='',nt='',ap;
+  if(nv>1){
+    if(vs&&vs.length){var mn=Math.min.apply(null,vs.map(function(x){return num(x.price_kurus)}));pr='<b>'+TL(mn)+'<small class="dn">\'den</small></b>';ap=TL(mn)+'\'den başlayan';ue=unitFrom(vs,p.net_content)}
+    else{pr='<span class="nvp">'+nv+' seçenek</span>';ap=nv+' seçenek'}
+    nt=vs?optText(vs,p.net_content).replace(/ (gramaj|hacim) seçeneği$/,' $1'):''}
+  else{var v=vs&&vs.length===1?vs[0]:null,k=v?num(v.price_kurus):num(p.price_kurus),ck=v?num(v.compare_at_kurus):num(p.compare_at_kurus);
+    pr='<b>'+TL(k)+'</b>';ap=TL(k);op=ck>k?tlShort(ck):'';
+    var r=v?unitK({variants:vs,net_content:p.net_content},v):null;if(r)ue=(op?'':'≈ ')+Math.round(r.k/100).toLocaleString('tr-TR')+'\u00a0₺/'+r.u;
+    nt=p.net_content||(v&&v.label)||''}
+  var rc=num(p.rating_count),ra=num(p.rating_avg).toLocaleString('tr-TR',{minimumFractionDigits:1,maximumFractionDigits:1});
+  var ctl=ppCtrl(p,1);
+  return '<div class="ozGr g2'+(so?' out':'')+grSt(ctl)+'" role="listitem" data-pid="'+id+'"><button type="button" class="go" data-a="nav" data-k="product" data-id="'+id+'" aria-label="'+E(String(p.name||'')+', '+ap+(so?', tükendi':''))+'">'+
+    '<span class="ph">'+(im?'<img src="'+E(im)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">':'')+'<i aria-hidden="true">'+E(grInit(p.name))+'</i>'+(so?'<span class="so">Tükendi</span>':'')+'</span>'+
+    '<span class="nm">'+E(p.name||'')+'</span>'+
+    '<span class="mr"><small class="nt">'+E(nt)+'</small>'+(rc?'<span class="rt" aria-hidden="true"><i>★</i> <b>'+ra+'</b> <small>('+rc+')</small></span>':'<span class="nw">Yeni</span>')+'</span>'+
+    '<span class="prw"><span class="pr">'+pr+'</span><small class="up">'+(op?'<s class="op">'+op+'</s>'+(ue?' ':''):'')+(ue?'<span class="ue">'+E(ue)+'</span>':'')+'</small></span></button>'+
+    (rc?'<span class="rvw"><button type="button" class="rvb" data-a="nav" data-k="product" data-rev="1" data-id="'+id+'" aria-label="'+E('5 üzerinden '+ra+' puan, '+rc+' değerlendirme')+'"></button></span>':'')+
+    '<span class="ac">'+ctl+'</span></div>'}
+function gridCard(p,g){if(g)return gridCard2(p);ST.rows=ST.rows||{};ST.rows[String(p.id)]=p;
   var im=httpsUrl(p.image)||httpsUrl(arr(p.images)[0]),id=E(p.id),vs=Array.isArray(p.vars)?p.vars:null,nv=Math.max(num(p.nv),vs?vs.length:0),so=p.in_stock===false;
   var pr,up='',nt='',ap,op='';
   /* AG1: seçenekli fiyat iki satır — "≈ X ₺" (13px) ve altında "/kg'dan" (11px) */

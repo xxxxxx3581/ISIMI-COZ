@@ -142,7 +142,7 @@ const {chromium,open,enter}=require('./harness.js');
       free:nx?Q.right<=nx.getBoundingClientRect().left-.5:Q.right<=innerWidth,top:Math.round(Q.top),hit:(()=>{const e=document.elementFromPoint((V.left+V.right)/2,(V.top+V.bottom)/2);return !!e&&pl.contains(e)})()}:null}});
    return {cg:gs.columnGap,rg:gs.rowGap,cs}});
   const acc2=th==='light'?'rgb(31, 107, 69)':'rgb(79, 182, 127)';
-  ok(g&&g.cg==='16px'&&g.rg==='20px','['+th+'] ızgara sütun arası 16px, satır arası 20px: '+JSON.stringify(g&&[g.cg,g.rg]));
+  ok(g&&g.cg==='12px'&&g.rg==='20px','['+th+'] ızgara sütun arası 12px (D2), satır arası 20px: '+JSON.stringify(g&&[g.cg,g.rg]));
   ok(g&&g.cs.length&&g.cs.every(c=>c.bg==='rgba(0, 0, 0, 0)|rgba(0, 0, 0, 0)'&&c.sh==='none|none'&&c.bw==='0px|0px'),'['+th+'] kart zemini/gölgesi/kenarlığı yok: '+JSON.stringify(g&&g.cs[0]));
   ok(g&&g.cs.every(c=>c.rad==='18px,18px'&&/^1px\|1\.[01]\d$/.test(c.frame)&&c.inset==='8,12px'),'['+th+'] çerçeve 18px köşe, 1px neredeyse görünmez çizgi, fotoğraf 7px içeride 12px köşe: '+JSON.stringify(g&&g.cs.map(c=>[c.rad,c.frame,c.inset])));
   ok(g&&g.cs.every(c=>c.prFull)&&g.cs.filter(c=>c.plus).every(c=>c.prC===acc2),'['+th+'] fiyat kesilmez, orman yeşili: '+JSON.stringify(g&&g.cs.map(c=>[c.prFull,c.prC])));

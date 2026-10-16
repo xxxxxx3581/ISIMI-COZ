@@ -1,4 +1,6 @@
 // AD2: "Son baktığın ürünler" rafı AD1 ızgara kartıyla — 390px, sahte RPC. Çalıştırma: node tests/oz-ui/ad2-raf-izgara.test.js
+// AJ2-D2: ızgara kartı (.ozGr.g2) puan satırı (.mr: miktar + puan) ve puan düğmesi (.rvw) ekledi, yazı sırası değişti; raf kapsam dışı
+// (eski kart). Karşılaştırma ortak bileşen parçalarına göre: .g2/.mr/.rvw ayıklanır, .go içi sırasız (ph, prw, nm, nt).
 // AH1: yalnız aralık/köşe beklentileri güncellendi — ürün ızgarasında sütun arası 0 (bitişik foto bandı), satır kenarı köşe sınıfları (cl/cr).
 // AG1: yalnız konum/ölçü/seçici beklentileri güncellendi — kart çerçevesiz/zeminsiz, "+" fotoğrafın ALTINDA fiyatın sağında (44×44), seçenekli fiyat "≈ X ₺" + "/kg'dan".
 // AF1: yalnız beklenti güncellendi — kart alt satırı kısa biçimde ("2 hacim").
@@ -28,7 +30,8 @@ const REC={s1:[
  // ürün listesindeki ızgara kartının iç yapısı (referans)
  await p.evaluate(()=>OZ.go('plist',{seller:'s1',sname:'Yayla'}));await p.waitForTimeout(1500);
  const sig=sel=>p.evaluate(sel=>{const c=document.querySelector(sel);if(!c)return null;const k=e=>e.tagName.toLowerCase()+'.'+[...e.classList].filter(x=>x!=='cl'&&x!=='cr').join('.');
-  return k(c)+'>'+[...c.children].map(x=>k(x)+'('+[...x.children].map(k).join(',')+')').join('|')},sel);
+  const kids=x=>[...x.children].flatMap(y=>y.classList.contains('mr')?[...y.children].filter(z=>z.classList.contains('nt')):[y]).map(k).sort();
+  return k(c).replace('.g2','')+'>'+[...c.children].filter(x=>!x.classList.contains('rvw')).map(x=>k(x)+'('+kids(x).join(',')+')').join('|')},sel);
  const ref=await sig('#ozRoot .ozGrs .ozGr[data-pid="p2"]');
  await p.evaluate(()=>OZ.go('store',{id:'s1'}));await p.waitForTimeout(1800);
  const R=await p.evaluate(()=>{function lum(x){const m=x.match(/[\d.]+/g).map(Number);const f=v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)};return .2126*f(m[0])+.7152*f(m[1])+.0722*f(m[2])}
