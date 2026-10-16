@@ -5,7 +5,8 @@
 // krem tercihte zorunlu; koyu tercih bugünkü görünümle aynı tutulduğu için orada yalnız ölçülüp yazdırılır;
 // dokunma hedefleri ≥44 (logo düğmesi görünmez genişletmeyle); 320/390/768/1280 px × iki tercih taşma 0; Hesabım › "Görünüm" satırı aynı
 // anahtarı çevirir (ana ekran koyu/krem olur) ve Hesabım'ın kendi zemini değişmez; Yemek/İlanlar/İşini Hallet gövde ve alt menü renkleri
-// tercihten bağımsız (kapsam yalnız ana ekran).
+// tercihten bağımsız (kapsam yalnız ana ekran). AJ2-C3 (krem): afiş dört köşe 22px, sayfa zemini renginde 6px iç çerçeve (tıklamayı geçirir,
+// noktaları örtmez), afiş ve karolar aynı sol/sağ kenar, karolar 22px, seçili sekme yeşil kapsül, başlıklarda kehribar çubuk; koyuda yok.
 const {chromium,open}=require('./harness.js');
 (async()=>{
  const br=await chromium.launch({executablePath:process.env.CHROMIUM||'/opt/pw-browsers/chromium'});
@@ -54,9 +55,30 @@ const {chromium,open}=require('./harness.js');
   const lg=document.querySelector('#app .hmBrandW .hmBrand');if(lg){const r=lg.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;const hit=(x,y)=>{const e=document.elementFromPoint(x,y);return !!e&&(e===lg||lg.contains(e))};
    if(!(hit(cx,r.top-5.5)&&hit(cx,r.bottom+5.5)&&(r.height+12)>=44))out.push('logo dokunma '+Math.round(r.width)+'x'+Math.round(r.height+12))}return out});
  v=await touch();ok(!v.length,'[krem] dokunma ≥44: '+v.join(' | '));
+ // AJ2-C3 (krem): afiş dört köşe 22px, sayfa zemini renginde 6px iç çerçeve (tıklamayı geçirir, noktaları örtmez), afiş ve karolar aynı sol/sağ
+ // kenarda, karolar 22px köşe; seçili sekme yeşil kapsül; başlıklarda kehribar çubuk
+ const C3=()=>p.evaluate(()=>{const sl=document.querySelector('#app .hmSlider'),S=sl.getBoundingClientRect(),cs=getComputedStyle(sl),b4=getComputedStyle(sl,'::before');
+  const tiles=[...document.querySelectorAll('#app .hmTile')].map(t=>t.getBoundingClientRect()),dots=document.querySelector('#app .hmDots').getBoundingClientRect();
+  const hit=document.elementFromPoint(S.left+3,S.top+S.height/2),act=document.querySelector('nav.bottom .navBtn.active');
+  return {rad:[cs.borderTopLeftRadius,cs.borderTopRightRadius,cs.borderBottomRightRadius,cs.borderBottomLeftRadius].join(','),
+   frame:b4.content!=='none'?b4.boxShadow:'none',pe:b4.pointerEvents,page:getComputedStyle(document.body).backgroundColor,
+   hitSl:!!(hit&&hit.closest('.hmSl')),dotsIn:dots.bottom<=S.bottom-6&&dots.top>=S.top+6,
+   left:[Math.round(S.left),Math.round(Math.min(...tiles.map(r=>r.left)))],right:[Math.round(S.right),Math.round(Math.max(...tiles.map(r=>r.right)))],
+   trad:[...document.querySelectorAll('#app .hmTile')].map(t=>getComputedStyle(t).borderTopLeftRadius),
+   cap:act?getComputedStyle(act,'::before').backgroundColor+'|'+getComputedStyle(act,'::before').borderTopLeftRadius:null,
+   bar:[...document.querySelectorAll('#app .hmH,#app .v2Recent h3')].map(h=>{const s=getComputedStyle(h,'::before');return s.content!=='none'?s.width+'x'+s.height:null})}});
+ let c3=await C3();
+ ok(c3.rad==='22px,22px,22px,22px','[krem] afiş dört köşe 22px: '+c3.rad);
+ ok(c3.frame.indexOf(c3.page)>=0&&/inset/.test(c3.frame)&&/ 6px/.test(c3.frame)&&c3.pe==='none','[krem] afiş çerçevesi sayfa zemini renginde, 6px iç, tıklamayı geçirir: '+JSON.stringify([c3.frame,c3.page,c3.pe]));
+ ok(c3.hitSl&&c3.dotsIn,'[krem] çerçeve kenarına dokunuş slayta gider, noktalar çerçevenin içinde: '+JSON.stringify([c3.hitSl,c3.dotsIn]));
+ ok(c3.left[0]===c3.left[1]&&c3.right[0]===c3.right[1],'[krem] afiş ve karolar aynı sol/sağ kenar: '+JSON.stringify([c3.left,c3.right]));
+ ok(c3.trad.length===4&&c3.trad.every(r=>r==='22px'),'[krem] karolar 22px köşe: '+c3.trad);
+ ok(c3.cap==='rgba(31, 107, 69, 0.12)|18px','[krem] seçili sekme yeşil kapsül: '+c3.cap);
+ ok(c3.bar.length===2&&c3.bar.every(x=>x==='4px x18px'.replace(' ','')),'[krem] başlıklarda 4×18 kehribar çubuk: '+JSON.stringify(c3.bar));
  // koyu tercih: bugünkü görünüm
  await setPref('dark');await home();L=await look();
  ok(L.attr==='dark'&&L.bg==='rgb(43, 33, 24)'&&L.nav==='rgb(58, 45, 32)','isimi_oz_theme=dark iken koyu kahve ana ekran: '+JSON.stringify(L));
+ c3=await C3();ok(c3.frame==='none'&&c3.bar.every(x=>x===null),'[koyu] C3 çerçeve/çubuk yok (bugünkü görünüm): '+JSON.stringify([c3.frame,c3.bar]));
  v=await AA();ok(!v.length,'[koyu] düz zemin metinleri AA: '+v.join(' | '));
  // koyu tercih bilinçli olarak bugünkü görünümle piksel düzeyinde aynı tutulur (AJ2-C şartı); fotoğraf üstü ölçüm bilgi olarak yazdırılır
  v=[...await tiles('koyu'),...await hero('koyu')];console.log('bilgi — [koyu, bugünkü görünüm değişmedi] fotoğraf üstü en açık bölge kontrastı <4.5: '+(v.join(' | ')||'yok'));
