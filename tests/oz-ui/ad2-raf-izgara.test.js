@@ -3,6 +3,7 @@
 // (eski kart). Karşılaştırma ortak bileşen parçalarına göre: .g2/.mr/.rvw ayıklanır, .go içi sırasız (ph, prw, nm, nt).
 // AH1: yalnız aralık/köşe beklentileri güncellendi — ürün ızgarasında sütun arası 0 (bitişik foto bandı), satır kenarı köşe sınıfları (cl/cr).
 // AG1: yalnız konum/ölçü/seçici beklentileri güncellendi — kart çerçevesiz/zeminsiz, "+" fotoğrafın ALTINDA fiyatın sağında (44×44), seçenekli fiyat "≈ X ₺" + "/kg'dan".
+// P1: seçenek metni "N seçenek" ("2 hacim" yerine).
 // AF1: yalnız beklenti güncellendi — kart alt satırı kısa biçimde ("2 hacim").
 // Doğrulanan: raf kartları AD1'in ürün listesi kartıyla AYNI bileşen (aynı sınıf/iç yapı: .ozGr > .go(.ph,.pr,.up,.nm,.nt) + .ac "+"),
 // 118px kare, yatay kaydırma (sayfa taşmaz); sıra ve kayıtlar aynı (localStorage); karta dokunuş o ürünün panelini açar, "+" paneli
@@ -46,7 +47,7 @@ const REC={s1:[
  if(R){
   ok(R.w.every(x=>x===118)&&R.sq,'118px kare kartlar: '+JSON.stringify(R.w));
   ok(R.scroll,'raf yatay kayar');
-  ok(/899,90/.test(R.txt[0])&&/500 g$/.test(R.txt[0])&&/^≈ .+ ₺\|2 hacim$/.test(R.txt[1])&&R.txt[2]==='3 seçenek|','fiyat/seçenek satırları (eski kayıt "3 seçenek", tahmin yok): '+JSON.stringify(R.txt.slice(0,3)));
+  ok(/899,90/.test(R.txt[0])&&/500 g$/.test(R.txt[0])&&/^≈ .+ ₺\|2 seçenek$/.test(R.txt[1])&&R.txt[2]==='3 seçenek|','fiyat/seçenek satırları (eski kayıt "3 seçenek", tahmin yok): '+JSON.stringify(R.txt.slice(0,3)));
   ok(R.aa.every(a=>a.every(x=>x>=4.5)),'AA kontrast: '+JSON.stringify(R.aa));
   ok(R.rv,'müşteri yorumları şeridi aynen');ok(R.cover>=2,'satıcı kapak vitrini (büyük slayt) aynen: '+R.cover);
  }

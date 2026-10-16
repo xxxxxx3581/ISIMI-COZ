@@ -1,4 +1,5 @@
 // Y2: liste kartı alt blok iki sütun + fotoğraf/yazı dengesi — 390px, sahte veri. Çalıştırma: node tests/oz-ui/y2-kart-denge.test.js
+// P1: tek fiyatlı kartta birim fiyat ızgara biçiminde, tam TL ("≈ 90 ₺/L", eski "≈ 90,00 ₺/L").
 // Doğrulanan (zeytinyağı, çilek, bal (yorumlu), süt (tek fiyatlı)): Z1 ile etiket kalktı — "+" sağ alt köşede, ekran okuyucu seçenek
 // sayısını söyler; "+" dört kartta aynı x; sol sütunda fiyat / "≈ X ₺/kg'dan"; "+" küçük seçenek penceresini açar, kartı açmaz;
 // fotoğraf alanı yüksekliği ile yazı bloğu farkı ≤ 8px (boş bant yok), fotoğraf ≥120px; iç boşluk 12px, foto-metin arası 12px;
@@ -40,7 +41,7 @@ const BIG='html:root .ozGc .nm{font-size:20px!important}html:root .ozGc .ds{font
   ok(x.h<=OLD[k],k+' kart yüksekliği ≤ '+OLD[k]+': '+x.h);
   ok(x.favTR&&!x.bind&&x.inside&&x.crs.every(c=>c>=4.5),k+' kalp sağ üstte, binme/taşma yok, AA: '+JSON.stringify(x))});
  ['p0','p1','p2'].forEach(k=>{const x=M[k]||{};ok(!x.pill&&x.prLeft&&/^Seçenek seç, \d+ gramaj seçeneği$/.test(x.aria||'')&&/^≈ [\d.]+ ₺\/kg'dan$/.test(x.pr||''),k+' Z1: etiket yok, "+" seçenek sayısını söyler; solda birim fiyat: '+JSON.stringify(x))});
- ok(M.p3&&!M.p3.pill&&M.p3.prLeft&&/^90,00\s₺ ≈ 90,00\s₺\/L$/.test(M.p3.pr||''),'süt: etiket yok, solda fiyat + birim fiyat: '+JSON.stringify(M.p3));
+ ok(M.p3&&!M.p3.pill&&M.p3.prLeft&&/^90,00\s₺ ≈ 90\s₺\/L$/.test(M.p3.pr||''),'süt: etiket yok, solda fiyat + birim fiyat: '+JSON.stringify(M.p3));
  const xs=['p0','p1','p2','p3'].map(k=>M[k]&&M[k].plusCx);ok(xs.every(x=>x!=null&&Math.abs(x-xs[0])<=1),'"+" dört kartta aynı x: '+JSON.stringify(xs));
  ok(page<=390,'390px taşma yok: '+page);
  // etiket → küçük pencere

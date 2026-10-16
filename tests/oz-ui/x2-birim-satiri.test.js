@@ -1,4 +1,5 @@
 // X2: seçenekli liste kartında en düşük birim fiyat satırı — 390px, sahte veri. Çalıştırma: node tests/oz-ui/x2-birim-satiri.test.js
+// P1: tek fiyatlı kartta birim fiyat ızgara biçiminde, tam TL ("≈ 90 ₺/L", eski "≈ 90,00 ₺/L").
 // Doğrulanan: zeytinyağı (1kg 400, 3kg 1.100, 5kg 1.800) → "≈ 360 ₺/kg'dan"; bal (800gr 1.000, 500gr 600) → "≈ 1.200 ₺/kg'dan";
 // hacim → "₺/L'den"; birimi çözülemeyen seçenek hesaba girmez (800gr 1.000 + "500" 600 → "≈ 1.250 ₺/kg'dan"); hiçbiri çözülemiyorsa ya da
 // kg/L karışıksa satır yok; seçenekli kartta toplam fiyat yok; tek fiyatlı süt aynı ("90,00 ₺" + "≈ 90,00 ₺/L"); soluk krem, 13px, AA.
@@ -28,7 +29,7 @@ const VV=(pid,l)=>l.map(([label,tl],i)=>({product_id:pid,label,price_kurus:tl*10
   ok(M.p5&&M.p5.u===null&&M.p5.opt,t+'kg/L karışıksa satır yok: '+JSON.stringify(M.p5));
   ['p0','p1','p3'].forEach(k=>{const x=M[k]||{};ok(x.pr===x.u&&!/\d,\d\d/.test(x.pr||''),t+k+' seçenekli kartta toplam fiyat yok, kuruş yok: '+JSON.stringify(x));
    ok(x.fs===13&&!x.gold&&x.cr>=4.5&&x.one&&x.in,t+k+' soluk krem 13px, vurgusuz, AA, tek satır: '+JSON.stringify(x))});
-  ok(M.p2&&/^90,00\s₺ ≈ 90,00\s₺\/L$/.test(M.p2.pr||'')&&!M.p2.opt&&M.p2.u===null,t+'tek fiyatlı süt aynı: '+JSON.stringify(M.p2));
+  ok(M.p2&&/^90,00\s₺ ≈ 90\s₺\/L$/.test(M.p2.pr||'')&&!M.p2.opt&&M.p2.u===null,t+'tek fiyatlı süt aynı: '+JSON.stringify(M.p2));
  }
  ok(await p.evaluate(()=>document.documentElement.scrollWidth<=390),'390px taşma yok');
  ok(!st.errors.length,'sayfa hatası olmamalı: '+st.errors.join(' | '));

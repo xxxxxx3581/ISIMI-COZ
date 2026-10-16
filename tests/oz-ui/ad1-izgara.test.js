@@ -8,6 +8,7 @@
 // (dokunma 44×44, sağ/üst kenarı fotoğrafınkiyle aynı, tamamen fotoğrafın içinde → fiyat/ada binmez; görünür daire 26px).
 // AH1: yalnız aralık/köşe beklentileri güncellendi — ürün ızgarasında sütun arası 0 (bitişik foto bandı), satır kenarı köşe sınıfları (cl/cr).
 // AG1: yalnız konum/ölçü/seçici beklentileri güncellendi — kart çerçevesiz/zeminsiz, "+" fotoğrafın ALTINDA fiyatın sağında (44×44), seçenekli fiyat "≈ X ₺" + "/kg'dan".
+// P1: kartta görünen seçenek metni "N seçenek" ("2 hacim" yerine); "+" ekran okuyucu metni aynı.
 // AF1: yalnız konum/seçici beklentileri güncellendi — "+" artık fotoğrafın dışında üst şeritte (44×36 dokunma), alt satır kısa ("2 hacim").
 // Doğrulanan: varsayılan Izgara (satıcı ürün listesi, arama, favoriler); 390px'te 3 sütun, 10px boşluk; kare foto (cover, ortalı);
 // "+" fotoğrafın sağ üstünde, dokunma alanı ≥44px, görsel ~31px, kart dışına taşmaz; kartta kalp/yıldız/açıklama/nokta yok;
@@ -57,7 +58,7 @@ const {chromium,open,enter,overflow}=require('./harness.js');
   ok(c2.sq&&c0.sq&&c0.fit==='cover 50% 50%','kare foto, cover, ortalı: '+c0.fit);
   ok(/^Ezine peyniri 2, 899,90\s₺$/.test(c2.go)&&c2.plus==='Sepete ekle','aria: kart "ad, fiyat", "+" "Sepete ekle": '+c2.go+' / '+c2.plus);
   ok(/899,90/.test(c2.pr)&&/₺\/kg/.test(c2.up)&&c2.nt==='500 g','tek fiyatlı: fiyat + ≈ birim + net miktar: '+JSON.stringify([c2.pr,c2.up,c2.nt]));
-  ok(/^650,00\s₺'den$/.test(c0.pr)&&/^≈ .+ ₺\/L'd[ae]n$/.test(c0.up)&&/^Seçenek seç, 2 hacim seçeneği$/.test(c0.plus)&&c0.nt==='2 hacim','seçenekli: "650,00 ₺\'den" + "≈ … ₺/L\'den" + seçenek bilgisi, "+" aria: '+JSON.stringify([c0.pr,c0.up,c0.plus,c0.nt]));
+  ok(/^650,00\s₺'den$/.test(c0.pr)&&/^≈ .+ ₺\/L'd[ae]n$/.test(c0.up)&&/^Seçenek seç, 2 hacim seçeneği$/.test(c0.plus)&&c0.nt==='2 seçenek','seçenekli: "650,00 ₺\'den" + "≈ … ₺/L\'den" + seçenek bilgisi, "+" aria: '+JSON.stringify([c0.pr,c0.up,c0.plus,c0.nt]));
   ok(c3.dis&&c3.so==='Tükendi'&&+c3.op<.6&&c3.pw>=44,'stoksuz: "+" pasif ama görünür, "Tükendi", soluk foto: '+JSON.stringify(c3));
   ok(c2.aa.every(x=>x>=4.5)&&c0.aa.every(x=>x>=4.5),'AA kontrast (fiyat, ad, soluk satırlar): '+JSON.stringify([c2.aa,c0.aa]));
   ok(c2.rad==='0px','çerçevesiz kart, köşesiz: '+c2.border+' '+c2.rad);

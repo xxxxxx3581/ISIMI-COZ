@@ -1174,7 +1174,7 @@ body:has(#app .v2Home.hmx) .v2Top{display:none!important}
 body:has(#app .v2Home.hmx) nav.bottom{left:8px;right:8px;bottom:calc(8px + env(safe-area-inset-bottom,0px));max-width:744px;margin:0 auto;border-radius:28px;background:var(--hm-card)!important;border:1px solid var(--hm-line);box-shadow:0 6px 18px rgba(40,20,5,.18);-webkit-backdrop-filter:none;backdrop-filter:none;padding-bottom:0;overflow:hidden}
 body:has(#app .v2Home.hmx) .bottomInner .navBtn{color:var(--hm-muted)!important;white-space:nowrap}
 body:has(#app .v2Home.hmx) .bottomInner .navBtn.active{color:var(--hm-chipIcon)!important;font-weight:800}
-.v2Home.hmx{--bg:#2B2118;--card:#3A2D20;--card2:#3A2D20;--line:#54422D;--text:#F6ECDC;--muted:#CDBB9F;--v2-pri:#F0B35A;--v2-pri-ink:#2B1A08;--primary:#F0B35A;padding:8px 0 120px;color:var(--hm-ink,#F6ECDC)}
+.v2Home.hmx{--bg:#2B2118;--card:#3A2D20;--card2:#3A2D20;--line:#54422D;--text:#F6ECDC;--muted:#CDBB9F;--v2-pri:#F0B35A;--v2-pri-ink:#2B1A08;--primary:#F0B35A;padding:8px 0 calc(120px + env(safe-area-inset-bottom,0px));color:var(--hm-ink,#F6ECDC)}
 .hmTop{display:flex;align-items:center;justify-content:space-between;margin:0 0 12px;padding-top:env(safe-area-inset-top,0px)}
 .hmBrand{display:inline-flex;align-items:center;gap:7px;height:40px;padding:0 14px 0 8px;border:0;border-radius:14px;background:linear-gradient(135deg,#9C5215,#58290A);box-shadow:0 4px 12px rgba(40,20,5,.25);cursor:pointer;color:#fff;font:inherit}
 .hmBrand b{font-size:17px;font-weight:800;color:#fff;letter-spacing:-.01em}
@@ -3517,7 +3517,7 @@ function hmGo(key){
 function hmSoon(){ try{ v2Toast('Özüne Dön çok yakında!'); }catch(e){} }
 /*K21-JS-BASLA*/ /* Özüne Dön: modül tembel yüklenir; pazar kapalıysa (veya hata olursa) yalnızca hmSoon() gösterilir. */
 var OZ_LOADING=null, OZ_TAP=false;
-function ozLoad(){ if(window.OZ&&window.OZ.__v) return Promise.resolve(window.OZ); if(OZ_LOADING) return OZ_LOADING; OZ_LOADING=new Promise(function(res,rej){ var s=document.createElement('script'); s.src='./oz-market-v1.js?v=2'; s.async=true; s.onload=function(){ if(window.OZ&&window.OZ.__v) res(window.OZ); else { OZ_LOADING=null; rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); } }; s.onerror=function(){ OZ_LOADING=null; s.remove(); rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); }; document.head.appendChild(s); }); return OZ_LOADING; }
+function ozLoad(){ if(window.OZ&&window.OZ.__v) return Promise.resolve(window.OZ); if(OZ_LOADING) return OZ_LOADING; OZ_LOADING=new Promise(function(res,rej){ var s=document.createElement('script'); s.src='./oz-market-v1.js?v=3'; s.async=true; s.onload=function(){ if(window.OZ&&window.OZ.__v) res(window.OZ); else { OZ_LOADING=null; rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); } }; s.onerror=function(){ OZ_LOADING=null; s.remove(); rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); }; document.head.appendChild(s); }); return OZ_LOADING; }
 window.ozLoad=ozLoad;
 function ozTap(){ if(OZ_TAP) return; OZ_TAP=true; ozLoad().then(function(oz){ return oz.tryEnter(); }).then(function(ok){ if(!ok) hmSoon(); }).catch(function(){ hmSoon(); }).then(function(){ OZ_TAP=false; }); }
 /*K21-JS-BITIS*/
@@ -10829,5 +10829,5 @@ for(const k of ["showGayrimenkulDetail","showOtomobilDetail"]){const f=window[k]
 </body>
 <script src="./a35-seller-identity.js"></script>
 <script src="./a7-food-v1.js"></script>
-<script src="./pf-platform-v1.js"></script>
+<script src="./pf-platform-v1.js?v=3"></script>
 </html>

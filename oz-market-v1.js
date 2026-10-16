@@ -381,12 +381,14 @@ async function heroSpLoad(t){var tr=D.getElementById('ozHeroT');if(!tr)return;
     el.dataset.pid=String(o.x.producer_id);if(o.x.sponsored)el.dataset.sp='1';el.innerHTML=heroSpInner(o.i,!!o.x.sponsored);tr.appendChild(el)});
   if(tr.__oz&&tr.__oz.refresh)tr.__oz.refresh();heroSpWatch()}
 var HERO_MS={wait:2500,anim:500};  /* bekleme ve geçiş süresi tek yerde */
+/* P1: "🔒 Güvenli ödeme" rozeti gerçek (online) ödeme gelene kadar kapalı; açmak için true yap */
+var SHOW_SECURE_PAY=false;
 function heroHtml(){
   var oe="var p=this.parentNode;this.remove();if(p&&!p.querySelector('img'))p.remove()";
   var sl=HERO_SL.map(function(h,n){
     return '<div class="ozHs ozBn" role="group" aria-roledescription="slayt" aria-label="'+(n+1)+' / '+HERO_SL.length+'"'+(h.producerId?' data-pid="'+E(h.producerId)+'"':'')+'>'+OZ_OLIVE+
     OZ_BRANCH+'<span class="pz" aria-hidden="true"><i></i><i></i></span><div class="mk">'+OZ_WHEAT+'<b>Özüne <em>Dön</em></b></div><div class="tx"><em>Doğal olanı keşfet.</em><strong>'+E(h.t)+'</strong><small>'+E(h.s)+'</small></div>'+
-    '<div class="tc"><span>✓ Onaylı satıcı</span><span>🚚 Kapına kargo</span><span>🔒 Güvenli ödeme</span></div>'+
+    '<div class="tc"><span>✓ Onaylı satıcı</span><span>🚚 Kapına kargo</span>'+(SHOW_SECURE_PAY?'<span>🔒 Güvenli ödeme</span>':'')+'</div>'+
     '<div class="ph">'+h.img.map(function(sg,k){return '<img class="p'+(k+1)+'" src="assets/oz-cat/'+sg+'.jpg" alt="" loading="'+(n?'lazy':'eager')+'" decoding="async" onerror="'+oe+'">'}).join('')+'</div></div>'});
   return '<section class="ozHero" aria-label="Özüne Dön" aria-roledescription="slayt gösterisi"><div class="ozHeroW"><div class="ozHeroT" id="ozHeroT">'+sl.join('')+'</div>'+
     (sl.length>1?'<span class="ozHeroN" id="ozHeroN" aria-hidden="true">1/'+sl.length+'</span>':'')+'</div><div class="ozDots" id="ozHeroD" aria-hidden="true">'+sl.map(function(_,i){return '<i'+(i?'':' class="on"')+'></i>'}).join('')+'</div></section>';
@@ -527,10 +529,12 @@ function optDim(l){var t=String(l==null?'':l).trim();if(/^\d+(?:[.,]\d+)?$/.test
 function optText(vs,net){var n=vs.length,ds=vs.map(function(v){return optDim(v.label)});var k=ds.filter(Boolean);
   if(k.indexOf('x')>=0)return n+' seçenek';if(!k.length){var nd=net!=null&&String(net).trim()?optDim(net):'x';k=nd?[nd]:['x']}
   var d=k[0];if(!k.every(function(x){return x===d}))return n+' seçenek';return n+(d==='w'?' gramaj seçeneği':d==='v'?' hacim seçeneği':' seçenek')}
+/* P1: kartta görünen seçenek metni her yerde kısa "N seçenek" (ızgara, raf, liste, Keşfet); "+" ekran okuyucu metni optText ile ayrıntılı kalır */
+function optCount(vs){return arr(vs).length+' seçenek'}
 function cardPrice(p,sFirst){
   var vs=Array.isArray(p.vars)?p.vars:null;var price=num(p.price_kurus),cmp=num(p.compare_at_kurus),sub='';
-  if(vs&&vs.length>1)return '<small class="u ov" style="display:block;font-size:13px;font-weight:700;color:var(--oz-x6B5A44T);white-space:nowrap">'+E(optText(vs,p.net_content))+'</small>'
-  if(vs&&vs.length===1){var v=vs[0];price=num(v.price_kurus);cmp=num(v.compare_at_kurus);sub=unitPrice({variants:vs,net_content:p.net_content},v)}
+  if(vs&&vs.length>1)return '<small class="u ov" style="display:block;font-size:13px;font-weight:700;color:var(--oz-x6B5A44T);white-space:nowrap">'+E(optCount(vs))+'</small>'
+  if(vs&&vs.length===1){var v=vs[0];price=num(v.price_kurus);cmp=num(v.compare_at_kurus);sub=unitCard({variants:vs,net_content:p.net_content},v)}
   var b='<b>'+TL(price)+'</b>',st=cmp>price?'<s>'+TL(cmp)+'</s>':'';
   return (sFirst?st+b:b+st)+(sub?'<small class="u" style="display:block;font-size:11.5px;font-weight:600;color:var(--oz-x8E7E66T);white-space:nowrap">'+E(sub)+'</small>':'')}
 /* F2: Keşfet şeridi için küçük kart (beyaz zemin, koyu yazı, F6 "+") */
@@ -585,10 +589,10 @@ function gridCard2(p){ST.rows=ST.rows||{};ST.rows[String(p.id)]=p;
   if(nv>1){
     if(vs&&vs.length){var mn=Math.min.apply(null,vs.map(function(x){return num(x.price_kurus)}));pr='<b>'+TL(mn)+'<small class="dn">\'den</small></b>';ap=TL(mn)+'\'den başlayan';ue=unitFrom(vs,p.net_content)}
     else{pr='<span class="nvp">'+nv+' seçenek</span>';ap=nv+' seçenek'}
-    nt=vs?optText(vs,p.net_content).replace(/ (gramaj|hacim) seçeneği$/,' $1'):''}
+    nt=vs?optCount(vs):''}
   else{var v=vs&&vs.length===1?vs[0]:null,k=v?num(v.price_kurus):num(p.price_kurus),ck=v?num(v.compare_at_kurus):num(p.compare_at_kurus);
     pr='<b>'+TL(k)+'</b>';ap=TL(k);op=ck>k?tlShort(ck):'';
-    var r=v?unitK({variants:vs,net_content:p.net_content},v):null;if(r)ue=(op?'':'≈ ')+Math.round(r.k/100).toLocaleString('tr-TR')+'\u00a0₺/'+r.u;
+    ue=v?unitCard({variants:vs,net_content:p.net_content},v):'';if(op)ue=ue.replace(/^≈ /,'');
     nt=p.net_content||(v&&v.label)||''}
   var rc=num(p.rating_count),ra=num(p.rating_avg).toLocaleString('tr-TR',{minimumFractionDigits:1,maximumFractionDigits:1});
   var ctl=ppCtrl(p,1);
@@ -603,11 +607,11 @@ function gridCard(p,g){if(g)return gridCard2(p);ST.rows=ST.rows||{};ST.rows[Stri
   var im=httpsUrl(p.image)||httpsUrl(arr(p.images)[0]),id=E(p.id),vs=Array.isArray(p.vars)?p.vars:null,nv=Math.max(num(p.nv),vs?vs.length:0),so=p.in_stock===false;
   var pr,up='',nt='',ap,op='';
   /* AG1: seçenekli fiyat iki satır — "≈ X ₺" (13px) ve altında "/kg'dan" (11px) */
-  if(nv>1){var u=vs?unitFrom(vs,p.net_content):'',uk=u?u.indexOf('/'):-1;pr=u?'<span class="uf">'+E(uk>0?u.slice(0,uk).trim():u)+'</span>':'<span class="nvp">'+nv+' seçenek</span>';up=uk>0?u.slice(uk):'';ap=u||nv+' seçenek';nt=u&&vs?optText(vs,p.net_content).replace(/ (gramaj|hacim) seçeneği$/,' $1'):''}  /* AF1: kısa — "3 gramaj", "2 hacim", "3 seçenek" */
+  if(nv>1){var u=vs?unitFrom(vs,p.net_content):'',uk=u?u.indexOf('/'):-1;pr=u?'<span class="uf">'+E(uk>0?u.slice(0,uk).trim():u)+'</span>':'<span class="nvp">'+nv+' seçenek</span>';up=uk>0?u.slice(uk):'';ap=u||nv+' seçenek';nt=u&&vs?optCount(vs):''}  /* P1: "N seçenek" */
   else{var v=vs&&vs.length===1?vs[0]:null,k=v?num(v.price_kurus):num(p.price_kurus),ck=v?num(v.compare_at_kurus):num(p.compare_at_kurus);
-    /* AJ2-A/D: eski fiyat yalnız veride compare_at varsa (üstü çizili gri, en alttaki ikincil satırda birim fiyatın önünde); birim fiyat parantez içinde */
+    /* AJ2-A/D: eski fiyat yalnız veride compare_at varsa (üstü çizili gri, en alttaki ikincil satırda birim fiyatın önünde); P1: birim fiyat ızgara biçiminde (unitCard, parantezsiz) */
     pr='<b>'+TL(k)+'</b>';op=ck>k?'<s class="op">'+TL(ck)+'</s>':'';ap=TL(k);
-    up=v?unitPrice({variants:vs,net_content:p.net_content},v):'';if(up)up='('+up+')';nt=p.net_content||(v&&v.label)||''}
+    up=v?unitCard({variants:vs,net_content:p.net_content},v):'';nt=p.net_content||(v&&v.label)||''}
   var ctl=ppCtrl(p,1);
   return '<div class="ozGr'+(so?' out':'')+grSt(ctl)+'" role="listitem" data-pid="'+id+'"><button type="button" class="go" data-a="nav" data-k="product" data-id="'+id+'" aria-label="'+E(String(p.name||'')+', '+ap+(so?', tükendi':''))+'">'+
     '<span class="ph">'+(im?'<img src="'+E(im)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">':'')+'<i aria-hidden="true">'+E(grInit(p.name))+'</i>'+(so?'<span class="so">Tükendi</span>':'')+'</span>'+
@@ -970,6 +974,8 @@ function qtyOf(txt){var m=/^\s*(\d+(?:[.,]\d+)?)\s*(g|gr|gram|kg|kilo|ml|l|lt|li
 function unitK(p,v){var vs=arr(p.variants);var q=qtyOf(v.label)||(vs.length===1?qtyOf(p.net_content):null);if(!q||!(num(v.price_kurus)>0))return null;
   if(q.q>50)return null;return {k:Math.round(num(v.price_kurus)/q.q),u:q.u}}
 function unitPrice(p,v){var r=unitK(p,v);return r?'≈ '+TL(r.k)+'/'+r.u:''}
+/* P1: kart birim fiyatı tek biçim — "≈ 650 ₺/L" (tam TL, parantezsiz, ₺ öncesi bölünmez boşluk); ızgara, raf, liste ve Keşfet kartı ortak */
+function unitCard(p,v){var r=unitK(p,v);return r?'≈ '+Math.round(r.k/100).toLocaleString('tr-TR')+'\u00a0₺/'+r.u:''}
 /* X2: seçenekli üründe en düşük birim fiyat — "≈ 360 ₺/kg'dan" / "≈ 45 ₺/L'den" (tam sayı TL, binlik ayırıcı). Birimi çözülemeyen
    seçenek hesaba girmez; hiçbiri çözülemez ya da kg ile L karışıksa satır yok (tahmin yok). Toplam fiyat gösterilmez. */
 function unitFrom(vs,net){var l=arr(vs).map(function(v){return unitK({variants:vs,net_content:net},v)}).filter(Boolean);if(!l.length)return '';
