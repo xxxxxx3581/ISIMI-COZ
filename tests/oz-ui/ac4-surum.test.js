@@ -8,11 +8,12 @@
 // AJ2: referans AJ2'nin (Paket A, B, C2 ve "Ürünleri değerlendir" tam genişlik) son tasarım commit'i 4671ffc'ye tek sefer taşındı
 // (önceki: dbd46f0). 4671ffc de ?v=2 içerir; doğrudan karşılaştırma ve diğer tüm kontroller aynen.
 // AJ2-C3: referans C3 commit'i 3503db8'e tek sefer taşındı (önceki: 4671ffc; arada yalnız ana ekran C3 CSS'i). ?v=2 aynen.
+// AJ2-D: referans Paket D commit'i 6e6c1ec'e tek sefer taşındı (önceki: 3503db8; arada yalnız ürün ızgarası CSS'i). ?v=2 aynen.
 const fs=require('fs'),path=require('path'),cp=require('child_process');
 const {chromium,open,enter}=require('./harness.js');
 const ROOT=path.resolve(__dirname,'../..');
 const cur=fs.readFileSync(path.join(ROOT,'index.html'),'utf8');
-const base=cp.execSync('git show 3503db8:index.html',{cwd:ROOT,encoding:'utf8',maxBuffer:64<<20});
+const base=cp.execSync('git show 6e6c1ec:index.html',{cwd:ROOT,encoding:'utf8',maxBuffer:64<<20});
 const blk=s=>{const a=s.indexOf('/*K21-BASLA*/'),b=s.indexOf('/*K21-BITIS*/');return s.slice(a,b)};
 const nocom=s=>s.replace(/\/\*[\s\S]*?\*\//g,'');
 (async()=>{
