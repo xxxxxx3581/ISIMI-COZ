@@ -5,7 +5,8 @@
 // krem tercihte zorunlu; koyu tercih bugünkü görünümle aynı tutulduğu için orada yalnız ölçülüp yazdırılır;
 // dokunma hedefleri ≥44 (logo düğmesi görünmez genişletmeyle); 320/390/768/1280 px × iki tercih taşma 0; Hesabım › "Görünüm" satırı aynı
 // anahtarı çevirir (ana ekran koyu/krem olur) ve Hesabım'ın kendi zemini değişmez; Yemek/İlanlar/İşini Hallet gövde ve alt menü renkleri
-// tercihten bağımsız (kapsam yalnız ana ekran). AJ2-C3 (krem): afiş dört köşe 22px, sayfa zemini renginde 6px iç çerçeve (tıklamayı geçirir,
+// tercihten bağımsız (kapsam yalnız ana ekran).
+// AJ2-G (krem): karo/afiş fotoğrafı tamamen beyaz ve tamamen siyahken de (yazı gölgesi hariç) yazılar AA — 390 ve 320 px. AJ2-C3 (krem): afiş dört köşe 22px, sayfa zemini renginde 6px iç çerçeve (tıklamayı geçirir,
 // noktaları örtmez), afiş ve karolar aynı sol/sağ kenar, karolar 22px, seçili sekme yeşil kapsül, başlıklarda kehribar çubuk; koyuda yok.
 const {chromium,open}=require('./harness.js');
 (async()=>{
@@ -33,7 +34,7 @@ const {chromium,open}=require('./harness.js');
    const z=eff(e),t=mix(P(getComputedStyle(e).color),z);const x=Lm(t),y=Lm(z);const v=(Math.max(x,y)+.05)/(Math.min(x,y)+.05);if(v<4.5)out.push(l+'['+i+'] '+v.toFixed(2))}));return out});
  let v=await AA();ok(!v.length,'[krem] düz zemin metinleri AA: '+v.join(' | '));
  // fotoğraf üstü metinler: metnin altındaki en açık piksele karşı
- const photoAA=async(sel,where)=>{const els=await p.$$(sel);const bad=[];
+ const W=[];const photoAA=async(sel,where)=>{const els=await p.$$(sel);const bad=[];
   for(const [i,e] of els.entries()){const r=await e.boundingBox();if(!r||r.width<2||r.height<2||r.x<0||r.x+r.width>p.viewportSize().width)continue;
    const col=await e.evaluate(x=>{const c=getComputedStyle(x).color;x.dataset.c0=x.getAttribute('style')||'';x.style.setProperty('color','transparent','important');x.style.setProperty('text-shadow','none','important');
     x.querySelectorAll('*').forEach(k=>{k.dataset.c0=k.getAttribute('style')||'';k.style.setProperty('color','transparent','important')});x.classList.add('ozMeasure');return {c:c,big:parseFloat(getComputedStyle(x).fontSize)>=18.66&&+getComputedStyle(x).fontWeight>=700}});
@@ -43,13 +44,25 @@ const {chromium,open}=require('./harness.js');
     const t=cv.getContext('2d');t.drawImage(im,0,0);const d=t.getImageData(0,0,im.width,im.height).data;const f=v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)};
     const m=c.match(/[\d.]+/g).map(Number);const Lt=.2126*f(m[0])+.7152*f(m[1])+.0722*f(m[2]);let worst=99;
     for(let k=0;k<d.length;k+=4){const Lb=.2126*f(d[k])+.7152*f(d[k+1])+.0722*f(d[k+2]);const cr=(Math.max(Lt,Lb)+.05)/(Math.min(Lt,Lb)+.05);if(cr<worst)worst=cr}return worst},[buf.toString('base64'),col.c]);
-   if(ratio<(col.big?3:4.5))bad.push(where+' '+sel+'['+i+'] '+ratio.toFixed(2))}
+   W.push({w:where,sel,i,r:ratio,big:col.big});if(ratio<(col.big?3:4.5))bad.push(where+' '+sel+'['+i+'] '+ratio.toFixed(2))}
   return bad};
  const tiles=async th=>[...await photoAA('#app .hmTile .tx b',th+' karo'),...await photoAA('#app .hmTile .tx small',th+' karo')];
  const hero=async th=>{const bad=[];for(let k=0;k<4;k++){await p.evaluate(k=>{const t=document.querySelector('#app .hmTrack');t.style.transform='translateX(-'+(k*20)+'%)'},k);await p.waitForTimeout(250);
    const sl='#app .hmSl:nth-child('+(k+1)+')';bad.push(...await photoAA(sl+' .h',th+' afiş'+k),...await photoAA(sl+' .s',th+' afiş'+k))}
   await p.evaluate(()=>{const t=document.querySelector('#app .hmTrack');t.style.transform='translateX(0)'});return bad};
  v=[...await tiles('krem'),...await hero('krem')];ok(!v.length,'[krem] fotoğraf üstü metinler en açık bölgeye karşı AA: '+v.join(' | '));
+ // AJ2-G: en kötü durum — karo ve afiş kapağı fotoğrafı TAMAMEN BEYAZ / TAMAMEN SİYAH iken (yazı gölgesi ölçüme katılmaz) krem tercihte AA, 390 ve 320 px
+ for(const vw of [390,320])for(const [nm,col] of [['beyaz','#fff'],['siyah','#000']]){
+  await p.setViewportSize({width:vw,height:844});await home();
+  await p.evaluate(c=>{const cv=document.createElement('canvas');cv.width=cv.height=8;const t=cv.getContext('2d');t.fillStyle=c;t.fillRect(0,0,8,8);const u=cv.toDataURL();
+   document.querySelectorAll('#app .hmTile img,#app .hmSl:not(.food) img.bg').forEach(i=>{i.removeAttribute('loading');i.src=u})},col);await p.waitForTimeout(300);
+  // afiş0 = Yemek mozaiği (fotoğrafları değiştirilmez, kapsam dışı) ölçüme alınmaz
+  W.length=0;v=[...await tiles('krem '+nm+' '+vw),...await hero('krem '+nm+' '+vw)].filter(x=>!/ afiş0 /.test(x));W.splice(0,W.length,...W.filter(x=>!/afiş0$/.test(x.w)));
+  const mn=(f)=>{const x=W.filter(f);return x.length?Math.min(...x.map(y=>y.r)).toFixed(2):'-'};
+  console.log('bilgi — [krem, '+nm+' fotoğraf, '+vw+'px] en düşük kontrast: karo başlık '+mn(x=>/karo/.test(x.w)&&/ b$/.test(x.sel))+' · karo alt yazı '+mn(x=>/karo/.test(x.w)&&/small$/.test(x.sel))+
+   ' · afiş başlık '+mn(x=>/afiş/.test(x.w)&&/\.h$/.test(x.sel))+' · afiş alt yazı '+mn(x=>/afiş/.test(x.w)&&/\.s$/.test(x.sel)));
+  ok(!v.length&&W.length>=8,'[krem] '+nm+' fotoğrafta ('+vw+'px) karo/afiş yazısı AA: '+v.join(' | '))}
+ await p.setViewportSize({width:390,height:844});await home();
  // dokunma hedefleri
  const touch=()=>p.evaluate(()=>{const out=[];document.querySelectorAll('#app .hmTile,#app .hmSc button,nav.bottom .navBtn,#qrFab').forEach(b=>{const r=b.getBoundingClientRect();if(r.width&&r.height&&(r.width<44||r.height<44))out.push((b.className||b.id)+' '+Math.round(r.width)+'x'+Math.round(r.height))});
   const lg=document.querySelector('#app .hmBrandW .hmBrand');if(lg){const r=lg.getBoundingClientRect(),cx=r.left+r.width/2,cy=r.top+r.height/2;const hit=(x,y)=>{const e=document.elementFromPoint(x,y);return !!e&&(e===lg||lg.contains(e))};
