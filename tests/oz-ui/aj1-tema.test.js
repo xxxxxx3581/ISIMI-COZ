@@ -4,12 +4,14 @@
 // üst öğe zeminleri karıştırılarak hesaplanır); 320/360/390/430/768/1280 px × iki tema × (Keşfet, liste, sepet, siparişler, sipariş,
 // satıcı, hesap): yatay taşma 0 ve alt menü düğmeleri ≥44px. P3: sepet satır tutarı + özet (2.550,00 ₺, kargo Ücretsiz), ≥900px iki sütun,
 // ürün detayı "'den başlayan" (seçimden önce .ozPrice yok), teslim düğmesi ikincil, "Öne çıkan ürünler" satıcıların altında.
+// P7: sonuçsuz aramada kategoriler + "Öne çıkan ürünler"; "Sıradaki adım"; kargo/iade/satıcı bloğu; adet sınırı açıklaması (50 / stok);
+// stok −/+ (kayıt yalnız "Kaydet" ile); sayaç süzme; ürün paneli hatasında "Tekrar dene"; panel odağı; 320px ödeme çubuğu toplamı.
 const {chromium,open,enter}=require('./harness.js');
 (async()=>{
  const br=await chromium.launch({executablePath:process.env.CHROMIUM||'/opt/pw-browsers/chromium'});
  const fails=[];const ok=(c,m)=>{if(!c)fails.push(m)};
  const {p,st}=await open(br,{w:390,h:844,visible:true,view:'',theme:''});
- await p.evaluate(()=>{const R=window.__OZ_FX.R;R.oz_public_settings=Object.assign({},R.oz_public_settings,{is_admin:false,market_enabled:true});
+ await p.evaluate(()=>{const R=window.__OZ_FX.R;R.oz_public_settings=Object.assign({},R.oz_public_settings,{is_admin:false,market_enabled:true,return_days:14});
   localStorage.setItem('isimi_oz_cart',JSON.stringify([{variant_id:'v1',product_id:'p0',qty:2,name:'Erken hasat soğuk sıkım zeytinyağı 0',label:'500 ml',image:null,price_kurus:65000,seller_id:'s1',seller_name:'Yayla Üreticileri',stock:10,nv:3},{variant_id:'v2',product_id:'p0',qty:1,name:'Erken hasat soğuk sıkım zeytinyağı 0',label:'1 L',image:null,price_kurus:125000,seller_id:'s1',seller_name:'Yayla Üreticileri',stock:3,nv:3}]))});
  await enter(p);
  const bg=()=>p.evaluate(()=>getComputedStyle(document.body).backgroundColor);
@@ -64,6 +66,59 @@ const {chromium,open,enter}=require('./harness.js');
  await go('kesfet');await p.waitForTimeout(600);
  const hp=await p.evaluate(()=>{const b=document.getElementById('ozHP'),pr=document.querySelector('#ozRoot .ozPrds3');return {h:b&&b.querySelector('h2')?b.querySelector('h2').textContent:null,n:b?b.querySelectorAll('.ozGr,.ozGc').length:0,after:!!(b&&pr&&(pr.compareDocumentPosition(b)&Node.DOCUMENT_POSITION_FOLLOWING))}});
  ok(hp.h==='Öne çıkan ürünler'&&hp.n>0&&hp.after,'ana sayfa "Öne çıkan ürünler" satıcı kartlarının altında: '+JSON.stringify(hp));
+ // AJ1 P7: cila — boş arama bağlantıları, "Sıradaki adım", ürün detayında kargo/iade/satıcı bloğu, adet sınırı açıklaması, stok −/+, sayaç süzme,
+ // ürün paneli hatasında "Tekrar dene", panel odağı (Kapat'a girer, kapanınca geri döner), 320px ödeme çubuğunda toplam kesilmez
+ await setTheme('light');await p.setViewportSize({width:390,height:844});
+ const R0=await p.evaluate(()=>JSON.stringify(window.__OZ_FX.R.oz_search_products));
+ await p.evaluate(()=>{window.__OZ_FX.R.oz_search_products=[]});await p.evaluate(()=>OZ.go('search',{q:'yokyok'}));await p.waitForTimeout(1400);
+ const em=await p.evaluate(()=>{const b=document.querySelector('#ozRoot .ozEmptyA');return b?[...b.querySelectorAll('button')].map(x=>x.dataset.a+':'+(x.dataset.sort||'')+':'+x.textContent):null});
+ ok(em&&em.join('|')==='catAll::Kategorilere göz at|nav:popular:Öne çıkan ürünler','sonuçsuz arama: kategoriler + "Öne çıkan ürünler" bağlantıları: '+JSON.stringify(em));
+ await p.evaluate(R0=>{window.__OZ_FX.R.oz_search_products=JSON.parse(R0)},R0);
+ await go('siparis');const nx=await p.evaluate(()=>{const e=document.querySelector('#ozRoot .ozOdN.ozNext');return e?e.innerText.replace(/\s+/g,' '):null});
+ ok(nx&&/^Sıradaki adım: Kargonun sana ulaşması \(Yurtiçi Kargo\)\./.test(nx),'sipariş detayı "Sıradaki adım" (kargoda, gerçek kargo firması): '+nx);
+ await p.evaluate(()=>OZ.go('product',{id:'p0'}));await p.waitForTimeout(1400);
+ await p.evaluate(()=>{const b=document.querySelector('.ozOv.ozPdS .ozVar');if(b)b.click()});await p.waitForTimeout(300);
+ const tr=await p.evaluate(()=>{const b=document.querySelector('.ozOv.ozPdS .ozPdTr');return b?{n:b.querySelectorAll('.ozShipN').length,pr:!!b.querySelector('.ozPdPr [data-a=pdSeller]'),t:b.innerText.replace(/\s+/g,' '),
+  foc:document.activeElement&&document.activeElement.classList.contains('ozX')}:null});
+ ok(tr&&tr.pr&&/iş günü içinde kargoya verilir/.test(tr.t),'ürün detayı: kargo süresi + satıcı tek blokta: '+JSON.stringify(tr));
+ ok(tr&&tr.foc,'ürün paneli açılınca odak panelde (Kapat): '+JSON.stringify(tr&&tr.foc));
+ ok(tr&&tr.n===2&&/Teslimattan sonraki 14 gün içinde iade isteyebilirsin/.test(tr.t),'iade koşulu (return_days=14) aynı blokta: '+JSON.stringify(tr&&tr.t));
+ await p.evaluate(()=>{const x=document.querySelector('.ozOv [data-a=sheetClose]');if(x)x.click()});await p.waitForTimeout(300);
+ // adet sınırı: stok 3'te 3 adet → "Stoktaki tüm adetler sepetinde"; stok 200'de 50 adet → "en fazla 50 adet"
+ const cart0=await p.evaluate(()=>localStorage.getItem('isimi_oz_cart'));
+ await p.evaluate(()=>{const R=window.__OZ_FX.R;const c=JSON.parse(localStorage.getItem('isimi_oz_cart'));c[0].qty=50;c[1].qty=2;localStorage.setItem('isimi_oz_cart',JSON.stringify(c));
+  R.__vs0=JSON.stringify(R.oz_product_detail.variants);R.oz_product_detail.variants=R.oz_product_detail.variants.map(v=>Object.assign({},v,{stock:v.id==='v1'?200:2}))});
+ await go('sepet');const qm=await p.evaluate(()=>[...document.querySelectorAll('#ozRoot .ozCoL')].map(l=>{const pl=l.querySelector('.q button[data-d="1"]'),m=l.querySelector('.ozQMx');return {dis:pl&&pl.disabled,m:m?m.textContent:null}}));
+ ok(qm.length===2&&qm.every(x=>x.dis&&x.m)&&qm.some(x=>x.m==='Bir üründen en fazla 50 adet')&&qm.some(x=>x.m==='Stoktaki tüm adetler sepetinde'),'adet sınırında "+" pasif + kısa açıklama: '+JSON.stringify(qm));
+ await p.setViewportSize({width:320,height:700});await go('sepet');
+ const bar=await p.evaluate(()=>{const b=document.querySelector('#ozRoot .ozCoBar2 .sum b');return b?{sw:b.scrollWidth,cw:b.clientWidth,t:b.innerText.replace(/\s+/g,' ')}:null});
+ ok(bar&&bar.sw<=bar.cw+1,'320px ödeme çubuğunda toplam kesilmez: '+JSON.stringify(bar));
+ await p.setViewportSize({width:390,height:844});await p.evaluate(c=>{localStorage.setItem('isimi_oz_cart',c);const R=window.__OZ_FX.R;R.oz_product_detail.variants=JSON.parse(R.__vs0)},cart0);
+ // satıcı: sayaç süzer; stok −/+ yalnız alanı değiştirir, "Kaydet" mevcut oz_variant_set_stock'u çağırır
+ await go('satici');await p.click('#ozRoot .ozSoCnt .c.c4').catch(()=>fails.push('Kargoda sayacı tıklanamadı'));await p.waitForTimeout(1300);
+ const fl=await p.evaluate(()=>{const c=document.querySelector('#ozRoot .ozSoCnt .c4'),h=document.querySelector('#ozSP .ozSoCnt ~ .ozSecH h2');return {on:c&&c.classList.contains('on'),h:h?h.textContent:null,top:h?Math.round(h.getBoundingClientRect().top):null}});
+ ok(fl.on&&/^Kargoda \(\d+\)$/.test(fl.h||'')&&fl.top>=0&&fl.top<844,'sayaç → ilgili siparişler (süzülür, başlık görünür): '+JSON.stringify(fl));
+ await p.evaluate(()=>OZ.go('seller',{tab:'urunler'}));await p.waitForTimeout(1500);
+ const sb=await p.evaluate(()=>{const b=document.querySelector('#ozRoot [data-a=stockBox][data-id=p0]');if(b)b.click();return !!b});await p.waitForTimeout(500);
+ ok(sb,'Stok düğmesi bulundu');
+ if(sb){const n0=st.calls.filter(c=>c[0]==='oz_variant_set_stock').length;
+  const v0=await p.evaluate(()=>document.querySelector('.ozOv #ozSt0').value);
+  await p.click('.ozOv .ozStQ:first-of-type [data-a=stQ][data-d="1"]').catch(()=>fails.push('stok + tıklanamadı'));await p.click('.ozOv .ozStQ:first-of-type [data-a=stQ][data-d="1"]').catch(()=>{});
+  await p.click('.ozOv .ozStQ:first-of-type [data-a=stQ][data-d="-1"]').catch(()=>fails.push('stok − tıklanamadı'));await p.waitForTimeout(200);
+  const v1=await p.evaluate(()=>document.querySelector('.ozOv #ozSt0').value);
+  ok(+v1===+v0+1&&st.calls.filter(c=>c[0]==='oz_variant_set_stock').length===n0,'stok −/+ yalnız alanı değiştirir (kayıt yok): '+v0+'→'+v1);
+  await p.click('.ozOv [data-a=fbOk]').catch(()=>fails.push('Kaydet tıklanamadı'));await p.waitForTimeout(700);
+  const sc=st.calls.filter(c=>c[0]==='oz_variant_set_stock');ok(sc.length===n0+1&&sc[sc.length-1][1].p_stock===+v1,'"Kaydet" mevcut oz_variant_set_stock ile: '+JSON.stringify(sc.slice(n0)))}
+ // ürün paneli hatası → "Tekrar dene" aynı ürünü yeniden açar; kapanınca odak açan öğeye döner
+ await go('liste');await p.evaluate(()=>{window.__OZ_FX.fail=Object.assign({},window.__OZ_FX.fail,{oz_product_detail:'ağ hatası'})});
+ await p.focus('#ozRoot .ozGrs .ozGr[data-pid=p0] .go');await p.keyboard.press('Enter');await p.waitForTimeout(900);
+ const er=await p.evaluate(()=>{const b=document.querySelector('.ozOv.ozPdS .ozErrBox button');return b?b.dataset.a+':'+b.dataset.k+':'+b.dataset.id+':'+b.textContent:null});
+ ok(er==='nav:product:p0:Tekrar dene','ürün paneli hatasında "Tekrar dene": '+er);
+ await p.evaluate(()=>{delete window.__OZ_FX.fail.oz_product_detail});
+ if(er){await p.click('.ozOv.ozPdS .ozErrBox button');await p.waitForTimeout(1200)}
+ ok(await p.evaluate(()=>!!document.querySelector('.ozOv.ozPdS .ozPName')),'"Tekrar dene" ürünü yükler');
+ await p.keyboard.press('Escape');await p.waitForTimeout(300);
+ ok(await p.evaluate(()=>!document.querySelector('.ozOv')&&!!document.activeElement&&!!document.activeElement.closest('.ozGr[data-pid=p0]')),'Esc ile kapanınca odak ürün kartına döner');
  // genişlik × tema × ekran: taşma 0, alt menü düğmeleri ≥44px
  let n=0;
  for(const th of ['light','dark']){await setTheme(th);

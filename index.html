@@ -2112,7 +2112,7 @@ html:root .ozPlC::-webkit-scrollbar{display:none}
 html:root .ozPlC .ozChip{flex:none}
 html:root .ozPlC .ozChip small{margin-left:2px;opacity:1;font-weight:700}
 /*OZ G1-5 ürün panelinde yakınlaştırma düğmesi*/
-html:root .ozGalW .ozZm{position:absolute;right:10px;bottom:10px;z-index:2;width:40px;height:40px;display:grid;place-items:center;padding:0;border:0;border-radius:50%;background:rgba(20,14,8,.55);color:#fff;cursor:zoom-in}
+html:root .ozGalW .ozZm{position:absolute;right:10px;bottom:10px;z-index:2;width:44px;height:44px;display:grid;place-items:center;padding:0;border:0;border-radius:50%;background:rgba(20,14,8,.55);color:#fff;cursor:zoom-in}
 html:root .ozGalW .ozZm:focus-visible{outline:2px solid var(--oz-sunL);outline-offset:2px}
 /*OZ H1 liste kartı: 4:3 kaydırmalı foto + noktalar, ad/açıklama/puan, fiyat + "+" altta, "i" bilgi kutusu*/
 html:root .ozGc .im{position:relative;aspect-ratio:4/3;background:var(--oz-xF3EBDDB);overflow:hidden}
@@ -2603,6 +2603,21 @@ html:root body.ozWorld{--oz-w:880px}@media (min-width:1100px){html:root body.ozW
 html:root body.ozWorld .app{max-width:var(--oz-w)}
 /*OZ AJ1 P5: kapalı platform çekmecesinin gölgesi Özüne Dön sayfasında sol kenara 12px sızıyordu (kremde görünür) — yalnız kapalıyken ve yalnız Özüne Dön açıkken gizlenir; açık çekmece aynı*/
 html:root body.ozWorld .appDrawer:not(.on){box-shadow:none}
+html:root .ozEmptyA{display:flex;flex-wrap:wrap;justify-content:center;gap:8px}
+html:root .ozPdTr{margin:0 0 12px;border:1px solid var(--oz-line);border-radius:12px;background:var(--oz-card);overflow:hidden}
+html:root .ozPdTr .ozShipN{margin:0;border:0;border-radius:0;background:none;padding:10px 12px}
+html:root .ozPdTr .ozShipN+.ozShipN,html:root .ozPdTr .ozPdPr{border-top:1px solid var(--oz-line)}
+html:root .ozPdTr .ozPdPr{margin:0;border-left:0;border-right:0;border-bottom:0;border-radius:0;background:none;padding:8px 8px 8px 12px}
+html:root .ozQMx{display:block;margin:4px 0 0;color:var(--oz-muted);font-size:12px;font-weight:600;line-height:1.3}
+html:root p.ozQMx{margin:0 0 8px;text-align:center}
+html:root .ozStQ{display:flex;align-items:center;gap:8px}
+html:root .ozStQ .ozIn{flex:1;min-width:0;text-align:center}
+html:root .ozStQ button{flex:none;width:44px;height:44px;border:1px solid var(--oz-line);border-radius:12px;background:var(--oz-card2);color:var(--oz-text);font:800 20px/1 system-ui,sans-serif;cursor:pointer}
+html:root #ozSP .ozSecH{scroll-margin-top:72px}
+@media (max-width:374px){html:root .ozCoBar2 .sum b span{display:block;line-height:1.1}html:root .ozCoBar2 .sum small{display:none}html:root .ozCoBar2 .sum{flex:0 0 auto}html:root .ozCoBar2 .ozBtn{flex:1 1 0;min-width:0;white-space:normal;line-height:1.15;text-align:center}}
+html:root .ozOdN.ozNext{text-align:left;padding:8px 12px;border-radius:12px;background:var(--oz-card);border:1px solid var(--oz-line);color:var(--oz-text);font-size:13px;line-height:1.4}
+html:root .ozOdN.ozNext b{color:var(--oz-acc2)}
+html:root body.ozLt .oz :focus-visible,html:root body.ozLt .ozTop :focus-visible,html:root body.ozLt .ozOv :focus-visible,html:root body.ozLt .ozHomeL:focus-visible,html:root body.ozLt .ozVw button:focus-visible,html:root body.ozLt .ozGalW .ozZm:focus-visible{outline-color:var(--oz-acc)}
 /*K21-BITIS*/
 </style>
 <style id="svcProvEntryCss">.svcProvEntry{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;border-radius:16px;border:1.5px solid rgba(124,92,255,.45);background:rgba(124,92,255,.10);color:var(--text);font:inherit;text-align:left;cursor:pointer}.svcProvEntry .ic{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:rgba(124,92,255,.18)}.svcProvEntry .tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}.svcProvEntry small{font-size:12px;font-weight:700;color:var(--muted)}.svcProvEntry b{font-size:16px;font-weight:900}.svcProvEntry em{font-style:normal;font-size:12.5px;color:var(--muted)}.svcProvEntry .go{flex:0 0 auto;font-size:24px;font-weight:700;color:#7c5cff}.svcProvEntry:active{transform:scale(.99)}.svcProvEntry:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}html[data-theme="light"] .svcProvEntry{background:#f3effe;border-color:#c9bbff}html[data-theme="light"] .svcProvEntry .go{color:#5b3fd6}</style>
