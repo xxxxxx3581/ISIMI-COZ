@@ -13,11 +13,12 @@
 // AJ2-D2: referans Paket D2 commit'i d07e55b'e tek sefer taşındı (önceki: f07a299; arada telefon ızgarası CSS'i). ?v=2 aynen.
 // AJ2-D3: referans Paket D3 commit'i d07cc60'a tek sefer taşındı (önceki: d07e55b; arada ızgara "+" altın sarısı daire CSS'i). ?v=2 aynen.
 // AJ2-F: referans Paket F commit'i 60268a5'e tek sefer taşındı (önceki: d07cc60; arada kutucuk görseli işaretlemesi). ?v=2 aynen.
+// AJ2-G: referans Paket G commit'i b4f3985'e tek sefer taşındı (önceki: 60268a5; arada krem ana ekran karartma/gölge CSS'i). ?v=2 aynen.
 const fs=require('fs'),path=require('path'),cp=require('child_process');
 const {chromium,open,enter}=require('./harness.js');
 const ROOT=path.resolve(__dirname,'../..');
 const cur=fs.readFileSync(path.join(ROOT,'index.html'),'utf8');
-const base=cp.execSync('git show 60268a5:index.html',{cwd:ROOT,encoding:'utf8',maxBuffer:64<<20});
+const base=cp.execSync('git show b4f3985:index.html',{cwd:ROOT,encoding:'utf8',maxBuffer:64<<20});
 const blk=s=>{const a=s.indexOf('/*K21-BASLA*/'),b=s.indexOf('/*K21-BITIS*/');return s.slice(a,b)};
 const nocom=s=>s.replace(/\/\*[\s\S]*?\*\//g,'');
 (async()=>{
