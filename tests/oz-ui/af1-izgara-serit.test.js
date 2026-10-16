@@ -1,5 +1,9 @@
 // AF1: ızgara kartı yerleşimi — "+" fotoğrafın DIŞINDA, kartın sağ üstündeki ince şeritte sade altın glif. 390px, sahte RPC.
 // AG1: yalnız konum/ölçü/seçici beklentileri güncellendi — kart çerçevesiz/zeminsiz, "+" fotoğrafın ALTINDA fiyatın sağında (44×44), seçenekli fiyat "≈ X ₺" + "/kg'dan".
+// AJ2-A: ürün ızgarasında (.ozGrs) "+" fotoğrafın sağ üst köşesine taşındı — konum kontrolü "fotoğrafın dışında" yerine "sağ üst köşe,
+// 44×44 dokunma, tamamen fotoğrafın içinde (fiyat/ada binmez)"; görünür daire 26px ≤ foto alanının %6'sı; "+" kontrastı dairenin zeminine
+// karşı ≥4.5; seçenek sayısı rozeti dairenin solunda fotoğrafın üst kenarında (orta kısmı örtmez); foto köşesi 14px. "+" düğmesinin kendisi
+// köşesiz/çerçevesiz/zeminsiz, kart zemini/gölgesi yok, "Tükendi" ve "Son baktığın ürünler" rafı kontrolleri aynen.
 // Çalıştırma: node tests/oz-ui/af1-izgara-serit.test.js
 // Doğrulanan: "+" border-radius 0, border yok, zemin yok, glif ≤16px; "+" kartın sağ üstünde ve fotoğrafın üstünde (fotoğraf kutusunun
 // dışında; fotoğraf üzerinde hiçbir düğme yok); dokunma alanı ≥44×36 ve kart içinde; "+" paneli açmaz, kart gövdesi "+" eklemez;
@@ -35,26 +39,29 @@ const {chromium,open,enter,overflow}=require('./harness.js');
   const col=s=>{const e=c.querySelector(s);return e?getComputedStyle(e).color:bg};
   return {h:Math.round(R0.height),phTop:Math.round(P.top-R0.top),phW:Math.round(P.width),phH:Math.round(P.height),phRad:getComputedStyle(ph).borderTopLeftRadius,pad:getComputedStyle(go).paddingTop+'/'+getComputedStyle(go).paddingLeft,
    btnOnPhoto:[...ph.querySelectorAll('button,[data-a]')].length,
-   ctl:Q?{w:Math.round(Q.width),h:Math.round(Q.height),right:Math.round(R0.right-Q.right),top:Math.round(Q.top-R0.top),below:Math.round(Q.top-P.bottom),inCard:Q.left>=R0.left-.5&&Q.right<=R0.right+.5}:null,
-   plus:pl?{rad:cs.borderTopLeftRadius,bw:cs.borderTopWidth,bg:cs.backgroundColor,shadow:cs.boxShadow,gw:G?Math.round(G.width):99,gh:G?Math.round(G.height):99,dis:pl.disabled,op:+cs.opacity,label:pl.getAttribute('aria-label'),color:cs.color}:null,
-   bd:B?{t:bd.textContent,w:Math.round(B.width),h:Math.round(B.height),leftOfGlyph:G?B.right<=G.left:false,aboveP:B.top>=P.bottom-.5}:null,
+   ctl:Q?{w:Math.round(Q.width),h:Math.round(Q.height),right:Math.round(R0.right-Q.right),top:Math.round(Q.top-R0.top),below:Math.round(Q.top-P.bottom),phTop:Math.round(Q.top-P.top),phRight:Math.round(P.right-Q.right),inPh:Q.bottom<=P.bottom+.5&&Q.left>=P.left-.5&&Q.right<=P.right+.5,
+    so:S?!(Q.left<S.right&&Q.right>S.left&&Q.top<S.bottom&&Q.bottom>S.top):true,inCard:Q.left>=R0.left-.5&&Q.right<=R0.right+.5}:null,
+   plus:pl?{rad:cs.borderTopLeftRadius,bw:cs.borderTopWidth,bg:cs.backgroundColor,shadow:cs.boxShadow,gw:G?Math.round(G.width):99,gh:G?Math.round(G.height):99,dis:pl.disabled,op:+cs.opacity,label:pl.getAttribute('aria-label'),color:cs.color,dot:getComputedStyle(pl,'::before').width,dotBg:getComputedStyle(pl,'::before').backgroundColor,
+    area:(()=>{const d=parseFloat(getComputedStyle(pl,'::before').width)||0;return +(Math.PI*d*d/4/(P.width*P.height)).toFixed(3)})()}:null,
+   bd:B?{t:bd.textContent,w:Math.round(B.width),h:Math.round(B.height),leftOfGlyph:G?B.right<=G.left:false,topEdge:B.top>=P.top-.5&&B.bottom<=P.top+P.height*.3}:null,
    step:stp?{n:stp.querySelector('b').textContent,bs:[...stp.querySelectorAll('button')].map(b=>{const r=b.getBoundingClientRect();return {w:Math.round(r.width),h:Math.round(r.height),l:b.getAttribute('aria-label'),below:Math.round(r.top-P.bottom)}})}:null,
    so:S?{t:so.textContent,l:Math.round(S.left-P.left),b:Math.round(P.bottom-S.bottom)}:null,op:(ph.querySelector('img')?+getComputedStyle(ph.querySelector('img')).opacity:1),
-   aa:[cr(col('.pr b')!==bg?col('.pr b'):col('.pr .uf'),bg),cr(col('.nm'),bg),cr(col('.up'),bg),cr(col('.nt'),bg),pl?cr(getComputedStyle(pl).color,bg):99]}},[root,id]);
+   aa:[cr(col('.pr b')!==bg?col('.pr b'):col('.pr .uf'),bg),cr(col('.nm'),bg),cr(col('.up'),bg),cr(col('.nt'),bg),pl?cr(getComputedStyle(pl).color,getComputedStyle(pl,'::before').backgroundColor==='rgba(0, 0, 0, 0)'?bg:getComputedStyle(pl,'::before').backgroundColor):99]}},[root,id]);
  const L='#ozRoot .ozGrs';
  let m=await M(L,'m1'),z=await M(L,'z1'),b=await M(L,'b1');
  ok(m&&z&&b,'kartlar');
  if(m){
   ok(m.plus&&m.plus.rad==='0px'&&m.plus.bw==='0px'&&/rgba\(0, 0, 0, 0\)|transparent/.test(m.plus.bg)&&m.plus.shadow==='none','"+" çerçevesiz, köşesiz, zeminsiz: '+JSON.stringify(m.plus));
   ok(m.plus&&m.plus.gw<=16&&m.plus.gh<=16&&m.plus.gw>=12,'glif 12-16px: '+JSON.stringify(m.plus&&[m.plus.gw,m.plus.gh]));
-  ok(m.ctl&&m.ctl.right<=1&&m.ctl.below>=0&&m.ctl.below<=8&&m.ctl.inCard,'"+" sağda, fotoğrafın DIŞINDA (hemen altında): '+JSON.stringify(m.ctl));
+  ok(m.ctl&&m.ctl.phTop===0&&m.ctl.phRight===0&&m.ctl.inPh&&m.ctl.inCard,'"+" fotoğrafın sağ üst köşesinde, tamamen fotoğrafın içinde (fiyat/ada binmez): '+JSON.stringify(m.ctl));
+  ok(m.plus&&m.plus.dot==='26px'&&m.plus.dotBg==='rgb(255, 253, 248)'&&m.plus.area<=.06,'görünür daire 26px, opak açık, foto alanının ≤%6\'sı: '+JSON.stringify(m.plus&&[m.plus.dot,m.plus.dotBg,m.plus.area]));
   ok(m.ctl&&m.ctl.w>=44&&m.ctl.h>=44,'dokunma alanı ≥44×44: '+JSON.stringify(m.ctl));
   ok(m.btnOnPhoto===0,'fotoğraf üzerinde düğme yok');
-  ok(m.pad==='0px/0px'&&m.phRad==='10px'&&Math.abs(m.phW-m.phH)<=1,'iç boşluk 8px, kare foto 10px köşe: '+JSON.stringify([m.pad,m.phRad,m.phW,m.phH]));
+  ok(m.pad==='0px/0px'&&m.phRad==='14px'&&Math.abs(m.phW-m.phH)<=1,'iç boşluk 0, kare foto 14px köşe: '+JSON.stringify([m.pad,m.phRad,m.phW,m.phH]));
   ok(m.plus&&m.plus.label==='Sepete ekle'&&z.plus&&/^Seçenek seç, 3 gramaj seçeneği$/.test(z.plus.label),'aria aynı: '+JSON.stringify([m.plus&&m.plus.label,z.plus&&z.plus.label]));
   ok([m,z].every(x=>x.aa.every(v=>v>=4.5)),'AA (fiyat, ad, birim, alt satır, "+"): '+JSON.stringify([m.aa,z.aa]));
  }
- if(b)ok(b.so&&b.so.t==='Tükendi'&&b.so.l<=8&&b.so.b<=8&&b.op<.6&&b.plus&&b.plus.dis&&b.plus.op<1&&b.btnOnPhoto===0,'stoksuz: foto sol altta "Tükendi", soluk foto, "+" soluk/pasif: '+JSON.stringify({so:b.so,op:b.op,plus:b.plus}));
+ if(b)ok(b.so&&b.so.t==='Tükendi'&&b.so.l<=8&&b.so.b<=8&&b.op<.6&&b.plus&&b.plus.dis&&b.plus.op<1&&b.btnOnPhoto===0&&b.ctl&&b.ctl.so,'stoksuz: foto sol altta "Tükendi", soluk foto, "+" soluk/pasif: '+JSON.stringify({so:b.so,op:b.op,plus:b.plus}));
  const h0=m&&m.h,p0=m&&m.phTop;
  // "+" paneli açmaz; kart gövdesi eklemez
  const qty=()=>p.evaluate(()=>{try{return JSON.parse(localStorage.getItem('isimi_oz_cart')||'[]').reduce((n,x)=>n+x.qty,0)}catch(e){return -1}});
@@ -72,7 +79,7 @@ const {chromium,open,enter,overflow}=require('./harness.js');
  await click(p,L+' .ozGr[data-pid=z1] .ac .ozPlus',1100);
  ok(await p.evaluate(()=>!!document.querySelector('.ozOv.ozPkS')&&!document.querySelector('.ozOv.ozPdS')),'seçenekli "+" küçük seçenek penceresi');
  await click(p,'.ozOv .ozPkO[data-v=z1a]',300);await click(p,'.ozOv [data-a=pkAdd]',900);
- z=await M(L,'z1');ok(z&&z.bd&&z.bd.t==='1'&&z.bd.w>=16&&z.bd.h>=16&&z.bd.leftOfGlyph&&z.bd.aboveP&&z.h===h0&&!z.step,'seçenekli: sayı "+"nın solunda aynı şeritte (≥16px), foto örtülmez, yükseklik aynı: '+JSON.stringify(z&&{bd:z.bd,h:z.h}));
+ z=await M(L,'z1');ok(z&&z.bd&&z.bd.t==='1'&&z.bd.w>=16&&z.bd.h>=16&&z.bd.leftOfGlyph&&z.bd.topEdge&&z.h===h0&&!z.step,'seçenekli: sayı "+"nın solunda (≥16px), fotoğrafın üst kenarında (orta örtülmez), yükseklik aynı: '+JSON.stringify(z&&{bd:z.bd,h:z.h}));
  // ızgara + taşma + büyük yazı
  let g=await p.evaluate(()=>{const gr=document.querySelector('#ozRoot .ozGrs');const rs=[...gr.querySelectorAll('.ozGr')].map(c=>c.getBoundingClientRect());let lap=false;
   rs.forEach((a,i)=>rs.forEach((b,j)=>{if(i<j&&a.left<b.right-1&&b.left<a.right-1&&a.top<b.bottom-1&&b.top<a.bottom-1)lap=true}));

@@ -580,20 +580,19 @@ function gridCard(p){ST.rows=ST.rows||{};ST.rows[String(p.id)]=p;
   var pr,up='',nt='',ap;
   /* AG1: seçenekli fiyat iki satır — "≈ X ₺" (13px) ve altında "/kg'dan" (11px) */
   if(nv>1){var u=vs?unitFrom(vs,p.net_content):'',uk=u?u.indexOf('/'):-1;pr=u?'<span class="uf">'+E(uk>0?u.slice(0,uk).trim():u)+'</span>':'<span class="nvp">'+nv+' seçenek</span>';up=uk>0?u.slice(uk):'';ap=u||nv+' seçenek';nt=u&&vs?optText(vs,p.net_content).replace(/ (gramaj|hacim) seçeneği$/,' $1'):''}  /* AF1: kısa — "3 gramaj", "2 hacim", "3 seçenek" */
-  else{var v=vs&&vs.length===1?vs[0]:null,k=v?num(v.price_kurus):num(p.price_kurus);pr='<b>'+TL(k)+'</b>';ap=TL(k);
-    up=v?unitPrice({variants:vs,net_content:p.net_content},v):'';nt=p.net_content||(v&&v.label)||''}
+  else{var v=vs&&vs.length===1?vs[0]:null,k=v?num(v.price_kurus):num(p.price_kurus),ck=v?num(v.compare_at_kurus):num(p.compare_at_kurus);
+    /* AJ2-A: eski fiyat yalnız veride compare_at varsa (üstü çizili gri); birim fiyat parantez içinde */
+    pr='<b>'+TL(k)+'</b>'+(ck>k?'<s class="op">'+TL(ck)+'</s>':'');ap=TL(k);
+    up=v?unitPrice({variants:vs,net_content:p.net_content},v):'';if(up)up='('+up+')';nt=p.net_content||(v&&v.label)||''}
   var ctl=ppCtrl(p,1);
   return '<div class="ozGr'+(so?' out':'')+grSt(ctl)+'" role="listitem" data-pid="'+id+'"><button type="button" class="go" data-a="nav" data-k="product" data-id="'+id+'" aria-label="'+E(String(p.name||'')+', '+ap+(so?', tükendi':''))+'">'+
     '<span class="ph">'+(im?'<img src="'+E(im)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">':'')+'<i aria-hidden="true">'+E(grInit(p.name))+'</i>'+(so?'<span class="so">Tükendi</span>':'')+'</span>'+
     '<span class="prw"><span class="pr">'+pr+'</span><small class="up">'+E(up)+'</small></span><span class="nm">'+E(p.name||'')+'</span><small class="nt">'+E(nt)+'</small></button>'+
     '<span class="ac">'+ctl+'</span></div>'}
 /* AG1: sağ sütundaki kontrolün genişliğine göre fiyat bloğu sola daralır (yalnız "+" / adet + "+" / "− n +") */
-/* AH1: ızgarada (.ozGrs) fotoğraflar bitişik tek bant — her satırın ilk kartı .cl (sol köşeler yuvarlak), son kartı .cr (sağ köşeler yuvarlak);
-   satır, kartların offsetTop'una göre bulunur (sütun sayısından bağımsız: 3 sütun, büyük yazıda 2). Boyut değişince ResizeObserver yeniden hesaplar.
-   Yalnız ürün ızgarası; "Son baktığın ürünler" rafı (.ozGrH) etkilenmez. */
-function grCorners(g){var rows={};[].forEach.call(g.children,function(c){var k=c.offsetTop;(rows[k]=rows[k]||[]).push(c)});
-  Object.keys(rows).forEach(function(k){var r=rows[k];r.forEach(function(c,i){c.classList.toggle('cl',i===0);c.classList.toggle('cr',i===r.length-1)})})}
-function grFix(root){qa('.ozGrs',root||D).forEach(function(g){grCorners(g);if(window.ResizeObserver&&!g.__oz_ro){g.__oz_ro=new ResizeObserver(function(){grCorners(g)});g.__oz_ro.observe(g)}})}
+/* AJ2-A: ızgarada fotoğraflar artık ayrı kutular (dört köşe CSS'te 14px); AH1'in satır kenarı köşe sınıfları (cl/cr) ve ResizeObserver kalktı.
+   grFix çağrı noktaları korunur (ileride ızgara sonrası düzeltme gerekirse tek yer). */
+function grFix(){}
 function grSt(h){return /ozPStep/.test(h)?' st':/class="bd"/.test(h)?' bdg':''}
 /* kart açıklaması arama sonucunda yok: görünür ürünler için tek okuma (RLS: yalnız yayındaki ürünler). Hata olursa sessizce gizli. */
 async function gcEnrich(l){var ids=l.filter(function(x){return x&&x.id&&x.description===undefined}).map(function(x){return x.id});if(!ids.length)return;

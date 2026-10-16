@@ -1,7 +1,7 @@
-// AH1: ürün ızgarasında bitişik foto bandı — 390px, sahte RPC. Çalıştırma: node tests/oz-ui/ah1-izgara-bant.test.js
-// Doğrulanan: sütun arası 0 (komşu fotolar arasında boşluk yok), kartta/fotoda kenarlık/gölge/outline yok; 3 sütunda 1. sütun yalnız sol,
-// 3. sütun yalnız sağ köşeler 10px, 2. sütun köşesiz; son satırdaki tek ürünün dört köşesi yuvarlak; büyük yazıda (2 sütun) aynı kural;
-// yazı blokları foto kenarından 6px içeride (ilk sütun sol 2px, son sütun sağ 2px); "+" ve "− n +" dokunma alanı kendi sütununu geçmez;
+// AH1: ürün ızgarası foto düzeni — 390px, sahte RPC. Çalıştırma: node tests/oz-ui/ah1-izgara-bant.test.js
+// AJ2-A (bilinçli tasarım değişikliği): bitişik bant kalktı — sütun arası 0 yerine 10px (komşu fotolar arası 10px), satır kenarı köşeleri
+// (1. sütun yalnız sol / 3. sütun yalnız sağ 10px) yerine HER fotoğrafın dört köşesi 14px, yazı blokları her sütunda 2px içeride.
+// Kartta/fotoda kenarlık/gölge/outline YOK şartı aynen; büyük yazıda (2 sütun) aynı kural; "+" ve "− n +" dokunma alanı kendi sütununu geçmez;
 // "Tükendi" sol altta 6px içeride; satırda kart yükseklikleri eşit; "+" paneli açmaz, kart gövdesi açar; "Son baktığın ürünler" rafında
 // aralık (6px) ve 10px köşeler eskisi gibi.
 const {chromium,open,enter,overflow}=require('./harness.js');
@@ -27,15 +27,15 @@ const {chromium,open,enter,overflow}=require('./harness.js');
     return {id:c.dataset.pid,rad:rad(c.querySelector('.ph')),L:P.left,Rt:P.right,h:Math.round(R.height),deco:deco(c)||deco(c.querySelector('.go'))||deco(c.querySelector('.ph'))||(c.querySelector('.ph img')&&deco(c.querySelector('.ph img'))),
      ctlIn:ctl.left>=R.left-.01&&ctl.right<=R.right+.01,pl:prw.paddingLeft,nmL:nm.marginLeft,nmR:nm.marginRight,
      so:so?[Math.round(so.getBoundingClientRect().left-P.left),Math.round(P.bottom-so.getBoundingClientRect().bottom)]:null}}))}});
- const chk=(g,n,where)=>{ok(g&&g.cols===n&&g.cg==='0px','['+where+'] '+n+' sütun, sütun arası 0: '+JSON.stringify(g&&[g.cols,g.cg]));if(!g)return;
+ const chk=(g,n,where)=>{ok(g&&g.cols===n&&g.cg==='10px','['+where+'] '+n+' sütun, sütun arası 10px: '+JSON.stringify(g&&[g.cols,g.cg]));if(!g)return;
   g.rows.forEach((r,ri)=>{ok(r.every(c=>c.h===r[0].h),'['+where+'] satır '+ri+' kart yükseklikleri eşit');
-   r.forEach((c,i)=>{const first=i===0,last=i===r.length-1;const want=[first?10:0,last?10:0,last?10:0,first?10:0].join(',');
+   r.forEach((c,i)=>{const want='14,14,14,14';
     ok(c.rad===want,'['+where+'] '+c.id+' köşeler '+want+': '+c.rad);ok(!c.deco,'['+where+'] '+c.id+' kenarlık/gölge/outline yok');ok(c.ctlIn,'['+where+'] '+c.id+' "+"/adım alanı kendi sütununda');
-    if(i>0)ok(Math.abs(c.L-r[i-1].Rt)<0.01,'['+where+'] '+r[i-1].id+'→'+c.id+' fotolar bitişik: '+(c.L-r[i-1].Rt));
-    if(n===3&&r.length===3){ok(c.pl===(first?'2px':'6px')&&c.nmL===(first?'2px':'6px')&&c.nmR===(last?'2px':'6px'),'['+where+'] '+c.id+' yazı iç boşluğu: '+[c.pl,c.nmL,c.nmR])}
+    if(i>0)ok(Math.abs(c.L-r[i-1].Rt-10)<0.01,'['+where+'] '+r[i-1].id+'→'+c.id+' fotolar arası 10px: '+(c.L-r[i-1].Rt));
+    if(n===3&&r.length===3){ok(c.pl==='2px'&&c.nmL==='2px'&&c.nmR==='2px','['+where+'] '+c.id+' yazı iç boşluğu 2px: '+[c.pl,c.nmL,c.nmR])}
     if(c.so)ok(c.so[0]===6&&c.so[1]===6,'['+where+'] "Tükendi" 6px içeride: '+c.so)})})};
  let g=await G();chk(g,3,'390px');
- ok(g&&g.rows.length===3&&g.rows[2].length===1&&g.rows[2][0].rad==='10,10,10,10','son satırdaki tek ürün dört köşe yuvarlak: '+JSON.stringify(g&&g.rows[2]));
+ ok(g&&g.rows.length===3&&g.rows[2].length===1&&g.rows[2][0].rad==='14,14,14,14','son satırdaki tek ürün dört köşe 14px: '+JSON.stringify(g&&g.rows[2]));
  ok(await overflow(p)<=0,'390px taşma yok');
  // tıklama davranışı
  const qty=()=>p.evaluate(()=>JSON.parse(localStorage.getItem('isimi_oz_cart')||'[]').reduce((n,x)=>n+x.qty,0));
@@ -45,7 +45,7 @@ const {chromium,open,enter,overflow}=require('./harness.js');
  // büyük yazı → 2 sütun, aynı kural
  await p.evaluate(()=>{document.documentElement.style.fontSize='24px'});await p.waitForTimeout(500);
  g=await G();chk(g,2,'büyük yazı');
- ok(g&&g.rows[g.rows.length-1].length===1&&g.rows[g.rows.length-1][0].rad==='10,10,10,10','2 sütunda son tek ürün dört köşe yuvarlak');
+ ok(g&&g.rows[g.rows.length-1].length===1&&g.rows[g.rows.length-1][0].rad==='14,14,14,14','2 sütunda son tek ürün dört köşe 14px');
  await p.evaluate(()=>{document.documentElement.style.fontSize=''});await p.waitForTimeout(400);
  // raf eskisi gibi
  await p.evaluate(()=>{localStorage.setItem('isimi_oz_recent',JSON.stringify({s1:[0,1,2].map(i=>({id:'q'+i,name:'Ürün '+i,image:'https://img.test/recel.jpg',price_kurus:9000,nv:1}))}))});

@@ -6,6 +6,7 @@
 // ürün detayı "'den başlayan" (seçimden önce .ozPrice yok), teslim düğmesi ikincil, "Öne çıkan ürünler" satıcıların altında.
 // P7: sonuçsuz aramada kategoriler + "Öne çıkan ürünler"; "Sıradaki adım"; kargo/iade/satıcı bloğu; adet sınırı açıklaması (50 / stok);
 // stok −/+ (kayıt yalnız "Kaydet" ile); sayaç süzme; ürün paneli hatasında "Tekrar dene"; panel odağı; 320px ödeme çubuğu toplamı.
+// AJ2-A: ızgara 10/16px aralık, 14px köşe, kart zemini/gölgesi yok, fiyat yeşil ve kesilmez, "+" foto sağ üstte (26px daire, 44×44).
 // AJ2-B: sipariş detayında takip düğmesi orman yeşili, "İade talebi oluştur" kehribar (.ozRet), iki temada AA.
 const {chromium,open,enter}=require('./harness.js');
 (async()=>{
@@ -120,6 +121,26 @@ const {chromium,open,enter}=require('./harness.js');
  ok(await p.evaluate(()=>!!document.querySelector('.ozOv.ozPdS .ozPName')),'"Tekrar dene" ürünü yükler');
  await p.keyboard.press('Escape');await p.waitForTimeout(300);
  ok(await p.evaluate(()=>!document.querySelector('.ozOv')&&!!document.activeElement&&!!document.activeElement.closest('.ozGr[data-pid=p0]')),'Esc ile kapanınca odak ürün kartına döner');
+ // AJ2-A: ürün ızgarası (.ozGrs) — sütun arası 10px, satır arası 16px, foto dört köşe 14px, kart zemini/gölgesi/kenarlığı yok,
+ // fiyat orman yeşili ve kesilmez, "+" fotoğrafın sağ üst köşesinde (görünür 30px açık daire, dokunma 44×44); iki tema
+ for(const th of ['light','dark']){await setTheme(th);await p.setViewportSize({width:390,height:844});await go('liste');
+  const g=await p.evaluate(()=>{const G=document.querySelector('#ozRoot .ozGrs');if(!G)return null;const gs=getComputedStyle(G);
+   const cs=[...G.querySelectorAll('.ozGr')].map(c=>{const s=getComputedStyle(c),go=getComputedStyle(c.querySelector('.go')),ph=c.querySelector('.ph'),P=ph.getBoundingClientRect(),pr=c.querySelector('.pr'),pl=c.querySelector('.ac .ozPlus');
+    const Q=pl?pl.getBoundingClientRect():null,b4=pl?getComputedStyle(pl,'::before'):null;
+    return {bg:s.backgroundColor+'|'+go.backgroundColor,sh:s.boxShadow+'|'+go.boxShadow,bw:s.borderTopWidth+'|'+go.borderTopWidth,rad:getComputedStyle(ph).borderTopLeftRadius+','+getComputedStyle(ph).borderBottomRightRadius,
+     prC:getComputedStyle(pr.querySelector('b,.uf,.nvp')).color,prFull:pr.scrollWidth<=pr.clientWidth+.5,
+     plus:Q?{w:Math.round(Q.width),h:Math.round(Q.height),top:Math.round(Q.top-P.top),right:Math.round(P.right-Q.right),vis:b4.width,rad:b4.borderTopLeftRadius,
+      inPh:Q.bottom<=P.bottom+.5&&Q.left>=P.left-.5,area:Math.PI*Math.pow(parseFloat(b4.width)||0,2)/4/(P.width*P.height),
+      soFree:(()=>{const so=c.querySelector('.so');if(!so)return true;const S=so.getBoundingClientRect();return !(Q.left<S.right&&Q.right>S.left&&Q.top<S.bottom&&Q.bottom>S.top)})()}:null}});
+   return {cg:gs.columnGap,rg:gs.rowGap,cs}});
+  const acc2=th==='light'?'rgb(31, 107, 69)':'rgb(79, 182, 127)';
+  ok(g&&g.cg==='10px'&&g.rg==='16px','['+th+'] ızgara sütun arası 10px, satır arası 16px: '+JSON.stringify(g&&[g.cg,g.rg]));
+  ok(g&&g.cs.length&&g.cs.every(c=>c.bg==='rgba(0, 0, 0, 0)|rgba(0, 0, 0, 0)'&&c.sh==='none|none'&&c.bw==='0px|0px'),'['+th+'] kart zemini/gölgesi/kenarlığı yok: '+JSON.stringify(g&&g.cs[0]));
+  ok(g&&g.cs.every(c=>c.rad==='14px,14px'),'['+th+'] foto dört köşe 14px: '+JSON.stringify(g&&g.cs.map(c=>c.rad)));
+  ok(g&&g.cs.every(c=>c.prFull)&&g.cs.filter(c=>c.plus).every(c=>c.prC===acc2),'['+th+'] fiyat kesilmez, orman yeşili: '+JSON.stringify(g&&g.cs.map(c=>[c.prFull,c.prC])));
+  const pls=g?g.cs.filter(c=>c.plus).map(c=>c.plus):[];
+  ok(pls.length&&pls.every(x=>x.w>=44&&x.h>=44&&x.top===0&&x.right===0&&x.inPh&&x.vis==='26px'&&x.rad==='50%'&&x.area<=.06&&x.soFree),'['+th+'] "+" foto sağ üstte (fotoğrafın içinde, fiyat/ada binmez, "Tükendi" ile çakışmaz), 26px daire ≤%6, 44×44 dokunma: '+JSON.stringify(pls[0]));
+ }
  // AJ2-B: sipariş detayı — "Kargo firmasının sayfasında takip et" orman yeşili dolgu + beyaz kalın; "İade talebi oluştur" (.ozRet) kehribar;
  // iki temada AA ≥4.5 (etkin zemin), "Kopyala"dan farklı zemin, "Siparişim elime ulaştı" birincil değil
  const od0=await p.evaluate(()=>{const R=window.__OZ_FX.R,d=R.oz_order_detail,k=JSON.stringify({o:d.order,c:d.can_return,r:d.return});

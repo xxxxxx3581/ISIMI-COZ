@@ -1,5 +1,9 @@
 // AG1: ızgara kartı — çerçevesiz/zeminsiz, bitişik, TEMİZ fotoğraf; "+" fotoğrafın hemen altında fiyatın sağında. 390px, sahte RPC.
 // AH1: yalnız aralık/köşe beklentileri güncellendi — ürün ızgarasında sütun arası 0 (bitişik foto bandı), satır kenarı köşe sınıfları (cl/cr).
+// AJ2-A: ürün ızgarasında (.ozGrs) sütun arası 10px, satır arası 16px, foto köşesi 14px; "+" fotoğrafın sağ üst köşesinde (44×44 dokunma,
+// tamamen fotoğrafın içinde, ada/fiyata binmez, "Tükendi" ile çakışmaz; kontrast dairenin zeminine karşı ≥4.5). "Foto üzerinde düğme/rozet
+// yok" şartı yalnız ızgaradaki "+" ve seçenek sayısı rozeti için kalktı ("− n +" ve diğer her şey için aynen); kart kenarlık/zemin/iç boşluk
+// yok, "Tükendi" ve "Son baktığın ürünler" rafı (+ fotoğrafın altında) kontrolleri aynen.
 // Çalıştırma: node tests/oz-ui/ag1-izgara-temiz.test.js
 // Doğrulanan: kartta kenarlık/zemin/köşe/iç boşluk yok, üst şerit yok; ızgara sütun arası 6px, satır arası 12px; foto hücreyi tam doldurur,
 // kare, 10px köşe; foto üzerinde düğme/rozet/sayı yok (yalnız stoksuzda sol altta "Tükendi"); "+" fotoğrafın altındaki satırda (≈6px),
@@ -38,31 +42,32 @@ const {chromium,open,enter,overflow}=require('./harness.js');
   const col=s=>{const e=c.querySelector(s);return e?getComputedStyle(e).color:null};
   return {box:[cs.borderTopWidth,cs.backgroundColor,cs.borderTopLeftRadius,cs.paddingTop,gs.paddingTop,gs.paddingBottom,gs.paddingLeft,gs.borderTopWidth].join('|'),tp:!!c.querySelector('.tp'),
    h:Math.round(R0.height),phFill:Math.abs(P.width-R0.width)<.6&&Math.abs(P.left-R0.left)<.6&&Math.abs(P.top-R0.top)<.6,sq:Math.abs(P.width-P.height)<1,phRad:getComputedStyle(ph).borderTopLeftRadius,
-   onPhoto:[...ph.querySelectorAll('*')].filter(e=>!e.matches('img,i,.so')).length+[...c.querySelectorAll('button,.bd,.ozPStep')].filter(e=>{const r=e.getBoundingClientRect();return r.top<P.bottom-.5&&r.bottom>P.top&&!ph.contains(e)&&e!==go}).length,
-   ctl:Q?{w:Math.round(Q.width),h:Math.round(Q.height),gapTop:Math.round(Q.top-P.bottom),right:Math.round(R0.right-Q.right),inCard:Q.left>=R0.left-.5&&Q.right<=R0.right+.5,overName:Q.bottom>nm.top+.5,
+   onPhoto:[...ph.querySelectorAll('*')].filter(e=>!e.matches('img,i,.so')).length+[...c.querySelectorAll('button,.bd,.ozPStep')].filter(e=>{const r=e.getBoundingClientRect();return r.top<P.bottom-.5&&r.bottom>P.top&&!ph.contains(e)&&e!==go&&!(root.indexOf('ozGrs')>=0&&e.matches('.ac .ozPlus,.ac .ozPlus .bd'))}).length,
+   ctl:Q?{w:Math.round(Q.width),h:Math.round(Q.height),gapTop:Math.round(Q.top-P.bottom),right:Math.round(R0.right-Q.right),inCard:Q.left>=R0.left-.5&&Q.right<=R0.right+.5,overName:Q.bottom>nm.top+.5,phTop:Math.round(Q.top-P.top),phRight:Math.round(P.right-Q.right),inPh:Q.bottom<=P.bottom+.5&&Q.left>=P.left-.5&&Q.right<=P.right+.5,
+    soFree:so?(()=>{const S2=so.getBoundingClientRect();return !(Q.left<S2.right&&Q.right>S2.left&&Q.top<S2.bottom&&Q.bottom>S2.top)})():true,
     vc:Math.abs((Q.top+Q.bottom)/2-(W.top+W.bottom)/2)<2.5,rightOfPrice:(()=>{const r=document.createRange();r.selectNodeContents(pr);return Q.left>=r.getBoundingClientRect().right-.5})()}:null,
-   plus:pl?{rad:ps.borderTopLeftRadius,bw:ps.borderTopWidth,bg:ps.backgroundColor,gw:G?Math.round(G.width):99,gh:G?Math.round(G.height):99,dis:pl.disabled,op:+ps.opacity,label:pl.getAttribute('aria-label')}:null,
+   plus:pl?{rad:ps.borderTopLeftRadius,bw:ps.borderTopWidth,bg:ps.backgroundColor,gw:G?Math.round(G.width):99,gh:G?Math.round(G.height):99,dis:pl.disabled,op:+ps.opacity,label:pl.getAttribute('aria-label'),dot:getComputedStyle(pl,'::before').width,dotBg:getComputedStyle(pl,'::before').backgroundColor}:null,
    bd:B?{t:bd.textContent,left:G?B.right<=G.left:false}:null,prFull:pr.scrollWidth<=pr.clientWidth+.5,prOverflowOk:prw.scrollWidth<=prw.clientWidth+.5,
    step:stp?{n:stp.querySelector('b').textContent,bs:[...stp.querySelectorAll('button')].map(b=>{const r=b.getBoundingClientRect();return [Math.round(r.width),Math.round(r.height)]})}:null,
    so:S?{t:so.textContent,l:Math.round(S.left-P.left),b:Math.round(P.bottom-S.bottom),bg:getComputedStyle(so).backgroundColor,c:getComputedStyle(so).color}:null,op:ph.querySelector('img')?+getComputedStyle(ph.querySelector('img')).opacity:1,
-   aa:[cr(col('.pr b')||col('.pr .uf')||col('.pr .nvp'),page),cr(col('.nm'),page),cr(col('.up'),page),cr(col('.nt'),page),pl?cr(ps.color,page):99]}},[root,id]);
+   aa:[cr(col('.pr b')||col('.pr .uf')||col('.pr .nvp'),page),cr(col('.nm'),page),cr(col('.up'),page),cr(col('.nt'),page),pl?cr(ps.color,getComputedStyle(pl,'::before').backgroundColor==='rgba(0, 0, 0, 0)'?page:getComputedStyle(pl,'::before').backgroundColor):99]}},[root,id]);
  const L='#ozRoot .ozGrs';
  const gr=await p.evaluate(()=>{const g=document.querySelector('#ozRoot .ozGrs');const s=getComputedStyle(g);return {cols:s.gridTemplateColumns.split(' ').length,cg:s.columnGap,rg:s.rowGap}});
- ok(gr.cols===3&&gr.cg==='0px'&&gr.rg==='12px','390px 3 sütun, sütun arası 0px, satır arası 12px: '+JSON.stringify(gr));
+ ok(gr.cols===3&&gr.cg==='10px'&&gr.rg==='16px','390px 3 sütun, sütun arası 10px, satır arası 16px: '+JSON.stringify(gr));
  let m=await M(L,'m1'),z=await M(L,'z1'),b=await M(L,'b1');
  ok(m&&z&&b,'kartlar');
  if(m){
   ok(m.box==='0px|rgba(0, 0, 0, 0)|0px|0px|0px|0px|0px|0px'&&!m.tp,'kartta kenarlık/zemin/köşe/iç boşluk yok, üst şerit yok: '+m.box);
-  ok(m.phFill&&m.sq&&m.phRad==='10px','foto hücreyi tam doldurur, kare, 10px köşe');
-  ok(m.onPhoto===0&&z.onPhoto===0&&b.onPhoto===0,'foto üzerinde düğme/rozet yok: '+[m.onPhoto,z.onPhoto,b.onPhoto]);
-  ok(m.ctl&&m.ctl.gapTop>=4&&m.ctl.gapTop<=8&&m.ctl.right<=1&&m.ctl.inCard&&!m.ctl.overName&&m.ctl.vc&&m.ctl.rightOfPrice,'"+" fotoğrafın altında (~6px), fiyatın sağında, sağ kenarda, dikey ortalı, ada/komşuya taşmaz: '+JSON.stringify(m.ctl));
+  ok(m.phFill&&m.sq&&m.phRad==='14px','foto hücreyi tam doldurur, kare, 14px köşe');
+  ok(m.onPhoto===0&&z.onPhoto===0&&b.onPhoto===0,'foto üzerinde ("+" ve seçenek sayısı dışında) düğme/rozet yok: '+[m.onPhoto,z.onPhoto,b.onPhoto]);
+  ok(m.ctl&&m.ctl.phTop===0&&m.ctl.phRight===0&&m.ctl.right<=1&&m.ctl.inPh&&m.ctl.inCard&&!m.ctl.overName&&m.plus&&m.plus.dot==='26px'&&m.plus.dotBg==='rgb(255, 253, 248)','"+" fotoğrafın sağ üst köşesinde (26px opak açık daire), fotoğrafın içinde, ada/fiyata/komşuya taşmaz: '+JSON.stringify(m.ctl));
   ok(m.plus&&m.plus.rad==='0px'&&m.plus.bw==='0px'&&m.plus.bg==='rgba(0, 0, 0, 0)'&&m.plus.gw<=16&&m.plus.gh<=16,'"+" sade glif (köşe/çerçeve/zemin yok, ≤16px): '+JSON.stringify(m.plus));
   ok(m.ctl&&m.ctl.w>=44&&m.ctl.h>=44,'dokunma alanı ≥44×44');
   ok(m.plus&&m.plus.label==='Sepete ekle'&&z.plus&&z.plus.label==='Seçenek seç, 3 gramaj seçeneği','aria aynı');
-  ok([m,z].every(x=>x.aa.every(v=>v>=4.5)),'AA (sayfa zemininde): '+JSON.stringify([m.aa,z.aa]));
+  ok([m,z].every(x=>x.aa.every(v=>v>=4.5)),'AA (metinler sayfa zemininde, "+" dairenin zemininde): '+JSON.stringify([m.aa,z.aa]));
   ok(m.prFull&&z.prFull,'fiyat kesilmeden görünür (tek "+" iken)');
  }
- if(b)ok(b.so&&b.so.t==='Tükendi'&&b.so.l<=8&&b.so.b<=8&&b.so.bg==='rgb(58, 45, 32)'&&b.so.c==='rgb(246, 236, 220)'&&b.op<.6&&b.plus&&b.plus.dis&&b.plus.op<1,'stoksuz: sol altta kahve/krem "Tükendi", soluk foto, pasif "+": '+JSON.stringify({so:b.so,op:b.op,plus:b.plus}));
+ if(b)ok(b.so&&b.so.t==='Tükendi'&&b.so.l<=8&&b.so.b<=8&&b.so.bg==='rgb(58, 45, 32)'&&b.so.c==='rgb(246, 236, 220)'&&b.op<.6&&b.plus&&b.plus.dis&&b.plus.op<1&&b.ctl&&b.ctl.soFree,'stoksuz: sol altta kahve/krem "Tükendi", soluk foto, pasif "+" ("Tükendi" ile çakışmaz): '+JSON.stringify({so:b.so,op:b.op,plus:b.plus}));
  const h0=m&&m.h;
  const qty=()=>p.evaluate(()=>{try{return JSON.parse(localStorage.getItem('isimi_oz_cart')||'[]').reduce((n,x)=>n+x.qty,0)}catch(e){return -1}});
  await click(p,L+' .ozGr[data-pid=k1] .go',1200);
