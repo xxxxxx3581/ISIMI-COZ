@@ -2641,8 +2641,12 @@ html:root .ozGrs .ozGr .pr{display:block;padding:0;font-size:.9375rem;line-heigh
 html:root .ozGrs .ozGr .pr b,html:root .ozGrs .ozGr .pr .uf{font-weight:800;color:var(--oz-acc2)}
 html:root .ozGrs .ozGr .up{min-height:1.3em;color:var(--oz-muted)}
 html:root .ozGrs .ozGr .ac{top:-11px;left:0;right:-11px;width:auto;height:44px;padding:0;display:flex;align-items:flex-start;justify-content:flex-end}
-html:root .ozGrs .ozGr .ac .ozPlus.gq,html:root .ozGrs .ozGr .ac .ozPlus.gq:disabled{position:static;align-items:flex-start;justify-content:flex-end;width:44px;min-width:44px;height:44px;padding:0;color:#1F6B45}
-html:root .ozGrs .ozGr .ac .ozPlus.gq .pg{box-sizing:border-box;width:24px;height:24px;padding:5px;border-radius:50%;background:#FFFDF8;box-shadow:0 1px 3px rgba(0,0,0,.22)}
+html:root .ozGrs .ozGr .ac .ozPlus.gq,html:root .ozGrs .ozGr .ac .ozPlus.gq:disabled{position:static;align-items:flex-start;justify-content:flex-end;width:44px;min-width:44px;height:44px;padding:0;color:#1F160E}
+/* AJ2-D3: "+" dolgulu altın sarısı daire (#F2C14E, iki temada aynı), koyu kalın artı #1F160E, 26px; basınca koyulaşır, pasifte gri */
+html:root .ozGrs .ozGr .ac .ozPlus.gq .pg{box-sizing:border-box;width:26px;height:26px;padding:6px;border-radius:50%;background:#F2C14E;box-shadow:0 0 0 1px rgba(138,90,0,.35),0 1px 4px rgba(0,0,0,.28)}
+html:root .ozGrs .ozGr .ac .ozPlus.gq .pg path{stroke-width:2.6}
+html:root .ozGrs .ozGr .ac .ozPlus.gq:not(:disabled):active .pg{background:color-mix(in srgb,#F2C14E 82%,#000)}
+html:root .ozGrs .ozGr .ac .ozPlus.gq:disabled .pg{background:var(--oz-card2);box-shadow:0 1px 2px rgba(0,0,0,.15)}
 html:root .ozGrs .ozGr .ac .ozPlus.gq:disabled{color:#8A7A60;opacity:.75}
 html:root .ozGrs .ozGr .ac .ozPlus.gq .bd{position:absolute;z-index:3;top:24px;left:13px;right:auto;background:#F2C14E;color:#1F160E;box-shadow:0 1px 3px rgba(0,0,0,.22)}
 html:root .ozGrs .ozGr.out .ac .ozPlus.gq .bd{top:46px}

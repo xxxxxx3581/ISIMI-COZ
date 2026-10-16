@@ -4,6 +4,7 @@
 // 44×44 dokunma, tamamen fotoğrafın içinde (fiyat/ada binmez)"; görünür daire 26px ≤ foto alanının %6'sı; "+" kontrastı dairenin zeminine
 // karşı ≥4.5; seçenek sayısı rozeti dairenin solunda fotoğrafın üst kenarında (orta kısmı örtmez); foto köşesi 14px. "+" düğmesinin kendisi
 // köşesiz/çerçevesiz/zeminsiz, kart zemini/gölgesi yok, "Tükendi" ve "Son baktığın ürünler" rafı kontrolleri aynen.
+// AJ2-D3: "+" dairesi 26px, dolgu altın sarısı #F2C14E (iki tema), koyu artı #1F160E (eski: 24px krem daire).
 // AJ2-D2: telefonda büyük yazıda da 3 sütun (eski: 2).
 // AJ2-D: ürün ızgarasında (.ozGrs) "+" çerçevenin SAĞ ÜST köşesine, yarısı dışarıda — konum kontrolü "fotoğrafın içinde sağ üstte, 26px daire"
 // yerine "24px krem daire merkezi çerçeve köşesinde (≤3px), fotoğrafa binmez, 44×44 dokunma, komşu karta değmez"; foto köşesi 18px (çerçeve);
@@ -59,9 +60,9 @@ const {chromium,open,enter,overflow}=require('./harness.js');
  ok(m&&z&&b,'kartlar');
  if(m){
   ok(m.plus&&m.plus.rad==='0px'&&m.plus.bw==='0px'&&/rgba\(0, 0, 0, 0\)|transparent/.test(m.plus.bg)&&m.plus.shadow==='none','"+" çerçevesiz, köşesiz, zeminsiz: '+JSON.stringify(m.plus));
-  ok(m.plus&&m.plus.gw===24&&m.plus.gh===24,'görünür daire (artı glifi içinde) 24px: '+JSON.stringify(m.plus&&[m.plus.gw,m.plus.gh]));
+  ok(m.plus&&m.plus.gw===26&&m.plus.gh===26,'görünür daire (artı glifi içinde) 26px: '+JSON.stringify(m.plus&&[m.plus.gw,m.plus.gh]));
   ok(m.ctl&&m.ctl.phTop===-11&&m.ctl.phRight===-11&&m.free,'"+" çerçevenin sağ üst köşesinde (dokunma alanı 11px dışarı taşar), komşu karta değmez: '+JSON.stringify([m.ctl,m.free]));
-  ok(m.circ&&m.circ.w===24&&m.circ.bg==='rgb(255, 253, 248)'&&m.circ.rad==='50%'&&m.circ.dx<=3&&m.circ.dy<=3&&m.circ.off,'24px krem daire, merkezi çerçeve köşesinde (yarısı dışarıda), fotoğrafa binmez: '+JSON.stringify(m.circ));
+  ok(m.circ&&m.circ.w===26&&/^rgb\(242, 193, 78\)$/.test(m.circ.bg)&&m.circ.rad==='50%'&&m.circ.dx<=3&&m.circ.dy<=3&&m.circ.off,'26px altın sarısı daire, merkezi çerçeve köşesinde (yarısı dışarıda), fotoğrafa binmez: '+JSON.stringify(m.circ));
   ok(m.ctl&&m.ctl.w>=44&&m.ctl.h>=44,'dokunma alanı ≥44×44: '+JSON.stringify(m.ctl));
   ok(m.btnOnPhoto===0,'fotoğraf üzerinde düğme yok');
   ok(m.pad==='0px/0px'&&m.phRad==='18px'&&Math.abs(m.phW-m.phH)<=1,'iç boşluk 0, kare foto çerçevesi 18px köşe: '+JSON.stringify([m.pad,m.phRad,m.phW,m.phH]));

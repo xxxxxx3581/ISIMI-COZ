@@ -1,5 +1,6 @@
 // AG1: ızgara kartı — çerçevesiz/zeminsiz, bitişik, TEMİZ fotoğraf; "+" fotoğrafın hemen altında fiyatın sağında. 390px, sahte RPC.
 // AH1: yalnız aralık/köşe beklentileri güncellendi — ürün ızgarasında sütun arası 0 (bitişik foto bandı), satır kenarı köşe sınıfları (cl/cr).
+// AJ2-D3: "+" dairesi 26px, dolgu altın sarısı #F2C14E (iki tema), koyu artı #1F160E (eski: 24px krem daire).
 // AJ2-D2: telefonda sütun arası 12px, büyük yazıda da 3 sütun (eski: 16px, 2 sütun).
 // AJ2-D: ızgarada sütun arası 16px, satır arası 20px, foto çerçevesi 18px köşe; "+" çerçevenin SAĞ ÜST köşesinde (24px krem daire merkezi
 // köşede, yarısı dışarıda, fotoğrafa binmez, 44×44 dokunma, komşu karta değmez; kontrast dairenin zeminine karşı); "Tükendi" sol üstte.
@@ -66,8 +67,8 @@ const {chromium,open,enter,overflow}=require('./harness.js');
   ok(m.box==='0px|rgba(0, 0, 0, 0)|0px|0px|0px|0px|0px|0px'&&!m.tp,'kartta kenarlık/zemin/köşe/iç boşluk yok, üst şerit yok: '+m.box);
   ok(m.phFill&&m.sq&&m.phRad==='18px','foto çerçevesi hücreyi tam doldurur, kare, 18px köşe');
   ok(m.onPhoto===0&&z.onPhoto===0&&b.onPhoto===0,'foto üzerinde ("+" ve seçenek sayısı dışında) düğme/rozet yok: '+[m.onPhoto,z.onPhoto,b.onPhoto]);
-  ok(m.ctl&&m.ctl.phTop===-11&&m.ctl.phRight===-11&&!m.ctl.overName&&m.free&&m.circ&&m.circ.w===24&&m.circ.bg==='rgb(255, 253, 248)'&&m.circ.dx<=3&&m.circ.dy<=3&&m.circ.off,'"+" çerçevenin sağ üst köşesinde (24px krem daire merkezi köşede, yarısı dışarıda), fotoğrafa/ada binmez, komşu karta değmez: '+JSON.stringify([m.ctl,m.circ,m.free]));
-  ok(m.plus&&m.plus.rad==='0px'&&m.plus.bw==='0px'&&m.plus.bg==='rgba(0, 0, 0, 0)'&&m.plus.gw===24&&m.plus.gh===24,'"+" düğmesinin kendisi köşesiz/çerçevesiz/zeminsiz, görünür daire (svg) 24px: '+JSON.stringify(m.plus));
+  ok(m.ctl&&m.ctl.phTop===-11&&m.ctl.phRight===-11&&!m.ctl.overName&&m.free&&m.circ&&m.circ.w===26&&/^rgb\(242, 193, 78\)$/.test(m.circ.bg)&&m.circ.dx<=3&&m.circ.dy<=3&&m.circ.off,'"+" çerçevenin sağ üst köşesinde (26px altın sarısı daire merkezi köşede, yarısı dışarıda), fotoğrafa/ada binmez, komşu karta değmez: '+JSON.stringify([m.ctl,m.circ,m.free]));
+  ok(m.plus&&m.plus.rad==='0px'&&m.plus.bw==='0px'&&m.plus.bg==='rgba(0, 0, 0, 0)'&&m.plus.gw===26&&m.plus.gh===26,'"+" düğmesinin kendisi köşesiz/çerçevesiz/zeminsiz, görünür daire (svg) 26px: '+JSON.stringify(m.plus));
   ok(m.ctl&&m.ctl.w>=44&&m.ctl.h>=44,'dokunma alanı ≥44×44');
   ok(m.plus&&m.plus.label==='Sepete ekle'&&z.plus&&z.plus.label==='Seçenek seç, 3 gramaj seçeneği','aria aynı');
   ok([m,z].every(x=>x.aa.every(v=>v>=4.5)),'AA (metinler sayfa zemininde, "+" dairenin zemininde): '+JSON.stringify([m.aa,z.aa]));

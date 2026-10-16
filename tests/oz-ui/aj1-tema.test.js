@@ -137,7 +137,7 @@ const {chromium,open,enter}=require('./harness.js');
     return {bg:s.backgroundColor+'|'+go.backgroundColor,sh:s.boxShadow+'|'+go.boxShadow,bw:s.borderTopWidth+'|'+go.borderTopWidth,rad:phs.borderTopLeftRadius+','+phs.borderBottomRightRadius,
      frame:phs.borderTopWidth+'|'+fr.toFixed(2),inset:Math.round(I.left-P.left)+','+getComputedStyle(im).borderTopLeftRadius,
      prC:getComputedStyle(pr.querySelector('b,.uf,.nvp')).color,prFull:pr.scrollWidth<=pr.clientWidth+.5,order:[top('.nm'),top('.nt'),top('.pr'),top('.up')],prTop:top('.pr'),rowTop:Math.round(R.top),
-     plus:Q?{w:Math.round(Q.width),h:Math.round(Q.height),vis:Math.round(V.width),bg:getComputedStyle(sv).backgroundColor,rad:getComputedStyle(sv).borderTopLeftRadius,
+     plus:Q?{w:Math.round(Q.width),h:Math.round(Q.height),vis:Math.round(V.width),bg:getComputedStyle(sv).backgroundColor,ink:getComputedStyle(pl).color,dis:pl.disabled,rad:getComputedStyle(sv).borderTopLeftRadius,
       dx:Math.round(Math.abs((V.left+V.right)/2-P.right)),dy:Math.round(Math.abs((V.top+V.bottom)/2-P.top)),off:Math.hypot((V.left+V.right)/2-(I.right-12),(V.top+V.bottom)/2-(I.top+12))>=V.width/2+12-.5,
       free:nx?Q.right<=nx.getBoundingClientRect().left-.5:Q.right<=innerWidth,top:Math.round(Q.top),hit:(()=>{const e=document.elementFromPoint((V.left+V.right)/2,(V.top+V.bottom)/2);return !!e&&pl.contains(e)})()}:null}});
    return {cg:gs.columnGap,rg:gs.rowGap,cs}});
@@ -150,7 +150,7 @@ const {chromium,open,enter}=require('./harness.js');
   const rows={};(g?g.cs:[]).forEach(c=>{(rows[c.rowTop]=rows[c.rowTop]||[]).push(c.prTop)});
   ok(Object.values(rows).every(r=>r.every(v=>v===r[0])),'['+th+'] aynı satırda fiyat aynı y hizasında: '+JSON.stringify(rows));
   const pls=g?g.cs.filter(c=>c.plus).map(c=>c.plus):[];const gTop=await p.evaluate(()=>Math.round(document.querySelector('#ozRoot .ozGrs').getBoundingClientRect().top));
-  ok(pls.length&&pls.every(x=>x.w>=44&&x.h>=44&&x.vis===24&&x.bg==='rgb(255, 253, 248)'&&x.rad==='50%'&&x.dx<=3&&x.dy<=3&&x.off&&x.free&&x.hit&&x.top>=gTop),'['+th+'] "+" çerçevenin sağ üst köşesinde (24px krem daire yarısı dışarıda, fotoğrafa binmez, komşu karta değmez, kırpılmaz), 44×44: '+JSON.stringify(pls[0]));
+  ok(pls.length&&pls.every(x=>x.w>=44&&x.h>=44&&x.vis===26&&(x.dis?x.bg!=='rgb(242, 193, 78)':x.bg==='rgb(242, 193, 78)'&&x.ink==='rgb(31, 22, 14)')&&x.rad==='50%'&&x.dx<=3&&x.dy<=3&&x.off&&x.free&&x.hit&&x.top>=gTop),'['+th+'] "+" çerçevenin sağ üst köşesinde (AJ2-D3: 26px altın sarısı daire, koyu artı; pasifte gri; yarısı dışarıda, fotoğrafa binmez, komşu karta değmez, kırpılmaz), 44×44: '+JSON.stringify(pls[0]));
  }
  // AJ2-B: sipariş detayı — "Kargo firmasının sayfasında takip et" orman yeşili dolgu + beyaz kalın; "İade talebi oluştur" (.ozRet) kehribar;
  // iki temada AA ≥4.5 (etkin zemin), "Kopyala"dan farklı zemin, "Siparişim elime ulaştı" birincil değil

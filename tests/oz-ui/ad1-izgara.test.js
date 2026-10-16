@@ -1,4 +1,5 @@
 // AD1: ürün listesi "Izgara / Liste" görünümü — 390px, sahte RPC. Çalıştırma: node tests/oz-ui/ad1-izgara.test.js
+// AJ2-D3: "+" dairesi 26px, dolgu altın sarısı #F2C14E (iki tema), koyu artı #1F160E (eski: 24px krem daire).
 // AJ2-D2: telefonda (320–719px) yazı boyutundan bağımsız sabit 3 sütun, sütun arası 12px → büyük yazıda da 3 sütun; ızgara kartında puan
 // ("★ 4,9 (23)" / "Yeni") bilerek var (kalp/açıklama/nokta hâlâ yok); seçenekli fiyat "650,00 ₺'den" + ikincil satır "≈ … ₺/L'den".
 // AJ2-D: yalnız aralık ve "+" konumu güncellendi — sütun arası 16px; "+" çerçevenin SAĞ ÜST köşesinde, görünür 24px krem daire merkezi
@@ -52,7 +53,7 @@ const {chromium,open,enter,overflow}=require('./harness.js');
  let c0=await C('p0'),c2=await C('p2'),c3=await C('p3');
  ok(c0&&c2&&c3,'kartlar bulunmalı');
  if(c0&&c2&&c3){
-  ok(c2.pw>=44&&c2.ph>=44&&c2.tt===-11&&c2.tr===-11&&/^24\|rgb\(255, 253, 248\)\|[0-3],[0-3]$/.test(c2.vis),'"+" çerçevenin sağ üst köşesinde (24px krem daire merkezi köşede, yarısı dışarıda), ≥44×44 dokunma: '+JSON.stringify(c2));
+  ok(c2.pw>=44&&c2.ph>=44&&c2.tt===-11&&c2.tr===-11&&/^26\|rgb\(242, 193, 78\)\|[0-3],[0-3]$/.test(c2.vis),'"+" çerçevenin sağ üst köşesinde (26px altın sarısı daire merkezi köşede, yarısı dışarıda), ≥44×44 dokunma: '+JSON.stringify(c2));
   ok(c2.sq&&c0.sq&&c0.fit==='cover 50% 50%','kare foto, cover, ortalı: '+c0.fit);
   ok(/^Ezine peyniri 2, 899,90\s₺$/.test(c2.go)&&c2.plus==='Sepete ekle','aria: kart "ad, fiyat", "+" "Sepete ekle": '+c2.go+' / '+c2.plus);
   ok(/899,90/.test(c2.pr)&&/₺\/kg/.test(c2.up)&&c2.nt==='500 g','tek fiyatlı: fiyat + ≈ birim + net miktar: '+JSON.stringify([c2.pr,c2.up,c2.nt]));
