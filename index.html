@@ -1369,8 +1369,12 @@ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .qrFab{border-c
 html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmTile:after{background:linear-gradient(to top,rgba(20,15,8,.74) 0%,rgba(20,15,8,.61) 42%,rgba(20,15,8,0) 64%)}
 @media (max-width:359px){html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmTile:after{background:linear-gradient(to top,rgba(20,15,8,.74) 0%,rgba(20,15,8,.61) 55%,rgba(20,15,8,0) 76%)}}
 html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmTile .tx b,html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmTile .tx small,html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmSl:not(.food) .s{text-shadow:0 1px 3px rgba(0,0,0,.55)}
-html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmSl:not(.food):before{background:linear-gradient(90deg,rgba(15,11,6,.78) 0%,rgba(15,11,6,.63) 90%,rgba(15,11,6,.3) 100%)}
-html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmSl[data-k="market"]:before{background:linear-gradient(90deg,rgba(31,107,69,.97) 0%,rgba(31,107,69,.9) 70%,rgba(31,107,69,.35) 100%)}
+/* AJ2-G2: afiş karartması yazının bittiği yerde (px; yazı soldan sabit px genişlikte) sıfırlanır, sağ taraf karartmasız.
+   Dar ekran (≤403px, başlık iki satır, yazı ≤~234px): .6 ≥ AA eşiği (.57) 250px’e kadar, 300px’te 0. Geniş: tek satır başlık ~316px (büyük yazı, eşik .45). */
+html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmSl:not(.food):before{background:linear-gradient(90deg,rgba(15,11,6,.78) 0,rgba(15,11,6,.6) 250px,rgba(15,11,6,.47) 326px,rgba(15,11,6,0) 372px)}
+@media (max-width:403px){html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmSl:not(.food):before{background:linear-gradient(90deg,rgba(15,11,6,.78) 0,rgba(15,11,6,.6) 250px,rgba(15,11,6,0) 300px)}}
+/* AJ2-G2: Özüne Dön yeşil katmanı yazı bölgesinde (≤~154px; küçük yazı eşiği .85) koyu, sağda hafif (logo için .3) */
+html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmSl[data-k="market"]:before{background:linear-gradient(90deg,rgba(31,107,69,.97) 0,rgba(31,107,69,.88) 170px,rgba(31,107,69,.3) 100%)}
 /* AJ2-C3 (krem): afiş dört köşe 22px + sayfa zemini renginde 6px iç çerçeve (dış kutu büyümez, tıklamayı geçirir) + hafif gölge; karolar 22px köşe
    ve hafif gölge; alt menüde seçili sekme yeşil kapsül; "En son gezdiklerim" kutusu 20px köşe; başlıklarda kehribar çubuk. Koyu tercih değişmez. */
 html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmSlider{border-radius:22px;box-shadow:0 8px 22px rgba(60,40,15,.24)}

@@ -6,7 +6,8 @@
 // dokunma hedefleri ≥44 (logo düğmesi görünmez genişletmeyle); 320/390/768/1280 px × iki tercih taşma 0; Hesabım › "Görünüm" satırı aynı
 // anahtarı çevirir (ana ekran koyu/krem olur) ve Hesabım'ın kendi zemini değişmez; Yemek/İlanlar/İşini Hallet gövde ve alt menü renkleri
 // tercihten bağımsız (kapsam yalnız ana ekran).
-// AJ2-G (krem): karo/afiş fotoğrafı tamamen beyaz ve tamamen siyahken de (yazı gölgesi hariç) yazılar AA — 390 ve 320 px. AJ2-C3 (krem): afiş dört köşe 22px, sayfa zemini renginde 6px iç çerçeve (tıklamayı geçirir,
+// AJ2-G (krem): karo/afiş fotoğrafı tamamen beyaz ve tamamen siyahken de (yazı gölgesi hariç) yazılar AA — 390, 320, 430 ve 768 px.
+// AJ2-G2: fotoğraf üstü ölçüm bölgesi yazının satır kutularıyla sınırlı (blok kutusunun yazısız sağ boşluğu ölçülmez). AJ2-C3 (krem): afiş dört köşe 22px, sayfa zemini renginde 6px iç çerçeve (tıklamayı geçirir,
 // noktaları örtmez), afiş ve karolar aynı sol/sağ kenar, karolar 22px, seçili sekme yeşil kapsül, başlıklarda kehribar çubuk; koyuda yok.
 const {chromium,open}=require('./harness.js');
 (async()=>{
@@ -38,7 +39,11 @@ const {chromium,open}=require('./harness.js');
   for(const [i,e] of els.entries()){const r=await e.boundingBox();if(!r||r.width<2||r.height<2||r.x<0||r.x+r.width>p.viewportSize().width)continue;
    const col=await e.evaluate(x=>{const c=getComputedStyle(x).color;x.dataset.c0=x.getAttribute('style')||'';x.style.setProperty('color','transparent','important');x.style.setProperty('text-shadow','none','important');
     x.querySelectorAll('*').forEach(k=>{k.dataset.c0=k.getAttribute('style')||'';k.style.setProperty('color','transparent','important')});x.classList.add('ozMeasure');return {c:c,big:parseFloat(getComputedStyle(x).fontSize)>=18.66&&+getComputedStyle(x).fontWeight>=700}});
-   const buf=await p.screenshot({clip:{x:r.x,y:r.y,width:r.width,height:r.height}});
+   // AJ2-G2: ölçüm bölgesi yazının kendisi (satır kutularının birleşimi), blok kutusunun yazısız sağ boşluğu değil
+   const g=await e.evaluate(x=>{const rg=document.createRange();rg.selectNodeContents(x);const rs=[...rg.getClientRects()].filter(q=>q.width&&q.height);if(!rs.length)return null;
+    return {x:Math.min(...rs.map(q=>q.left)),y:Math.min(...rs.map(q=>q.top)),r:Math.max(...rs.map(q=>q.right)),b:Math.max(...rs.map(q=>q.bottom))}});
+   const cl=g?{x:Math.max(r.x,g.x),y:Math.max(r.y,g.y),width:Math.min(r.x+r.width,g.r)-Math.max(r.x,g.x),height:Math.min(r.y+r.height,g.b)-Math.max(r.y,g.y)}:r;
+   const buf=await p.screenshot({clip:{x:cl.x,y:cl.y,width:Math.max(1,cl.width),height:Math.max(1,cl.height)}});
    await e.evaluate(x=>{x.classList.remove('ozMeasure');x.setAttribute('style',x.dataset.c0);x.querySelectorAll('*').forEach(k=>k.setAttribute('style',k.dataset.c0))});
    const ratio=await p.evaluate(async([b64,c])=>{const im=await new Promise(r=>{const i=new Image();i.onload=()=>r(i);i.src='data:image/png;base64,'+b64});const cv=document.createElement('canvas');cv.width=im.width;cv.height=im.height;
     const t=cv.getContext('2d');t.drawImage(im,0,0);const d=t.getImageData(0,0,im.width,im.height).data;const f=v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)};
@@ -52,7 +57,7 @@ const {chromium,open}=require('./harness.js');
   await p.evaluate(()=>{const t=document.querySelector('#app .hmTrack');t.style.transform='translateX(0)'});return bad};
  v=[...await tiles('krem'),...await hero('krem')];ok(!v.length,'[krem] fotoğraf üstü metinler en açık bölgeye karşı AA: '+v.join(' | '));
  // AJ2-G: en kötü durum — karo ve afiş kapağı fotoğrafı TAMAMEN BEYAZ / TAMAMEN SİYAH iken (yazı gölgesi ölçüme katılmaz) krem tercihte AA, 390 ve 320 px
- for(const vw of [390,320])for(const [nm,col] of [['beyaz','#fff'],['siyah','#000']]){
+ for(const vw of [390,320,430,768])for(const [nm,col] of [['beyaz','#fff'],['siyah','#000']]){
   await p.setViewportSize({width:vw,height:844});await home();
   await p.evaluate(c=>{const cv=document.createElement('canvas');cv.width=cv.height=8;const t=cv.getContext('2d');t.fillStyle=c;t.fillRect(0,0,8,8);const u=cv.toDataURL();
    document.querySelectorAll('#app .hmTile img,#app .hmSl:not(.food) img.bg').forEach(i=>{i.removeAttribute('loading');i.src=u})},col);await p.waitForTimeout(300);
