@@ -7,7 +7,7 @@
 // P7: sonuçsuz aramada kategoriler + "Öne çıkan ürünler"; "Sıradaki adım"; kargo/iade/satıcı bloğu; adet sınırı açıklaması (50 / stok);
 // stok −/+ (kayıt yalnız "Kaydet" ile); sayaç süzme; ürün paneli hatasında "Tekrar dene"; panel odağı; 320px ödeme çubuğu toplamı.
 // AJ2-A: ızgara 10/16px aralık, 14px köşe, kart zemini/gölgesi yok, fiyat yeşil ve kesilmez, "+" foto sağ üstte (26px daire, 44×44).
-// AJ2-B: sipariş detayında takip düğmesi orman yeşili, "İade talebi oluştur" kehribar (.ozRet), iki temada AA.
+// AJ2-B: sipariş detayında takip düğmesi orman yeşili, "İade talebi oluştur" kehribar (.ozRet), iki temada AA; "Ürünleri değerlendir" kartı tam genişlik.
 const {chromium,open,enter}=require('./harness.js');
 (async()=>{
  const br=await chromium.launch({executablePath:process.env.CHROMIUM||'/opt/pw-browsers/chromium'});
@@ -151,7 +151,9 @@ const {chromium,open,enter}=require('./harness.js');
   const acc=th==='light'?'rgb(31, 107, 69)':'rgb(40, 128, 79)',sun=th==='light'?'rgb(138, 90, 0)':'rgb(247, 210, 74)';
   ok(b.trk&&b.trk.bg===acc&&b.trk.c==='rgb(255, 255, 255)'&&+b.trk.fw>=700,'['+th+'] takip düğmesi orman yeşili + beyaz kalın: '+JSON.stringify(b.trk));
   ok(b.ret&&/\bozRet\b/.test(b.ret.cls)&&b.ret.bg==='rgba(242, 193, 78, 0.28)'&&b.ret.c===sun&&b.cp&&b.ret.bg!==b.cp.bg,'['+th+'] iade düğmesi kehribar (.ozRet), Kopyala\'dan ayrı: '+JSON.stringify([b.ret,b.cp&&b.cp.bg]));
-  const v=await AA([['iade','#ozRoot [data-a=ordReturn]'],['takip','#ozRoot .ozTrkGo']]);ok(!v.length,'['+th+'] sipariş düğmeleri AA: '+v.join(' | '))}
+  const v=await AA([['iade','#ozRoot [data-a=ordReturn]'],['takip','#ozRoot .ozTrkGo']]);ok(!v.length,'['+th+'] sipariş düğmeleri AA: '+v.join(' | '));
+  const rw=await p.evaluate(()=>{const a=document.querySelector('#ozRoot #ozRateC'),b=document.querySelector('#ozRoot .ozTrkC');return a&&b?[Math.round(a.getBoundingClientRect().width),Math.round(b.getBoundingClientRect().width)]:null});
+  ok(rw&&rw[0]===rw[1],'['+th+'] "Ürünleri değerlendir" kartı tam genişlik (kargo kartıyla aynı): '+JSON.stringify(rw))}
  await p.evaluate(k=>{const d=window.__OZ_FX.R.oz_order_detail,x=JSON.parse(k);d.order=x.o;d.can_return=x.c;d.return=x.r},od0);
  // genişlik × tema × ekran: taşma 0, alt menü düğmeleri ≥44px
  let n=0;

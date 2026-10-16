@@ -2659,6 +2659,9 @@ html:root body.ozLt .oz :focus-visible,html:root body.ozLt .ozTop :focus-visible
   kehribar tonlu (sarı "Kopyala"dan ayrı: yarı saydam zemin + kehribar kenar). "Siparişim elime ulaştı" ikincil kalır (AJ1).*/
 html:root .ozTrkC .ozTrkGo{background:var(--oz-acc);border-color:var(--oz-acc);color:#fff;font-weight:800}
 html:root .ozOd .ozBtn.ozRet{background:rgba(242,193,78,.28);border-color:var(--oz-sunL);color:var(--oz-sun)}
+/*OZ AJ2 sipariş detayındaki "Ürünleri değerlendir" kartı tam genişlik (yalnız görünüm): .ozRvC sınıfı yorum şeridi kartıyla ortak olduğu için
+  (240px sabit genişlik) yalnız sipariş detayındaki kartta genişlik sıfırlanır.*/
+html:root .ozOd .ozCard.ozRvC{flex:none;width:auto}
 /*K21-BITIS*/
 </style>
 <style id="svcProvEntryCss">.svcProvEntry{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;border-radius:16px;border:1.5px solid rgba(124,92,255,.45);background:rgba(124,92,255,.10);color:var(--text);font:inherit;text-align:left;cursor:pointer}.svcProvEntry .ic{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:rgba(124,92,255,.18)}.svcProvEntry .tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}.svcProvEntry small{font-size:12px;font-weight:700;color:var(--muted)}.svcProvEntry b{font-size:16px;font-weight:900}.svcProvEntry em{font-style:normal;font-size:12.5px;color:var(--muted)}.svcProvEntry .go{flex:0 0 auto;font-size:24px;font-weight:700;color:#7c5cff}.svcProvEntry:active{transform:scale(.99)}.svcProvEntry:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}html[data-theme="light"] .svcProvEntry{background:#f3effe;border-color:#c9bbff}html[data-theme="light"] .svcProvEntry .go{color:#5b3fd6}</style>
