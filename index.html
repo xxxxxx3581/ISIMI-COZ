@@ -2576,35 +2576,38 @@ html:root .ozGr .ac .ozPStep.gp button .pg{width:14px;height:14px}
 html:root .ozGr .ac .ozPStep.gp button:disabled{color:var(--oz-x8A7A60T);cursor:not-allowed}
 html:root .ozGr .ac .ozPStep.gp button:focus-visible{outline:2px solid var(--oz-sunL);outline-offset:-3px;border-radius:8px}
 html:root .ozGr .ac .ozPStep.gp b{display:flex;align-items:center;justify-content:center;min-width:10px;padding:0;color:var(--oz-text);font:800 13px/1 system-ui,sans-serif;background:none}
-/*OZ AJ2-A ürün ızgarası (.ozGrs: liste, kategori, "Öne çıkan ürünler", mağaza, favoriler) — AH1 bitişik bandı ve AI1 düzeltmelerinin yerine tek blok.
-  Kart zemini/gölgesi/kenarlığı yok, yazılar sayfa fonunda. Fotoğraf kutuları ayrı: dört köşe 14px, sütun arası 10px, satır arası 16px.
-  "+" fotoğrafın sağ üst köşesinde: görünür 26px opak açık daire (köşeden 4px içeride, 14px glif, yalnız dairede hafif gölge),
-  dokunma 44×44 (sağ/üst kenarı fotoğrafınkiyle aynı, görünmez kısım fotoğrafın içine aşağı-sola uzanır; seçenek sayısı rozeti dairenin solunda). Fiyat kalın orman yeşili,
-  tam genişlik (kesilmez); eski fiyat (yalnız veride compare_at varsa) üstü çizili gri; birim fiyat gri ve parantezli; ad 2 satır; miktar gri.
-  Sepetteki tek seçenekli üründe "− n +" yeri değişmedi (AI1: fiyat/birim satırının altında, sağa hizalı, 40px). Masaüstü/tablette (≥720px)
-  sütun en az 150px. "Son baktığın ürünler" rafı (.ozGrH) değişmez.*/
-html:root .ozGr .pr .op{margin-left:4px;font-size:.6875rem;font-weight:600;color:var(--oz-muted)}
-html:root .ozGrs{column-gap:10px;row-gap:16px}
+/*OZ AJ2-D ürün ızgarası (.ozGrs: liste, kategori, "Öne çıkan ürünler", mağaza, favoriler) — AJ2-A bloğunun yerine tek blok.
+  Kart zemini/gölgesi yok. Fotoğraf, neredeyse görünmez 1px çerçevenin (18px köşe) 7px içinde (12px köşe). "+" çerçevenin SAĞ ÜST köşesinde:
+  görünür 24px krem daire (merkezi köşenin 1px içinde → 11px dışarı taşar, fotoğrafın yuvarlak köşesine binmez), yeşil artı, hafif gölge;
+  dokunma 44×44 (sağ/üst kenarı dairenin kenarı; görünmez kısım çerçeve içine aşağı-sola uzanır). Taşma için sütun arası 16px, satır arası
+  20px, ızgaranın üstünde 12px boşluk (komşu karta/başlığa değmez, kırpılmaz). Seçenek sayısı rozeti ve "Tükendi" sol üstte.
+  Yazı bloğu sabit sıra/yükseklik: ad (2 satır sabit), miktar (1 satır), fiyat (yeşil kalın, 1 satır), ikincil satır (eski fiyat üstü çizili +
+  birim fiyat, 1 satır) → aynı sıradaki kartlarda fiyat aynı hizada. Sepetteki tek seçenekli üründe "− n +" kartın altında (AI1) kalır.
+  Masaüstü/tablette (≥720px) sütun en az 150px. "Son baktığın ürünler" rafı (.ozGrH) değişmez.*/
+html:root .ozGr .up .op{color:var(--oz-muted)}
+html:root .ozGrs{column-gap:16px;row-gap:20px;padding-top:12px}
 @media (min-width:720px){html:root .ozGrs{grid-template-columns:repeat(auto-fill,minmax(150px,1fr))}}
-html:root .ozGrs .ozGr .ph{border-radius:14px}
-html:root .ozGrs .ozGr .so{left:6px;bottom:6px}
-html:root .ozGrs .ozGr .prw{margin-top:8px;padding:0 2px}
-html:root .ozGrs .ozGr .pr{display:flex;flex-wrap:wrap;align-items:baseline;gap:0 4px;padding:0;white-space:normal;color:var(--oz-acc2);overflow:hidden}
-html:root .ozGrs .ozGr .pr b,html:root .ozGrs .ozGr .pr .uf{flex:none;white-space:nowrap;font-weight:800;color:var(--oz-acc2)}
-html:root .ozGrs .ozGr .pr .op{flex:none;margin-left:0;white-space:nowrap;font-size:.6875rem;font-weight:600;color:var(--oz-muted)}
-html:root .ozGrs .ozGr .up{color:var(--oz-muted)}
-html:root .ozGrs .ozGr .nm,html:root .ozGrs .ozGr .nt{margin-left:2px;margin-right:2px}
-html:root .ozGrs .ozGr .nt{color:var(--oz-muted)}
-html:root .ozGrs .ozGr .ac{top:0;right:0;left:auto;width:44px;height:44px;padding:0;align-items:flex-start;justify-content:flex-end}
-html:root .ozGrs .ozGr .ac .ozPlus.gq,html:root .ozGrs .ozGr .ac .ozPlus.gq:disabled{align-items:flex-start;justify-content:flex-end;width:44px;min-width:44px;height:44px;padding:10px 10px 0 0;color:#1F6B45}
-html:root .ozGrs .ozGr .ac .ozPlus.gq::before{content:"";position:absolute;top:4px;right:4px;width:26px;height:26px;border-radius:50%;background:#FFFDF8;box-shadow:0 1px 3px rgba(0,0,0,.22)}
-html:root .ozGrs .ozGr .ac .ozPlus.gq .pg{position:relative;z-index:1;width:14px;height:14px}
+html:root .ozGrs .ozGr .ph{box-sizing:border-box;border:1px solid rgba(246,236,220,.05);border-radius:18px;background:none;overflow:visible}
+html:root body.ozLt .ozGrs .ozGr .ph{border-color:rgba(90,66,30,.09)}
+html:root .ozGrs .ozGr .ph img{top:7px;left:7px;right:auto;bottom:auto;width:calc(100% - 14px);height:calc(100% - 14px);border-radius:12px}
+html:root .ozGrs .ozGr .ph i{inset:7px;border-radius:12px;background:var(--oz-card2)}
+html:root .ozGrs .ozGr .so{top:13px;left:13px;bottom:auto;z-index:2}
+html:root .ozGrs .ozGr .nm{order:1;margin:10px 2px 0;min-height:2.6em;font-size:.8125rem}
+html:root .ozGrs .ozGr .nt{order:2;margin:2px 2px 0;min-height:1.3em;color:var(--oz-muted)}
+html:root .ozGrs .ozGr .prw{order:3;justify-content:flex-start;min-height:0;margin:4px 0 0;padding:0 2px}
+html:root .ozGrs .ozGr .pr{display:block;padding:0;font-size:.9375rem;line-height:1.3;color:var(--oz-acc2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html:root .ozGrs .ozGr .pr b,html:root .ozGrs .ozGr .pr .uf{font-weight:800;color:var(--oz-acc2)}
+html:root .ozGrs .ozGr .up{min-height:1.3em;color:var(--oz-muted)}
+html:root .ozGrs .ozGr .ac{top:-11px;left:0;right:-11px;width:auto;height:44px;padding:0;display:flex;align-items:flex-start;justify-content:flex-end}
+html:root .ozGrs .ozGr .ac .ozPlus.gq,html:root .ozGrs .ozGr .ac .ozPlus.gq:disabled{position:static;align-items:flex-start;justify-content:flex-end;width:44px;min-width:44px;height:44px;padding:0;color:#1F6B45}
+html:root .ozGrs .ozGr .ac .ozPlus.gq .pg{box-sizing:border-box;width:24px;height:24px;padding:5px;border-radius:50%;background:#FFFDF8;box-shadow:0 1px 3px rgba(0,0,0,.22)}
 html:root .ozGrs .ozGr .ac .ozPlus.gq:disabled{color:#8A7A60;opacity:.75}
-html:root .ozGrs .ozGr .ac .ozPlus.gq .bd{position:absolute;z-index:1;top:8px;right:33px;background:#F2C14E;color:#1F160E;box-shadow:0 1px 3px rgba(0,0,0,.22)}
+html:root .ozGrs .ozGr .ac .ozPlus.gq .bd{position:absolute;z-index:3;top:24px;left:13px;right:auto;background:#F2C14E;color:#1F160E;box-shadow:0 1px 3px rgba(0,0,0,.22)}
+html:root .ozGrs .ozGr.out .ac .ozPlus.gq .bd{top:46px}
 html:root .ozGrs .ozGr .ac .ozPlus.gq:focus-visible{outline:none}
-html:root .ozGrs .ozGr .ac .ozPlus.gq:focus-visible::before{outline:2px solid var(--oz-acc);outline-offset:2px}
+html:root .ozGrs .ozGr .ac .ozPlus.gq:focus-visible .pg{outline:2px solid var(--oz-acc);outline-offset:2px}
 html:root .ozGrs .ozGr.st .go{padding-bottom:40px}
-html:root .ozGrs .ozGr.st .ac{top:auto;bottom:0;left:0;width:auto;height:auto;padding:0;align-items:flex-end}
+html:root .ozGrs .ozGr.st .ac{top:auto;bottom:0;left:0;right:0;width:auto;height:auto;padding:0;align-items:flex-end}
 html:root .ozGrs .ozGr.st .ac .ozPStep.gp{height:40px;padding-right:0}
 html:root .ozGrs .ozGr.st .ac .ozPStep.gp button{height:40px;min-height:40px}
 /*OZ AI2 seçenek penceresi alt çubuğu: seçili seçenek sepetteyse "− n +" (44px dokunma alanı); yalnız .ozPkBar.*/

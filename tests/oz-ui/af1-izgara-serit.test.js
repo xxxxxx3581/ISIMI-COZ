@@ -4,6 +4,9 @@
 // 44×44 dokunma, tamamen fotoğrafın içinde (fiyat/ada binmez)"; görünür daire 26px ≤ foto alanının %6'sı; "+" kontrastı dairenin zeminine
 // karşı ≥4.5; seçenek sayısı rozeti dairenin solunda fotoğrafın üst kenarında (orta kısmı örtmez); foto köşesi 14px. "+" düğmesinin kendisi
 // köşesiz/çerçevesiz/zeminsiz, kart zemini/gölgesi yok, "Tükendi" ve "Son baktığın ürünler" rafı kontrolleri aynen.
+// AJ2-D: ürün ızgarasında (.ozGrs) "+" çerçevenin SAĞ ÜST köşesine, yarısı dışarıda — konum kontrolü "fotoğrafın içinde sağ üstte, 26px daire"
+// yerine "24px krem daire merkezi çerçeve köşesinde (≤3px), fotoğrafa binmez, 44×44 dokunma, komşu karta değmez"; foto köşesi 18px (çerçeve);
+// "+" kontrastı dairenin (svg) zeminine karşı; "Tükendi" sol üstte; büyük yazıda "+" komşu karta değmez. Diğer kontroller aynen.
 // Çalıştırma: node tests/oz-ui/af1-izgara-serit.test.js
 // Doğrulanan: "+" border-radius 0, border yok, zemin yok, glif ≤16px; "+" kartın sağ üstünde ve fotoğrafın üstünde (fotoğraf kutusunun
 // dışında; fotoğraf üzerinde hiçbir düğme yok); dokunma alanı ≥44×36 ve kart içinde; "+" paneli açmaz, kart gövdesi "+" eklemez;
@@ -38,6 +41,9 @@ const {chromium,open,enter,overflow}=require('./harness.js');
   const so=c.querySelector('.so'),S=so?so.getBoundingClientRect():null;
   const col=s=>{const e=c.querySelector(s);return e?getComputedStyle(e).color:bg};
   return {h:Math.round(R0.height),phTop:Math.round(P.top-R0.top),phW:Math.round(P.width),phH:Math.round(P.height),phRad:getComputedStyle(ph).borderTopLeftRadius,pad:getComputedStyle(go).paddingTop+'/'+getComputedStyle(go).paddingLeft,
+   circ:G?{w:Math.round(G.width),bg:getComputedStyle(g).backgroundColor,rad:getComputedStyle(g).borderTopLeftRadius,dx:Math.round(Math.abs((G.left+G.right)/2-P.right)),dy:Math.round(Math.abs((G.top+G.bottom)/2-P.top)),
+    off:(()=>{const im=ph.querySelector('img')||ph.querySelector('i');if(!im)return true;const I=im.getBoundingClientRect();return Math.hypot((G.left+G.right)/2-(I.right-12),(G.top+G.bottom)/2-(I.top+12))>=G.width/2+12-.5})()}:null,
+   free:(()=>{if(!Q)return true;const nx=[...c.parentElement.children].find(x=>x!==c&&Math.abs(x.getBoundingClientRect().top-R0.top)<2&&x.getBoundingClientRect().left>R0.left);return nx?Q.right<=nx.getBoundingClientRect().left-.5:Q.right<=innerWidth})(),
    btnOnPhoto:[...ph.querySelectorAll('button,[data-a]')].length,
    ctl:Q?{w:Math.round(Q.width),h:Math.round(Q.height),right:Math.round(R0.right-Q.right),top:Math.round(Q.top-R0.top),below:Math.round(Q.top-P.bottom),phTop:Math.round(Q.top-P.top),phRight:Math.round(P.right-Q.right),inPh:Q.bottom<=P.bottom+.5&&Q.left>=P.left-.5&&Q.right<=P.right+.5,
     so:S?!(Q.left<S.right&&Q.right>S.left&&Q.top<S.bottom&&Q.bottom>S.top):true,inCard:Q.left>=R0.left-.5&&Q.right<=R0.right+.5}:null,
@@ -45,23 +51,23 @@ const {chromium,open,enter,overflow}=require('./harness.js');
     area:(()=>{const d=parseFloat(getComputedStyle(pl,'::before').width)||0;return +(Math.PI*d*d/4/(P.width*P.height)).toFixed(3)})()}:null,
    bd:B?{t:bd.textContent,w:Math.round(B.width),h:Math.round(B.height),leftOfGlyph:G?B.right<=G.left:false,topEdge:B.top>=P.top-.5&&B.bottom<=P.top+P.height*.3}:null,
    step:stp?{n:stp.querySelector('b').textContent,bs:[...stp.querySelectorAll('button')].map(b=>{const r=b.getBoundingClientRect();return {w:Math.round(r.width),h:Math.round(r.height),l:b.getAttribute('aria-label'),below:Math.round(r.top-P.bottom)}})}:null,
-   so:S?{t:so.textContent,l:Math.round(S.left-P.left),b:Math.round(P.bottom-S.bottom)}:null,op:(ph.querySelector('img')?+getComputedStyle(ph.querySelector('img')).opacity:1),
-   aa:[cr(col('.pr b')!==bg?col('.pr b'):col('.pr .uf'),bg),cr(col('.nm'),bg),cr(col('.up'),bg),cr(col('.nt'),bg),pl?cr(getComputedStyle(pl).color,getComputedStyle(pl,'::before').backgroundColor==='rgba(0, 0, 0, 0)'?bg:getComputedStyle(pl,'::before').backgroundColor):99]}},[root,id]);
+   so:S?{t:so.textContent,l:Math.round(S.left-P.left),top:Math.round(S.top-P.top),b:Math.round(P.bottom-S.bottom)}:null,op:(ph.querySelector('img')?+getComputedStyle(ph.querySelector('img')).opacity:1),
+   aa:[cr(col('.pr b')!==bg?col('.pr b'):col('.pr .uf'),bg),cr(col('.nm'),bg),cr(col('.up'),bg),cr(col('.nt'),bg),pl?cr(getComputedStyle(pl).color,g&&getComputedStyle(g).backgroundColor!=='rgba(0, 0, 0, 0)'?getComputedStyle(g).backgroundColor:bg):99]}},[root,id]);
  const L='#ozRoot .ozGrs';
  let m=await M(L,'m1'),z=await M(L,'z1'),b=await M(L,'b1');
  ok(m&&z&&b,'kartlar');
  if(m){
   ok(m.plus&&m.plus.rad==='0px'&&m.plus.bw==='0px'&&/rgba\(0, 0, 0, 0\)|transparent/.test(m.plus.bg)&&m.plus.shadow==='none','"+" çerçevesiz, köşesiz, zeminsiz: '+JSON.stringify(m.plus));
-  ok(m.plus&&m.plus.gw<=16&&m.plus.gh<=16&&m.plus.gw>=12,'glif 12-16px: '+JSON.stringify(m.plus&&[m.plus.gw,m.plus.gh]));
-  ok(m.ctl&&m.ctl.phTop===0&&m.ctl.phRight===0&&m.ctl.inPh&&m.ctl.inCard,'"+" fotoğrafın sağ üst köşesinde, tamamen fotoğrafın içinde (fiyat/ada binmez): '+JSON.stringify(m.ctl));
-  ok(m.plus&&m.plus.dot==='26px'&&m.plus.dotBg==='rgb(255, 253, 248)'&&m.plus.area<=.06,'görünür daire 26px, opak açık, foto alanının ≤%6\'sı: '+JSON.stringify(m.plus&&[m.plus.dot,m.plus.dotBg,m.plus.area]));
+  ok(m.plus&&m.plus.gw===24&&m.plus.gh===24,'görünür daire (artı glifi içinde) 24px: '+JSON.stringify(m.plus&&[m.plus.gw,m.plus.gh]));
+  ok(m.ctl&&m.ctl.phTop===-11&&m.ctl.phRight===-11&&m.free,'"+" çerçevenin sağ üst köşesinde (dokunma alanı 11px dışarı taşar), komşu karta değmez: '+JSON.stringify([m.ctl,m.free]));
+  ok(m.circ&&m.circ.w===24&&m.circ.bg==='rgb(255, 253, 248)'&&m.circ.rad==='50%'&&m.circ.dx<=3&&m.circ.dy<=3&&m.circ.off,'24px krem daire, merkezi çerçeve köşesinde (yarısı dışarıda), fotoğrafa binmez: '+JSON.stringify(m.circ));
   ok(m.ctl&&m.ctl.w>=44&&m.ctl.h>=44,'dokunma alanı ≥44×44: '+JSON.stringify(m.ctl));
   ok(m.btnOnPhoto===0,'fotoğraf üzerinde düğme yok');
-  ok(m.pad==='0px/0px'&&m.phRad==='14px'&&Math.abs(m.phW-m.phH)<=1,'iç boşluk 0, kare foto 14px köşe: '+JSON.stringify([m.pad,m.phRad,m.phW,m.phH]));
+  ok(m.pad==='0px/0px'&&m.phRad==='18px'&&Math.abs(m.phW-m.phH)<=1,'iç boşluk 0, kare foto çerçevesi 18px köşe: '+JSON.stringify([m.pad,m.phRad,m.phW,m.phH]));
   ok(m.plus&&m.plus.label==='Sepete ekle'&&z.plus&&/^Seçenek seç, 3 gramaj seçeneği$/.test(z.plus.label),'aria aynı: '+JSON.stringify([m.plus&&m.plus.label,z.plus&&z.plus.label]));
   ok([m,z].every(x=>x.aa.every(v=>v>=4.5)),'AA (fiyat, ad, birim, alt satır, "+"): '+JSON.stringify([m.aa,z.aa]));
  }
- if(b)ok(b.so&&b.so.t==='Tükendi'&&b.so.l<=8&&b.so.b<=8&&b.op<.6&&b.plus&&b.plus.dis&&b.plus.op<1&&b.btnOnPhoto===0&&b.ctl&&b.ctl.so,'stoksuz: foto sol altta "Tükendi", soluk foto, "+" soluk/pasif: '+JSON.stringify({so:b.so,op:b.op,plus:b.plus}));
+ if(b)ok(b.so&&b.so.t==='Tükendi'&&b.so.l<=16&&b.so.top<=16&&b.op<.6&&b.plus&&b.plus.dis&&b.plus.op<1&&b.btnOnPhoto===0&&b.ctl&&b.ctl.so,'stoksuz: foto sol üstte "Tükendi" ("+" ile çakışmaz), soluk foto, "+" soluk/pasif: '+JSON.stringify({so:b.so,op:b.op,plus:b.plus}));
  const h0=m&&m.h,p0=m&&m.phTop;
  // "+" paneli açmaz; kart gövdesi eklemez
  const qty=()=>p.evaluate(()=>{try{return JSON.parse(localStorage.getItem('isimi_oz_cart')||'[]').reduce((n,x)=>n+x.qty,0)}catch(e){return -1}});
@@ -88,9 +94,10 @@ const {chromium,open,enter,overflow}=require('./harness.js');
  await p.evaluate(()=>{document.documentElement.style.fontSize='24px'});await p.waitForTimeout(300);
  g=await p.evaluate(()=>{const gr=document.querySelector('#ozRoot .ozGrs');const cs=[...gr.querySelectorAll('.ozGr')];const rs=cs.map(c=>c.getBoundingClientRect());let lap=false;
   rs.forEach((a,i)=>rs.forEach((b,j)=>{if(i<j&&a.left<b.right-1&&b.left<a.right-1&&a.top<b.bottom-1&&b.top<a.bottom-1)lap=true}));
-  const inside=cs.every(c=>{const r=c.getBoundingClientRect(),a=c.querySelector('.ac').getBoundingClientRect();return a.right<=r.right+.5&&a.left>=r.left-.5});
+  const inside=cs.every(c=>{const r=c.getBoundingClientRect(),b=c.querySelector('.ac .ozPlus,.ac .ozPStep');if(!b)return true;const a=b.getBoundingClientRect();
+   const nx=cs.find(x=>x!==c&&Math.abs(x.getBoundingClientRect().top-r.top)<2&&x.getBoundingClientRect().left>r.left);return a.left>=r.left-.5&&(nx?a.right<=nx.getBoundingClientRect().left-.5:a.right<=innerWidth)});
   return {cols:getComputedStyle(gr).gridTemplateColumns.split(' ').length,lap,inside,sw:document.scrollingElement.scrollWidth-document.scrollingElement.clientWidth}});
- ok(g.cols===2&&!g.lap&&g.inside&&g.sw<=0,'büyük yazıda 2 sütun, çakışma/taşma yok: '+JSON.stringify(g));
+ ok(g.cols===2&&!g.lap&&g.inside&&g.sw<=0,'büyük yazıda 2 sütun, çakışma/taşma yok, "+" komşu karta değmez: '+JSON.stringify(g));
  await p.evaluate(()=>{document.documentElement.style.fontSize=''});
  // Son baktığın ürünler rafında aynı kart
  await p.evaluate(()=>{localStorage.setItem('isimi_oz_recent',JSON.stringify({s1:[{id:'m1',name:'Cam şişe günlük süt',image:'https://img.test/icecekler.jpg',price_kurus:9000,nv:1,vs:[{label:'1 L',price_kurus:9000}],net:'1 L'}]}))});

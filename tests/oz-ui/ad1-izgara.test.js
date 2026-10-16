@@ -1,4 +1,6 @@
 // AD1: ürün listesi "Izgara / Liste" görünümü — 390px, sahte RPC. Çalıştırma: node tests/oz-ui/ad1-izgara.test.js
+// AJ2-D: yalnız aralık ve "+" konumu güncellendi — sütun arası 16px; "+" çerçevenin SAĞ ÜST köşesinde, görünür 24px krem daire merkezi
+// köşede (yarısı dışarıda, fotoğrafa binmez), dokunma 44×44, komşu karta değmez.
 // AJ2-A: yalnız aralık ve "+" konumu güncellendi — sütun arası 10px (bitişik bant kalktı); "+" fotoğrafın sağ üst köşesinde
 // (dokunma 44×44, sağ/üst kenarı fotoğrafınkiyle aynı, tamamen fotoğrafın içinde → fiyat/ada binmez; görünür daire 26px).
 // AH1: yalnız aralık/köşe beklentileri güncellendi — ürün ızgarasında sütun arası 0 (bitişik foto bandı), satır kenarı köşe sınıfları (cl/cr).
@@ -31,7 +33,7 @@ const {chromium,open,enter,overflow}=require('./harness.js');
   return {cols,gap:cs.columnGap,n:cards.length,lap,row0,extra:cards.some(c=>c.querySelector('.ozFav,.rt,.ds,.dt')),
    sw:document.scrollingElement.scrollWidth-document.scrollingElement.clientWidth}});
  let g=await G();
- ok(!g.none&&g.cols===3&&g.gap==='10px'&&g.n===6,'varsayılan Izgara, 390px 3 sütun, sütun arası 10px: '+JSON.stringify(g));
+ ok(!g.none&&g.cols===3&&g.gap==='16px'&&g.n===6,'varsayılan Izgara, 390px 3 sütun, sütun arası 16px: '+JSON.stringify(g));
  ok(!g.extra,'ızgara kartında kalp/yıldız/açıklama/nokta olmamalı');ok(!g.lap&&g.sw<=0,'üst üste binme/taşma yok');
  ok(g.row0&&g.row0.every(h=>h===g.row0[0]),'aynı satırda kart yükseklikleri eşit: '+JSON.stringify(g.row0));
  const C=id=>p.evaluate(id=>{const c=document.querySelector('#ozRoot .ozGr[data-pid="'+id+'"]');if(!c)return null;
@@ -39,7 +41,7 @@ const {chromium,open,enter,overflow}=require('./harness.js');
   const cr=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05)};const bg=getComputedStyle(c).backgroundColor;
   const ph=c.querySelector('.ph'),im=ph.querySelector('img'),pl=c.querySelector('.ac .ozPlus')||c.querySelector('.ac .ozPStep [data-d="1"]');const pr=ph.getBoundingClientRect(),br=pl.getBoundingClientRect(),cr0=c.getBoundingClientRect();
   const q=s=>c.querySelector(s);const t=s=>(q(s)||{}).textContent||'';const col=s=>q(s)?getComputedStyle(q(s)).color:bg;
-  return {go:q('.go').getAttribute('aria-label'),plus:pl.getAttribute('aria-label'),dis:pl.disabled,pw:Math.round(br.width),ph:Math.round(br.height),vis:getComputedStyle(pl,'::before').width,
+  return {go:q('.go').getAttribute('aria-label'),plus:pl.getAttribute('aria-label'),dis:pl.disabled,pw:Math.round(br.width),ph:Math.round(br.height),vis:(()=>{const g=pl.querySelector('svg');if(!g)return '';const r=g.getBoundingClientRect(),gs=getComputedStyle(g);return Math.round(r.width)+'|'+gs.backgroundColor+'|'+Math.round(Math.abs((r.left+r.right)/2-pr.right))+','+Math.round(Math.abs((r.top+r.bottom)/2-pr.top))})(),
    tr:Math.round(pr.right-br.right),tt:Math.round(br.top-pr.top),inPh:br.bottom<=pr.bottom+.5&&br.left>=pr.left-.5&&br.right<=pr.right+.5,inCard:br.right<=cr0.right+.5&&br.top>=cr0.top-.5,sq:Math.abs(pr.width-pr.height)<1.5,
    fit:im?getComputedStyle(im).objectFit+' '+getComputedStyle(im).objectPosition:'',op:im?getComputedStyle(im).opacity:'',so:t('.so'),
    pr:t('.pr'),up:t('.up'),nm:t('.nm'),nt:t('.nt'),bd:t('.ac .bd'),
@@ -48,7 +50,7 @@ const {chromium,open,enter,overflow}=require('./harness.js');
  let c0=await C('p0'),c2=await C('p2'),c3=await C('p3');
  ok(c0&&c2&&c3,'kartlar bulunmalı');
  if(c0&&c2&&c3){
-  ok(c2.pw>=44&&c2.ph>=44&&c2.tt===0&&c2.tr===0&&c2.inPh&&c2.inCard&&c2.vis==='26px','"+" fotoğrafın sağ üst köşesinde (fotoğrafın içinde), ≥44×44 dokunma, görünür 26px: '+JSON.stringify(c2));
+  ok(c2.pw>=44&&c2.ph>=44&&c2.tt===-11&&c2.tr===-11&&/^24\|rgb\(255, 253, 248\)\|[0-3],[0-3]$/.test(c2.vis),'"+" çerçevenin sağ üst köşesinde (24px krem daire merkezi köşede, yarısı dışarıda), ≥44×44 dokunma: '+JSON.stringify(c2));
   ok(c2.sq&&c0.sq&&c0.fit==='cover 50% 50%','kare foto, cover, ortalı: '+c0.fit);
   ok(/^Ezine peyniri 2, 899,90\s₺$/.test(c2.go)&&c2.plus==='Sepete ekle','aria: kart "ad, fiyat", "+" "Sepete ekle": '+c2.go+' / '+c2.plus);
   ok(/899,90/.test(c2.pr)&&/₺\/kg/.test(c2.up)&&c2.nt==='500 g','tek fiyatlı: fiyat + ≈ birim + net miktar: '+JSON.stringify([c2.pr,c2.up,c2.nt]));

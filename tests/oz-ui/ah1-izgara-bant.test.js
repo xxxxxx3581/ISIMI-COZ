@@ -1,4 +1,7 @@
 // AH1: ürün ızgarası foto düzeni — 390px, sahte RPC. Çalıştırma: node tests/oz-ui/ah1-izgara-bant.test.js
+// AJ2-D (bilinçli tasarım değişikliği): sütun arası 16px; foto çerçevesi 18px köşe ve neredeyse görünmez 1px çizgi (sayfa zeminine karşı
+// kontrast <1.2; gölge/outline yok); "+" çerçevenin sağ üst köşesinden 11px dışarı taşar → "kendi sütununda" yerine "komşu karta değmez";
+// "Tükendi" sol üstte çerçevenin içinde. Kart/düğme/fotoğrafta kenarlık/gölge/outline yok şartı aynen.
 // AJ2-A (bilinçli tasarım değişikliği): bitişik bant kalktı — sütun arası 0 yerine 10px (komşu fotolar arası 10px), satır kenarı köşeleri
 // (1. sütun yalnız sol / 3. sütun yalnız sağ 10px) yerine HER fotoğrafın dört köşesi 14px, yazı blokları her sütunda 2px içeride.
 // Kartta/fotoda kenarlık/gölge/outline YOK şartı aynen; büyük yazıda (2 sütun) aynı kural; "+" ve "− n +" dokunma alanı kendi sütununu geçmez;
@@ -24,18 +27,21 @@ const {chromium,open,enter,overflow}=require('./harness.js');
   return {cols:getComputedStyle(g).gridTemplateColumns.split(' ').length,cg:getComputedStyle(g).columnGap,
    rows:Object.values(rows).map(r=>r.map(c=>{const R=c.getBoundingClientRect(),P=c.querySelector('.ph').getBoundingClientRect(),ctl=c.querySelector('.ac .ozPlus,.ac .ozPStep').getBoundingClientRect();
     const prw=getComputedStyle(c.querySelector('.prw')),nm=getComputedStyle(c.querySelector('.nm')),so=c.querySelector('.so');
-    return {id:c.dataset.pid,rad:rad(c.querySelector('.ph')),L:P.left,Rt:P.right,h:Math.round(R.height),deco:deco(c)||deco(c.querySelector('.go'))||deco(c.querySelector('.ph'))||(c.querySelector('.ph img')&&deco(c.querySelector('.ph img'))),
-     ctlIn:ctl.left>=R.left-.01&&ctl.right<=R.right+.01,pl:prw.paddingLeft,nmL:nm.marginLeft,nmR:nm.marginRight,
-     so:so?[Math.round(so.getBoundingClientRect().left-P.left),Math.round(P.bottom-so.getBoundingClientRect().bottom)]:null}}))}});
- const chk=(g,n,where)=>{ok(g&&g.cols===n&&g.cg==='10px','['+where+'] '+n+' sütun, sütun arası 10px: '+JSON.stringify(g&&[g.cols,g.cg]));if(!g)return;
+    return {id:c.dataset.pid,rad:rad(c.querySelector('.ph')),L:P.left,Rt:P.right,h:Math.round(R.height),deco:deco(c)||deco(c.querySelector('.go'))||(c.querySelector('.ph img')&&deco(c.querySelector('.ph img'))),
+     frame:(()=>{const s=getComputedStyle(c.querySelector('.ph'));if(s.boxShadow!=='none'||(s.outlineStyle!=='none'&&parseFloat(s.outlineWidth)>0))return 'gölge/outline';if(parseFloat(s.borderTopWidth)===0)return 'ok';
+      if(parseFloat(s.borderTopWidth)>1)return 'kalın';const P=x=>x.match(/[\d.]+/g).map(Number),f=v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)},L=c=>.2126*f(c[0])+.7152*f(c[1])+.0722*f(c[2]);
+      const b=P(getComputedStyle(document.body).backgroundColor),k=P(s.borderTopColor),a=k.length>3?k[3]:1,m=[0,1,2].map(i=>k[i]*a+b[i]*(1-a));const x=L(m),y=L(b);const r=(Math.max(x,y)+.05)/(Math.min(x,y)+.05);return r<1.2?'ok':'belirgin '+r.toFixed(2)})(),
+     ctlIn:ctl.left>=R.left-.01&&(()=>{const nx=[...c.parentElement.children].find(x=>x!==c&&Math.abs(x.getBoundingClientRect().top-R.top)<2&&x.getBoundingClientRect().left>R.left);return nx?ctl.right<=nx.getBoundingClientRect().left-.5:ctl.right<=innerWidth})(),pl:prw.paddingLeft,nmL:nm.marginLeft,nmR:nm.marginRight,
+     so:so?[Math.round(so.getBoundingClientRect().left-P.left),Math.round(so.getBoundingClientRect().top-P.top)]:null}}))}});
+ const chk=(g,n,where)=>{ok(g&&g.cols===n&&g.cg==='16px','['+where+'] '+n+' sütun, sütun arası 16px: '+JSON.stringify(g&&[g.cols,g.cg]));if(!g)return;
   g.rows.forEach((r,ri)=>{ok(r.every(c=>c.h===r[0].h),'['+where+'] satır '+ri+' kart yükseklikleri eşit');
-   r.forEach((c,i)=>{const want='14,14,14,14';
-    ok(c.rad===want,'['+where+'] '+c.id+' köşeler '+want+': '+c.rad);ok(!c.deco,'['+where+'] '+c.id+' kenarlık/gölge/outline yok');ok(c.ctlIn,'['+where+'] '+c.id+' "+"/adım alanı kendi sütununda');
-    if(i>0)ok(Math.abs(c.L-r[i-1].Rt-10)<0.01,'['+where+'] '+r[i-1].id+'→'+c.id+' fotolar arası 10px: '+(c.L-r[i-1].Rt));
+   r.forEach((c,i)=>{const want='18,18,18,18';
+    ok(c.rad===want,'['+where+'] '+c.id+' köşeler '+want+': '+c.rad);ok(!c.deco,'['+where+'] '+c.id+' kenarlık/gölge/outline yok');ok(c.frame==='ok','['+where+'] '+c.id+' foto çerçevesi neredeyse görünmez: '+c.frame);ok(c.ctlIn,'['+where+'] '+c.id+' "+"/adım alanı komşu karta değmez');
+    if(i>0)ok(Math.abs(c.L-r[i-1].Rt-16)<0.01,'['+where+'] '+r[i-1].id+'→'+c.id+' foto çerçeveleri arası 16px: '+(c.L-r[i-1].Rt));
     if(n===3&&r.length===3){ok(c.pl==='2px'&&c.nmL==='2px'&&c.nmR==='2px','['+where+'] '+c.id+' yazı iç boşluğu 2px: '+[c.pl,c.nmL,c.nmR])}
-    if(c.so)ok(c.so[0]===6&&c.so[1]===6,'['+where+'] "Tükendi" 6px içeride: '+c.so)})})};
+    if(c.so)ok(c.so[0]>=7&&c.so[0]<=16&&c.so[1]>=7&&c.so[1]<=16,'['+where+'] "Tükendi" sol üstte çerçevenin içinde: '+c.so)})})};
  let g=await G();chk(g,3,'390px');
- ok(g&&g.rows.length===3&&g.rows[2].length===1&&g.rows[2][0].rad==='14,14,14,14','son satırdaki tek ürün dört köşe 14px: '+JSON.stringify(g&&g.rows[2]));
+ ok(g&&g.rows.length===3&&g.rows[2].length===1&&g.rows[2][0].rad==='18,18,18,18','son satırdaki tek ürün dört köşe 18px: '+JSON.stringify(g&&g.rows[2]));
  ok(await overflow(p)<=0,'390px taşma yok');
  // tıklama davranışı
  const qty=()=>p.evaluate(()=>JSON.parse(localStorage.getItem('isimi_oz_cart')||'[]').reduce((n,x)=>n+x.qty,0));
@@ -45,7 +51,7 @@ const {chromium,open,enter,overflow}=require('./harness.js');
  // büyük yazı → 2 sütun, aynı kural
  await p.evaluate(()=>{document.documentElement.style.fontSize='24px'});await p.waitForTimeout(500);
  g=await G();chk(g,2,'büyük yazı');
- ok(g&&g.rows[g.rows.length-1].length===1&&g.rows[g.rows.length-1][0].rad==='14,14,14,14','2 sütunda son tek ürün dört köşe 14px');
+ ok(g&&g.rows[g.rows.length-1].length===1&&g.rows[g.rows.length-1][0].rad==='18,18,18,18','2 sütunda son tek ürün dört köşe 18px');
  await p.evaluate(()=>{document.documentElement.style.fontSize=''});await p.waitForTimeout(400);
  // raf eskisi gibi
  await p.evaluate(()=>{localStorage.setItem('isimi_oz_recent',JSON.stringify({s1:[0,1,2].map(i=>({id:'q'+i,name:'Ürün '+i,image:'https://img.test/recel.jpg',price_kurus:9000,nv:1}))}))});

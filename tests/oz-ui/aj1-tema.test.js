@@ -6,7 +6,7 @@
 // ürün detayı "'den başlayan" (seçimden önce .ozPrice yok), teslim düğmesi ikincil, "Öne çıkan ürünler" satıcıların altında.
 // P7: sonuçsuz aramada kategoriler + "Öne çıkan ürünler"; "Sıradaki adım"; kargo/iade/satıcı bloğu; adet sınırı açıklaması (50 / stok);
 // stok −/+ (kayıt yalnız "Kaydet" ile); sayaç süzme; ürün paneli hatasında "Tekrar dene"; panel odağı; 320px ödeme çubuğu toplamı.
-// AJ2-A: ızgara 10/16px aralık, 14px köşe, kart zemini/gölgesi yok, fiyat yeşil ve kesilmez, "+" foto sağ üstte (26px daire, 44×44).
+// AJ2-D: ızgara 16/20px aralık, 18px köşeli neredeyse görünmez çerçeve, fotoğraf 7px içeride, yazı sırası ve fiyat hizası, "+" çerçevenin sağ üst köşesinde (24px, 44×44).
 // AJ2-B: sipariş detayında takip düğmesi orman yeşili, "İade talebi oluştur" kehribar (.ozRet), iki temada AA; "Ürünleri değerlendir" kartı tam genişlik.
 const {chromium,open,enter}=require('./harness.js');
 (async()=>{
@@ -121,25 +121,36 @@ const {chromium,open,enter}=require('./harness.js');
  ok(await p.evaluate(()=>!!document.querySelector('.ozOv.ozPdS .ozPName')),'"Tekrar dene" ürünü yükler');
  await p.keyboard.press('Escape');await p.waitForTimeout(300);
  ok(await p.evaluate(()=>!document.querySelector('.ozOv')&&!!document.activeElement&&!!document.activeElement.closest('.ozGr[data-pid=p0]')),'Esc ile kapanınca odak ürün kartına döner');
- // AJ2-A: ürün ızgarası (.ozGrs) — sütun arası 10px, satır arası 16px, foto dört köşe 14px, kart zemini/gölgesi/kenarlığı yok,
- // fiyat orman yeşili ve kesilmez, "+" fotoğrafın sağ üst köşesinde (görünür 30px açık daire, dokunma 44×44); iki tema
+ // AJ2-D: ürün ızgarası (.ozGrs) — sütun arası 16px, satır arası 20px, kart zemini/gölgesi/kenarlığı yok; foto çerçevesi 18px köşe ve
+ // neredeyse görünmez 1px çizgi (sayfa zeminine karşı <1.2), fotoğraf 7px içeride 12px köşe; "+" çerçevenin SAĞ ÜST köşesinde (24px krem daire
+ // merkezi köşede, yarısı dışarıda, fotoğrafa binmez, 44×44 dokunma, komşu karta değmez, kırpılmaz); yazı sırası ad → miktar → fiyat (yeşil,
+ // kesilmez) → ikincil satır; aynı satırdaki kartlarda fiyat aynı y hizasında; iki tema
  for(const th of ['light','dark']){await setTheme(th);await p.setViewportSize({width:390,height:844});await go('liste');
-  const g=await p.evaluate(()=>{const G=document.querySelector('#ozRoot .ozGrs');if(!G)return null;const gs=getComputedStyle(G);
-   const cs=[...G.querySelectorAll('.ozGr')].map(c=>{const s=getComputedStyle(c),go=getComputedStyle(c.querySelector('.go')),ph=c.querySelector('.ph'),P=ph.getBoundingClientRect(),pr=c.querySelector('.pr'),pl=c.querySelector('.ac .ozPlus');
-    const Q=pl?pl.getBoundingClientRect():null,b4=pl?getComputedStyle(pl,'::before'):null;
-    return {bg:s.backgroundColor+'|'+go.backgroundColor,sh:s.boxShadow+'|'+go.boxShadow,bw:s.borderTopWidth+'|'+go.borderTopWidth,rad:getComputedStyle(ph).borderTopLeftRadius+','+getComputedStyle(ph).borderBottomRightRadius,
-     prC:getComputedStyle(pr.querySelector('b,.uf,.nvp')).color,prFull:pr.scrollWidth<=pr.clientWidth+.5,
-     plus:Q?{w:Math.round(Q.width),h:Math.round(Q.height),top:Math.round(Q.top-P.top),right:Math.round(P.right-Q.right),vis:b4.width,rad:b4.borderTopLeftRadius,
-      inPh:Q.bottom<=P.bottom+.5&&Q.left>=P.left-.5,area:Math.PI*Math.pow(parseFloat(b4.width)||0,2)/4/(P.width*P.height),
-      soFree:(()=>{const so=c.querySelector('.so');if(!so)return true;const S=so.getBoundingClientRect();return !(Q.left<S.right&&Q.right>S.left&&Q.top<S.bottom&&Q.bottom>S.top)})()}:null}});
+  const g=await p.evaluate(()=>{const G=document.querySelector('#ozRoot .ozGrs');if(!G)return null;const gs=getComputedStyle(G);const all=[...G.querySelectorAll('.ozGr')];
+   const Pc=x=>x.match(/[\d.]+/g).map(Number),f=v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)},Lm=c=>.2126*f(c[0])+.7152*f(c[1])+.0722*f(c[2]);
+   const pg=Pc(getComputedStyle(document.body).backgroundColor);
+   const cs=all.map(c=>{const s=getComputedStyle(c),go=getComputedStyle(c.querySelector('.go')),ph=c.querySelector('.ph'),P=ph.getBoundingClientRect(),phs=getComputedStyle(ph),pr=c.querySelector('.pr'),pl=c.querySelector('.ac .ozPlus');
+    const Q=pl?pl.getBoundingClientRect():null,sv=pl?pl.querySelector('svg'):null,V=sv?sv.getBoundingClientRect():null,im=ph.querySelector('img')||ph.querySelector('i'),I=im.getBoundingClientRect();
+    const k=Pc(phs.borderTopColor),a=k.length>3?k[3]:1,mx=[0,1,2].map(i=>k[i]*a+pg[i]*(1-a)),fr=(Math.max(Lm(mx),Lm(pg))+.05)/(Math.min(Lm(mx),Lm(pg))+.05);
+    const R=c.getBoundingClientRect(),nx=all.find(x=>x!==c&&Math.abs(x.getBoundingClientRect().top-R.top)<2&&x.getBoundingClientRect().left>R.left);
+    const top=e=>e?Math.round(c.querySelector(e).getBoundingClientRect().top):null;
+    return {bg:s.backgroundColor+'|'+go.backgroundColor,sh:s.boxShadow+'|'+go.boxShadow,bw:s.borderTopWidth+'|'+go.borderTopWidth,rad:phs.borderTopLeftRadius+','+phs.borderBottomRightRadius,
+     frame:phs.borderTopWidth+'|'+fr.toFixed(2),inset:Math.round(I.left-P.left)+','+getComputedStyle(im).borderTopLeftRadius,
+     prC:getComputedStyle(pr.querySelector('b,.uf,.nvp')).color,prFull:pr.scrollWidth<=pr.clientWidth+.5,order:[top('.nm'),top('.nt'),top('.pr'),top('.up')],prTop:top('.pr'),rowTop:Math.round(R.top),
+     plus:Q?{w:Math.round(Q.width),h:Math.round(Q.height),vis:Math.round(V.width),bg:getComputedStyle(sv).backgroundColor,rad:getComputedStyle(sv).borderTopLeftRadius,
+      dx:Math.round(Math.abs((V.left+V.right)/2-P.right)),dy:Math.round(Math.abs((V.top+V.bottom)/2-P.top)),off:Math.hypot((V.left+V.right)/2-(I.right-12),(V.top+V.bottom)/2-(I.top+12))>=V.width/2+12-.5,
+      free:nx?Q.right<=nx.getBoundingClientRect().left-.5:Q.right<=innerWidth,top:Math.round(Q.top),hit:(()=>{const e=document.elementFromPoint((V.left+V.right)/2,(V.top+V.bottom)/2);return !!e&&pl.contains(e)})()}:null}});
    return {cg:gs.columnGap,rg:gs.rowGap,cs}});
   const acc2=th==='light'?'rgb(31, 107, 69)':'rgb(79, 182, 127)';
-  ok(g&&g.cg==='10px'&&g.rg==='16px','['+th+'] ızgara sütun arası 10px, satır arası 16px: '+JSON.stringify(g&&[g.cg,g.rg]));
+  ok(g&&g.cg==='16px'&&g.rg==='20px','['+th+'] ızgara sütun arası 16px, satır arası 20px: '+JSON.stringify(g&&[g.cg,g.rg]));
   ok(g&&g.cs.length&&g.cs.every(c=>c.bg==='rgba(0, 0, 0, 0)|rgba(0, 0, 0, 0)'&&c.sh==='none|none'&&c.bw==='0px|0px'),'['+th+'] kart zemini/gölgesi/kenarlığı yok: '+JSON.stringify(g&&g.cs[0]));
-  ok(g&&g.cs.every(c=>c.rad==='14px,14px'),'['+th+'] foto dört köşe 14px: '+JSON.stringify(g&&g.cs.map(c=>c.rad)));
+  ok(g&&g.cs.every(c=>c.rad==='18px,18px'&&/^1px\|1\.[01]\d$/.test(c.frame)&&c.inset==='8,12px'),'['+th+'] çerçeve 18px köşe, 1px neredeyse görünmez çizgi, fotoğraf 7px içeride 12px köşe: '+JSON.stringify(g&&g.cs.map(c=>[c.rad,c.frame,c.inset])));
   ok(g&&g.cs.every(c=>c.prFull)&&g.cs.filter(c=>c.plus).every(c=>c.prC===acc2),'['+th+'] fiyat kesilmez, orman yeşili: '+JSON.stringify(g&&g.cs.map(c=>[c.prFull,c.prC])));
-  const pls=g?g.cs.filter(c=>c.plus).map(c=>c.plus):[];
-  ok(pls.length&&pls.every(x=>x.w>=44&&x.h>=44&&x.top===0&&x.right===0&&x.inPh&&x.vis==='26px'&&x.rad==='50%'&&x.area<=.06&&x.soFree),'['+th+'] "+" foto sağ üstte (fotoğrafın içinde, fiyat/ada binmez, "Tükendi" ile çakışmaz), 26px daire ≤%6, 44×44 dokunma: '+JSON.stringify(pls[0]));
+  ok(g&&g.cs.every(c=>c.order.every((v,i,a)=>i===0||v>a[i-1])),'['+th+'] yazı sırası ad → miktar → fiyat → ikincil satır: '+JSON.stringify(g&&g.cs.map(c=>c.order)));
+  const rows={};(g?g.cs:[]).forEach(c=>{(rows[c.rowTop]=rows[c.rowTop]||[]).push(c.prTop)});
+  ok(Object.values(rows).every(r=>r.every(v=>v===r[0])),'['+th+'] aynı satırda fiyat aynı y hizasında: '+JSON.stringify(rows));
+  const pls=g?g.cs.filter(c=>c.plus).map(c=>c.plus):[];const gTop=await p.evaluate(()=>Math.round(document.querySelector('#ozRoot .ozGrs').getBoundingClientRect().top));
+  ok(pls.length&&pls.every(x=>x.w>=44&&x.h>=44&&x.vis===24&&x.bg==='rgb(255, 253, 248)'&&x.rad==='50%'&&x.dx<=3&&x.dy<=3&&x.off&&x.free&&x.hit&&x.top>=gTop),'['+th+'] "+" çerçevenin sağ üst köşesinde (24px krem daire yarısı dışarıda, fotoğrafa binmez, komşu karta değmez, kırpılmaz), 44×44: '+JSON.stringify(pls[0]));
  }
  // AJ2-B: sipariş detayı — "Kargo firmasının sayfasında takip et" orman yeşili dolgu + beyaz kalın; "İade talebi oluştur" (.ozRet) kehribar;
  // iki temada AA ≥4.5 (etkin zemin), "Kopyala"dan farklı zemin, "Siparişim elime ulaştı" birincil değil
