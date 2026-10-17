@@ -1098,7 +1098,16 @@ ACT_EXTRA({
 var ORDER_ST={awaiting_payment:['Ödeme bekleniyor','warn'],new:['Yeni sipariş','warn'],accepted:['Onaylandı','ok'],packed:['Hazırlandı','ok'],shipped:['Kargoda','ok'],delivered:['Teslim edildi','ok'],completed:['Tamamlandı','ok'],cancelled:['İptal edildi','bad'],return_requested:['İade talebi','warn'],returned:['İade edildi','bad'],refund_pending:['İade ödemesi bekleniyor','warn'],refunded:['Ücret iade edildi','bad']};
 var RET_ST={requested:['İade talebi alındı','warn'],approved:['İade onaylandı','ok'],rejected:['İade reddedildi','bad'],refunded:['Ücret iade edildi','ok'],completed:['İade tamamlandı','ok']};
 var ROLE={buyer:'Alıcı',seller:'Satıcı',admin:'Yönetici',system:'Sistem'};
-var PAYM={mock:'Deneme ödemesi',cod:'Kapıda ödeme',online:'Online ödeme'};
+var PAYM={mock:'Deneme ödemesi',cod:'Kapıda ödeme',online:'Kartla öde'};
+/* P10: iyzico (SANDBOX) yalnız oz_payment_provider = 'iyzico_sandbox' iken; 'mock' (varsayılan) iken liste eskisiyle aynı */
+function iyzMode(s){return (s||S()).payment_provider==='iyzico_sandbox'}
+function payMethods(s){var p=[];if(iyzMode(s))p.push('online');if(s.payment_mock)p.push('mock');if(s.cod)p.push('cod');return p}
+var IYZ_TEST='<span class="ozTag warn ozIyzT" data-iyz-test="1">Test ödemesi</span>';
+/* Edge Function oz-iyzico: anahtar istemcide yok; oturum belirteciyle çağrılır. Tutar gönderilmez (sunucu siparişten hesaplar). */
+async function iyzCall(action,body){var tk=await token();if(!tk)throw new Error('Giriş yapmalısın.');
+  var r,d=null;try{r=await fetch(sbUrl()+'/functions/v1/oz-iyzico?action='+action,{method:'POST',headers:{Authorization:'Bearer '+tk,apikey:sbKey(),'Content-Type':'application/json'},body:JSON.stringify(body||{})});d=await r.json()}catch(e){d=null}
+  if(!r||!r.ok||!d||d.ok===false){var er=new Error((d&&d.error)||'Ödeme sunucusuna ulaşılamadı. Biraz sonra tekrar dene.');er.data=d;throw er}return d}
+async function iyzStart(ids){var d=await iyzCall('init',{order_ids:ids.map(String)});if(!d.payment_page_url)throw new Error('Ödeme sayfası açılamadı. Lütfen tekrar dene.');location.assign(d.payment_page_url);return d}
 var PAY_ST={pending:['Ödeme bekleniyor','warn'],paid:['Ödendi','ok'],cod:['Kapıda ödenecek',''],refund_pending:['Ücret iadesi bekleniyor','warn'],refunded:['Ücret iade edildi','ok'],failed:['Ödeme başarısız','bad'],void:['Ödeme iptal','']};
 function stTag(map,s){var x=map[s]||[s||'—',''];return '<span class="ozTag '+x[1]+'">'+E(x[0])+'</span>'}
 /* AC1: sipariş durumunun TEK renk dili (müşteri + satıcı aynı): yeni=turuncu, hazırlanıyor=sarı, kargoda=mavi, teslim=yeşil, iptal/iade=gri-kırmızı.
@@ -1175,6 +1184,26 @@ VIEWS_EXTRA({
       empty(ico('pin',36),'Kayıtlı adresin yok','Siparişlerin için teslimat adresi ekle.'))+'<button type="button" class="ozBtn pri wide" data-a="addrNew" style="margin-top:12px">Yeni adres ekle</button>');
   }
 });
+/* P10: iyzico ödeme sonucu — oz_payments (RLS: yalnız alıcı) kısa aralıklarla sorgulanır; sonuç gelmezse sipariş sayfasına yönlendirilir */
+VIEWS_EXTRA({
+  payres:async function(a,t){
+    var h=pageHead('Ödeme sonucu');
+    if(!logged()){paint(h+loginWall());return}
+    var id=String(a.id||'');
+    if(!/^[0-9a-f-]{36}$/i.test(id)){paint(h+'<div class="ozCard" id="ozPayRes"><p>Ödeme kaydı bulunamadı.</p><button type="button" class="ozBtn wide" data-a="nav" data-k="orders">Siparişlerim</button></div>');return}
+    paint(h+'<div class="ozCard" id="ozPayRes" role="status" aria-live="polite"><p>Ödeme sonucu kontrol ediliyor…</p></div>');
+    var r=null;
+    for(var i=0;i<6;i++){try{r=arr(await get('oz_payments?select=id,status,order_ids&id=eq.'+encodeURIComponent(id)+'&limit=1'))[0]||null}catch(e){if(e&&e.auth)throw e;r=null}
+      if(!alive(t))return;if(r&&r.status!=='initiated')break;await new Promise(function(res){setTimeout(res,1500)});if(!alive(t))return}
+    var oid=r&&arr(r.order_ids)[0],ob=oid?'<button type="button" class="ozBtn pri wide" data-a="nav" data-k="order" data-id="'+E(oid)+'">Siparişe git</button>':'<button type="button" class="ozBtn wide" data-a="nav" data-k="orders">Siparişlerim</button>';
+    var st=r?r.status:'unknown';
+    var msg=st==='paid'?'<h3 data-paystate="paid">Ödemen alındı</h3><p>Siparişin satıcıya iletildi.</p>':
+      st==='failed'?'<h3 data-paystate="failed">Ödeme tamamlanamadı</h3><p>Kartından tahsilat yapılmadıysa sipariş sayfasından tekrar deneyebilirsin. Sorun sürerse destekle iletişime geç.</p>':
+      '<h3 data-paystate="pending">Ödeme sonucu henüz gelmedi</h3><p>Birkaç dakika içinde siparişlerinde görünecek.</p>';
+    paint(h+'<div class="ozCard" id="ozPayRes" role="status">'+msg+(r&&iyzMode()?'<p style="margin:6px 0 10px">'+IYZ_TEST+'</p>':'')+ob+'</div>');
+    if(st==='paid')ST.home=null;
+  }
+});
 /* Ödeme adımı TEK yerde: bugün yalnız deneme (mock) ödemesi. Gerçek ödeme sağlayıcısı geldiğinde yalnız bu fonksiyon değişir.
    Dönüş: {ok, skipped}. Hata fırlatmaz; başarısız sipariş "Ödeme bekleniyor" kalır, detayda "Ödemeyi tamamla" ile tekrar denenir. */
 async function payOrders(os,method){
@@ -1196,7 +1225,7 @@ async function coLoad(t,title){
   if(need.length){var ds=await Promise.all(need.map(function(id){return rpc('oz_producer_detail',{p_id:id}).catch(function(){return null})}));if(!alive(t))return;need.forEach(function(id,i){if(ds[i])ST.sinfo[id]=ds[i]})}
   ST.co=ST.co||{};ST.co.title=title;ST.co.qe=r[0]&&r[0].__err||null;ST.co.q=ST.co.qe?null:r[0];ST.co.addrs=adr;ST.co.legal=r[3];
   if(!ST.co.addr||!adr.some(function(x){return x.id===ST.co.addr}))ST.co.addr=(adr.filter(function(x){return x.is_default})[0]||adr[0]||{}).id||null;
-  var s=S();var pays=[];if(s.payment_mock)pays.push('mock');if(s.cod)pays.push('cod');
+  var s=S();var pays=payMethods(s);
   if(pays.indexOf(ST.co.pay)<0)ST.co.pay=pays[0]||null;
   drawCheckout();
 }
@@ -1279,7 +1308,7 @@ function coLine(it,stock){var q=num(it.qty);var max=Math.min(QMAX,stock||0);
     '<button type="button" class="del" data-a="cDel" data-id="'+E(it.variant_id)+'" aria-label="'+E(it.name)+' sepetten çıkar">'+ico('trash',18)+'</button></div>'}
 function drawCheckout(){
   var co=ST.co;var q=co.q||{};var s=S();var c=cartGet();
-  var pays=[];if(s.payment_mock)pays.push('mock');if(s.cod)pays.push('cod');
+  var pays=payMethods(s);
   var groups=arr(q.groups);var issues=arr(q.issues);
   var byV={};groups.forEach(function(g){arr(g.items).forEach(function(it){byV[it.variant_id]=it})});
   var orphan=co.q?c.filter(function(x){return !byV[x.variant_id]}):[];
@@ -1315,7 +1344,7 @@ function drawCheckout(){
     '<div class="ozCoMain"><div class="ozCoItems">'+itH+'</div>'+(co.q?'<div class="ozCoSum" aria-label="Sipariş özeti"><div><span>Ara toplam</span><span>'+TL(q.subtotal_kurus)+'</span></div><div><span>Kargo</span><span>'+(fee?TL(fee):'Ücretsiz')+'</span></div><div class="tot"><span>Genel toplam</span><span>'+TL(q.total_kurus)+'</span></div></div>':'')+'</div>'+
     '<div class="ozCoFix">'+(mn?'<p class="ozMinW1">'+E(mn)+'</p>':'')+adrH+payH+noteH+consH+'</div>'+
     '<div class="ozCoBar2"><div class="sum"><b><span>Toplam</span> '+TL(q.total_kurus)+'</b><small>Kargo: '+(fee?TL(fee):'Bedava')+'</small></div>'+
-    '<button type="button" class="ozBtn pri" id="ozPlace" data-a="place"'+(off?' aria-disabled="true"':'')+'>Siparişi onayla ve öde</button></div></div>');
+    '<button type="button" class="ozBtn pri" id="ozPlace" data-a="place"'+(off?' aria-disabled="true"':'')+'>Siparişi onayla ve öde</button></div>'+(co.pay==='online'&&iyzMode(s)?'<p class="ozHint" style="margin:6px 0 0;text-align:right">'+IYZ_TEST+' Kart bilgilerini iyzico\'nun güvenli sayfasına gireceksin.</p>':'')+'</div>');
 }
 /* AJ1 P3: ana sayfa "Öne çıkan ürünler" — mevcut oz_search_products (popular, 6) + gcEnrich, ortak prodList (ızgara/liste seçimi); ST.hp listeyi saklar */
 async function homeProducts(t){
@@ -1419,6 +1448,7 @@ function orderDetailHtml(d){
   var st=o.status;
   var acts='';
   if(st==='awaiting_payment'&&o.payment_method==='mock'&&s.payment_mock)acts+='<button type="button" class="ozBtn sun" data-a="mockPay" data-id="'+E(o.id)+'">Ödemeyi tamamla</button>';
+  if(st==='awaiting_payment'&&o.payment_method==='online'&&iyzMode(s))acts+='<button type="button" class="ozBtn sun" data-a="iyzPay" data-id="'+E(o.id)+'">Ödemeyi tamamla</button> '+IYZ_TEST;
   if(st==='shipped')acts+='<button type="button" class="ozBtn" data-a="ordDeliver" data-id="'+E(o.id)+'">Siparişim elime ulaştı</button>';
   if(st==='awaiting_payment'||st==='new')acts+=cnlBtn(o,'');
   if(d.can_return&&!ret)acts+='<button type="button" class="ozBtn ozRet" data-a="ordReturn" data-id="'+E(o.id)+'" data-m="'+(d.return_mode==='ayip_only'?'ayip_only':'cayma')+'">İade / cayma talebi oluştur</button>';
@@ -1525,6 +1555,8 @@ ACT_EXTRA({
       cartSet([]);ST.crid=null;var pay=co.pay;ST.co=null;ST.staleSeq=HSEQ;ST.staleUsed=false;
       var os=arr(res.orders);var cons=await ensureOrderConsents(os);
       /* A4: ödeme adımı otomatik zincirlenir, ara ekran yok → siparişin detayı. Başarısızsa sipariş "Ödeme bekleniyor" kalır. */
+      /* P10: online (iyzico SANDBOX) → onay kaydından sonra iyzico ödeme sayfası; dönüşte "payres" ekranı sipariş durumunu sorgular */
+      if(cons&&pay==='online'&&os.length){try{await iyzStart(os.map(function(o){return o.id}));return}catch(e){errToast(e.message);go('order',{id:os[0].id},true);return}}
       var pr=cons?await payOrders(os,pay):{ok:false,skipped:false};
       ST.placedBand={ids:os.map(function(o){return String(o.id)}),n:os.length,payFail:!pr.ok&&!pr.skipped};
       if(!cons)errToast(LEGAL_NA);else if(!pr.ok&&!pr.skipped)errToast('Siparişin alındı ama ödeme tamamlanamadı; "Ödemeyi tamamla" ile tekrar dene.');else if(os.length>1)toast(os.length+' satıcıdan '+os.length+' sipariş oluşturuldu.');
@@ -1535,6 +1567,7 @@ ACT_EXTRA({
     var c=cur();var os=arr(c.a.res&&c.a.res.orders).filter(function(o){return o.status==='awaiting_payment'});
     await busy(b,async function(){if(!await ensureOrderConsents(os)){errToast(LEGAL_NA);return}for(var i=0;i<os.length;i++){await rpc('oz_mock_pay',{p_order:os[i].id});os[i].status='new'}toast('Deneme ödemesi tamamlandı');draw()});
   },
+  iyzPay:async function(b){await busy(b,async function(){if(!await ensureOrderConsents([{id:b.dataset.id}])){errToast(LEGAL_NA);return}try{await iyzStart([b.dataset.id])}catch(e){errToast(e.message)}})},
   mockPay:async function(b){await busy(b,async function(){if(!await ensureOrderConsents([{id:b.dataset.id}])){errToast(LEGAL_NA);return}var r=await payOrders([{id:b.dataset.id,status:'awaiting_payment'}],'mock');
     if(r.ok){if(ST.placedBand)ST.placedBand.payFail=false;toast('Ödeme tamamlandı')}else fail(new Error('Ödeme tamamlanamadı. Biraz sonra tekrar dene.'));draw()})},
   ordMore:function(){ordersMore(SCR).catch(fail)},
@@ -1798,6 +1831,8 @@ function topSync(){
 
 /* Giriş noktası: pazar kapalıysa false döner (ana sayfa hmSoon gösterir). Yönetici için market_open her zaman true. */
 /* K27: pazar kapalı + satıcı başvurusu açık → ön başvuru alt sayfası (true döner). Ayar okunamazsa false (eski "Yakında" bildirimi). */
+/* P10: iyzico dönüşü (index.html ?oz_pay=<ödeme id>) → modül açılır ve sonuç ekranı gösterilir */
+OZ.openPayResult=async function(id){var ok=await OZ.tryEnter();if(ok&&/^[0-9a-f-]{36}$/i.test(String(id||'')))go('payres',{id:String(id)},true);return ok};
 OZ.tryEnter=async function(){
   var s=null;try{s=await loadSettings(true)}catch(e){return false}
   if(!s||!s.market_open){
@@ -2500,6 +2535,13 @@ var SET_B=[['oz_market_enabled','Pazar açık (herkes görür)'],['oz_seller_sig
 function retDueLine(r,ps){if(!r.created_at)return '';var due=Date.parse(r.created_at)+14*864e5;if(isNaN(due))return '';
   var late=r.status!=='rejected'&&!!ps&&ps[r.order_id]!=='refunded'&&due<Date.now();
   return '<div class="pfxMuted"><span data-rdue="1">Bedel iadesi son günü: '+E(fmtDay(new Date(due).toISOString()))+'</span>'+(late?' <span class="ozTag bad" data-late="1">Gecikti</span>':'')+'</div>'}
+var IYZ_ST={pending:['Onay bekliyor','warn'],approved:['Onaylandı','ok'],failed:['Onay başarısız','bad'],disapproved:['Onay geri alındı','warn'],refunded:['İade edildi','']};
+function iyzRows(l){var on=iyzMode();return '<h4 style="margin:10px 0 6px" id="ozAIyzH">iyzico onayı '+(on?IYZ_TEST:'')+'</h4>'+(on?'':'<p class="pfxMuted" style="margin:0 0 6px">Onay yalnız test (sandbox) modunda çalışır.</p>')+
+  (l.length?l.map(function(x){var ok=x.approve_status==='approved',late=!ok&&x.due_by&&Date.parse(x.due_by)<Date.now(),st=IYZ_ST[x.approve_status]||[x.approve_status||'—',''];
+    return '<div class="pfxCard" data-iyz="'+E(x.kind+':'+x.id)+'"><div class="pfxRow"><b>'+E((x.order_no||'')+' · '+(x.name||''))+'</b><span>'+TL(x.price_kurus)+'</span></div><div class="pfxMuted">'+E(x.seller_name||'')+'</div>'+
+      (x.due_by?'<div class="pfxMuted"><span data-due="1">Son ödeme günü: '+E(fmtDay(x.due_by))+'</span>'+(late?' <span class="ozTag bad" data-late="1">Gecikti</span>':'')+'</div>':'')+
+      '<div class="pfxRow" style="margin-top:6px"><span class="ozTag '+st[1]+'" data-iyzst="'+E(x.approve_status||'')+'">'+E(st[0])+'</span>'+(ok?'':'<button type="button" class="pfxBtn pri" data-a="aIyz" data-op="approve" data-kind="'+E(x.kind)+'" data-id="'+E(x.id)+'"'+(!on||x.block_reason?' disabled':'')+'>iyzico onayı</button>')+'</div>'+
+      (x.block_reason&&!ok?'<p class="pfxMuted" style="margin:4px 0 0" data-block="1">'+E(x.block_reason)+'</p>':'')+'</div>'}).join(''):'<p class="pfxMuted">iyzico ile ödenmiş kalem yok.</p>')}
 function payDueLine(x){var t=[];if(x.due_by){var late=Date.parse(x.due_by)<Date.now();t.push('<span data-due="1">Son ödeme günü: '+E(fmtDay(x.due_by))+'</span>'+(late?' <span class="ozTag bad" data-late="1">Gecikti</span>':''))}
   if(num(x.pending_adjustments_kurus)>0)t.push('<span>Mahsup: −'+TL(x.pending_adjustments_kurus)+'</span>');if(num(x.unpaid_kurus)>num(x.available_kurus))t.push('<span>Bekleme süresinde: '+TL(num(x.unpaid_kurus)-num(x.available_kurus))+'</span>');
   return t.length?'<div class="pfxMuted" style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px 12px">'+t.join('')+'</div>':''}
@@ -2567,8 +2609,11 @@ var ADMV={
     var sids=l.map(function(x){return x.seller_id}).filter(Boolean).filter(function(v,i,a){return a.indexOf(v)===i});var ib=null;
     if(sids.length){try{ib={};arr(await get('oz_sellers?select=id&iban=not.is.null&id=in.'+inList(sids))).forEach(function(r){ib[r.id]=true})}catch(e){ib=null}}
     ADM.ib=ib;
+    /* P10: iyzico ile ödenmiş kalemler (oz_admin_iyzico_items; SQL yoksa bölüm yok). "Son ödeme günü"/"Gecikti" Paket 6 kuralıyla: teslim + 5 iş günü */
+    var iz=null;try{await loadSettings(true)}catch(e){}try{iz=arr(await rpc('oz_admin_iyzico_items',{p_limit:100}))}catch(e){if(e&&e.auth)throw e;iz=null}
     aPaint(filterBar('payouts',A_ST_PAY,false)+
       (due.length?'<h4 style="margin:10px 0 6px">Ödemeye hazır satıcılar</h4>'+due.map(function(x){return '<div class="pfxCard"><div class="pfxRow"><b>'+E(x.seller_name||x.seller_id)+'</b><span>'+TL(x.available_kurus)+'</span></div>'+payDueLine(x)+noIbanWarn(ib,x.seller_id)+(function(){var ni=!!(ib&&!ib[x.seller_id]);return '<div class="pfxRow" style="margin-top:8px"><button type="button" class="pfxBtn pri" data-a="aPayNew" data-id="'+E(x.seller_id)+'"'+(ni?' disabled aria-describedby="ozPN_'+E(x.seller_id)+'"':'')+'>Ödeme kaydı oluştur</button>'+(ni?'<span class="pfxMuted" id="ozPN_'+E(x.seller_id)+'">Önce satıcının IBAN\'ı gerekli</span>':'')+'</div><p class="ozErr" data-payerr="'+E(x.seller_id)+'" hidden></p>'})()+'</div>'}).join(''):'')+
+      (iz&&(iz.length||iyzMode())?iyzRows(iz):'')+
       '<h4 style="margin:10px 0 6px">Ödeme kayıtları</h4>'+(pays.length?pays.map(function(x){return '<div class="pfxCard"><div class="pfxRow"><b>'+E(x.seller_name||x.seller_id||'')+' · '+TL(x.amount_kurus)+'</b>'+aTag(PST,x.status)+'</div><div class="pfxMuted">'+E([fmtDay(x.created_at),(x.reference||x.bank_reference)?'Ref: '+(x.reference||x.bank_reference):''].filter(Boolean).join(' · '))+'</div>'+
         (x.status==='pending'||x.status==='processing'?noIbanWarn(ib,x.seller_id)+'<div class="pfxRow" style="margin-top:8px"><button type="button" class="pfxBtn pri" data-a="aPayMark" data-ok="1" data-s="'+E(x.seller_id||'')+'" data-id="'+E(x.id)+'">Ödendi</button><button type="button" class="pfxBtn bad" data-a="aPayMark" data-ok="0" data-id="'+E(x.id)+'">Başarısız</button></div>':'')+'</div>'}).join(''):'<p class="pfxMuted">Ödeme kaydı yok.</p>'));
   },
@@ -2623,8 +2668,9 @@ function aSlPaint(){var l=ADM.slides||[];
       '<span class="ozTag'+(x.active?'':' bad')+'">'+(x.active?'Aktif':'Kapalı')+'</span></div><div class="pfxMuted">Sıra: '+E(String(num(x.sort_order)))+' · '+E(slRange(x))+'</div>'+
       '<div class="pfxRow" style="margin-top:8px"><button type="button" class="pfxBtn" data-a="aSlEdit" data-id="'+E(x.id)+'">Düzenle</button><button type="button" class="pfxBtn" data-a="aSlDel" data-id="'+E(x.id)+'">Sil</button></div></div>'}).join(''):'<p class="pfxMuted ozSlE">Henüz slayt yok.</p>'))}
 function slErr(m){var e=D.getElementById('ozSlErr');if(e){e.textContent=m;e.hidden=false}else toast(m)}
+var IYZ_SYNC={synced:'Alt üye açık',pending:'Bekliyor',failed:'Başarısız',manual_review:'Elle inceleme gerekli'};
 async function sellerDetail(id){
-  aPaint(aLoading());
+  aPaint(aLoading());try{await loadSettings(true)}catch(e){}
   var d=await rpc('oz_admin_seller_detail',{p_id:id})||{};var s=d.seller||{};
   var docs=arr(d.documents),rates=arr(d.rates);
   var pct=s.commission_bps!=null?num(s.commission_bps)/100:10;
@@ -2640,6 +2686,9 @@ async function sellerDetail(id){
       return '<div class="pfxCard" id="ozAReq"><b>Zorunlu belgeler</b>'+h+(bad?'<p class="pfxMuted" style="margin:8px 0 0" data-reqwarn="1">Zorunlu belgelerin hepsi onaylanmadan satıcı onaylanamaz.</p>':'')+'</div>'})()+
     '<div class="pfxCard"><b>Belgeler</b>'+(docs.length?docs.map(function(x){return '<div style="margin:8px 0;padding-top:8px;border-top:1px solid rgba(127,127,127,.2)"><div class="pfxRow"><span>'+E(DOC_T[x.doc_type||x.type]||x.doc_type||x.type)+' · '+E(x.file_name||x.name||'')+'</span>'+aTag(DOC_ST,x.status)+'</div><div class="pfxRow" style="margin-top:6px"><button type="button" class="pfxBtn" data-a="aDocView" data-p="'+E(x.path||x.storage_path||'')+'">Görüntüle</button><button type="button" class="pfxBtn pri" data-a="aDoc" data-ok="1" data-id="'+E(x.id)+'">Onayla</button><button type="button" class="pfxBtn bad" data-a="aDoc" data-ok="0" data-id="'+E(x.id)+'">Reddet</button></div></div>'}).join(''):'<p class="pfxMuted">Belge yok.</p>')+'</div>'+
     '<div class="pfxCard"><b>Kargo tablosu</b>'+(rates.length?'<table class="pfxTbl">'+rates.map(function(r){return '<tr><td>'+NF1.format(num(r.max_weight_g)/1000)+' kg\'a kadar</td><td>'+TL(r.fee_kurus)+'</td></tr>'}).join('')+'</table>':'<p class="pfxMuted">Kargo tablosu yok.</p>')+'</div>'+
+    /* P10: iyzico alt üye durumu (oz_sellers.iyzico_sync_status); senkron yalnız sandbox modunda ve onaylı satıcıda */
+    ('iyzico_sync_status' in s?'<div class="pfxCard" id="ozAIyzS"><b>iyzico alt üye</b><div class="pfxRow" style="margin-top:6px"><span class="ozTag '+(s.iyzico_sync_status==='synced'?'ok':s.iyzico_sync_status?'bad':'')+'" data-sync="'+E(s.iyzico_sync_status||'')+'">'+E(IYZ_SYNC[s.iyzico_sync_status]||'Senkronlanmadı')+'</span>'+
+      '<button type="button" class="pfxBtn" data-a="aIyzSync" data-id="'+E(s.id||id)+'"'+(iyzMode()&&s.status==='approved'?'':' disabled')+'>Alt üye senkronla</button></div>'+(s.iyzico_sync_error?'<p class="pfxMuted" style="margin:6px 0 0" data-syncerr="1">'+E(s.iyzico_sync_error)+'</p>':'')+(iyzMode()?'':'<p class="pfxMuted" style="margin:6px 0 0">Senkron yalnız test (sandbox) modunda çalışır.</p>')+'</div>':'')+
     '<div class="pfxCard"><b>Karar</b><label class="pfxLbl" for="ozAdmCom">Komisyon (%)</label><input class="pfxIn" id="ozAdmCom" inputmode="decimal" value="'+E(String(pct).replace('.',','))+'"><div class="pfxRow"><button type="button" class="pfxBtn pri" data-a="aSDec" data-d="approve" data-id="'+E(s.id||id)+'">Onayla</button><button type="button" class="pfxBtn bad" data-a="aSDec" data-d="reject" data-id="'+E(s.id||id)+'">Reddet</button><button type="button" class="pfxBtn" data-a="aSDec" data-d="suspend" data-id="'+E(s.id||id)+'">Askıya al</button></div></div>');
 }
 function ibanFmt(v){return ibanClean(v).replace(/(.{4})/g,'$1 ').trim()}
@@ -2675,6 +2724,11 @@ ACT_EXTRA({
     await busy(b,async function(){await rpc('oz_admin_set_setting',{p_key:k,p_value:v});toast('Ayar kaydedildi')});
   },
   aSeller:function(b){ADM.detail={kind:'seller',id:b.dataset.id};return aReload()},
+  aIyz:async function(b){if(!iyzMode()){toast('Onay yalnız test (sandbox) modunda çalışır.');return}
+    if(!await confirmBox('iyzico onayı verilsin mi?','Bu kalemin tutarı satıcıya aktarılmak üzere iyzico\'ya onaylanır (test ortamı).','Onayla'))return;
+    await busy(b,async function(){try{await iyzCall('approve',{kind:b.dataset.kind,id:b.dataset.id,op:b.dataset.op||'approve'});toast('iyzico onayı verildi')}catch(e){errToast(e.message)}await aReload()})},
+  aIyzSync:async function(b){if(!iyzMode()){toast('Senkron yalnız test (sandbox) modunda çalışır.');return}
+    await busy(b,async function(){try{var r=await iyzCall('sync_seller',{seller_id:b.dataset.id});toast(r.status==='synced'?'Alt üye senkronlandı':'Senkron tamamlanmadı')}catch(e){errToast(e.message)}await aReload()})},
   aSellerBack:function(){ADM.detail=null;return aReload()},
   aDocView:async function(b){if(!b.dataset.p){toast('Belge açılamadı. Lütfen tekrar dene.');return}await busy(b,async function(){var u=await signedUrl('oz-docs',b.dataset.p);window.open(u,'_blank','noopener')})},
   aDoc:async function(b){var ok=b.dataset.ok==='1';var r=null;if(!ok){r=await reasonBox('Belgeyi reddet','Ret gerekçesi (satıcı görür)',true);if(r===null)return}await rpc('oz_admin_review_document',{p_id:b.dataset.id,p_approve:ok,p_reason:r});toast(ok?'Belge onaylandı':'Belge reddedildi');await aReload()},

@@ -11,3 +11,7 @@ verify_jwt = false
 
 [functions.ai-orchestrator]
 verify_jwt = false
+
+# Özüne Dön iyzico (SANDBOX) — DEPLOY EDİLMEDİ; geri çağrı JWT taşımaz, uçlar kendi kimlik doğrulamasını yapar
+[functions.oz-iyzico]
+verify_jwt = false
