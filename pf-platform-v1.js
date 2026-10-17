@@ -62,7 +62,7 @@ function css(){if(document.getElementById('pfxCss'))return;var s=document.create
 '.pfxAllOk{display:flex;flex-direction:column;gap:4px;border:1px solid var(--primary,#14b87a);background:color-mix(in srgb,var(--primary,#14b87a) 12%,transparent)}.pfxAllOk b{color:var(--primary,#14b87a)}html[data-theme="light"] .pfxAllOk b{color:var(--primary-2,#0f766e)}'+
 '.pfxCnt{flex:none;min-width:24px;height:24px;padding:0 8px;box-sizing:border-box;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;background:var(--line,rgba(127,127,127,.3))}.pfxCnt.warn{background:var(--warning,#fbbf24);color:var(--logo-ink,#042f2e)}'+
 '.pfxOzC b{display:block;margin:0 0 10px}.pfxChips{display:flex;flex-wrap:wrap;gap:8px}.pfxMenu .pfxChips .pfxChip{display:inline-flex;width:auto;min-height:44px;margin:0;padding:0 14px;border-radius:999px;font-size:14px}'+
-'.pfxDoc{white-space:pre-wrap;line-height:1.55;font-size:14px}'+
+'/* P2 yönetim ana listesi: renk şeridi, rozet, bekleyen kartı, Özüne Dön durum şeridi */'+'.pfxAdm2{--pfx-r:#E5484D;--pfx-o:#F28C28;--pfx-g:#D4A72C;--pfx-b:#3E8EF7;--pfx-s:#8A94A6;--pfx-e:#2EA66B}'+'.pfxAdm2 .pfxBtn[class*=pfxT-]{position:relative;padding-left:18px;overflow:hidden}.pfxAdm2 .pfxBtn[class*=pfxT-]:before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px}'+'.pfxAdm2 .pfxT-r:before,.pfxAdm2 .pfxT-x:before{background:var(--pfx-r)}.pfxAdm2 .pfxT-o:before{background:var(--pfx-o)}.pfxAdm2 .pfxT-g:before{background:var(--pfx-g)}.pfxAdm2 .pfxT-b:before{background:var(--pfx-b)}.pfxAdm2 .pfxT-s:before{background:var(--pfx-s)}.pfxAdm2 .pfxT-e:before{background:var(--pfx-e)}'+'.pfxAdm2 .pfxT-x{background:color-mix(in srgb,var(--pfx-r) 14%,transparent);border-color:color-mix(in srgb,var(--pfx-r) 45%,transparent)}.pfxDk{font-size:12px;font-weight:700;color:#FF9A9E}html[data-theme="light"] .pfxDk{color:#B42318}'+'.pfxCnt.bad{background:var(--danger,#f87171);color:var(--logo-ink,#042f2e)}html[data-theme="light"] .pfxCnt.bad{background:#C62828;color:#fff}html[data-theme="light"] .pfxCnt.warn{background:#F5B83D;color:#2B1A08}.pfxCnt.z{opacity:.75}'+'.pfxNowBox{border:1.5px solid var(--pfx-o);border-radius:16px;padding:12px;background:color-mix(in srgb,var(--pfx-o) 14%,transparent)}.pfxNowT{display:block;margin:2px 2px 10px;font-size:16px;color:#FFB45C}html[data-theme="light"] .pfxNowT{color:#8A4B00}'+'.pfxNowBox .pfxNowC{min-height:56px!important;margin:0 0 8px;background:color-mix(in srgb,var(--pfx-o) 7%,transparent)}.pfxNowBox .pfxNowC:last-child{margin-bottom:0}.pfxNowBox .pfxNum{min-width:36px;height:32px;border-radius:999px;font-size:16px}'+'.pfxAdm2 .pfxOzC{border:1.5px solid var(--pfx-e);background:color-mix(in srgb,var(--pfx-e) 9%,transparent)}'+'.pfxStrip{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 12px}.pfxSt{display:inline-flex;align-items:center;gap:6px;min-height:28px;padding:0 10px;border-radius:999px;font-size:12.5px;font-weight:800;border:1px solid var(--line,rgba(127,127,127,.35))}.pfxSt i{width:9px;height:9px;border-radius:50%;flex:none}'+'.pfxSt.on i{background:#2EA66B}.pfxSt.off i{background:#E5484D}.pfxSt.mock i{background:#F28C28}.pfxStN{margin:10px 2px 0;font-size:12px}.pfxChip .pfxCnt{margin-left:6px;min-width:22px;height:22px}'+'.pfxDoc{white-space:pre-wrap;line-height:1.55;font-size:14px}'+
 '.pfxChk{display:flex;gap:10px;align-items:flex-start;margin:8px 0;font-size:14px;line-height:1.4}.pfxChk input{margin-top:3px;width:18px;height:18px;flex:none}'+
 '.pfxFoot{margin:28px auto 90px;padding:16px;max-width:980px;font-size:13px;opacity:.85;border-top:1px solid var(--line,rgba(127,127,127,.25))}'+
 '.pfxFoot a,.pfxFoot button{color:inherit;background:none;border:0;padding:4px 6px;text-decoration:underline;cursor:pointer;font:inherit}'+
@@ -464,7 +464,12 @@ async function admCounts(tabs){
   job('venues',has('venues')&&rpc('pf_admin_venue_queue',{p_stage:null}),function(v){c.venues={n:n(v).filter(function(x){return x.stage==='in_review'}).length}});
   job('kvkk',has('kvkk')&&rpc('pf_admin_data_requests',{p_status:null}),function(v){c.kvkk={n:n(v).filter(function(x){return x.status==='open'||x.status==='in_progress'}).length}});
   job('tickets',has('tickets')&&rpc('pf_admin_tickets',{p_status:null,p_kind:null}),function(v){c.tickets={n:n(v).filter(function(x){return x.status==='open'||x.status==='in_review'}).length}});
-  job('oz',has('oz_orders')&&rpc('oz_admin_overview',{}),function(v){if(v&&typeof v==='object'&&!Array.isArray(v)){var o=+v.orders_open||0,r=+v.returns_open||0;c.oz={n:o+r,orders:o,returns:r}}});
+  /* P2: oz_admin_overview siparişleri durum haritası (orders) olarak verir; açık = yeni + kabul + hazırlanıyor (orders_open varsa o) */
+  job('oz',has('oz_orders')&&rpc('oz_admin_overview',{}),function(v){if(v&&typeof v==='object'&&!Array.isArray(v)){var m=v.orders&&typeof v.orders==='object'?v.orders:{};
+    var o=v.orders_open!=null?+v.orders_open||0:(+m['new']||0)+(+m.accepted||0)+(+m.packed||0),r=+v.returns_open||0;c.oz={n:o+r,orders:o,returns:r,sellers:v.sellers_pending!=null?+v.sellers_pending||0:null}}});
+  /* P2: Özüne Dön durum şeridi — Ayarlar sekmesinin kullandığı mevcut okuma (yalnız okunur; bayrak buradan değişmez) */
+  job('ozset',has('oz_settings')&&rpc('oz_admin_settings',{}),function(v){if(v&&typeof v==='object'&&!Array.isArray(v)){var f=function(k,d){return v[k]==null?d:v[k]===true||v[k]==='true'};
+    c.ozset={market:f('oz_market_enabled',false),orders:f('oz_orders_enabled',true),mock:f('oz_payment_mock_enabled',false)}}});
   await Promise.all(J);
   var sum=0,any=false;ADM_NOW.forEach(function(x){if(c[x[0]]){any=true;sum+=c[x[0]].n}});c.ok=any;
   PF._admCnt=c;PF._admN=any?sum:null;try{if(typeof window.drwBadges==='function')window.drwBadges()}catch(e){}
@@ -472,26 +477,40 @@ async function admCounts(tabs){
 }
 function admNowSub(k,c){var x=c[k];if(k==='reports')return 'Önce bunlara bak';if(k==='lreview'){if(x.old){var d=Math.max(0,Math.floor((Date.now()-x.old)/864e5));return d?'En eskisi '+d+' gün önce':'En eskisi bugün'}return 'Onay bekliyor'}
   if(k==='venues')return 'İncelemede';if(k==='kvkk')return 'Yanıt süresi işliyor';if(k==='oz')return [x.orders?x.orders+' açık sipariş':'',x.returns?x.returns+' iade':''].filter(Boolean).join(' · ');return ''}
+/* P2: satır renk şeridi (sol 5px) — kırmızı acil, turuncu bekleyen, altın para, mavi içerik, gri sistem/yasal, yeşil operasyon; Ayarlar "dikkat" */
+var ADM_TONE={reports:'r',susp:'r',lreview:'o',venues:'o',tickets:'o',finance:'g',campaigns:'g',revenue:'g',listings:'b',docs:'b',providers:'b',hero:'b',words:'s',kvkk:'s',legal:'s',company:'s',audit:'s',dispatch:'e',settings:'x'};
+/* P2: sayı rozeti yalnız mevcut okumadan gelen sayılar için (Belgeler vb. için sayı okunmuyor → rozet yok) */
+var ADM_CNT={reports:'bad',lreview:'warn',venues:'warn',tickets:'warn',kvkk:'warn'};
 function admHome(tabs,c,loading){
   var has=function(k){return tabs.some(function(t){return t[0]===k})},lab=function(k){var t=tabs.filter(function(x){return x[0]===k})[0];return t?t[1]:k};
-  var now=c?ADM_NOW.filter(function(x){return c[x[0]]&&c[x[0]].n>0}):[],inNow={};now.forEach(function(x){inNow[x[0]]=1});
+  var now=c?ADM_NOW.filter(function(x){return c[x[0]]&&c[x[0]].n>0}):[];
   var h='<div class="pfxMenu pfxAdm2" id="pfxAdmHome"><div class="pfxMenuH">Şimdi bakılacaklar</div><div class="pfxNow" aria-live="polite">';
   if(!c)h+='<p class="pfxMuted">'+(loading?'Bekleyen işler yükleniyor…':'Sayılar alınamadı.')+'</p>';
   else if(!c.ok)h+='<p class="pfxMuted">Sayılar alınamadı.</p>';
   else if(!now.length)h+='<div class="pfxCard pfxAllOk"><b>Her şey yolunda ✓</b><span class="pfxMuted">Bekleyen şikâyet, onay veya başvuru yok.</span></div>';
-  else h+=now.map(function(x){var k=x[0],v=c[k],go=k==='oz'?(v.orders?'oz_orders':'oz_returns'):k,sub=admNowSub(k,c);
-    return '<button type="button" class="pfxBtn pfxNowC" data-tab="'+go+'" onclick="PF.openAdmin(\''+go+'\')" aria-label="'+esc(x[1]+': '+v.n+' bekleyen'+(sub?', '+sub:''))+'"><span class="pfxNum '+x[2]+'" aria-hidden="true">'+v.n+'</span><span class="tx"><b>'+esc(x[1])+'</b>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</span><span aria-hidden="true">›</span></button>'}).join('');
+  else{var tot=now.reduce(function(a,x){return a+c[x[0]].n},0);
+    h+='<div class="pfxNowBox"><b class="pfxNowT">⚠️ '+tot+' iş seni bekliyor</b>'+now.map(function(x){var k=x[0],v=c[k],go=k==='oz'?(v.orders?'oz_orders':'oz_returns'):k,sub=admNowSub(k,c);
+      return '<button type="button" class="pfxBtn pfxNowC" data-tab="'+go+'" onclick="PF.openAdmin(\''+go+'\')" aria-label="'+esc(x[1]+': '+v.n+' bekleyen'+(sub?', '+sub:''))+'"><span class="ic" aria-hidden="true">'+(k==='oz'?'🌿':(ADM_ICON[k]||'•'))+'</span><span class="tx"><b>'+esc(x[1])+'</b>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</span><span class="pfxNum '+x[2]+'" aria-hidden="true">'+v.n+'</span></button>'}).join('')+'</div>'}
   h+='</div>';
-  var row=function(k){var badge=k==='tickets'&&c&&c.tickets?'<span class="pfxCnt'+(c.tickets.n?' warn':'')+'">'+c.tickets.n+(c.tickets.n?' açık':'')+'</span>':'';
-    return '<button type="button" class="pfxBtn" data-tab="'+k+'" onclick="PF.openAdmin(\''+k+'\')"><span>'+(ADM_ICON[k]||'•')+' '+esc(lab(k))+'</span>'+badge+'<span aria-hidden="true">›</span></button>'};
+  var row=function(k){var cl=ADM_CNT[k],v=cl&&c&&c[k]?c[k].n:null;
+    var badge=v==null?'':'<span class="pfxCnt'+(v>0?' '+cl:' z')+'" aria-label="'+v+' bekleyen">'+v+'</span>';
+    var tone=ADM_TONE[k]?' pfxT-'+ADM_TONE[k]:'';
+    return '<button type="button" class="pfxBtn'+tone+'" data-tab="'+k+'" onclick="PF.openAdmin(\''+k+'\')"><span>'+(ADM_ICON[k]||'•')+' '+esc(lab(k))+(k==='settings'?' <small class="pfxDk">· dikkat</small>':'')+'</span>'+badge+'<span aria-hidden="true">›</span></button>'};
   var seen={};
-  ADM_G2.forEach(function(g,gi){
-    var ks=g[1].filter(function(k){seen[k]=1;return has(k)&&!inNow[k]});
+  /* P2: Özüne Dön "Şimdi bakılacaklar"ın hemen altında; durum şeridi yalnız gösterir (bayraklar Özüne Dön › Ayarlar'dan değişir) */
+  var oz=tabs.filter(function(t){return /^oz_/.test(t[0])});oz.forEach(function(t){seen[t[0]]=1});
+  if(oz.length){var S=c&&c.ozset,Z=c&&c.oz;
+    var pill=function(cls,t){return '<span class="pfxSt '+cls+'"><i aria-hidden="true"></i>'+t+'</span>'};
+    var strip=S?'<div class="pfxStrip" role="status" aria-label="Özüne Dön durumu">'+pill(S.market?'on':'off','Pazar '+(S.market?'AÇIK':'KAPALI'))+pill(S.orders?'on':'off','Sipariş '+(S.orders?'AÇIK':'KAPALI'))+pill(S.mock?'mock':'on','Ödeme '+(S.mock?'DENEME':'GERÇEK'))+'</div>':'';
+    var zc=function(k){var n=!Z?null:k==='oz_sellers'?Z.sellers:k==='oz_orders'?Z.orders:k==='oz_returns'?Z.returns:null;
+      return n==null?'':' <span class="pfxCnt'+(n>0?(k==='oz_returns'?' bad':' warn'):' z')+'" aria-hidden="true">'+n+'</span>'};
+    h+='<div class="pfxMenuH">Özüne Dön</div><div class="pfxCard pfxOzC"><b>🌿 Özüne Dön</b>'+strip+'<div class="pfxChips">'+oz.map(function(t){var s=t[1].replace(/^Özüne Dön · /,'');var b=zc(t[0]);
+      return '<button type="button" class="pfxBtn pfxChip" data-tab="'+t[0]+'" aria-label="'+esc(t[1])+(b?esc(', '+(Z[t[0]==='oz_sellers'?'sellers':t[0]==='oz_orders'?'orders':'returns'])+' bekleyen'):'')+'" onclick="PF.openAdmin(\''+t[0]+'\')">'+esc(s)+b+'</button>'}).join('')+'</div>'+(S?'<p class="pfxMuted pfxStN">Durum şeridi yalnız gösterir; açıp kapatmak için Özüne Dön › Ayarlar.</p>':'')+'</div>'}
+  ADM_G2.forEach(function(g){
+    var ks=g[1].filter(function(k){seen[k]=1;return has(k)});
     if(ks.length)h+='<div class="pfxMenuH">'+esc(g[0])+'</div>'+ks.map(row).join('');
-    if(gi===0){var oz=tabs.filter(function(t){return /^oz_/.test(t[0])});oz.forEach(function(t){seen[t[0]]=1});
-      if(oz.length)h+='<div class="pfxMenuH">Özüne Dön</div><div class="pfxCard pfxOzC"><b>🌿 Özüne Dön</b><div class="pfxChips">'+oz.map(function(t){var s=t[1].replace(/^Özüne Dön · /,'');return '<button type="button" class="pfxBtn pfxChip" data-tab="'+t[0]+'" aria-label="'+esc(t[1])+'" onclick="PF.openAdmin(\''+t[0]+'\')">'+esc(s)+'</button>'}).join('')+'</div></div>'}
   });
-  var rest=tabs.filter(function(t){return !seen[t[0]]&&!inNow[t[0]]});
+  var rest=tabs.filter(function(t){return !seen[t[0]]});
   if(rest.length)h+='<div class="pfxMenuH">Diğer</div>'+rest.map(function(t){return row(t[0])}).join('');
   var el=document.getElementById('pfxAdmHome');if(!loading&&el){var sc=el.closest('.pfxSh');var y=sc?sc.scrollTop:0;el.outerHTML=h+'</div>';if(sc)sc.scrollTop=y;return}
   sheet('Yönetim paneli',h+'</div>');

@@ -1,4 +1,5 @@
 // AJ2-E: yan menü + yönetim paneli ana listesi — 390px (taşma 320/768/1280), iki tema, sahte RPC (ağ), veri yazmaz.
+// P2: Özüne Dön grubu "Şimdi bakılacaklar"ın hemen altında; bekleyen kartları en az 52px (turuncu kutu içinde); satır rozetleri yalnız sayı ("1"); bekleyen satırlar gruplarda da görünür.
 // Çalıştırma: NODE_PATH=/opt/node-tools/node_modules node tests/oz-ui/aj3-menu.test.js
 // Doğrulanan: menü sırası (Başlat → kategori kısayolları → İşlerim → Hizmet verenler için → Diğer çalışma alanları → [Yönetim] → Hesap → Çıkış);
 // rozetler yalnız mevcut okumalardan (window.__hzCnt: hzPing/hzCustAlerts; PF._admN: panel sayıları) ve sayı + yazı ("2 yeni"); bilinmiyorsa rozet yok,
@@ -8,9 +9,9 @@
 // hepsi 0 → "Her şey yolunda ✓"; gruplar; yetkili her sekmeye (Özüne Dön alt ekranları dahil) bir düğmeden ulaşılır; yalnız mevcut okuma RPC'leri.
 const {chromium,open}=require('./harness.js');
 const SAMPLE={pf_public_settings:{},pf_my_roles:{is_admin:true,roles:['super']},pf_admin_reports:[{id:'r1'},{id:'r2'}],pf_admin_listing_queue:[{id:'l1',created_at:new Date(Date.now()-86400000*1.5).toISOString()},{id:'l2'},{id:'l3'},{id:'l4'}],
- pf_admin_venue_queue:[{venue_id:'v1',stage:'in_review'},{venue_id:'v2',stage:'active'}],pf_admin_data_requests:[{id:'d',status:'completed'}],pf_admin_tickets:[{id:'t1',status:'open'},{id:'t2',status:'resolved'}],oz_admin_overview:{orders_open:3,returns_open:1}};
+ pf_admin_venue_queue:[{venue_id:'v1',stage:'in_review'},{venue_id:'v2',stage:'active'}],pf_admin_data_requests:[{id:'d',status:'completed'}],pf_admin_tickets:[{id:'t1',status:'open'},{id:'t2',status:'resolved'}],oz_admin_overview:{orders_open:3,returns_open:1,sellers_pending:1},oz_admin_settings:{oz_market_enabled:false,oz_orders_enabled:true,oz_payment_mock_enabled:true}};
 const ZERO={pf_public_settings:{},pf_my_roles:{is_admin:true,roles:['super']},oz_admin_overview:{orders_open:0,returns_open:0}};
-const READS=['pf_admin_reports','pf_admin_listing_queue','pf_admin_venue_queue','pf_admin_data_requests','pf_admin_tickets','oz_admin_overview'];
+const READS=['pf_admin_reports','pf_admin_listing_queue','pf_admin_venue_queue','pf_admin_data_requests','pf_admin_tickets','oz_admin_overview','oz_admin_settings'];
 (async()=>{
  const br=await chromium.launch({executablePath:process.env.CHROMIUM||'/opt/pw-browsers/chromium'});
  const fails=[];const ok=(c,m)=>{if(!c)fails.push(m)};
@@ -64,16 +65,20 @@ const READS=['pf_admin_reports','pf_admin_listing_queue','pf_admin_venue_queue',
  const H=()=>p.evaluate(()=>{const h=document.getElementById('pfxAdmHome');if(!h)return null;return {now:[...h.querySelectorAll('.pfxNowC')].map(b=>({tab:b.dataset.tab,n:b.querySelector('.pfxNum').textContent,cls:b.querySelector('.pfxNum').className,t:b.querySelector('.tx b').textContent,al:b.getAttribute('aria-label'),h:Math.round(b.getBoundingClientRect().height)})),
   ok:!!h.querySelector('.pfxAllOk'),heads:[...h.querySelectorAll('.pfxMenuH')].map(x=>x.textContent),tabs:[...h.querySelectorAll('[data-tab]')].map(b=>b.dataset.tab),
   oz:[...h.querySelectorAll('.pfxOzC [data-tab]')].map(b=>b.getAttribute('aria-label')),small:[...h.querySelectorAll('button')].filter(b=>b.getBoundingClientRect().height<44-.5).map(b=>b.textContent.trim()),
-  tk:(h.querySelector('[data-tab=tickets] .pfxCnt')||{}).textContent||null,sw:document.scrollingElement.scrollWidth-document.scrollingElement.clientWidth}});
+  tk:(h.querySelector('[data-tab=tickets] .pfxCnt')||{}).textContent||null,strip:[...h.querySelectorAll('.pfxStrip .pfxSt')].map(x=>x.className.replace('pfxSt ','')+':'+x.textContent).join('|'),stripBtn:h.querySelectorAll('.pfxStrip button,.pfxStrip [onclick]').length,
+  chipN:[...h.querySelectorAll('.pfxOzC .pfxChip')].filter(b=>b.querySelector('.pfxCnt')).map(b=>b.dataset.tab+':'+b.querySelector('.pfxCnt').textContent).join('|'),stripe:[...h.querySelectorAll('.pfxBtn[data-tab]')].filter(b=>/pfxT-/.test(b.className)).map(b=>b.dataset.tab+':'+(b.className.match(/pfxT-(\w)/)||[])[1]+':'+getComputedStyle(b,'::before').width).join(','),sw:document.scrollingElement.scrollWidth-document.scrollingElement.clientWidth}});
  let h=await H();
  ok(h&&h.now.map(x=>x.t+':'+x.n).join('|')==='Şikâyetler:2|Onay bekleyen ilanlar:4|İşletme başvuruları:1|Özüne Dön siparişleri:4','Şimdi bakılacaklar (yalnız >0, Şikâyetler en üstte): '+JSON.stringify(h&&h.now));
- ok(h&&/\bbad\b/.test(h.now[0].cls)&&h.now.slice(1).every(x=>/\bwarn\b/.test(x.cls))&&h.now.every(x=>x.h>=60&&/bekleyen/.test(x.al)),'Şikâyetler kırmızı, diğerleri sarı, büyük kart, sayı + yazı: '+JSON.stringify(h&&h.now));
+ ok(h&&/\bbad\b/.test(h.now[0].cls)&&h.now.slice(1).every(x=>/\bwarn\b/.test(x.cls))&&h.now.every(x=>x.h>=52&&/bekleyen/.test(x.al)),'Şikâyetler kırmızı, diğerleri sarı, büyük kart, sayı + yazı: '+JSON.stringify(h&&h.now));
  ok(h&&h.now[3].tab==='oz_orders'&&/3 açık sipariş · 1 iade/.test(h.now[3].al),'Özüne Dön kartı siparişlere gider: '+JSON.stringify(h&&h.now[3]));
- ok(h&&h.heads.join('|')==='Şimdi bakılacaklar|İçerik ve kullanıcılar|Özüne Dön|Destek, yasal, sistem|Finans ve operasyon','gruplar: '+JSON.stringify(h&&h.heads));
+ ok(h&&h.heads.join('|')==='Şimdi bakılacaklar|Özüne Dön|İçerik ve kullanıcılar|Destek, yasal, sistem|Finans ve operasyon','gruplar: '+JSON.stringify(h&&h.heads));
  const all=await p.evaluate(()=>['docs','venues','lreview','reports','listings','providers','susp','tickets','kvkk','legal','company','finance','campaigns','revenue','settings','dispatch','hero','words','audit','oz_overview','oz_settings','oz_sellers','oz_products','oz_orders','oz_returns','oz_payouts','oz_categories','oz_moderation','oz_slides']);
  ok(h&&all.every(k=>h.tabs.indexOf(k)>=0||(k==='oz_returns'&&h.tabs.indexOf('oz_orders')>=0)),'her yetkili sekmeye bir düğmeden ulaşılır: eksik '+JSON.stringify(h&&all.filter(k=>h.tabs.indexOf(k)<0)));
- ok(h&&h.oz.join('|')==='Özüne Dön · Özet|Özüne Dön · Ayarlar|Özüne Dön · Satıcılar|Özüne Dön · Ürünler|Özüne Dön · Siparişler|Özüne Dön · İadeler|Özüne Dön · Ödemeler|Özüne Dön · Kategoriler|Özüne Dön · Moderasyon|Özüne Dön · Slaytlar','Özüne Dön kartı tüm alt ekranlar: '+JSON.stringify(h&&h.oz));
- ok(h&&h.tk==='1 açık'&&!h.small.length&&h.sw<=0,'Destek "1 açık", dokunma ≥44, taşma yok: '+JSON.stringify(h&&[h.tk,h.small,h.sw]));
+ ok(h&&h.oz.join('|')==='Özüne Dön · Özet|Özüne Dön · Ayarlar|Özüne Dön · Satıcılar, 1 bekleyen|Özüne Dön · Ürünler|Özüne Dön · Siparişler, 3 bekleyen|Özüne Dön · İadeler, 1 bekleyen|Özüne Dön · Ödemeler|Özüne Dön · Kategoriler|Özüne Dön · Moderasyon|Özüne Dön · Slaytlar','Özüne Dön kartı tüm alt ekranlar: '+JSON.stringify(h&&h.oz));
+ ok(h&&h.tk==='1'&&!h.small.length&&h.sw<=0,'Destek rozeti "1", dokunma ≥44, taşma yok: '+JSON.stringify(h&&[h.tk,h.small,h.sw]));
+ ok(h&&h.strip==='off:Pazar KAPALI|on:Sipariş AÇIK|mock:Ödeme DENEME'&&h.stripBtn===0,'P2: Özüne Dön durum şeridi yalnız gösterir: '+JSON.stringify(h&&[h.strip,h.stripBtn]));
+ ok(h&&h.chipN==='oz_sellers:1|oz_orders:3|oz_returns:1','P2: Özüne Dön çip rozetleri (Satıcılar/Siparişler/İadeler): '+JSON.stringify(h&&h.chipN));
+ ok(h&&/reports:r:5px/.test(h.stripe)&&/lreview:o:5px/.test(h.stripe)&&/finance:g:5px/.test(h.stripe)&&/hero:b:5px/.test(h.stripe)&&/legal:s:5px/.test(h.stripe)&&/dispatch:e:5px/.test(h.stripe)&&/settings:x:5px/.test(h.stripe),'P2: satır renk şeritleri 5px: '+(h&&h.stripe));
  ok(net.filter(f=>/^(pf_admin|oz_admin)/.test(f)).every(f=>READS.indexOf(f)>=0),'yalnız mevcut okuma çağrıları: '+JSON.stringify([...new Set(net)]));
  await p.click('#pfxAdmHome [data-tab=reports]').catch(()=>fails.push('Şikâyetler kartı tıklanamadı'));await p.waitForTimeout(600);
  ok(await p.evaluate(()=>/Şikâyetler/.test((document.querySelector('.pfxAdmT')||{}).textContent||'')),'Şikâyetler kartı ilgili ekranı açar');
