@@ -92,6 +92,8 @@ async function act(btn,fn){if(btn){btn.disabled=true}try{return await fn()}catch
 var LEGAL_ORDER=['kullanici_sozlesmesi','kvkk_aydinlatma','cerez_politikasi','mesafeli_satis','on_bilgilendirme','iade_iptal','acik_riza_pazarlama','acik_riza_konum','isletme_sozlesmesi','kurye_sozlesmesi','hizmet_veren_sozlesmesi','ilan_kurallari','topluluk_kurallari','hallet_sorumluluk','acik_riza_yurtdisi'];
 async function legalList(){if(PF.legal)return PF.legal;try{var l=await rpc('pf_legal_current',{p_audience:null},{anon:true});PF.legal=Array.isArray(l)?l:[]}catch(e){PF.legal=[]}return PF.legal}
 PF.legalList=legalList;
+/* P3: yayımlanmış metin yoksa boş ekran yerine net mesaj + Destek (hukuki metin uydurulmaz) */
+function legalPending(){return '<div class="pfxCard pfxPend"><b>Bu metin yayına hazırlanıyor.</b><p>Sorularınız için Destek bölümünden bize ulaşabilirsiniz.</p><button type="button" class="pfxBtn pri" onclick="PF.openSupport()">Destek’e git</button></div>'}
 PF.openLegal=async function(docType){
   sheet('Yasal metinler',loading());
   try{
@@ -99,13 +101,13 @@ PF.openLegal=async function(docType){
     if(docType){
       var rows=await get('pf_legal_documents?select=title,body,version,published_at,doc_type&status=eq.published&doc_type=eq.'+encodeURIComponent(docType),{anon:true});
       var d=rows&&rows[0];
-      if(!d){setBody('<div class="pfxCard"><b>Bu metin henüz yayınlanmadı.</b><p class="pfxMuted">Metin hukuk incelemesi tamamlandıktan sonra burada yayınlanacak.</p></div><button type="button" class="pfxBtn" onclick="PF.openLegal()">‹ Tüm metinler</button>');return}
+      if(!d){setBody(legalPending()+'<button type="button" class="pfxBtn" onclick="PF.openLegal()">‹ Tüm metinler</button>');return}
       setBody('<p class="pfxMuted">Sürüm '+esc(d.version)+' · Yayın: '+esc(fmtDate(d.published_at))+'</p><h3>'+esc(d.title)+'</h3><div class="pfxDoc">'+esc(d.body)+'</div><p><button type="button" class="pfxBtn" onclick="PF.openLegal()">‹ Tüm metinler</button></p>');return;
     }
     var map={};list.forEach(function(x){map[x.doc_type]=x});
     var pub=LEGAL_ORDER.filter(function(k){return map[k]});
     setBody((pub.length?pub.map(function(k){var x=map[k];return '<div class="pfxCard pfxRow"><div><b>'+esc(x.title)+'</b><div class="pfxMuted">Sürüm '+esc(x.version)+(x.summary?' · '+esc(x.summary):'')+'</div></div><button type="button" class="pfxBtn" onclick="PF.openLegal(\''+esc(k)+'\')">Oku</button></div>'}).join(''):
-      '<div class="pfxCard"><b>Yasal metinler hazırlanıyor.</b><p class="pfxMuted">Kullanıcı sözleşmesi, KVKK aydınlatma metni ve diğer metinler hukuk incelemesinden sonra burada yayınlanacak.</p></div>')+
+      legalPending())+
       '<p><button type="button" class="pfxBtn" onclick="PF.openCompany()">Künye ve iletişim</button></p>');
   }catch(e){setBody(errHTML(e))}
 };
@@ -116,7 +118,7 @@ PF.openCompany=async function(){
     var filled=(rows||[]).filter(function(r){return r.value&&String(r.value).trim()&&r.key!=='etbis_status'});
     var et=(rows||[]).find(function(r){return r.key==='etbis_status'});
     setBody(filled.length?'<table class="pfxTbl">'+filled.map(function(r){return '<tr><th>'+esc(r.label)+'</th><td>'+esc(r.value)+'</td></tr>'}).join('')+(et&&et.value==='registered'?'<tr><th>ETBİS</th><td>Kayıtlı</td></tr>':'')+'</table>':
-      '<div class="pfxCard"><b>Şirket bilgileri henüz eklenmedi.</b><p class="pfxMuted">Platformun işletmeci bilgileri (unvan, adres, vergi ve MERSİS numaraları, iletişim) resmi kuruluş tamamlandığında burada yayınlanacak.</p></div>');
+      legalPending());
   }catch(e){setBody(errHTML(e))}
 };
 

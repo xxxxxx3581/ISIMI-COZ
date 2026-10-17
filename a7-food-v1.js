@@ -3757,6 +3757,20 @@ html[data-theme="light"] .fdProd .fdStep button{color:#B8892A}
 .fdHero .fdPic.cover{aspect-ratio:auto;height:clamp(110px,33vw,143px);max-height:none}
 .fdHero .fdPic.cover img{object-fit:cover}
 /*K32-BITIS*/
+/*P3-BASLA rötuş: kapak kalbi ince/küçük, menü kartında "+" görsel sağ üst köşede, kampanya bandı açıkken alt bilgi okunur */
+.fdHero .nav .fdFav{position:relative;width:44px;height:44px;min-width:44px;margin:-6px -6px 0 0;font-size:0!important;font-weight:400;color:#fff;-webkit-text-stroke:0;text-shadow:none!important}
+.fdHero .nav .fdFav::before{content:"";position:absolute;inset:7px;border-radius:50%;background:rgba(15,16,19,.4);-webkit-backdrop-filter:blur(2px);backdrop-filter:blur(2px)}
+.fdHero .nav .fdFav::after{content:"";position:absolute;left:50%;top:50%;width:17px;height:17px;transform:translate(-50%,-48%);background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.8' stroke-linejoin='round'%3E%3Cpath d='M12 20.3s-7.6-4.6-7.6-10.3A4.3 4.3 0 0 1 12 7.4a4.3 4.3 0 0 1 7.6 2.6c0 5.7-7.6 10.3-7.6 10.3z'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23000' stroke-width='1.8' stroke-linejoin='round'%3E%3Cpath d='M12 20.3s-7.6-4.6-7.6-10.3A4.3 4.3 0 0 1 12 7.4a4.3 4.3 0 0 1 7.6 2.6c0 5.7-7.6 10.3-7.6 10.3z'/%3E%3C/svg%3E") center/contain no-repeat}
+.fdHero .nav .fdFav.on{color:#FF5C7A}
+.fdHero .nav .fdFav.on::after{-webkit-mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 20.3s-7.6-4.6-7.6-10.3A4.3 4.3 0 0 1 12 7.4a4.3 4.3 0 0 1 7.6 2.6c0 5.7-7.6 10.3-7.6 10.3z'/%3E%3C/svg%3E");mask-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 20.3s-7.6-4.6-7.6-10.3A4.3 4.3 0 0 1 12 7.4a4.3 4.3 0 0 1 7.6 2.6c0 5.7-7.6 10.3-7.6 10.3z'/%3E%3C/svg%3E")}
+.fdHero .nav .fdFav:focus-visible{outline:none}.fdHero .nav .fdFav:focus-visible::before{outline:2px solid #fff;outline-offset:1px}
+.fdProd .rc{position:relative;flex:0 0 30%;width:30%;min-width:84px;max-width:112px;display:block;gap:0}
+.fdProd .rc .im{width:100%;flex:none}
+.fdProd .rc .ac{position:absolute;top:-20px;right:-20px;z-index:2}
+.fdProd .rc .ac .fdAdd{margin:0}
+.fdProd .rc .ac:has(.fdStep:not([hidden])){top:auto;right:50%;bottom:-14px;transform:translateX(50%)}
+body.fdwFlBarOn #pfxFoot{margin-bottom:calc(174px + env(safe-area-inset-bottom,0px))}
+/*P3-BITIS*/
 `;document.head.appendChild(s);
 }
 

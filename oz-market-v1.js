@@ -478,11 +478,14 @@ function ppHtml(d,all,prods){
   var own=arr(d.categories),cnt={};own.forEach(function(c){cnt[c.slug]=num(c.count)});
   var cats=all&&all.length?all.slice():own.slice();own.forEach(function(c){if(!cats.some(function(x){return x.slug===c.slug}))cats.push(c)});
   var rc=num(d.rating_count);
-  return '<div class="ozPP"><div class="cv">'+ppCover(cv,ppSlides(prods))+sfavBtn(d.id,!!(ST.sfav&&ST.sfav.has(String(d.id))),'ppFav')+'</div>'+  /* T2: fotoğraf üstü geri oku yok; üst çubuktaki "<" aynı back() ile bir adım geri */
+  var ra=num(d.rating_avg).toLocaleString('tr-TR',{minimumFractionDigits:1,maximumFractionDigits:1});
+  /* P3: puan, kapak görselinin sağ altında küçük yarı saydam rozet "★ 5,0 (4)" (44px dokunma; aynı değerlendirmeler paneli) */
+  return '<div class="ozPP"><div class="cv">'+ppCover(cv,ppSlides(prods))+sfavBtn(d.id,!!(ST.sfav&&ST.sfav.has(String(d.id))),'ppFav')+
+    (rc?'<button type="button" class="rtb3" data-a="ppRev" data-id="'+E(d.id)+'" aria-label="5 üzerinden '+ra+' puan, '+rc+' değerlendirme. Değerlendirmeleri gör"><span class="pl" aria-hidden="true"><b>★ '+ra+'</b> <small>('+rc+')</small></span></button>':'')+'</div>'+  /* T2: fotoğraf üstü geri oku yok; üst çubuktaki "<" aynı back() ile bir adım geri */
     '<div class="hd"><span class="lg">'+(lg?'<img src="'+E(lg)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">':'')+'<i aria-hidden="true">'+E(initials(nm))+'</i></span><span class="ok">✓ Onaylı satıcı</span></div>'+
-    /* C7: solda ad (tek satır) + konum; sağda tek dokunma alanı: ★ puan / Değerlendirmeler (N) */
+    /* C7: solda ad + konum; P3: puan kutusu kalktı (kapakta rozet), yorumsuz satıcıda "Yeni" aynen */
     '<div class="nmr"><div class="nl"><h1 class="nm" data-nfit>'+E(nm)+'</h1>'+(loc?'<p class="loc">'+E(loc)+'</p>':'')+'</div>'+
-      (rc?'<button type="button" class="rtb2" data-a="ppRev" data-id="'+E(d.id)+'" aria-label="'+rc+' değerlendirmeyi gör"><b>★ '+num(d.rating_avg).toLocaleString('tr-TR',{minimumFractionDigits:1,maximumFractionDigits:1})+'</b><small>Değerlendirmeler ('+rc+')</small></button>':'<em class="new">Yeni</em>')+'</div>'+
+      (rc?'':'<em class="new">Yeni</em>')+'</div>'+
     /* F4: başlık + puan + kategoriler. Ürünü olan kategori altın çerçeveli (rozet yok); dokunuş ortak liste sayfasını açar. */
     '<div class="ozSecH"><h2>Kategoriler</h2>'+(num(d.product_count)||own.length?'<button type="button" class="ozLink" data-a="nav" data-k="plist" data-seller="'+E(d.id)+'" data-sname="'+E(nm)+'">Tüm ürünler ›</button>':'')+'</div>'+
     (cats.length?'<div class="ozPPCats" role="list">'+
