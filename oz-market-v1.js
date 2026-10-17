@@ -1049,7 +1049,9 @@ function pdRender(){
   var bar='<div class="ozPdBar"><span class="pp">'+(pick?'<b class="pk" style="font-size:16px;color:var(--oz-muted)">Seçenek seç</b>':'<b>'+(v?TL(price):'—')+'</b>'+(v&&cmp>price?'<s>'+TL(cmp)+'</s>':''))+'</span>'+act+'</div>';
   var b=qs('.ozShB',ov);if(!b)return;var keep=b.scrollTop,openInf=!!qs('.ozPdInf[open]',b);
   /* AJ1 P7: kargo süresi, iade koşulu ve satıcı tek sakin blokta (yalnız gerçek alanlar: handling_days, free_ship_over_kurus, return_days) */
-  var ret=rd?'<p class="ozShipN">'+ico('box',16)+'<span>Teslimattan sonraki '+rd+' gün içinde iade isteyebilirsin</span></p>':'';
+  /* P7: no_withdrawal = etkin "çabuk bozulur" (ürün ?? kategori); SQL uygulanmadan önce kategori değeri */
+  var nw=p.no_withdrawal!=null?!!p.no_withdrawal:!!(p.category||{}).perishable;
+  var ret=rd?'<p class="ozShipN" data-ret="'+(nw?'ayip':'cayma')+'">'+ico('box',16)+'<span>'+(nw?'Çabuk bozulabilen ürün: cayma hakkı yoktur. Hasarlı, yanlış veya eksik ürün için '+rd+' gün içinde iade isteyebilirsin.':'Teslimattan sonraki '+rd+' gün içinde cayma hakkın var')+'</span></p>':'';
   b.innerHTML=gal+head+desc+vars+pdFeat(p)+'<div class="ozPdTr">'+ship+ret+prod+'</div>'+qmx+bar;
   /* O2: alt çubuk panelin altına sabit; içerik alanına çubuk yüksekliği kadar alt boşluk → son seçenek/bilgi çubuğun altında kalmaz */
   var pb=qs('.ozPdBar',b);if(pb)b.style.paddingBottom=Math.ceil(pb.getBoundingClientRect().height+12)+'px';
@@ -1106,6 +1108,8 @@ function stTone(s){return ST_TONE[s]||'n'}
 function stBadge(s,label){var x=ORDER_ST[s]||[s||'—',''];return '<span class="ozTag ozStB ozT-'+stTone(s)+'">'+E(label||x[0])+'</span>'}
 function addrText(a){if(!a)return '';return [a.address_line,a.neighborhood,[a.district,a.city].filter(Boolean).join(' / '),a.postal_code].filter(Boolean).join(', ')}
 var RET_REASONS=['Hasarlı geldi','Yanlış ürün gönderildi','Eksik ürün','Ürün açıklamayla uyuşmuyor','Bozuk / tarihi geçmiş','Diğer'];
+/* P7: çabuk bozulan siparişte (return_mode 'ayip_only') yalnız ayıp nedenleri; oz_request_return aynı listeyi uygular */
+var RET_AYIP=RET_REASONS.slice(0,5);
 function openLegal(type){
   if(window.PF&&typeof PF.openLegal==='function'){PF.openLegal(type);return}
   sheet('Sözleşme','<p class="ozP">Bu metin yayına alınmadan önce hukuki onaydan geçecektir.</p>');
@@ -1397,7 +1401,7 @@ function orderDetailHtml(d){
   if(st==='awaiting_payment'&&o.payment_method==='mock'&&s.payment_mock)acts+='<button type="button" class="ozBtn sun" data-a="mockPay" data-id="'+E(o.id)+'">Ödemeyi tamamla</button>';
   if(st==='shipped')acts+='<button type="button" class="ozBtn" data-a="ordDeliver" data-id="'+E(o.id)+'">Siparişim elime ulaştı</button>';
   if(st==='awaiting_payment'||st==='new')acts+=cnlBtn(o,'');
-  if(d.can_return&&!ret)acts+='<button type="button" class="ozBtn ozRet" data-a="ordReturn" data-id="'+E(o.id)+'">İade talebi oluştur</button>';
+  if(d.can_return&&!ret)acts+='<button type="button" class="ozBtn ozRet" data-a="ordReturn" data-id="'+E(o.id)+'" data-m="'+(d.return_mode==='ayip_only'?'ayip_only':'cayma')+'">İade / cayma talebi oluştur</button>';
   var canReview=(st==='delivered'||st==='completed');
   var ship=o.ship_to||{};
   var tl=ev.length?'<ol class="ozTl">'+ev.map(function(e){return '<li><b>'+E((ORDER_ST[e.to]||[e.to])[0])+'</b><small>'+E(fmtDate(e.at))+(e.role?' · '+E(ROLE[e.role]||e.role):'')+(e.reason?' · '+E(e.reason):'')+'</small></li>'}).join('')+'</ol>':'<p class="ozMuted">Henüz hareket yok.</p>';
@@ -1533,14 +1537,15 @@ ACT_EXTRA({
   },
   ordReturn:async function(b){
     var rd=num(S().return_days);
-    var v=await formBox('İade iste','<label for="ozRtR">İade nedeni</label><select class="ozSel" id="ozRtR" data-f="r">'+RET_REASONS.map(function(x){return '<option>'+E(x)+'</option>'}).join('')+'</select><label for="ozRtD">Açıklama</label><textarea class="ozTa" id="ozRtD" data-f="d" maxlength="1000" placeholder="Sorunu kısaca anlat"></textarea>'+(rd?'<p class="ozHint">Teslimattan sonraki '+rd+' gün içinde iade isteyebilirsin.</p>':''),'Gönder',function(v){return v.d.length<5?'Kısa bir açıklama yaz.':''});
+    var ay=b.dataset.m==='ayip_only';
+    var v=await formBox('İade iste',(ay?'<p class="ozWarn" data-ayip="1">Bu siparişte çabuk bozulabilen ürün var: cayma hakkı yoktur. Yalnız ayıplı, hasarlı, yanlış veya eksik ürün için iade isteyebilirsin.</p>':'')+'<label for="ozRtR">İade nedeni</label><select class="ozSel" id="ozRtR" data-f="r">'+(ay?RET_AYIP:RET_REASONS).map(function(x){return '<option>'+E(x)+'</option>'}).join('')+'</select><label for="ozRtD">Açıklama</label><textarea class="ozTa" id="ozRtD" data-f="d" maxlength="1000" placeholder="Sorunu kısaca anlat"></textarea>'+(rd?'<p class="ozHint">Teslimattan sonraki '+rd+' gün içinde iade isteyebilirsin.</p>':''),'Gönder',function(v){return v.d.length<5?'Kısa bir açıklama yaz.':''});
     if(!v)return;await rpc('oz_request_return',{p_order:b.dataset.id,p_reason:v.r,p_details:v.d});toast('İade talebin satıcıya iletildi');draw();
   },
   ordReview:function(b){return reviewBox(b.dataset.o,b.dataset.p)}
 });
 Object.assign(CHANGE,{
   plSort:function(el){var c=cur();if(c.k!=='plist')return;c.a=Object.assign({},c.a,{sort:el.value});hSync();ST.sr.a.sort=el.value;ST.sr.list=[];ST.sr.offset=0;var r=D.getElementById('ozRes');if(r)r.innerHTML=skel(2,'line');return searchMore(SCR)},
-  pfCat:function(el){var n=D.getElementById('ozPCatN');if(n)n.hidden=!pfCatIsDrink(el.value)},
+  pfCat:function(el){var n=D.getElementById('ozPCatN');if(n)n.hidden=!pfCatIsDrink(el.value);var w=D.getElementById('ozPPer');if(w&&ST.pf){pfRead();ST.pf.category_id=el.value;w.outerHTML=pfPerishField(ST.pf)}},
   coAddr:function(el){if(ST.co){ST.co.addr=el.value;ST.co.note=val('ozCoNote');coReadTerms();drawCheckout()}},
   coPay:function(el){if(ST.co){ST.co.pay=el.value;ST.co.note=val('ozCoNote');coReadTerms();drawCheckout()}},
   coTerms:function(){coReadTerms();coSyncBtn()}
@@ -1952,12 +1957,12 @@ VIEWS_EXTRA({
     if(!logged()){paint(loginWall());return}
     paint(pageHead(a.id?'Ürünü düzenle':'Yeni ürün')+skel(3,'line'));
     var hd=null;try{hd=await homeData()}catch(e){}
-    if(!hd||!arr(hd.categories).length){try{hd={categories:arr(await get('oz_categories?select=id,slug,name&is_active=eq.true&parent_id=is.null&order=sort.asc'))}}catch(e){}}
+    if(!hd||!arr(hd.categories).length){try{hd={categories:arr(await get('oz_categories?select=id,slug,name,perishable&is_active=eq.true&parent_id=is.null&order=sort.asc'))}}catch(e){}}
     var p={},vs=[];
     if(a.id){p=arr(await get('oz_products?select=*&id=eq.'+encodeURIComponent(a.id)+'&limit=1'))[0]||{};vs=arr(await get('oz_variants?select=*&product_id=eq.'+encodeURIComponent(a.id)+'&order=sort.asc'))}
     if(!alive(t))return;
     if(!sellerId()){await loadSettings(true)}
-    ST.pf={id:p.id||null,name:p.name||'',category_id:p.category_id||'',description:p.description||'',ingredients:p.ingredients||'',origin_city:p.origin_city||'',origin_note:p.origin_note||'',net_content:p.net_content||'',shelf_life_days:p.shelf_life_days==null?'':String(p.shelf_life_days),storage_info:p.storage_info||'',organic_cert:p.organic_cert||'',
+    ST.pf={id:p.id||null,name:p.name||'',category_id:p.category_id||'',description:p.description||'',ingredients:p.ingredients||'',origin_city:p.origin_city||'',origin_note:p.origin_note||'',net_content:p.net_content||'',shelf_life_days:p.shelf_life_days==null?'':String(p.shelf_life_days),storage_info:p.storage_info||'',organic_cert:p.organic_cert||'',perishable:p.perishable===true,
       allergens:arr(p.allergens).slice(),images:arr(p.images).slice(),status:p.status||'draft',reason:p.status_reason||p.reject_reason||'',
       variants:(vs.length?vs:[{label:'',price_kurus:'',compare_at_kurus:'',stock:'',weight_g:'',sku:'',is_active:true}]).map(function(v){return {id:v.id||null,label:v.label||'',price:v.price_kurus===''||v.price_kurus==null?'':kurusToInput(v.price_kurus),compare:v.compare_at_kurus?kurusToInput(v.compare_at_kurus):'',stock:v.stock==null?'':String(v.stock),weight:v.weight_g==null?'':String(v.weight_g),sku:v.sku||'',active:v.is_active!==false}}),
       cats:arr(hd&&hd.categories)};
@@ -2203,6 +2208,7 @@ function pfRead(){
   var pf=ST.pf;if(!pf)return;
   ['name','category_id','description','ingredients','origin_city','origin_note','shelf_life_days','storage_info','organic_cert'].forEach(function(k){var el=D.getElementById('ozP_'+k);if(el)pf[k]=el.value});
   /* N1-5: net miktar = sayı + birim (gr, kg, ml, lt, adet); veritabanında aynı metin alanına "800 gr" olarak yazılır */
+  var pe=D.getElementById('ozP_perishable');if(pe&&!pe.disabled)pf.perishable=pe.checked;
   var nn=D.getElementById('ozP_net_n'),nu=D.getElementById('ozP_net_u');if(nn&&nu){pf.net_n=nn.value;pf.net_u=nu.value;pf.net_content=String(nn.value).trim()?String(nn.value).trim()+(nu.value?' '+nu.value:''):''}
   qa('#ozVars .ozVarRow').forEach(function(r,i){var v=pf.variants[i];if(!v)return;['label','price','compare','stock','weight','sku'].forEach(function(k){var el=qs('[data-v="'+k+'"]',r);if(el)v[k]=el.value});var ac=qs('[data-v="active"]',r);if(ac)v.active=ac.checked});
 }
@@ -2227,7 +2233,7 @@ function drawProductForm(){
       ta('ingredients','İçindekiler','Örn. %100 süzme çiçek balı')+
       (pf.id?'<div class="ozReapp"><p class="ozHint">↻ Bu alanları değiştirirsen ürün yeniden onaya girer.</p>':'<div>')+netField(pf)+
       '<div class="ozTwo"><div>'+f('origin_city','Menşe (il)',{max:40})+'</div><div>'+f('shelf_life_days','Raf ömrü (gün)',{im:'numeric',max:5})+'</div></div>'+
-      ta('origin_note','Menşe notu','Örn. Ula köyündeki kendi bahçemizden')+ta('storage_info','Saklama koşulları','Örn. Serin ve kuru yerde saklayın')+f('organic_cert','Organik sertifika no (varsa)',{max:80})+
+      ta('origin_note','Menşe notu','Örn. Ula köyündeki kendi bahçemizden')+ta('storage_info','Saklama koşulları','Örn. Serin ve kuru yerde saklayın')+f('organic_cert','Organik sertifika no (varsa)',{max:80})+pfPerishField(pf)+
       '<fieldset style="border:0;padding:0;margin:12px 0 0"><legend class="ozMuted" style="font-weight:700;font-size:13px">Alerjenler</legend><div class="ozWrap">'+Object.keys(ALG).map(function(k){var on=pf.allergens.indexOf(k)>=0;return '<button type="button" class="ozChip'+(on?' on':'')+'" data-a="algT" data-k="'+k+'" aria-pressed="'+on+'">'+E(ALG[k])+'</button>'}).join('')+'</div></fieldset></div></div>'+
     '<div class="ozCard" id="ozVars"><h3>Seçenekler (gramaj), fiyat ve stok</h3><p class="ozHint" style="margin:0 0 8px">Tek seçenek yeterli; 250 g / 500 g / 1 kg gibi farklı boyları ayrı satır olarak ekle. Alıcı "+" ile seçer.</p>'+vars+'<button type="button" class="ozBtn sm" data-a="varAdd">Seçenek ekle</button></div>'+
     '<p class="ozErr" id="ozPErr" hidden></p><div class="ozRow2"><button type="button" class="ozBtn'+(pfSubLabel(pf)?'':' pri')+'" data-a="prodSave">Kaydet</button>'+(pfSubLabel(pf)?'<button type="button" class="ozBtn pri" data-a="prodSave" data-sub="1">'+pfSubLabel(pf)+'</button>':'')+'</div>');
@@ -2238,6 +2244,9 @@ function pfSubLabel(pf){if(!sellerApproved())return '';var st=pf.status||'draft'
 function prodSubToast(st){return st==='rejected'?'Ürün yeniden incelemeye gönderildi':'Ürün yayınlandı'}
 /* K37: Süt & İçecekler notu */
 function pfCatIsDrink(id){var c=(ST.pf&&ST.pf.cats||[]).filter(function(x){return String(x.id)===String(id)})[0];return !!c&&(c.slug==='icecekler'||/içecek/i.test(c.name||''))}
+/* P7: "çabuk bozulur" — satıcı yalnız işaretleyebilir; kategori çabuk bozulursa işaretli ve kilitli (etkin değer = ürün ?? kategori ?? false) */
+function pfCatPerish(id){var c=(ST.pf&&ST.pf.cats||[]).filter(function(x){return String(x.id)===String(id)})[0];return !!(c&&c.perishable)}
+function pfPerishField(pf){var lk=pfCatPerish(pf.category_id);return '<div id="ozPPer"><label class="ozChk"><input type="checkbox" id="ozP_perishable"'+(lk||pf.perishable?' checked':'')+(lk?' disabled aria-describedby="ozPPerL ozPPerH"':' aria-describedby="ozPPerH"')+'><span>Çabuk bozulur / soğuk zincir gerektirir</span></label>'+(lk?'<p class="ozHint" id="ozPPerL">Bu kategorideki ürünler çabuk bozulur olarak işaretlidir.</p>':'')+'<p class="ozHint" id="ozPPerH">İşaretlenirse alıcı sebepsiz cayma hakkı kullanamaz, yalnız ayıplı ürün iadesi isteyebilir.</p></div>'}
 var DRINK_NOTE='Taze süt/çabuk bozulan ürün satılamaz; yalnızca uzun ömürlü içecekler.';
 /* N1-5: "800 gr", "1kg", "1,5 L" → sayı + birim; okunamayan eski metin sayı alanında kalır (birim seçilene kadar kayıt olmaz) */
 var NET_U=[['gr','gr'],['kg','kg'],['ml','ml'],['lt','lt'],['adet','adet']];
@@ -2263,7 +2272,7 @@ function pfPayload(){
     if(!(wg>0))return (i+1)+'. seçeneğin kargo ağırlığını gram olarak yaz.';
     var o={label:v.label.trim(),price_kurus:pr,compare_at_kurus:cm,stock:stk,weight_g:Math.round(wg),sku:v.sku.trim()||null,is_active:!!v.active,sort:i};if(v.id)o.id=v.id;vs.push(o)}
   var sl=pf.shelf_life_days===''?null:Number(pf.shelf_life_days);if(sl!==null&&!(sl>=1&&sl<=3650&&Math.floor(sl)===sl))return 'Raf ömrü 1-3650 gün arasında olmalı.';
-  var p={name:pf.name.trim(),description:pf.description.trim()||null,ingredients:pf.ingredients.trim()||null,origin_city:pf.origin_city.trim()||null,origin_note:pf.origin_note.trim()||null,net_content:pf.net_content.trim()||null,shelf_life_days:sl,storage_info:pf.storage_info.trim()||null,allergens:pf.allergens.slice(),images:pf.images.slice(),organic_cert:pf.organic_cert.trim()||null,category_id:pf.category_id,variants:vs};
+  var p={name:pf.name.trim(),description:pf.description.trim()||null,ingredients:pf.ingredients.trim()||null,origin_city:pf.origin_city.trim()||null,origin_note:pf.origin_note.trim()||null,net_content:pf.net_content.trim()||null,shelf_life_days:sl,storage_info:pf.storage_info.trim()||null,allergens:pf.allergens.slice(),images:pf.images.slice(),organic_cert:pf.organic_cert.trim()||null,category_id:pf.category_id,perishable:!!pf.perishable,variants:vs};
   if(pf.id)p.id=pf.id;return p;
 }
 async function saveStore(btn){
@@ -2418,6 +2427,9 @@ var A_ST_RET=[['requested','Bekleyen'],['','Tümü'],['approved','Onaylandı'],[
 var A_ST_PAY=[['','Tümü'],['pending','Bekleyen'],['paid','Ödendi'],['failed','Başarısız']];
 var SET_B=[['oz_market_enabled','Pazar açık (herkes görür)'],['oz_seller_signup_enabled','Satıcı başvuruları açık'],['oz_orders_enabled','Sipariş alımı açık'],['oz_payment_mock_enabled','Deneme ödemesi (gerçek para çekilmez)'],['oz_cod_enabled','Kapıda ödeme']];
 /* P6: ödemeye hazır satıcı satırı — son ödeme günü (en eski teslim + 5 iş günü), geçmişse kırmızı "Gecikti"; bekleyen mahsup */
+function retDueLine(r,ps){if(!r.created_at)return '';var due=Date.parse(r.created_at)+14*864e5;if(isNaN(due))return '';
+  var late=r.status!=='rejected'&&!!ps&&ps[r.order_id]!=='refunded'&&due<Date.now();
+  return '<div class="pfxMuted"><span data-rdue="1">Bedel iadesi son günü: '+E(fmtDay(new Date(due).toISOString()))+'</span>'+(late?' <span class="ozTag bad" data-late="1">Gecikti</span>':'')+'</div>'}
 function payDueLine(x){var t=[];if(x.due_by){var late=Date.parse(x.due_by)<Date.now();t.push('<span data-due="1">Son ödeme günü: '+E(fmtDay(x.due_by))+'</span>'+(late?' <span class="ozTag bad" data-late="1">Gecikti</span>':''))}
   if(num(x.pending_adjustments_kurus)>0)t.push('<span>Mahsup: −'+TL(x.pending_adjustments_kurus)+'</span>');if(num(x.unpaid_kurus)>num(x.available_kurus))t.push('<span>Bekleme süresinde: '+TL(num(x.unpaid_kurus)-num(x.available_kurus))+'</span>');
   return t.length?'<div class="pfxMuted" style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px 12px">'+t.join('')+'</div>':''}
@@ -2444,7 +2456,11 @@ var ADMV={
   oz_products:async function(){
     aPaint(filterBar('products',A_ST_PROD,true)+aLoading());
     var l=await aList('products','pending');
-    aPaint(filterBar('products',A_ST_PROD,true)+(l.length?l.map(function(p){var st=p.is_hidden?'hidden':p.status;return '<div class="pfxCard"><div class="pfxRow"><b>'+E(p.name||'—')+'</b>'+aTag(PROD_ST,st)+'</div><div class="pfxMuted">'+E([p.seller_name,p.price_kurus!=null?TL(p.price_kurus):'',fmtDay(p.created_at||p.updated_at)].filter(Boolean).join(' · '))+'</div>'+(p.image?'<img src="'+E(p.image)+'" alt="" style="width:72px;height:72px;object-fit:cover;border-radius:10px;margin-top:8px">':'')+
+    /* P7: etkin "çabuk bozulur" = ürün.perishable ?? kategori.perishable (yönetici oz_products okuyabilir); okunamazsa rozet yok */
+    var per={},pids=l.map(function(p){return p.id}).filter(Boolean);
+    if(pids.length){try{arr(await get('oz_products?select=id,perishable,category:oz_categories(perishable)&id=in.'+inList(pids))).forEach(function(r){per[r.id]=r.perishable!=null?!!r.perishable:!!(r.category&&r.category.perishable)})}catch(e){if(e&&e.auth)throw e;
+      try{arr(await get('oz_products?select=id,category:oz_categories(perishable)&id=in.'+inList(pids))).forEach(function(r){per[r.id]=!!(r.category&&r.category.perishable)})}catch(e2){if(e2&&e2.auth)throw e2}}}
+    aPaint(filterBar('products',A_ST_PROD,true)+(l.length?l.map(function(p){var st=p.is_hidden?'hidden':p.status;return '<div class="pfxCard"><div class="pfxRow"><b>'+E(p.name||'—')+'</b>'+aTag(PROD_ST,st)+'</div>'+(per[p.id]?'<div style="margin-top:4px"><span class="ozTag warn" data-per="1">Çabuk bozulur</span></div>':'')+'<div class="pfxMuted">'+E([p.seller_name,p.price_kurus!=null?TL(p.price_kurus):'',fmtDay(p.created_at||p.updated_at)].filter(Boolean).join(' · '))+'</div>'+(p.image?'<img src="'+E(p.image)+'" alt="" style="width:72px;height:72px;object-fit:cover;border-radius:10px;margin-top:8px">':'')+
       '<div class="pfxRow" style="margin-top:8px"><button type="button" class="pfxBtn" data-a="aPView" data-id="'+E(p.id)+'">İncele</button>'+(st==='pending'||st==='in_review'||st==='rejected'||st==='draft'?'<button type="button" class="pfxBtn pri" data-a="aProd" data-d="approve" data-id="'+E(p.id)+'">Onayla</button>':'')+(st==='pending'||st==='in_review'||st==='published'||st==='active'||st==='approved'?'<button type="button" class="pfxBtn bad" data-a="aProd" data-d="reject" data-id="'+E(p.id)+'">Reddet</button>':'')+
       (st==='hidden'?'<button type="button" class="pfxBtn" data-a="aProd" data-d="unhide" data-id="'+E(p.id)+'">Göster</button>':(st==='published'||st==='active'||st==='approved'?'<button type="button" class="pfxBtn" data-a="aProd" data-d="hide" data-id="'+E(p.id)+'">Gizle</button>':''))+'</div></div>'}).join(''):'<p class="pfxMuted">Kayıt yok.</p>'));
   },
@@ -2460,7 +2476,10 @@ var ADMV={
   oz_returns:async function(){
     aPaint(filterBar('returns',A_ST_RET,true)+aLoading());
     var l=await aList('returns','requested');
-    aPaint(filterBar('returns',A_ST_RET,true)+(l.length?l.map(function(r){return '<div class="pfxCard"><div class="pfxRow"><b>'+E(r.order_no||'Sipariş')+'</b>'+aTag(RET_ST,r.status)+'</div><div class="pfxMuted">'+E([r.reason,r.details,fmtDate(r.created_at)].filter(Boolean).join(' · '))+'</div>'+
+    /* P7: bedel iadesi son günü = talep + 14 gün; ücret iadesi yapılmamış (oz_orders.payment_status) ve tarih geçmişse "Gecikti". Okunamazsa yalnız tarih. */
+    var oids=l.map(function(r){return r.order_id}).filter(Boolean),ps=null;
+    if(oids.length){try{ps={};arr(await get('oz_orders?select=id,payment_status&id=in.'+inList(oids))).forEach(function(o){ps[o.id]=o.payment_status})}catch(e){if(e&&e.auth)throw e;ps=null}}
+    aPaint(filterBar('returns',A_ST_RET,true)+(l.length?l.map(function(r){return '<div class="pfxCard"><div class="pfxRow"><b>'+E(r.order_no||'Sipariş')+'</b>'+aTag(RET_ST,r.status)+'</div><div class="pfxMuted">'+E([r.reason,r.details,fmtDate(r.created_at)].filter(Boolean).join(' · '))+'</div>'+retDueLine(r,ps)+
       (r.status==='requested'?'<div class="pfxRow" style="margin-top:8px"><button type="button" class="pfxBtn pri" data-a="aRet" data-ok="1" data-id="'+E(r.id)+'">Kabul et</button><button type="button" class="pfxBtn bad" data-a="aRet" data-ok="0" data-id="'+E(r.id)+'">Reddet</button></div>':'')+
       (r.order_id&&(r.status==='approved'||r.order_status==='refund_pending')?'<div class="pfxRow" style="margin-top:8px"><button type="button" class="pfxBtn" data-a="aRefund" data-id="'+E(r.order_id)+'">Ücret iadesi yapıldı</button></div>':'')+'</div>'}).join(''):'<p class="pfxMuted">Kayıt yok.</p>'));
   },
@@ -2592,7 +2611,7 @@ ACT_EXTRA({
   aPView:async function(b){
     await busy(b,async function(){var p=await rpc('oz_product_detail',{p_id:b.dataset.id})||{};
       sheet(p.name||'Ürün','<div class="ozImgs" style="margin-bottom:10px">'+arr(p.images).map(function(u){return pic(u,p.name)}).join('')+'</div>'+
-        '<dl class="ozKV"><dt>Satıcı</dt><dd>'+E((p.seller||{}).display_name||'')+'</dd><dt>Kategori</dt><dd>'+E((p.category||{}).name||'')+'</dd><dt>Menşe</dt><dd>'+E(p.origin_city||'')+'</dd><dt>Net miktar</dt><dd>'+E(p.net_content||'')+'</dd><dt>Raf ömrü</dt><dd>'+E(p.shelf_life_days!=null?p.shelf_life_days+' gün':'')+'</dd><dt>Alerjen</dt><dd>'+E(arr(p.allergens).map(algLabel).join(', ')||'—')+'</dd><dt>Organik</dt><dd>'+E(p.organic_cert||'—')+'</dd></dl>'+
+        '<dl class="ozKV"><dt>Satıcı</dt><dd>'+E((p.seller||{}).display_name||'')+'</dd><dt>Kategori</dt><dd>'+E((p.category||{}).name||'')+'</dd><dt>Menşe</dt><dd>'+E(p.origin_city||'')+'</dd><dt>Net miktar</dt><dd>'+E(p.net_content||'')+'</dd><dt>Raf ömrü</dt><dd>'+E(p.shelf_life_days!=null?p.shelf_life_days+' gün':'')+'</dd><dt>Alerjen</dt><dd>'+E(arr(p.allergens).map(algLabel).join(', ')||'—')+'</dd><dt>Organik</dt><dd>'+E(p.organic_cert||'—')+'</dd><dt>Çabuk bozulur</dt><dd>'+((p.no_withdrawal!=null?p.no_withdrawal:(p.category||{}).perishable)?'<span class="ozTag warn" data-per="1">Evet · cayma yok</span>':'Hayır')+'</dd></dl>'+
         '<h3 style="font-size:15px;margin:12px 0 4px">Açıklama</h3><p class="ozStory" style="margin:0">'+E(p.description||'—')+'</p><h3 style="font-size:15px;margin:12px 0 4px">İçindekiler</h3><p class="ozStory" style="margin:0">'+E(p.ingredients||'—')+'</p>'+
         '<h3 style="font-size:15px;margin:12px 0 4px">Seçenekler</h3>'+arr(p.variants).map(function(v){return '<div class="ozLine"><span>'+E(v.label||'')+' · stok '+num(v.stock)+' · '+num(v.weight_g)+' g</span><span>'+TL(v.price_kurus)+'</span></div>'}).join(''),{wide:true})});
   },

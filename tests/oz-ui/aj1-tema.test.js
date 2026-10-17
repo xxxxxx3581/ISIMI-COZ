@@ -84,7 +84,8 @@ const {chromium,open,enter}=require('./harness.js');
   foc:document.activeElement&&document.activeElement.classList.contains('ozX')}:null});
  ok(tr&&tr.pr&&/iş günü içinde kargoya verilir/.test(tr.t),'ürün detayı: kargo süresi + satıcı tek blokta: '+JSON.stringify(tr));
  ok(tr&&tr.foc,'ürün paneli açılınca odak panelde (Kapat): '+JSON.stringify(tr&&tr.foc));
- ok(tr&&tr.n===2&&/Teslimattan sonraki 14 gün içinde iade isteyebilirsin/.test(tr.t),'iade koşulu (return_days=14) aynı blokta: '+JSON.stringify(tr&&tr.t));
+ // P7 (bilinçli beklenti değişikliği): metin "… iade isteyebilirsin" → "… cayma hakkın var" (çabuk bozulmayan ürün)
+ ok(tr&&tr.n===2&&/Teslimattan sonraki 14 gün içinde cayma hakkın var/.test(tr.t),'iade koşulu (return_days=14) aynı blokta: '+JSON.stringify(tr&&tr.t));
  await p.evaluate(()=>{const x=document.querySelector('.ozOv [data-a=sheetClose]');if(x)x.click()});await p.waitForTimeout(300);
  // adet sınırı: stok 3'te 3 adet → "Stoktaki tüm adetler sepetinde"; stok 200'de 50 adet → "en fazla 50 adet"
  const cart0=await p.evaluate(()=>localStorage.getItem('isimi_oz_cart'));
