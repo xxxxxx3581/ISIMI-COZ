@@ -16,11 +16,12 @@
 // AJ2-G: referans Paket G commit'i b4f3985'e tek sefer taşındı (önceki: 60268a5; arada krem ana ekran karartma/gölge CSS'i). ?v=2 aynen.
 // AJ2-G2: referans Paket G2 commit'i f891d84'e tek sefer taşındı (önceki: b4f3985; arada krem afiş karartması CSS'i). ?v=2 aynen.
 // P1: referans Paket 1 commit'i fe3c30e'e tek sefer taşındı (önceki: f891d84; arada kart metinleri, alt boşluk ve sürüm). Sürüm ?v=2 → ?v=3 (canlıya geçiş, önbellek tazeleme).
+// P3: referans Paket 3 commit'i 373ff45'e tek sefer taşındı (önceki: fe3c30e; arada satıcı puan rozeti ve QR düğmesi CSS'i). Sürüm ?v=3 aynen.
 const fs=require('fs'),path=require('path'),cp=require('child_process');
 const {chromium,open,enter}=require('./harness.js');
 const ROOT=path.resolve(__dirname,'../..');
 const cur=fs.readFileSync(path.join(ROOT,'index.html'),'utf8');
-const base=cp.execSync('git show fe3c30e:index.html',{cwd:ROOT,encoding:'utf8',maxBuffer:64<<20});
+const base=cp.execSync('git show 373ff45:index.html',{cwd:ROOT,encoding:'utf8',maxBuffer:64<<20});
 const blk=s=>{const a=s.indexOf('/*K21-BASLA*/'),b=s.indexOf('/*K21-BITIS*/');return s.slice(a,b)};
 const nocom=s=>s.replace(/\/\*[\s\S]*?\*\//g,'');
 (async()=>{
