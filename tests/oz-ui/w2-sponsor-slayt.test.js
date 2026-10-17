@@ -1,4 +1,5 @@
 // W2: Keşfet hero slider'ına TEST "Sponsorlu" satıcı slaytı (Deneme Çiftliği) — 390px, sahte veri, sahte zamanlayıcı.
+// Paket 1: "🔒 Güvenli ödeme" rozeti gerçek ödeme gelene kadar gizli (SHOW_SECURE_PAY=false) → ilk 3 slayt etiketleri iki öğe.
 // Çalıştırma: node tests/oz-ui/w2-sponsor-slayt.test.js
 // Doğrulanan: 4 slayt; noktalar 4 ve "1/4" çip, akışla "4/4"e kadar doğru sayar; ilk 3 slayt aynı (başlık, metin, foto, bağlantısız);
 // 4. slayt: satıcı logosu, ad, "İzmir · Karabağlar", "✓ Onaylı satıcı", "Ürünlerini keşfet", ürün fotoğrafları, okunur "Sponsorlu";
@@ -21,7 +22,7 @@ const SID='41876174-05d7-421c-bac1-f2e8272d19e2';
  let s=await S();
  ok(s.n===4&&s.dots===4&&s.chip==='1/4'&&s.on===0,'4 slayt, 4 nokta, "1/4": '+JSON.stringify({n:s.n,dots:s.dots,chip:s.chip,on:s.on}));
  const OLD=[['Doğadan sofranıza','Üreticiden doğrudan kapına.','bal-recel.jpg,kuruyemis-meyve.jpg,recel.jpg'],['Her kavanozda bir hikâye','Anadolu\'nun köylerinden el emeği ürünler.','recel.jpg,tursu-konserve.jpg,el-emegi.jpg'],['Güvenilir satıcılar','Başvurusu incelenen, onaylı satıcılardan.','kuru-yemis.jpg,baharat-bitki-cay.jpg,bitki-cayi.jpg']];
- OLD.forEach((o,i)=>{const x=s.slides[i]||{};ok(x.t===o[0]&&x.s===o[1]&&x.imgs.join(',')===o[2]&&!x.pid&&!x.sp&&x.tc.join('|')==='✓ Onaylı satıcı|🚚 Kapına kargo|🔒 Güvenli ödeme','slayt '+(i+1)+' aynı kalmalı: '+JSON.stringify(x))});
+ OLD.forEach((o,i)=>{const x=s.slides[i]||{};ok(x.t===o[0]&&x.s===o[1]&&x.imgs.join(',')===o[2]&&!x.pid&&!x.sp&&x.tc.join('|')==='✓ Onaylı satıcı|🚚 Kapına kargo','slayt '+(i+1)+' aynı kalmalı: '+JSON.stringify(x))});
  const z=s.slides[3]||{};
  ok(z.pid===SID&&z.t==='Deneme Çiftliği'&&z.s==='İzmir · Karabağlar'&&z.logo,'4. slayt satıcı kimliği, ad, il · ilçe, logo: '+JSON.stringify(z));
  ok(z.tc&&z.tc.join('|')==='✓ Onaylı satıcı|Ürünlerini keşfet ›','4. slayt "Onaylı satıcı" + "Ürünlerini keşfet": '+JSON.stringify(z.tc));
