@@ -13,7 +13,11 @@ const DECL='Ürünlerimin mevzuata uygun üretildiğini, etiket bilgilerinin (i�
  const {p,st}=await open(br,{w:390,h:844,visible:true,fx:{dash:{status:'draft'}}});
  await enter(p);
  await p.evaluate(()=>{const F=window.__OZ_FX;Object.assign(F.T.oz_sellers[0],{status:'draft',tax_type:null,sells_food:true,declarations_at:null});
-  F.R.oz_seller_declare='2026-10-17T10:00:00Z';window.__calls=[];const orig=window.PF.rpc;window.PF.rpc=async function(fn,a){window.__calls.push([fn,a]);return orig.apply(this,arguments)}});
+  F.R.oz_seller_declare='2026-10-17T10:00:00Z';
+  // P9 (bilinçli beklenti değişikliği): tek "satıcı sözleşmesi" kutusu yerine iki yasal metin onayı (oz_satici_sozlesmesi, oz_urun_kurallari);
+  // metinler yayında sayılır ve onay kaydı başarılı döner
+  F.R.pf_legal_current=[{doc_type:'oz_satici_sozlesmesi',title:'Satıcı Sözleşmesi',version:1},{doc_type:'oz_urun_kurallari',title:'Ürün Kuralları',version:1}];
+  F.R.pf_record_consents={saved:[{doc_type:'oz_satici_sozlesmesi'},{doc_type:'oz_urun_kurallari'}],not_published:[]};window.__calls=[];const orig=window.PF.rpc;window.PF.rpc=async function(fn,a){window.__calls.push([fn,a]);return orig.apply(this,arguments)}});
  const step=async n=>{await p.evaluate(n=>{document.querySelectorAll('.ozOv,.pfxOv').forEach(x=>x.remove());OZ.go('sellerApply',{tab:String(n)})},n);await p.waitForTimeout(1400)};
  const req=()=>p.evaluate(()=>[...document.querySelectorAll('#ozSReq li')].map(l=>l.dataset.doc+':'+l.querySelector('.ozTag').textContent));
  // 1) 1. adım: vergi durumu seçenekleri, gıda kutusu, belge listesi
@@ -46,16 +50,16 @@ const DECL='Ürünlerimin mevzuata uygun üretildiğini, etiket bilgilerinin (i�
  await step(4);
  const g1=await p.evaluate(()=>({dis:document.getElementById('ozSubB').disabled,t:document.getElementById('ozSubB').textContent,why:document.getElementById('ozSubWhy').textContent,decl:(document.getElementById('ozSDecl')||{closest:()=>null}).closest('label')?.textContent,dc:(document.getElementById('ozSDecl')||{}).checked}));
  ok(g1.t==='Başvuruyu gönder'&&g1.dis&&g1.decl===DECL&&g1.dc===false,'4. adım: düğme devre dışı, beyan metni ve kutusu: '+JSON.stringify(g1));
- ok(/Kimlik belgesi yükle/.test(g1.why)&&/Gıda işletme kayıt\/onay belgesi yükle/.test(g1.why)&&!/Vergi levhası yükle/.test(g1.why)&&/Satıcı beyanını onayla/.test(g1.why)&&/Satıcı sözleşmesini onayla/.test(g1.why),'4. adım: eksikler tek tek yazılı: '+g1.why);
- await p.check('#ozSDecl');await p.check('#ozSTerms');await p.waitForTimeout(150);
+ ok(/Kimlik belgesi yükle/.test(g1.why)&&/Gıda işletme kayıt\/onay belgesi yükle/.test(g1.why)&&!/Vergi levhası yükle/.test(g1.why)&&/Satıcı beyanını onayla/.test(g1.why)&&/Satıcı Sözleşmesi onayını işaretle/.test(g1.why)&&/Ürün Kuralları onayını işaretle/.test(g1.why),'4. adım: eksikler tek tek yazılı: '+g1.why);
+ await p.check('#ozSDecl');await p.check('#ozSC_oz_satici_sozlesmesi');await p.check('#ozSC_oz_urun_kurallari');await p.waitForTimeout(150);
  const g2=await p.evaluate(()=>({dis:document.getElementById('ozSubB').disabled,why:document.getElementById('ozSubWhy').textContent}));
- ok(g2.dis&&!/beyan|sözleşme/i.test(g2.why)&&/Kimlik belgesi yükle/.test(g2.why),'kutular işaretli ama belge eksik → hâlâ devre dışı: '+JSON.stringify(g2));
+ ok(g2.dis&&!/beyan|sözleşme|kurallar/i.test(g2.why)&&/Kimlik belgesi yükle/.test(g2.why),'kutular işaretli ama belge eksik → hâlâ devre dışı: '+JSON.stringify(g2));
  await p.evaluate(()=>{const T=window.__OZ_FX.T;T.oz_seller_documents=T.oz_seller_documents.concat([{id:'d2',doc_type:'identity',status:'pending'},{id:'d3',doc_type:'food_registration',status:'pending'}])});
  await step(4);
  ok(await p.evaluate(()=>document.getElementById('ozSubB').disabled),'belgeler tam, kutular boş → devre dışı');
  await p.check('#ozSDecl');await p.waitForTimeout(100);
- ok(await p.evaluate(()=>document.getElementById('ozSubB').disabled&&/sözleşme/.test(document.getElementById('ozSubWhy').textContent)),'yalnız beyan işaretli → sözleşme eksik');
- await p.check('#ozSTerms');await p.waitForTimeout(100);
+ ok(await p.evaluate(()=>document.getElementById('ozSubB').disabled&&/Satıcı Sözleşmesi onayını/.test(document.getElementById('ozSubWhy').textContent)),'yalnız beyan işaretli → sözleşme eksik');
+ await p.check('#ozSC_oz_satici_sozlesmesi');await p.check('#ozSC_oz_urun_kurallari');await p.waitForTimeout(100);
  const g3=await p.evaluate(()=>({dis:document.getElementById('ozSubB').disabled,why:document.getElementById('ozSubWhy').textContent}));
  ok(!g3.dis&&g3.why==='Başvurun gönderilmeye hazır.','tamamlanınca etkin: '+JSON.stringify(g3));
  await p.evaluate(()=>{window.__calls=[]});await p.click('#ozSubB');await p.waitForTimeout(1500);
@@ -68,7 +72,7 @@ const DECL='Ürünlerimin mevzuata uygun üretildiğini, etiket bilgilerinin (i�
  ok(lg.kind&&!lg.tax&&!lg.food,'SQL yokken 1. adım eski tür seçimi: '+JSON.stringify(lg));
  await step(4);
  const lg4=await p.evaluate(()=>({decl:!!document.getElementById('ozSDecl'),dis:document.getElementById('ozSubB').disabled}));
- await p.check('#ozSTerms');await p.waitForTimeout(100);
+ await p.check('#ozSC_oz_satici_sozlesmesi');await p.check('#ozSC_oz_urun_kurallari');await p.waitForTimeout(100);
  ok(!lg4.decl&&lg4.dis&&!(await p.evaluate(()=>document.getElementById('ozSubB').disabled)),'SQL yokken 4. adım: beyan kutusu yok, sözleşmeyle etkin: '+JSON.stringify(lg4));
  // 5) yönetici satıcı detayı
  await p.evaluate(()=>{const R=window.__OZ_FX.R;const d=R.oz_admin_seller_detail;
