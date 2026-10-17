@@ -479,10 +479,10 @@ function ppHtml(d,all,prods){
   var cats=all&&all.length?all.slice():own.slice();own.forEach(function(c){if(!cats.some(function(x){return x.slug===c.slug}))cats.push(c)});
   var rc=num(d.rating_count);
   var ra=num(d.rating_avg).toLocaleString('tr-TR',{minimumFractionDigits:1,maximumFractionDigits:1});
-  /* P3: puan, kapak görselinin sağ altında küçük yarı saydam rozet "★ 5,0 (4)" (44px dokunma; aynı değerlendirmeler paneli) */
-  return '<div class="ozPP"><div class="cv">'+ppCover(cv,ppSlides(prods))+sfavBtn(d.id,!!(ST.sfav&&ST.sfav.has(String(d.id))),'ppFav')+
-    (rc?'<button type="button" class="rtb3" data-a="ppRev" data-id="'+E(d.id)+'" aria-label="5 üzerinden '+ra+' puan, '+rc+' değerlendirme. Değerlendirmeleri gör"><span class="pl" aria-hidden="true"><b>★ '+ra+'</b> <small>('+rc+')</small></span></button>':'')+'</div>'+  /* T2: fotoğraf üstü geri oku yok; üst çubuktaki "<" aynı back() ile bir adım geri */
-    '<div class="hd"><span class="lg">'+(lg?'<img src="'+E(lg)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">':'')+'<i aria-hidden="true">'+E(initials(nm))+'</i></span><span class="ok">✓ Onaylı satıcı</span></div>'+
+  return '<div class="ozPP"><div class="cv">'+ppCover(cv,ppSlides(prods))+sfavBtn(d.id,!!(ST.sfav&&ST.sfav.has(String(d.id))),'ppFav')+'</div>'+  /* T2: fotoğraf üstü geri oku yok; üst çubuktaki "<" aynı back() ile bir adım geri */
+    '<div class="hd"><span class="lg">'+(lg?'<img src="'+E(lg)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">':'')+'<i aria-hidden="true">'+E(initials(nm))+'</i></span><span class="ok">✓ Onaylı satıcı</span>'+
+    /* P4: puan rozeti görselin dışında, avatar/"Onaylı satıcı" satırının sağında (dar ekranda alt satıra iner) */
+    (rc?'<button type="button" class="rtb3" data-a="ppRev" data-id="'+E(d.id)+'" aria-label="5 üzerinden '+ra+' puan, '+rc+' değerlendirme. Değerlendirmeleri gör"><span class="pl" aria-hidden="true"><b>★ '+ra+'</b> <small>('+rc+')</small></span></button>':'')+'</div>'+
     /* C7: solda ad + konum; P3: puan kutusu kalktı (kapakta rozet), yorumsuz satıcıda "Yeni" aynen */
     '<div class="nmr"><div class="nl"><h1 class="nm" data-nfit>'+E(nm)+'</h1>'+(loc?'<p class="loc">'+E(loc)+'</p>':'')+'</div>'+
       (rc?'':'<em class="new">Yeni</em>')+'</div>'+

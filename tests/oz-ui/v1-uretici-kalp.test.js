@@ -1,4 +1,5 @@
 // V1: üretici sayfası favori kalbi — 390px, sahte veri (oz_toggle_favorite_seller sahte). Çalıştırma: node tests/oz-ui/v1-uretici-kalp.test.js
+// P4: kalp zeminsiz ince beyaz (24px, hafif gölge); "yarı saydam zemin" beklentisi "zeminsiz" oldu.
 // Doğrulanan: slider'ın sağ üstünde ≥44px kalp; açılışta durum oz_favorite_sellers okumasından (boş / dolu kırmızı);
 // dokunma slider'ı/slayt panelini açmaz; iyimser güncelleme + oz_toggle_favorite_seller(p_seller); RPC hatası ya da farklı
 // dönüşte eski durum + kısa uyarı; çağrı sürerken art arda dokunmada tek çağrı; girişsizde RPC yok, giriş yönlendirmesi;
@@ -30,7 +31,7 @@ async function setup(br,opt){
  // 1) favoride değil → boş; dokun → dolu kırmızı, slider/panel açılmaz
  let {p,st}=await setup(br,{fav:false});
  let h=await H(p);
- ok(h&&!h.on&&h.pressed==='false'&&h.w>=44&&h.h>=44&&h.top<=12&&h.right<=12&&/rgba\(/.test(h.bg),'boş kalp sağ üstte, ≥44px, yarı saydam zemin: '+JSON.stringify(h));
+ ok(h&&!h.on&&h.pressed==='false'&&h.w>=44&&h.h>=44&&h.top<=12&&h.right<=12&&h.bg==='rgba(0, 0, 0, 0)','boş kalp sağ üstte, ≥44px, zeminsiz (P4): '+JSON.stringify(h));
  ok(h&&h.chip&&h.dots&&!h.hitChip&&!h.hitDots,'çip ve noktalarla çakışma olmamalı: '+JSON.stringify(h));
  ok(st.calls.some(c=>c[0]==='GET oz_favorite_sellers'&&/seller_id=eq\.s1/.test(c[1])),'açılışta oz_favorite_sellers (seller_id=eq.s1) okunmalı');
  const i0=await p.evaluate(()=>(document.getElementById('ozPPS')||{__oz:{state:()=>({i:-1})}}).__oz.state().i);
