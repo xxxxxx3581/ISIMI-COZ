@@ -18,11 +18,12 @@
 // P1: referans Paket 1 commit'i fe3c30e'e tek sefer taşındı (önceki: f891d84; arada kart metinleri, alt boşluk ve sürüm). Sürüm ?v=2 → ?v=3 (canlıya geçiş, önbellek tazeleme).
 // P3: referans Paket 3 commit'i 373ff45'e tek sefer taşındı (önceki: fe3c30e; arada satıcı puan rozeti ve QR düğmesi CSS'i). Sürüm ?v=3 aynen.
 // P4: referans Paket 4 commit'i dcccd67'e tek sefer taşındı (önceki: 373ff45; arada satıcı puan rozeti ve kalp CSS'i). Sürüm ?v=3 aynen.
+// P5: referans Paket 5 commit'i 9d58b31'e tek sefer taşındı (önceki: dcccd67; arada yalnız a7-food-v1.js?v=3 ve a35-seller-identity.js?v=3).
 const fs=require('fs'),path=require('path'),cp=require('child_process');
 const {chromium,open,enter}=require('./harness.js');
 const ROOT=path.resolve(__dirname,'../..');
 const cur=fs.readFileSync(path.join(ROOT,'index.html'),'utf8');
-const base=cp.execSync('git show dcccd67:index.html',{cwd:ROOT,encoding:'utf8',maxBuffer:64<<20});
+const base=cp.execSync('git show 9d58b31:index.html',{cwd:ROOT,encoding:'utf8',maxBuffer:64<<20});
 const blk=s=>{const a=s.indexOf('/*K21-BASLA*/'),b=s.indexOf('/*K21-BITIS*/');return s.slice(a,b)};
 const nocom=s=>s.replace(/\/\*[\s\S]*?\*\//g,'');
 (async()=>{
