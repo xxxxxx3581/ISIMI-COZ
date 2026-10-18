@@ -25,11 +25,12 @@
 // P9: referans Paket 9 commit'i 73e4e64'e tek sefer taşındı (önceki: 1661f34; arada yalnız oz-market-v1.js ?v=6 → ?v=7).
 // P10: referans Paket 10 commit'i 8aba1d7'e tek sefer taşındı (önceki: 73e4e64; arada oz-market-v1.js ?v=7 → ?v=8 ve K21-JS bloğuna ?oz_pay iyzico dönüş işleyicisi).
 // P11: referans Paket 11 commit'i a728005'e tek sefer taşındı (önceki: 8aba1d7; arada yalnız oz-market-v1.js ?v=8 → ?v=9).
+// P13: referans 60e9226'e tek sefer taşındı (önceki: a728005; arada yalnız pf-platform-v1.js ?v=3 → ?v=4; oz-market-v1.js ?v=9 aynen).
 const fs=require('fs'),path=require('path'),cp=require('child_process');
 const {chromium,open,enter}=require('./harness.js');
 const ROOT=path.resolve(__dirname,'../..');
 const cur=fs.readFileSync(path.join(ROOT,'index.html'),'utf8');
-const base=cp.execSync('git show a728005:index.html',{cwd:ROOT,encoding:'utf8',maxBuffer:64<<20});
+const base=cp.execSync('git show 60e9226:index.html',{cwd:ROOT,encoding:'utf8',maxBuffer:64<<20});
 const blk=s=>{const a=s.indexOf('/*K21-BASLA*/'),b=s.indexOf('/*K21-BITIS*/');return s.slice(a,b)};
 const nocom=s=>s.replace(/\/\*[\s\S]*?\*\//g,'');
 (async()=>{
