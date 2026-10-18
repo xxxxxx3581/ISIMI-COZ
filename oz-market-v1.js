@@ -2541,12 +2541,27 @@ function retDueLine(r,ps){if(!r.created_at)return '';var due=Date.parse(r.create
   return '<div class="pfxMuted"><span data-rdue="1">Bedel iadesi son günü: '+E(fmtDay(new Date(due).toISOString()))+'</span>'+(late?' <span class="ozTag bad" data-late="1">Gecikti</span>':'')+'</div>'}
 var IYZ_RET_WARN='Bu siparişin iyzico onayı verilmiş. Satıcıya aktarılan tutarın geri alınması iyzico ile netleştirilmeden iade onaylama.';
 var IYZ_ST={pending:['Onay bekliyor','warn'],approved:['Onaylandı','ok'],failed:['Onay başarısız','bad'],disapproved:['Onay geri alındı','warn'],refunded:['İade edildi','']};
-function iyzRows(l){var on=iyzMode();return '<h4 style="margin:10px 0 6px" id="ozAIyzH">iyzico onayı '+(on?IYZ_TEST:'')+'</h4>'+(on?'':'<p class="pfxMuted" style="margin:0 0 6px">Onay yalnız test (sandbox) modunda çalışır.</p>')+
+/* P12: iade bekleyen (payment_status 'refund_pending') siparişte kalem başına iyzico iadesi: önce onayı geri al (disapprove), sonra iade (refund).
+   payment_status alanı yoksa (oz-paket12 SQL uygulanmadı) eski görünüm aynen. Siparişin tüm iyzico kalemleri iade edilince oz_admin_mark_refunded. */
+function iyzOrderRefunded(l,oid){var m=l.filter(function(y){return String(y.order_id)===String(oid)});return m.length>0&&m.every(function(y){return y.approve_status==='refunded'})}
+function iyzRefundUi(x,on,l,first){
+  if(x.payment_status!=='refund_pending')return null;var dis=on?'':' disabled',a=' data-kind="'+E(x.kind)+'" data-id="'+E(x.id)+'" data-order="'+E(x.order_id)+'" data-price="'+E(x.price_kurus)+'"';
+  var btn=x.approve_status==='approved'?'<button type="button" class="pfxBtn" data-a="aIyzR" data-op="disapprove"'+a+dis+'>Onayı geri al</button>':
+    /^(pending|disapproved|failed)$/.test(x.approve_status||'pending')?'<button type="button" class="pfxBtn bad" data-a="aIyzR" data-op="refund"'+a+dis+'>iyzico iade</button>':'';
+  var retry=first&&iyzOrderRefunded(l,x.order_id)?'<p class="ozErr" style="margin:6px 0 0" data-markretry="1">Kalemler iyzico\'da iade edildi; sipariş durumu henüz güncellenmedi.</p><div class="pfxRow" style="margin-top:6px"><button type="button" class="pfxBtn pri" data-a="aIyzMark" data-order="'+E(x.order_id)+'"'+dis+'>Tekrar dene</button></div>':'';
+  return {btn:btn,retry:retry}}
+function iyzRows(l){var on=iyzMode(),seen={};return '<h4 style="margin:10px 0 6px" id="ozAIyzH">iyzico onayı '+(on?IYZ_TEST:'')+'</h4>'+(on?'':'<p class="pfxMuted" style="margin:0 0 6px">Onay yalnız test (sandbox) modunda çalışır.</p>')+
   (l.length?l.map(function(x){var ok=x.approve_status==='approved',late=!ok&&x.due_by&&Date.parse(x.due_by)<Date.now(),st=IYZ_ST[x.approve_status]||[x.approve_status||'—',''];
+    var first=!seen[x.order_id];seen[x.order_id]=1;var rf=iyzRefundUi(x,on,l,first);
     return '<div class="pfxCard" data-iyz="'+E(x.kind+':'+x.id)+'"><div class="pfxRow"><b>'+E((x.order_no||'')+' · '+(x.name||''))+'</b><span>'+TL(x.price_kurus)+'</span></div><div class="pfxMuted">'+E(x.seller_name||'')+'</div>'+
       (x.due_by?'<div class="pfxMuted"><span data-due="1">Son ödeme günü: '+E(fmtDay(x.due_by))+'</span>'+(late?' <span class="ozTag bad" data-late="1">Gecikti</span>':'')+'</div>':'')+
-      '<div class="pfxRow" style="margin-top:6px"><span class="ozTag '+st[1]+'" data-iyzst="'+E(x.approve_status||'')+'">'+E(st[0])+'</span>'+(ok?'':'<button type="button" class="pfxBtn pri" data-a="aIyz" data-op="approve" data-kind="'+E(x.kind)+'" data-id="'+E(x.id)+'"'+(!on||x.block_reason?' disabled':'')+'>iyzico onayı</button>')+'</div>'+
-      (x.block_reason&&!ok?'<p class="pfxMuted" style="margin:4px 0 0" data-block="1">'+E(x.block_reason)+'</p>':'')+'</div>'}).join(''):'<p class="pfxMuted">iyzico ile ödenmiş kalem yok.</p>')}
+      '<div class="pfxRow" style="margin-top:6px"><span class="ozTag '+st[1]+'" data-iyzst="'+E(x.approve_status||'')+'">'+E(st[0])+'</span>'+(rf?rf.btn:(ok||x.approve_status==='refunded'?'':'<button type="button" class="pfxBtn pri" data-a="aIyz" data-op="approve" data-kind="'+E(x.kind)+'" data-id="'+E(x.id)+'"'+(!on||x.block_reason?' disabled':'')+'>iyzico onayı</button>'))+'</div>'+
+      (rf?rf.retry:(x.block_reason&&!ok?'<p class="pfxMuted" style="margin:4px 0 0" data-block="1">'+E(x.block_reason)+'</p>':''))+'</div>'}).join(''):'<p class="pfxMuted">iyzico ile ödenmiş kalem yok.</p>')}
+/* iade sonrası: siparişin tüm iyzico kalemleri iade edildiyse sipariş "iade edildi" yapılır; hata olursa iyzico'ya yeniden iade GÖNDERİLMEZ ("Tekrar dene" yalnız durumu günceller) */
+async function iyzMarkRefunded(oid){try{await rpc('oz_admin_mark_refunded',{p_order:oid,p_reference:'iyzico iade (test)'});toast('Sipariş iade edildi olarak işaretlendi');return true}
+  catch(e){if(e&&e.auth)throw e;errToast('iyzico iadesi yapıldı ama sipariş durumu güncellenemedi: '+e.message+' "Tekrar dene" yalnız durumu günceller; iyzico\'ya yeniden iade gönderilmez.');return false}}
+async function iyzAfterRefund(oid){var l=null;try{l=arr(await rpc('oz_admin_iyzico_items',{p_limit:500}))}catch(e){if(e&&e.auth)throw e;errToast('Kalem listesi okunamadı; sipariş durumu için "Tekrar dene"yi kullan.');return}
+  if(iyzOrderRefunded(l,oid))await iyzMarkRefunded(oid)}
 /* P11: iade gerekli ödemeler — para alınmış, sipariş açılmamış (oz_admin_refund_required). İade iyzico panelinden elle yapılır; burada yalnız not */
 async function refreqView(){aPaint(aLoading());var l=arr(await rpc('oz_admin_refund_required',{p_include_resolved:false}));
   aPaint('<button type="button" class="pfxBtn" data-a="aReload">← Özet</button><h4 style="margin:10px 0 6px">İade gerekli ödemeler</h4><p class="pfxMuted" style="margin:0 0 8px">İade iyzico panelinden elle yapılır; burada yalnız "elle iade ettim" notu tutulur.</p>'+
@@ -2741,6 +2756,18 @@ ACT_EXTRA({
   aRefRes:async function(b){var r=await reasonBox('Elle iade ettim','Not (zorunlu, en fazla 300 karakter): iade tarihi, iyzico işlem no…',true);if(r===null)return;
     if(r.length>300){toast('Not en fazla 300 karakter olabilir.');return}
     await busy(b,async function(){await rpc('oz_admin_refund_resolve',{p_payment:b.dataset.id,p_note:r});toast('Kayıt çözüldü olarak işaretlendi')});await refreqView()},
+  aIyzR:async function(b){if(!iyzMode()){toast('iyzico işlemleri yalnız test (sandbox) modunda çalışır.');return}
+    var op=b.dataset.op;
+    var go=op==='disapprove'?await confirmBox('Onayı geri al','Bu kalemin iyzico onayı geri alınır. Ardından iade edebilirsin.','Onayı geri al',true)
+      :await confirmBox('iyzico iade',TL(b.dataset.price)+' · Tutar müşteri kartına iade edilir (test ortamı).','İade et',true);
+    if(!go)return;
+    await busy(b,async function(){
+      /* iyzico işlemi başarısız ya da sonuç bilinmiyorsa (ağ/zaman aşımı) mesaj aynen gösterilir; mark_refunded ASLA çağrılmaz */
+      try{await iyzCall('approve',{kind:b.dataset.kind,id:b.dataset.id,op:op})}catch(e){errToast(e.message);return}
+      toast(op==='refund'?'iyzico iadesi yapıldı':'iyzico onayı geri alındı');
+      if(op==='refund')await iyzAfterRefund(b.dataset.order);
+    });await aReload()},
+  aIyzMark:async function(b){await busy(b,async function(){await iyzMarkRefunded(b.dataset.order)});await aReload()},
   aIyz:async function(b){if(!iyzMode()){toast('Onay yalnız test (sandbox) modunda çalışır.');return}
     if(!await confirmBox('iyzico onayı verilsin mi?','Bu kalemin tutarı satıcıya aktarılmak üzere iyzico\'ya onaylanır (test ortamı).','Onayla'))return;
     await busy(b,async function(){try{await iyzCall('approve',{kind:b.dataset.kind,id:b.dataset.id,op:b.dataset.op||'approve'});toast('iyzico onayı verildi')}catch(e){errToast(e.message)}await aReload()})},
