@@ -89,7 +89,8 @@ function need(){if(!sess()||!sess().access_token){toast('Devam etmek için giri�
 async function act(btn,fn){if(btn){btn.disabled=true}try{return await fn()}catch(e){toast(clean(e&&e.message||e),'bad');return undefined}finally{if(btn)btn.disabled=false}}
 
 /* ------------------------------------------------------------------ yasal metinler */
-var LEGAL_ORDER=['kullanici_sozlesmesi','kvkk_aydinlatma','cerez_politikasi','mesafeli_satis','on_bilgilendirme','iade_iptal','acik_riza_pazarlama','acik_riza_konum','isletme_sozlesmesi','kurye_sozlesmesi','hizmet_veren_sozlesmesi','ilan_kurallari','topluluk_kurallari','hallet_sorumluluk','acik_riza_yurtdisi'];
+var LEGAL_ORDER=['kullanici_sozlesmesi','kvkk_aydinlatma','cerez_politikasi','mesafeli_satis','on_bilgilendirme','iade_iptal','acik_riza_pazarlama','acik_riza_konum','isletme_sozlesmesi','kurye_sozlesmesi','hizmet_veren_sozlesmesi','ilan_kurallari','topluluk_kurallari','hallet_sorumluluk','acik_riza_yurtdisi',
+  /* P13: Özüne Dön metinleri */ 'oz_kvkk_eki','oz_on_bilgilendirme','oz_mesafeli_satis','oz_iade_cayma','oz_satici_sozlesmesi','oz_urun_kurallari'];
 async function legalList(){if(PF.legal)return PF.legal;try{var l=await rpc('pf_legal_current',{p_audience:null},{anon:true});PF.legal=Array.isArray(l)?l:[]}catch(e){PF.legal=[]}return PF.legal}
 PF.legalList=legalList;
 /* P3: yayımlanmış metin yoksa boş ekran yerine net mesaj + Destek (hukuki metin uydurulmaz) */
@@ -105,7 +106,8 @@ PF.openLegal=async function(docType){
       setBody('<p class="pfxMuted">Sürüm '+esc(d.version)+' · Yayın: '+esc(fmtDate(d.published_at))+'</p><h3>'+esc(d.title)+'</h3><div class="pfxDoc">'+esc(d.body)+'</div><p><button type="button" class="pfxBtn" onclick="PF.openLegal()">‹ Tüm metinler</button></p>');return;
     }
     var map={};list.forEach(function(x){map[x.doc_type]=x});
-    var pub=LEGAL_ORDER.filter(function(k){return map[k]});
+    /* P13: LEGAL_ORDER dışında kalan yayındaki türler sessizce düşmez; geliş sırasıyla listenin sonuna eklenir */
+    var pub=LEGAL_ORDER.filter(function(k){return map[k]}).concat(Object.keys(map).filter(function(k){return LEGAL_ORDER.indexOf(k)<0}));
     setBody((pub.length?pub.map(function(k){var x=map[k];return '<div class="pfxCard pfxRow"><div><b>'+esc(x.title)+'</b><div class="pfxMuted">Sürüm '+esc(x.version)+(x.summary?' · '+esc(x.summary):'')+'</div></div><button type="button" class="pfxBtn" onclick="PF.openLegal(\''+esc(k)+'\')">Oku</button></div>'}).join(''):
       legalPending())+
       '<p><button type="button" class="pfxBtn" onclick="PF.openCompany()">Künye ve iletişim</button></p>');
