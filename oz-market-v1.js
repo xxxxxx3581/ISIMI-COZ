@@ -2189,6 +2189,10 @@ var SP={
       /* P6: bekletme = ödemeye hazır olma eşiği (takvim günü); iade olursa tutar sonraki ödemeden düşülür (mahsup) */
       (num(e.hold_days)?'<p class="ozMuted">Teslim edilen siparişlerin tutarı teslimden '+num(e.hold_days)+' gün sonra ödemeye hazır olur. İade olursa tutar sonraki ödemenizden düşülür.</p>':'')+
       (num(e.pending_adjustments_kurus)>0?'<p class="ozMuted" data-adj="1"><b>Mahsup edilecek: '+TL(e.pending_adjustments_kurus)+'</b></p>':'')+
+      /* P11: kartla (iyzico) ödenen siparişler — elle hakedişe girmez; yalnız tutar varsa görünür. Aktarım süresi teyitsiz → yazılmaz */
+      (num(e.iyzico_pending_kurus)+num(e.iyzico_approved_kurus)+num(e.iyzico_waiting_kurus)>0?'<div class="ozCard" id="ozIyzE" style="margin:0 0 12px"><h3 style="margin:0 0 6px">Kartla ödenen siparişler</h3>'+
+        '<div class="ozLine"><span class="m">Bekleyen</span><span data-iyze="pending">'+TL(e.iyzico_pending_kurus)+'</span></div><div class="ozLine"><span class="m">Onaylanan</span><span data-iyze="approved">'+TL(e.iyzico_approved_kurus)+'</span></div><div class="ozLine"><span class="m">Teslim bekleyen</span><span data-iyze="waiting">'+TL(e.iyzico_waiting_kurus)+'</span></div>'+
+        '<p class="ozHint" style="margin:6px 0 0">Kartla ödenen siparişlerde ödeme iyzico üzerinden yapılır; admin onayından sonra hesabına geçer.</p></div>':'')+
       '<div class="ozSecH"><h2>Ödemeler</h2></div>'+(po.length?'<div class="ozList">'+po.map(function(x){return '<div class="ozCard" style="margin:0"><div class="ozRow2" style="justify-content:space-between"><b>'+TL(x.amount_kurus)+'</b>'+stTag(PST,x.status)+'</div><p class="ozMuted" style="margin:4px 0 0">'+E(fmtDay(x.created_at))+((x.reference||x.bank_reference)?' · Ref: '+E(x.reference||x.bank_reference):'')+(x.paid_at?' · Ödendi: '+E(fmtDay(x.paid_at)):'')+'</p></div>'}).join('')+'</div>':'<p class="ozMuted">Henüz ödeme kaydı yok.</p>');
     var b=D.getElementById('ozSP');if(b)b.innerHTML=h;
   },
@@ -2535,6 +2539,7 @@ var SET_B=[['oz_market_enabled','Pazar açık (herkes görür)'],['oz_seller_sig
 function retDueLine(r,ps){if(!r.created_at)return '';var due=Date.parse(r.created_at)+14*864e5;if(isNaN(due))return '';
   var late=r.status!=='rejected'&&!!ps&&ps[r.order_id]!=='refunded'&&due<Date.now();
   return '<div class="pfxMuted"><span data-rdue="1">Bedel iadesi son günü: '+E(fmtDay(new Date(due).toISOString()))+'</span>'+(late?' <span class="ozTag bad" data-late="1">Gecikti</span>':'')+'</div>'}
+var IYZ_RET_WARN='Bu siparişin iyzico onayı verilmiş. Satıcıya aktarılan tutarın geri alınması iyzico ile netleştirilmeden iade onaylama.';
 var IYZ_ST={pending:['Onay bekliyor','warn'],approved:['Onaylandı','ok'],failed:['Onay başarısız','bad'],disapproved:['Onay geri alındı','warn'],refunded:['İade edildi','']};
 function iyzRows(l){var on=iyzMode();return '<h4 style="margin:10px 0 6px" id="ozAIyzH">iyzico onayı '+(on?IYZ_TEST:'')+'</h4>'+(on?'':'<p class="pfxMuted" style="margin:0 0 6px">Onay yalnız test (sandbox) modunda çalışır.</p>')+
   (l.length?l.map(function(x){var ok=x.approve_status==='approved',late=!ok&&x.due_by&&Date.parse(x.due_by)<Date.now(),st=IYZ_ST[x.approve_status]||[x.approve_status||'—',''];
@@ -2542,6 +2547,13 @@ function iyzRows(l){var on=iyzMode();return '<h4 style="margin:10px 0 6px" id="o
       (x.due_by?'<div class="pfxMuted"><span data-due="1">Son ödeme günü: '+E(fmtDay(x.due_by))+'</span>'+(late?' <span class="ozTag bad" data-late="1">Gecikti</span>':'')+'</div>':'')+
       '<div class="pfxRow" style="margin-top:6px"><span class="ozTag '+st[1]+'" data-iyzst="'+E(x.approve_status||'')+'">'+E(st[0])+'</span>'+(ok?'':'<button type="button" class="pfxBtn pri" data-a="aIyz" data-op="approve" data-kind="'+E(x.kind)+'" data-id="'+E(x.id)+'"'+(!on||x.block_reason?' disabled':'')+'>iyzico onayı</button>')+'</div>'+
       (x.block_reason&&!ok?'<p class="pfxMuted" style="margin:4px 0 0" data-block="1">'+E(x.block_reason)+'</p>':'')+'</div>'}).join(''):'<p class="pfxMuted">iyzico ile ödenmiş kalem yok.</p>')}
+/* P11: iade gerekli ödemeler — para alınmış, sipariş açılmamış (oz_admin_refund_required). İade iyzico panelinden elle yapılır; burada yalnız not */
+async function refreqView(){aPaint(aLoading());var l=arr(await rpc('oz_admin_refund_required',{p_include_resolved:false}));
+  aPaint('<button type="button" class="pfxBtn" data-a="aReload">← Özet</button><h4 style="margin:10px 0 6px">İade gerekli ödemeler</h4><p class="pfxMuted" style="margin:0 0 8px">İade iyzico panelinden elle yapılır; burada yalnız "elle iade ettim" notu tutulur.</p>'+
+    (l.length?l.map(function(x){return '<div class="pfxCard" data-refreq="'+E(x.id)+'"><div class="pfxRow"><b>'+TL(x.paid_kurus)+'</b><span class="pfxMuted">'+E(fmtDate(x.created_at))+'</span></div>'+
+      '<div class="pfxMuted">iyzico ödeme no: <span data-payid="1">'+E(x.payment_id||'—')+'</span>'+(arr(x.order_nos).length?' · Sipariş: '+E(arr(x.order_nos).join(', ')):'')+'</div>'+
+      (x.error?'<p class="ozErr" style="margin:6px 0 0" data-referr="1">'+E(x.error)+'</p>':'')+
+      '<div class="pfxRow" style="margin-top:8px"><button type="button" class="pfxBtn pri" data-a="aRefRes" data-id="'+E(x.id)+'">Elle iade ettim</button></div></div>'}).join(''):'<p class="pfxMuted">Çözülmemiş kayıt yok.</p>'))}
 function payDueLine(x){var t=[];if(x.due_by){var late=Date.parse(x.due_by)<Date.now();t.push('<span data-due="1">Son ödeme günü: '+E(fmtDay(x.due_by))+'</span>'+(late?' <span class="ozTag bad" data-late="1">Gecikti</span>':''))}
   if(num(x.pending_adjustments_kurus)>0)t.push('<span>Mahsup: −'+TL(x.pending_adjustments_kurus)+'</span>');if(num(x.unpaid_kurus)>num(x.available_kurus))t.push('<span>Bekleme süresinde: '+TL(num(x.unpaid_kurus)-num(x.available_kurus))+'</span>');
   return t.length?'<div class="pfxMuted" style="margin-top:4px;display:flex;flex-wrap:wrap;gap:4px 12px">'+t.join('')+'</div>':''}
@@ -2549,11 +2561,12 @@ var SET_N=[['oz_return_days','İade süresi (gün)',0],['oz_auto_deliver_days','
 var ADMV={
   oz_overview:async function(){
     var o=await rpc('oz_admin_overview',{})||{};
-    var ks=Object.keys(o);
+    var ks=Object.keys(o).filter(function(k){return k!=='refund_required_count'});
+    var rrc=num(o.refund_required_count);
     /* P9: yayındaki Özüne Dön yasal metin sayısı (pf_legal_current; okunamazsa şerit yok) */
     var lgA=await ozLegalList();
     var lgN=lgA?OZ_DOCS_ALL.filter(function(k){return arr(lgA).some(function(d){return d&&d.doc_type===k})}).length:-1;
-    aPaint((lgN>=0?'<div class="pfxCard" id="ozALegal" style="padding:8px 12px"><span>Yasal metinler: <b>'+lgN+'/'+OZ_DOCS_ALL.length+'</b> yayında</span>'+(lgN<OZ_DOCS_ALL.length?' <span class="ozTag warn">Eksik</span>':' <span class="ozTag ok">Tamam</span>')+'</div>':'')+'<div class="ozKpis">'+(ks.length?ks.map(function(k){return '<div class="ozKpi'+(k==='payouts_overdue'&&num(o[k])>0?' hot':'')+'" data-kpi="'+E(k)+'"><small>'+E(kpiLabel(k))+'</small><b>'+E(kpiVal(k,o[k]))+'</b></div>'}).join(''):'<p class="pfxMuted">Özet verisi yok.</p>')+'</div>'+
+    aPaint((rrc>0?'<div class="pfxCard" id="ozARefReq" style="border-color:var(--oz-badL)"><div class="pfxRow"><b>İade gerekli ödemeler: '+rrc+'</b><button type="button" class="pfxBtn pri" data-a="aRefReq">Listeyi aç</button></div><p class="pfxMuted" style="margin:4px 0 0">Kartla para alınmış ama sipariş açılmamış ödemeler.</p></div>':'')+(lgN>=0?'<div class="pfxCard" id="ozALegal" style="padding:8px 12px"><span>Yasal metinler: <b>'+lgN+'/'+OZ_DOCS_ALL.length+'</b> yayında</span>'+(lgN<OZ_DOCS_ALL.length?' <span class="ozTag warn">Eksik</span>':' <span class="ozTag ok">Tamam</span>')+'</div>':'')+'<div class="ozKpis">'+(ks.length?ks.map(function(k){return '<div class="ozKpi'+(k==='payouts_overdue'&&num(o[k])>0?' hot':'')+'" data-kpi="'+E(k)+'"><small>'+E(kpiLabel(k))+'</small><b>'+E(kpiVal(k,o[k]))+'</b></div>'}).join(''):'<p class="pfxMuted">Özet verisi yok.</p>')+'</div>'+
       '<div class="pfxCard"><b>Bakım çalıştır</b><p class="pfxMuted">Ödenmeyen siparişleri iptal etme, süresi dolan teslimleri tamamlama, bekletme süresi biten tutarları serbest bırakma gibi zamanlı işleri hemen çalıştırır.</p><button type="button" class="pfxBtn pri" data-a="aTick">Bakım çalıştır</button><div id="ozAdmTick"></div></div>');
   },
   oz_settings:async function(){
@@ -2595,7 +2608,7 @@ var ADMV={
     var oids=l.map(function(r){return r.order_id}).filter(Boolean),ps=null;
     if(oids.length){try{ps={};arr(await get('oz_orders?select=id,payment_status&id=in.'+inList(oids))).forEach(function(o){ps[o.id]=o.payment_status})}catch(e){if(e&&e.auth)throw e;ps=null}}
     aPaint(filterBar('returns',A_ST_RET,true)+(l.length?l.map(function(r){return '<div class="pfxCard"><div class="pfxRow"><b>'+E(r.order_no||'Sipariş')+'</b>'+aTag(RET_ST,r.status)+'</div><div class="pfxMuted">'+E([r.reason,r.details,fmtDate(r.created_at)].filter(Boolean).join(' · '))+'</div>'+retDueLine(r,ps)+
-      (r.status==='requested'?'<div class="pfxRow" style="margin-top:8px"><button type="button" class="pfxBtn pri" data-a="aRet" data-ok="1" data-id="'+E(r.id)+'">Kabul et</button><button type="button" class="pfxBtn bad" data-a="aRet" data-ok="0" data-id="'+E(r.id)+'">Reddet</button></div>':'')+
+      (r.iyzico_approved?'<p class="ozErr" role="alert" data-iyzwarn="1" style="margin:6px 0 0">'+IYZ_RET_WARN+'</p>':'')+(r.status==='requested'?'<div class="pfxRow" style="margin-top:8px"><button type="button" class="pfxBtn pri" data-a="aRet" data-ok="1" data-id="'+E(r.id)+'"'+(r.iyzico_approved?' data-iyz="1"':'')+'>Kabul et</button><button type="button" class="pfxBtn bad" data-a="aRet" data-ok="0" data-id="'+E(r.id)+'">Reddet</button></div>':'')+
       (r.order_id&&(r.status==='approved'||r.order_status==='refund_pending')?'<div class="pfxRow" style="margin-top:8px"><button type="button" class="pfxBtn" data-a="aRefund" data-id="'+E(r.order_id)+'">Ücret iadesi yapıldı</button></div>':'')+'</div>'}).join(''):'<p class="pfxMuted">Kayıt yok.</p>'));
   },
   oz_payouts:async function(){
@@ -2724,6 +2737,10 @@ ACT_EXTRA({
     await busy(b,async function(){await rpc('oz_admin_set_setting',{p_key:k,p_value:v});toast('Ayar kaydedildi')});
   },
   aSeller:function(b){ADM.detail={kind:'seller',id:b.dataset.id};return aReload()},
+  aRefReq:function(){return refreqView()},
+  aRefRes:async function(b){var r=await reasonBox('Elle iade ettim','Not (zorunlu, en fazla 300 karakter): iade tarihi, iyzico işlem no…',true);if(r===null)return;
+    if(r.length>300){toast('Not en fazla 300 karakter olabilir.');return}
+    await busy(b,async function(){await rpc('oz_admin_refund_resolve',{p_payment:b.dataset.id,p_note:r});toast('Kayıt çözüldü olarak işaretlendi')});await refreqView()},
   aIyz:async function(b){if(!iyzMode()){toast('Onay yalnız test (sandbox) modunda çalışır.');return}
     if(!await confirmBox('iyzico onayı verilsin mi?','Bu kalemin tutarı satıcıya aktarılmak üzere iyzico\'ya onaylanır (test ortamı).','Onayla'))return;
     await busy(b,async function(){try{await iyzCall('approve',{kind:b.dataset.kind,id:b.dataset.id,op:b.dataset.op||'approve'});toast('iyzico onayı verildi')}catch(e){errToast(e.message)}await aReload()})},
@@ -2753,7 +2770,9 @@ ACT_EXTRA({
   aOCancel:async function(b){var r=await reasonBox('Siparişi iptal et','İptal gerekçesi (alıcı ve satıcı görür)',true);if(r===null)return;await rpc('oz_transition_order',{p_order:b.dataset.id,p_action:'cancel',p:{reason:r}});toast('Sipariş iptal edildi');await aReload()},
   aODeliver:async function(b){if(!await confirmBox('Teslim edildi olarak işaretlensin mi?','Alıcı yerine teslimatı onaylıyorsun.','İşaretle'))return;await rpc('oz_transition_order',{p_order:b.dataset.id,p_action:'deliver',p:{}});toast('Teslim edildi olarak işaretlendi');await aReload()},
   aRefund:async function(b){var v=await formBox('Ücret iadesi yapıldı','<label for="ozARef">İade referansı (dekont/işlem no)</label><input class="ozIn" id="ozARef" data-f="r" maxlength="80">','Kaydet',function(v){return v.r.length<2?'Referans yaz.':''});if(!v)return;await rpc('oz_admin_mark_refunded',{p_order:b.dataset.id,p_reference:v.r});toast('İade kaydedildi');await aReload()},
-  aRet:async function(b){var ok=b.dataset.ok==='1';var r=await reasonBox(ok?'İadeyi kabul et':'İadeyi reddet',ok?'Not (isteğe bağlı)':'Ret gerekçesi',!ok);if(r===null)return;await rpc('oz_decide_return',{p_return:b.dataset.id,p_approve:ok,p_note:r||null});toast('Karar kaydedildi');await aReload()},
+  aRet:async function(b){var ok=b.dataset.ok==='1';
+    if(ok&&b.dataset.iyz==='1'&&!await confirmBox('iyzico onayı verilmiş',IYZ_RET_WARN,'Yine de devam et',true))return;
+    var r=await reasonBox(ok?'İadeyi kabul et':'İadeyi reddet',ok?'Not (isteğe bağlı)':'Ret gerekçesi',!ok);if(r===null)return;await rpc('oz_decide_return',{p_return:b.dataset.id,p_approve:ok,p_note:r||null});toast('Karar kaydedildi');await aReload()},
   aPayNew:async function(b){var ni=ADM.ib&&!ADM.ib[b.dataset.id];if(!await confirmBox('Ödeme kaydı oluşturulsun mu?',(ni?NO_IBAN+'. ':'')+'Satıcının ödemeye hazır tutarı için ödeme kaydı açılır. Parayı bankadan gönderdikten sonra "Ödendi" olarak işaretle.','Oluştur'))return;
     /* K29: sunucu geçerli IBAN yoksa PF_STATE ile reddeder; mesaj olduğu gibi gösterilir */
     var pe=qa('[data-payerr]').filter(function(x){return x.dataset.payerr===b.dataset.id})[0];if(pe)pe.hidden=true;
