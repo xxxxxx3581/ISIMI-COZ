@@ -26,6 +26,8 @@
 // P10: referans Paket 10 commit'i 8aba1d7'e tek sefer taşındı (önceki: 73e4e64; arada oz-market-v1.js ?v=7 → ?v=8 ve K21-JS bloğuna ?oz_pay iyzico dönüş işleyicisi).
 // P11: referans Paket 11 commit'i a728005'e tek sefer taşındı (önceki: 8aba1d7; arada yalnız oz-market-v1.js ?v=8 → ?v=9).
 // P13: referans 60e9226'e tek sefer taşındı (önceki: a728005; arada yalnız pf-platform-v1.js ?v=3 → ?v=4; oz-market-v1.js ?v=9 aynen).
+// P12: oz-market-v1.js ?v=9 → ?v=10; referans 60e9226 aynen. Bilinçli değişiklik: "sürüm ve yorum dışında değişiklik olmamalı" karşılaştırması
+//      artık oz-market-v1.js?v=N değerini (yalnız onu) yok sayar; sürümün tam değeri aşağıdaki ayrı kontrolle (?v=10, tek yerde) denetlenir.
 const fs=require('fs'),path=require('path'),cp=require('child_process');
 const {chromium,open,enter}=require('./harness.js');
 const ROOT=path.resolve(__dirname,'../..');
@@ -33,21 +35,22 @@ const cur=fs.readFileSync(path.join(ROOT,'index.html'),'utf8');
 const base=cp.execSync('git show 60e9226:index.html',{cwd:ROOT,encoding:'utf8',maxBuffer:64<<20});
 const blk=s=>{const a=s.indexOf('/*K21-BASLA*/'),b=s.indexOf('/*K21-BITIS*/');return s.slice(a,b)};
 const nocom=s=>s.replace(/\/\*[\s\S]*?\*\//g,'');
+const nover=s=>s.replace(/oz-market-v1\.js\?v=\d+/g,'oz-market-v1.js?v=N');
 (async()=>{
  const fails=[];const ok=(c,m)=>{if(!c)fails.push(m)};
  ok(!/TEST/.test(blk(cur)),'Özüne Dön CSS bloğunda "TEST" kalmamalı: '+(blk(cur).match(/.{0,40}TEST.{0,20}/)||[''])[0]);
  ok(/\/\*OZ W2 hero "Sponsorlu" satıcı slaytı[^*]*:/.test(cur),'W2 yorumu nötr biçimde durmalı');
- const v=cur.match(/oz-market-v1\.js\?v=\d+/g)||[];ok(v.length===1&&v[0]==='oz-market-v1.js?v=9','sürüm parametresi tek yerde ?v=9: '+JSON.stringify(v));
+ const v=cur.match(/oz-market-v1\.js\?v=\d+/g)||[];ok(v.length===1&&v[0]==='oz-market-v1.js?v=10','sürüm parametresi tek yerde ?v=10: '+JSON.stringify(v));
  const others=['manifest.json','sw.js','food-sw.js','pf-platform-v1.js','a7-food-v1.js'].filter(f=>fs.existsSync(path.join(ROOT,f))&&/oz-market-v1\.js\?/.test(fs.readFileSync(path.join(ROOT,f),'utf8')));
  ok(!others.length,'başka dosyada sürümlü başvuru olmamalı: '+others);
  ok(nocom(blk(cur))===nocom(blk(base)),'Özüne Dön CSS (yorumsuz) değişmemeli');
- ok(nocom(cur)===nocom(base),'index.html’de sürüm ve yorum dışında değişiklik olmamalı');
+ ok(nover(nocom(cur))===nover(nocom(base)),'index.html’de sürüm ve yorum dışında değişiklik olmamalı');
  const br=await chromium.launch({executablePath:process.env.CHROMIUM||'/opt/pw-browsers/chromium'});
  const {p,st}=await open(br,{w:390,h:844});
  await enter(p);
  const css=await p.evaluate(()=>{const out=[];for(const sh of document.styleSheets){let r;try{r=sh.cssRules}catch(e){continue}for(const x of r)out.push(x.cssText)}return out.filter(t=>/oz|Oz/.test(t))});
  const src=await p.evaluate(()=>[...document.scripts].map(s=>s.getAttribute('src')||'').filter(s=>/oz-market/.test(s)));
- ok(src.length===1&&src[0]==='./oz-market-v1.js?v=9','modül ?v=9 ile yüklenmeli: '+JSON.stringify(src));
+ ok(src.length===1&&src[0]==='./oz-market-v1.js?v=10','modül ?v=10 ile yüklenmeli: '+JSON.stringify(src));
  await p.setContent(base.replace(/<script[\s\S]*?<\/script>/g,''));const css0=await p.evaluate(()=>{const out=[];for(const sh of document.styleSheets){let r;try{r=sh.cssRules}catch(e){continue}for(const x of r)out.push(x.cssText)}return out.filter(t=>/oz|Oz/.test(t))});
  await p.setContent(cur.replace(/<script[\s\S]*?<\/script>/g,''));const css1=await p.evaluate(()=>{const out=[];for(const sh of document.styleSheets){let r;try{r=sh.cssRules}catch(e){continue}for(const x of r)out.push(x.cssText)}return out.filter(t=>/oz|Oz/.test(t))});
  ok(css1.length>100&&css1.length===css0.length&&css1.join('\n')===css0.join('\n'),'CSS kural sayısı/bildirimleri aynı olmalı: '+css0.length+' → '+css1.length);
