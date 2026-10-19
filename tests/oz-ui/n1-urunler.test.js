@@ -16,7 +16,8 @@ const {chromium,open,enter}=require('./harness.js');
  const rows=await p.evaluate(()=>{const sp=document.getElementById('ozSP');const first=sp&&sp.querySelector('button');
   return {first:first?first.innerText.trim():'',firstNew:!!first&&first.classList.contains('ozSpNew'),rows:[...document.querySelectorAll('#ozSP .ozSpRow')].map(r=>{const e=r.querySelector('.ozSpEd');const er=e&&e.getBoundingClientRect();
    return {id:r.dataset.pid,pic:!!r.querySelector('.ozPic'),name:(r.querySelector('.tx b')||{}).textContent,pr:((r.querySelector('.tx .pr')||{}).textContent||'').replace(/\s+/g,' '),tag:(r.querySelector('.ozTag')||{}).textContent,ed:e?e.innerText.trim():'',edH:er?Math.round(er.height):0,edSun:!!e&&e.classList.contains('sun')}})}});
- ok(rows.firstNew&&rows.first==='+ Yeni ürün','en üstte "+ Yeni ürün" olmalı: '+rows.first);
+ // Paket 21 (bilinçli değişiklik): düğme büyük "＋ Ürün ekle" (önceden "+ Yeni ürün"); yeri ve sınıfı (.ozSpNew) aynı
+ ok(rows.firstNew&&rows.first==='＋ Ürün ekle','en üstte "＋ Ürün ekle" olmalı: '+rows.first);
  const R={};rows.rows.forEach(r=>R[r.id]=r);
  ok(R.sp1&&R.sp1.pic&&R.sp1.name==='Zeytinyağı'&&R.sp1.pr==='2 seçenek'&&R.sp1.tag==='Yayında','çok seçenekli satır: '+JSON.stringify(R.sp1));
  ok(R.sp2&&R.sp2.pr==='300,00 ₺'&&R.sp2.tag==='Gizli','tek seçenekli gizli satır fiyat + Gizli: '+JSON.stringify(R.sp2));

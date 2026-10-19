@@ -44,7 +44,7 @@ function hue(s){let h=0;for(const c of String(s||'x'))h=(h*31+c.charCodeAt(0))%3
 
 /* ====================== Ekran yaşam döngüsü ====================== */
 let SCREEN=0;const CLEANUPS=[];
-function newScreen(){SCREEN++;FDW_PANEL=0;while(CLEANUPS.length){try{CLEANUPS.pop()()}catch(e){}}closeModal();return SCREEN}
+function newScreen(){SCREEN++;FDW_PANEL=0;FDW_BIZ=0;while(CLEANUPS.length){try{CLEANUPS.pop()()}catch(e){}}closeModal();return SCREEN}
 function alive(tok){return tok===SCREEN&&!!document.getElementById('fdRoot')}
 function onCleanup(fn){CLEANUPS.push(fn)}
 function topOffset(){const w=document.getElementById('fdwTop');if(w&&document.body.classList.contains('fdWorld'))return Math.round(w.getBoundingClientRect().bottom);const h=document.querySelector('.v2Top');return h?Math.round(h.getBoundingClientRect().height):0}
@@ -1776,8 +1776,22 @@ function timersTick(){qa('[data-deadline]').forEach(el=>{const m=Math.ceil((new 
 function isMgr(){return BZ.role==='owner'||BZ.role==='manager'}
 function subnav(venueId,on){
   if(!isMgr())return '';
-  return '<div class="fdSub"><button type="button" class="'+(on==='orders'?'on':'')+'" onclick="showFoodBusiness(\''+E(venueId)+'\')">Siparişler</button><button type="button" class="'+(on==='menu'?'on':'')+'" onclick="showFoodMenu(\''+E(venueId)+'\')">Menü</button><button type="button" class="'+(on==='settings'?'on':'')+'" onclick="showFoodSettings(\''+E(venueId)+'\')">Ayarlar</button><button type="button" class="'+(on==='reports'?'on':'')+'" onclick="showFoodReports(\''+E(venueId)+'\')">Raporlar</button></div>';
+  /* P21: telefonda (≤768px) üst sekmeler yerine alt sabit menü (Bugün/Menü/Raporlar/Ayarlar); masaüstünde üst sekmeler. Rol kısıtı aynı. */
+  return '<div class="fdSub"><button type="button" class="'+(on==='orders'?'on':'')+'" onclick="showFoodBusiness(\''+E(venueId)+'\')">Siparişler</button><button type="button" class="'+(on==='menu'?'on':'')+'" onclick="showFoodMenu(\''+E(venueId)+'\')">Menü</button><button type="button" class="'+(on==='settings'?'on':'')+'" onclick="showFoodSettings(\''+E(venueId)+'\')">Ayarlar</button><button type="button" class="'+(on==='reports'?'on':'')+'" onclick="showFoodReports(\''+E(venueId)+'\')">Raporlar</button></div>'+
+    '<nav class="pnNav fdPNav" aria-label="İşletme menüsü">'+[['orders','Bugün','📋','showFoodBusiness'],['menu','Menü','🍽️','showFoodMenu'],['reports','Raporlar','📊','showFoodReports'],['settings','Ayarlar','⚙️','showFoodSettings']].map(x=>
+      '<button type="button" class="pnItem'+(on===x[0]?' on':'')+'"'+(on===x[0]?' aria-current="page"':'')+' onclick="'+x[3]+'(\''+E(venueId)+'\')"><span class="ic" aria-hidden="true">'+x[2]+'</span><span class="l">'+x[1]+'</span>'+
+      (x[0]==='orders'?'<i class="pnBdg" id="fdPNavN"'+(BZ.newCount>0?' aria-label="'+BZ.newCount+' yeni sipariş">'+BZ.newCount:' hidden>')+'</i>':'')+'</button>').join('')+'</nav>';
 }
+/* P21: alt menü "Bugün" rozeti = yeni sipariş sayısı (bizLoad'daki mevcut sayaç) */
+function pnBadge(n){const b=document.getElementById('fdPNavN');if(!b)return;b.hidden=!n;b.textContent=n?String(n):'';if(n)b.setAttribute('aria-label',n+' yeni sipariş');else b.removeAttribute('aria-label')}
+/* P21: "Mutfak modu" — açıkken yalnız işletme ekranlarında mevcut koyu tema (data-theme=dark); tercih bu cihazda (localStorage).
+   İşletme ekranından çıkınca (müşteri tarafı, kurye, yönetim ve Yemek dışı) kullanıcının kayıtlı teması (isimi-theme) geri yüklenir. */
+const KM_KEY='isimi_food_kitchen';
+function kmOn(){try{return localStorage.getItem(KM_KEY)==='1'}catch(e){return false}}
+function kmApply(){const de=document.documentElement;const want=!!FDW_PANEL&&!!FDW_BIZ&&kmOn()&&document.body.classList.contains('fdWorld');
+  if(want){if(de.getAttribute('data-theme')!=='dark'){de.setAttribute('data-fd-km','1');de.setAttribute('data-theme','dark')}}
+  else if(de.hasAttribute('data-fd-km')){de.removeAttribute('data-fd-km');let t='dark';try{t=localStorage.getItem('isimi-theme')==='light'?'light':'dark'}catch(e){}de.setAttribute('data-theme',t)}}
+window.foodKitchen=function(inp){try{localStorage.setItem(KM_KEY,inp.checked?'1':'0')}catch(e){}kmApply()};
 async function bizContext(venueId){
   const w=await whoami(true);const venues=w.venues||[];BZ.venues=venues;
   if(!venues.length)return null;
@@ -1790,7 +1804,7 @@ window.foodVenueSwitch=function(){
     row('➕','Yeni işletme başvurusu','＋ Yeni restoran ekle','foodNewVenue()')+'</div>',{sheet:true});bindClose(w);
 };
 async function showFoodBusiness(venueId){FDW_TAB='';
-  if(!A())return;const tok=newScreen();FDW_PANEL=1;
+  if(!A())return;const tok=newScreen();FDW_PANEL=1;FDW_BIZ=1;
   render(bar('İşletme paneli','showFoodHome()')+skel('row',1)+skel('row',3));
   let cur;try{cur=await bizContext(venueId)}catch(e){return render(bar('İşletme paneli','showFoodHome()')+errBox(e,'showFoodBusiness()'))}
   if(!alive(tok))return;if(!cur)return venueCreateForm();
@@ -1798,14 +1812,18 @@ async function showFoodBusiness(venueId){FDW_TAB='';
   if(!alive(tok))return;BZ.venue=v||{id:cur.id,name:cur.name,is_open:false};BZ.offset=0;BZ.orders=[];
   const mgr=isMgr();const open=BZ.venue.is_open;
   render(bar(BZ.venue.name,'showFoodHome()','<span class="fdLive" id="fdLive"></span>'+venueSwitchBtn()+bellBtn(),{owner:'İşletme sahibi',manager:'Yönetici',staff:'Personel'}[cur.role]||'')+
-    roleBar('business')+subnav(cur.id,'orders')+'<div id="fdGuideB"></div>'+
-    '<button type="button" class="fb soft block" style="margin:0 0 12px;min-height:44px" onclick="foodNewVenue()">＋ Yeni restoran ekle / Yeni işletme başvurusu</button>'+
-    '<div class="fdOpen'+(open?' on':'')+'" id="fdOpenCard"><div class="tx"><b>'+(open?'Sipariş alıyorsun':'Sipariş almıyorsun')+'</b><small>'+(open&&v&&!openNow(v)&&v.is_active?'Açık ama şu an çalışma saati dışında':open?'Müşteriler sipariş verebilir':'Menün görünür, sipariş verilemez')+'</small></div>'+
+    roleBar('business')+subnav(cur.id,'orders')+
+    /* P21 "Bugün": üstte büyük açık/kapalı kartı (mantık aynı), altında 3 renkli sayaç; ikincil bağlantılar sayfa sonunda "Daha fazla" */
+    '<div class="fdOpen fdOpenBig'+(open?' on':'')+'" id="fdOpenCard"><div class="tx"><b>'+(open?'Sipariş alıyorum':'Sipariş almıyorum')+'</b><small>'+(open&&v&&!openNow(v)&&v.is_active?'Açık ama şu an çalışma saati dışında':open?'Müşteriler sipariş verebilir':'Menün görünür, sipariş verilemez')+'</small></div>'+
       (mgr?sw('fdOpenSw',open,'foodToggleOpen(this)'):'')+'</div>'+
+    '<div class="fdCnt3" id="fdCnt3"></div><div id="fdGuideB"></div>'+
     (mgr&&v?'<div id="fdBusy">'+busyRow(v)+'</div>':'')+
+    '<div class="fdKmRow"><div class="tx"><b>🌙 Mutfak modu</b><small>Yalnız işletme paneli koyu; bu cihazda hatırlanır</small></div>'+sw('fdKmSw',kmOn(),'foodKitchen(this)')+'</div>'+
     '<div id="fdAlarmBox"></div>'+pushSlot('business')+'<div id="fdIssB"></div><div class="fdKpi" id="fdKpi">'+skel('line',1)+'</div>'+
     '<div class="fdSeg" id="fdTabs"></div><div id="fdPastF"></div><div id="fdBList">'+skel('row',2)+'</div><div id="fdBMore"></div>'+
-    (mgr&&pfOn()?'<button type="button" class="fdwStrip" style="margin-top:14px" onclick="foodPromoRequest(\''+E(cur.id)+'\')"><span class="i">📣</span><span class="t"><b>Kampanya ve reklam</b><small>Öne çıkma, slider veya indirim talebi oluştur</small></span></button>':''));
+    '<section class="fdMoreSec" aria-label="Daha fazla"><h3>Daha fazla</h3>'+
+    '<button type="button" class="fb soft block" style="margin:0 0 12px;min-height:44px" onclick="foodNewVenue()">＋ Yeni restoran ekle / Yeni işletme başvurusu</button>'+
+    (mgr&&pfOn()?'<button type="button" class="fdwStrip" onclick="foodPromoRequest(\''+E(cur.id)+'\')"><span class="i">📣</span><span class="t"><b>Kampanya ve reklam</b><small>Öne çıkma, slider veya indirim talebi oluştur</small></span></button>':'')+'</section>');
   bellCount();pushDraw();venueGuide(cur.id,'fdGuideB');
   const origTitle=document.title;onCleanup(()=>{document.title=origTitle});BZ.origTitle=origTitle;
   BZ.newCount=0;const alarm=setInterval(()=>{if(BZ.newCount>0&&document.visibilityState==='visible')beep()},6000);onCleanup(()=>clearInterval(alarm));
@@ -1831,7 +1849,10 @@ async function bizLoad(tok,more){
     BZ.orders=more?BZ.orders.concat(orders):orders;BZ.offset=BZ.orders.length;
     BZ.firstNew=(BZ.orders.filter(o=>o.status==='new').sort((a,b)=>new Date(a.created_at)-new Date(b.created_at))[0]||{}).id||null;
     const cnt=t=>t[2]?t[2].reduce((n,k)=>n+(+c[k]||0),0):null;
-    const nNew=+c.new||0;BZ.newCount=nNew;alarmDraw();
+    const nNew=+c.new||0;BZ.newCount=nNew;alarmDraw();pnBadge(nNew);
+    /* P21: Bugün sayaçları (mevcut sayımlar); dokununca ilgili sekme */
+    setHTML('fdCnt3',[['new','Yeni','n'],['prep','Hazırlanıyor','p'],['ready','Yolda','s']].map(([k,l,cl])=>{const n=cnt(TABS.find(x=>x[0]===k));
+      return '<button type="button" class="'+cl+(BZ.tab===k?' on':'')+'" aria-pressed="'+(BZ.tab===k)+'" onclick="foodBizTab(\''+k+'\');const t=document.getElementById(\'fdTabs\');if(t)t.scrollIntoView({block:\'start\'})"><b>'+n+'</b><span>'+l+'</span>'+(k==='ready'?'<small>hazır dahil</small>':'')+'</button>'}).join(''));
     document.title=(nNew?'('+nNew+') Yeni sipariş · ':'')+(BZ.origTitle||document.title.replace(/^\(\d+\) Yeni sipariş · /,''));
     setHTML('fdKpi','<div class="'+(nNew?'hot':'')+'"><b>'+nNew+'</b><span>Bekleyen</span></div><div><b>'+(s.today_orders||0)+'</b><span>Bugün sipariş</span></div><div><b>'+M(s.today_revenue_kurus||0)+'</b><span>Bugün hakediş</span></div>');
     /* P19: sayaç rozeti durum renginde (Yeni #C4492F, Mutfakta amber, Hazır/yolda mavi); yeni sipariş varken Yeni sekmesi dolu */
@@ -1946,9 +1967,9 @@ window.foodVenueAct=async function(id,to,btn,mode){
 };
 /* V4 · İşletme raporları (yalnızca sahip/yönetici; kendi restoranının siparişleri, RLS ile) */
 async function showFoodReports(venueId,days){
-  if(!A())return;const tok=newScreen();FDW_PANEL=1;days=[7,30].includes(+days)?+days:7;
+  if(!A())return;const tok=newScreen();FDW_PANEL=1;FDW_BIZ=1;days=[7,30].includes(+days)?+days:7;
   const head=()=>bar('Raporlar','showFoodBusiness(\''+E(venueId)+'\')')+roleBar('business')+subnav(venueId,'reports')+
-    '<div class="fdChips" style="margin:0 0 12px">'+[7,30].map(d=>'<button type="button" class="fdChip'+(d===days?' on':'')+'" onclick="showFoodReports(\''+E(venueId)+'\','+d+')">Son '+d+' gün</button>').join('')+'</div>';
+    '<div class="fdChips fdRepCh" style="margin:0 0 12px">'+[7,30].map(d=>'<button type="button" class="fdChip'+(d===days?' on':'')+'"'+(d===days?' aria-pressed="true"':' aria-pressed="false"')+' onclick="showFoodReports(\''+E(venueId)+'\','+d+')">Son '+d+' gün</button>').join('')+'</div>';
   render(head()+skel('row',3));
   try{
     await bizContext(venueId);if(!alive(tok))return;
@@ -1973,6 +1994,8 @@ async function showFoodReports(venueId,days){
       if(!alive(tok))return;
       popH='<div class="fdSecH"><b>En çok satanlar</b></div><div class="fdCard">'+pop.map((x,i)=>'<div class="fdLine"><span>'+(i+1)+'. '+E(names[x.menu_item_id]||'Ürün')+'</span><b>'+(+x.sold||0)+' adet</b></div>').join('')+'</div>'}
     render(head()+
+      /* P21: toplam hakediş büyük rakam (aynı hesap: teslim edilenlerin restaurant_share_kurus toplamı) */
+      '<div class="fdRepHero"><small>Toplam hakediş · son '+days+' gün</small><b>'+M(hak)+'</b><span>komisyon sonrası, teslim edilen '+del.length+' sipariş</span></div>'+
       '<div class="fdwRep">'+
         '<div><small>Teslim edilen</small><b>'+del.length+'</b><span>'+rows.length+' siparişten</span></div>'+
         '<div><small>Ciro (ürün)</small><b>'+M(ciro)+'</b><span>teslim edilenler</span></div>'+
@@ -2089,7 +2112,7 @@ window.foodCreateVenue=async function(btn){
 
 /* ====================== F6 · Ayarlar (bölümlü) ====================== */
 async function showFoodSettings(venueId,firstRun){
-  if(!A())return;const tok=newScreen();FDW_PANEL=1;
+  if(!A())return;const tok=newScreen();FDW_PANEL=1;FDW_BIZ=1;
   if(pfOn()){let n=0;const iv=setInterval(()=>{const el=document.querySelector('[data-pf-onb]');if(el&&!el.dataset.pfDone){el.dataset.pfDone='1';clearInterval(iv);PF.venueOnboardingCard(venueId,el)}else if(++n>60)clearInterval(iv)},150)}
   render(bar('Ayarlar','showFoodBusiness(\''+E(venueId)+'\')')+skel('row',4));
   let v;try{await bizContext(venueId);v=(await Q('GET','food_venues?select=*&id=eq.'+encodeURIComponent(venueId)))[0]}catch(e){return render(bar('Ayarlar','showFoodBusiness()')+errBox(e,'showFoodSettings(\''+E(venueId)+'\')'))}
@@ -2201,7 +2224,7 @@ window.foodSaveSettings=async function(btn,venueId){
 /* ====================== F6 · Menü yönetimi ====================== */
 const MN={venueId:null,cats:[],items:[],groups:{}};
 async function showFoodMenu(venueId){
-  if(!A())return;const tok=newScreen();FDW_PANEL=1;MN.venueId=venueId;
+  if(!A())return;const tok=newScreen();FDW_PANEL=1;FDW_BIZ=1;MN.venueId=venueId;
   if(!document.getElementById('fdMenuRoot'))render(bar('Menü','showFoodBusiness(\''+E(venueId)+'\')')+skel('row',4));
   try{
     const enc=encodeURIComponent(venueId);
@@ -2304,7 +2327,7 @@ window.foodOptions=function(itemId){
 
 /* ====================== Sorunlar ====================== */
 async function showFoodVenueIssues(venueId){
-  if(!A())return;const tok=newScreen();FDW_PANEL=1;
+  if(!A())return;const tok=newScreen();FDW_PANEL=1;FDW_BIZ=1;
   render(bar('Müşteri bildirimleri','showFoodBusiness(\''+E(venueId)+'\')')+'<div id="fdIList">'+skel('row',2)+'</div>');
   try{const r=await RPC('food_venue_issues',{p_venue_id:venueId});if(!alive(tok))return;
     const st={open:['Açık','bad'],in_review:['İnceleniyor','acc'],resolved:['Çözüldü','ok'],rejected:['Reddedildi','mute']};
@@ -2321,7 +2344,7 @@ window.foodIssueSet=async function(id,st,btn,venueId){
 
 /* ====================== Ekip ====================== */
 async function showFoodTeam(venueId){
-  if(!A())return;const tok=newScreen();FDW_PANEL=1;
+  if(!A())return;const tok=newScreen();FDW_PANEL=1;FDW_BIZ=1;
   render(bar('Ekip','showFoodSettings(\''+E(venueId)+'\')')+'<div id="fdTm">'+skel('row',1)+'</div>');
   try{const r=await Q('GET','food_venue_members?select=user_id,role,created_at&venue_id=eq.'+encodeURIComponent(venueId)+'&order=created_at.asc');if(!alive(tok))return;
     setHTML('fdTm','<div class="fdList">'+r.map(m=>'<div class="fdCartItem"><div class="tx"><b>'+(m.user_id===UID()?'Sen':'Ekip üyesi · '+E(m.user_id.slice(0,8)))+'</b><small>'+E(ago(m.created_at))+' eklendi</small></div><span class="fdBadge acc">'+E({owner:'Sahip',manager:'Yönetici',staff:'Personel'}[m.role])+'</span></div>').join('')+'</div>'+
@@ -2804,9 +2827,9 @@ const FDW_ICO={
   gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>'
 };
 function fdIco(k,s){s=s||22;return '<svg viewBox="0 0 24 24" width="'+s+'" height="'+s+'" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'+(FDW_ICO[k]||'')+'</svg>'}
-let FDW_TAB='',FDW_PANEL=0;
+let FDW_TAB='',FDW_PANEL=0,FDW_BIZ=0;
 function fdwEnter(){document.body.classList.add('fdWorld');fdwShell()}
-function fdwLeave(){document.body.classList.remove('fdWorld');['fdwTop','fdwNav'].forEach(id=>{const e=document.getElementById(id);if(e)e.remove()})}
+function fdwLeave(){document.body.classList.remove('fdWorld');kmApply();['fdwTop','fdwNav'].forEach(id=>{const e=document.getElementById(id);if(e)e.remove()})}
 function fdwShell(){
   if(!document.getElementById('fdwTop')){
     const h=document.createElement('header');h.id='fdwTop';h.className='fdwTop';
@@ -2851,7 +2874,7 @@ function fdwSync(){
   }else{top.classList.remove('pg');if(pt)pt.hidden=true}
   if(back){const home=!bar&&fdwIsHome();back.setAttribute('aria-label',home?'İşimi Çöz ana sayfasına dön':'Geri');back.title=home?'İşimi Çöz’e dön':'Geri'}
   document.body.classList.toggle('fdwHome',!bar&&fdwIsHome());
-  fdwFlBar();fdwPanelBtn();
+  fdwFlBar();fdwPanelBtn();kmApply();
 }
 /* Panel erişimi: yalnız işletmesi, kurye hesabı veya yönetim yetkisi olan kullanıcıya görünür */
 let FDW_PN=null,FDW_PN_AT=0;

@@ -151,8 +151,8 @@ const SHOTS=process.env.P20_SHOTS||'';if(SHOTS)fs.mkdirSync(SHOTS,{recursive:tru
   // B2: panel üstünde başlangıç rehberi
   await p.evaluate(()=>{window.__FD.venues=[{id:'v1',name:'Test Lokanta',role:'owner'}]});
   await p.evaluate(()=>showFoodBusiness('v1'));await p.waitForTimeout(1500);
-  r=await p.evaluate(()=>{const g=document.querySelector('#fdGuideB .fdGuide');return g?{rows:[...g.querySelectorAll('.gi')].map(e=>e.tagName+':'+e.querySelector('.m').textContent),sw:!!document.getElementById('fdOpenSw'),first:document.querySelector('#fdGuideB').compareDocumentPosition(document.getElementById('fdOpenCard'))&Node.DOCUMENT_POSITION_FOLLOWING}:null});
-  ok(r&&JSON.stringify(r.rows.map(x=>x.split(':')[1]))===JSON.stringify(['Menüye ürün ekle','Çalışma saatlerini gir','Teslimat bölgesi ve ücreti','Kapak görseli yükle','Sipariş almaya hazırım'])&&r.rows.every(x=>/^BUTTON/.test(x))&&r.sw&&r.first,'['+th+'] Yemek panel: başlangıç rehberi üstte, anahtar duruyor: '+JSON.stringify(r));
+  r=await p.evaluate(()=>{const g=document.querySelector('#fdGuideB .fdGuide');return g?{rows:[...g.querySelectorAll('.gi')].map(e=>e.tagName+':'+e.querySelector('.m').textContent),sw:!!document.getElementById('fdOpenSw'),first:!!(document.getElementById('fdOpenCard').compareDocumentPosition(document.querySelector('#fdGuideB'))&Node.DOCUMENT_POSITION_FOLLOWING)&&!!(document.querySelector('#fdGuideB').compareDocumentPosition(document.getElementById('fdKpi'))&Node.DOCUMENT_POSITION_FOLLOWING)}:null});
+  ok(r&&JSON.stringify(r.rows.map(x=>x.split(':')[1]))===JSON.stringify(['Menüye ürün ekle','Çalışma saatlerini gir','Teslimat bölgesi ve ücreti','Kapak görseli yükle','Sipariş almaya hazırım'])&&r.rows.every(x=>/^BUTTON/.test(x))&&r.sw&&r.first,'['+th+'] Yemek panel: başlangıç rehberi üst bölümde (P21: açık/kapalı kartı ve sayaçların altında), anahtar duruyor: '+JSON.stringify(r));
   await chk(p,'#fdRoot','['+th+'] Yemek panel');await shot(p,'yemek-panel-rehber-'+th);
   n0=await p.evaluate(()=>window.__FDC.length);
   await p.evaluate(()=>[...document.querySelectorAll('#fdGuideB .gi')].find(e=>/hazırım/.test(e.textContent)).click());await p.waitForTimeout(600);

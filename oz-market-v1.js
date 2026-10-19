@@ -1702,7 +1702,8 @@ function navHtml(){return TABS.map(function(t){return '<button type="button" cla
 /* K30: satıcı alt menüsü (onaylı/askıdaki satıcı panelinde; ön başvuru kipinde menü yok, üstteki sekme çipleri kalır) */
 /* Satıcı paneli tek ekran: 'ozet' = sayaçlar + siparişler (eski 'siparisler' sekmesi buraya yönlenir) */
 var STABS=[['ozet','Siparişler','box'],['urunler','Ürünler','tag'],['sorular','Sorular','star'],['kazanc','Kazanç','wallet'],['magaza','Mağaza','store']];
-function sellerNavHtml(){return STABS.map(function(t){return '<button type="button" class="ozNavB" data-a="sTab" data-tab="'+t[0]+'">'+ico(t[2],22)+'<span class="l">'+t[1]+'</span>'+(t[0]==='ozet'?'<span class="ozBdg ozAttnB n" id="ozSoN" hidden></span>':t[0]==='sorular'?'<span class="ozBdg dot" id="ozSqN" hidden></span>':t[0]==='urunler'?'<span class="ozBdg" id="ozSlN" hidden></span>':'')+'</button>'}).join('')}
+/* P21: satıcı alt menüsü ortak alt menü sınıflarını (pnNav/pnItem) kullanır; seçili dolu sarı, rozetler durum renginde (AC2), ≥62px */
+function sellerNavHtml(){return STABS.map(function(t){return '<button type="button" class="ozNavB pnItem" data-a="sTab" data-tab="'+t[0]+'">'+ico(t[2],22)+'<span class="l">'+t[1]+'</span>'+(t[0]==='ozet'?'<span class="ozBdg ozAttnB n" id="ozSoN" hidden></span>':t[0]==='sorular'?'<span class="ozBdg dot" id="ozSqN" hidden></span>':t[0]==='urunler'?'<span class="ozBdg" id="ozSlN" hidden></span>':'')+'</button>'}).join('')}
 /* K37 → AC2: Siparişler sekmesinde turuncu dikkat rozeti (görülmemiş yeni / hazırlanacak sipariş; newDotSync ile aynı sayı). Diğer rozetler aynı. */
 function soBadge(){
   function set(id,n){var b=D.getElementById(id);if(!b)return;b.hidden=!n;b.textContent=n>9?'9+':String(n)}
@@ -1800,7 +1801,7 @@ OZ.__poll=POLL;
 function navSync(){
   var c=cur(),k=c.k,nav=D.getElementById('ozNav');
   var mode=!D.body.classList.contains('ozWorld')||isPre()?'':(k==='seller'||STAB_OF[k])?(sellerPanelOn()?'seller':''):(NONAV[k]?'':'buyer');
-  D.body.classList.toggle('ozSellerNav',mode==='seller');var tg=D.getElementById('ozSellTag');if(tg)tg.hidden=mode!=='seller';
+  D.body.classList.toggle('ozSellerNav',mode==='seller');if(nav)nav.classList.toggle('pnNav',mode==='seller');var tg=D.getElementById('ozSellTag');if(tg)tg.hidden=mode!=='seller';
   if(nav&&mode&&nav.dataset.mode!==mode){nav.innerHTML=mode==='seller'?sellerNavHtml():navHtml();nav.dataset.mode=mode;nav.setAttribute('aria-label',mode==='seller'?'Satıcı menüsü':'Özüne Dön menüsü');cartBadge()}
   if(mode==='seller')soBadge();else if(mode==='buyer')newDotSync();
   if(mode)newDotCheck();
@@ -2172,13 +2173,14 @@ function spUrunRender(){
     var vit=sc.length?'<section class="ozSpVit" aria-label="Vitrin"><div class="ozSecH"><h2>Vitrin</h2><span class="ozMuted">'+sc.length+' / '+SHOW_MAX+'</span></div><ol class="ozSpVL">'+sc.map(function(p,i){
       return '<li class="ozSpV" data-pid="'+E(p.id)+'">'+pic(arr(p.images)[0],p.name)+'<b>'+E(p.name||'')+'</b><span class="ar"><button type="button" class="ozIc sm" data-a="spVit" data-op="up" data-id="'+E(p.id)+'" aria-label="Yukarı taşı"'+(i?'':' disabled')+'>↑</button>'+
         '<button type="button" class="ozIc sm" data-a="spVit" data-op="down" data-id="'+E(p.id)+'" aria-label="Aşağı taşı"'+(i<sc.length-1?'':' disabled')+'>↓</button></span><button type="button" class="ozBtn sm" data-a="spVit" data-op="rm" data-id="'+E(p.id)+'" aria-label="Vitrinden çıkar">Çıkar</button></li>'}).join('')+'</ol></section>':'';
-    var h='<button type="button" class="ozBtn pri wide ozSpNew" data-a="spGo" style="margin-bottom:12px">+ Yeni ürün</button>'+vit+catH+(low?'<div class="ozWrap ozApplied"><button type="button" class="ozChip x" data-a="sTab" data-tab="urunler" aria-label="Düşük stok filtresini kaldır">Düşük stok / Tükendi ✕</button></div>':'');
+    /* P21: büyük "＋ Ürün ekle"; kartta durum rozeti (Yayında yeşil, İncelemede sarı, Reddedildi kırmızı, Taslak gri) + durum renginde kenar */
+    var h='<button type="button" class="ozBtn pri wide btnNext ozSpNew" data-a="spGo" style="margin-bottom:12px">＋ Ürün ekle</button>'+vit+catH+(low?'<div class="ozWrap ozApplied"><button type="button" class="ozChip x" data-a="sTab" data-tab="urunler" aria-label="Düşük stok filtresini kaldır">Düşük stok / Tükendi ✕</button></div>':'');
     if(!ps.length){h+=cat?empty(ico('box',36),'Bu kategoride ürünün yok',''):empty(ico('box',36),'Henüz ürünün yok','İlk ürününü ekleyip yayınla.');}
     else h+='<div class="ozList">'+ps.map(function(p){
       var pv=vs.filter(function(v){return v.product_id===p.id});var stock=pv.reduce(function(n,v){return n+num(v.stock)},0);
       var st=p.is_hidden?'hidden':p.status;var low=pv.some(function(v){return v.is_active!==false&&num(v.stock)<=3});
       var act=pv.filter(function(v){return v.is_active!==false});var prc=act.length===1?TL(act[0].price_kurus):act.length>1?act.length+' seçenek':'Seçenek yok';
-      return '<div class="ozCard ozSpRow" style="margin:0" data-pid="'+E(p.id)+'"><div class="ozCI" style="border:0;padding:0">'+pic(arr(p.images)[0],p.name)+'<div class="tx"><b>'+E(p.name||'Adsız ürün')+'</b><span class="pr">'+E(prc)+'</span><small>'+stock+' stok'+(low?' · <span style="color:var(--oz-sun)">düşük stok</span>':'')+'</small><div style="margin-top:4px">'+stTag(PROD_ST,st)+'</div></div>'+
+      return '<div class="ozCard ozSpRow" style="margin:0" data-pid="'+E(p.id)+'" data-pst="'+E((PROD_ST[st]||['',''])[1]||'x')+'"><div class="ozCI" style="border:0;padding:0">'+pic(arr(p.images)[0],p.name)+'<div class="tx"><b>'+E(p.name||'Adsız ürün')+'</b><span class="pr">'+E(prc)+'</span><small>'+stock+' stok'+(low?' · <span style="color:var(--oz-sun)">düşük stok</span>':'')+'</small><div class="ozPSt" style="margin-top:4px">'+stTag(PROD_ST,st)+'</div></div>'+
         '<button type="button" class="ozBtn sun ozSpEd" data-a="spGo" data-id="'+E(p.id)+'">'+ico('tag',16)+'<span>Düzenle</span></button></div>'+
         ((p.status_reason||p.reject_reason)&&p.status==='rejected'?'<div class="ozWarn">Gerekçe: '+E(p.status_reason||p.reject_reason)+'</div>':'')+
         (p.status==='published'?(p.showcase_order!=null?'<div class="ozSpVB"><button type="button" class="ozBtn sm" data-a="spVit" data-op="rm" data-id="'+E(p.id)+'">Vitrinden çıkar</button></div>':
@@ -2269,7 +2271,9 @@ var SP={
     if(!alive(t))return;var e=r[0]||{};var po=arr(r[1]);var ps=r[2];
     var PST={pending:['Hazırlanıyor','warn'],processing:['İşleniyor','warn'],paid:['Ödendi','ok'],failed:['Başarısız','bad']};
     var h=(ps?'<div class="ozKpis"><div class="ozKpi"><small>Bugün</small><b>'+TL(ps.today.k)+'</b><span>'+ps.today.n+' sipariş</span></div><div class="ozKpi"><small>Bu hafta</small><b>'+TL(ps.week.k)+'</b><span>'+ps.week.n+' sipariş</span></div></div><p class="ozHint" style="margin:-4px 0 12px">Gelen siparişlerdeki satıcı payın; ödemesi bekleyen ve iptal edilen siparişler hariç. Hafta pazartesi başlar.</p>':'')+
-      '<div class="ozKpis"><div class="ozKpi"><small>Süren siparişler</small><b>'+TL(e.in_progress_kurus)+'</b></div><div class="ozKpi"><small>Bekleme süresinde</small><b>'+TL(e.holding_kurus)+'</b></div><div class="ozKpi hot"><small>Ödemeye hazır</small><b>'+TL(e.available_kurus)+'</b></div><div class="ozKpi"><small>Ödeme sürecinde</small><b>'+TL(e.payout_pending_kurus)+'</b></div><div class="ozKpi"><small>Ödenen toplam</small><b>'+TL(e.paid_kurus)+'</b></div></div>'+
+      /* P21: "Bekleyen / Hakedişe hazır / Ödenen" üç renkli kart — değerler aynı alanlardan (holding / available / paid); diğerleri altta */
+      '<div class="ozErn3"><div class="ozKpi ozErn w"><em>Bekleyen</em><b>'+TL(e.holding_kurus)+'</b><small>Bekleme süresinde</small></div><div class="ozKpi ozErn ok"><em>Hakedişe hazır</em><b>'+TL(e.available_kurus)+'</b><small>Ödemeye hazır</small></div><div class="ozKpi ozErn d"><em>Ödenen</em><b>'+TL(e.paid_kurus)+'</b><small>Ödenen toplam</small></div></div>'+
+      '<div class="ozKpis"><div class="ozKpi"><small>Süren siparişler</small><b>'+TL(e.in_progress_kurus)+'</b></div><div class="ozKpi"><small>Ödeme sürecinde</small><b>'+TL(e.payout_pending_kurus)+'</b></div></div>'+
       /* P6: bekletme = ödemeye hazır olma eşiği (takvim günü); iade olursa tutar sonraki ödemeden düşülür (mahsup) */
       (num(e.hold_days)?'<p class="ozMuted">Teslim edilen siparişlerin tutarı teslimden '+num(e.hold_days)+' gün sonra ödemeye hazır olur. İade olursa tutar sonraki ödemenizden düşülür.</p>':'')+
       (num(e.pending_adjustments_kurus)>0?'<p class="ozMuted" data-adj="1"><b>Mahsup edilecek: '+TL(e.pending_adjustments_kurus)+'</b></p>':'')+
@@ -2283,14 +2287,17 @@ var SP={
   magaza:async function(d,t){
     var s=await sellerRow(true);var rates=arr(await get('oz_shipping_rates?select=*&seller_id=eq.'+encodeURIComponent(sellerId())+'&order=max_weight_g.asc'));
     if(!alive(t))return;SELLER.rates=rates.length?rates:[{max_weight_g:2000,fee_kurus:0}];
-    var b=D.getElementById('ozSP');if(b)b.innerHTML='<div class="ozList" style="margin:0 0 12px">'+row('box','Belgelerim','Kimlik, vergi levhası, gıda kayıt belgesi…','nav',{k:'sellerApply',tab:'2'})+row('star','Sorular ve yorumlar','Alıcı soruları ve değerlendirmeler','sTab',{tab:'sorular'})+'</div>'+storeForm(s||{},false)+'<div class="ozSecH"><h2>Kargo ücret tablosu</h2></div>'+ratesEditor()+'<button type="button" class="ozBtn wide" data-a="ratesSave" style="margin-top:10px">Kargo tablosunu kaydet</button>';
+    var b=D.getElementById('ozSP');if(b)b.innerHTML='<div class="ozList" style="margin:0 0 12px">'+row('box','Belgelerim','Kimlik, vergi levhası, gıda kayıt belgesi…','nav',{k:'sellerApply',tab:'2'})+row('star','Sorular ve yorumlar','Alıcı soruları ve değerlendirmeler','sTab',{tab:'sorular'})+'</div>'+storeForm(s||{},false)+'<div class="ozSecH"><h2>Kargo ücret tablosu</h2><span class="ozSecSt '+(rates.length?'ok':'no')+'">'+(rates.length?'Tamam ✓':'Eksik')+'</span></div>'+ratesEditor()+'<button type="button" class="ozBtn wide" data-a="ratesSave" style="margin-top:10px">Kargo tablosunu kaydet</button>';
   }
 };
 function storeForm(s,wizard){
   s=Object.assign({},s,SELLER.img||{});
   /* P20: alanlar gruplu (Mağaza / İletişim / Vergi ve ödeme / Fotoğraflar), alan altında kısa yardım; kimlikler ve kayıt aynı */
   function f(id,label,v,opt){opt=opt||{};return '<label for="ozS_'+id+'">'+E(label)+'</label><input class="ozIn" id="ozS_'+id+'" value="'+E(v==null?'':v)+'"'+(opt.im?' inputmode="'+opt.im+'"':'')+(opt.type?' type="'+opt.type+'"':'')+(opt.ac?' autocomplete="'+opt.ac+'"':'')+(opt.ph?' placeholder="'+E(opt.ph)+'"':'')+(opt.help?' aria-describedby="ozSH_'+id+'"':'')+' maxlength="'+(opt.max||120)+'">'+(opt.help?'<small class="ozFHelp" id="ozSH_'+id+'">'+E(opt.help)+'</small>':'')}
-  function grp(ic,t,body){return '<section class="ozFG"><h3 class="ozFGH"><span aria-hidden="true">'+ic+'</span> '+E(t)+'</h3>'+body+'</section>'}
+  /* P21: Mağaza ayarlarında (sihirbaz dışı) bölüm durum rozeti — kayıtlı veriden */
+  function grp(ic,t,body,okv){return '<section class="ozFG"><h3 class="ozFGH"><span aria-hidden="true">'+ic+'</span> '+E(t)+(okv==null?'':'<span class="ozSecSt '+(okv?'ok':'no')+'">'+(okv?'Tamam ✓':'Eksik')+'</span>')+'</h3>'+body+'</section>'}
+  var bs=wizard?{}:{st:String(s.display_name||'').trim().length>=3&&num(s.handling_days)>=1,ct:String(s.phone||'').replace(/\D/g,'').length>=10&&!!s.city&&!!s.ship_from_city,
+    tx:String(s.legal_name||'').trim().length>=3&&/^\d{10,11}$/.test(String(s.tax_no||''))&&/^TR\d{24}$/.test(ibanClean(s.iban))&&String(s.iban_holder||'').trim().length>=3,ph:!!(s.logo_url||s.cover_url)};
   var kind=s.kind||'person';var lock=sellerLocked(s);var p8=p8On(s),tt=s.tax_type||'';
   var imgs=s.id?'<div class="ozTwo"><div><span class="ozMuted">Logo</span>'+(s.logo_url?pic(s.logo_url,'Logo','')+'':'')+fileBtn(s.logo_url?'Logoyu değiştir':'Logo yükle','logo','image/jpeg,image/png,image/webp')+'</div><div><span class="ozMuted">Kapak fotoğrafı</span>'+(s.cover_url?pic(s.cover_url,'Kapak',''):'')+fileBtn(s.cover_url?'Kapağı değiştir':'Kapak yükle','cover','image/jpeg,image/png,image/webp')+'</div></div><small class="ozFHelp">Kare logo ve yatay, aydınlık bir kapak fotoğrafı mağazanı öne çıkarır.</small>':'<p class="ozHint">Logo ve kapak fotoğrafını bu adımı kaydettikten sonra ekleyebilirsin.</p>';
   var store=f('display_name','Mağaza adı (alıcılar görür)',s.display_name,{max:60,help:'Kısa ve akılda kalan bir ad; en az 3 harf.'})+
@@ -2310,8 +2317,8 @@ function storeForm(s,wizard){
   var bank='<div class="ozBank"><b class="ozBankH">Ödeme hesabı</b>'+f('iban','IBAN',s.iban,{max:34,ac:'off',ph:'TR00 0000 0000 0000 0000 0000 00'})+f('iban_holder','Hesap sahibi adı',s.iban_holder,{max:160,ac:'off'})+'<p class="ozHint">Ödemeler bu hesaba yapılır. Hesap sahibi adı ünvanınla aynı olmalı.</p></div>';
   var food=p8?'<label class="ozChk"><input type="checkbox" id="ozS_food" data-chg="sTax"'+(s.sells_food===false?'':' checked')+'><span>Gıda ürünü satacağım</span></label>'+
     (wizard?'<div style="margin:6px 0 10px"><p class="ozHint" style="margin:0">Gereken belgeler (2. adımda yüklenir)</p>'+reqList(tt,kind,s.sells_food,SELLER.docs)+'</div>':''):'';
-  return '<div class="ozCard ozForm"><p class="ozErr ozErrTop" id="ozSErrTop" role="alert" hidden></p>'+grp('🏪','Mağaza',store)+grp('📞','İletişim',contact)+grp('🧾','Vergi ve ödeme',legal+food+bank)+grp('📷','Fotoğraflar',imgs)+
-    '<p class="ozErr" id="ozSErr" hidden></p><button type="button" class="ozBtn pri wide btnNext" data-a="storeSave" data-w="'+(wizard?'1':'')+'" style="margin-top:14px">'+(wizard?'Kaydet ve devam':'Mağaza bilgilerini kaydet')+'</button></div>';
+  return '<div class="ozCard ozForm"><p class="ozErr ozErrTop" id="ozSErrTop" role="alert" hidden></p>'+grp('🏪','Mağaza',store,bs.st)+grp('📞','İletişim',contact,bs.ct)+grp('🧾','Vergi ve ödeme',legal+food+bank,bs.tx)+grp('📷','Fotoğraflar',imgs,bs.ph)+
+    '<p class="ozErr" id="ozSErr" hidden></p>'+(wizard?'':'<div class="ozSaveSt">')+'<button type="button" class="ozBtn pri wide btnNext" data-a="storeSave" data-w="'+(wizard?'1':'')+'" style="margin-top:14px">'+(wizard?'Kaydet ve devam':'Mağaza bilgilerini kaydet')+'</button>'+(wizard?'':'</div>')+'</div>';
 }
 /* Onaylı hesapta tür, ünvan ve vergi no sunucuda kilitli (PF_STATE) — formda salt okunur */
 /* P8: "Başvuruyu gönder" eksik varsa devre dışı, nedenleri altında yazılı */

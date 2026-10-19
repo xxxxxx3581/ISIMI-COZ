@@ -1513,6 +1513,67 @@ html:root .ozSetup{border:2px solid var(--nx-star)}
 .fd .fdSub button,.fd #fdTabs button,.fd .fdCatPick .fdChip,.fd .fdUp .fb,.fd .fdPushSlot .fb{min-height:44px}
 .fd .fdAdv{margin-top:10px}.fd .fdAdv summary{cursor:pointer;font-weight:800;min-height:44px;display:flex;align-items:center}
 /*P20-BITIS*/
+/*P21-BASLA*/ /* Paket 21: panel alt menü, Bugün, kazanç, mutfak modu (yalnız görünüm). Durum renkleri: krem/açık temada P19 jetonları aynen;
+   koyu temada kart zemininde ≥3:1 kontrast için AÇIK tonlar (AC1 bulgusu) + koyu yazı. */
+:root{--st-new:#F28B6E;--st-prep:#F2C94C;--st-ship:#6FB3E8;--st-done:#5FCB8A;--st-issue:#C98D84;--st-ink:#1F1A12}
+html[data-theme="light"] body:not(.ozWorld),html:root body.ozWorld.ozLt{--st-new:var(--nx-new);--st-prep:var(--nx-amber);--st-ship:var(--nx-blue);--st-done:var(--nx-pri);--st-issue:var(--nx-issue);--st-ink:#fff}
+html:root body.ozWorld:not(.ozLt){--st-new:#F28B6E;--st-prep:#F2C94C;--st-ship:#6FB3E8;--st-done:#5FCB8A;--st-issue:#C98D84;--st-ink:#1F1A12}
+/* ortak alt menü: .pnNav kapsayıcı, .pnItem öğe (≥62px), seçili dolu sarı, .pnBdg rozet (yeni = kırmızı ton) */
+.pnNav{grid-auto-flow:column;grid-auto-columns:minmax(0,1fr)}
+.pnItem{position:relative;min-width:0;min-height:62px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border-radius:12px;font-weight:800;font-size:12px;line-height:1.15}
+.pnItem .l{max-width:100%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pnNav .pnItem.on,.pnNav .pnItem[aria-current=page]{background:var(--pn-on,var(--nx-star));color:var(--pn-on-ink,var(--nx-star-ink))}
+.pnBdg{position:absolute;top:4px;right:calc(50% - 28px);min-width:20px;height:20px;padding:0 6px;border-radius:10px;background:var(--st-new);color:var(--st-ink);font:900 11.5px/20px system-ui,sans-serif;font-style:normal;text-align:center;box-sizing:border-box}
+.pnBdg[hidden]{display:none}
+/* Özüne Dön satıcı alt menüsü: mevcut renkler aynı (Q1), yükseklik ≥62px */
+html:root body.ozSellerNav .ozNavB.pnItem{min-height:62px;height:62px}
+html:root body.ozWorld.ozLt.ozSellerNav .ozNavB.pnItem[aria-current=page]{background:var(--nx-star);color:var(--nx-star-ink)}
+html:root body.ozWorld.ozSellerNav.ozNavOn .app{padding-bottom:calc(92px + env(safe-area-inset-bottom,0px))!important}
+/* Yemek işletme alt menüsü: yalnız telefonda (≤768px); masaüstünde üst sekmeler */
+.fdPNav{display:none}
+@media (max-width:768px){
+ .fd .fdSub{display:none}
+ body.fdWorld .fd .fdPNav{display:grid;position:fixed;left:0;right:0;bottom:0;z-index:46;gap:6px;padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px));background:var(--card);border-top:1px solid var(--line);box-shadow:0 -6px 18px rgba(0,0,0,.14)}
+ body.fdWorld .fd .fdPNav .pnItem{border:0;background:transparent;color:var(--muted);font:inherit;font-weight:800;font-size:12.5px;cursor:pointer}
+ body.fdWorld .fd .fdPNav .pnItem.on{background:var(--nx-star);color:var(--nx-star-ink)}
+ body.fdWorld.fdwPanel:has(.fdPNav) .app{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+ body.fdWorld.fdwPanel:has(.fdPNav) .fdSticky{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+}
+.fd .fdPNav .ic{font-size:20px;line-height:1}
+/* Bugün: büyük açık/kapalı kartı, 3 renkli sayaç, mutfak modu, "Daha fazla" */
+.fd .fdOpen.fdOpenBig{padding:16px 16px;border-width:2px;min-height:76px}.fd .fdOpenBig .tx b{display:block;font-size:20px;font-weight:900}
+.fd .fdOpenBig:not(.on){border-color:var(--st-new)}.fd .fdOpenBig.on{border-color:var(--st-done)}
+.fd .fdOpenBig .fdSw i{width:62px;height:36px;border-radius:18px}.fd .fdOpenBig .fdSw i:after{width:30px;height:30px}.fd .fdOpenBig .fdSw input:checked+i:after{transform:translateX(26px)}
+.fd .fdCnt3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 12px}.fd .fdCnt3:empty{display:none}
+.fd .fdCnt3 button{--stc:var(--st-new);min-height:84px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:2px;padding:8px 10px;border-radius:14px;border:2px solid var(--line);border-top:6px solid var(--stc);background:var(--card);color:var(--text);font:inherit;text-align:left;cursor:pointer;min-width:0}
+.fd .fdCnt3 .p{--stc:var(--st-prep)}.fd .fdCnt3 .s{--stc:var(--st-ship)}
+.fd .fdCnt3 b{font-size:28px;line-height:1.05;font-weight:900;color:var(--stc)}.fd .fdCnt3 span{font-weight:800;font-size:13px}.fd .fdCnt3 small{font-size:11px;color:var(--muted)}
+.fd .fdCnt3 button.on{border-color:var(--stc);background:color-mix(in srgb,var(--stc) 12%,var(--card))}
+.fd .fdKmRow{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:56px;padding:10px 14px;margin:0 0 12px;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+.fd .fdKmRow .tx{min-width:0}.fd .fdKmRow b{display:block}.fd .fdKmRow small{display:block;color:var(--muted);font-size:12.5px}
+.fd .fdMoreSec{margin-top:18px;padding-top:12px;border-top:1px solid var(--line)}.fd .fdMoreSec h3{margin:0 0 10px;font-size:15px}
+/* Raporlar: seçili dönem dolu yeşil, toplam hakediş büyük */
+.fd .fdRepCh .fdChip{min-height:44px}.fd .fdRepCh .fdChip.on{background:var(--nx-pri);border-color:var(--nx-pri);color:#fff}
+.fd .fdRepHero{display:flex;flex-direction:column;gap:2px;padding:16px;margin:0 0 12px;border-radius:16px;border:2px solid var(--nx-pri);background:color-mix(in srgb,var(--nx-pri) 10%,var(--card))}
+.fd .fdRepHero small{font-weight:800;color:var(--muted)}.fd .fdRepHero b{font-size:34px;line-height:1.1;font-weight:900}.fd .fdRepHero span{font-size:13px;color:var(--muted)}
+/* Özüne Dön: sayaçlar koyu temada açık tonlar (krem aynen) */
+html:root body.ozWorld:not(.ozLt) .ozSoCnt .c.c1{background:var(--st-new);color:var(--st-ink)}html:root body.ozWorld:not(.ozLt) .ozSoCnt .c.c2{background:var(--st-prep);color:var(--st-ink)}
+html:root body.ozWorld:not(.ozLt) .ozSoCnt .c.c4{background:var(--st-ship);color:var(--st-ink)}html:root body.ozWorld:not(.ozLt) .ozSoCnt .c.c6{background:var(--st-issue);color:var(--st-ink)}
+/* ürün kartı durum kenarı + belirgin rozet */
+html:root .ozSpRow{border-left:5px solid var(--oz-line)}html:root .ozSpRow[data-pst=ok]{border-left-color:var(--st-done)}html:root .ozSpRow[data-pst=warn]{border-left-color:var(--st-prep)}html:root .ozSpRow[data-pst=bad]{border-left-color:var(--st-new)}
+html:root .ozSpRow .ozPSt .ozTag{font-size:12.5px;padding:4px 10px}
+/* kazanç: üç renkli kart */
+html:root .ozErn3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 10px}
+html:root .ozKpi.ozErn{--stc:var(--st-prep);display:flex;flex-direction:column;gap:2px;padding:10px;border-radius:14px;border:2px solid var(--oz-line);border-top:6px solid var(--stc);background:var(--oz-card);min-width:0}
+html:root .ozKpi.ozErn.ok{--stc:var(--st-done)}html:root .ozKpi.ozErn.d{--stc:var(--st-ship)}
+html:root .ozKpi.ozErn em{font-style:normal;font-weight:900;font-size:13px;color:var(--oz-text)}html:root .ozKpi.ozErn b{font-size:15px;letter-spacing:-.2px;overflow-wrap:anywhere}html:root .ozKpi.ozErn small{font-size:11.5px;color:var(--oz-muted)}
+/* mağaza ayarları: bölüm rozeti, kaydet altta sabit (alt menünün üstünde) */
+html:root .ozSecSt{margin-left:auto;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:800;white-space:nowrap}
+html:root .ozSecSt.ok{background:var(--nx-pri);color:#fff}html:root .ozSecSt.no{background:var(--nx-amber);color:#fff}
+html:root .ozForm .ozFGH{flex-wrap:wrap}html:root .ozSecH:has(.ozSecSt){display:flex;align-items:center;gap:8px}
+html:root .ozSaveSt{position:sticky;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:6;margin:0 -4px;padding:0 4px 4px;background:linear-gradient(to top,var(--oz-card) 70%,transparent)}
+html:root .ozSaveSt .ozBtn{min-height:56px}
+/*P21-BITIS*/
 /*K21-BASLA*/
 /*OZ AJ1 P1 renk jetonları (koyu = önceki hex değerleri, birebir). Çekirdek: rol bazlı (T metin, L çizgi, B zemin); --oz-x<HEX><ROL> tek kullanımlık ara tonlar. Krem tema bu değerleri body.ozWorld.ozLt altında değiştirir.*/
 html:root{--oz-bg:#2B2118;--oz-card:#3A2D20;--oz-card2:#4A3A27;--oz-line:#54422D;--oz-line2:#6B5A44;--oz-text:#F6ECDC;--oz-muted:#CDBB9F;--oz-muted2:#A99983;--oz-acc:#28804F;--oz-acc2:#4FB67F;--oz-acc2L:#4FB67F;--oz-acc2B:#4FB67F;--oz-sun:#F7D24A;--oz-sunL:#F7D24A;--oz-sunB:#F7D24A;--oz-bad:#E5735A;--oz-badL:#E5735A;--oz-ink:#1F3B2A;--oz-warn:#E0A84A;--oz-x1E1712B:#1E1712;--oz-x1E6B3ET:#1E6B3E;--oz-x1F160ET:#1F160E;--oz-x1F1A12B:#1F1A12;--oz-x1F3B2AB:#1F3B2A;--oz-x1F6F43B:#1F6F43;--oz-x241B13B:#241B13;--oz-x2A2017B:#2A2017;--oz-x2B2118L:#2B2118;--oz-x2B2118T:#2B2118;--oz-x2E6B47L:#2E6B47;--oz-x2F2419B:#2F2419;--oz-x2F241AB:#2F241A;--oz-x2F2519B:#2F2519;--oz-x2F3A26B:#2F3A26;--oz-x2F6FA3B:#2F6FA3;--oz-x352A1FB:#352A1F;--oz-x3A2D20L:#3A2D20;--oz-x463622B:#463622;--oz-x46372AB:#46372A;--oz-x4A3A27L:#4A3A27;--oz-x4E95D0B:#4E95D0;--oz-x4E95D0L:#4E95D0;--oz-x5E4E3AT:#5E4E3A;--oz-x5E5348B:#5E5348;--oz-x5FCB8AT:#5FCB8A;--oz-x6A3A2EL:#6A3A2E;--oz-x6B4F2AB:#6B4F2A;--oz-x6B5739L:#6B5739;--oz-x6B5A44T:#6B5A44;--oz-x6E5C45T:#6E5C45;--oz-x7A3A2CL:#7A3A2C;--oz-x7A4E00T:#7A4E00;--oz-x7A5BA6B:#7A5BA6;--oz-x7FD3A2T:#7FD3A2;--oz-x8A6B3EL:#8A6B3E;--oz-x8A7A60T:#8A7A60;--oz-x8C6B2AL:#8C6B2A;--oz-x8E3B2EB:#8E3B2E;--oz-x8E3B2EL:#8E3B2E;--oz-x8E7E66T:#8E7E66;--oz-x9BE0B8T:#9BE0B8;--oz-x9BE3B9T:#9BE3B9;--oz-x9FD0F5T:#9FD0F5;--oz-xA8977CT:#A8977C;--oz-xA8987FT:#A8987F;--oz-xB07800T:#B07800;--oz-xB5482FB:#B5482F;--oz-xB7791FB:#B7791F;--oz-xB8A68AT:#B8A68A;--oz-xBDAE95B:#BDAE95;--oz-xBFAE92T:#BFAE92;--oz-xC7A23AL:#C7A23A;--oz-xC9A33AB:#C9A33A;--oz-xC9A33AL:#C9A33A;--oz-xC9B79AB:#C9B79A;--oz-xCFC3B0B:#CFC3B0;--oz-xCFE7C2T:#CFE7C2;--oz-xD8C8AET:#D8C8AE;--oz-xD9694AB:#D9694A;--oz-xD9694AL:#D9694A;--oz-xD9A79FT:#D9A79F;--oz-xD9C9AET:#D9C9AE;--oz-xE0A84AB:#E0A84A;--oz-xE0A84AL:#E0A84A;--oz-xE6D9C3B:#E6D9C3;--oz-xE6D9C3L:#E6D9C3;--oz-xE8685DL:#E8685D;--oz-xE8685DT:#E8685D;--oz-xE8A08ET:#E8A08E;--oz-xE8DCC6T:#E8DCC6;--oz-xE9DCC4T:#E9DCC4;--oz-xEADCC4T:#EADCC4;--oz-xEDE5D8B:#EDE5D8;--oz-xF0A792T:#F0A792;--oz-xF1CC85T:#F1CC85;--oz-xF2A08CT:#F2A08C;--oz-xF2B431B:#F2B431;--oz-xF2B431L:#F2B431;--oz-xF2B431T:#F2B431;--oz-xF2C14EB:#F2C14E;--oz-xF2C14ET:#F2C14E;--oz-xF3A893T:#F3A893;--oz-xF3B6A6T:#F3B6A6;--oz-xF3D27AT:#F3D27A;--oz-xF3EBDDB:#F3EBDD;--oz-xF7B979T:#F7B979;--oz-xFFF6E6T:#FFF6E6;--oz-xFFFDF8B:#FFFDF8;--oz-xFFFFFFB:#FFFFFF}
@@ -3653,7 +3714,7 @@ function hmGo(key){
 function hmSoon(){ try{ v2Toast('Özüne Dön çok yakında!'); }catch(e){} }
 /*K21-JS-BASLA*/ /* Özüne Dön: modül tembel yüklenir; pazar kapalıysa (veya hata olursa) yalnızca hmSoon() gösterilir. */
 var OZ_LOADING=null, OZ_TAP=false;
-function ozLoad(){ if(window.OZ&&window.OZ.__v) return Promise.resolve(window.OZ); if(OZ_LOADING) return OZ_LOADING; OZ_LOADING=new Promise(function(res,rej){ var s=document.createElement('script'); s.src='./oz-market-v1.js?v=14'; s.async=true; s.onload=function(){ if(window.OZ&&window.OZ.__v) res(window.OZ); else { OZ_LOADING=null; rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); } }; s.onerror=function(){ OZ_LOADING=null; s.remove(); rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); }; document.head.appendChild(s); }); return OZ_LOADING; }
+function ozLoad(){ if(window.OZ&&window.OZ.__v) return Promise.resolve(window.OZ); if(OZ_LOADING) return OZ_LOADING; OZ_LOADING=new Promise(function(res,rej){ var s=document.createElement('script'); s.src='./oz-market-v1.js?v=15'; s.async=true; s.onload=function(){ if(window.OZ&&window.OZ.__v) res(window.OZ); else { OZ_LOADING=null; rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); } }; s.onerror=function(){ OZ_LOADING=null; s.remove(); rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); }; document.head.appendChild(s); }); return OZ_LOADING; }
 window.ozLoad=ozLoad;
 function ozTap(){ if(OZ_TAP) return; OZ_TAP=true; ozLoad().then(function(oz){ return oz.tryEnter(); }).then(function(ok){ if(!ok) hmSoon(); }).catch(function(){ hmSoon(); }).then(function(){ OZ_TAP=false; }); }
 /* P10: iyzico (sandbox) ödeme dönüşü ?oz_pay=<ödeme id> → parametre adres çubuğundan silinir, Özüne Dön açılıp ödeme sonucu gösterilir */
@@ -10968,6 +11029,6 @@ for(const k of ["showGayrimenkulDetail","showOtomobilDetail"]){const f=window[k]
 </script>
 </body>
 <script src="./a35-seller-identity.js?v=3"></script>
-<script src="./a7-food-v1.js?v=6"></script>
+<script src="./a7-food-v1.js?v=7"></script>
 <script src="./pf-platform-v1.js?v=4"></script>
 </html>
