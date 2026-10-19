@@ -64,8 +64,7 @@ const {chromium,open,enter}=require('./harness.js');
  ok(pf&&pf.txt==="650,00 ₺'den başlayan fiyatlarla · seçeneğini seç"&&!pf.price,'ürün detayı: seçimden önce "\'den başlayan", .ozPrice b yok: '+JSON.stringify(pf));
  await p.evaluate(()=>{document.querySelectorAll('.ozOv').forEach(x=>x.remove())});
  await go('siparis');const dl=await p.evaluate(()=>{const b=document.querySelector('#ozRoot [data-a=ordDeliver]');return b?b.className:null});
- // Paket 19 (bilinçli değişiklik): kargodaki siparişte müşterinin sıradaki adımı "Siparişim elime ulaştı" → tek birincil, nabızlı (önceden ikincil 'ozBtn')
- ok(dl==='ozBtn btnNext btnPulse','"Siparişim elime ulaştı" Paket 19 birincili (ozBtn btnNext btnPulse) değil: '+dl);
+ ok(dl==='ozBtn','"Siparişim elime ulaştı" birincil değil: '+dl);
  await go('kesfet');await p.waitForTimeout(600);
  const hp=await p.evaluate(()=>{const b=document.getElementById('ozHP'),pr=document.querySelector('#ozRoot .ozPrds3');return {h:b&&b.querySelector('h2')?b.querySelector('h2').textContent:null,n:b?b.querySelectorAll('.ozGr,.ozGc').length:0,after:!!(b&&pr&&(pr.compareDocumentPosition(b)&Node.DOCUMENT_POSITION_FOLLOWING))}});
  ok(hp.h==='Öne çıkan ürünler'&&hp.n>0&&hp.after,'ana sayfa "Öne çıkan ürünler" satıcı kartlarının altında: '+JSON.stringify(hp));
@@ -78,7 +77,8 @@ const {chromium,open,enter}=require('./harness.js');
  ok(em&&em.join('|')==='catAll::Kategorilere göz at|nav:popular:Öne çıkan ürünler','sonuçsuz arama: kategoriler + "Öne çıkan ürünler" bağlantıları: '+JSON.stringify(em));
  await p.evaluate(R0=>{window.__OZ_FX.R.oz_search_products=JSON.parse(R0)},R0);
  await go('siparis');const nx=await p.evaluate(()=>{const e=document.querySelector('#ozRoot .ozOdN.ozNext');return e?e.innerText.replace(/\s+/g,' '):null});
- ok(nx&&/^Sıradaki adım: Kargonun sana ulaşması \(Yurtiçi Kargo\)\./.test(nx),'sipariş detayı "Sıradaki adım" (kargoda, gerçek kargo firması): '+nx);
+ // Paket 19 düzeltme (bilinçli değişiklik): kargoda metin kullanıcının verdiği sabit cümle; firma adı hemen alttaki kargo kartında (önceden metinde)
+ ok(nx&&/^Sıradaki adım: Kargon yolda\. Kargo firmasından takip edebilirsin\. Eline ulaşınca aşağıdan onayla\./.test(nx),'sipariş detayı "Sıradaki adım" (kargoda): '+nx);
  await p.evaluate(()=>OZ.go('product',{id:'p0'}));await p.waitForTimeout(1400);
  await p.evaluate(()=>{const b=document.querySelector('.ozOv.ozPdS .ozVar');if(b)b.click()});await p.waitForTimeout(300);
  const tr=await p.evaluate(()=>{const b=document.querySelector('.ozOv.ozPdS .ozPdTr');return b?{n:b.querySelectorAll('.ozShipN').length,pr:!!b.querySelector('.ozPdPr [data-a=pdSeller]'),t:b.innerText.replace(/\s+/g,' '),
@@ -163,7 +163,8 @@ const {chromium,open,enter}=require('./harness.js');
    return {ret:f('#ozRoot [data-a=ordReturn]'),trk:f('#ozRoot .ozTrkGo'),cp:f('#ozRoot .ozTrkC .cp')}});
   const acc=th==='light'?'rgb(31, 107, 69)':'rgb(40, 128, 79)',sun=th==='light'?'rgb(138, 90, 0)':'rgb(247, 210, 74)';
   ok(b.trk&&b.trk.bg===acc&&b.trk.c==='rgb(255, 255, 255)'&&+b.trk.fw>=700,'['+th+'] takip düğmesi orman yeşili + beyaz kalın: '+JSON.stringify(b.trk));
-  ok(b.ret&&/\bozRet\b/.test(b.ret.cls)&&b.ret.bg==='rgba(242, 193, 78, 0.28)'&&b.ret.c===sun&&b.cp&&b.ret.bg!==b.cp.bg,'['+th+'] iade düğmesi kehribar (.ozRet), Kopyala\'dan ayrı: '+JSON.stringify([b.ret,b.cp&&b.cp.bg]));
+  // Paket 19 düzeltme (bilinçli değişiklik): iade/cayma artık sarı dolgulu kutu değil, sönük ikincil bağlantı (zeminsiz, altı çizili); önceden kehribar dolgu
+  ok(b.ret&&/\bozRet\b/.test(b.ret.cls)&&b.ret.bg==='rgba(0, 0, 0, 0)'&&b.ret.c!==sun&&b.cp&&b.ret.bg!==b.cp.bg,'['+th+'] iade sönük bağlantı (.ozRet, zeminsiz), Kopyala\'dan ayrı: '+JSON.stringify([b.ret,b.cp&&b.cp.bg]));
   const v=await AA([['iade','#ozRoot [data-a=ordReturn]'],['takip','#ozRoot .ozTrkGo']]);ok(!v.length,'['+th+'] sipariş düğmeleri AA: '+v.join(' | '));
   const rw=await p.evaluate(()=>{const a=document.querySelector('#ozRoot #ozRateC'),b=document.querySelector('#ozRoot .ozTrkC');return a&&b?[Math.round(a.getBoundingClientRect().width),Math.round(b.getBoundingClientRect().width)]:null});
   ok(rw&&rw[0]===rw[1],'['+th+'] "Ürünleri değerlendir" kartı tam genişlik (kargo kartıyla aynı): '+JSON.stringify(rw))}

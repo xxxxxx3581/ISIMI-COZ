@@ -1437,6 +1437,12 @@ html:root .ozSoActs.nxActs{flex-wrap:nowrap;align-items:stretch}
 html:root .ozOdN.ozNext.nxCard{display:block;border:2px solid var(--nx-star);padding:12px;font-size:14px}
 html:root .ozOdN.ozNext.nxCard>p{margin:0 0 10px}html:root .ozOdN.ozNext.nxCard>p:last-child{margin:0}
 html:root .ozOdN.ozNext.nxCard .nxRow{display:flex;flex-wrap:wrap;gap:8px}html:root .ozOdN.ozNext.nxCard .nxRow>.btnNext{flex:1 1 100%}html:root .ozOdN.ozNext.nxCard .nxRow>:not(.btnNext){flex:1 1 150px}
+/* P19 düzeltme: kargoda teslim onayı sönük çerçeveli (kargo kartında "takip et" altında; tek ana düğme "takip et"), iade/cayma sönük bağlantı */
+html:root .ozTrkC .ozDlvW{margin-top:8px}html:root .ozTrkC .ozDlvW>.ozBtn{width:100%;min-height:48px;background:transparent;border:1.5px solid var(--oz-line);color:var(--oz-text);font-weight:700;box-shadow:none}
+html:root .ozOd .ozBtn.ozRet.ozRet{background:transparent;border-color:transparent;color:var(--oz-muted);font-weight:700;text-decoration:underline;text-underline-offset:3px;box-shadow:none;min-height:44px}
+/* P19 düzeltme: Yemek takip alt çubuğu — kaydırma sonunda içerik çubuk + alt menü + güvenli alan kadar boşlukla biter; çubuk alt menünün üstünde */
+body.fdWorld #fdTrack:has(>#fdNextBar){padding-bottom:calc(8px + env(safe-area-inset-bottom,0px))}
+html:has(#fdNextBar){scroll-padding-bottom:calc(90px + 76px + env(safe-area-inset-bottom,0px))}
 /*P19-BITIS*/
 /*K21-BASLA*/
 /*OZ AJ1 P1 renk jetonları (koyu = önceki hex değerleri, birebir). Çekirdek: rol bazlı (T metin, L çizgi, B zemin); --oz-x<HEX><ROL> tek kullanımlık ara tonlar. Krem tema bu değerleri body.ozWorld.ozLt altında değiştirir.*/
@@ -3578,7 +3584,7 @@ function hmGo(key){
 function hmSoon(){ try{ v2Toast('Özüne Dön çok yakında!'); }catch(e){} }
 /*K21-JS-BASLA*/ /* Özüne Dön: modül tembel yüklenir; pazar kapalıysa (veya hata olursa) yalnızca hmSoon() gösterilir. */
 var OZ_LOADING=null, OZ_TAP=false;
-function ozLoad(){ if(window.OZ&&window.OZ.__v) return Promise.resolve(window.OZ); if(OZ_LOADING) return OZ_LOADING; OZ_LOADING=new Promise(function(res,rej){ var s=document.createElement('script'); s.src='./oz-market-v1.js?v=11'; s.async=true; s.onload=function(){ if(window.OZ&&window.OZ.__v) res(window.OZ); else { OZ_LOADING=null; rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); } }; s.onerror=function(){ OZ_LOADING=null; s.remove(); rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); }; document.head.appendChild(s); }); return OZ_LOADING; }
+function ozLoad(){ if(window.OZ&&window.OZ.__v) return Promise.resolve(window.OZ); if(OZ_LOADING) return OZ_LOADING; OZ_LOADING=new Promise(function(res,rej){ var s=document.createElement('script'); s.src='./oz-market-v1.js?v=12'; s.async=true; s.onload=function(){ if(window.OZ&&window.OZ.__v) res(window.OZ); else { OZ_LOADING=null; rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); } }; s.onerror=function(){ OZ_LOADING=null; s.remove(); rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); }; document.head.appendChild(s); }); return OZ_LOADING; }
 window.ozLoad=ozLoad;
 function ozTap(){ if(OZ_TAP) return; OZ_TAP=true; ozLoad().then(function(oz){ return oz.tryEnter(); }).then(function(ok){ if(!ok) hmSoon(); }).catch(function(){ hmSoon(); }).then(function(){ OZ_TAP=false; }); }
 /* P10: iyzico (sandbox) ödeme dönüşü ?oz_pay=<ödeme id> → parametre adres çubuğundan silinir, Özüne Dön açılıp ödeme sonucu gösterilir */
@@ -10893,6 +10899,6 @@ for(const k of ["showGayrimenkulDetail","showOtomobilDetail"]){const f=window[k]
 </script>
 </body>
 <script src="./a35-seller-identity.js?v=3"></script>
-<script src="./a7-food-v1.js?v=4"></script>
+<script src="./a7-food-v1.js?v=5"></script>
 <script src="./pf-platform-v1.js?v=4"></script>
 </html>

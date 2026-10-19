@@ -4,6 +4,9 @@
 // Özüne Dön satıcı sipariş kartları (new, accepted, packed) ve müşteri sipariş detayı (shipped, awaiting_payment).
 // Doğrulanan: durum başına en fazla bir birincil (.btnNext) ve beklenen etiket/renk; tıklama eski işlevi çağırır (aynı onclick / data-a);
 // yatay taşma yok; görünür düğmeler ≥44px; nabız yalnız izinli düğmelerde ve prefers-reduced-motion altında animasyon yok.
+// P19 düzeltme: Özüne Dön kargoda tek ana düğme "takip et" (birincil .btnNext yok), "Kargom elime ulaştı" sönük, takip et'in altında, ordDeliver onayı aynı;
+// iade/cayma sönük bağlantı; Yemek teslimat kodu yalnız platform kuryesinde; restoran kuryesi teslimde kod sorulmaz; kaydırma sonunda alt çubuk ve
+// alt menü içerikle/kendi aralarında çakışmaz (390px; görüntü alanı ekran görüntüsü üst/alt).
 const {chromium,open,enter,overflow}=require('./harness.js');
 const fs=require('fs'),path=require('path');
 const SHOTS=process.env.P19_SHOTS||'';if(SHOTS)fs.mkdirSync(SHOTS,{recursive:true});
@@ -11,14 +14,14 @@ const NOW=Date.now(),iso=m=>new Date(NOW+m*60000).toISOString();
 /* Yemek sahte verisi: supabaseAuthRequest (Q/RPC) yönlendirici */
 function foodFx(){
  const ord=(id,status,min)=>({id,status,total_kurus:25000,created_at:iso(min),delivery_mode:'platform_delivery',venue_id:'v1',food_venues:{name:'Test Lokanta',image_url:''},food_order_items:[{name_snapshot:'Kaşarlı pide',quantity:1}],food_reviews:null});
- const track=st=>({order:{id:'f-'+st,no:'A1B2',status:st,delivery_mode:'platform_delivery',created_at:iso(-30),total_kurus:25000,subtotal_kurus:22000,delivery_fee_kurus:3000,platform_fee_kurus:0,discount_kurus:0,payment_method:'cash',address_text:'Bornova, İzmir',phone:'05320000000',estimated_delivery_at:iso(20),estimated_ready_at:iso(10),note:null},
+ const track=(st,mode)=>({order:{id:'f-'+st,no:'A1B2',status:st,delivery_mode:mode||'platform_delivery',created_at:iso(-30),total_kurus:25000,subtotal_kurus:22000,delivery_fee_kurus:3000,platform_fee_kurus:0,discount_kurus:0,payment_method:'cash',address_text:'Bornova, İzmir',phone:'05320000000',estimated_delivery_at:iso(20),estimated_ready_at:iso(10),note:null},
   venue:{name:'Test Lokanta',phone:'02320000000',lat:null,lng:null},
-  delivery:st==='on_the_way'?{status:'on_the_way',courier:{name:'Kurye Kaan',vehicle:'motorcycle',phone:'05000000000',rating_avg:4.8},location:null}:null,
+  delivery:st==='on_the_way'&&!mode?{status:'on_the_way',courier:{name:'Kurye Kaan',vehicle:'motorcycle',phone:'05000000000',rating_avg:4.8},location:null}:null,
   items:[{name:'Kaşarlı pide',quantity:1,line_total_kurus:22000,options:[]}],events:[],issues:[],review:null,delivery_code:'4821',
   can:{review:st==='delivered',review_courier:false,report:true,cancel:st==='new'}});
  const biz=(id,status,min,mode)=>({id,no:id.toUpperCase(),status,delivery_mode:mode||'self_delivery',created_at:iso(min),total_kurus:31000,payment_method:'cash',items:[{name:'Lahmacun',quantity:2,options:[]}],address_text:'Bornova',phone:'05320000000',estimated_ready_at:['accepted','preparing'].includes(status)?iso(15):null});
  return {orders:[ord('f-new','new',-2),ord('f-preparing','preparing',-10),ord('f-on_the_way','on_the_way',-25),ord('f-delivered','delivered',-90)],
-  track:{new:track('new'),preparing:track('preparing'),on_the_way:track('on_the_way'),delivered:track('delivered')},
+  track:{new:track('new'),preparing:track('preparing'),on_the_way:track('on_the_way'),delivered:track('delivered'),self:track('near_customer','self_delivery'),pickup:track('ready','pickup')},
   biz:{new:[biz('n2','new',-1),biz('n1','new',-4)],preparing:[biz('p1','preparing',-12)],ready:[biz('r1','ready',-20)],courier_wait:[],active_delivery:[]}};
 }
 async function foodPage(br,o){
@@ -46,7 +49,7 @@ const measure=(p,root)=>p.evaluate(root=>{const R=document.querySelector(root);i
  return {pri:pri.map(e=>({t:e.textContent.trim(),c:e.className,h:Math.round(e.getBoundingClientRect().height),bg:getComputedStyle(e).backgroundColor,an:getComputedStyle(e).animationName,on:e.getAttribute('onclick')||'',a:e.dataset.a||''})),
   danger:[...R.querySelectorAll('.btnDanger')].filter(vis).map(e=>({t:e.textContent.trim(),col:getComputedStyle(e).color,bd:getComputedStyle(e).borderTopColor})),small,
   pulse:[...R.querySelectorAll('.btnPulse')].filter(vis).map(e=>e.textContent.trim()+'|'+getComputedStyle(e).animationName)}},root);
-const PULSE_OK=/Kabul et|Teslim aldım|elime ulaştı|canlı izle/;
+const PULSE_OK=/Kabul et|Teslim aldım|canlı izle/;
 (async()=>{
  const br=await chromium.launch({executablePath:process.env.CHROMIUM||'/opt/pw-browsers/chromium'});
  const fails=[];const ok=(c,m)=>{if(!c)fails.push(m)};const shots=[];
@@ -95,6 +98,25 @@ const PULSE_OK=/Kabul et|Teslim aldım|elime ulaştı|canlı izle/;
      const sp=await p.evaluate(()=>window.__spy);ok(sp.length===1&&sp[0][0]===e[1]&&sp[0][1]==='f-'+s,tg+' Yemek takip '+s+': tıklama → '+e[1]+': '+JSON.stringify(sp));
      await p.evaluate(()=>window.__unspy());}
    }
+   // teslimat kodu yalnız platform kuryesinde
+   for(const [k,want] of [['on_the_way',1],['self',0],['pickup',0]]){
+    await p.evaluate(k=>showFoodOrderDetail('f-'+k),k);await p.waitForTimeout(900);
+    const r=await p.evaluate(()=>({code:document.querySelectorAll('#fdTrack .fdCodeBox').length,txt:(document.querySelector('#fdTrack')||{}).innerText||''}));
+    ok(r.code===want,tg+' Yemek takip '+k+': teslimat kodu kutusu '+(want?'görünür':'gizli')+': '+r.code);
+    if(k==='self')ok(!/Teslimat kodunu hazır tut/.test(r.txt),tg+' Yemek takip self_delivery yaklaştı: "Teslimat kodunu hazır tut" yok');
+   }
+   // alt çubuk / alt menü / içerik çakışması (yolda): üstte ve kaydırma sonunda
+   if(w===390){await p.evaluate(()=>showFoodOrderDetail('f-on_the_way'));await p.waitForTimeout(900);
+    for(const pos of ['ust','alt']){
+     await p.evaluate(pos=>window.scrollTo(0,pos==='ust'?0:document.scrollingElement.scrollHeight),pos);await p.waitForTimeout(300);
+     const g=await p.evaluate(()=>{const b=document.getElementById('fdNextBar').getBoundingClientRect(),n=document.querySelector('.fdwNav').getBoundingClientRect();
+      const kids=[...document.querySelectorAll('#fdTrack>*')].filter(e=>e.id!=='fdNextBar'&&e.getBoundingClientRect().height>0);
+      const atEnd=innerHeight+scrollY>=document.scrollingElement.scrollHeight-1;
+      return {barB:Math.round(b.bottom),barT:Math.round(b.top),navT:Math.round(n.top),hidden:atEnd?kids.filter(e=>e.getBoundingClientRect().bottom>b.top+1).map(e=>e.className||e.tagName):[]}});
+     ok(g.barB<=g.navT,tg+' Yemek takip ('+pos+'): çubuk alt menüye binmiyor: '+JSON.stringify(g));
+     ok(!g.hidden.length,tg+' Yemek takip ('+pos+'): kaydırma sonunda çubuk içeriği örtmüyor: '+JSON.stringify(g));
+     if(!rm&&SHOTS){const f=path.join(SHOTS,'duzeltme-yemek-takip-yolda-'+th+'-390-'+pos+'.png');await p.screenshot({path:f});shots.push(f)}
+    }}
    ok(!st.errors.length,tg+' Yemek müşteri sayfa hatası: '+st.errors.join(' | '));
    await ctx.close();
    /* ---------- Yemek işletme ---------- */
@@ -120,6 +142,12 @@ const PULSE_OK=/Kabul et|Teslim aldım|elime ulaştı|canlı izle/;
     await p.evaluate(()=>{const c=document.querySelector('#fdBList .fdBiz.nxFirst');c.querySelector('.btnNext').click();c.querySelector('.btnDanger').click()});
     ok(JSON.stringify(await p.evaluate(()=>window.__spy))==='[["n1","accepted","self_delivery"],["n1","rejected","self_delivery"]]',tg+' Yemek işletme: Kabul/Reddet → foodVenueAct: '+JSON.stringify(await p.evaluate(()=>window.__spy)));
     await p.evaluate(()=>window.__unspy());}
+   if(!rm){const n0=await p.evaluate(()=>window.__FDC.length);
+    await p.evaluate(()=>{foodVenueAct('r1','delivered',null,'self_delivery')});await p.waitForTimeout(500);
+    const r=await p.evaluate(()=>({txt:document.body.innerText,code:!!document.getElementById('fdDc')}));
+    ok(/Sipariş teslim edildi mi\?/.test(r.txt)&&!r.code,tg+' Yemek işletme self_delivery teslim: kod alanı yok, sade onay');
+    ok(!(await p.evaluate(n0=>window.__FDC.slice(n0).some(c=>/food_transition_order/.test(c[1])),n0)),tg+' Yemek işletme: onaysız sunucu çağrısı yok');
+    await p.keyboard.press('Escape');await p.waitForTimeout(300);}
    ok(!st.errors.length,tg+' Yemek işletme sayfa hatası: '+st.errors.join(' | '));
    await ctx.close();
    /* ---------- Özüne Dön satıcı ---------- */
@@ -153,12 +181,32 @@ const PULSE_OK=/Kabul et|Teslim aldım|elime ulaştı|canlı izle/;
    for(const os of ['shipped','awaiting_payment']){
     await p.evaluate(os=>{const o=window.__OZ_FX.R.oz_order_detail.order;o.status=os;o.payment_status=os==='awaiting_payment'?'pending':'paid'},os);
     await p.evaluate(()=>OZ.go('order',{id:'o1'}));await p.waitForTimeout(1300);
+    await p.evaluate(()=>document.querySelectorAll('#v2Toast,.ozToast').forEach(x=>x.remove()));
     m=await measure(p,'#ozRoot');await common(p,tg+' Özüne Dön sipariş '+os,'#ozRoot',m,rm);
-    const e=os==='shipped'?['✓ Siparişim elime ulaştı','ordDeliver']:['💳 Ödemeyi tamamla',null];
-    ok(m&&m.pri.length===1&&m.pri[0].t===e[0]&&(!e[1]||m.pri[0].a===e[1])&&(e[1]||/^(mockPay|iyzPay)$/.test(m.pri[0].a)),tg+' Özüne Dön sipariş '+os+': tek birincil '+JSON.stringify(m&&m.pri));
-    ok(await p.evaluate(()=>{const n=document.querySelector('#ozRoot .ozOdN.ozNext.nxCard');return !!n&&!!n.querySelector('.btnNext')}),tg+' Özüne Dön sipariş '+os+': birincil "Sıradaki adım" kartında');
+    if(os==='shipped'){
+     // tek ana düğme "Kargo firmasının sayfasında takip et"; teslim onayı sönük, onun altında
+     ok(m&&m.pri.length===0,tg+' Özüne Dön kargoda: birincil .btnNext yok: '+JSON.stringify(m&&m.pri));
+     const r=await p.evaluate(()=>{const g=document.querySelector('#ozRoot .ozTrkC .ozTrkGo'),d=document.querySelector('#ozRoot [data-a=ordDeliver]'),rt=document.querySelector('#ozRoot [data-a=ordReturn]'),nx=document.querySelector('#ozRoot .ozOdN.ozNext');
+      const cs=e=>e&&getComputedStyle(e);const filled=[...document.querySelectorAll('#ozRoot .ozOd .ozBtn')].filter(e=>{const c=cs(e).backgroundColor;return c!=='rgba(0, 0, 0, 0)'&&e.getBoundingClientRect().height>0}).map(e=>e.textContent.trim());
+      return {cls:d&&d.className,t:d&&d.textContent.trim(),under:!!(g&&d&&g.compareDocumentPosition(d)&Node.DOCUMENT_POSITION_FOLLOWING)&&d.getBoundingClientRect().top>=g.getBoundingClientRect().bottom,
+       dBg:d&&cs(d).backgroundColor,dH:d&&Math.round(d.getBoundingClientRect().height),ret:rt?{bg:cs(rt).backgroundColor,u:cs(rt).textDecorationLine}:null,filled,nx:nx&&nx.querySelector('p').innerText.replace(/\s+/g,' ')}});
+     ok(r.cls==='ozBtn'&&r.t==='Kargom elime ulaştı'&&r.under&&r.dBg==='rgba(0, 0, 0, 0)'&&r.dH>=44,tg+' Özüne Dön kargoda: "Kargom elime ulaştı" sönük, takip et altında: '+JSON.stringify(r));
+     ok(JSON.stringify(r.filled)==='["Kargo firmasının sayfasında takip et"]',tg+' Özüne Dön kargoda: tek dolu ana düğme takip et: '+JSON.stringify(r.filled));
+     ok(!r.ret||(r.ret.bg==='rgba(0, 0, 0, 0)'&&/underline/.test(r.ret.u)),tg+' Özüne Dön: iade/cayma sönük bağlantı: '+JSON.stringify(r.ret));
+     ok(r.nx==='Sıradaki adım: Kargon yolda. Kargo firmasından takip edebilirsin. Eline ulaşınca aşağıdan onayla.',tg+' Özüne Dön kargoda: sıradaki adım metni: '+r.nx);
+     if(w===390)for(const pos of ['ust','alt']){
+      await p.evaluate(pos=>window.scrollTo(0,pos==='ust'?0:document.scrollingElement.scrollHeight),pos);await p.waitForTimeout(300);
+      const g=await p.evaluate(()=>{const n=document.getElementById('ozNav').getBoundingClientRect();const atEnd=innerHeight+scrollY>=document.scrollingElement.scrollHeight-1;
+       const last=[...document.querySelectorAll('#ozRoot .ozOd>*')].filter(e=>e.getBoundingClientRect().height>0).pop();return {navT:Math.round(n.top),lastB:last?Math.round(last.getBoundingClientRect().bottom):0,atEnd}});
+      if(pos==='alt')ok(g.atEnd&&g.lastB<=g.navT,tg+' Özüne Dön kargoda: kaydırma sonunda içerik alt menünün altında kalmıyor: '+JSON.stringify(g));
+      if(!rm&&SHOTS){const f=path.join(SHOTS,'duzeltme-oz-kargoda-'+th+'-390-'+pos+'.png');await p.screenshot({path:f});shots.push(f)}
+     }
+    }else{
+     ok(m&&m.pri.length===1&&m.pri[0].t==='💳 Ödemeyi tamamla'&&/^(mockPay|iyzPay)$/.test(m.pri[0].a),tg+' Özüne Dön sipariş '+os+': tek birincil '+JSON.stringify(m&&m.pri));
+     ok(await p.evaluate(()=>{const n=document.querySelector('#ozRoot .ozOdN.ozNext.nxCard');return !!n&&!!n.querySelector('.btnNext')}),tg+' Özüne Dön sipariş '+os+': birincil "Sıradaki adım" kartında');
+    }
     if(!rm)await shot(p,'oz-siparis-'+os+'-'+K);
-    if(!rm&&os==='shipped'){await p.evaluate(()=>document.querySelector('#ozRoot .btnNext[data-a=ordDeliver]').click());await p.waitForTimeout(500);
+    if(!rm&&os==='shipped'){await p.evaluate(()=>document.querySelector('#ozRoot [data-a=ordDeliver]').click());await p.waitForTimeout(500);
      ok(await p.evaluate(()=>/Siparişin eline ulaştı mı\?/.test(document.body.innerText)),tg+' Özüne Dön: Elime ulaştı → eski onay (ordDeliver)');
      await p.keyboard.press('Escape');await p.waitForTimeout(300);}
    }

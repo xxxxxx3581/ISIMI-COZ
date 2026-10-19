@@ -1557,8 +1557,9 @@ function trackRender(t){
   const bad=BAD.includes(st)||st==='refund_pending'||st==='refunded';const done=st==='delivered';const stg=stageOf(o);const lbl=stageLabels(o.delivery_mode);
   const d=t.delivery;const cr=d&&d.courier;const pickup=o.delivery_mode==='pickup';
   const etaTs=pickup?o.estimated_ready_at:(o.estimated_delivery_at||o.estimated_ready_at);
-  const sub=st==='ready'&&pickup?'Siparişin hazır, restorandan teslim alabilirsin.':st==='ready'&&o.delivery_mode==='self_delivery'?'Siparişin hazır, restoran kuryesi yola çıkmak üzere.':info[2];
-  const showCode=t.delivery_code&&!pickup&&!TERMINAL.includes(st);
+  const sub=st==='ready'&&pickup?'Siparişin hazır, restorandan teslim alabilirsin.':st==='ready'&&o.delivery_mode==='self_delivery'?'Siparişin hazır, restoran kuryesi yola çıkmak üzere.':st==='near_customer'&&o.delivery_mode!=='platform_delivery'?'Kurye çok yakında.':info[2];
+  /* P19 düzeltme: teslimat kodu yalnız platform kuryesinde (restoran kuryesi / gel-al'da gizli) */
+  const showCode=t.delivery_code&&o.delivery_mode==='platform_delivery'&&!TERMINAL.includes(st);
   const events=(t.events||[]).filter(e=>STL[e.to]);
   /* P19: alt yapışkan çubukta duruma göre TEK birincil (onclick'ler aynı): teslimde ★ değerlendir (sarı), tekrar + sorun bildir ikincil */
   const acts=[];
@@ -1933,14 +1934,8 @@ window.foodVenueAct=async function(id,to,btn,mode){
       chips:to==='failed'?['Müşteriye ulaşılamadı','Adres bulunamadı','Müşteri teslim almadı']:['Ürün tükendi','Çok yoğunuz','Restoran kapanıyor','Teslimat bölgesi dışında']});
     if(!reason)return;
   }
-  if(to==='delivered'&&mode==='self_delivery'){
-    code=await new Promise(res=>{
-      const w=modal(sheetHead('Teslim edildi','Müşterinin 4 haneli teslimat kodunu girmen önerilir.')+'<input id="fdDc" class="fdCode" inputmode="numeric" maxlength="4" placeholder="• • • •" autofocus>'+
-        '<div class="fdRow2"><button type="button" class="fb" data-x="skip">Kodsuz onayla</button><button type="button" class="fb pri" data-x="ok">Teslim edildi</button></div>',{sheet:true,onClose:()=>res(false)});
-      bindClose(w,()=>res(false));w.querySelector('[data-x=skip]').onclick=()=>{closeModal();res('')};w.querySelector('[data-x=ok]').onclick=()=>{const v=w.querySelector('#fdDc').value.trim();closeModal();res(v||'')};
-    });
-    if(code===false)return;
-  }
+  /* P19 düzeltme: restoran kuryesinde teslimat kodu sorulmaz (sunucuda opsiyonel; yalnız gönderilirse doğrulanır) — sade onay */
+  if(to==='delivered'&&mode==='self_delivery'){if(!await confirmBox('Sipariş teslim edildi mi?','Sipariş tamamlandı olarak işaretlenecek.','Evet, teslim edildi'))return}
   if(to==='delivered'&&mode==='pickup'){if(!await confirmBox('Müşteri siparişi teslim aldı mı?','Sipariş tamamlandı olarak işaretlenecek.','Evet, teslim aldı'))return}
   if(to==='picked_up'){if(!await confirmBox('Kurye siparişi teslim aldı mı?','Ürünlerin eksiksiz verildiğinden emin ol.','Evet, teslim etti'))return}
   await once('va'+id,btn,async()=>{

@@ -1431,7 +1431,7 @@ var TRK_SITES=[[/aras/i,'Aras Kargo','https://www.araskargo.com.tr/'],[/yurt\s*i
   [/ptt/i,'PTT Kargo','https://gonderitakip.ptt.gov.tr/'],[/s[uü]rat/i,'Sürat Kargo','https://www.suratkargo.com.tr/'],[/\bups\b/i,'UPS','https://www.ups.com/track?loc=tr_TR'],
   [/hepsi\s*jet/i,'HepsiJet','https://www.hepsijet.com/'],[/trendyol/i,'Trendyol Express','https://www.trendyolexpress.com/']];
 function carrierOf(n){n=String(n||'');for(var i=0;i<TRK_SITES.length;i++)if(TRK_SITES[i][0].test(n))return TRK_SITES[i];return null}
-function trkCard(o,ev){
+function trkCard(o,ev,dlv){
   var st=o.status;if(!o.tracking_no&&!/^(shipped|delivered|completed)$/.test(st))return '';
   function at(to){var e=arr(ev).filter(function(x){return x.to===to})[0];return e?e.at:null}
   var idx={awaiting_payment:0,new:0,accepted:1,packed:1,shipped:2,delivered:3,completed:3}[st];if(idx==null)idx=-1;
@@ -1443,22 +1443,24 @@ function trkCard(o,ev){
     (o.tracking_no?'<button type="button" class="cp" data-a="copyTrk" data-v="'+E(o.tracking_no)+'" aria-label="Takip numarasını kopyala">'+ico('copy',16)+'<span>Kopyala</span></button>':'')+'</div>'+
     (cr&&o.tracking_no?'<button type="button" class="ozBtn wide ozTrkGo" data-a="trkGo" data-v="'+E(o.tracking_no)+'" data-u="'+E(cr[2])+'">Kargo firmasının sayfasında takip et</button>':
       (o.tracking_url&&/^https:\/\//i.test(o.tracking_url)?'<a class="ozBtn wide ozTrkGo" href="'+E(o.tracking_url)+'" target="_blank" rel="noopener noreferrer">Takip bağlantısını aç</a>':''))+
+    (dlv?'<div class="ozDlvW">'+dlv+'</div>':'')+
     '<details class="ozTrkH"><summary>Hareketler</summary>'+line+'</details></div>';
 }
 function orderDetailHtml(d){
   var o=d.order||{};var its=ordItems(d.items);var ev=arr(d.events);var rv=arr(d.reviewed_product_ids).map(String);var ret=d.return;var s=S();
   var st=o.status;
   var acts='';
-  /* P19: sıradaki adımın birincil düğmesi renkli ve büyük ("Teslim aldım" nabızlı); iptal ters (çerçeveli) — data-a aynı */
+  /* P19: sıradaki adımın birincil düğmesi renkli ve büyük; iptal ters (çerçeveli) — data-a aynı.
+     P19 düzeltme: kargodaki teslim onayı birincil DEĞİL — sönük, kargo kartında "takip et"in altında (ordDeliver + onay penceresi aynı) */
   if(st==='awaiting_payment'&&o.payment_method==='mock'&&s.payment_mock)acts+='<button type="button" class="ozBtn sun btnNext" data-a="mockPay" data-id="'+E(o.id)+'">💳 Ödemeyi tamamla</button>';
   if(st==='awaiting_payment'&&o.payment_method==='online'&&iyzMode(s))acts+='<button type="button" class="ozBtn sun btnNext" data-a="iyzPay" data-id="'+E(o.id)+'">💳 Ödemeyi tamamla</button> '+IYZ_TEST;
-  if(st==='shipped')acts+='<button type="button" class="ozBtn btnNext btnPulse" data-a="ordDeliver" data-id="'+E(o.id)+'">✓ Siparişim elime ulaştı</button>';
+  var dlv=st==='shipped'?'<button type="button" class="ozBtn" data-a="ordDeliver" data-id="'+E(o.id)+'">Kargom elime ulaştı</button>':'';
   if(st==='awaiting_payment'||st==='new')acts+=cnlBtn(o,'');
   if(d.can_return&&!ret)acts+='<button type="button" class="ozBtn ozRet" data-a="ordReturn" data-id="'+E(o.id)+'" data-m="'+(d.return_mode==='ayip_only'?'ayip_only':'cayma')+'">İade / cayma talebi oluştur</button>';
   var canReview=(st==='delivered'||st==='completed');
   var ship=o.ship_to||{};
   var tl=ev.length?'<ol class="ozTl">'+ev.map(function(e){return '<li><b>'+E((ORDER_ST[e.to]||[e.to])[0])+'</b><small>'+E(fmtDate(e.at))+(e.role?' · '+E(ROLE[e.role]||e.role):'')+(e.reason?' · '+E(e.reason):'')+'</small></li>'}).join('')+'</ol>':'<p class="ozMuted">Henüz hareket yok.</p>';
-  var trk=trkCard(o,ev);
+  var trk=trkCard(o,ev,dlv);
   /* E3: kompakt tek ekran — başlıkta no + kopyala + durum; stepper altında kısa not; ürünler sıkı satır; adres ve geçmiş kapalı */
   var stL=st==='new'?['Alındı','warn']:(ORDER_ST[st]||[st||'—','']);
   var feeK=num(o.shipping_fee_kurus!=null?o.shipping_fee_kurus:o.shipping_kurus);
@@ -1468,7 +1470,7 @@ function orderDetailHtml(d){
     st==='new'?'Satıcının siparişi onaylaması. Onaylayınca bildirim alacaksın.':
     st==='accepted'?'Satıcı ürünlerini hazırlayıp paketleyecek.':
     st==='packed'?'Paket kargoya verilecek; takip numarası burada görünecek.':
-    st==='shipped'?'Kargonun sana ulaşması'+(o.carrier?' ('+o.carrier+')':'')+'. Eline geçince "Siparişim elime ulaştı"ya dokun.':
+    st==='shipped'?'Kargon yolda. Kargo firmasından takip edebilirsin. Eline ulaşınca aşağıdan onayla.':
     unRv?'Aldığın ürünleri değerlendirebilirsin.':'';
   var note=nx?'<div class="ozOdN ozNext nxCard"><p><b>Sıradaki adım:</b> '+E(nx)+'</p>'+(acts?'<div class="nxRow ozOdActs">'+acts+'</div>':'')+'</div>':'';
   var payS=o.payment_status&&PAY_ST[o.payment_status]?PAY_ST[o.payment_status][0]:'';
