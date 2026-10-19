@@ -48,9 +48,31 @@ const SHOTS=process.env.P20_SHOTS||'';if(SHOTS)fs.mkdirSync(SHOTS,{recursive:tru
   ok(r.lab==='Adım 1 / 4 · Mağaza'&&r.bar.length===4&&r.bar[0]==='cur:1','['+th+'] 1. adım: çubuk + etiket: '+JSON.stringify(r.bar)+' '+r.lab);
   ok(JSON.stringify(r.g)==='["🏪 Mağaza","📞 İletişim","🧾 Vergi ve ödeme","📷 Fotoğraflar"]'&&r.help>=5&&r.leg==='Vergi durumun','['+th+'] 1. adım: gruplar + yardım: '+JSON.stringify(r));
   ok(r.req.some(x=>/^Eksik:ozTag warn$/.test(x))&&r.req.some(x=>/^Reddedildi:ozTag bad$/.test(x))&&r.req.some(x=>/^Yüklendi:ozTag ok$/.test(x)),'['+th+'] 1. adım: gerekli belge listesi renkli rozet: '+JSON.stringify(r.req));
-  await p.fill('#ozS_display_name','');await p.click('#ozRoot [data-a=storeSave]');await p.waitForTimeout(400);
-  r=await p.evaluate(()=>{const e=document.querySelector('#ozRoot .ozFErr');const i=document.getElementById('ozS_display_name');return e?{t:e.textContent,after:!!(i.compareDocumentPosition(e)&Node.DOCUMENT_POSITION_FOLLOWING),near:e.getBoundingClientRect().top-i.getBoundingClientRect().bottom,inv:i.getAttribute('aria-invalid'),col:getComputedStyle(e).color,top:document.getElementById('ozSErr').hidden}:null});
-  ok(r&&r.t==='⚠ Mağaza adını yaz.'&&r.after&&r.near<60&&r.inv==='true'&&r.top,'['+th+'] 1. adım: hata alanın altında, kırmızı + ikon: '+JSON.stringify(r));
+  // P20 düzeltme: birden çok eksik → hepsi işaretli (kırmızı çerçeve + alan altında metin), üstte somut özet, ilk alana ortalı kaydırma + odak
+  await p.fill('#ozS_display_name','');await p.fill('#ozS_phone','');await p.evaluate(()=>window.scrollTo(0,document.scrollingElement.scrollHeight));
+  const s0=st.calls.length;await p.click('#ozRoot [data-a=storeSave]');await p.waitForTimeout(500);
+  r=await p.evaluate(()=>{const e=document.querySelector('#ozRoot .ozFErr');const i=document.getElementById('ozS_display_name');const b=i.getBoundingClientRect();
+   return e?{t:e.textContent,after:!!(i.compareDocumentPosition(e)&Node.DOCUMENT_POSITION_FOLLOWING),near:e.getBoundingClientRect().top-b.bottom,inv:i.getAttribute('aria-invalid'),bd:getComputedStyle(i).borderTopColor,
+    marked:[...document.querySelectorAll('#ozRoot .ozFErr')].map(x=>x.dataset.for),sum:(document.getElementById('ozSErrTop')||{}).textContent,sumOn:!document.getElementById('ozSErrTop').hidden,bottom:document.getElementById('ozSErr').hidden,
+    focus:document.activeElement&&document.activeElement.id,mid:Math.abs((b.top+b.bottom)/2-innerHeight/2)<innerHeight/3}:null});
+  ok(r&&r.t==='⚠ Mağaza adı yazılmalı (en az 3 harf).'&&r.after&&r.near<60&&r.inv==='true'&&r.bottom,'['+th+'] 1. adım: hata alanın altında, kırmızı + ikon: '+JSON.stringify(r));
+  ok(r&&JSON.stringify(r.marked)==='["display_name","phone","iban","iban_holder"]','['+th+'] 1. adım: tüm eksik alanlar işaretli: '+JSON.stringify(r&&r.marked));
+  ok(r&&r.sumOn&&r.sum==='4 alan eksik veya hatalı: Mağaza adı, Telefon, IBAN, Hesap sahibi adı','['+th+'] 1. adım: üstte somut özet: '+(r&&r.sum));
+  ok(r&&r.focus==='ozS_display_name'&&r.mid,'['+th+'] 1. adım: ilk eksik alana kaydırma + odak: '+JSON.stringify(r&&{f:r.focus,m:r.mid}));
+  ok(!st.calls.slice(s0).some(x=>x[0]==='oz_seller_apply'),'['+th+'] 1. adım: eksikken sunucuya gönderilmedi');
+  await p.type('#ozS_display_name','Yayla');await p.waitForTimeout(100);
+  ok(await p.evaluate(()=>!document.querySelector('#ozRoot .ozFErr[data-for=display_name]')&&!document.getElementById('ozS_display_name').getAttribute('aria-invalid')),'['+th+'] 1. adım: yazınca alanın hatası kalkar');
+  ok(await p.evaluate(()=>document.getElementById('ozSErrTop').textContent==='3 alan eksik veya hatalı: Telefon, IBAN, Hesap sahibi adı'),'['+th+'] 1. adım: özet düzeltilen alanı çıkarır: '+await p.evaluate(()=>document.getElementById('ozSErrTop').textContent));
+  await shot(p,'oz-adim1-eksik-'+th);
+  // sunucu hatası: alanla eşlenen alanda, eşlenemeyen olduğu gibi altta
+  await p.fill('#ozS_phone','05321234567');await p.fill('#ozS_iban','TR000000000000000000000001');await p.fill('#ozS_iban_holder','Yayla Tarım');
+  await p.evaluate(()=>{window.__OZ_FX.fail={oz_seller_apply:'IBAN geçersiz (TR ile başlayan 26 haneli IBAN gir)'}});await p.click('#ozRoot [data-a=storeSave]');await p.waitForTimeout(800);
+  r=await p.evaluate(()=>({m:[...document.querySelectorAll('#ozRoot .ozFErr')].map(x=>x.dataset.for+':'+x.textContent),f:document.activeElement&&document.activeElement.id,b:document.getElementById('ozSErr').hidden}));
+  ok(JSON.stringify(r.m)==='["iban:⚠ IBAN geçersiz (TR ile başlayan 26 haneli IBAN gir)"]'&&r.f==='ozS_iban'&&r.b,'['+th+'] sunucu hatası alanla eşlendi: '+JSON.stringify(r));
+  await p.evaluate(()=>{window.__OZ_FX.fail={oz_seller_apply:'Başvurun şu an incelemede veya askıda; değişiklik yapılamaz'}});await p.click('#ozRoot [data-a=storeSave]');await p.waitForTimeout(800);
+  r=await p.evaluate(()=>({m:document.querySelectorAll('#ozRoot .ozFErr').length,t:document.getElementById('ozSErr').textContent,b:document.getElementById('ozSErr').hidden}));
+  ok(!r.m&&!r.b&&r.t==='Başvurun şu an incelemede veya askıda; değişiklik yapılamaz','['+th+'] eşlenemeyen sunucu hatası olduğu gibi: '+JSON.stringify(r));
+  await p.evaluate(()=>{window.__OZ_FX.fail=null});await go('sellerApply',{tab:'1'});
   await chk(p,'#ozRoot','['+th+'] 1. adım');await shot(p,'oz-adim1-'+th);
   // A4: 2. adım belge kartları
   await go('sellerApply',{tab:'2'});
@@ -85,6 +107,14 @@ const SHOTS=process.env.P20_SHOTS||'';if(SHOTS)fs.mkdirSync(SHOTS,{recursive:tru
   ok(r.dis&&/yükle/.test(r.why),'['+th+'] 4. adım: eksikken Gönder kapalı (mevcut): '+r.why);
   await chk(p,'#ozRoot','['+th+'] 4. adım');await shot(p,'oz-adim4-'+th);
   await p.evaluate(()=>document.querySelector('#ozRoot button.ozCk.no[data-tab="2"]').click());await p.waitForTimeout(1500);
+  r=await p.evaluate(()=>{const a=document.activeElement;const li=a&&a.closest&&a.closest('#ozSReq li');return {lab:document.querySelector('#ozRoot .ozApL').textContent,doc:li&&li.dataset.doc,type:a&&a.type}});
+  ok(r.doc==='esnaf_exemption'&&r.type==='file','['+th+'] 4. adım → Belgeler: ilk eksik belgenin yükleme alanına odak: '+JSON.stringify(r));
+  // Mağaza satırı (eksik TC/vergi no) → 1. adım + o alan işaretli ve odakta
+  await p.evaluate(()=>{window.__OZ_FX.T.oz_sellers[0].tax_no=null});await go('sellerApply',{tab:'4'});
+  await p.evaluate(()=>document.querySelector('#ozRoot button.ozCk.no[data-tab="1"]').click());await p.waitForTimeout(1500);
+  r=await p.evaluate(()=>({lab:document.querySelector('#ozRoot .ozApL').textContent,f:document.activeElement&&document.activeElement.id,inv:document.getElementById('ozS_tax_no').getAttribute('aria-invalid'),m:(document.querySelector('#ozRoot .ozFErr[data-for=tax_no]')||{}).textContent}));
+  ok(r.lab==='Adım 1 / 4 · Mağaza'&&r.f==='ozS_tax_no'&&r.inv==='true'&&/TCKN 11/.test(r.m||''),'['+th+'] 4. adım → Mağaza: 1. adım, TC/vergi no işaretli + odakta: '+JSON.stringify(r));
+  await p.evaluate(()=>{window.__OZ_FX.T.oz_sellers[0].tax_no='1234567890'});await go('sellerApply',{tab:'2'});
   ok(await p.evaluate(()=>document.querySelector('#ozRoot .ozApL').textContent==='Adım 2 / 4 · Belgeler'),'['+th+'] 4. adım: eksik satır → 2. adım');
   // A6: inceleniyor / reddedildi
   await p.evaluate(()=>{window.__OZ_FX.R.oz_seller_dashboard=Object.assign({},window.__OZ_FX.R.oz_seller_dashboard,{status:'pending',status_reason:null})});await go('seller',{});

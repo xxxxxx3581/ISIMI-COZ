@@ -1469,7 +1469,8 @@ html:root .ozForm .ozFG{padding:0 0 12px;margin:0 0 12px;border-bottom:1px solid
 html:root .ozForm .ozFGH{margin:2px 0 6px;font-size:16px;display:flex;gap:6px;align-items:center}
 html:root .ozFHelp{display:block;margin:4px 0 2px;color:var(--oz-muted);font-size:12.5px;line-height:1.35}
 html:root .ozFErr{margin:4px 0 2px;color:var(--ap-bad);font-weight:800;font-size:13.5px}
-html:root .ozForm [aria-invalid=true]{border-color:var(--ap-bad);box-shadow:0 0 0 1px var(--ap-bad)}
+html:root .ozForm [aria-invalid=true]{border-color:var(--ap-bad);box-shadow:0 0 0 2px var(--ap-bad)}html:root .ozForm fieldset[aria-invalid=true]{border-radius:12px;padding:4px!important}
+html:root .ozForm .ozErrTop{margin:0 0 12px;padding:10px 12px;border-radius:12px;border:2px solid var(--ap-bad);color:var(--ap-bad);font-weight:800}
 html:root #ozSReq .ozTag.warn{background:color-mix(in srgb,var(--ap-warn) 20%,transparent);color:var(--ap-warn)}
 /* belge kartları */
 html:root .ozDocN{font-weight:800;font-size:13.5px;color:var(--oz-muted)}
@@ -3652,7 +3653,7 @@ function hmGo(key){
 function hmSoon(){ try{ v2Toast('Özüne Dön çok yakında!'); }catch(e){} }
 /*K21-JS-BASLA*/ /* Özüne Dön: modül tembel yüklenir; pazar kapalıysa (veya hata olursa) yalnızca hmSoon() gösterilir. */
 var OZ_LOADING=null, OZ_TAP=false;
-function ozLoad(){ if(window.OZ&&window.OZ.__v) return Promise.resolve(window.OZ); if(OZ_LOADING) return OZ_LOADING; OZ_LOADING=new Promise(function(res,rej){ var s=document.createElement('script'); s.src='./oz-market-v1.js?v=13'; s.async=true; s.onload=function(){ if(window.OZ&&window.OZ.__v) res(window.OZ); else { OZ_LOADING=null; rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); } }; s.onerror=function(){ OZ_LOADING=null; s.remove(); rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); }; document.head.appendChild(s); }); return OZ_LOADING; }
+function ozLoad(){ if(window.OZ&&window.OZ.__v) return Promise.resolve(window.OZ); if(OZ_LOADING) return OZ_LOADING; OZ_LOADING=new Promise(function(res,rej){ var s=document.createElement('script'); s.src='./oz-market-v1.js?v=14'; s.async=true; s.onload=function(){ if(window.OZ&&window.OZ.__v) res(window.OZ); else { OZ_LOADING=null; rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); } }; s.onerror=function(){ OZ_LOADING=null; s.remove(); rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); }; document.head.appendChild(s); }); return OZ_LOADING; }
 window.ozLoad=ozLoad;
 function ozTap(){ if(OZ_TAP) return; OZ_TAP=true; ozLoad().then(function(oz){ return oz.tryEnter(); }).then(function(ok){ if(!ok) hmSoon(); }).catch(function(){ hmSoon(); }).then(function(){ OZ_TAP=false; }); }
 /* P10: iyzico (sandbox) ödeme dönüşü ?oz_pay=<ödeme id> → parametre adres çubuğundan silinir, Özüne Dön açılıp ödeme sonucu gösterilir */
