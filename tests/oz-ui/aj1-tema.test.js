@@ -64,7 +64,8 @@ const {chromium,open,enter}=require('./harness.js');
  ok(pf&&pf.txt==="650,00 ₺'den başlayan fiyatlarla · seçeneğini seç"&&!pf.price,'ürün detayı: seçimden önce "\'den başlayan", .ozPrice b yok: '+JSON.stringify(pf));
  await p.evaluate(()=>{document.querySelectorAll('.ozOv').forEach(x=>x.remove())});
  await go('siparis');const dl=await p.evaluate(()=>{const b=document.querySelector('#ozRoot [data-a=ordDeliver]');return b?b.className:null});
- ok(dl==='ozBtn','"Siparişim elime ulaştı" birincil değil: '+dl);
+ // Paket 19 (bilinçli değişiklik): kargodaki siparişte müşterinin sıradaki adımı "Siparişim elime ulaştı" → tek birincil, nabızlı (önceden ikincil 'ozBtn')
+ ok(dl==='ozBtn btnNext btnPulse','"Siparişim elime ulaştı" Paket 19 birincili (ozBtn btnNext btnPulse) değil: '+dl);
  await go('kesfet');await p.waitForTimeout(600);
  const hp=await p.evaluate(()=>{const b=document.getElementById('ozHP'),pr=document.querySelector('#ozRoot .ozPrds3');return {h:b&&b.querySelector('h2')?b.querySelector('h2').textContent:null,n:b?b.querySelectorAll('.ozGr,.ozGc').length:0,after:!!(b&&pr&&(pr.compareDocumentPosition(b)&Node.DOCUMENT_POSITION_FOLLOWING))}});
  ok(hp.h==='Öne çıkan ürünler'&&hp.n>0&&hp.after,'ana sayfa "Öne çıkan ürünler" satıcı kartlarının altında: '+JSON.stringify(hp));

@@ -1353,7 +1353,7 @@ function coDraw(tok){
     '<div id="fdIss"></div>'+
     '<p class="fdMuted fdSmall fdCenter" id="fdEtaL" style="margin-top:10px"></p>'+
     coLegalHTML()+'</div>'+
-    '<div class="fdSticky"><div class="fdCta"><h2>Ödeme özeti</h2><div class="fdCard" id="fdSum">'+(CO.quote?sumHTML(CO.quote):skel('line',3))+'</div><button type="button" class="fb pri" id="fdPlace" disabled onclick="foodPlaceOrder(this)">Siparişi ver</button></div></div></div>');
+    '<div class="fdSticky"><div class="fdCta"><h2>Ödeme özeti</h2><div class="fdCard" id="fdSum">'+(CO.quote?sumHTML(CO.quote):skel('line',3))+'</div><button type="button" class="fb pri btnNext btnNextTall" id="fdPlace" disabled onclick="foodPlaceOrder(this)">✓ Siparişi ver</button></div></div></div>');
   const mn2=document.querySelector('#fdRoot .fdCoMain');if(mn2&&mst)mn2.scrollTop=mst;
   coQuote(tok);
 }
@@ -1390,7 +1390,7 @@ const coQuote=debounce(async tok=>{
     setHTML('fdSum',sumHTML(q));setHTML('fdIss',issuesHTML(q.issues));const cr=document.querySelector('#coCoupon b');if(cr&&CO.autoCp)cr.innerHTML=E(CO.coupon)+' <small class="fdMuted">· Yemek İndirim Fırsatı, otomatik</small>';
     const t=(+q.prep_time_min||0)+(CO.fulfillment==='delivery'?(+q.delivery_eta_min||0):0);
     setHTML('fdEtaL',CO.fulfillment==='delivery'?'Tahmini teslimat '+t+'-'+(t+10)+' dk':'Tahmini hazırlık '+t+' dk');
-    if(btn){btn.disabled=!q.ok;btn.innerHTML='Siparişi ver · '+M(q.total_kurus)}
+    if(btn){btn.disabled=!q.ok;btn.innerHTML='✓ Siparişi ver · '+M(q.total_kurus)}
   }catch(e){if(alive(tok))setHTML('fdSum',errBox(e,'showFoodCheckout()'))}
 },250);
 window.foodCoPhone=async function(){
@@ -1505,13 +1505,15 @@ function orderCard(o){
   const st=STL[o.status]||['•',o.status];const t=tone(o.status);const its=o.food_order_items||[];const reviewed=hasReview(o);
   const vn=o.food_venues?o.food_venues.name:'Restoran';
   let acts='';
-  if(!TERMINAL.includes(o.status))acts='<button type="button" class="fb pri" onclick="showFoodOrderDetail(\''+E(o.id)+'\')">'+(['picked_up','on_the_way','near_customer'].includes(o.status)?'🛵 Siparişi canlı izle':'Siparişi izle')+'</button>';
-  else if(o.status==='delivered')acts='<button type="button" class="fb" onclick="foodReorder(\''+E(o.id)+'\',this)">↻ Tekrarla</button>'+(reviewed?'':'<button type="button" class="fb soft" onclick="foodReview(\''+E(o.id)+'\','+(o.delivery_mode==='platform_delivery')+')">★ Değerlendir</button>');
+  /* P19: tek birincil "sıradaki adım" (yolda → mavi + nabız; teslimde ★ Değerlendir sarı), Tekrarla ikincil — onclick'ler aynı */
+  const onWay=['picked_up','on_the_way','near_customer'].includes(o.status);
+  if(!TERMINAL.includes(o.status))acts='<button type="button" class="fb pri btnNext'+(onWay?' btnNextBlue btnPulse':'')+'" onclick="showFoodOrderDetail(\''+E(o.id)+'\')">'+(onWay?'🛵 Siparişi canlı izle':'📍 Siparişi izle')+'</button>';
+  else if(o.status==='delivered')acts=(reviewed?'':'<button type="button" class="fb btnNext btnNextStar" onclick="foodReview(\''+E(o.id)+'\','+(o.delivery_mode==='platform_delivery')+')">★ Değerlendir</button>')+'<button type="button" class="fb btnSoft" onclick="foodReorder(\''+E(o.id)+'\',this)">↻ Tekrarla</button>';
   else acts='<button type="button" class="fb" onclick="foodReorder(\''+E(o.id)+'\',this)">↻ Tekrarla</button>';
   return '<div class="fdOCard"><div class="hd" role="button" tabindex="0" onclick="showFoodOrderDetail(\''+E(o.id)+'\')">'+pic(o.food_venues&&o.food_venues.image_url||'',vn,'sq')+
     '<div class="tx"><b>'+E(vn)+'</b><small>'+E(dt(o.created_at))+'</small></div><div style="text-align:right"><b>'+M(o.total_kurus)+'</b><small class="fdMuted" style="display:block;font-size:12px">Detay ›</small></div></div>'+
     '<div class="bd"><div class="stl '+t+'">'+(t==='ok'?'✓':t==='bad'?'✕':st[0])+' '+E(st[1])+'</div>'+(its.length?'<div class="its">'+E(its.map(i=>i.name_snapshot+' ('+i.quantity+')').join(', '))+'</div>':'')+
-    '<div class="acts">'+acts+'</div></div></div>';
+    '<div class="acts nxActs">'+acts+'</div></div></div>';
 }
 
 /* ====================== F5 · Sipariş takibi ====================== */
@@ -1523,6 +1525,8 @@ function stageOf(o){
 }
 function stageLabels(m){return m==='pickup'?['Alındı','Hazırlanıyor','Hazır','Teslim alındı']:['Alındı','Hazırlanıyor','Yolda','Teslim edildi']}
 const TRK={id:null,home:null,courier:null,at:null,dst:null,venue:null,reload:null,deliveredAt:null,addr:'',vname:''};
+/* P19: "Siparişimi takip et" (sipariş alındı notu altında) — yalnız görünüm: notu kapatıp ilerleme kartına kaydırır */
+window.foodTrackFocus=function(){TRK.placed=null;const g=document.querySelector('#fdTrack .fdPlacedGo');if(g)g.remove();const h=document.querySelector('#fdTrack .fdTrackHero');if(h)try{h.scrollIntoView({block:'start',behavior:'smooth'})}catch(e){}};
 async function showFoodOrderDetail(id){
   if(!A())return;const tok=newScreen();
   render(bar('Sipariş','showFoodOrders()')+skel('hero',1)+skel('row',2));
@@ -1556,22 +1560,24 @@ function trackRender(t){
   const sub=st==='ready'&&pickup?'Siparişin hazır, restorandan teslim alabilirsin.':st==='ready'&&o.delivery_mode==='self_delivery'?'Siparişin hazır, restoran kuryesi yola çıkmak üzere.':info[2];
   const showCode=t.delivery_code&&!pickup&&!TERMINAL.includes(st);
   const events=(t.events||[]).filter(e=>STL[e.to]);
+  /* P19: alt yapışkan çubukta duruma göre TEK birincil (onclick'ler aynı): teslimde ★ değerlendir (sarı), tekrar + sorun bildir ikincil */
   const acts=[];
-  if(t.can.review)acts.push('<button type="button" class="fb pri block" onclick="foodReview(\''+E(o.id)+'\','+(t.can.review_courier?'true':'false')+')">★ Siparişi değerlendir</button>');
-  if(TERMINAL.includes(st))acts.push('<button type="button" class="fb block" onclick="foodReorder(\''+E(o.id)+'\',this)">↻ Tekrar sipariş ver</button>');
-  if(done&&t.can.report)acts.push('<button type="button" class="fb block ghost" style="border:1px solid var(--line)" onclick="foodIssue(\''+E(o.id)+'\')">Sorun bildir</button>');
+  if(t.can.review)acts.push('<button type="button" class="fb pri block btnNext btnNextStar" onclick="foodReview(\''+E(o.id)+'\','+(t.can.review_courier?'true':'false')+')">★ Siparişi değerlendir</button>');
+  if(TERMINAL.includes(st))acts.push('<button type="button" class="fb block btnSoft" onclick="foodReorder(\''+E(o.id)+'\',this)">↻ Tekrar sipariş ver</button>');
+  if(done&&t.can.report)acts.push('<button type="button" class="fb block btnDanger" onclick="foodIssue(\''+E(o.id)+'\')">⚠ Sorun bildir</button>');
   const qk=[];
   if(!TERMINAL.includes(st)){
-    if(t.venue.phone)qk.push('<a class="q" href="tel:'+E(t.venue.phone)+'">'+fdIco('store',20)+'<span>Restoranı ara</span></a>');
-    if(cr&&cr.phone)qk.push('<a class="q" href="tel:'+E(cr.phone)+'">'+fdIco('bike',20)+'<span>Kuryeyi ara</span></a>');
-    if(t.can.report)qk.push('<button type="button" class="q" onclick="foodIssue(\''+E(o.id)+'\')">'+fdIco('help',20)+'<span>Sorun bildir</span></button>');
+    if(t.venue.phone)qk.push('<a class="q qCall" href="tel:'+E(t.venue.phone)+'">'+fdIco('store',20)+'<span>Restoranı ara</span></a>');
+    if(cr&&cr.phone)qk.push('<a class="q qCall" href="tel:'+E(cr.phone)+'">'+fdIco('bike',20)+'<span>Kuryeyi ara</span></a>');
+    if(t.can.report)qk.push('<button type="button" class="q qWarn" onclick="foodIssue(\''+E(o.id)+'\')">'+fdIco('help',20)+'<span>Sorun bildir</span></button>');
     if(t.can.cancel)qk.push('<button type="button" class="q bad" onclick="foodCustomerCancel(\''+E(o.id)+'\',this)"><b aria-hidden="true">✕</b><span>Siparişi iptal et</span></button>');
   }
   const online=o.payment_method==='online_card';
   const refundNote=st==='refund_pending'?'<div class="fdNote info">↩️ <b>İade süreci başladı.</b> '+(online?'Tutar kartına iade ediliyor; bankana göre hesabına yansıması birkaç iş günü sürebilir.':'İade durumunu bu ekrandan izleyebilirsin.')+'</div>':
     st==='refunded'?'<div class="fdNote ok">💸 <b>İade tamamlandı.</b> '+(online?'Tutar kartına iade edildi.':'')+'</div>':
     (['cancelled','rejected'].includes(st)&&!online?'<div class="fdNote info">Kapıda ödeme seçtiğin için senden ücret alınmadı.</div>':['cancelled','rejected','failed'].includes(st)&&online?'<div class="fdNote info">Online ödemen için iade süreci otomatik başlatılır; durumu burada görünür.</div>':'');
-  const placed=TRK.placed===o.id&&st==='new'?'<div class="fdNote ok" role="status">✓ <b>Siparişin alındı.</b> Restoran onayladığında bildirim alacaksın.</div>':'';
+  const placed=TRK.placed===o.id&&st==='new'?'<div class="fdNote ok" role="status">✓ <b>Siparişin alındı.</b> Restoran onayladığında bildirim alacaksın.</div>'+
+    '<div class="fdPlacedGo"><button type="button" class="fb pri btnNext" onclick="foodTrackFocus()">📍 Siparişimi takip et</button></div>':'';
   const loc=d&&d.location;const vLL=t.venue.lat!=null?[t.venue.lat,t.venue.lng]:null;
   if(!TRK.courier&&loc&&TRK.id===o.id){TRK.courier=[loc.lat,loc.lng];TRK.at=loc.at}
   const courierStage=['courier_assigned','courier_at_venue','picked_up','on_the_way','near_customer'].includes(st)||(o.delivery_mode==='self_delivery'&&['on_the_way','near_customer'].includes(st));
@@ -1583,12 +1589,17 @@ function trackRender(t){
   const etaMin=etaTs?Math.max(0,Math.round((new Date(etaTs)-Date.now())/60000)):null;
   const mapBlock=(mapTop?'<div class="fdwTWrap"><div class="fdMap fdwTBig" id="fdTMap"></div><div class="fdwEta" aria-live="polite">'+(etaMin===null?'<b>Kurye yolda</b>':etaMin<=1||st==='near_customer'?'<b>Birazdan</b><span>kapında</span>':'<b>'+etaMin+' dakika</b><span>sonra kapında</span>')+'</div></div>':'<div class="fdMap" id="fdTMap"></div>')+
     (o.delivery_mode==='self_delivery'?'':'<div class="fdChips" style="margin-top:-4px;padding-bottom:6px"><button type="button" class="fdChip'+(TRK.view!=='all'?' on':'')+'" data-tv="focus" onclick="foodTrackView(\'focus\')">🛵 Kuryeye odaklan</button><button type="button" class="fdChip'+(TRK.view==='all'?' on':'')+'" data-tv="all" onclick="foodTrackView(\'all\')">🗺 Tümünü göster</button></div>')+'<p class="fdMuted fdSmall" id="fdTLoc" style="margin:0 0 4px"></p>'+(o.address_text?'<p class="fdMuted fdSmall" style="margin:0 0 12px">🏠 '+E(o.address_text)+'</p>':'');
+  /* P19: yapışkan alt aksiyon çubuğu — yolda: "Siparişini izle" (mavi, mevcut foodTrackOpen); hazırlık aşamasında yalnız "Restoranı ara" (ikincil);
+     teslim/son durumda değerlendir + tekrar + sorun bildir. Müşteri "Teslim aldım" akışı Yemek'te yok (eklenmedi). */
+  const nb=watchCard?['<button type="button" class="fb pri btnNext btnNextBlue" onclick="foodTrackOpen(\''+E(o.id)+'\')">🗺 Siparişini izle</button>']:
+    TERMINAL.includes(st)?acts:(t.venue.phone?['<a class="fb btnSoft" href="tel:'+E(t.venue.phone)+'">📞 Restoranı ara</a>']:[]);
+  const nextBar=nb.length?'<div class="fdSticky nxBar" id="fdNextBar"><div class="fdCta">'+nb.join('')+'</div></div>':'';
   (document.getElementById('fdTrack')?patch:render)(bar('#'+o.no,'showFoodOrders()','<span class="fdLive" id="fdLive"></span>',t.venue.name)+
-    '<div id="fdTrack">'+(mapTop?mapBlock:'')+(watchCard?'<div class="fdTrackHero ok" style="text-align:center"><div class="st" style="justify-content:center"><span class="e">🛵</span><div><h2>'+(etaMin===null?'Kurye yolda':etaMin<=1||st==='near_customer'?'Kurye birazdan kapında':'Kurye '+etaMin+' dakika sonra kapında')+'</h2></div></div><button type="button" class="fb pri block" style="margin-top:12px;min-height:46px" onclick="foodTrackOpen(\''+E(o.id)+'\')">🗺 Siparişini izle</button></div>':'')+'<div class="fdTrackHero'+(bad?' bad':done?' ok':'')+'"><div class="st"><span class="e">'+info[0]+'</span><div><h2>'+E(info[1])+'</h2><p>'+E(sub)+'</p></div></div>'+
+    '<div id="fdTrack">'+(mapTop?mapBlock:'')+(watchCard?'<div class="fdTrackHero ok" style="text-align:center"><div class="st" style="justify-content:center"><span class="e">🛵</span><div><h2>'+(etaMin===null?'Kurye yolda':etaMin<=1||st==='near_customer'?'Kurye birazdan kapında':'Kurye '+etaMin+' dakika sonra kapında')+'</h2></div></div></div>':'')+'<div class="fdTrackHero'+(bad?' bad':done?' ok':'')+'"><div class="st"><span class="e">'+info[0]+'</span><div><h2>'+E(info[1])+'</h2><p>'+E(sub)+'</p></div></div>'+
       (o.cancel_reason&&bad?'<div class="fdNote bad" style="margin:12px 0 0">Sebep: '+E(o.cancel_reason)+'</div>':'')+
       (!bad&&!done&&etaTs?'<div class="fdEta"><small>'+(pickup?'Tahmini hazır olma':'Tahmini teslimat')+'</small><b>'+hm(etaTs)+'</b></div>':'')+
       (done?'<div class="fdEta"><small>✓ Teslim edildi</small><b>'+hm(TRK.deliveredAt||(events.find(e=>e.to==='delivered')||{}).at||o.created_at)+'</b></div><p style="margin-top:6px">'+E(dt(TRK.deliveredAt||(events.find(e=>e.to==='delivered')||{}).at||o.created_at))+' · '+M(o.total_kurus)+'</p>':'')+
-      (!bad?'<div class="fdSteps">'+lbl.map((l,i)=>'<div class="'+(i<stg||done?'done':i===stg?'cur':'')+'"><i></i>'+E(l)+'</div>').join('')+'</div>':'')+'</div>'+
+      (!bad?'<div class="fdSteps">'+lbl.map((l,i)=>'<div class="'+(i<stg||done?'done':i===stg?'cur nx'+i:'')+'"><i></i>'+(i<stg||done?'✓ ':'')+E(l)+'</div>').join('')+'</div>':'')+'</div>'+
     placed+refundNote+(qk.length?'<div class="fdwQk">'+qk.join('')+'</div>':'')+
     (showMap&&!mapTop&&!watchCard?mapBlock:'')+
     (!TERMINAL.includes(st)?pushSlot('order'):'')+
@@ -1598,7 +1609,6 @@ function trackRender(t){
       (d.location?' · <a href="https://www.google.com/maps?q='+d.location.lat+','+d.location.lng+'" target="_blank" rel="noopener" style="color:var(--fd-acc)">konum ('+ago(d.location.at)+')</a>':'')+'</small></div>'+
       (cr.phone&&!TERMINAL.includes(st)?'<a class="fb sm soft" href="tel:'+E(cr.phone)+'">📞 Ara</a>':'')+'</div>':'')+
     '<div class="fdPerson"><span class="av">🏪</span><div class="tx"><b>'+E(t.venue.name)+'</b><small>'+E(MODE[o.delivery_mode]||'')+'</small></div>'+(t.venue.phone&&!TERMINAL.includes(st)?'<a class="fb sm" href="tel:'+E(t.venue.phone)+'">📞</a>':'')+'</div>'+
-    (acts.length?'<div class="fdRows" style="margin-bottom:12px">'+acts.join('')+'</div>':'')+
     (t.review?'<div class="fdNote ok">★ Değerlendirmen: restoran '+t.review.venue_rating+'/5'+(t.review.courier_rating?' · kurye '+t.review.courier_rating+'/5':'')+(t.review.comment?' — '+E(t.review.comment):'')+'</div>':'')+
     (!TERMINAL.includes(st)?'<div class="fdPerson" id="fdNoteCard" data-note="'+E(o.note||'')+'"><span class="av">📝</span><div class="tx"><b>Sipariş notun</b><small>'+(o.note?E(o.note):'Not eklemedin')+'</small></div><button type="button" class="fb sm" onclick="foodEditNote(\''+E(o.id)+'\')">'+(o.note?'Düzenle':'Not ekle')+'</button></div>':'')+
     '<details class="fdDet"'+(TERMINAL.includes(st)?' open':'')+'><summary>Sepetim · '+t.items.reduce((n,i)=>n+i.quantity,0)+' ürün</summary><div>'+
@@ -1612,7 +1622,7 @@ function trackRender(t){
       (TERMINAL.includes(st)?'<button type="button" class="fb ghost" onclick="PF.openDispute(\'food\',\'food_order\',\''+E(o.id)+'\')">Uyuşmazlık aç</button>':'')+'</div>':'')+
     '<div class="fdCenter" style="margin-top:6px">'+
       (t.can.report&&!done&&TERMINAL.includes(st)?'<button type="button" class="fb ghost" onclick="foodIssue(\''+E(o.id)+'\')">Yardım · Sorun bildir</button>':'')+'</div>'+
-    (!t.can.cancel&&!TERMINAL.includes(st)&&st!=='new'?'<p class="fdMuted fdSmall fdCenter">Restoran onayladıktan sonra iptal için restoranı arayabilirsin.</p>':'')+'</div>');
+    (!t.can.cancel&&!TERMINAL.includes(st)&&st!=='new'?'<p class="fdMuted fdSmall fdCenter">Restoran onayladıktan sonra iptal için restoranı arayabilirsin.</p>':'')+nextBar+'</div>');
 }
 let TMAP=null,TMK={};
 async function trackMap(v){
@@ -1818,11 +1828,14 @@ async function bizLoad(tok,more){
     let orders=[].concat(...res.map(r=>r.orders||[]));
     orders.sort((a,b)=>tab[2]?new Date(a.created_at)-new Date(b.created_at):new Date(b.created_at)-new Date(a.created_at));
     BZ.orders=more?BZ.orders.concat(orders):orders;BZ.offset=BZ.orders.length;
+    BZ.firstNew=(BZ.orders.filter(o=>o.status==='new').sort((a,b)=>new Date(a.created_at)-new Date(b.created_at))[0]||{}).id||null;
     const cnt=t=>t[2]?t[2].reduce((n,k)=>n+(+c[k]||0),0):null;
     const nNew=+c.new||0;BZ.newCount=nNew;alarmDraw();
     document.title=(nNew?'('+nNew+') Yeni sipariş · ':'')+(BZ.origTitle||document.title.replace(/^\(\d+\) Yeni sipariş · /,''));
     setHTML('fdKpi','<div class="'+(nNew?'hot':'')+'"><b>'+nNew+'</b><span>Bekleyen</span></div><div><b>'+(s.today_orders||0)+'</b><span>Bugün sipariş</span></div><div><b>'+M(s.today_revenue_kurus||0)+'</b><span>Bugün hakediş</span></div>');
-    setHTML('fdTabs',TABS.map(t=>{const n=cnt(t);return '<button type="button" class="'+(BZ.tab===t[0]?'on':'')+'" onclick="foodBizTab(\''+t[0]+'\')">'+E(t[1])+(n!=null?'<em class="'+(n?'':'z')+'">'+n+'</em>':'')+'</button>'}).join(''));
+    /* P19: sayaç rozeti durum renginde (Yeni #C4492F, Mutfakta amber, Hazır/yolda mavi); yeni sipariş varken Yeni sekmesi dolu */
+    const TC={new:'nxNew',prep:'nxAmber',ready:'nxBlue'};
+    setHTML('fdTabs',TABS.map(t=>{const n=cnt(t);return '<button type="button" class="'+(BZ.tab===t[0]?'on':'')+(t[0]==='new'&&n?' nxHot':'')+'" onclick="foodBizTab(\''+t[0]+'\')">'+E(t[1])+(n!=null?'<em class="'+(n?(TC[t[0]]||''):'z')+'">'+n+'</em>':'')+'</button>'}).join(''));
     setHTML('fdPastF',BZ.tab==='past'?'<div class="fdChips"><button type="button" class="fdChip'+(BZ.past==='done'?' on':'')+'" onclick="foodBizPast(\'done\')">Tamamlanan · '+(+c.done||0)+'</button><button type="button" class="fdChip'+(BZ.past==='cancelled'?' on':'')+'" onclick="foodBizPast(\'cancelled\')">İptal / red · '+(+c.cancelled||0)+'</button></div>'+
       (s.avg_prep_min!=null?'<p class="fdMuted fdSmall" style="margin:0 0 10px">Bugün: '+(s.today_delivered||0)+' tamamlanan · '+(s.today_cancelled||0)+' iptal · ort. hazırlık '+s.avg_prep_min+' dk</p>':''):'');
     const emptyTxt={new:['🛎️','Yeni sipariş yok','Sipariş geldiğinde burada anında görünür ve sesli uyarı alırsın.'],prep:['👨‍🍳','Mutfakta sipariş yok','Kabul ettiğin siparişler burada.'],ready:['📦','Hazır veya yolda sipariş yok','Hazır, kurye bekleyen ve yoldaki siparişler burada.'],past:['🧾','Kayıt yok','']}[BZ.tab];
@@ -1876,13 +1889,17 @@ function bizActs(o){
     default:return{};
   }
 }
+/* P19: birincil aksiyonun rengi hedef duruma göre (yalnız görünüm; foodVenueAct aynı) */
+function bizPriCls(to){return to==='accepted'?'btnNext btnNextXL btnPulse':to==='preparing'?'btnNext btnNextAmber':['on_the_way','picked_up'].includes(to)?'btnNext btnNextBlue':'btnNext'}
+function bizPriIco(to){return {accepted:'✓ ',preparing:'👨‍🍳 ',ready:'📦 ',on_the_way:'🛵 ',picked_up:'🛵 ',delivered:'✓ '}[to]||''}
 function bizCard(o){
   const late=o.estimated_ready_at&&['accepted','preparing'].includes(o.status)&&new Date(o.estimated_ready_at)<new Date();
   const a=bizActs(o);const past=TERMINAL.includes(o.status);
   const call='foodVenueAct(\''+E(o.id)+'\',\'%TO%\',this,\''+o.delivery_mode+'\')';
   const moreJson=E(JSON.stringify((a.more||[]).map(x=>[x.to,x.l,x.bad?1:0])));
   const dl=o.status==='new'&&BZ.acceptMin?new Date(new Date(o.created_at).getTime()+BZ.acceptMin*60000).toISOString():null;
-  return '<div class="fdBiz'+(o.status==='new'?' new':'')+'"><div class="hd"><div><b>#'+E(o.no)+'</b> <span class="fdMuted fdSmall">· '+ago(o.created_at)+'</span>'+(dl?' <span class="fdTimer" data-deadline="'+E(dl)+'"></span>':'')+'<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">'+badge(o.status)+'<span class="fdPill">'+(o.delivery_mode==='pickup'?'🛍️':'🛵')+' '+E(MODE[o.delivery_mode]||'')+'</span>'+(late?'<span class="fdBadge bad">⏰ Gecikiyor</span>':'')+'</div></div>'+
+  const first=o.status==='new'&&o.id===BZ.firstNew;
+  return '<div class="fdBiz'+(o.status==='new'?' new':'')+(first?' nxFirst':'')+'"><div class="hd"><div>'+(first?'<span class="nxFirstL">SIRADAKİ SİPARİŞ</span><br>':'')+'<b>#'+E(o.no)+'</b> <span class="fdMuted fdSmall">· '+ago(o.created_at)+'</span>'+(dl?' <span class="fdTimer" data-deadline="'+E(dl)+'"></span>':'')+'<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">'+badge(o.status)+'<span class="fdPill">'+(o.delivery_mode==='pickup'?'🛍️':'🛵')+' '+E(MODE[o.delivery_mode]||'')+'</span>'+(late?'<span class="fdBadge bad">⏰ Gecikiyor</span>':'')+'</div></div>'+
     '<div class="tot"><b>'+M(o.total_kurus)+'</b><small>'+E(PAY[o.payment_method]||'')+'</small>'+(past&&o.status==='delivered'?'<small>Hakediş '+M(o.restaurant_share_kurus)+'</small>':'')+'</div></div>'+
     '<div class="its">'+(o.items||[]).map(i=>'<div><span class="q">'+i.quantity+'×</span>'+E(i.name)+((i.options||[]).length?'<small>'+E(i.options.map(x=>(x.kind==='remove'?'Çıkar: ':'')+x.option).join(', '))+'</small>':'')+'</div>').join('')+'</div>'+
     (o.note?'<div class="fdNote warn note">📝 '+E(o.note)+'</div>':'')+
@@ -1892,9 +1909,9 @@ function bizCard(o){
       (o.cancel_reason?'<div class="fdBad">Sebep: '+E(o.cancel_reason)+'</div>':'')+'</div>'+
     (a.info?'<div class="fdNote info note">'+E(a.info)+'</div>':'')+
     ((a.pri||a.side||(a.more&&a.more.length))?'<div class="ft">'+
-      (a.side?'<button type="button" class="fb ghostBad" onclick="'+call.replace('%TO%',a.side.to)+'">'+E(a.side.l)+'</button>':'')+
-      (a.pri?'<button type="button" class="fb pri" onclick="'+call.replace('%TO%',a.pri.to)+'">'+E(a.pri.l)+'</button>':'<span style="flex:1"></span>')+
-      (a.more&&a.more.length?'<button type="button" class="fb" aria-label="Diğer işlemler" onclick="foodBizMoreActs(\''+E(o.id)+'\',\''+o.delivery_mode+'\',this)" data-more="'+moreJson+'">⋯</button>':'')+'</div>':'<div style="height:12px"></div>')+'</div>';
+      (a.pri?'<button type="button" class="fb pri '+bizPriCls(a.pri.to)+'" onclick="'+call.replace('%TO%',a.pri.to)+'">'+bizPriIco(a.pri.to)+E(a.pri.l)+'</button>':'<span style="flex:1"></span>')+
+      (a.side?'<button type="button" class="fb ghostBad btnDanger btnSide" onclick="'+call.replace('%TO%',a.side.to)+'">✕ '+E(a.side.l)+'</button>':'')+
+      (a.more&&a.more.length?'<button type="button" class="fb btnSoft nxMore" aria-label="Diğer işlemler" onclick="foodBizMoreActs(\''+E(o.id)+'\',\''+o.delivery_mode+'\',this)" data-more="'+moreJson+'">⋯</button>':'')+'</div>':'<div style="height:12px"></div>')+'</div>';
 }
 window.foodBizMoreActs=function(id,mode,btn){
   let list=[];try{list=JSON.parse(btn.getAttribute('data-more'))}catch(e){}

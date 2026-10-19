@@ -1152,7 +1152,9 @@ VIEWS_EXTRA({
     var needPay=os.some(function(o){return o.status==='awaiting_payment'})&&a.pay==='mock';
     paint('<div class="ozEmpty" style="padding-top:12px"><div class="i">'+ico('leaf',40)+'</div><b>'+(res.duplicate?'Bu sipariş zaten alındı, Siparişlerim\'den kontrol et':'Siparişin alındı')+'</b><p>'+(needPay?'Ödemeyi tamamladığında sipariş satıcıya iletilir.':'Satıcı siparişini onayladığında bildirim alacaksın.')+'</p></div>'+
       '<div class="ozCard">'+os.map(function(o){return '<div class="ozLine"><span><b>'+E(o.order_no||'Sipariş')+'</b> '+stTag(ORDER_ST,o.status)+'</span><span>'+TL(o.total_kurus)+'</span></div>'}).join('')+'</div>'+
-      (needPay?(s.payment_mock?'<div class="ozWarn">Bu bir deneme ödemesidir; gerçek para çekilmez.</div><button type="button" class="ozBtn sun wide" data-a="mockPayAll">Deneme ödemesini tamamla</button>':'<div class="ozWarn">Deneme ödemesi şu anda kapalı. Ödeme yöntemi çok yakında.</div>'):'')+
+      (needPay?(s.payment_mock?'<div class="ozWarn">Bu bir deneme ödemesidir; gerçek para çekilmez.</div><button type="button" class="ozBtn sun wide btnNext" data-a="mockPayAll">💳 Deneme ödemesini tamamla</button>':'<div class="ozWarn">Deneme ödemesi şu anda kapalı. Ödeme yöntemi çok yakında.</div>'):'')+
+      /* P19: sipariş sonrası büyük "Siparişimi takip et" (ödeme bekliyorsa birincil ödeme olduğu için ikincil) */
+      (os.length?'<button type="button" class="ozBtn wide '+(needPay&&s.payment_mock?'btnSoft':'btnNext')+'" style="margin-top:12px" data-a="nav" data-k="'+(os.length>1?'orders':'order')+'"'+(os.length>1?'':' data-id="'+E(os[0].id)+'"')+'>📍 Siparişimi takip et</button>':'')+
       '<div class="ozRow2" style="margin-top:12px"><button type="button" class="ozBtn" data-a="nav" data-k="orders">Siparişlerim</button><button type="button" class="ozBtn" data-a="nav" data-k="home">Alışverişe devam</button></div>');
   },
 
@@ -1447,9 +1449,10 @@ function orderDetailHtml(d){
   var o=d.order||{};var its=ordItems(d.items);var ev=arr(d.events);var rv=arr(d.reviewed_product_ids).map(String);var ret=d.return;var s=S();
   var st=o.status;
   var acts='';
-  if(st==='awaiting_payment'&&o.payment_method==='mock'&&s.payment_mock)acts+='<button type="button" class="ozBtn sun" data-a="mockPay" data-id="'+E(o.id)+'">Ödemeyi tamamla</button>';
-  if(st==='awaiting_payment'&&o.payment_method==='online'&&iyzMode(s))acts+='<button type="button" class="ozBtn sun" data-a="iyzPay" data-id="'+E(o.id)+'">Ödemeyi tamamla</button> '+IYZ_TEST;
-  if(st==='shipped')acts+='<button type="button" class="ozBtn" data-a="ordDeliver" data-id="'+E(o.id)+'">Siparişim elime ulaştı</button>';
+  /* P19: sıradaki adımın birincil düğmesi renkli ve büyük ("Teslim aldım" nabızlı); iptal ters (çerçeveli) — data-a aynı */
+  if(st==='awaiting_payment'&&o.payment_method==='mock'&&s.payment_mock)acts+='<button type="button" class="ozBtn sun btnNext" data-a="mockPay" data-id="'+E(o.id)+'">💳 Ödemeyi tamamla</button>';
+  if(st==='awaiting_payment'&&o.payment_method==='online'&&iyzMode(s))acts+='<button type="button" class="ozBtn sun btnNext" data-a="iyzPay" data-id="'+E(o.id)+'">💳 Ödemeyi tamamla</button> '+IYZ_TEST;
+  if(st==='shipped')acts+='<button type="button" class="ozBtn btnNext btnPulse" data-a="ordDeliver" data-id="'+E(o.id)+'">✓ Siparişim elime ulaştı</button>';
   if(st==='awaiting_payment'||st==='new')acts+=cnlBtn(o,'');
   if(d.can_return&&!ret)acts+='<button type="button" class="ozBtn ozRet" data-a="ordReturn" data-id="'+E(o.id)+'" data-m="'+(d.return_mode==='ayip_only'?'ayip_only':'cayma')+'">İade / cayma talebi oluştur</button>';
   var canReview=(st==='delivered'||st==='completed');
@@ -1467,14 +1470,14 @@ function orderDetailHtml(d){
     st==='packed'?'Paket kargoya verilecek; takip numarası burada görünecek.':
     st==='shipped'?'Kargonun sana ulaşması'+(o.carrier?' ('+o.carrier+')':'')+'. Eline geçince "Siparişim elime ulaştı"ya dokun.':
     unRv?'Aldığın ürünleri değerlendirebilirsin.':'';
-  var note=nx?'<p class="ozOdN ozNext"><b>Sıradaki adım:</b> '+E(nx)+'</p>':'';
+  var note=nx?'<div class="ozOdN ozNext nxCard"><p><b>Sıradaki adım:</b> '+E(nx)+'</p>'+(acts?'<div class="nxRow ozOdActs">'+acts+'</div>':'')+'</div>':'';
   var payS=o.payment_status&&PAY_ST[o.payment_status]?PAY_ST[o.payment_status][0]:'';
   var adr=[ship.recipient,ship.district].filter(Boolean).join(' · ')||'Teslimat adresi';
   return '<div class="ozOd">'+
     '<div class="ozOdH"><div class="no"><small>Sipariş no</small><span><b>'+E(o.order_no||'—')+'</b><button type="button" class="cp" data-a="copyTxt" data-v="'+E(o.order_no||'')+'" data-msg="Sipariş numarası kopyalandı" aria-label="Sipariş numarasını kopyala">'+ico('copy',16)+'</button></span></div>'+stBadge(st,stL[0])+'</div>'+
     '<p class="ozOdS" title="'+E(d.seller_name||'')+'">'+E(d.seller_name||'')+' · '+E(fmtDate(o.created_at))+'</p>'+
     progHtml(o)+note+
-    (acts?'<div class="ozRow2 ozOdActs">'+acts+'</div>':'')+
+    (acts&&!nx?'<div class="ozRow2 ozOdActs">'+acts+'</div>':'')+
     (canReview&&its.some(function(it){return it.product_id&&rv.indexOf(String(it.product_id))<0})?'<div class="ozCard ozRvC" id="ozRateC"><h3>Ürünleri değerlendir</h3>'+its.filter(function(it){return it.product_id&&rv.indexOf(String(it.product_id))<0}).map(function(it){return '<div class="ozRvI">'+pic(it.image,it.name)+'<b>'+E(it.name)+'</b><button type="button" class="ozBtn sm pri" data-a="ordReview" data-o="'+E(o.id)+'" data-p="'+E(String(it.product_id))+'">Değerlendir</button></div>'}).join('')+'</div>':'')+
     (ret?'<div class="ozCard"><h3>İade</h3><p style="margin:0 0 6px">'+stTag(RET_ST,ret.status)+'</p>'+(ret.reason?'<p class="ozMuted" style="margin:0">Neden: '+E(ret.reason)+'</p>':'')+(ret.decision_note||ret.note?'<p class="ozMuted" style="margin:4px 0 0">Not: '+E(ret.decision_note||ret.note)+'</p>':'')+'</div>':'')+
     trk+
@@ -2268,9 +2271,10 @@ function sellerOrderCard(o){
   var its=ordItems(o.items);var sh=o.ship_to||{};var ret=o.return;
   /* K30: duruma göre TEK ilerleyen birincil buton: Yeni → Kabul et, Kabul edildi → Hazırlandı, Hazırlandı → Kargoya ver */
   var acts='',id=E(o.id);
-  if(o.status==='new')acts='<button type="button" class="ozBtn pri" data-a="soAct" data-act="accept" data-id="'+id+'">Kabul et</button><button type="button" class="ozBtn ghost sm" data-a="soCancel" data-rej="1" data-id="'+id+'">Reddet</button>';
-  else if(o.status==='accepted')acts='<button type="button" class="ozBtn pri" data-a="soAct" data-act="pack" data-id="'+id+'">Hazırlandı</button><button type="button" class="ozBtn ghost sm" data-a="soCancel" data-id="'+id+'">İptal et</button>';
-  else if(o.status==='packed')acts='<button type="button" class="ozBtn pri" data-a="soShip" data-id="'+id+'">Kargoya ver</button><button type="button" class="ozBtn ghost sm" data-a="soCancel" data-id="'+id+'">İptal et</button>';
+  /* P19: birincil renkli ve büyük (Yeni → yeşil nabızlı 64px, Hazırlanıyor → amber, Paketlendi → mavi); Reddet/İptal çerçeveli — data-a aynı */
+  if(o.status==='new')acts='<button type="button" class="ozBtn pri btnNext btnNextXL btnPulse" data-a="soAct" data-act="accept" data-id="'+id+'">✓ Kabul et</button><button type="button" class="ozBtn ghost sm btnDanger btnSide" data-a="soCancel" data-rej="1" data-id="'+id+'">✕ Reddet</button>';
+  else if(o.status==='accepted')acts='<button type="button" class="ozBtn pri btnNext btnNextAmber" data-a="soAct" data-act="pack" data-id="'+id+'">📦 Hazırlandı</button><button type="button" class="ozBtn ghost sm btnDanger btnSide" data-a="soCancel" data-id="'+id+'">✕ İptal et</button>';
+  else if(o.status==='packed')acts='<button type="button" class="ozBtn pri btnNext btnNextBlue" data-a="soShip" data-id="'+id+'">🚚 Kargoya ver</button><button type="button" class="ozBtn ghost sm btnDanger btnSide" data-a="soCancel" data-id="'+id+'">✕ İptal et</button>';
   var wait=o.status==='shipped'?'<p class="ozHint" style="margin:6px 0 0">Alıcı onaylayınca ya da süre dolunca tamamlanır.</p>':'';
   return '<div class="ozCard ozSoC ozStL ozT-'+stTone(o.status)+'" style="margin:0" data-oid="'+id+'" data-st="'+E(o.status||'')+'"><div class="ozRow2" style="justify-content:space-between"><b>'+E(o.order_no||'Sipariş')+'</b>'+stBadge(o.status)+'</div><p class="ozMuted" style="margin:2px 0 6px">'+E(fmtDate(o.created_at))+' · '+TL(o.total_kurus)+'</p>'+soSteps(o.status)+
     /* AJ1 P4: fotoğraflı kalem satırı — 48px görsel, ad 2 satıra kadar, "seçenek · N adet", sağda tutar (mantık aynı) */
@@ -2278,14 +2282,14 @@ function sellerOrderCard(o){
     '<details class="ozAdr"><summary>'+ico('pin',14)+'<span>'+E([sh.recipient||o.buyer_name||'',sh.district].filter(Boolean).join(' · ')||'Teslimat adresi')+'</span></summary><div>'+(sh.phone?E(sh.phone)+'<br>':'')+E(addrText(sh))+(o.note?'<br><b>Not:</b> '+E(o.note):'')+'</div></details>'+(o.note?'<p class="ozHint" style="margin:4px 0 0">📝 Siparişte not var</p>':'')+
     (o.tracking_no?'<div class="ozSoTrk">'+ico('truck',16)+'<span>'+E(o.carrier||'Kargo')+' · <b>'+E(o.tracking_no)+'</b></span><button type="button" class="cp" data-a="copyTrk" data-v="'+E(o.tracking_no)+'" aria-label="Takip numarasını kopyala">'+ico('copy',16)+'</button></div>':'')+
     (ret?'<div class="ozWarn"><b>İade:</b> '+stTag(RET_ST,ret.status)+' '+E(ret.reason||'')+(ret.details?' — '+E(ret.details):'')+(ret.status==='requested'?'<div class="ozRow2" style="margin-top:8px"><button type="button" class="ozBtn sm pri" data-a="retDecide" data-id="'+E(ret.id)+'" data-ok="1">İadeyi kabul et</button><button type="button" class="ozBtn sm bad" data-a="retDecide" data-id="'+E(ret.id)+'" data-ok="0">Reddet</button></div>':'')+'</div>':'')+
-    wait+(acts?'<div class="ozRow2 ozSoActs" style="margin-top:10px">'+acts+'</div>':'')+'</div>';
+    wait+(acts?'<div class="ozRow2 ozSoActs nxActs" style="margin-top:10px">'+acts+'</div>':'')+'</div>';
 }
 /* "Bugün" yeni sipariş kartı: ürün fotoğrafı, adet, tutar, alıcı ilçe/il */
 function newOrderCard(o){var its=ordItems(o.items),sh=o.ship_to||{};var loc=[sh.district,sh.city].filter(Boolean).join(', ');
   return '<div class="ozCard ozNewO" style="margin:0"><div class="ozRow2" style="justify-content:space-between"><b>'+E(o.order_no||'Sipariş')+'</b><span class="ozMuted">'+E(fmtDate(o.created_at))+'</span></div>'+
     its.map(function(it){return '<div class="ozCI">'+pic(it.image,it.name)+'<div class="tx"><b>'+E(it.name)+'</b><small>'+(it.label?E(it.label)+' · ':'')+num(it.qty)+' adet</small></div></div>'}).join('')+
     '<div class="ozRow2" style="justify-content:space-between;margin-top:6px"><span class="ozMuted">'+ico('pin',14)+' '+E(loc||'—')+'</span><b>'+TL(o.total_kurus)+'</b></div>'+
-    '<div class="ozRow2 ozSoActs" style="margin-top:10px"><button type="button" class="ozBtn pri" data-a="soAct" data-act="accept" data-id="'+E(o.id)+'">Kabul et</button><button type="button" class="ozBtn bad" data-a="soCancel" data-rej="1" data-id="'+E(o.id)+'">Reddet</button></div></div>'}
+    '<div class="ozRow2 ozSoActs nxActs" style="margin-top:10px"><button type="button" class="ozBtn pri btnNext btnNextXL btnPulse" data-a="soAct" data-act="accept" data-id="'+E(o.id)+'">✓ Kabul et</button><button type="button" class="ozBtn bad btnDanger btnSide" data-a="soCancel" data-rej="1" data-id="'+E(o.id)+'">✕ Reddet</button></div></div>'}
 /* Bugün / bu hafta: oz_seller_orders'tan (satıcı payı; awaiting_payment ve cancelled hariç). Hafta 300'den fazla sipariş içeriyorsa eksik kalacağı için gösterilmez. */
 async function periodStats(){
   var now=new Date(),d0=new Date(now.getFullYear(),now.getMonth(),now.getDate()),w0=new Date(d0);w0.setDate(d0.getDate()-((d0.getDay()+6)%7));
