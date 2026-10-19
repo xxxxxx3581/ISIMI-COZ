@@ -1798,7 +1798,7 @@ async function showFoodBusiness(venueId){FDW_TAB='';
   if(!alive(tok))return;BZ.venue=v||{id:cur.id,name:cur.name,is_open:false};BZ.offset=0;BZ.orders=[];
   const mgr=isMgr();const open=BZ.venue.is_open;
   render(bar(BZ.venue.name,'showFoodHome()','<span class="fdLive" id="fdLive"></span>'+venueSwitchBtn()+bellBtn(),{owner:'İşletme sahibi',manager:'Yönetici',staff:'Personel'}[cur.role]||'')+
-    roleBar('business')+subnav(cur.id,'orders')+
+    roleBar('business')+subnav(cur.id,'orders')+'<div id="fdGuideB"></div>'+
     '<button type="button" class="fb soft block" style="margin:0 0 12px;min-height:44px" onclick="foodNewVenue()">＋ Yeni restoran ekle / Yeni işletme başvurusu</button>'+
     '<div class="fdOpen'+(open?' on':'')+'" id="fdOpenCard"><div class="tx"><b>'+(open?'Sipariş alıyorsun':'Sipariş almıyorsun')+'</b><small>'+(open&&v&&!openNow(v)&&v.is_active?'Açık ama şu an çalışma saati dışında':open?'Müşteriler sipariş verebilir':'Menün görünür, sipariş verilemez')+'</small></div>'+
       (mgr?sw('fdOpenSw',open,'foodToggleOpen(this)'):'')+'</div>'+
@@ -1806,7 +1806,7 @@ async function showFoodBusiness(venueId){FDW_TAB='';
     '<div id="fdAlarmBox"></div>'+pushSlot('business')+'<div id="fdIssB"></div><div class="fdKpi" id="fdKpi">'+skel('line',1)+'</div>'+
     '<div class="fdSeg" id="fdTabs"></div><div id="fdPastF"></div><div id="fdBList">'+skel('row',2)+'</div><div id="fdBMore"></div>'+
     (mgr&&pfOn()?'<button type="button" class="fdwStrip" style="margin-top:14px" onclick="foodPromoRequest(\''+E(cur.id)+'\')"><span class="i">📣</span><span class="t"><b>Kampanya ve reklam</b><small>Öne çıkma, slider veya indirim talebi oluştur</small></span></button>':''));
-  bellCount();pushDraw();
+  bellCount();pushDraw();venueGuide(cur.id,'fdGuideB');
   const origTitle=document.title;onCleanup(()=>{document.title=origTitle});BZ.origTitle=origTitle;
   BZ.newCount=0;const alarm=setInterval(()=>{if(BZ.newCount>0&&document.visibilityState==='visible')beep()},6000);onCleanup(()=>clearInterval(alarm));
   const tick=setInterval(timersTick,30000);onCleanup(()=>clearInterval(tick));
@@ -2066,13 +2066,18 @@ function venueCreateForm(extra){
   const ds=(typeof DISTRICTS!=='undefined'?DISTRICTS:[]);
   render(bar(extra?'Yeni işletme':'İşletmeni ekle','showFoodHome()')+(extra?'':roleBar('business'))+
     (extra?'':'<div class="fdTrackHero" style="text-align:center"><div style="font-size:40px">🏪</div><h2 style="margin-top:6px">Restoranını İşimi Çöz\'e taşı</h2><p>Birkaç dakikada kaydol, menünü ekle ve sipariş almaya başla.</p></div>')+
-    '<div class="fdCard fdForm">'+
+    /* P20: tek ekran, gruplu (İşletme / Konum / Mutfak ve sipariş türü); alan kimlikleri ve foodCreateVenue aynı */
+    '<div class="fdCard fdForm"><span class="fdQuick">⏱ 3 dakikada hazır</span>'+
+    '<h3 class="fdGrpH">🏪 İşletme</h3>'+
     '<label for="nvName">İşletme adı</label><input id="nvName" maxlength="80" autocomplete="organization">'+
-    '<div class="two"><div><label for="nvDist">İlçe</label><select id="nvDist"><option value="">Seç</option>'+ds.map(d=>'<option>'+E(d)+'</option>').join('')+'</select></div><div><label for="nvPhone">Telefon</label><input id="nvPhone" type="tel" inputmode="tel"></div></div>'+
+    '<label for="nvPhone">Telefon</label><input id="nvPhone" type="tel" inputmode="tel">'+
+    '<h3 class="fdGrpH">📍 Konum</h3>'+
+    '<label for="nvDist">İlçe</label><select id="nvDist"><option value="">Seç</option>'+ds.map(d=>'<option>'+E(d)+'</option>').join('')+'</select>'+
     '<label for="nvAddr">Açık adres</label><input id="nvAddr" maxlength="200">'+
+    '<h3 class="fdGrpH">🍽️ Mutfak ve sipariş türü</h3>'+
     '<label>Mutfak</label>'+cuisinePicker('nvCui','')+
     '<label for="nvMode">Sipariş türü</label><select id="nvMode"><option value="both">Teslimat + Gel-al</option><option value="self_delivery">Yalnızca teslimat</option><option value="pickup">Yalnızca gel-al</option></select>'+
-    '<div class="fdErr" id="nvErr" hidden></div><button type="button" class="fb pri block" style="margin-top:16px" onclick="foodCreateVenue(this)">İşletmeyi oluştur</button>'+
+    '<div class="fdErr" id="nvErr" hidden></div><button type="button" class="fb pri block btnNext" style="margin-top:16px" onclick="foodCreateVenue(this)">✓ İşletmeyi oluştur</button>'+
     '<p class="fdMuted fdSmall fdCenter" style="margin-top:10px">İşletmen kapalı başlar; menünü ekleyip hazır olduğunda açarsın.</p></div>');
 }
 window.foodCreateVenue=async function(btn){
@@ -2091,35 +2096,39 @@ async function showFoodSettings(venueId,firstRun){
   if(!alive(tok)||!v)return;
   const wh=v.working_hours||{};const hasHours=Object.keys(wh).length>0;const ds=(typeof DISTRICTS!=='undefined'?DISTRICTS:[]);
   const opt=(val,cur,l)=>'<option value="'+val+'"'+(val===cur?' selected':'')+'>'+l+'</option>';
+  /* P20: bölüm rozeti — mevcut işletme verisinden (yeni alan yok) */
+  const bd=ok=>'<span class="fdSt '+(ok?'ok':'miss')+'">'+(ok?'Tamam ✓':'Eksik')+'</span>';
+  const profOk=String(v.name||'').trim().length>1&&String(v.phone||'').replace(/\D/g,'').length>=10&&String(v.address_text||'').trim().length>5;
   render(bar('Ayarlar','showFoodBusiness(\''+E(venueId)+'\')',null,v.name)+roleBar('business')+subnav(venueId,'settings')+
-    (pfOn()?'<div data-pf-onb></div>':'')+
+    (pfOn()?'<div data-pf-onb></div>':'')+'<div id="fdGuideS"></div>'+
     (firstRun?'<div class="fdNote ok">👋 Hoş geldin! Önce temel bilgileri ve görselleri tamamla, sonra Menü sekmesinden ürünlerini ekle.</div>':'')+
     '<div class="fdForm">'+
-    '<details class="fdDet"'+(firstRun?' open':'')+'><summary>🏪 Genel bilgiler</summary><div>'+
+    '<details class="fdDet" data-sec="profile"'+(firstRun?' open':'')+'><summary>🏪 Genel bilgiler'+bd(profOk)+'</summary><div>'+
       '<label for="sName">İşletme adı</label><input id="sName" maxlength="80" value="'+E(v.name)+'">'+
       '<label for="sDesc">Kısa açıklama</label><textarea id="sDesc" rows="2" maxlength="300" placeholder="Örn. 1985\'ten beri odun ateşinde pide">'+E(v.description||'')+'</textarea>'+
       '<div class="two"><div><label for="sDist">İlçe</label><select id="sDist">'+(ds.includes(v.district)?'':'<option>'+E(v.district||'')+'</option>')+ds.map(d=>'<option'+(d===v.district?' selected':'')+'>'+E(d)+'</option>').join('')+'</select></div><div><label for="sPhone">Telefon</label><input id="sPhone" type="tel" value="'+E(v.phone||'')+'"></div></div>'+
       '<label for="sAddr">Açık adres</label><input id="sAddr" maxlength="200" value="'+E(v.address_text||'')+'">'+
       '<label>Mutfak</label>'+cuisinePicker('sCui',v.cuisine_type)+
     '</div></details>'+
-    '<details class="fdDet"'+(firstRun||!v.cover_url?' open':'')+'><summary>🖼️ Görseller</summary><div>'+
+    '<details class="fdDet" data-sec="images"'+(firstRun||!v.cover_url?' open':'')+'><summary>🖼️ Görseller'+bd(!!v.cover_url)+'</summary><div>'+
       '<p class="fdMuted fdSmall">Kapak restoran kartında ve sayfanın üstünde görünür. Yatay (16:9), ışıklı ve yemeğin net göründüğü bir fotoğraf seç. Fotoğraflar yüklemeden önce otomatik küçültülür.</p>'+
       '<label>Kapak fotoğrafı</label><div class="fdUp"><span id="upCover">'+pic(v.cover_url||'',v.name,'cover')+'</span><label class="fb sm">'+(v.cover_url?'Değiştir':'Yükle')+'<input type="file" accept="image/jpeg,image/png,image/webp" onchange="foodVenueImg(this,\'cover_url\',\''+E(venueId)+'\')"></label></div>'+
       '<label>Logo</label><div class="fdUp"><span id="upLogo">'+pic(v.image_url||'',v.name,'fdLogo')+'</span><label class="fb sm">'+(v.image_url?'Değiştir':'Yükle')+'<input type="file" accept="image/jpeg,image/png,image/webp" onchange="foodVenueImg(this,\'image_url\',\''+E(venueId)+'\')"></label></div>'+
     '</div></details>'+
-    '<details class="fdDet"><summary>🛵 Sipariş ve teslimat</summary><div>'+
+    '<details class="fdDet" data-sec="order"><summary>🛵 Sipariş ve teslimat'+bd(!!v.delivery_mode)+'</summary><div>'+
       '<label for="sMode">Sipariş türü</label><select id="sMode">'+opt('both',v.delivery_mode,'Teslimat + Gel-al')+opt('self_delivery',v.delivery_mode,'Yalnızca teslimat')+opt('pickup',v.delivery_mode,'Yalnızca gel-al')+'</select>'+
       '<label for="sProv">Teslimatı kim yapar?</label><select id="sProv">'+opt('venue',v.delivery_provider,'Kendi kuryemiz')+((window.PF&&PF.settings&&PF.settings.platform_courier_enabled===false&&v.delivery_provider!=='platform')?'':opt('platform',v.delivery_provider,'Platform kuryeleri'))+'</select>'+
       '<div class="two"><div><label for="sMin">Min. sepet (TL)</label><input id="sMin" inputmode="decimal" value="'+kurusToTl(v.min_order_amount)+'"></div><div><label for="sFee">Teslimat ücreti (TL)</label><input id="sFee" inputmode="decimal" value="'+kurusToTl(v.delivery_fee_kurus)+'"></div></div>'+
       '<div class="two"><div><label for="sPrep">Hazırlık (dk)</label><input id="sPrep" type="number" min="1" max="240" value="'+v.prep_time_min+'"></div><div><label for="sEta">Yol süresi (dk)</label><input id="sEta" type="number" min="1" max="240" value="'+v.delivery_eta_min+'"></div></div>'+
       '<div class="fdNote info" style="margin-top:12px">Platform komisyonu <b>%'+(v.commission_bps/100).toFixed(2).replace('.',',')+'</b> · hizmet bedeli <b>'+M(v.platform_fee_kurus)+'</b> <span class="fdMuted">(platform yönetimi belirler)</span></div>'+
     '</div></details>'+
-    '<details class="fdDet"><summary>📍 Teslimat bölgesi</summary><div>'+
+    '<details class="fdDet" data-sec="zone"><summary>📍 Teslimat bölgesi'+bd(v.delivery_mode==='pickup'||(v.lat!=null&&v.lng!=null))+'</summary><div>'+
       '<p class="fdMuted fdSmall">Konum ve yarıçap girersen, bölge dışındaki adreslere sipariş verilemez. Mesafe kuş uçuşu hesaplanır.</p>'+
-      '<div class="two"><div><label for="sLat">Enlem</label><input id="sLat" inputmode="decimal" value="'+(v.lat??'')+'"></div><div><label for="sLng">Boylam</label><input id="sLng" inputmode="decimal" value="'+(v.lng??'')+'"></div></div>'+
       '<div class="two"><div><label for="sRad">Yarıçap (km)</label><input id="sRad" inputmode="decimal" value="'+(v.delivery_radius_km??'')+'" placeholder="Boş = sınırsız"></div><div><label>&nbsp;</label><button type="button" class="fb block" onclick="foodVenueGeo(this)">📍 Konumum</button></div></div>'+
+      /* P20: elle enlem/boylam "Gelişmiş" altında (alanlar ve kaydetme aynı) */
+      '<details class="fdAdv"><summary>Gelişmiş: enlem / boylam</summary><div class="two"><div><label for="sLat">Enlem</label><input id="sLat" inputmode="decimal" value="'+(v.lat??'')+'"></div><div><label for="sLng">Boylam</label><input id="sLng" inputmode="decimal" value="'+(v.lng??'')+'"></div></div></details>'+
     '</div></details>'+
-    '<details class="fdDet"><summary>🕐 Çalışma saatleri</summary><div>'+
+    '<details class="fdDet" data-sec="hours"><summary>🕐 Çalışma saatleri'+bd(hasHours)+'</summary><div>'+
       '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><span class="fdSmall" style="font-weight:700">Saatleri uygula</span>'+sw('sHasH',hasHours,"document.getElementById('sHours').hidden=!this.checked")+'</div>'+
       '<p class="fdMuted fdSmall">Kapalıyken yalnızca panel anahtarı geçerlidir. Gece yarısını geçen saatler desteklenir (ör. 18:00 – 02:00).</p>'+
       '<div class="fdHours" id="sHours"'+(hasHours?'':' hidden')+'>'+DAYS.map(([k,l])=>{const r=(wh[k]||[])[0];return '<div><span>'+l+'</span>'+sw('d_'+k,!!r||!hasHours,'')+'<input type="time" data-o="'+k+'" value="'+(r?r[0]:'10:00')+'" aria-label="'+l+' açılış"><input type="time" data-c="'+k+'" value="'+(r?(r[1]==='24:00'?'23:59':r[1]):'22:00')+'" aria-label="'+l+' kapanış"></div>'}).join('')+
@@ -2127,7 +2136,34 @@ async function showFoodSettings(venueId,firstRun){
     '</div></details></div>'+
     '<div class="fdRows" style="margin-top:4px">'+row('⚠️','Müşteri bildirimleri','Sorun bildirimleri','showFoodVenueIssues(\''+E(venueId)+'\')')+(BZ.role==='owner'?row('👥','Ekip','Yönetici ve personel','showFoodTeam(\''+E(venueId)+'\')'):'')+'</div>'+
     '<div class="fdErr" id="sErr" hidden></div><div class="fdSticky"><div class="fdCta"><button type="button" class="fb pri" onclick="foodSaveSettings(this,\''+E(venueId)+'\')">Değişiklikleri kaydet</button></div></div>');
+  venueGuide(venueId,'fdGuideS');
 }
+/* P20: "Başlangıç rehberi" (panel üstü + Ayarlar; tamamlanınca gizli). Tamamlanma yalnız mevcut veriden: food_venues (saat, konum, kapak, açık),
+   food_menu_items (en az 1 ürün), belgeler PF açıkken mevcut pf_venue_onboarding_status 'documents' kontrolü (okunamazsa madde gösterilmez).
+   "Sipariş almaya hazırım" yalnız açık/kapalı anahtarına götürür; anahtarın davranışı aynı. */
+async function venueGuide(venueId,boxId){
+  if(!isMgr()||!document.getElementById(boxId))return;
+  let v,mi;try{const r=await Promise.all([Q('GET','food_venues?select=id,is_open,working_hours,delivery_mode,lat,lng,cover_url&id=eq.'+encodeURIComponent(venueId)),Q('GET','food_menu_items?select=id&venue_id=eq.'+encodeURIComponent(venueId)+'&limit=1')]);v=(r[0]||[])[0];mi=r[1]||[]}catch(e){return}
+  if(!v)return;let docs=null;
+  if(pfOn()){try{const st=await RPC('pf_venue_onboarding_status',{p_venue_id:venueId});const c=st&&(st.checks||[]).find(x=>x.key==='documents');if(c)docs=!!c.ok}catch(e){}}
+  const box=document.getElementById(boxId);if(!box)return;
+  const it=[[mi.length>0,'Menüye ürün ekle','menu'],[!!(v.working_hours&&Object.keys(v.working_hours).length),'Çalışma saatlerini gir','hours'],
+    [v.delivery_mode==='pickup'||(v.lat!=null&&v.lng!=null),'Teslimat bölgesi ve ücreti','zone'],[!!v.cover_url,'Kapak görseli yükle','images']];
+  if(docs!==null)it.push([docs,'Belgeleri yükle','docs']);
+  it.push([!!v.is_open,'Sipariş almaya hazırım','open']);
+  const n=it.filter(x=>x[0]).length;if(n===it.length){box.innerHTML='';return}
+  box.innerHTML='<div class="fdCard fdGuide"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h3>🚀 Başlangıç rehberi</h3><b class="fdSmall">'+n+' / '+it.length+'</b></div>'+
+    '<div class="gp" role="progressbar" aria-label="Başlangıç" aria-valuemin="0" aria-valuemax="'+it.length+'" aria-valuenow="'+n+'"><i style="width:'+Math.round(n*100/it.length)+'%"></i></div>'+
+    it.map(x=>x[0]?'<div class="gi ok"><span class="i" aria-hidden="true">✓</span><span class="m">'+E(x[1])+'</span></div>':
+      '<button type="button" class="gi" onclick="foodGuideGo(\''+E(venueId)+'\',\''+x[2]+'\')"><span class="i" aria-hidden="true">!</span><span class="m">'+E(x[1])+'</span><span class="go" aria-hidden="true">›</span></button>').join('')+'</div>';
+}
+window.foodGuideGo=async function(venueId,k){
+  const sec=k2=>{const d=document.querySelector('details.fdDet[data-sec="'+k2+'"]');if(d){d.open=true;try{d.scrollIntoView({block:'start',behavior:'smooth'})}catch(e){}}};
+  if(k==='menu')return showFoodMenu(venueId);
+  if(k==='docs'){try{PF.openDocuments('venue',venueId,'İşletme belgeleri')}catch(e){}return}
+  if(k==='open'){if(!document.getElementById('fdOpenCard'))await showFoodBusiness(venueId);const c=document.getElementById('fdOpenCard');if(c)try{c.scrollIntoView({block:'center',behavior:'smooth'})}catch(e){}return}
+  if(!document.getElementById('sName'))await showFoodSettings(venueId);sec(k);
+};
 window.foodCopyMon=function(){const o=document.querySelector('[data-o=mon]').value,c=document.querySelector('[data-c=mon]').value;DAYS.forEach(([k])=>{document.querySelector('[data-o='+k+']').value=o;document.querySelector('[data-c='+k+']').value=c;document.getElementById('d_'+k).checked=true});toast('Tüm günlere uygulandı')};
 window.foodVenueGeo=function(btn){if(!navigator.geolocation)return toast('Konum desteklenmiyor.','warn');btn.disabled=true;navigator.geolocation.getCurrentPosition(p=>{document.getElementById('sLat').value=p.coords.latitude.toFixed(6);document.getElementById('sLng').value=p.coords.longitude.toFixed(6);btn.disabled=false;toast('Konum eklendi, kaydetmeyi unutma')},()=>{btn.disabled=false;toast('Konum alınamadı.','warn')},{timeout:10000})};
 /* Görsel yükle: yalnızca o alanı kaydeder, formdaki diğer değişiklikleri silmez */
