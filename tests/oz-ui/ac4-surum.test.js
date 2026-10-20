@@ -36,11 +36,12 @@
 //      oz-market-v1.js ?v=12 → ?v=13).
 // P20 düzeltme: referans f9496e7'e tek sefer taşındı (önceki: 31b2f09; arada alan hatası CSS'i, oz-market-v1.js ?v=13 → ?v=14).
 // P21: referans de9ade4'e tek sefer taşındı (önceki: f9496e7; arada Paket 21 CSS'i (P21 bloğu), a7-food-v1.js ?v=6 → ?v=7, oz-market-v1.js ?v=14 → ?v=15).
+// P22: referans e22f3b3'e tek sefer taşındı (önceki: de9ade4; arada Paket 22 CSS'i (P22 bloğu), a7-food-v1.js ?v=7 → ?v=8, oz-market-v1.js ?v=15 → ?v=16).
 const fs=require('fs'),path=require('path'),cp=require('child_process');
 const {chromium,open,enter}=require('./harness.js');
 const ROOT=path.resolve(__dirname,'../..');
 const cur=fs.readFileSync(path.join(ROOT,'index.html'),'utf8');
-const base=cp.execSync('git show de9ade4:index.html',{cwd:ROOT,encoding:'utf8',maxBuffer:64<<20});
+const base=cp.execSync('git show e22f3b3:index.html',{cwd:ROOT,encoding:'utf8',maxBuffer:64<<20});
 const blk=s=>{const a=s.indexOf('/*K21-BASLA*/'),b=s.indexOf('/*K21-BITIS*/');return s.slice(a,b)};
 const nocom=s=>s.replace(/\/\*[\s\S]*?\*\//g,'');
 const nover=s=>s.replace(/oz-market-v1\.js\?v=\d+/g,'oz-market-v1.js?v=N');
@@ -48,7 +49,7 @@ const nover=s=>s.replace(/oz-market-v1\.js\?v=\d+/g,'oz-market-v1.js?v=N');
  const fails=[];const ok=(c,m)=>{if(!c)fails.push(m)};
  ok(!/TEST/.test(blk(cur)),'Özüne Dön CSS bloğunda "TEST" kalmamalı: '+(blk(cur).match(/.{0,40}TEST.{0,20}/)||[''])[0]);
  ok(/\/\*OZ W2 hero "Sponsorlu" satıcı slaytı[^*]*:/.test(cur),'W2 yorumu nötr biçimde durmalı');
- const v=cur.match(/oz-market-v1\.js\?v=\d+/g)||[];ok(v.length===1&&v[0]==='oz-market-v1.js?v=15','sürüm parametresi tek yerde ?v=15: '+JSON.stringify(v));
+ const v=cur.match(/oz-market-v1\.js\?v=\d+/g)||[];ok(v.length===1&&v[0]==='oz-market-v1.js?v=16','sürüm parametresi tek yerde ?v=16: '+JSON.stringify(v));
  const others=['manifest.json','sw.js','food-sw.js','pf-platform-v1.js','a7-food-v1.js'].filter(f=>fs.existsSync(path.join(ROOT,f))&&/oz-market-v1\.js\?/.test(fs.readFileSync(path.join(ROOT,f),'utf8')));
  ok(!others.length,'başka dosyada sürümlü başvuru olmamalı: '+others);
  ok(nocom(blk(cur))===nocom(blk(base)),'Özüne Dön CSS (yorumsuz) değişmemeli');
@@ -58,7 +59,7 @@ const nover=s=>s.replace(/oz-market-v1\.js\?v=\d+/g,'oz-market-v1.js?v=N');
  await enter(p);
  const css=await p.evaluate(()=>{const out=[];for(const sh of document.styleSheets){let r;try{r=sh.cssRules}catch(e){continue}for(const x of r)out.push(x.cssText)}return out.filter(t=>/oz|Oz/.test(t))});
  const src=await p.evaluate(()=>[...document.scripts].map(s=>s.getAttribute('src')||'').filter(s=>/oz-market/.test(s)));
- ok(src.length===1&&src[0]==='./oz-market-v1.js?v=15','modül ?v=15 ile yüklenmeli: '+JSON.stringify(src));
+ ok(src.length===1&&src[0]==='./oz-market-v1.js?v=16','modül ?v=16 ile yüklenmeli: '+JSON.stringify(src));
  await p.setContent(base.replace(/<script[\s\S]*?<\/script>/g,''));const css0=await p.evaluate(()=>{const out=[];for(const sh of document.styleSheets){let r;try{r=sh.cssRules}catch(e){continue}for(const x of r)out.push(x.cssText)}return out.filter(t=>/oz|Oz/.test(t))});
  await p.setContent(cur.replace(/<script[\s\S]*?<\/script>/g,''));const css1=await p.evaluate(()=>{const out=[];for(const sh of document.styleSheets){let r;try{r=sh.cssRules}catch(e){continue}for(const x of r)out.push(x.cssText)}return out.filter(t=>/oz|Oz/.test(t))});
  ok(css1.length>100&&css1.length===css0.length&&css1.join('\n')===css0.join('\n'),'CSS kural sayısı/bildirimleri aynı olmalı: '+css0.length+' → '+css1.length);
