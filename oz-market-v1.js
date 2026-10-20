@@ -929,14 +929,28 @@ VIEWS_EXTRA({
       '<div class="ozRow2"><button type="button" class="ozBtn pri" data-a="login">Giriş yap</button><button type="button" class="ozBtn" data-a="signup">Kayıt ol</button></div></div>'+homeRow);return}
     var u=(sess()||{}).user||{};
     var ms=s.my_seller;
-    var sellerRow=ms?row('store','Satıcı paneli',SELLER_ST[ms.status]?SELLER_ST[ms.status][0]:'Mağazanı yönet','nav',{k:'seller'}):(s.seller_signup_enabled?row('store','Satıcı ol','Ürünlerini Özüne Dön\'de sat','nav',{k:'seller'}):'');
-    paint(pageHead('Hesabım',u.email||'')+'<div class="ozList">'+
-      row('heart','Favorilerim','Kaydettiğin ürünler','nav',{k:'favs'})+
-      row('pin','Adreslerim','Teslimat adreslerini yönet','nav',{k:'addresses'})+
-      sellerRow+
-      (s.is_admin?row('leaf','Özüne Dön yönetimi','Satıcı, ürün, sipariş ve ayarlar','admin'):'')+
-      row('sun','Görünüm',themeGet()==='light'?'Açık tema (krem) · koyuya geç':'Koyu tema · açığa (krem) geç','ozTheme')+
-      row('out','Çıkış yap','Bu cihazdaki oturumu kapat','ozLogout')+'</div>'+homeRow);
+    /* P22: ortak Hesabım şablonu — profil + roller (yalnız bilinen: satıcı durumu, yönetici), iki büyük kutu, çalışma alanlarım
+       (yalnız mevcut paneller; rozet yalnız zaten okunan veriden), hesap listesi, tema seçici, küçük çıkış. İşlevler aynı. */
+    var md=u.user_metadata||{},nm=String(md.full_name||md.name||'').trim();
+    var tags=(ms?'<span class="ozRoleT s">Satıcı · '+E(SELLER_ST[ms.status]?SELLER_ST[ms.status][0]:'Başvuru')+'</span>':'')+(s.is_admin?'<span class="ozRoleT a">Yönetici</span>':'');
+    var ws=function(cls,ic,t,sub,act,data,n){var at='';Object.keys(data||{}).forEach(function(k){at+=' data-'+k+'="'+E(data[k])+'"'});
+      return '<button type="button" class="ozWs '+cls+'" data-a="'+act+'"'+at+'><span class="ic">'+ico(ic,22)+'</span><span class="tx"><b>'+E(t)+'</b><small>'+E(sub)+'</small></span>'+(n>0?'<span class="ozWsN" aria-label="'+n+' bekleyen">'+(n>9?'9+':n)+'</span>':'')+'<span class="ch" aria-hidden="true">›</span></button>'};
+    var sn=0;try{sn=ms?attnSell():0}catch(e){sn=0}
+    var wsH=(ms?ws('s','store','Satıcı paneli',(SELLER_ST[ms.status]?SELLER_ST[ms.status][0]:'Mağazanı yönet')+' · Mağazanı yönet','nav',{k:'seller'},sn):'')+
+      (s.is_admin?ws('a','leaf','Özüne Dön yönetimi','Satıcı, ürün, sipariş ve ayarlar','admin'):'');
+    var more=(!ms&&s.seller_signup_enabled?row('store','Satıcı ol','Ürünlerini Özüne Dön\'de sat','nav',{k:'seller'}):'');
+    var lt=themeGet()==='light';
+    paint(pageHead('Hesabım')+
+      '<div class="ozMe"><span class="av" aria-hidden="true">'+E((nm||u.email||'?').charAt(0).toLocaleUpperCase('tr'))+'</span><span class="tx"><b>'+E(nm||'Hesabım')+'</b><small>'+E(u.email||'')+'</small>'+(tags?'<span class="ozRoles">'+tags+'</span>':'')+'</span></div>'+
+      '<div class="ozQuick2"><button type="button" data-a="nav" data-k="orders">'+ico('box',26)+'<b>Siparişlerim</b></button><button type="button" data-a="nav" data-k="favs">'+ico('heart',26)+'<b>Favorilerim</b></button></div>'+
+      (wsH||more?'<h2 class="ozAccH">Çalışma alanlarım</h2>'+wsH+(more?'<div class="ozList ozAccL">'+more+'</div>':''):'')+
+      '<h2 class="ozAccH">Hesap</h2><div class="ozList ozAccL">'+
+        row('pin','Adreslerim','Teslimat adreslerini yönet','nav',{k:'addresses'})+
+        row('bell','Bildirimler','Sipariş ve mağaza bildirimleri','bell')+'</div>'+
+      '<div class="ozAccEnd"><div class="ozThSel" role="group" aria-label="Görünüm"><span class="l">Görünüm</span>'+
+        '<button type="button"'+(lt?' class="on" aria-pressed="true"':' class="ozThB" data-a="ozTheme" aria-pressed="false"')+'>Açık (krem)</button>'+
+        '<button type="button"'+(!lt?' class="on" aria-pressed="true"':' class="ozThB" data-a="ozTheme" aria-pressed="false"')+'>Koyu</button></div>'+
+        '<button type="button" class="ozOut" data-a="ozLogout">'+ico('out',16)+'<span>Çıkış yap</span></button></div>'+homeRow);
     newDotSync();
   }
 });

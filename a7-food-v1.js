@@ -2919,16 +2919,36 @@ async function showFoodAccount(){
   if(!A())return;FDW_TAB='account';const tok=newScreen();
   const u=(S()&&S().user)||{};const name=(u.user_metadata&&(u.user_metadata.full_name||u.user_metadata.name))||'';
   const r=accRow;
-  render('<div class="fdwAcc"><div class="fdwMe"><span class="av">'+E((name||u.email||'?').trim().charAt(0).toLocaleUpperCase('tr'))+'</span><span class="tx"><b>'+E(name||'Hesabım')+'</b><small>'+E(u.email||'')+'</small></span></div>'+
-    '<div class="fdwList">'+r('out','Çıkış yap','','foodLogout()','fdwOut')+'</div>'+
+  /* P22: ortak Hesabım şablonu — profil + roller, iki büyük kutu, çalışma alanlarım (yalnız mevcut paneller; mevcut whoami verisinden),
+     tek kartta hesap listesi, tema seçici (applyAppTheme) ve küçük çıkış. whoami okunamazsa bugünkü genel satırlar kalır. */
+  const lt=document.documentElement.getAttribute('data-theme')==='light';
+  const gen=r('store','İşletmem','Restoranını yönet veya işletmeni ekle','showFoodBusiness()')+r('bike','Kurye','Kurye paneli veya kurye başvurusu','showFoodCourier()');
+  render('<div class="fdwAcc"><div class="fdwMe"><span class="av" aria-hidden="true">'+E((name||u.email||'?').trim().charAt(0).toLocaleUpperCase('tr'))+'</span><span class="tx"><b>'+E(name||'Hesabım')+'</b><small>'+E(u.email||'')+'</small><span class="fdwRoles" id="fdwRoles"></span></span></div>'+
     '<div class="fdwQuick"><button type="button" onclick="showFoodOrders()">'+fdIco('receipt',24)+'<b>Siparişlerim</b></button><button type="button" onclick="foodAccFavs()">'+fdIco('heart',24)+'<b>Favorilerim</b></button></div>'+
-    '<div class="fdwList">'+r('ticket','Kuponlarım','Kullanabileceğin indirimler','showFoodCoupons()')+r('pin','Adreslerim','Teslimat adreslerini yönet',"foodAddrSheet('account')")+r('bell','Bildirimler','Sipariş ve kampanya bildirimleri','showFoodNotifications()')+
+    '<div id="fdwWsBox"><div class="fdSecH"><b>Çalışma alanlarım</b></div><div class="fdwList" id="fdwAccRoles">'+gen+'</div></div>'+
+    '<div class="fdSecH"><b>Hesap</b></div><div class="fdwList">'+r('pin','Adreslerim','Teslimat adreslerini yönet',"foodAddrSheet('account')")+r('ticket','Kuponlarım','Kullanabileceğin indirimler','showFoodCoupons()')+r('bell','Bildirimler','Sipariş ve kampanya bildirimleri','showFoodNotifications()')+
     r('help','Yardım ve destek','Sık sorulanlar, sorun bildir, destek talebi','showFoodHelp()')+r('shield','Hesap ve güvenlik','Kullanıcı bilgilerin','location.href=\'./marketplace-profile.html\'')+
     (pfFn('openPrivacy')?r('shield','Gizlilik ve verilerim','KVKK, izinler, verilerini indir','PF.openPrivacy()'):'')+'</div>'+
-    '<div class="fdSecH"><b>İş ortaklığı</b></div><div class="fdwList" id="fdwAccRoles">'+r('store','İşletmem','Restoranını yönet veya işletmeni ekle','showFoodBusiness()')+r('bike','Kurye','Kurye paneli veya kurye başvurusu','showFoodCourier()')+'</div>'+
-    '<div class="fdwList">'+r('out','İşimi Çöz’e dön','Ana platforma geç','showHome()')+'</div></div>');
-  try{const w=await whoami();if(!alive(tok))return;if(w&&w.is_admin){const box=document.getElementById('fdwAccRoles');if(box)box.insertAdjacentHTML('beforeend',r('gear','Yemek yönetimi','Platform yönetim paneli','showFoodAdmin()'))}}catch(e){}
+    '<div class="fdwList" id="fdwAccMore">'+r('out','İşimi Çöz’e dön','Ana platforma geç','showHome()')+'</div>'+
+    '<div class="fdwAccEnd"><div class="fdwThSel" role="group" aria-label="Görünüm"><span class="l">Görünüm</span>'+
+      '<button type="button" class="'+(lt?'on':'')+'" aria-pressed="'+lt+'" onclick="foodAccTheme(\'light\')">Açık</button><button type="button" class="'+(!lt?'on':'')+'" aria-pressed="'+!lt+'" onclick="foodAccTheme(\'dark\')">Koyu</button></div>'+
+      '<button type="button" class="fdwOut2" onclick="foodLogout()">'+fdIco('out',16)+'<span>Çıkış yap</span></button></div></div>');
+  try{const w=await whoami();if(!alive(tok)||!w)return;
+    const vs=w.venues||[],c=w.courier,own=vs.some(v=>v.role==='owner'),RL={owner:'İşletme sahibi',manager:'İşletme yöneticisi',staff:'İşletme personeli'};
+    const tags=(vs.length?'<span class="fdwRoleT b">'+E(own?RL.owner:(RL[vs[0].role]||'İşletme'))+'</span>':'')+(c?'<span class="fdwRoleT c">Kurye'+(c.status&&c.status!=='approved'&&c.status!=='active'?' · '+E({pending:'başvuru inceleniyor',rejected:'başvuru reddedildi',suspended:'askıda'}[c.status]||c.status):'')+'</span>':'')+(w.is_admin?'<span class="fdwRoleT a">Yönetici</span>':'');
+    setHTML('fdwRoles',tags);
+    const ws=(cls,ic,t,sub,fn,n)=>'<button type="button" class="fdwWs '+cls+'" onclick="'+fn+'"><span class="ic">'+fdIco(ic,22)+'</span><span class="tx"><b>'+E(t)+'</b><small>'+E(sub)+'</small></span>'+(n>0?'<span class="fdwWsN" aria-label="'+n+' yeni sipariş">'+(n>9?'9+':n)+'</span>':'')+'<span class="ch" aria-hidden="true">›</span></button>';
+    const h=(vs.length?ws('b','store','İşletmem',(vs.length>1?vs.length+' işletme':(vs[0].name||'Restoranın'))+' · Restoranını yönet','showFoodBusiness()',+FDW_PN||0):'')+
+      (c?ws('c','bike','Kurye',c.status==='approved'||c.status==='active'||!c.status?'Kurye paneli':'Başvuru durumu','showFoodCourier()'):'')+
+      (w.is_admin?ws('a','gear','Yemek yönetimi','Platform yönetim paneli','showFoodAdmin()'):'');
+    const box=document.getElementById('fdwWsBox');if(!box)return;
+    box.innerHTML=h?'<div class="fdSecH"><b>Çalışma alanlarım</b></div><div class="fdwWsL" id="fdwAccRoles">'+h+'</div>':'';
+    /* mevcut ama kullanıcıda olmayan alanlar: başvuru/ekleme bağlantıları "Daha fazla"da */
+    const more=(vs.length?'':r('store','İşletme ekle','Restoranını İşimi Çöz\'e ekle','showFoodBusiness()'))+(c?'':r('bike','Kurye ol','Kurye başvurusu','showFoodCourier()'));
+    const m=document.getElementById('fdwAccMore');if(m&&more)m.insertAdjacentHTML('afterbegin',more);
+  }catch(e){}
 }
+window.foodAccTheme=function(t){try{applyAppTheme(t)}catch(e){}showFoodAccount()};
 /* Girişsiz Hesabım: A() kontrolü yok; diğer ekranlar girişi eskisi gibi ister */
 function showFoodAccountGuest(){
   FDW_TAB='account';newScreen();const r=accRow;

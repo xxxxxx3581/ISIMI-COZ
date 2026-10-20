@@ -1574,6 +1574,51 @@ html:root .ozForm .ozFGH{flex-wrap:wrap}html:root .ozSecH:has(.ozSecSt){display:
 html:root .ozSaveSt{position:sticky;bottom:calc(76px + env(safe-area-inset-bottom,0px));z-index:6;margin:0 -4px;padding:0 4px 4px;background:linear-gradient(to top,var(--oz-card) 70%,transparent)}
 html:root .ozSaveSt .ozBtn{min-height:56px}
 /*P21-BITIS*/
+/*P22-BASLA*/ /* Paket 22: ortak Hesabım şablonu (yalnız görünüm). Her modül kendi temasını korur; yapı, sıra ve renk anlamı ortak:
+   Satıcı = yeşil (--nx-pri), İşletme = amber (--nx-amber), Kurye = mavi (--nx-blue), Yönetim = lacivert çerçeve. Renk yanında her zaman yazı var. */
+:root{--ws-navy:#22345C;--ws-navy-l:#6F8FD0}
+/* --- Özüne Dön --- */
+html:root .ozMe{display:flex;align-items:center;gap:14px;margin:0 0 14px}
+html:root .ozMe .av{flex:0 0 auto;width:60px;height:60px;border-radius:50%;display:grid;place-items:center;background:var(--nx-star);color:var(--nx-star-ink);font-size:26px;font-weight:900}
+html:root .ozMe .tx{min-width:0;display:flex;flex-direction:column;gap:2px}html:root .ozMe b{font-size:19px}html:root .ozMe small{color:var(--oz-muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html:root .ozRoles{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+html:root .ozRoleT{padding:3px 9px;border-radius:99px;font-size:12px;font-weight:800;border:1.5px solid currentColor}
+html:root .ozRoleT.s{background:var(--nx-pri);border-color:var(--nx-pri);color:#fff}html:root .ozRoleT.a{color:var(--oz-text);border-color:var(--ws-navy-l)}
+html:root .ozQuick2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 16px}
+html:root .ozQuick2 button{min-height:84px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border-radius:16px;border:1px solid var(--oz-line);background:var(--oz-card);color:var(--oz-text);font:inherit;font-weight:800;cursor:pointer}
+html:root .ozAccH{margin:6px 0 8px;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--oz-muted)}
+html:root .ozWs{width:100%;min-height:68px;display:flex;align-items:center;gap:12px;margin:0 0 10px;padding:10px 14px;border-radius:16px;border:2px solid transparent;font:inherit;text-align:left;cursor:pointer;color:#fff}
+html:root .ozWs .ic{flex:0 0 auto;display:grid;place-items:center}html:root .ozWs .tx{flex:1;min-width:0;display:flex;flex-direction:column}html:root .ozWs b{font-size:16px}
+html:root .ozWs small{font-size:12.5px;opacity:.95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}html:root .ozWs .ch{font-size:22px}
+html:root .ozWs.s{background:var(--nx-pri)}html:root .ozWs.a{background:var(--oz-card);color:var(--oz-text);border-color:var(--ws-navy-l)}html:root .ozWs.a small{color:var(--oz-muted)}
+html:root .ozWsN{min-width:24px;height:24px;padding:0 7px;border-radius:12px;background:#fff;color:#1F2A22;font:900 12.5px/24px system-ui,sans-serif;text-align:center}
+html:root .ozList.ozAccL{margin:0 0 14px;gap:0;border:1px solid var(--oz-line);border-radius:16px;overflow:hidden;background:var(--oz-card)}html:root .ozAccL .ozRowBtn{margin:0;border:0;border-radius:0;box-shadow:none;border-bottom:1px solid var(--oz-line)}html:root .ozAccL .ozRowBtn:last-child{border-bottom:0}
+html:root .ozAccEnd{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin:4px 0 14px}
+html:root .ozThSel{display:flex;align-items:center;gap:4px;padding:4px;border-radius:14px;border:1px solid var(--oz-line);background:var(--oz-card)}
+html:root .ozThSel .l{padding:0 6px;font-size:12.5px;font-weight:800;color:var(--oz-muted)}
+html:root .ozThSel button{min-height:44px;padding:0 14px;border:0;border-radius:10px;background:transparent;color:var(--oz-text);font:inherit;font-weight:800;cursor:pointer}
+html:root .ozThSel button.on{background:var(--nx-star);color:var(--nx-star-ink)}
+html:root .ozOut{min-height:44px;display:inline-flex;align-items:center;gap:6px;padding:0 14px;border-radius:12px;border:2px solid var(--nx-bad-l);background:transparent;color:var(--nx-bad-t);font:inherit;font-weight:800;cursor:pointer}
+html:root body.ozWorld:not(.ozLt) .ozOut{border-color:#E5735A;color:#E5735A}
+/* --- Yemek --- */
+.fdwAcc .fdwMe .av{width:60px;height:60px;font-size:26px}
+.fdwAcc .fdwRoles{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}.fdwAcc .fdwRoles:empty{display:none}
+.fdwAcc .fdwRoleT{padding:3px 9px;border-radius:99px;font-size:12px;font-weight:800;border:1.5px solid var(--line);color:var(--text)}
+.fdwAcc .fdwRoleT.b{background:var(--nx-amber);border-color:var(--nx-amber);color:#fff}.fdwAcc .fdwRoleT.c{background:var(--nx-blue);border-color:var(--nx-blue);color:#fff}.fdwAcc .fdwRoleT.a{border-color:var(--ws-navy-l)}
+.fdwAcc .fdwQuick button{min-height:84px}
+.fdwAcc .fdwWsL{margin:0 0 14px}
+.fdwAcc .fdwWs{width:100%;min-height:68px;display:flex;align-items:center;gap:12px;margin:0 0 10px;padding:10px 14px;border-radius:16px;border:2px solid transparent;font:inherit;text-align:left;cursor:pointer;color:#fff}
+.fdwAcc .fdwWs .ic{flex:0 0 auto;display:grid;place-items:center}.fdwAcc .fdwWs .tx{flex:1;min-width:0;display:flex;flex-direction:column}.fdwAcc .fdwWs b{font-size:16px}
+.fdwAcc .fdwWs small{font-size:12.5px;opacity:.95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fdwAcc .fdwWs .ch{font-size:22px}
+.fdwAcc .fdwWs.b{background:var(--nx-amber)}.fdwAcc .fdwWs.c{background:var(--nx-blue)}.fdwAcc .fdwWs.a{background:var(--card);color:var(--text);border-color:var(--ws-navy-l)}.fdwAcc .fdwWs.a small{color:var(--muted)}
+.fdwAcc .fdwWsN{min-width:24px;height:24px;padding:0 7px;border-radius:12px;background:#fff;color:#1F2A22;font:900 12.5px/24px system-ui,sans-serif;text-align:center}
+.fdwAcc .fdwAccEnd{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin:4px 0 14px}
+.fdwAcc .fdwThSel{display:flex;align-items:center;gap:4px;padding:4px;border-radius:14px;border:1px solid var(--line);background:var(--card)}
+.fdwAcc .fdwThSel .l{padding:0 6px;font-size:12.5px;font-weight:800;color:var(--muted)}
+.fdwAcc .fdwThSel button{min-height:44px;padding:0 14px;border:0;border-radius:10px;background:transparent;color:var(--text);font:inherit;font-weight:800;cursor:pointer}
+.fdwAcc .fdwThSel button.on{background:var(--nx-star);color:var(--nx-star-ink)}
+.fdwAcc .fdwOut2{min-height:44px;display:inline-flex;align-items:center;gap:6px;padding:0 14px;border-radius:12px;border:2px solid var(--nx-bad-l);background:transparent;color:var(--nx-bad-t);font:inherit;font-weight:800;cursor:pointer}
+/*P22-BITIS*/
 /*K21-BASLA*/
 /*OZ AJ1 P1 renk jetonları (koyu = önceki hex değerleri, birebir). Çekirdek: rol bazlı (T metin, L çizgi, B zemin); --oz-x<HEX><ROL> tek kullanımlık ara tonlar. Krem tema bu değerleri body.ozWorld.ozLt altında değiştirir.*/
 html:root{--oz-bg:#2B2118;--oz-card:#3A2D20;--oz-card2:#4A3A27;--oz-line:#54422D;--oz-line2:#6B5A44;--oz-text:#F6ECDC;--oz-muted:#CDBB9F;--oz-muted2:#A99983;--oz-acc:#28804F;--oz-acc2:#4FB67F;--oz-acc2L:#4FB67F;--oz-acc2B:#4FB67F;--oz-sun:#F7D24A;--oz-sunL:#F7D24A;--oz-sunB:#F7D24A;--oz-bad:#E5735A;--oz-badL:#E5735A;--oz-ink:#1F3B2A;--oz-warn:#E0A84A;--oz-x1E1712B:#1E1712;--oz-x1E6B3ET:#1E6B3E;--oz-x1F160ET:#1F160E;--oz-x1F1A12B:#1F1A12;--oz-x1F3B2AB:#1F3B2A;--oz-x1F6F43B:#1F6F43;--oz-x241B13B:#241B13;--oz-x2A2017B:#2A2017;--oz-x2B2118L:#2B2118;--oz-x2B2118T:#2B2118;--oz-x2E6B47L:#2E6B47;--oz-x2F2419B:#2F2419;--oz-x2F241AB:#2F241A;--oz-x2F2519B:#2F2519;--oz-x2F3A26B:#2F3A26;--oz-x2F6FA3B:#2F6FA3;--oz-x352A1FB:#352A1F;--oz-x3A2D20L:#3A2D20;--oz-x463622B:#463622;--oz-x46372AB:#46372A;--oz-x4A3A27L:#4A3A27;--oz-x4E95D0B:#4E95D0;--oz-x4E95D0L:#4E95D0;--oz-x5E4E3AT:#5E4E3A;--oz-x5E5348B:#5E5348;--oz-x5FCB8AT:#5FCB8A;--oz-x6A3A2EL:#6A3A2E;--oz-x6B4F2AB:#6B4F2A;--oz-x6B5739L:#6B5739;--oz-x6B5A44T:#6B5A44;--oz-x6E5C45T:#6E5C45;--oz-x7A3A2CL:#7A3A2C;--oz-x7A4E00T:#7A4E00;--oz-x7A5BA6B:#7A5BA6;--oz-x7FD3A2T:#7FD3A2;--oz-x8A6B3EL:#8A6B3E;--oz-x8A7A60T:#8A7A60;--oz-x8C6B2AL:#8C6B2A;--oz-x8E3B2EB:#8E3B2E;--oz-x8E3B2EL:#8E3B2E;--oz-x8E7E66T:#8E7E66;--oz-x9BE0B8T:#9BE0B8;--oz-x9BE3B9T:#9BE3B9;--oz-x9FD0F5T:#9FD0F5;--oz-xA8977CT:#A8977C;--oz-xA8987FT:#A8987F;--oz-xB07800T:#B07800;--oz-xB5482FB:#B5482F;--oz-xB7791FB:#B7791F;--oz-xB8A68AT:#B8A68A;--oz-xBDAE95B:#BDAE95;--oz-xBFAE92T:#BFAE92;--oz-xC7A23AL:#C7A23A;--oz-xC9A33AB:#C9A33A;--oz-xC9A33AL:#C9A33A;--oz-xC9B79AB:#C9B79A;--oz-xCFC3B0B:#CFC3B0;--oz-xCFE7C2T:#CFE7C2;--oz-xD8C8AET:#D8C8AE;--oz-xD9694AB:#D9694A;--oz-xD9694AL:#D9694A;--oz-xD9A79FT:#D9A79F;--oz-xD9C9AET:#D9C9AE;--oz-xE0A84AB:#E0A84A;--oz-xE0A84AL:#E0A84A;--oz-xE6D9C3B:#E6D9C3;--oz-xE6D9C3L:#E6D9C3;--oz-xE8685DL:#E8685D;--oz-xE8685DT:#E8685D;--oz-xE8A08ET:#E8A08E;--oz-xE8DCC6T:#E8DCC6;--oz-xE9DCC4T:#E9DCC4;--oz-xEADCC4T:#EADCC4;--oz-xEDE5D8B:#EDE5D8;--oz-xF0A792T:#F0A792;--oz-xF1CC85T:#F1CC85;--oz-xF2A08CT:#F2A08C;--oz-xF2B431B:#F2B431;--oz-xF2B431L:#F2B431;--oz-xF2B431T:#F2B431;--oz-xF2C14EB:#F2C14E;--oz-xF2C14ET:#F2C14E;--oz-xF3A893T:#F3A893;--oz-xF3B6A6T:#F3B6A6;--oz-xF3D27AT:#F3D27A;--oz-xF3EBDDB:#F3EBDD;--oz-xF7B979T:#F7B979;--oz-xFFF6E6T:#FFF6E6;--oz-xFFFDF8B:#FFFDF8;--oz-xFFFFFFB:#FFFFFF}
@@ -3714,7 +3759,7 @@ function hmGo(key){
 function hmSoon(){ try{ v2Toast('Özüne Dön çok yakında!'); }catch(e){} }
 /*K21-JS-BASLA*/ /* Özüne Dön: modül tembel yüklenir; pazar kapalıysa (veya hata olursa) yalnızca hmSoon() gösterilir. */
 var OZ_LOADING=null, OZ_TAP=false;
-function ozLoad(){ if(window.OZ&&window.OZ.__v) return Promise.resolve(window.OZ); if(OZ_LOADING) return OZ_LOADING; OZ_LOADING=new Promise(function(res,rej){ var s=document.createElement('script'); s.src='./oz-market-v1.js?v=15'; s.async=true; s.onload=function(){ if(window.OZ&&window.OZ.__v) res(window.OZ); else { OZ_LOADING=null; rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); } }; s.onerror=function(){ OZ_LOADING=null; s.remove(); rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); }; document.head.appendChild(s); }); return OZ_LOADING; }
+function ozLoad(){ if(window.OZ&&window.OZ.__v) return Promise.resolve(window.OZ); if(OZ_LOADING) return OZ_LOADING; OZ_LOADING=new Promise(function(res,rej){ var s=document.createElement('script'); s.src='./oz-market-v1.js?v=16'; s.async=true; s.onload=function(){ if(window.OZ&&window.OZ.__v) res(window.OZ); else { OZ_LOADING=null; rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); } }; s.onerror=function(){ OZ_LOADING=null; s.remove(); rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); }; document.head.appendChild(s); }); return OZ_LOADING; }
 window.ozLoad=ozLoad;
 function ozTap(){ if(OZ_TAP) return; OZ_TAP=true; ozLoad().then(function(oz){ return oz.tryEnter(); }).then(function(ok){ if(!ok) hmSoon(); }).catch(function(){ hmSoon(); }).then(function(){ OZ_TAP=false; }); }
 /* P10: iyzico (sandbox) ödeme dönüşü ?oz_pay=<ödeme id> → parametre adres çubuğundan silinir, Özüne Dön açılıp ödeme sonucu gösterilir */
@@ -11029,6 +11074,6 @@ for(const k of ["showGayrimenkulDetail","showOtomobilDetail"]){const f=window[k]
 </script>
 </body>
 <script src="./a35-seller-identity.js?v=3"></script>
-<script src="./a7-food-v1.js?v=7"></script>
+<script src="./a7-food-v1.js?v=8"></script>
 <script src="./pf-platform-v1.js?v=4"></script>
 </html>

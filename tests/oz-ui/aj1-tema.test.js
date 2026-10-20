@@ -20,12 +20,13 @@ const {chromium,open,enter}=require('./harness.js');
  ok(await p.evaluate(()=>localStorage.getItem('isimi_oz_theme'))===null&&await bg()==='rgb(246, 240, 227)','depolama yokken krem tema: '+await bg());
  // Görünüm anahtarı
  await p.evaluate(()=>OZ.go('account',{}));await p.waitForTimeout(1000);
- const row=await p.evaluate(()=>{const b=document.querySelector('#ozRoot .ozRowBtn[data-a=ozTheme]');return b?b.innerText.replace(/\s+/g,' '):null});
- ok(row&&/Görünüm/.test(row)&&/Açık tema \(krem\)/.test(row),'Hesabım › Görünüm satırı: '+row);
- await p.click('#ozRoot .ozRowBtn[data-a=ozTheme]').catch(()=>fails.push('Görünüm tıklanamadı'));await p.waitForTimeout(900);
+ // Paket 22 (bilinçli değişiklik): "Görünüm" satırı yerine Hesabım altında Açık/Koyu seçici (aynı ozTheme işlevi); seçili olan basılı
+ const row=await p.evaluate(()=>{const g=document.querySelector('#ozRoot .ozThSel');const on=g&&g.querySelector('[aria-pressed=true]');return g?g.innerText.replace(/\s+/g,' ')+' | seçili: '+(on&&on.textContent):null});
+ ok(row&&/Görünüm/.test(row)&&/seçili: Açık \(krem\)/.test(row),'Hesabım › Görünüm seçici: '+row);
+ await p.click('#ozRoot .ozThSel [data-a=ozTheme]').catch(()=>fails.push('Görünüm tıklanamadı'));await p.waitForTimeout(900);
  ok(await bg()==='rgb(43, 33, 24)'&&await p.evaluate(()=>localStorage.getItem('isimi_oz_theme'))==='dark','Görünüm → koyu: '+await bg());
- ok(await p.evaluate(()=>/Koyu tema/.test((document.querySelector('#ozRoot .ozRowBtn[data-a=ozTheme]')||{}).innerText||'')),'satır koyu temayı söyler');
- await p.click('#ozRoot .ozRowBtn[data-a=ozTheme]').catch(()=>fails.push('Görünüm tıklanamadı (2)'));await p.waitForTimeout(900);
+ ok(await p.evaluate(()=>((document.querySelector('#ozRoot .ozThSel [aria-pressed=true]')||{}).textContent||'')==='Koyu'),'seçici koyu temayı gösterir');
+ await p.click('#ozRoot .ozThSel [data-a=ozTheme]').catch(()=>fails.push('Görünüm tıklanamadı (2)'));await p.waitForTimeout(900);
  ok(await bg()==='rgb(246, 240, 227)','Görünüm → krem geri: '+await bg());
  // AA: etkin zemin (üst öğe zeminleri karıştırılarak)
  const AA=sels=>p.evaluate(sels=>{
