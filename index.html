@@ -1665,6 +1665,29 @@ html[data-theme="light"] .pfxAdm3 .pfxPN .pnItem{color:#4b5563}
 .pfxAdm3 .pfxPN .pnItem.on{background:var(--ad-on);color:var(--ad-on-ink)}
 .pfxAdm3 .pfxPN .pnBdg{background:#C4492F;color:#fff}
 /*P23-BITIS*/
+/*P24-BASLA*/ /* Paket 24-B: İşimi Çöz Hesabım ortak şablonu (yalnız görünüm). Hesabım zemini tercihten bağımsız (AJ2); kart renkleri Paket 22 ile aynı anlam. */
+html:root .hmAcc .hmAccMe .ed{height:auto;min-height:44px}
+html:root .hmAcc .hmRoles{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+html:root .hmAcc .hmRoleT{padding:3px 9px;border-radius:99px;font-size:12px;font-weight:800;color:#fff;border:1.5px solid transparent}
+html:root .hmAcc .hmRoleT.sl{background:#1F6B45}html:root .hmAcc .hmRoleT.bz{background:#9A6410}html:root .hmAcc .hmRoleT.cr{background:#2F6FA8}html:root .hmAcc .hmRoleT.ad{background:transparent;border-color:#6F8FD0;color:#F6ECDC}
+html:root .hmAcc .hmAccQ{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 6px}
+html:root .hmAcc .hmAccQ button{min-height:84px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border-radius:18px;border:1px solid #54422D;background:#3A2D20;color:#F6ECDC;font:inherit;font-weight:800;font-size:15px;cursor:pointer}
+html:root .hmAcc .hmAccQ svg{width:24px;height:24px;color:#F0B35A}
+html:root .hmAcc .hmAccWs{width:100%;min-height:68px;display:flex;align-items:center;gap:12px;margin:0 0 10px;padding:10px 14px;border-radius:16px;border:2px solid transparent;color:#fff;font:inherit;text-align:left;cursor:pointer}
+html:root .hmAcc .hmAccWs .ic{flex:0 0 auto;display:grid;place-items:center}html:root .hmAcc .hmAccWs .ic svg{width:22px;height:22px}
+html:root .hmAcc .hmAccWs .tx{flex:1;min-width:0;display:flex;flex-direction:column}html:root .hmAcc .hmAccWs b{font-size:16px}
+html:root .hmAcc .hmAccWs small{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}html:root .hmAcc .hmAccWs .ch{font-size:22px}
+html:root .hmAcc .hmAccWs.sl{background:#1F6B45}html:root .hmAcc .hmAccWs.bz{background:#9A6410}html:root .hmAcc .hmAccWs.cr{background:#2F6FA8}
+html:root .hmAcc .hmAccWs.ad{background:#3A2D20;border-color:#6F8FD0;color:#F6ECDC}html:root .hmAcc .hmAccWs.ad small{color:#CDBB9F}
+html:root .hmAcc .hmAccWsN{min-width:26px;height:26px;padding:0 7px;border-radius:13px;background:#C4492F;color:#fff;font:900 12.5px/26px system-ui,sans-serif;text-align:center}
+html:root .hmAcc .hmAccEnd{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin:14px 0 6px}
+html:root .hmAcc .hmAccTh{display:flex;align-items:center;gap:4px;padding:4px;border-radius:14px;border:1px solid #54422D;background:#3A2D20}
+html:root .hmAcc .hmAccTh .l{padding:0 6px;font-size:12.5px;font-weight:800;color:#CDBB9F}
+html:root .hmAcc .hmAccTh button{min-height:44px;padding:0 14px;border:0;border-radius:10px;background:transparent;color:#F6ECDC;font:inherit;font-weight:800;cursor:pointer}
+html:root .hmAcc .hmAccTh button.on{background:#F7D24A;color:#1F1A12}
+html:root .hmAcc .hmAccOut2{min-height:44px;display:inline-flex;align-items:center;gap:6px;padding:0 14px;border-radius:12px;border:2px solid #E5735A;background:transparent;color:#F08A73;font:inherit;font-weight:800;cursor:pointer}
+html:root .hmAcc .hmAccOut2 svg{width:16px;height:16px}
+/*P24-BITIS*/
 /*K21-BASLA*/
 /*OZ AJ1 P1 renk jetonları (koyu = önceki hex değerleri, birebir). Çekirdek: rol bazlı (T metin, L çizgi, B zemin); --oz-x<HEX><ROL> tek kullanımlık ara tonlar. Krem tema bu değerleri body.ozWorld.ozLt altında değiştirir.*/
 html:root{--oz-bg:#2B2118;--oz-card:#3A2D20;--oz-card2:#4A3A27;--oz-line:#54422D;--oz-line2:#6B5A44;--oz-text:#F6ECDC;--oz-muted:#CDBB9F;--oz-muted2:#A99983;--oz-acc:#28804F;--oz-acc2:#4FB67F;--oz-acc2L:#4FB67F;--oz-acc2B:#4FB67F;--oz-sun:#F7D24A;--oz-sunL:#F7D24A;--oz-sunB:#F7D24A;--oz-bad:#E5735A;--oz-badL:#E5735A;--oz-ink:#1F3B2A;--oz-warn:#E0A84A;--oz-x1E1712B:#1E1712;--oz-x1E6B3ET:#1E6B3E;--oz-x1F160ET:#1F160E;--oz-x1F1A12B:#1F1A12;--oz-x1F3B2AB:#1F3B2A;--oz-x1F6F43B:#1F6F43;--oz-x241B13B:#241B13;--oz-x2A2017B:#2A2017;--oz-x2B2118L:#2B2118;--oz-x2B2118T:#2B2118;--oz-x2E6B47L:#2E6B47;--oz-x2F2419B:#2F2419;--oz-x2F241AB:#2F241A;--oz-x2F2519B:#2F2519;--oz-x2F3A26B:#2F3A26;--oz-x2F6FA3B:#2F6FA3;--oz-x352A1FB:#352A1F;--oz-x3A2D20L:#3A2D20;--oz-x463622B:#463622;--oz-x46372AB:#46372A;--oz-x4A3A27L:#4A3A27;--oz-x4E95D0B:#4E95D0;--oz-x4E95D0L:#4E95D0;--oz-x5E4E3AT:#5E4E3A;--oz-x5E5348B:#5E5348;--oz-x5FCB8AT:#5FCB8A;--oz-x6A3A2EL:#6A3A2E;--oz-x6B4F2AB:#6B4F2A;--oz-x6B5739L:#6B5739;--oz-x6B5A44T:#6B5A44;--oz-x6E5C45T:#6E5C45;--oz-x7A3A2CL:#7A3A2C;--oz-x7A4E00T:#7A4E00;--oz-x7A5BA6B:#7A5BA6;--oz-x7FD3A2T:#7FD3A2;--oz-x8A6B3EL:#8A6B3E;--oz-x8A7A60T:#8A7A60;--oz-x8C6B2AL:#8C6B2A;--oz-x8E3B2EB:#8E3B2E;--oz-x8E3B2EL:#8E3B2E;--oz-x8E7E66T:#8E7E66;--oz-x9BE0B8T:#9BE0B8;--oz-x9BE3B9T:#9BE3B9;--oz-x9FD0F5T:#9FD0F5;--oz-xA8977CT:#A8977C;--oz-xA8987FT:#A8987F;--oz-xB07800T:#B07800;--oz-xB5482FB:#B5482F;--oz-xB7791FB:#B7791F;--oz-xB8A68AT:#B8A68A;--oz-xBDAE95B:#BDAE95;--oz-xBFAE92T:#BFAE92;--oz-xC7A23AL:#C7A23A;--oz-xC9A33AB:#C9A33A;--oz-xC9A33AL:#C9A33A;--oz-xC9B79AB:#C9B79A;--oz-xCFC3B0B:#CFC3B0;--oz-xCFE7C2T:#CFE7C2;--oz-xD8C8AET:#D8C8AE;--oz-xD9694AB:#D9694A;--oz-xD9694AL:#D9694A;--oz-xD9A79FT:#D9A79F;--oz-xD9C9AET:#D9C9AE;--oz-xE0A84AB:#E0A84A;--oz-xE0A84AL:#E0A84A;--oz-xE6D9C3B:#E6D9C3;--oz-xE6D9C3L:#E6D9C3;--oz-xE8685DL:#E8685D;--oz-xE8685DT:#E8685D;--oz-xE8A08ET:#E8A08E;--oz-xE8DCC6T:#E8DCC6;--oz-xE9DCC4T:#E9DCC4;--oz-xEADCC4T:#EADCC4;--oz-xEDE5D8B:#EDE5D8;--oz-xF0A792T:#F0A792;--oz-xF1CC85T:#F1CC85;--oz-xF2A08CT:#F2A08C;--oz-xF2B431B:#F2B431;--oz-xF2B431L:#F2B431;--oz-xF2B431T:#F2B431;--oz-xF2C14EB:#F2C14E;--oz-xF2C14ET:#F2C14E;--oz-xF3A893T:#F3A893;--oz-xF3B6A6T:#F3B6A6;--oz-xF3D27AT:#F3D27A;--oz-xF3EBDDB:#F3EBDD;--oz-xF7B979T:#F7B979;--oz-xFFF6E6T:#FFF6E6;--oz-xFFFDF8B:#FFFDF8;--oz-xFFFFFFB:#FFFFFF}
@@ -3805,7 +3828,7 @@ function hmGo(key){
 function hmSoon(){ try{ v2Toast('Özüne Dön çok yakında!'); }catch(e){} }
 /*K21-JS-BASLA*/ /* Özüne Dön: modül tembel yüklenir; pazar kapalıysa (veya hata olursa) yalnızca hmSoon() gösterilir. */
 var OZ_LOADING=null, OZ_TAP=false;
-function ozLoad(){ if(window.OZ&&window.OZ.__v) return Promise.resolve(window.OZ); if(OZ_LOADING) return OZ_LOADING; OZ_LOADING=new Promise(function(res,rej){ var s=document.createElement('script'); s.src='./oz-market-v1.js?v=17'; s.async=true; s.onload=function(){ if(window.OZ&&window.OZ.__v) res(window.OZ); else { OZ_LOADING=null; rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); } }; s.onerror=function(){ OZ_LOADING=null; s.remove(); rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); }; document.head.appendChild(s); }); return OZ_LOADING; }
+function ozLoad(){ if(window.OZ&&window.OZ.__v) return Promise.resolve(window.OZ); if(OZ_LOADING) return OZ_LOADING; OZ_LOADING=new Promise(function(res,rej){ var s=document.createElement('script'); s.src='./oz-market-v1.js?v=18'; s.async=true; s.onload=function(){ if(window.OZ&&window.OZ.__v) res(window.OZ); else { OZ_LOADING=null; rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); } }; s.onerror=function(){ OZ_LOADING=null; s.remove(); rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); }; document.head.appendChild(s); }); return OZ_LOADING; }
 window.ozLoad=ozLoad;
 function ozTap(){ if(OZ_TAP) return; OZ_TAP=true; ozLoad().then(function(oz){ return oz.tryEnter(); }).then(function(ok){ if(!ok) hmSoon(); }).catch(function(){ hmSoon(); }).then(function(){ OZ_TAP=false; }); }
 /* P10: iyzico (sandbox) ödeme dönüşü ?oz_pay=<ödeme id> → parametre adres çubuğundan silinir, Özüne Dön açılıp ödeme sonucu gösterilir */
@@ -3862,10 +3885,32 @@ function hmAccountHtml(u){
   var name=String(md.full_name||md.name||'').trim();
   var mail=String(u.email||'').trim();
   var ini=(name||mail||'?').charAt(0).toLocaleUpperCase('tr');
+  /* P24: ortak Hesabım şablonu (Paket 22 ile aynı yapı): profil + rol etiketleri, iki büyük kutu, çalışma alanlarım (yalnız bilinen roller:
+     Özüne Dön satıcı kaydı ve Yemek whoami yalnız modül daha önce okuduysa bellekten; yönetim PF.roles), tek kartta hesap listesi, tema seçici,
+     küçük çıkış. Yeni sorgu yok; rozet yalnız zaten okunan sayıdan (PF._admN). hmAcc anahtarları aynı, yeni anahtarlar yalnız ws_*. */
+  var who=null,ms;try{ who=typeof window.foodWhoCached==='function'?window.foodWhoCached():null; }catch(e){}
+  try{ ms=window.OZ&&typeof window.OZ.mySellerCached==='function'?window.OZ.mySellerCached():undefined; }catch(e){}
+  var adm=!!(window.PF&&window.PF.roles&&window.PF.roles.is_admin),vs=(who&&who.venues)||[],cr=who&&who.courier;
+  var SST={draft:'Başvuru taslağı',pending:'İnceleniyor',in_review:'İnceleniyor',approved:'Onaylı',active:'Onaylı',rejected:'Reddedildi',suspended:'Askıda'};
+  var own=vs.some(function(v){return v.role==='owner'});
+  var tags=(ms?'<span class="hmRoleT sl">Satıcı · '+E(SST[ms.status]||'Başvuru')+'</span>':'')+(vs.length?'<span class="hmRoleT bz">'+(own?'İşletme sahibi':'İşletme ekibi')+'</span>':'')+(cr?'<span class="hmRoleT cr">Kurye</span>':'')+(adm?'<span class="hmRoleT ad">Yönetici</span>':'');
+  var WI={store:'<path d="M4 9l1.5-5h13L20 9M4 9h16v11H4zM9 20v-6h6v6"/>',bike:'<circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M6 17l4-8h5l3 8M10 9h-2"/>',shield:'<path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/>',leaf:'<path d="M5 19c0-8 6-14 15-14 0 9-6 15-14 15zM5 19l7-7"/>'};
+  var ws=function(k,cls,ic,t,sub,n){return '<button type="button" class="hmAccWs '+cls+'" data-k="'+k+'" onclick="hmAcc(this.dataset.k)"><span class="ic">'+hmAccIc(WI[ic])+'</span><span class="tx"><b>'+t+'</b><small>'+E(sub)+'</small></span>'+(n>0?'<span class="hmAccWsN" aria-label="'+n+' bekleyen iş">'+(n>99?'99+':n)+'</span>':'')+'<span class="ch" aria-hidden="true">›</span></button>'};
+  var an=window.PF&&typeof window.PF._admN==='number'?window.PF._admN:0;
+  var wsH=(ms?ws('ws_seller','sl','leaf','Satıcı paneli','Özüne Dön · '+(SST[ms.status]||'Mağazanı yönet')):'')+
+    (vs.length?ws('ws_biz','bz','store','İşletmem','Yemek · '+(vs.length>1?vs.length+' işletme':(vs[0].name||'Restoranını yönet'))):'')+
+    (cr?ws('ws_courier','cr','bike','Kurye','Yemek · Kurye paneli'):'')+
+    (adm?ws('ws_admin','ad','shield','Yönetim',an>0?an+' iş seni bekliyor':'Platform yönetim paneli',an):'');
+  var th=hmThemeGet()==='dark';
   return '<div class="hmAcc"><div class="hmAccT">Hesabım</div>'+
-    '<div class="hmAccMe"><span class="av">'+E(ini)+'</span><span class="tx"><b>'+E(name||'Hesabım')+'</b><small>'+E(mail)+'</small></span><button type="button" class="ed" data-k="edit" onclick="hmAcc(this.dataset.k)">Düzenle</button></div>'+
-    '<div class="hmAccL hmAccOut">'+row('out','Çıkış yap',false,'out')+'</div><div class="hmAccH">Hesabım</div><div class="hmAccL">'+row('orders','Siparişlerim')+row('favs','Favorilerim')+row('msgs','Mesajlarım')+row('mylist','İlanlarım',true)+row('addr','Adreslerim')+row('bell','Bildirimler')+'</div>'+
-    legal+other+'</div>';
+    '<div class="hmAccMe"><span class="av">'+E(ini)+'</span><span class="tx"><b>'+E(name||'Hesabım')+'</b><small>'+E(mail)+'</small>'+(tags?'<span class="hmRoles">'+tags+'</span>':'')+'</span><button type="button" class="ed" data-k="edit" onclick="hmAcc(this.dataset.k)">Düzenle</button></div>'+
+    '<div class="hmAccQ"><button type="button" data-k="orders" onclick="hmAcc(this.dataset.k)">'+hmAccIc(IC.orders)+'<b>Siparişlerim</b></button><button type="button" data-k="favs" onclick="hmAcc(this.dataset.k)">'+hmAccIc(IC.favs)+'<b>Favorilerim</b></button></div>'+
+    (wsH?'<div class="hmAccH">ÇALIŞMA ALANLARIM</div>'+wsH:'')+
+    '<div class="hmAccH">HESAP</div><div class="hmAccL">'+row('msgs','Mesajlarım')+row('mylist','İlanlarım',true)+row('addr','Adreslerim')+row('bell','Bildirimler')+row('help','Yardım ve destek')+row('privacy','Gizlilik ve KVKK')+row('terms','Kullanım şartları')+row('more','Diğer ayarlar')+'</div>'+
+    '<div class="hmAccEnd"><div class="hmAccTh" role="group" aria-label="Görünüm (ana ekran ve Özüne Dön)"><span class="l">Görünüm</span>'+
+      '<button type="button"'+(!th?' class="on" aria-pressed="true"':' data-k="theme" onclick="hmAcc(this.dataset.k)" aria-pressed="false"')+'>Açık (krem)</button>'+
+      '<button type="button"'+(th?' class="on" aria-pressed="true"':' data-k="theme" onclick="hmAcc(this.dataset.k)" aria-pressed="false"')+'>Koyu</button></div>'+
+    '<button type="button" class="hmAccOut2" data-k="out" onclick="hmAcc(this.dataset.k)">'+hmAccIc(IC.out)+'<span>Çıkış yap</span></button></div></div>';
 }
 function hmAcc(k){
   var s=null; try{ s=getAuthSession(); }catch(e){}
@@ -3888,6 +3933,10 @@ function hmAcc(k){
       case 'more': return openAppDrawer();
       case 'edit': location.href='./marketplace-profile.html'; return;
       case 'out': return logoutUser();
+      case 'ws_seller': if(guestStop()) return; return ozLoad().then(function(oz){ return oz.go('seller',{}); }).catch(function(){ v2Toast('Satıcı paneli şu an açılamadı.'); });
+      case 'ws_biz': if(guestStop()) return; return showFoodBusiness();
+      case 'ws_courier': if(guestStop()) return; return showFoodCourier();
+      case 'ws_admin': if(guestStop()) return; return pfCall('openAdmin');
       case 'theme': try{ localStorage.setItem('isimi_oz_theme',hmThemeGet()==='dark'?'light':'dark'); }catch(e){} hmThemeSync(); showAccount(); try{ v2Toast(hmThemeGet()==='dark'?'Koyu görünüm seçildi':'Açık (krem) görünüm seçildi'); }catch(e){} return;
     }
   }catch(e){ try{ v2Toast('Bu bölüm şu an açılamadı.'); }catch(e2){} }
@@ -11125,6 +11174,6 @@ for(const k of ["showGayrimenkulDetail","showOtomobilDetail"]){const f=window[k]
 </script>
 </body>
 <script src="./a35-seller-identity.js?v=3"></script>
-<script src="./a7-food-v1.js?v=9"></script>
+<script src="./a7-food-v1.js?v=10"></script>
 <script src="./pf-platform-v1.js?v=6"></script>
 </html>

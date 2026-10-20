@@ -1704,6 +1704,8 @@ function draw(){
   try{var p=v(t.a||{},SCR);if(p&&p.then)p.then(back2,function(e){if(e&&e.auth&&!logged()){paint(loginWall());return}paint(errBox(e))});else back2()}catch(e){paint(errBox(e))}
 }
 OZ.go=function(k,a){go(k,a)};
+/* P24: İşimi Çöz Hesabım için salt okunur — yalnız zaten yüklenmiş ayarlardan satıcı kaydı (yüklenmediyse undefined; sorgu yok) */
+OZ.mySellerCached=function(){return ST.set?(ST.set.my_seller||null):undefined};
 function loginWall(text){return empty(ico('user',34),'Giriş yapman gerekiyor',text||'Bu bölümü görmek için hesabına giriş yap.','<button type="button" class="ozBtn pri" data-a="login">Giriş yap</button>')}
 function topHtml(){
   return '<button type="button" class="ozIc" data-a="back" aria-label="Geri">'+ico('back')+'</button>'+

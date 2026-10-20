@@ -114,12 +114,14 @@ const {chromium,open}=require('./harness.js');
  ['food','listings','services','acc'].forEach(k=>ok(S.krem[k]===S.dark[k],'kapsam: '+k+' tercihten bağımsız: '+S.krem[k]+' / '+S.dark[k]));
  // Hesabım › Görünüm satırı aynı anahtarı çevirir
  await setPref(null);await p.evaluate(()=>{showHome();showAccount()});await p.waitForTimeout(700);
- const row=()=>p.evaluate(()=>{const b=document.querySelector('#app .hmAccR[data-k=theme]');return b?b.innerText.replace(/\s+/g,' ').trim():null});
- ok(/Görünüm: Açık \(krem\)/.test(await row()||''),'Hesabım › "Görünüm: Açık (krem)" satırı: '+await row());
- await p.click('#app .hmAccR[data-k=theme]').catch(()=>fails.push('Görünüm satırı tıklanamadı'));await p.waitForTimeout(600);
+ // Paket 24 (bilinçli değişiklik): "Görünüm" satırı yerine Açık/Koyu seçici (aynı 'theme' anahtarı; seçili olan basılı). Giriş yapmamış görünümde satır aynen.
+ const row=()=>p.evaluate(()=>{const g=document.querySelector('#app .hmAccTh');if(g){const on=g.querySelector('[aria-pressed=true]');return 'Görünüm: '+(on?on.textContent:'')}const b=document.querySelector('#app .hmAccR[data-k=theme]');return b?b.innerText.replace(/\s+/g,' ').trim():null});
+ const thSel='#app .hmAccTh [data-k=theme], #app .hmAccR[data-k=theme]';
+ ok(/Görünüm: Açık \(krem\)/.test(await row()||''),'Hesabım › Görünüm: Açık (krem) seçili: '+await row());
+ await p.click(thSel).catch(()=>fails.push('Görünüm tıklanamadı'));await p.waitForTimeout(600);
  ok(await p.evaluate(()=>localStorage.getItem('isimi_oz_theme'))==='dark'&&/Görünüm: Koyu/.test(await row()||''),'Görünüm → koyu (isimi_oz_theme=dark): '+await row());
  await home();L=await look();ok(L.attr==='dark'&&L.bg==='rgb(43, 33, 24)','koyu seçimden sonra ana ekran koyu: '+JSON.stringify(L));
- await p.evaluate(()=>showAccount());await p.waitForTimeout(500);await p.click('#app .hmAccR[data-k=theme]').catch(()=>fails.push('Görünüm satırı tıklanamadı (2)'));await p.waitForTimeout(600);
+ await p.evaluate(()=>showAccount());await p.waitForTimeout(500);await p.click(thSel).catch(()=>fails.push('Görünüm tıklanamadı (2)'));await p.waitForTimeout(600);
  await home();L=await look();ok(await p.evaluate(()=>localStorage.getItem('isimi_oz_theme'))==='light'&&L.attr==='light'&&L.bg==='rgb(246, 240, 227)','Görünüm → krem geri: '+JSON.stringify(L));
  ok(!st.errors.length,'sayfa hatası: '+st.errors.join(' | '));
  await br.close();

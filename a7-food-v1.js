@@ -288,6 +288,8 @@ function stars(n){n=+n||0;return '<span class="fdStar">★ '+n.toFixed(1).replac
 
 /* whoami önbelleği */
 let WHO=null,WHO_AT=0;
+/* P24: İşimi Çöz Hesabım için salt okunur — yalnız bellekteki son whoami (yoksa null; sorgu yok) */
+window.foodWhoCached=function(){return WHO};
 async function whoami(force){if(!force&&WHO&&Date.now()-WHO_AT<60000)return WHO;WHO=await RPC('food_whoami');WHO_AT=Date.now();return WHO}
 
 /* ====================== Stiller (yalnızca .fd kapsamı) ====================== */
