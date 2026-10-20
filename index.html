@@ -1687,6 +1687,10 @@ html:root .hmAcc .hmAccTh button{min-height:44px;padding:0 14px;border:0;border-
 html:root .hmAcc .hmAccTh button.on{background:#F7D24A;color:#1F1A12}
 html:root .hmAcc .hmAccOut2{min-height:44px;display:inline-flex;align-items:center;gap:6px;padding:0 14px;border-radius:12px;border:2px solid #E5735A;background:transparent;color:#F08A73;font:inherit;font-weight:800;cursor:pointer}
 html:root .hmAcc .hmAccOut2 svg{width:16px;height:16px}
+/* P24b: rol kartları arka planda gelene kadar tek kart yüksekliğinde sakin yer tutucu (zıplama yok) */
+/* rol etiketleri tek satır (gerekirse yatay kaydırılır); giriş yapmış kullanıcıda yeri hep ayrılı → veri gelince profil kartı uzamaz */
+html:root .hmAcc .hmRoles{flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none;min-height:24px}html:root .hmAcc .hmRoles::-webkit-scrollbar{display:none}html:root .hmAcc .hmRoleT{flex:none;white-space:nowrap}
+html:root .hmAcc .hmAccWsPh{height:68px;margin:0 0 10px;border-radius:16px;border:1px dashed #54422D;background:#3A2D20;opacity:.55}
 /*P24-BITIS*/
 /*K21-BASLA*/
 /*OZ AJ1 P1 renk jetonları (koyu = önceki hex değerleri, birebir). Çekirdek: rol bazlı (T metin, L çizgi, B zemin); --oz-x<HEX><ROL> tek kullanımlık ara tonlar. Krem tema bu değerleri body.ozWorld.ozLt altında değiştirir.*/
@@ -3852,6 +3856,51 @@ function hmShortcut(k){
 }
 /*K3-BASLA*/
 function hmAccIc(d){ return '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">'+d+'</svg>'; }
+/* P24b: Hesabım rol kartları — yalnız UYGULAMANIN ZATEN KULLANDIĞI okuma çağrıları: pf_my_roles (PF.roles; Yönetim paneli de aynısını çağırır),
+   Yemek whoami (food_whoami; foodWhoami), Özüne Dön oz_public_settings (my_seller; Özüne Dön loadSettings ile aynı çağrı). Oturum başına bir kez;
+   kullanıcı değişince (çıkış/giriş) sıfırlanır. Hata → sessizce eski görünüm (kart yok; Diğer ayarlar'dan erişim aynen). */
+var HM_ROLES={uid:null,state:null};
+function hmRolesLoad(u){
+  if(!u||!u.id){ HM_ROLES={uid:null,state:null}; return; }
+  if(HM_ROLES.uid!==u.id) HM_ROLES={uid:u.id,state:null};
+  if(HM_ROLES.state) return;
+  var R=HM_ROLES;R.state='loading';var J=[],pf=window.PF&&typeof window.PF.rpc==='function'?window.PF:null;
+  if(pf&&!pf.roles) J.push(pf.rpc('pf_my_roles',{}).then(function(r){ if(r&&typeof r==='object') pf.roles=r; },function(){}));
+  if(typeof window.foodWhoami==='function') J.push(window.foodWhoami(true).then(function(w){ R.who=w&&typeof w==='object'?w:null; },function(){ R.who=null; }));
+  if(pf) J.push(pf.rpc('oz_public_settings',{},{auth:false}).then(function(x){ R.ms=x&&typeof x==='object'?(x.my_seller||null):null; },function(){ R.ms=null; }));
+  Promise.all(J).then(function(){ if(HM_ROLES!==R) return; R.state='done'; hmWsFill(); });
+}
+function hmRoleBits(u){
+  /* rozet yalnız zaten okunan sayıdan (PF._admN); yönetim kartı yalnız PF.roles.is_admin */
+  var E=escapeHTML,R=HM_ROLES.uid===(u&&u.id)?HM_ROLES:{},who=R.who,ms=R.ms;
+  if(who===undefined){ who=null; try{ who=typeof window.foodWhoCached==='function'?window.foodWhoCached():null; }catch(e){} }
+  if(ms===undefined){ try{ ms=window.OZ&&typeof window.OZ.mySellerCached==='function'?window.OZ.mySellerCached():undefined; }catch(e){} }
+  var adm=!!(window.PF&&window.PF.roles&&window.PF.roles.is_admin),vs=(who&&who.venues)||[],cr=who&&who.courier;
+  var SST={draft:'Başvuru taslağı',pending:'İnceleniyor',in_review:'İnceleniyor',approved:'Onaylı',active:'Onaylı',rejected:'Reddedildi',suspended:'Askıda'};
+  var own=vs.some(function(v){return v.role==='owner'});
+  var tags=(ms?'<span class="hmRoleT sl">Satıcı · '+E(SST[ms.status]||'Başvuru')+'</span>':'')+(vs.length?'<span class="hmRoleT bz">'+(own?'İşletme sahibi':'İşletme ekibi')+'</span>':'')+(cr?'<span class="hmRoleT cr">Kurye</span>':'')+(adm?'<span class="hmRoleT ad">Yönetici</span>':'');
+  var WI={store:'<path d="M4 9l1.5-5h13L20 9M4 9h16v11H4zM9 20v-6h6v6"/>',bike:'<circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M6 17l4-8h5l3 8M10 9h-2"/>',shield:'<path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/>',leaf:'<path d="M5 19c0-8 6-14 15-14 0 9-6 15-14 15zM5 19l7-7"/>'};
+  var ws=function(k,cls,ic,t,sub,n){return '<button type="button" class="hmAccWs '+cls+'" data-k="'+k+'" onclick="hmAcc(this.dataset.k)"><span class="ic">'+hmAccIc(WI[ic])+'</span><span class="tx"><b>'+t+'</b><small>'+E(sub)+'</small></span>'+(n>0?'<span class="hmAccWsN" aria-label="'+n+' bekleyen iş">'+(n>99?'99+':n)+'</span>':'')+'<span class="ch" aria-hidden="true">›</span></button>'};
+  var an=window.PF&&typeof window.PF._admN==='number'?window.PF._admN:0;
+  var wsH=(ms?ws('ws_seller','sl','leaf','Satıcı paneli','Özüne Dön · '+(SST[ms.status]||'Mağazanı yönet')):'')+
+    (vs.length?ws('ws_biz','bz','store','İşletmem','Yemek · '+(vs.length>1?vs.length+' işletme':(vs[0].name||'Restoranını yönet'))):'')+
+    (cr?ws('ws_courier','cr','bike','Kurye','Yemek · Kurye paneli'):'')+
+    (adm?ws('ws_admin','ad','shield','Yönetim',an>0?an+' iş seni bekliyor':'Platform yönetim paneli',an):'');
+  return {tags:tags,ws:wsH,loading:HM_ROLES.uid===(u&&u.id)&&HM_ROLES.state==='loading'};
+}
+/* yanıt gelince yerinde güncelle: yükseklik yumuşak geçişle (zıplama yok; hareket azaltma tercihinde anında) */
+function hmWsFill(){
+  try{
+    var box=document.querySelector('#app .hmAcc #hmAccWs'),rl=document.querySelector('#app .hmAcc #hmRoles');if(!box) return;
+    var s=getAuthSession(),u=s&&s.user;if(!u||HM_ROLES.uid!==u.id) return;
+    var rb=hmRoleBits(u);if(rl){ rl.innerHTML=rb.tags; }
+    var h0=box.offsetHeight;box.innerHTML=rb.ws?'<div class="hmAccH">ÇALIŞMA ALANLARIM</div>'+rb.ws:'';box.classList.remove('ld');
+    var red=false;try{ red=matchMedia('(prefers-reduced-motion:reduce)').matches; }catch(e){}
+    var h1=box.scrollHeight;if(red||h0===h1) return;
+    box.style.height=h0+'px';box.style.overflow='hidden';void box.offsetHeight;box.style.transition='height .25s ease';box.style.height=h1+'px';
+    var done=function(){ box.style.height='';box.style.overflow='';box.style.transition=''; };box.addEventListener('transitionend',done,{once:true});setTimeout(done,400);
+  }catch(e){}
+}
 function hmAccountHtml(u){
   var E=escapeHTML;
   var IC={
@@ -3885,27 +3934,14 @@ function hmAccountHtml(u){
   var name=String(md.full_name||md.name||'').trim();
   var mail=String(u.email||'').trim();
   var ini=(name||mail||'?').charAt(0).toLocaleUpperCase('tr');
-  /* P24: ortak Hesabım şablonu (Paket 22 ile aynı yapı): profil + rol etiketleri, iki büyük kutu, çalışma alanlarım (yalnız bilinen roller:
-     Özüne Dön satıcı kaydı ve Yemek whoami yalnız modül daha önce okuduysa bellekten; yönetim PF.roles), tek kartta hesap listesi, tema seçici,
-     küçük çıkış. Yeni sorgu yok; rozet yalnız zaten okunan sayıdan (PF._admN). hmAcc anahtarları aynı, yeni anahtarlar yalnız ws_*. */
-  var who=null,ms;try{ who=typeof window.foodWhoCached==='function'?window.foodWhoCached():null; }catch(e){}
-  try{ ms=window.OZ&&typeof window.OZ.mySellerCached==='function'?window.OZ.mySellerCached():undefined; }catch(e){}
-  var adm=!!(window.PF&&window.PF.roles&&window.PF.roles.is_admin),vs=(who&&who.venues)||[],cr=who&&who.courier;
-  var SST={draft:'Başvuru taslağı',pending:'İnceleniyor',in_review:'İnceleniyor',approved:'Onaylı',active:'Onaylı',rejected:'Reddedildi',suspended:'Askıda'};
-  var own=vs.some(function(v){return v.role==='owner'});
-  var tags=(ms?'<span class="hmRoleT sl">Satıcı · '+E(SST[ms.status]||'Başvuru')+'</span>':'')+(vs.length?'<span class="hmRoleT bz">'+(own?'İşletme sahibi':'İşletme ekibi')+'</span>':'')+(cr?'<span class="hmRoleT cr">Kurye</span>':'')+(adm?'<span class="hmRoleT ad">Yönetici</span>':'');
-  var WI={store:'<path d="M4 9l1.5-5h13L20 9M4 9h16v11H4zM9 20v-6h6v6"/>',bike:'<circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M6 17l4-8h5l3 8M10 9h-2"/>',shield:'<path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/>',leaf:'<path d="M5 19c0-8 6-14 15-14 0 9-6 15-14 15zM5 19l7-7"/>'};
-  var ws=function(k,cls,ic,t,sub,n){return '<button type="button" class="hmAccWs '+cls+'" data-k="'+k+'" onclick="hmAcc(this.dataset.k)"><span class="ic">'+hmAccIc(WI[ic])+'</span><span class="tx"><b>'+t+'</b><small>'+E(sub)+'</small></span>'+(n>0?'<span class="hmAccWsN" aria-label="'+n+' bekleyen iş">'+(n>99?'99+':n)+'</span>':'')+'<span class="ch" aria-hidden="true">›</span></button>'};
-  var an=window.PF&&typeof window.PF._admN==='number'?window.PF._admN:0;
-  var wsH=(ms?ws('ws_seller','sl','leaf','Satıcı paneli','Özüne Dön · '+(SST[ms.status]||'Mağazanı yönet')):'')+
-    (vs.length?ws('ws_biz','bz','store','İşletmem','Yemek · '+(vs.length>1?vs.length+' işletme':(vs[0].name||'Restoranını yönet'))):'')+
-    (cr?ws('ws_courier','cr','bike','Kurye','Yemek · Kurye paneli'):'')+
-    (adm?ws('ws_admin','ad','shield','Yönetim',an>0?an+' iş seni bekliyor':'Platform yönetim paneli',an):'');
+  /* P24: ortak Hesabım şablonu (Paket 22 ile aynı yapı). P24b: rol etiketleri ve çalışma alanları hmRoleBits'ten; giriş yapmış kullanıcıda
+     mevcut okuma çağrıları arka planda (hmRolesLoad) — sayfa beklemez, kartlar gelince yerinde yumuşakça belirir. */
+  var rb=hmRoleBits(u);var tags=rb.tags,wsH=rb.ws;
   var th=hmThemeGet()==='dark';
   return '<div class="hmAcc"><div class="hmAccT">Hesabım</div>'+
-    '<div class="hmAccMe"><span class="av">'+E(ini)+'</span><span class="tx"><b>'+E(name||'Hesabım')+'</b><small>'+E(mail)+'</small>'+(tags?'<span class="hmRoles">'+tags+'</span>':'')+'</span><button type="button" class="ed" data-k="edit" onclick="hmAcc(this.dataset.k)">Düzenle</button></div>'+
+    '<div class="hmAccMe"><span class="av">'+E(ini)+'</span><span class="tx"><b>'+E(name||'Hesabım')+'</b><small>'+E(mail)+'</small>'+'<span class="hmRoles" id="hmRoles" aria-label="Rollerin">'+tags+'</span>'+'</span><button type="button" class="ed" data-k="edit" onclick="hmAcc(this.dataset.k)">Düzenle</button></div>'+
     '<div class="hmAccQ"><button type="button" data-k="orders" onclick="hmAcc(this.dataset.k)">'+hmAccIc(IC.orders)+'<b>Siparişlerim</b></button><button type="button" data-k="favs" onclick="hmAcc(this.dataset.k)">'+hmAccIc(IC.favs)+'<b>Favorilerim</b></button></div>'+
-    (wsH?'<div class="hmAccH">ÇALIŞMA ALANLARIM</div>'+wsH:'')+
+    '<div class="hmAccWsBox'+(rb.loading&&!wsH?' ld':'')+'" id="hmAccWs" aria-live="polite">'+(wsH?'<div class="hmAccH">ÇALIŞMA ALANLARIM</div>'+wsH:rb.loading?'<div class="hmAccH">ÇALIŞMA ALANLARIM</div><div class="hmAccWsPh" aria-hidden="true"></div>':'')+'</div>'+
     '<div class="hmAccH">HESAP</div><div class="hmAccL">'+row('msgs','Mesajlarım')+row('mylist','İlanlarım',true)+row('addr','Adreslerim')+row('bell','Bildirimler')+row('help','Yardım ve destek')+row('privacy','Gizlilik ve KVKK')+row('terms','Kullanım şartları')+row('more','Diğer ayarlar')+'</div>'+
     '<div class="hmAccEnd"><div class="hmAccTh" role="group" aria-label="Görünüm (ana ekran ve Özüne Dön)"><span class="l">Görünüm</span>'+
       '<button type="button"'+(!th?' class="on" aria-pressed="true"':' data-k="theme" onclick="hmAcc(this.dataset.k)" aria-pressed="false"')+'>Açık (krem)</button>'+
@@ -3953,7 +3989,9 @@ function showAccount(){
   var s=null; try{ s=getAuthSession(); }catch(e){}
   var u=(s&&s.user)||null;
   window.__hmAccState=!!u;
+  hmRolesLoad(u);
   app(hmAccountHtml(u));
+  if(u&&HM_ROLES.state==='done') hmWsFill();
 }
 /*K3-BITIS*/
 /*K3B-BASLA*/
@@ -11174,6 +11212,6 @@ for(const k of ["showGayrimenkulDetail","showOtomobilDetail"]){const f=window[k]
 </script>
 </body>
 <script src="./a35-seller-identity.js?v=3"></script>
-<script src="./a7-food-v1.js?v=10"></script>
+<script src="./a7-food-v1.js?v=11"></script>
 <script src="./pf-platform-v1.js?v=6"></script>
 </html>
