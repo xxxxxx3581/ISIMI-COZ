@@ -1654,7 +1654,7 @@ function back(){var V=hNav(),ce=V&&V.stack[V.idx];if(ce&&isOzEnt(ce)&&V.idx>0){h
    Platform (index.html) her ekranı V2_NAV.stack'e {v2:idx} durumuyla pushState eder; popstate'te önce açık pencereleri
    (.v2Sheet, çekmece, giriş modalı, .ozOv) kapatır, sonra kayıttaki fn'i çalıştırır. Özüne Dön ekranları bu yığına
    "oz:N" adlı kayıtlar olarak girer; fn, o anki NAV kopyasını geri yükler. Kök Özüne Dön kaydından geri → platform ana sayfası. */
-var HSEQ=0,HREST=false,HPEND=null;
+var HSEQ=0,HREST=false,HPEND=null,HY=null;
 function hNav(){var V=window.V2_NAV;return typeof window.v2NavPush==='function'&&V&&Array.isArray(V.stack)?V:null}
 function isOzEnt(e){return !!(e&&typeof e.name==='string'&&e.name.indexOf('oz:')===0&&e.name!=='oz:sheet')}
 function hSnap(){return NAV.map(function(x){var o={k:x.k,a:Object.assign({},x.a)};if(x.sy)o.sy=x.sy;return o})}
@@ -1664,6 +1664,9 @@ function hPush(rep){
   var ce=V.stack[V.idx];var seq=++HSEQ;
   if((rep&&isOzEnt(ce))||(ce&&ce.name==='oz:sheet'))V.replaceNext=true;   /* platform kaydı (ana sayfa) asla ezilmez */
   try{window.v2NavPush('oz:'+seq,hFn(hSnap(),isPre(),seq),[])}catch(e){}
+  /* P24: draw() sayfayı başa kaydırdıktan sonra kayıt açılır; önceki PLATFORM kaydının kaydırma konumu draw öncesi değerle yazılır
+     (yoksa İşimi Çöz ekranına geri dönüşte konum 0 olur). Özüne Dön kayıtları kendi konumunu (sy) taşır. */
+  if(HY!=null&&ce&&!isOzEnt(ce)&&ce.name!=='oz:sheet'&&V.stack[V.idx]!==ce)ce.scroll=HY;
 }
 function hSync(){var V=hNav();if(!V||HREST)return;var ce=V.stack[V.idx];if(isOzEnt(ce))ce.fn=hFn(hSnap(),isPre(),+ce.name.slice(3))}
 function hRestore(snap,pre,seq){
@@ -1691,7 +1694,7 @@ var PRE_OK={seller:1,sellerApply:1,sellerProduct:1};
 function isPre(){return D.body.classList.contains('ozPre')}
 function draw(){
   var t=cur();if(isPre()&&!PRE_OK[t.k]){NAV=[{k:'seller',a:{}}];t=cur()}
-  SCR++;closeSheet();fadeStop();ensureWorld();
+  HY=window.scrollY||0;SCR++;closeSheet();fadeStop();ensureWorld();
   try{window.scrollTo(0,0)}catch(e){}
   topSync();
   var v=VIEWS[t.k]||VIEWS.home;
