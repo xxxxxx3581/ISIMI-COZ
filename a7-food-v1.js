@@ -1805,13 +1805,13 @@ window.foodVenueSwitch=function(){
 };
 async function showFoodBusiness(venueId){FDW_TAB='';
   if(!A())return;const tok=newScreen();FDW_PANEL=1;FDW_BIZ=1;
-  render(bar('İşletme paneli','showFoodHome()')+skel('row',1)+skel('row',3));
-  let cur;try{cur=await bizContext(venueId)}catch(e){return render(bar('İşletme paneli','showFoodHome()')+errBox(e,'showFoodBusiness()'))}
+  render(bar('İşletme paneli','foodPanelBack()')+skel('row',1)+skel('row',3));
+  let cur;try{cur=await bizContext(venueId)}catch(e){return render(bar('İşletme paneli','foodPanelBack()')+errBox(e,'showFoodBusiness()'))}
   if(!alive(tok))return;if(!cur)return venueCreateForm();
   let v=null;try{v=(await Q('GET','food_venues?select=id,name,is_open,is_active,working_hours,delivery_mode,delivery_provider,prep_time_min&id=eq.'+cur.id))[0]}catch(e){}
   if(!alive(tok))return;BZ.venue=v||{id:cur.id,name:cur.name,is_open:false};BZ.offset=0;BZ.orders=[];
   const mgr=isMgr();const open=BZ.venue.is_open;
-  render(bar(BZ.venue.name,'showFoodHome()','<span class="fdLive" id="fdLive"></span>'+venueSwitchBtn()+bellBtn(),{owner:'İşletme sahibi',manager:'Yönetici',staff:'Personel'}[cur.role]||'')+
+  render(bar(BZ.venue.name,'foodPanelBack()','<span class="fdLive" id="fdLive"></span>'+venueSwitchBtn()+bellBtn(),{owner:'İşletme sahibi',manager:'Yönetici',staff:'Personel'}[cur.role]||'')+
     roleBar('business')+subnav(cur.id,'orders')+
     /* P21 "Bugün": üstte büyük açık/kapalı kartı (mantık aynı), altında 3 renkli sayaç; ikincil bağlantılar sayfa sonunda "Daha fazla" */
     '<div class="fdOpen fdOpenBig'+(open?' on':'')+'" id="fdOpenCard"><div class="tx"><b>'+(open?'Sipariş alıyorum':'Sipariş almıyorum')+'</b><small>'+(open&&v&&!openNow(v)&&v.is_active?'Açık ama şu an çalışma saati dışında':open?'Müşteriler sipariş verebilir':'Menün görünür, sipariş verilemez')+'</small></div>'+
@@ -2087,7 +2087,7 @@ window.foodCuisPick=function(b){const box=b.parentNode;const on=!b.classList.con
 window.foodNewVenue=function(){newScreen();FDW_PANEL=1;venueCreateForm(true)};
 function venueCreateForm(extra){
   const ds=(typeof DISTRICTS!=='undefined'?DISTRICTS:[]);
-  render(bar(extra?'Yeni işletme':'İşletmeni ekle','showFoodHome()')+(extra?'':roleBar('business'))+
+  render(bar(extra?'Yeni işletme':'İşletmeni ekle','foodPanelBack()')+(extra?'':roleBar('business'))+
     (extra?'':'<div class="fdTrackHero" style="text-align:center"><div style="font-size:40px">🏪</div><h2 style="margin-top:6px">Restoranını İşimi Çöz\'e taşı</h2><p>Birkaç dakikada kaydol, menünü ekle ve sipariş almaya başla.</p></div>')+
     /* P20: tek ekran, gruplu (İşletme / Konum / Mutfak ve sipariş türü); alan kimlikleri ve foodCreateVenue aynı */
     '<div class="fdCard fdForm"><span class="fdQuick">⏱ 3 dakikada hazır</span>'+
@@ -2377,13 +2377,13 @@ window.foodEarnings=function(){if(!CEARN)return;const sum=l=>M(l.reduce((n,d)=>n
     '<p class="fdMuted fdSmall" style="margin-top:12px">Kapıda tahsil ettiğin tutarlar kazançtan ayrıdır; restoranla/platformla mutabakat yapılır.</p>',{sheet:true});bindClose(w)};
 async function showFoodCourier(){FDW_TAB='';
   if(!A())return;const tok=newScreen();FDW_PANEL=1;
-  render(bar('Kurye','showFoodHome()')+roleBar('courier')+skel('row',3));
-  let w;try{w=await whoami(true)}catch(e){return render(bar('Kurye','showFoodHome()')+roleBar('courier')+errBox(e,'showFoodCourier()'))}
+  render(bar('Kurye','foodPanelBack()')+roleBar('courier')+skel('row',3));
+  let w;try{w=await whoami(true)}catch(e){return render(bar('Kurye','foodPanelBack()')+roleBar('courier')+errBox(e,'showFoodCourier()'))}
   if(!alive(tok))return;const c=w.courier;
   if(!c)return courierApplyForm(null);
   if(c.status==='pending'||c.status==='rejected')return courierApplication(tok,c);
-  if(c.status==='suspended')return render(bar('Kurye','showFoodHome()')+roleBar('courier')+'<div class="fdTrackHero bad"><div class="st"><span class="e">⛔</span><div><h2>Kurye hesabın askıda</h2><p>Detay için platform yönetimiyle iletişime geç.</p></div></div></div>');
-  render(bar('Kurye',"showFoodHome()",'<span class="fdLive" id="fdLive"></span>'+bellBtn(),c.display_name+(+c.rating_avg?' · ★ '+(+c.rating_avg).toFixed(1):''))+
+  if(c.status==='suspended')return render(bar('Kurye','foodPanelBack()')+roleBar('courier')+'<div class="fdTrackHero bad"><div class="st"><span class="e">⛔</span><div><h2>Kurye hesabın askıda</h2><p>Detay için platform yönetimiyle iletişime geç.</p></div></div></div>');
+  render(bar('Kurye',"foodPanelBack()",'<span class="fdLive" id="fdLive"></span>'+bellBtn(),c.display_name+(+c.rating_avg?' · ★ '+(+c.rating_avg).toFixed(1):''))+
     roleBar('courier')+
     '<div class="fdOpen'+(c.is_available?' on':'')+'"><div class="tx"><b>'+(c.is_available?'Müsaitsin':'Moladasın')+'</b><small>'+(c.is_available?'Yeni teslimatları görüyorsun · konumun paylaşılıyor':'Teslimat almak için müsait ol')+'</small></div>'+sw('crAv',c.is_available,'foodCourierAvail(this)')+'</div>'+
     pushSlot('courier')+(pfOn()?'<div class="fdRows" style="margin-bottom:10px">'+row('📄','Kurye belgelerim','Ehliyet, ruhsat ve diğer belgeler','PF.openDocuments(\'courier\',\''+E(UID())+'\',\'Kurye belgelerim\')')+'</div>':'')+'<div class="fdKpi" id="crKpi"></div><div id="crGps"></div><div id="crMap"></div><div id="crActive"></div><div id="crPoolH"></div><div id="crPool">'+skel('row',1)+'</div><div id="crHist"></div>');
@@ -2544,7 +2544,7 @@ window.foodCourierComplete=async function(id,btn){
 /* ====================== Kurye başvurusu (DEMO iş akışı) ====================== */
 function courierApplyForm(prev){
   if(pfOn())PF.legalList().then(list=>{const el=document.getElementById('crCons');if(el)el.innerHTML=PF.consentChecklist(list,'courier_application','courier')}).catch(()=>{});
-  render(bar(prev?'Tekrar başvur':'Kurye ol','showFoodHome()')+roleBar('courier')+
+  render(bar(prev?'Tekrar başvur':'Kurye ol','foodPanelBack()')+roleBar('courier')+
     (prev?'':'<div class="fdTrackHero" style="text-align:center"><div style="font-size:40px">🛵</div><h2 style="margin-top:6px">Kendi saatlerinde teslimat yap</h2><p>Başvur, incelensin, onaylanınca müsait olduğunda yakınındaki teslimatları al.</p></div>')+
     '<div class="fdCard" style="margin-bottom:12px"><ol class="fdApply"><li class="cur"><i>1</i><div><b>Başvuru</b><small>Ad, telefon ve araç bilgisi</small></div></li><li><i>2</i><div><b>İnceleme</b><small>Bilgilerin kontrol edilir</small></div></li><li><i>3</i><div><b>Onay</b><small>Onaylanınca teslimat almaya başlarsın</small></div></li></ol></div>'+
     '<div class="fdCard fdForm"><label for="crN">Ad soyad</label><input id="crN" maxlength="60" autocomplete="name" value="'+E(prev?prev.display_name:'')+'"><label for="crP">Telefon</label><input id="crP" type="tel" inputmode="tel" autocomplete="tel" value="'+E(prev?prev.phone:'')+'">'+
@@ -2558,7 +2558,7 @@ async function courierApplication(tok,c){
   if(!alive(tok))return;
   const draw=(st,left)=>{
     const rej=st==='rejected';
-    render(bar('Kurye başvurusu','showFoodHome()')+roleBar('courier')+
+    render(bar('Kurye başvurusu','foodPanelBack()')+roleBar('courier')+
       '<div class="fdTrackHero'+(rej?' bad':'')+'"><div class="st"><span class="e">'+(rej?'❌':'⏳')+'</span><div><h2>'+(rej?'Başvurun reddedildi':'Başvurun inceleniyor')+'</h2><p>'+(rej?'Bilgilerini güncelleyip tekrar başvurabilirsin.':'İnceleme bitince burada ve bildirimlerde göreceksin.')+'</p></div></div></div>'+
       '<div class="fdCard"><ol class="fdApply">'+
         '<li class="done"><i>✓</i><div><b>Başvuru alındı</b><small>'+E(info.display_name||'')+' · '+E(VEH[info.vehicle_type]||'')+(info.applied_at?' · '+E(dt(info.applied_at)):'')+'</small></div></li>'+
@@ -2612,14 +2612,16 @@ function liveStart(){
 }
 
 /* ====================== Admin ====================== */
+/* P24: panel kök ekranlarının "←" düğmesi panele girilen ekrana döner (platform geçmişinde önceki kayıt); kayıt yoksa Yemek ana sayfası */
+window.foodPanelBack=function(){const V=window.V2_NAV;if(V&&V.idx>0&&typeof history!=='undefined')history.back();else showFoodHome()};
 async function showFoodAdmin(){FDW_TAB='';
   if(!A())return;const tok=newScreen();FDW_PANEL=1;
-  render(bar('Yemek yönetimi','showFoodHome()')+skel('row',3));
+  render(bar('Yemek yönetimi','foodPanelBack()')+skel('row',3));
   try{
-    const w=await whoami(true);if(!w.is_admin)return render(bar('Yemek yönetimi','showFoodHome()')+empty('🔒','Yetkin yok','Bu alan yalnızca platform yönetimi içindir.'));
+    const w=await whoami(true);if(!w.is_admin)return render(bar('Yemek yönetimi','foodPanelBack()')+empty('🔒','Yetkin yok','Bu alan yalnızca platform yönetimi içindir.'));
     const [o,st]=await Promise.all([RPC('food_admin_overview'),foodSettings(true)]);SETA=st||{};if(!alive(tok))return;
     const sc=o.orders_by_status||{};
-    render(bar('Yemek yönetimi','showFoodHome()',null,'Son 7 gün')+
+    render(bar('Yemek yönetimi','foodPanelBack()',null,'Son 7 gün')+
       '<div class="fdKpi">'+Object.entries(sc).map(([k,n])=>'<div><b>'+n+'</b><span>'+E((STL[k]||['',k])[1])+'</span></div>').join('')+'<div class="'+(o.searching_deliveries?'hot':'')+'"><b>'+o.searching_deliveries+'</b><span>Kurye bekleyen</span></div></div>'+
       '<details class="fdDet"><summary>⚙️ Operasyon ayarları</summary><div class="fdForm">'+
         '<div style="display:flex;align-items:center;gap:12px;padding:10px 0"><div style="flex:1"><b>Demo kurye otomatik onayı</b><small class="fdMuted" style="display:block">Açıkken başvurular 60 sn sonra demo olarak onaylanır. Canlı kullanımda KAPALI olmalı.</small></div>'+sw('stDemo',!!SETA.courier_demo_auto_approve,"foodSetting('courier_demo_auto_approve',this.checked,this)")+'</div>'+
@@ -2631,7 +2633,7 @@ async function showFoodAdmin(){FDW_TAB='';
       '<h2>Onaylı kuryeler</h2>'+(o.couriers.length?'<div class="fdList">'+o.couriers.map(c=>'<div class="fdCartItem"><div class="tx"><b>'+E(c.name)+' '+(c.is_available?'🟢':'⚪')+'</b><small>'+(+c.rating_avg?'★ '+(+c.rating_avg).toFixed(1):'Puan yok')+'</small></div><button type="button" class="fb ghostBad sm" onclick="foodAdmCourier(\''+E(c.user_id)+'\',\'suspended\',this)">Askıya al</button></div>').join('')+'</div>':'<p class="fdMuted fdSmall">Onaylı kurye yok.</p>')+
       '<h2>Restoranlar</h2><div class="fdList">'+o.venues.map(v=>'<div class="fdCartItem"><div class="tx"><b>'+E(v.name)+'</b><small>'+(v.is_active?'Aktif':'Pasif')+' · '+(v.is_open?'Açık':'Kapalı')+' · komisyon %'+(v.commission_bps/100).toFixed(2).replace('.',',')+' · hizmet '+M(v.platform_fee_kurus)+'</small></div><button type="button" class="fb sm" onclick="foodAdmVenue(\''+E(v.id)+'\','+v.commission_bps+','+v.platform_fee_kurus+','+v.is_active+')">Düzenle</button></div>').join('')+'</div>'+
       '<h2>Açık sorunlar</h2>'+(o.open_issues.length?o.open_issues.map(x=>'<div class="fdCard" style="margin-bottom:10px"><b>'+E(ISSUE[x.type]||x.type)+'</b> <span class="fdMuted fdSmall">#'+E(x.order_no)+' · '+ago(x.created_at)+'</span>'+(x.description?'<p>'+E(x.description)+'</p>':'')+'<div class="fdRow2"><button type="button" class="fb" onclick="foodAdmIssue(\''+E(x.id)+'\',\'rejected\',this)">Reddet</button><button type="button" class="fb pri" onclick="foodAdmIssue(\''+E(x.id)+'\',\'resolved\',this)">Çözüldü</button></div></div>').join(''):'<p class="fdMuted fdSmall">Açık sorun yok.</p>'));
-  }catch(e){if(alive(tok))render(bar('Yemek yönetimi','showFoodHome()')+errBox(e,'showFoodAdmin()'))}
+  }catch(e){if(alive(tok))render(bar('Yemek yönetimi','foodPanelBack()')+errBox(e,'showFoodAdmin()'))}
 }
 /* ---------- V4 · Yemek admin: reklam alanları ve yorum moderasyonu ----------
    Tablolar henüz kurulmadıysa (veritabanı onayı bekleniyorsa) açıklayıcı bilgi gösterilir; hiçbir şey kırılmaz. */
@@ -3880,6 +3882,7 @@ showFoodBusiness=fdNav('showFoodBusiness',showFoodBusiness);
 showFoodMenu=fdNav('showFoodMenu',showFoodMenu);
 showFoodSettings=fdNav('showFoodSettings',showFoodSettings);
 showFoodCourier=fdNav('showFoodCourier',showFoodCourier);
+showFoodAdmin=fdNav('showFoodAdmin',showFoodAdmin);
 /* ====================== Dışa aktarım (eski adlarla uyumlu) ====================== */
 Object.assign(window,{
   showFoodHome,showFoodVenue,showFoodCart,showFoodCheckout,showFoodSearch,showFoodOrders,showFoodOrderDetail,showFoodBusiness,showFoodMenu,showFoodSettings,

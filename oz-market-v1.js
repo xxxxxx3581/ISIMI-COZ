@@ -935,9 +935,9 @@ VIEWS_EXTRA({
     var tags=(ms?'<span class="ozRoleT s">Satıcı · '+E(SELLER_ST[ms.status]?SELLER_ST[ms.status][0]:'Başvuru')+'</span>':'')+(s.is_admin?'<span class="ozRoleT a">Yönetici</span>':'');
     var ws=function(cls,ic,t,sub,act,data,n){var at='';Object.keys(data||{}).forEach(function(k){at+=' data-'+k+'="'+E(data[k])+'"'});
       return '<button type="button" class="ozWs '+cls+'" data-a="'+act+'"'+at+'><span class="ic">'+ico(ic,22)+'</span><span class="tx"><b>'+E(t)+'</b><small>'+E(sub)+'</small></span>'+(n>0?'<span class="ozWsN" aria-label="'+n+' bekleyen">'+(n>9?'9+':n)+'</span>':'')+'<span class="ch" aria-hidden="true">›</span></button>'};
-    var sn=0;try{sn=ms?attnSell():0}catch(e){sn=0}
-    var wsH=(ms?ws('s','store','Satıcı paneli',(SELLER_ST[ms.status]?SELLER_ST[ms.status][0]:'Mağazanı yönet')+' · Mağazanı yönet','nav',{k:'seller'},sn):'')+
-      (s.is_admin?ws('a','leaf','Özüne Dön yönetimi','Satıcı, ürün, sipariş ve ayarlar','admin'):'');
+    /* satıcı kartının dikkat rozeti mevcut AC2 mekanizmasıyla (attnBadge, newDotSync) eklenir; kart sınıfları s/n ile çakışmasın diye sl/ad */
+    var wsH=(ms?ws('sl','store','Satıcı paneli',(SELLER_ST[ms.status]?SELLER_ST[ms.status][0]:'Mağazanı yönet')+' · Mağazanı yönet','nav',{k:'seller'}):'')+
+      (s.is_admin?ws('ad','leaf','Özüne Dön yönetimi','Satıcı, ürün, sipariş ve ayarlar','admin'):'');
     var more=(!ms&&s.seller_signup_enabled?row('store','Satıcı ol','Ürünlerini Özüne Dön\'de sat','nav',{k:'seller'}):'');
     var lt=themeGet()==='light';
     paint(pageHead('Hesabım')+
@@ -1751,7 +1751,7 @@ function attnBadge(host,n,tone){if(!host)return;var b=null;for(var i=0;i<host.ch
   host.classList.toggle('ozAttnOn',!!n);host.classList.toggle('s',!!n&&tone==='s');host.classList.toggle('n',!!n&&tone!=='s')}
 function newDotSync(){var nb=attnBuy(),ns=attnSell();
   qa('#ozNav .ozNavB[data-k=orders]').forEach(function(b){attnBadge(b,nb,'s')});
-  qa('#ozNav .ozNavB[data-k=account], #ozRoot .ozRowBtn[data-k=seller]').forEach(function(b){attnBadge(b,ns,'n')});
+  qa('#ozNav .ozNavB[data-k=account], #ozRoot .ozRowBtn[data-k=seller], #ozRoot .ozWs[data-k=seller]').forEach(function(b){attnBadge(b,ns,'n')});
   var so=D.getElementById('ozSoN');if(so){so.hidden=!ns;so.textContent=ns?(ns>9?'9+':String(ns)):'';so.parentNode.classList.toggle('ozAttnOn',!!ns);so.parentNode.classList.toggle('n',!!ns)}}
 /* Dikkat sayıları için okuma (force: süre sınırı yok). Dönüş {ok, buy, sell}; ağ hatasında ok=false (eski sayılar kalır). */
 function newDotCheck(force){

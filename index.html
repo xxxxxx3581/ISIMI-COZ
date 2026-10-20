@@ -1590,7 +1590,7 @@ html:root .ozAccH{margin:6px 0 8px;font-size:12.5px;letter-spacing:.06em;text-tr
 html:root .ozWs{width:100%;min-height:68px;display:flex;align-items:center;gap:12px;margin:0 0 10px;padding:10px 14px;border-radius:16px;border:2px solid transparent;font:inherit;text-align:left;cursor:pointer;color:#fff}
 html:root .ozWs .ic{flex:0 0 auto;display:grid;place-items:center}html:root .ozWs .tx{flex:1;min-width:0;display:flex;flex-direction:column}html:root .ozWs b{font-size:16px}
 html:root .ozWs small{font-size:12.5px;opacity:.95;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}html:root .ozWs .ch{font-size:22px}
-html:root .ozWs.s{background:var(--nx-pri)}html:root .ozWs.a{background:var(--oz-card);color:var(--oz-text);border-color:var(--ws-navy-l)}html:root .ozWs.a small{color:var(--oz-muted)}
+html:root .ozWs.sl{background:var(--nx-pri)}html:root .ozWs.ad{background:var(--oz-card);color:var(--oz-text);border-color:var(--ws-navy-l)}html:root .ozWs.ad small{color:var(--oz-muted)}html:root .ozWs>.ozAttnB{position:static;flex:none;margin-left:auto}
 html:root .ozWsN{min-width:24px;height:24px;padding:0 7px;border-radius:12px;background:#fff;color:#1F2A22;font:900 12.5px/24px system-ui,sans-serif;text-align:center}
 html:root .ozList.ozAccL{margin:0 0 14px;gap:0;border:1px solid var(--oz-line);border-radius:16px;overflow:hidden;background:var(--oz-card)}html:root .ozAccL .ozRowBtn{margin:0;border:0;border-radius:0;box-shadow:none;border-bottom:1px solid var(--oz-line)}html:root .ozAccL .ozRowBtn:last-child{border-bottom:0}
 html:root .ozAccEnd{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;margin:4px 0 14px}
@@ -3805,7 +3805,7 @@ function hmGo(key){
 function hmSoon(){ try{ v2Toast('Özüne Dön çok yakında!'); }catch(e){} }
 /*K21-JS-BASLA*/ /* Özüne Dön: modül tembel yüklenir; pazar kapalıysa (veya hata olursa) yalnızca hmSoon() gösterilir. */
 var OZ_LOADING=null, OZ_TAP=false;
-function ozLoad(){ if(window.OZ&&window.OZ.__v) return Promise.resolve(window.OZ); if(OZ_LOADING) return OZ_LOADING; OZ_LOADING=new Promise(function(res,rej){ var s=document.createElement('script'); s.src='./oz-market-v1.js?v=16'; s.async=true; s.onload=function(){ if(window.OZ&&window.OZ.__v) res(window.OZ); else { OZ_LOADING=null; rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); } }; s.onerror=function(){ OZ_LOADING=null; s.remove(); rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); }; document.head.appendChild(s); }); return OZ_LOADING; }
+function ozLoad(){ if(window.OZ&&window.OZ.__v) return Promise.resolve(window.OZ); if(OZ_LOADING) return OZ_LOADING; OZ_LOADING=new Promise(function(res,rej){ var s=document.createElement('script'); s.src='./oz-market-v1.js?v=17'; s.async=true; s.onload=function(){ if(window.OZ&&window.OZ.__v) res(window.OZ); else { OZ_LOADING=null; rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); } }; s.onerror=function(){ OZ_LOADING=null; s.remove(); rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); }; document.head.appendChild(s); }); return OZ_LOADING; }
 window.ozLoad=ozLoad;
 function ozTap(){ if(OZ_TAP) return; OZ_TAP=true; ozLoad().then(function(oz){ return oz.tryEnter(); }).then(function(ok){ if(!ok) hmSoon(); }).catch(function(){ hmSoon(); }).then(function(){ OZ_TAP=false; }); }
 /* P10: iyzico (sandbox) ödeme dönüşü ?oz_pay=<ödeme id> → parametre adres çubuğundan silinir, Özüne Dön açılıp ödeme sonucu gösterilir */
@@ -8768,7 +8768,10 @@ function v2NavUrl(name,args){
 
 /* Alt menü sekmeleri: aralarında geçiş yeni geçmiş kaydı açmaz; geri tuşu doğrudan Ana sayfaya döner. */
 var V2_NAV_TABS={showKesfet:1,showMine:1,showFoodHome:1,showAccount:1};
-var V2_NAV_FOOD_INNER={showFoodSearch:1,showFoodVenue:1,showFoodCart:1,showFoodCheckout:1,showFoodOrders:1,showFoodOrderDetail:1,showFoodNotifications:1,showFoodAccount:1,showFoodHelp:1,showFoodCoupons:1,showFoodBusiness:1,showFoodMenu:1,showFoodSettings:1,showFoodCourier:1};
+var V2_NAV_FOOD_INNER={showFoodSearch:1,showFoodVenue:1,showFoodCart:1,showFoodCheckout:1,showFoodOrders:1,showFoodOrderDetail:1,showFoodNotifications:1,showFoodAccount:1,showFoodHelp:1,showFoodCoupons:1,showFoodBusiness:1,showFoodMenu:1,showFoodSettings:1,showFoodCourier:1,showFoodAdmin:1};
+/* P24: çalışma panelleri (İşletmem, Menü, Ayarlar, Kurye, Yemek yönetimi) müşteri ekranının kaydını EZMEZ — panele giriş yeni kayıt açar,
+   panel içi geçişler birbirinin yerine yazılır; böylece geri/← panele girilen ekrana (ve kaydırma konumuna) döner. */
+var V2_NAV_FOOD_PANEL={showFoodBusiness:1,showFoodMenu:1,showFoodSettings:1,showFoodCourier:1,showFoodAdmin:1};
 function v2NavPush(name,fn,args){
   if(V2_NAV.busy) return;
   try{
@@ -8782,7 +8785,7 @@ function v2NavPush(name,fn,args){
       var j=V2_NAV.idx-1; while(j>=0&&V2_NAV.stack[j].name!=='showFoodHome') j--;
       if(j>=0){ var n2=V2_NAV.idx-j; V2_NAV.stack=V2_NAV.stack.slice(0,j+1); V2_NAV.stack[j].fn=fn; V2_NAV.idx=j; V2_NAV.skip++; history.go(-n2); return; }
     }
-    if(!rep&&cur&&V2_NAV_FOOD_INNER[name]&&V2_NAV_FOOD_INNER[cur.name]) rep=true;
+    if(!rep&&cur&&V2_NAV_FOOD_INNER[name]&&V2_NAV_FOOD_INNER[cur.name]&&!V2_NAV_FOOD_PANEL[name]===!V2_NAV_FOOD_PANEL[cur.name]) rep=true;
     if(V2_NAV.idx<0){ V2_NAV.stack=[{sig:sig,name:name,fn:fn,scroll:0}]; V2_NAV.idx=0; history.replaceState({v2:0},'',url); }
     else if(cur&&(cur.sig===sig||rep)){ cur.sig=sig; cur.name=name; cur.fn=fn; history.replaceState({v2:V2_NAV.idx},'',url); }
     else{ V2_NAV.stack=V2_NAV.stack.slice(0,V2_NAV.idx+1); V2_NAV.stack.push({sig:sig,name:name,fn:fn,scroll:0}); V2_NAV.idx++; history.pushState({v2:V2_NAV.idx},'',url); }
@@ -8806,11 +8809,13 @@ function v2HalletOpen(){
 
 function v2OverlaysOpen(){
   var d=document.getElementById('appDrawer');
-  return !!(document.querySelector('.v2Sheet,.ozOv:not(.ozOvH)')||(d&&d.classList.contains('on'))||document.getElementById('authModal')||v2HalletOpen());
+  /* P24: platform pencereleri (.pfxOv: Yönetim paneli, yasal metin, destek…) da açık pencere sayılır → geri önce onu kapatır */
+  return !!(document.querySelector('.v2Sheet,.ozOv:not(.ozOvH),.pfxOv')||(d&&d.classList.contains('on'))||document.getElementById('authModal')||v2HalletOpen());
 }
 
 function v2CloseOverlays(){
   document.querySelectorAll('.v2Sheet').forEach(function(x){ x.remove(); }); document.body.classList.remove('v2NoScroll');
+  if(document.querySelector('.pfxOv')){ try{ if(window.PF&&typeof PF.closeSheet==='function') PF.closeSheet(); else document.querySelectorAll('.pfxOv').forEach(function(x){ x.remove(); }); }catch(e){} }
   try{ closeAppDrawer(); }catch(e){}
   var am=document.getElementById('authModal'); if(am) am.remove();
   if(v2HalletOpen()){ try{ window.Hallet.close(); }catch(e){} }
@@ -11120,6 +11125,6 @@ for(const k of ["showGayrimenkulDetail","showOtomobilDetail"]){const f=window[k]
 </script>
 </body>
 <script src="./a35-seller-identity.js?v=3"></script>
-<script src="./a7-food-v1.js?v=8"></script>
-<script src="./pf-platform-v1.js?v=5"></script>
+<script src="./a7-food-v1.js?v=9"></script>
+<script src="./pf-platform-v1.js?v=6"></script>
 </html>

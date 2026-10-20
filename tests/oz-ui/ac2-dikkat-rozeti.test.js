@@ -53,7 +53,7 @@ const B=(p,sel)=>p.evaluate(sel=>{
   o=await B(p,'#ozNav .ozNavB[data-k=orders]');ok(o.n===null,'Siparişlerim listesi görülünce rozet kalkmalı: '+JSON.stringify(o));
   // satıcı: Hesabım > Satıcı paneli satırı
   await click(p,'#ozNav .ozNavB[data-k=account]',1300);
-  const r=await p.evaluate(()=>{const h=document.querySelector('#ozRoot .ozRowBtn[data-k=seller]');const b=h&&h.querySelector('.ozAttnB');return b&&!b.hidden?{n:b.textContent,bg:getComputedStyle(b).backgroundColor}:null});
+  const r=await p.evaluate(()=>{/* Paket 22 (bilinçli): Hesabım'da satıcı paneli artık çalışma alanı kartı (.ozWs); dikkat rozeti aynı mekanizma */const h=document.querySelector('#ozRoot .ozWs[data-k=seller]');const b=h&&h.querySelector('.ozAttnB');return b&&!b.hidden?{n:b.textContent,bg:getComputedStyle(b).backgroundColor}:null});
   ok(r&&r.n==='3'&&r.bg===ORANGE,'Hesabım > Satıcı paneli satırında turuncu 3: '+JSON.stringify(r));
   // satıcı menüsü (Ürünler sekmesinden girildi): Siparişler rozeti 3, etiket vurgulu; panel görülünce kalkar
   await p.evaluate(()=>OZ.go('seller',{tab:'urunler'}));await p.waitForTimeout(1500);

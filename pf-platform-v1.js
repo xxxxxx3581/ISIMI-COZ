@@ -80,6 +80,8 @@ function sheet(title,html,opt){
   document.body.appendChild(ov);return ov;
 }
 function closeSheet(keep){document.querySelectorAll('.pfxOv').forEach(function(x){if(!keep||x.id!==keep)x.remove()});if(PF._poll){clearInterval(PF._poll);PF._poll=null}}
+/* P24: platform geri işleyicisi (index.html v2CloseOverlays) açık pencereyi aynı yoldan kapatır */
+PF.closeSheet=function(){closeSheet()};
 function body(){var b=document.querySelector('#pfxSheet .pfxBody');return b}
 function setBody(h){var b=body();if(b)b.innerHTML=h}
 function loading(){return '<p class="pfxMuted">Yükleniyor…</p>'}
