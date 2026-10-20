@@ -485,39 +485,84 @@ function admNowSub(k,c){var x=c[k];if(k==='reports')return 'Önce bunlara bak';i
 var ADM_TONE={reports:'r',susp:'r',lreview:'o',venues:'o',tickets:'o',finance:'g',campaigns:'g',revenue:'g',listings:'b',docs:'b',providers:'b',hero:'b',words:'s',kvkk:'s',legal:'s',company:'s',audit:'s',dispatch:'e',settings:'x'};
 /* P2: sayı rozeti yalnız mevcut okumadan gelen sayılar için (Belgeler vb. için sayı okunmuyor → rozet yok) */
 var ADM_CNT={reports:'bad',lreview:'warn',venues:'warn',tickets:'warn',kvkk:'warn'};
+/* P23: yönetim ana görünümü 4 bölme (Bugün / Kuyruklar / Para / Sistem), sheet içinde yapışkan alt menü. Rol filtresi (tabs), sayı
+   okumaları (admCounts, PF._admCnt, PF._admN) ve bölüm iç ekranları (ADMIN.*) aynı. Tüm bölmeler DOM'da; yalnız görünürlük değişir. */
+var ADM_PI={home:'<path d="M4 11l8-7 8 7v9H4z"/>',list:'<path d="M4 6h16M4 12h16M4 18h10"/>',trend:'<path d="M3 17l6-6 4 4 8-8M15 7h6v6"/>',
+  shield:'<path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/>',flag:'<path d="M5 21V4h11l-2 4 2 4H5"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  store:'<path d="M4 9l1.5-5h13L20 9M4 9h16v11H4zM9 20v-6h6v6"/>',box:'<path d="M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10"/>',
+  lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',search:'<circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/>',
+  wallet:'<path d="M3 7h15a3 3 0 0 1 3 3v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2zM3 7l12-3v3"/><circle cx="16.5" cy="13.5" r="1.2"/>',
+  help:'<path d="M4 14v-2a8 8 0 0 1 16 0v2M4 14h3v5H5a1 1 0 0 1-1-1zM20 14h-3v5h2a1 1 0 0 0 1-1z"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>'};
+function pIco(k,s){s=s||22;return '<svg viewBox="0 0 24 24" width="'+s+'" height="'+s+'" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'+(ADM_PI[k]||'')+'</svg>'}
+var ADM_PANES=[['today','Bugün','home'],['queues','Kuyruklar','list'],['money','Para','trend'],['system','Sistem','shield']];
+var ADM_QC=['lreview','reports','venues','docs','listings','providers','susp'],ADM_QS=['tickets','kvkk'],ADM_M=['finance','campaigns','revenue'],ADM_S=['settings','dispatch','hero','words','legal','company','audit'];
+/* renk anlamı (yazı/sayı ile birlikte): şikâyet kırmızı, ilan/başvuru/KVKK/destek amber, Özüne Dön mavi */
+var ADM_NT={reports:'r',lreview:'a',venues:'a',kvkk:'a',tickets:'a',oz:'b'},ADM_NI={reports:'flag',lreview:'clock',venues:'store',kvkk:'lock',oz:'box'};
+PF._admPane=function(k){ADM.pane=k;var h=document.getElementById('pfxAdmHome');if(!h)return;
+  h.querySelectorAll('.pfxPane').forEach(function(p){p.hidden=p.dataset.pane!==k});
+  h.querySelectorAll('.pfxPN [data-pane]').forEach(function(b){var on=b.dataset.pane===k;b.classList.toggle('on',on);if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
+  var sc=h.closest('.pfxSh');if(sc)sc.scrollTop=0};
+/* Kuyruklar: istemci tarafı bölüm arama + çip süzgeci (veri çağrısı yok) */
+PF._admQ=function(v){ADM.q=String(v||'');admQApply()};
+PF._admF=function(k){ADM.f=k;admQApply()};
+function admQApply(){var h=document.getElementById('pfxAdmHome');if(!h)return;var q=(ADM.q||'').toLocaleLowerCase('tr').trim(),f=ADM.f||'all';
+  h.querySelectorAll('.pfxQF [data-f]').forEach(function(b){var on=b.dataset.f===f;b.classList.toggle('on',on);b.setAttribute('aria-pressed',on)});
+  h.querySelectorAll('[data-pane=queues] [data-qn]').forEach(function(b){var ok=(!q||b.dataset.qn.indexOf(q)>=0)&&(f==='all'||(f==='wait'?b.dataset.w==='1':b.dataset.g===f));b.hidden=!ok});
+  h.querySelectorAll('[data-pane=queues] .pfxQSec').forEach(function(sec){sec.hidden=!sec.querySelector('[data-qn]:not([hidden])')})}
 function admHome(tabs,c,loading){
   var has=function(k){return tabs.some(function(t){return t[0]===k})},lab=function(k){var t=tabs.filter(function(x){return x[0]===k})[0];return t?t[1]:k};
   var now=c?ADM_NOW.filter(function(x){return c[x[0]]&&c[x[0]].n>0}):[];
-  var h='<div class="pfxMenu pfxAdm2" id="pfxAdmHome"><div class="pfxMenuH">Şimdi bakılacaklar</div><div class="pfxNow" aria-live="polite">';
-  if(!c)h+='<p class="pfxMuted">'+(loading?'Bekleyen işler yükleniyor…':'Sayılar alınamadı.')+'</p>';
-  else if(!c.ok)h+='<p class="pfxMuted">Sayılar alınamadı.</p>';
-  else if(!now.length)h+='<div class="pfxCard pfxAllOk"><b>Her şey yolunda ✓</b><span class="pfxMuted">Bekleyen şikâyet, onay veya başvuru yok.</span></div>';
-  else{var tot=now.reduce(function(a,x){return a+c[x[0]].n},0);
-    h+='<div class="pfxNowBox"><b class="pfxNowT">⚠️ '+tot+' iş seni bekliyor</b>'+now.map(function(x){var k=x[0],v=c[k],go=k==='oz'?(v.orders?'oz_orders':'oz_returns'):k,sub=admNowSub(k,c);
-      return '<button type="button" class="pfxBtn pfxNowC" data-tab="'+go+'" onclick="PF.openAdmin(\''+go+'\')" aria-label="'+esc(x[1]+': '+v.n+' bekleyen'+(sub?', '+sub:''))+'"><span class="ic" aria-hidden="true">'+(k==='oz'?'🌿':(ADM_ICON[k]||'•'))+'</span><span class="tx"><b>'+esc(x[1])+'</b>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</span><span class="pfxNum '+x[2]+'" aria-hidden="true">'+v.n+'</span></button>'}).join('')+'</div>'}
-  h+='</div>';
-  var row=function(k){var cl=ADM_CNT[k],v=cl&&c&&c[k]?c[k].n:null;
-    var badge=v==null?'':'<span class="pfxCnt'+(v>0?' '+cl:' z')+'" aria-label="'+v+' bekleyen">'+v+'</span>';
+  var cnt=function(k){return ADM_CNT[k]&&c&&c[k]?c[k].n:null};
+  var row=function(k){var v=cnt(k);
+    var badge=v==null?'':'<span class="pfxCnt'+(v>0?' '+ADM_CNT[k]:' z')+'" aria-label="'+v+' bekleyen">'+v+'</span>';
     var tone=ADM_TONE[k]?' pfxT-'+ADM_TONE[k]:'';
-    return '<button type="button" class="pfxBtn'+tone+'" data-tab="'+k+'" onclick="PF.openAdmin(\''+k+'\')"><span>'+(ADM_ICON[k]||'•')+' '+esc(lab(k))+(k==='settings'?' <small class="pfxDk">· dikkat</small>':'')+'</span>'+badge+'<span aria-hidden="true">›</span></button>'};
+    return '<button type="button" class="pfxBtn'+tone+'" data-tab="'+k+'" onclick="PF.openAdmin(\''+k+'\')"><span>'+esc(lab(k))+(k==='settings'?' <small class="pfxDk">· dikkat</small>':'')+'</span>'+badge+'<span aria-hidden="true">›</span></button>'};
   var seen={};
-  /* P2: Özüne Dön "Şimdi bakılacaklar"ın hemen altında; durum şeridi yalnız gösterir (bayraklar Özüne Dön › Ayarlar'dan değişir) */
+  /* ---------- BUGÜN ---------- */
+  var T='';
+  if(!c)T+='<p class="pfxMuted">'+(loading?'Bekleyen işler yükleniyor…':'Sayılar alınamadı.')+'</p>';
+  else if(!c.ok)T+='<p class="pfxMuted">Sayılar alınamadı.</p>';
+  else if(!now.length)T+='<div class="pfxCard pfxAllOk pfxBig ok"><b>Her şey yolunda ✓</b><span>Bekleyen şikâyet, onay veya başvuru yok.</span></div>';
+  else{var tot=now.reduce(function(a,x){return a+c[x[0]].n},0);var old=c.lreview&&c.lreview.n&&c.lreview.old?Math.max(0,Math.floor((Date.now()-c.lreview.old)/864e5)):null;
+    T+='<div class="pfxBig bad" role="status"><b class="n">'+tot+'</b><span class="tx"><b>iş seni bekliyor</b>'+(old!=null?'<small>En eski bekleyen: '+(old?old+' gün önce':'bugün')+'</small>':'')+'</span></div>'+
+     '<div class="pfxNowL">'+now.map(function(x){var k=x[0],v=c[k],go=k==='oz'?(v.orders?'oz_orders':'oz_returns'):k,sub=admNowSub(k,c),tn=ADM_NT[k]||'a';
+      return '<button type="button" class="pfxBtn pfxNowC pfxR-'+tn+'" data-tab="'+go+'" onclick="PF.openAdmin(\''+go+'\')" aria-label="'+esc(x[1]+': '+v.n+' bekleyen'+(sub?', '+sub:''))+'"><span class="ic" aria-hidden="true">'+pIco(ADM_NI[k]||'clock',22)+'</span><span class="tx"><b>'+esc(x[1])+'</b>'+(sub?'<small>'+esc(sub)+'</small>':'')+'</span><span class="pfxNum '+(x[2]==='bad'?'bad':tn==='b'?'blue':'warn')+'" aria-hidden="true">'+v.n+'</span></button>'}).join('')+'</div>'}
   var oz=tabs.filter(function(t){return /^oz_/.test(t[0])});oz.forEach(function(t){seen[t[0]]=1});
-  if(oz.length){var S=c&&c.ozset,Z=c&&c.oz;
-    var pill=function(cls,t){return '<span class="pfxSt '+cls+'"><i aria-hidden="true"></i>'+t+'</span>'};
-    var strip=S?'<div class="pfxStrip" role="status" aria-label="Özüne Dön durumu">'+pill(S.market?'on':'off','Pazar '+(S.market?'AÇIK':'KAPALI'))+pill(S.orders?'on':'off','Sipariş '+(S.orders?'AÇIK':'KAPALI'))+pill(S.mock?'mock':'on','Ödeme '+(S.mock?'DENEME':'GERÇEK'))+'</div>':'';
-    var zc=function(k){var n=!Z?null:k==='oz_sellers'?Z.sellers:k==='oz_orders'?Z.orders:k==='oz_returns'?Z.returns:null;
-      return n==null?'':' <span class="pfxCnt'+(n>0?(k==='oz_returns'?' bad':' warn'):' z')+'" aria-hidden="true">'+n+'</span>'};
-    h+='<div class="pfxMenuH">Özüne Dön</div><div class="pfxCard pfxOzC"><b>🌿 Özüne Dön</b>'+strip+'<div class="pfxChips">'+oz.map(function(t){var s=t[1].replace(/^Özüne Dön · /,'');var b=zc(t[0]);
-      return '<button type="button" class="pfxBtn pfxChip" data-tab="'+t[0]+'" aria-label="'+esc(t[1])+(b?esc(', '+(Z[t[0]==='oz_sellers'?'sellers':t[0]==='oz_orders'?'orders':'returns'])+' bekleyen'):'')+'" onclick="PF.openAdmin(\''+t[0]+'\')">'+esc(s)+b+'</button>'}).join('')+'</div>'+(S?'<p class="pfxMuted pfxStN">Durum şeridi yalnız gösterir; açıp kapatmak için Özüne Dön › Ayarlar.</p>':'')+'</div>'}
-  ADM_G2.forEach(function(g){
-    var ks=g[1].filter(function(k){seen[k]=1;return has(k)});
-    if(ks.length)h+='<div class="pfxMenuH">'+esc(g[0])+'</div>'+ks.map(row).join('');
-  });
+  var S=c&&c.ozset,Z=c&&c.oz;
+  var pill=function(cls,t){return '<span class="pfxSt '+cls+'"><i aria-hidden="true"></i>'+t+'</span>'};
+  if(oz.length&&S)T+='<div class="pfxMenuH">Sistem durumu</div><div class="pfxStrip" role="status" aria-label="Özüne Dön durumu">'+pill(S.market?'on':'off','Pazar '+(S.market?'AÇIK':'KAPALI'))+pill(S.orders?'on':'off','Sipariş '+(S.orders?'AÇIK':'KAPALI'))+pill(S.mock?'mock':'on','Ödeme '+(S.mock?'DENEME':'GERÇEK'))+'</div><p class="pfxMuted pfxStN">Yalnız gösterir; açıp kapatmak için Özüne Dön › Ayarlar.</p>';
+  var sc=[['finance','Finans','wallet'],['tickets','Destek','help'],['settings','Ayarlar','gear']].filter(function(x){return has(x[0])});
+  if(sc.length)T+='<div class="pfxMenuH">Kısayollar</div><div class="pfxSc">'+sc.map(function(x){return '<button type="button" class="pfxBtn pfxScB" data-tab="'+x[0]+'" onclick="PF.openAdmin(\''+x[0]+'\')"><span class="ic" aria-hidden="true">'+pIco(x[2],22)+'</span><b>'+x[1]+'</b></button>'}).join('')+'</div>';
+  /* ---------- KUYRUKLAR ---------- */
+  var Q='';var qb=function(k,g){var v=cnt(k);seen[k]=1;var tn=ADM_NT[k]||'a';
+    return '<button type="button" class="pfxBtn pfxQB'+(v>0?' on pfxQ-'+tn:'')+'" data-tab="'+k+'" data-g="'+g+'" data-w="'+(v>0?1:0)+'" data-qn="'+esc(lab(k).toLocaleLowerCase('tr'))+'" onclick="PF.openAdmin(\''+k+'\')"'+(v!=null?' aria-label="'+esc(lab(k)+': '+v+' bekleyen')+'"':'')+'><b>'+esc(lab(k))+'</b>'+(v==null?'':'<span class="pfxCnt'+(v>0?' '+ADM_CNT[k]:' z')+'" aria-hidden="true">'+v+'</span>')+'</button>'};
+  var srt=function(ks){return ks.filter(has).sort(function(a,b){return ((cnt(b)||0)>0)-((cnt(a)||0)>0)})};
+  var qc=srt(ADM_QC),qs=srt(ADM_QS);var nw=qc.concat(qs).filter(function(k){return cnt(k)>0}).length+(Z?oz.filter(function(t){var n=t[0]==='oz_sellers'?Z.sellers:t[0]==='oz_orders'?Z.orders:t[0]==='oz_returns'?Z.returns:null;return n>0}).length:0);
+  if(qc.length||qs.length||oz.length){
+    Q+='<label class="pfxQS"><span class="ic">'+pIco('search',20)+'</span><input type="search" placeholder="Bölüm ara" aria-label="Bölüm ara" value="'+esc(ADM.q||'')+'" oninput="PF._admQ(this.value)"></label>'+
+      '<div class="pfxQF" role="group" aria-label="Süzgeç">'+[['all','Hepsi'],['wait','Bekleyen'+(nw?' '+nw:'')],['content','İçerik'],['support','Destek ve yasal']].concat(oz.length?[['oz','Özüne Dön']]:[]).map(function(x){return '<button type="button" class="pfxChip" data-f="'+x[0]+'" aria-pressed="false" onclick="PF._admF(\''+x[0]+'\')">'+x[1]+'</button>'}).join('')+'</div>';
+    if(oz.length){var big=['oz_sellers','oz_orders','oz_returns'];var zn=function(k){return !Z?null:k==='oz_sellers'?Z.sellers:k==='oz_orders'?Z.orders:k==='oz_returns'?Z.returns:null};
+      var chip=function(t){var sn=t[1].replace(/^Özüne Dön · /,''),n=zn(t[0]),b=n==null?'':' <span class="pfxCnt'+(n>0?(t[0]==='oz_returns'?' bad':' warn'):' z')+'" aria-hidden="true">'+n+'</span>';
+        return '<button type="button" class="pfxBtn pfxChip'+(big.indexOf(t[0])>=0?' pfxOzBig':'')+'" data-tab="'+t[0]+'" data-g="oz" data-w="'+(n>0?1:0)+'" data-qn="'+esc(t[1].toLocaleLowerCase('tr'))+'" aria-label="'+esc(t[1])+(n!=null&&big.indexOf(t[0])>=0?esc(', '+n+' bekleyen'):'')+'" onclick="PF.openAdmin(\''+t[0]+'\')">'+esc(sn)+b+'</button>'};
+      var ob=oz.filter(function(t){return big.indexOf(t[0])>=0}).sort(function(a,b){return big.indexOf(a[0])-big.indexOf(b[0])}),orr=oz.filter(function(t){return big.indexOf(t[0])<0});
+      Q+='<div class="pfxQSec"><div class="pfxCard pfxOzC"><div class="pfxOzH"><b>Özüne Dön</b>'+(S?'<small>Pazar '+(S.market?'AÇIK':'KAPALI')+' · Sipariş '+(S.orders?'AÇIK':'KAPALI')+'</small>':'')+'</div>'+
+        (ob.length?'<div class="pfxOzG">'+ob.map(chip).join('')+'</div>':'')+(orr.length?'<div class="pfxChips">'+orr.map(chip).join('')+'</div>':'')+'</div></div>'}
+    if(qc.length)Q+='<div class="pfxQSec"><div class="pfxMenuH pfxDotH r">İçerik ve kullanıcılar</div><div class="pfxQG">'+qc.map(function(k){return qb(k,'content')}).join('')+'</div></div>';
+    if(qs.length)Q+='<div class="pfxQSec"><div class="pfxMenuH pfxDotH a">Destek ve yasal başvurular</div><div class="pfxQG">'+qs.map(function(k){return qb(k,'support')}).join('')+'</div></div>';
+  }
+  /* ---------- PARA / SİSTEM ---------- */
+  var mk=ADM_M.filter(function(k){seen[k]=1;return has(k)}),sk=ADM_S.filter(function(k){seen[k]=1;return has(k)});
+  var M=mk.length?'<div class="pfxMenuH">Finans ve operasyon</div>'+mk.map(row).join(''):'';
   var rest=tabs.filter(function(t){return !seen[t[0]]});
-  if(rest.length)h+='<div class="pfxMenuH">Diğer</div>'+rest.map(function(t){return row(t[0])}).join('');
-  var el=document.getElementById('pfxAdmHome');if(!loading&&el){var sc=el.closest('.pfxSh');var y=sc?sc.scrollTop:0;el.outerHTML=h+'</div>';if(sc)sc.scrollTop=y;return}
-  sheet('Yönetim paneli',h+'</div>');
+  var Y=(sk.length?'<div class="pfxMenuH">Ayarlar, içerik ve yasal</div>'+sk.map(row).join(''):'')+(rest.length?'<div class="pfxMenuH">Diğer</div>'+rest.map(function(t){return row(t[0])}).join(''):'');
+  var P={today:T,queues:Q,money:M,system:Y};var vis=ADM_PANES.filter(function(x){return P[x[0]]});
+  if(!vis.some(function(x){return x[0]===ADM.pane}))ADM.pane=vis.length?vis[0][0]:'today';
+  var tot2=c&&c.ok?now.reduce(function(a,x){return a+c[x[0]].n},0):0;
+  var h='<div class="pfxMenu pfxAdm2 pfxAdm3" id="pfxAdmHome">'+vis.map(function(x){return '<section class="pfxPane" data-pane="'+x[0]+'" aria-label="'+x[1]+'"'+(x[0]===ADM.pane?'':' hidden')+'>'+P[x[0]]+'</section>'}).join('')+
+    (vis.length>1?'<nav class="pfxPN pnNav" aria-label="Yönetim bölümleri">'+vis.map(function(x){var on=x[0]===ADM.pane;return '<button type="button" class="pnItem'+(on?' on':'')+'" data-pane="'+x[0]+'"'+(on?' aria-current="page"':'')+' onclick="PF._admPane(\''+x[0]+'\')"><span class="ic" aria-hidden="true">'+pIco(x[2],22)+'</span><span class="l">'+x[1]+'</span>'+(x[0]==='today'&&tot2>0?'<i class="pnBdg" aria-label="'+tot2+' bekleyen iş">'+tot2+'</i>':'')+'</button>'}).join('')+'</nav>':'')+'</div>';
+  var el=document.getElementById('pfxAdmHome');if(!loading&&el){var sh=el.closest('.pfxSh');var y=sh?sh.scrollTop:0;el.outerHTML=h;if(sh)sh.scrollTop=y;admQApply();return}
+  sheet('Yönetim paneli',h);admQApply();
 }
 function isoDay(off){var d=new Date();d.setDate(d.getDate()+(off||0));return d.toISOString().slice(0,10)}
 var ADMIN={

@@ -1619,6 +1619,52 @@ html:root body.ozWorld:not(.ozLt) .ozOut{border-color:#E5735A;color:#E5735A}
 .fdwAcc .fdwThSel button.on{background:var(--nx-star);color:var(--nx-star-ink)}
 .fdwAcc .fdwOut2{min-height:44px;display:inline-flex;align-items:center;gap:6px;padding:0 14px;border-radius:12px;border:2px solid var(--nx-bad-l);background:transparent;color:var(--nx-bad-t);font:inherit;font-weight:800;cursor:pointer}
 /*P22-BITIS*/
+/*P23-BASLA*/ /* Paket 23: yönetim ana görünümü Bugün / Kuyruklar / Para / Sistem (yalnız görünüm). Renk = durum, yanında her zaman yazı/sayı.
+   Açık temada P19 jetonları, koyu temada kart zemininde okunur açık tonlar. Bölüm iç ekranları değişmez. */
+.pfxAdm3{--ad-r:#F28B6E;--ad-a:#F2C94C;--ad-b:#6FB3E8;--ad-ok:#5FCB8A;--ad-ink:#1F1A12;--ad-on:#F7D24A;--ad-on-ink:#1F1A12}
+html[data-theme="light"] .pfxAdm3{--ad-r:#C4492F;--ad-a:#9A6410;--ad-b:#2F6FA8;--ad-ok:#1F6B45;--ad-ink:#fff;--ad-on:#F2C14E;--ad-on-ink:#1F2A22}
+/* Bugün */
+.pfxAdm3 .pfxBig{display:flex;align-items:center;gap:14px;padding:16px;margin:0 0 12px;border-radius:16px;color:#fff}
+.pfxAdm3 .pfxBig.bad{background:#C4492F}.pfxAdm3 .pfxBig.ok{background:#1F6B45;border:0;flex-direction:column;align-items:flex-start;gap:4px}
+.pfxAdm3 .pfxBig.ok b,.pfxAdm3 .pfxBig.ok span{color:#fff}.pfxAdm3 .pfxBig .n{font-size:44px;line-height:1;font-weight:900}
+.pfxAdm3 .pfxBig .tx{display:flex;flex-direction:column;gap:2px;min-width:0}.pfxAdm3 .pfxBig .tx b{font-size:18px}.pfxAdm3 .pfxBig small{font-size:13.5px}
+.pfxAdm3 .pfxNowL .pfxNowC{position:relative;display:flex;align-items:center;gap:12px;min-height:72px!important;margin:0 0 10px;padding:10px 12px 10px 16px!important;overflow:hidden}
+.pfxAdm3 .pfxNowC:before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--rc,var(--ad-a))}
+.pfxAdm3 .pfxR-r{--rc:var(--ad-r)}.pfxAdm3 .pfxR-a{--rc:var(--ad-a)}.pfxAdm3 .pfxR-b{--rc:var(--ad-b)}
+.pfxAdm3 .pfxNowC .ic{flex:0 0 44px;height:44px;border-radius:12px;display:grid;place-items:center;color:var(--rc);background:color-mix(in srgb,var(--rc) 16%,transparent)}
+.pfxAdm3 .pfxNum{border-radius:50%;min-width:40px;height:40px;font-size:18px}
+.pfxAdm3 .pfxNum.bad{background:var(--ad-r);color:var(--ad-ink)}.pfxAdm3 .pfxNum.warn{background:var(--ad-a);color:var(--ad-ink)}.pfxAdm3 .pfxNum.blue{background:var(--ad-b);color:var(--ad-ink)}
+.pfxAdm3 .pfxSc{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.pfxAdm3 .pfxSc .pfxScB{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:8px;min-height:84px;margin:0;padding:12px}
+.pfxAdm3 .pfxScB .ic{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,var(--ad-a) 16%,transparent);color:var(--text)}
+/* Kuyruklar */
+.pfxAdm3 .pfxQS{display:flex;align-items:center;gap:8px;min-height:50px;padding:0 14px;margin:0 0 10px;border:1px solid var(--line,rgba(127,127,127,.3));border-radius:14px;background:color-mix(in srgb,var(--text) 4%,transparent)}
+.pfxAdm3 .pfxQS input{flex:1;min-width:0;min-height:44px;border:0;outline:0;background:transparent;color:var(--text);font:inherit;font-size:15px}
+.pfxAdm3 .pfxQS:focus-within{outline:2px solid var(--ad-on);outline-offset:2px}
+.pfxAdm3 .pfxQF{display:flex;gap:8px;overflow-x:auto;padding:0 0 4px;margin:0 0 12px;scrollbar-width:none}
+.pfxAdm3 .pfxQF .pfxChip{flex:none;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--line,rgba(127,127,127,.3));background:transparent;color:var(--text);font:inherit;font-weight:800;cursor:pointer}
+.pfxAdm3 .pfxQF .pfxChip.on{background:var(--ad-on);border-color:var(--ad-on);color:var(--ad-on-ink)}
+.pfxAdm3 .pfxOzC{border:2px solid var(--ad-ok)}.pfxAdm3 .pfxOzH{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:6px;margin:0 0 10px}.pfxAdm3 .pfxOzH b{margin:0}.pfxAdm3 .pfxOzH small{font-weight:800;color:var(--text)}
+.pfxAdm3 .pfxOzG{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 10px}
+.pfxAdm3 .pfxOzG .pfxOzBig{display:flex;flex-direction:column;align-items:flex-start;justify-content:center;gap:8px;width:auto;min-height:80px;margin:0;padding:10px 12px;border-radius:14px;font-weight:800}
+.pfxAdm3 .pfxOzBig .pfxCnt{min-width:32px;height:32px;font-size:15px}
+.pfxAdm3 .pfxDotH:before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;background:var(--ad-a)}.pfxAdm3 .pfxDotH.r:before{background:var(--ad-r)}
+.pfxAdm3 .pfxQG{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.pfxAdm3 .pfxQG .pfxQB{position:relative;display:flex;align-items:flex-start;justify-content:flex-start;min-height:92px;margin:0;padding:12px 48px 12px 14px;border-radius:16px;border:2px solid var(--line,rgba(127,127,127,.3));text-align:left}
+.pfxAdm3 .pfxQB b{font-size:15px;line-height:1.25;overflow-wrap:anywhere}
+.pfxAdm3 .pfxQB .pfxCnt{position:absolute;top:10px;right:10px;min-width:32px;height:32px;font-size:15px}
+.pfxAdm3 .pfxQB:not(.on){background:transparent}.pfxAdm3 .pfxQB:not(.on) b{color:var(--muted,#94a8bd)}
+html[data-theme="light"] .pfxAdm3 .pfxQB:not(.on) b{color:#4b5563}
+.pfxAdm3 .pfxQB.pfxQ-r{border-color:var(--ad-r)}.pfxAdm3 .pfxQB.pfxQ-a{border-color:var(--ad-a)}
+.pfxAdm3 .pfxQB .pfxCnt.bad{background:var(--ad-r);color:var(--ad-ink)}.pfxAdm3 .pfxQB .pfxCnt.warn,.pfxAdm3 .pfxOzBig .pfxCnt.warn{background:var(--ad-a);color:var(--ad-ink)}.pfxAdm3 .pfxOzBig .pfxCnt.bad{background:var(--ad-r);color:var(--ad-ink)}
+.pfxAdm3 [data-qn][hidden],.pfxAdm3 .pfxQSec[hidden],.pfxAdm3 .pfxPane[hidden]{display:none!important}
+/* alt menü: sheet içinde yapışkan; aktif sarı dolu */
+.pfxAdm3 .pfxPN{position:sticky;bottom:-28px;z-index:2;display:grid;gap:6px;margin:16px 0 -28px;padding:6px 0 calc(6px + env(safe-area-inset-bottom,0px));background:var(--card,#0d1b2e);border-top:1px solid var(--line,rgba(127,127,127,.3))}
+.pfxAdm3 .pfxPN .pnItem{border:0;background:transparent;color:var(--muted,#94a8bd);font:inherit;font-weight:800;font-size:12.5px;cursor:pointer}
+html[data-theme="light"] .pfxAdm3 .pfxPN .pnItem{color:#4b5563}
+.pfxAdm3 .pfxPN .pnItem.on{background:var(--ad-on);color:var(--ad-on-ink)}
+.pfxAdm3 .pfxPN .pnBdg{background:#C4492F;color:#fff}
+/*P23-BITIS*/
 /*K21-BASLA*/
 /*OZ AJ1 P1 renk jetonları (koyu = önceki hex değerleri, birebir). Çekirdek: rol bazlı (T metin, L çizgi, B zemin); --oz-x<HEX><ROL> tek kullanımlık ara tonlar. Krem tema bu değerleri body.ozWorld.ozLt altında değiştirir.*/
 html:root{--oz-bg:#2B2118;--oz-card:#3A2D20;--oz-card2:#4A3A27;--oz-line:#54422D;--oz-line2:#6B5A44;--oz-text:#F6ECDC;--oz-muted:#CDBB9F;--oz-muted2:#A99983;--oz-acc:#28804F;--oz-acc2:#4FB67F;--oz-acc2L:#4FB67F;--oz-acc2B:#4FB67F;--oz-sun:#F7D24A;--oz-sunL:#F7D24A;--oz-sunB:#F7D24A;--oz-bad:#E5735A;--oz-badL:#E5735A;--oz-ink:#1F3B2A;--oz-warn:#E0A84A;--oz-x1E1712B:#1E1712;--oz-x1E6B3ET:#1E6B3E;--oz-x1F160ET:#1F160E;--oz-x1F1A12B:#1F1A12;--oz-x1F3B2AB:#1F3B2A;--oz-x1F6F43B:#1F6F43;--oz-x241B13B:#241B13;--oz-x2A2017B:#2A2017;--oz-x2B2118L:#2B2118;--oz-x2B2118T:#2B2118;--oz-x2E6B47L:#2E6B47;--oz-x2F2419B:#2F2419;--oz-x2F241AB:#2F241A;--oz-x2F2519B:#2F2519;--oz-x2F3A26B:#2F3A26;--oz-x2F6FA3B:#2F6FA3;--oz-x352A1FB:#352A1F;--oz-x3A2D20L:#3A2D20;--oz-x463622B:#463622;--oz-x46372AB:#46372A;--oz-x4A3A27L:#4A3A27;--oz-x4E95D0B:#4E95D0;--oz-x4E95D0L:#4E95D0;--oz-x5E4E3AT:#5E4E3A;--oz-x5E5348B:#5E5348;--oz-x5FCB8AT:#5FCB8A;--oz-x6A3A2EL:#6A3A2E;--oz-x6B4F2AB:#6B4F2A;--oz-x6B5739L:#6B5739;--oz-x6B5A44T:#6B5A44;--oz-x6E5C45T:#6E5C45;--oz-x7A3A2CL:#7A3A2C;--oz-x7A4E00T:#7A4E00;--oz-x7A5BA6B:#7A5BA6;--oz-x7FD3A2T:#7FD3A2;--oz-x8A6B3EL:#8A6B3E;--oz-x8A7A60T:#8A7A60;--oz-x8C6B2AL:#8C6B2A;--oz-x8E3B2EB:#8E3B2E;--oz-x8E3B2EL:#8E3B2E;--oz-x8E7E66T:#8E7E66;--oz-x9BE0B8T:#9BE0B8;--oz-x9BE3B9T:#9BE3B9;--oz-x9FD0F5T:#9FD0F5;--oz-xA8977CT:#A8977C;--oz-xA8987FT:#A8987F;--oz-xB07800T:#B07800;--oz-xB5482FB:#B5482F;--oz-xB7791FB:#B7791F;--oz-xB8A68AT:#B8A68A;--oz-xBDAE95B:#BDAE95;--oz-xBFAE92T:#BFAE92;--oz-xC7A23AL:#C7A23A;--oz-xC9A33AB:#C9A33A;--oz-xC9A33AL:#C9A33A;--oz-xC9B79AB:#C9B79A;--oz-xCFC3B0B:#CFC3B0;--oz-xCFE7C2T:#CFE7C2;--oz-xD8C8AET:#D8C8AE;--oz-xD9694AB:#D9694A;--oz-xD9694AL:#D9694A;--oz-xD9A79FT:#D9A79F;--oz-xD9C9AET:#D9C9AE;--oz-xE0A84AB:#E0A84A;--oz-xE0A84AL:#E0A84A;--oz-xE6D9C3B:#E6D9C3;--oz-xE6D9C3L:#E6D9C3;--oz-xE8685DL:#E8685D;--oz-xE8685DT:#E8685D;--oz-xE8A08ET:#E8A08E;--oz-xE8DCC6T:#E8DCC6;--oz-xE9DCC4T:#E9DCC4;--oz-xEADCC4T:#EADCC4;--oz-xEDE5D8B:#EDE5D8;--oz-xF0A792T:#F0A792;--oz-xF1CC85T:#F1CC85;--oz-xF2A08CT:#F2A08C;--oz-xF2B431B:#F2B431;--oz-xF2B431L:#F2B431;--oz-xF2B431T:#F2B431;--oz-xF2C14EB:#F2C14E;--oz-xF2C14ET:#F2C14E;--oz-xF3A893T:#F3A893;--oz-xF3B6A6T:#F3B6A6;--oz-xF3D27AT:#F3D27A;--oz-xF3EBDDB:#F3EBDD;--oz-xF7B979T:#F7B979;--oz-xFFF6E6T:#FFF6E6;--oz-xFFFDF8B:#FFFDF8;--oz-xFFFFFFB:#FFFFFF}
@@ -11075,5 +11121,5 @@ for(const k of ["showGayrimenkulDetail","showOtomobilDetail"]){const f=window[k]
 </body>
 <script src="./a35-seller-identity.js?v=3"></script>
 <script src="./a7-food-v1.js?v=8"></script>
-<script src="./pf-platform-v1.js?v=4"></script>
+<script src="./pf-platform-v1.js?v=5"></script>
 </html>
