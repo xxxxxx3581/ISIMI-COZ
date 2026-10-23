@@ -485,7 +485,7 @@ async function admCounts(tabs){
   job('venues',has('venues')&&rpc('pf_admin_venue_queue',{p_stage:null}),function(v){c.venues={n:n(v).filter(function(x){return x.stage==='in_review'}).length}});
   job('kvkk',has('kvkk')&&rpc('pf_admin_data_requests',{p_status:null}),function(v){c.kvkk={n:n(v).filter(function(x){return x.status==='open'||x.status==='in_progress'}).length}});
   /* P32: Yemek — yalnız mevcut food_admin_overview okuması; n = bekleyen kurye başvurusu + açık sorun (hata → o sayı yok) */
-  job('food',has('food')&&rpc('food_admin_overview',{}),function(v){if(v&&typeof v==='object'&&!Array.isArray(v)){var a=n(v.pending_couriers).length,b=n(v.open_issues).length;c.food={n:a+b,couriers:a,issues:b}}});
+  job('food',has('food')&&rpc('food_admin_overview',{}),function(v){if(v&&typeof v==='object'&&!Array.isArray(v)){var a=foodPendN(v),b=n(v.open_issues).length;c.food={n:a+b,couriers:a,issues:b}}});
   job('tickets',has('tickets')&&rpc('pf_admin_tickets',{p_status:null,p_kind:null}),function(v){c.tickets={n:n(v).filter(function(x){return x.status==='open'||x.status==='in_review'}).length}});
   /* P2: oz_admin_overview siparişleri durum haritası (orders) olarak verir; açık = yeni + kabul + hazırlanıyor (orders_open varsa o) */
   job('oz',has('oz_orders')&&rpc('oz_admin_overview',{}),function(v){if(v&&typeof v==='object'&&!Array.isArray(v)){var m=v.orders&&typeof v.orders==='object'?v.orders:{};
@@ -594,15 +594,17 @@ function admHome(tabs,c,loading){
 function isoDay(off){var d=new Date();d.setDate(d.getDate()+(off||0));return d.toISOString().slice(0,10)}
 /* P32: yönetim paneli "Yemek" bölümü — özet (food_admin_overview) + mevcut Yemek yönetim ekranlarına kısayollar (a7-food-v1.js aynen).
    Kısayol: panel kapanır, Yemek yönetimi Hesabım'daki gibi showFoodAdmin() ile açılır (geçmiş kaydı P24 kuralıyla), gerekirse ilgili ekran üstüne çizilir. */
+/* P32b: pending_couriers sunucuda onaylanmamış tüm kuryeleri (reddedilen/askıdaki dahil) içerir; başvuru sayısı yalnız status==='pending' */
+function foodPendN(o){return (Array.isArray(o&&o.pending_couriers)?o.pending_couriers:[]).filter(function(c){return c&&c.status==='pending'}).length}
 var FOOD_ST={new:'Yeni',accepted:'Kabul',preparing:'Hazırlanıyor',ready:'Hazır',courier_search:'Kurye aranıyor',courier_assigned:'Kurye atandı',picked_up:'Kuryede',on_the_way:'Yolda',delivered:'Teslim',cancelled:'İptal',rejected:'Reddedildi'};
 PF._admFood=function(fn){var w=window;if(typeof w.showFoodAdmin!=='function'){toast('Yemek modülü yüklenemedi.');return}
   ADM.tab=null;ADM.direct=false;closeSheet();w.showFoodAdmin();if(fn&&fn!=='showFoodAdmin'&&typeof w[fn]==='function')w[fn]()};
 var ADMIN={
   food:async function(el){
-    var o=await rpc('food_admin_overview',{})||{};var a=Array.isArray(o.pending_couriers)?o.pending_couriers.length:0,b=Array.isArray(o.open_issues)?o.open_issues.length:0,sd=+o.searching_deliveries||0,sc=o.orders_by_status&&typeof o.orders_by_status==='object'?o.orders_by_status:null;
+    var o=await rpc('food_admin_overview',{})||{};var a=foodPendN(o),b=Array.isArray(o.open_issues)?o.open_issues.length:0,sd=+o.searching_deliveries||0,sc=o.orders_by_status&&typeof o.orders_by_status==='object'?o.orders_by_status:null;
     var pill=function(cls,t){return '<span class="pfxSt '+cls+'"><i aria-hidden="true"></i>'+esc(t)+'</span>'};
     var go=[['showFoodOpsCenter','🛰️ Operasyon merkezi'],['showFoodOnboarding','🗂️ Başvurular'],['showFoodAdminPromos','📣 Reklam ve kampanya alanları'],['showFoodAdminReviews','⭐ Yorum moderasyonu'],['showFoodAdmin','🍽️ Restoranlar / kuryeler / sorunlar']];
-    el.innerHTML='<div class="pfxStrip" role="status" aria-label="Yemek özeti">'+pill(sd?'mock':'on','Kurye bekleyen: '+sd)+pill(a?'mock':'on','Kurye başvurusu: '+a)+pill(b?'off':'on','Açık sorun: '+b)+'</div>'+
+    el.innerHTML='<div class="pfxStrip" role="status" aria-label="Yemek özeti">'+pill(sd?'mock':'on','Kurye arayan sipariş: '+sd)+pill(a?'mock':'on','Kurye başvurusu: '+a)+pill(b?'off':'on','Açık sorun: '+b)+'</div>'+
       (sc&&Object.keys(sc).length?'<div class="pfxStrip" aria-label="Son 7 gün siparişler">'+Object.keys(sc).map(function(k){return '<span class="pfxSt">'+esc((FOOD_ST[k]||k)+': '+sc[k])+'</span>'}).join('')+'</div>':'')+
       '<div class="pfxMenu pfxFoodGo">'+go.map(function(x){return '<button type="button" class="pfxBtn" data-food="'+x[0]+'" onclick="PF._admFood(\''+x[0]+'\')"><span>'+esc(x[1])+'</span><span aria-hidden="true">›</span></button>'}).join('')+'</div>';
   },
