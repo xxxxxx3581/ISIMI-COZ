@@ -642,6 +642,7 @@ function css2(){
 .fdFar{font-size:12.5px;font-weight:700;color:var(--fd-warn);margin:-4px 0 10px;padding:0 4px}
 .fdAlarm{position:sticky;top:var(--fd-top);z-index:30;display:flex;align-items:center;gap:10px;padding:12px 14px;border-radius:14px;background:#dc2626;color:#fff;font-weight:800;margin:0 0 12px;animation:fdBlink 1.2s ease-in-out infinite;cursor:pointer;border:0;width:100%;font:inherit;font-weight:800;text-align:left}
 .fdAlarm span{flex:1}@keyframes fdBlink{50%{box-shadow:0 0 0 6px rgba(220,38,38,.25)}}
+.fdChkHint{display:block;margin-top:2px;font-size:12.5px;font-weight:700;color:var(--muted)}
 .fdTimer{font-weight:800}.fdTimer.late{color:var(--fd-bad)}
 .fdCatPick{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}.fdCatPick .fdChip{min-height:36px}
 .fdRole{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:0 0 12px}
@@ -1945,7 +1946,8 @@ function bizCard(o){
       its.filter(i=>(i.options||[]).length).map(i=>'<small class="opt">'+E(i.name)+': '+E(i.options.map(x=>(x.kind==='remove'?'Çıkar: ':'')+x.option).join(', '))+'</small>').join('')+
       '<div class="mp">'+[MODE[o.delivery_mode],PAY[o.payment_method]].filter(Boolean).map(E).join(' · ')+'</div>'+
       '<div class="nxTot"><b>'+M(o.total_kurus)+'</b>'+(past&&o.status==='delivered'?'<small>Hakediş '+M(o.restaurant_share_kurus)+'</small>':'')+'</div>'+
-      '<div class="bdg">'+badge(o.status)+(late?'<span class="fdBadge bad">⏰ Gecikiyor</span>':'')+'</div></div>'+
+      /* P36: durum notu (a.info: Kurye aranıyor / siparişi aldı / Yolda / yaklaştı) varsa aynı durumu söyleyen küçük etiket tekrarlanmaz */
+      ((a.info?'':badge(o.status))||late?'<div class="bdg">'+(a.info?'':badge(o.status))+(late?'<span class="fdBadge bad">⏰ Gecikiyor</span>':'')+'</div>':'')+'</div>'+
     (o.note?'<div class="fdNote warn note">📝 '+E(o.note)+'</div>':'')+
     '<div class="inf">'+(o.address_text?'<div>📍 '+E(o.address_text)+'</div>':'')+(o.phone?'<div>📞 <a href="tel:'+E(o.phone)+'">'+E(o.phone)+'</a></div>':'')+
       (o.estimated_ready_at&&['accepted','preparing'].includes(o.status)?'<div>Hazır olacak: <b>'+hm(o.estimated_ready_at)+'</b> · <span class="fdTimer" data-eta="'+E(o.estimated_ready_at)+'"></span></div>':o.estimated_ready_at&&!past?'<div>⏱ Hazır olacak: <b>'+hm(o.estimated_ready_at)+'</b></div>':'')+
@@ -2564,8 +2566,13 @@ window.foodCourierComplete=async function(id,btn){
 };
 
 /* ====================== Kurye başvurusu (DEMO iş akışı) ====================== */
+/* P36: sözleşme kutusu, metin "Oku" bağlantısıyla açılmadan pasif ("Önce metni oku"); açılınca aktif. Zaten işaretli kutuya dokunulmaz;
+   zorunlu onay kontrolü (PF.readChecklist) aynı. */
+function consentGate(root){qa('label.pfxChk',root).forEach(l=>{const i=l.querySelector('input[data-doc]'),a=l.querySelector('a');if(!i||!a||i.checked)return;
+  i.disabled=true;i.setAttribute('aria-disabled','true');const h=document.createElement('small');h.className='fdChkHint';h.textContent='Önce metni oku';(l.querySelector('span')||l).appendChild(h);
+  a.addEventListener('click',()=>{i.disabled=false;i.removeAttribute('aria-disabled');h.remove()})})}
 function courierApplyForm(prev){
-  if(pfOn())PF.legalList().then(list=>{const el=document.getElementById('crCons');if(el)el.innerHTML=PF.consentChecklist(list,'courier_application','courier')}).catch(()=>{});
+  if(pfOn())PF.legalList().then(list=>{const el=document.getElementById('crCons');if(el){el.innerHTML=PF.consentChecklist(list,'courier_application','courier');consentGate(el)}}).catch(()=>{});
   render(bar(prev?'Tekrar başvur':'Kurye ol','foodPanelBack()')+roleBar('courier')+
     (prev?'':'<div class="fdTrackHero" style="text-align:center"><div style="font-size:40px">🛵</div><h2 style="margin-top:6px">Kendi saatlerinde teslimat yap</h2><p>Başvur, incelensin, onaylanınca müsait olduğunda yakınındaki teslimatları al.</p></div>')+
     '<div class="fdCard" style="margin-bottom:12px"><ol class="fdApply"><li class="cur"><i>1</i><div><b>Başvuru</b><small>Ad, telefon ve araç bilgisi</small></div></li><li><i>2</i><div><b>İnceleme</b><small>Bilgilerin kontrol edilir</small></div></li><li><i>3</i><div><b>Onay</b><small>Onaylanınca teslimat almaya başlarsın</small></div></li></ol></div>'+
