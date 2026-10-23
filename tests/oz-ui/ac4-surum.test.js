@@ -50,11 +50,12 @@
 // P28b: referans 8c775ec'e tek sefer taşındı (önceki: e41237e; arada yalnız menüde Giriş yap / Kayıt ol satırı + CSS; oz-market-v1.js ?v=21 aynen).
 // P27b: referans 8c53b8b'e tek sefer taşındı (önceki: 8c775ec; arada yalnız Hesabım profil kartı düzeni + CSS; oz-market-v1.js ?v=21 aynen).
 // P31: referans 52688eb'e tek sefer taşındı (önceki: 8c53b8b; arada yalnız oz-market-v1.js ?v=21 → ?v=22).
+// P32: referans cc6692e'e tek sefer taşındı (önceki: 52688eb; arada yalnız pf-platform-v1.js ?v=9 → ?v=10; oz-market-v1.js ?v=22 aynen).
 const fs=require('fs'),path=require('path'),cp=require('child_process');
 const {chromium,open,enter}=require('./harness.js');
 const ROOT=path.resolve(__dirname,'../..');
 const cur=fs.readFileSync(path.join(ROOT,'index.html'),'utf8');
-const base=cp.execSync('git show 52688eb:index.html',{cwd:ROOT,encoding:'utf8',maxBuffer:64<<20});
+const base=cp.execSync('git show cc6692e:index.html',{cwd:ROOT,encoding:'utf8',maxBuffer:64<<20});
 const blk=s=>{const a=s.indexOf('/*K21-BASLA*/'),b=s.indexOf('/*K21-BITIS*/');return s.slice(a,b)};
 const nocom=s=>s.replace(/\/\*[\s\S]*?\*\//g,'');
 const nover=s=>s.replace(/oz-market-v1\.js\?v=\d+/g,'oz-market-v1.js?v=N');
