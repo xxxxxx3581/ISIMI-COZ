@@ -2643,7 +2643,7 @@ function liveStart(){
 /* ====================== Admin ====================== */
 /* P24: panel kök ekranlarının "←" düğmesi panele girilen ekrana döner (platform geçmişinde önceki kayıt); kayıt yoksa Yemek ana sayfası */
 window.foodPanelBack=function(){const V=window.V2_NAV;if(V&&V.idx>0&&typeof history!=='undefined')history.back();else showFoodHome()};
-async function showFoodAdmin(){FDW_TAB='';
+async function showFoodAdmin(focus){FDW_TAB='';
   if(!A())return;const tok=newScreen();FDW_PANEL=1;
   render(bar('Yemek yönetimi','foodPanelBack()')+skel('row',3));
   try{
@@ -2658,10 +2658,12 @@ async function showFoodAdmin(){FDW_TAB='';
         '<div class="two"><div><label for="stAcc">Kabul süresi (dk)</label><input id="stAcc" type="number" min="3" max="60" value="'+(+SETA.accept_timeout_min||10)+'" onchange="foodSetting(&#39;accept_timeout_min&#39;,+this.value,this)"></div><div><label for="stLate">Gecikme eşiği (dk)</label><input id="stLate" type="number" min="3" max="60" value="'+(+SETA.late_notify_min||10)+'" onchange="foodSetting(&#39;late_notify_min&#39;,+this.value,this)"></div></div>'+
         '<p class="fdMuted fdSmall" style="margin-top:10px">Online ödeme: '+(SETA.online_payment_enabled?'açık':'kapalı')+' (ödeme sağlayıcı anahtarları tanımlanınca açılır).</p></div></details>'+
       '<div class="fdRows" style="margin:12px 0">'+row('🏷️','Kademeli Yemek İndirim Fırsatı','Mevcut kupon altyapısıyla kademeli, süreli kampanya','foodAdmFlash()')+row('🛰️','Operasyon merkezi','Alarmlar, acil durum anahtarları, bekleyen işler','showFoodOpsCenter()')+row('🗂️','Başvurular','Restoran ve kurye: Başvuru → Belgeler → İnceleme → Onay → Aktif','showFoodOnboarding()')+row('📣','Reklam ve kampanya alanları','Slider, sponsorlu kart, banner · gösterim/tıklama','showFoodAdminPromos()')+row('💬','Yorum moderasyonu','Bildirilen yorumlar, gizle / yayına al','showFoodAdminReviews()')+'</div>'+
-      '<h2>Kurye başvuruları</h2>'+(o.pending_couriers.length?o.pending_couriers.map(c=>'<div class="fdCard" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;gap:8px"><b>'+E(c.name)+'</b>'+badge(c.status==='suspended'?'cancelled':'new').replace(/>[^<]*</,'>'+(c.status==='suspended'?'Askıda':'Bekliyor')+'<')+'</div><div class="fdMuted fdSmall">'+E(c.phone)+' · '+E(VEH[c.vehicle]||'')+' · '+ago(c.created_at)+'</div><div class="fdRow2">'+(c.status==='pending'?'<button type="button" class="fb ghostBad" onclick="foodAdmCourier(\''+E(c.user_id)+'\',\'rejected\',this)">Reddet</button>':c.status!=='suspended'?'<button type="button" class="fb ghostBad" onclick="foodAdmCourier(\''+E(c.user_id)+'\',\'suspended\',this)">Askıya al</button>':'<span></span>')+'<button type="button" class="fb pri" onclick="foodAdmCourier(\''+E(c.user_id)+'\',\'approved\',this)">Onayla</button></div></div>').join(''):'<p class="fdMuted fdSmall">Bekleyen başvuru yok.</p>')+
+      '<h2 id="fdAdmCour">Kurye başvuruları</h2>'+(o.pending_couriers.length?o.pending_couriers.map(c=>'<div class="fdCard" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;gap:8px"><b>'+E(c.name)+'</b>'+badge(c.status==='suspended'?'cancelled':'new').replace(/>[^<]*</,'>'+(c.status==='suspended'?'Askıda':'Bekliyor')+'<')+'</div><div class="fdMuted fdSmall">'+E(c.phone)+' · '+E(VEH[c.vehicle]||'')+' · '+ago(c.created_at)+'</div><div class="fdRow2">'+(c.status==='pending'?'<button type="button" class="fb ghostBad" onclick="foodAdmCourier(\''+E(c.user_id)+'\',\'rejected\',this)">Reddet</button>':c.status!=='suspended'?'<button type="button" class="fb ghostBad" onclick="foodAdmCourier(\''+E(c.user_id)+'\',\'suspended\',this)">Askıya al</button>':'<span></span>')+'<button type="button" class="fb pri" onclick="foodAdmCourier(\''+E(c.user_id)+'\',\'approved\',this)">Onayla</button></div></div>').join(''):'<p class="fdMuted fdSmall">Bekleyen başvuru yok.</p>')+
       '<h2>Onaylı kuryeler</h2>'+(o.couriers.length?'<div class="fdList">'+o.couriers.map(c=>'<div class="fdCartItem"><div class="tx"><b>'+E(c.name)+' '+(c.is_available?'🟢':'⚪')+'</b><small>'+(+c.rating_avg?'★ '+(+c.rating_avg).toFixed(1):'Puan yok')+'</small></div><button type="button" class="fb ghostBad sm" onclick="foodAdmCourier(\''+E(c.user_id)+'\',\'suspended\',this)">Askıya al</button></div>').join('')+'</div>':'<p class="fdMuted fdSmall">Onaylı kurye yok.</p>')+
       '<h2>Restoranlar</h2><div class="fdList">'+o.venues.map(v=>'<div class="fdCartItem"><div class="tx"><b>'+E(v.name)+'</b><small>'+(v.is_active?'Aktif':'Pasif')+' · '+(v.is_open?'Açık':'Kapalı')+' · komisyon %'+(v.commission_bps/100).toFixed(2).replace('.',',')+' · hizmet '+M(v.platform_fee_kurus)+'</small></div><button type="button" class="fb sm" onclick="foodAdmVenue(\''+E(v.id)+'\','+v.commission_bps+','+v.platform_fee_kurus+','+v.is_active+')">Düzenle</button></div>').join('')+'</div>'+
       '<h2>Açık sorunlar</h2>'+(o.open_issues.length?o.open_issues.map(x=>'<div class="fdCard" style="margin-bottom:10px"><b>'+E(ISSUE[x.type]||x.type)+'</b> <span class="fdMuted fdSmall">#'+E(x.order_no)+' · '+ago(x.created_at)+'</span>'+(x.description?'<p>'+E(x.description)+'</p>':'')+'<div class="fdRow2"><button type="button" class="fb" onclick="foodAdmIssue(\''+E(x.id)+'\',\'rejected\',this)">Reddet</button><button type="button" class="fb pri" onclick="foodAdmIssue(\''+E(x.id)+'\',\'resolved\',this)">Çözüldü</button></div></div>').join(''):'<p class="fdMuted fdSmall">Açık sorun yok.</p>'));
+    /* P38: Başvurular / yönetim panelinden kurye kararına gelindiyse "Kurye başvuruları" başlığına kaydır (Onayla/Reddet orada) */
+    if(focus==='couriers'){const h=document.getElementById('fdAdmCour');if(h)window.scrollTo(0,Math.max(0,h.getBoundingClientRect().top+window.scrollY-topOffset()-8))}
   }catch(e){if(alive(tok))render(bar('Yemek yönetimi','foodPanelBack()')+errBox(e,'showFoodAdmin()'))}
 }
 /* ---------- V4 · Yemek admin: reklam alanları ve yorum moderasyonu ----------
@@ -2769,12 +2771,14 @@ async function showFoodOnboarding(kind){
       return '<div class="'+(cnt[st]?'on':'')+'"><b>'+(cnt[st]||0)+'</b><span>'+E(l)+'</span></div>'}).join('')+'</div>';
     render(bar('Başvurular','showFoodAdmin()',null,(rows||[]).length+' kayıt')+head+steps+
       (window.PF&&typeof PF.openAdmin==='function'?'<button type="button" class="fb block soft" style="margin:0 0 12px" onclick="PF.openAdmin()">Belge ve restoran onayları için yönetim paneli ›</button>':'')+
-      ((rows||[]).length?'<div class="fdwAdmL">'+rows.map(r=>'<div class="fdwAdmP"><div class="h"><b>'+(r.kind==='venue'?'🏪 ':'🛵 ')+E(r.name||'—')+'</b><span class="fdPill">'+E(r.stage_label)+'</span></div>'+
+      /* P38: satır karar ekranına gider — kurye → Yemek yönetimi "Kurye başvuruları" (Onayla/Reddet), restoran → yönetim paneli İşletme başvuruları */
+      ((rows||[]).length?'<div class="fdwAdmL">'+rows.map(r=>'<button type="button" class="fdwAdmP fdwAdmGo" data-kind="'+(r.kind==='venue'?'venue':'courier')+'" aria-label="'+E((r.kind==='venue'?'Restoran':'Kurye')+' başvurusu: '+(r.name||'—')+', aç')+'" onclick="foodObGo(\''+(r.kind==='venue'?'venue':'courier')+'\')"><span class="tx"><span class="h"><b>'+(r.kind==='venue'?'🏪 ':'🛵 ')+E(r.name||'—')+'</b><span class="fdPill">'+E(r.stage_label)+'</span></span>'+
         '<small>Belge: '+(+r.docs_total||0)+(+r.docs_pending?' · '+r.docs_pending+' inceleme bekliyor':'')+(+r.docs_rejected?' · '+r.docs_rejected+' reddedildi':'')+(+r.required_missing?' · <span class="fdBad">'+r.required_missing+' zorunlu belge eksik</span>':'')+' · '+E(ago(r.since))+'</small>'+
-        (r.reason?'<p class="fdMuted fdSmall" style="margin:4px 0 0">'+E(r.reason)+'</p>':'')+
-        '</div>').join('')+'</div>':empty('🗂️','Kayıt yok','')));
+        (r.reason?'<span class="fdMuted fdSmall" style="display:block;margin:4px 0 0">'+E(r.reason)+'</span>':'')+
+        '<small class="go">Karar vermek için dokun</small></span><span class="ch" aria-hidden="true">›</span></button>').join('')+'</div>':empty('🗂️','Kayıt yok','')));
   }catch(e){if(alive(tok))render(bar('Başvurular','showFoodAdmin()')+head+errBox(e,'showFoodOnboarding()'))}
 }
+window.foodObGo=function(k){if(k==='venue'){if(window.PF&&typeof PF.openAdmin==='function')PF.openAdmin('venues');else toast('Yönetim paneli yüklenemedi.','err');return}showFoodAdmin('couriers')};
 /* ---------- V5 · Operasyon merkezi (yalnız yönetim): alarmlar, acil durum anahtarları, bekleyen işler, son işlemler ---------- */
 const OPS_SW=[['orders_enabled','Sipariş alma','Kapatınca yeni sipariş ve ödeme başlatılamaz; mevcut siparişler devam eder.'],
   ['venue_signup_enabled','Yeni restoran başvurusu','Kapatınca yeni restoran oluşturulamaz.'],
@@ -3534,6 +3538,12 @@ html:not([data-theme="light"]) .fdwCp b{color:var(--fdw-acc)}
 .fdwAdmP small{display:block;color:var(--muted);font-size:12px;margin-top:2px}.fdwAdmP p{margin:6px 0 0;font-size:14px;line-height:1.5}
 .fdwAdmP .m{display:flex;gap:14px;margin-top:6px;font-size:13px;font-weight:700}
 .fdwAdmP .fdRow2{margin-top:8px}
+/* P38: tıklanır başvuru satırı */
+button.fdwAdmP.fdwAdmGo{display:flex;align-items:center;gap:10px;width:100%;min-height:56px;font:inherit;color:var(--text);text-align:left;cursor:pointer}
+.fdwAdmGo .tx{flex:1;min-width:0;display:block}.fdwAdmGo .ch{flex:none;font-size:22px;color:var(--muted)}
+.fdwAdmGo small.go{color:var(--fd-acc);font-weight:700}
+.fdwAdmGo:focus-visible{outline:3px solid var(--fd-acc);outline-offset:2px}
+html:not([data-theme="light"]) .fdwAdmGo .fdBad{color:#EF7A6B}
 body.fdWorld .fdSub{grid-template-columns:repeat(4,1fr)}body.fdWorld .fdSub button{font-size:13px;padding:0 2px}
 .fdwRep{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .fdwRep>div{display:flex;flex-direction:column;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--card);min-width:0}

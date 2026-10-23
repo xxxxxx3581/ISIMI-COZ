@@ -115,13 +115,13 @@ const CONTRAST=(sel)=>{const L=c=>{const f=v=>{v/=255;return v<=.03928?v/12.92:M
   ok(JSON.stringify(r.c)==='["showFoodAdmin","showFoodOpsCenter"]'&&r.ov===0,'['+T+'] P32: kısayol paneli kapatır, showFoodAdmin → showFoodOpsCenter: '+JSON.stringify(r));
   await p.evaluate(()=>{for(const n in window.__fo)window[n]=window.__fo[n]});
   // P37: özet etiketleri düğme — doğru showFood… çağrısı (Kurye başvurusu → Başvurular, Kuryeler süzgeci)
-  for(const [fn,arg] of [['showFoodOnboarding','courier'],['showFoodOpsCenter',null],['showFoodAdmin',null]]){
+  /* P38: Kurye başvurusu etiketi doğrudan karar ekranına (showFoodAdmin('couriers')) gider */
+  for(const [lab,exp] of [['Kurye başvurusu',['showFoodAdmin:couriers']],['Kurye arayan sipariş',['showFoodAdmin','showFoodOpsCenter']],['Açık sorun',['showFoodAdmin']]]){
    await p.evaluate(()=>PF.openAdmin('food'));await W(1200);
-   r=await p.evaluate(([fn])=>{const b=document.querySelector('#pfxAdm .pfxStB[data-food='+fn+']');if(!b)return null;const R=b.getBoundingClientRect();
+   r=await p.evaluate(([lab])=>{const b=[...document.querySelectorAll('#pfxAdm .pfxStB')].find(x=>x.getAttribute('aria-label').indexOf(lab+':')===0);if(!b)return null;const R=b.getBoundingClientRect();
     window.__fc=[];window.__fo={};['showFoodAdmin','showFoodOnboarding','showFoodOpsCenter'].forEach(n=>{window.__fo[n]=window[n];window[n]=function(a){window.__fc.push(n+(a?':'+a:''))}});
-    const tag=b.tagName,al=b.getAttribute('aria-label'),h=Math.round(R.height);b.click();return {tag,al,h,c:window.__fc,ov:document.querySelectorAll('.pfxOv').length}},[fn]);
+    const tag=b.tagName,al=b.getAttribute('aria-label'),h=Math.round(R.height);b.click();return {tag,al,h,c:window.__fc,ov:document.querySelectorAll('.pfxOv').length}},[lab]);
    await p.evaluate(()=>{for(const n in window.__fo)window[n]=window.__fo[n]});
-   const exp=fn==='showFoodAdmin'?['showFoodAdmin']:['showFoodAdmin',fn+(arg?':'+arg:'')];
    ok(r&&r.tag==='BUTTON'&&/: \d+, aç$/.test(r.al)&&r.h>=44&&JSON.stringify(r.c)===JSON.stringify(exp)&&r.ov===0,'['+T+'] P37: etiket düğme → '+exp.join(' → ')+': '+JSON.stringify(r));
   }
   await openA();await p.evaluate(()=>PF.openAdmin('food'));await W(1200);
@@ -157,13 +157,13 @@ const CONTRAST=(sel)=>{const L=c=>{const f=v=>{v/=255;return v<=.03928?v/12.92:M
   let q=await tp.evaluate(()=>[...document.querySelectorAll('.pfxOv .pfxSh button')].map(b=>{b.scrollIntoView({block:'center'});const r=b.getBoundingClientRect();const e=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
    return {t:(b.getAttribute('aria-label')||b.textContent).trim().slice(0,24),ok:!!e&&(e===b||b.contains(e)),hit:e&&!(e===b||b.contains(e))?String(e.className||e.tagName):''}}));
   ok(q.length>=20&&q.every(x=>x.ok),T+' P37: tüm düğmelerde elementFromPoint(merkez) = düğme ('+q.length+'): '+JSON.stringify(q.filter(x=>!x.ok)));
-  for(const sel of ['.pfxFoodGo [data-food=showFoodOnboarding]','.pfxStB[data-food=showFoodOnboarding]']){
+  for(const sel of ['.pfxFoodGo [data-food=showFoodOnboarding]','.pfxStB[aria-label^="Kurye başvurusu"]']){
    await tp.evaluate(()=>PF.openAdmin('food'));await tp.waitForTimeout(1100);
    const c=await tp.evaluate(s=>{window.__fc=[];window.__fo={};['showFoodAdmin','showFoodOnboarding'].forEach(n=>{window.__fo[n]=window[n];window[n]=function(a){window.__fc.push(n+(a?':'+a:''))}});
     const b=document.querySelector('#pfxAdm '+s);b.scrollIntoView({block:'center'});const r=b.getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2]},sel);
    await tp.touchscreen.tap(c[0],c[1]);await tp.waitForTimeout(400);
    q=await tp.evaluate(()=>{const r={c:window.__fc,ov:document.querySelectorAll('.pfxOv').length};for(const n in window.__fo)window[n]=window.__fo[n];return r});
-   ok(q.c[0]==='showFoodAdmin'&&/^showFoodOnboarding/.test(q.c[1]||'')&&(sel.indexOf('pfxStB')<0||q.c[1]==='showFoodOnboarding:courier')&&q.ov===0,T+' P37: touchscreen.tap '+sel+': '+JSON.stringify(q));
+   ok((sel.indexOf('pfxStB')<0?q.c[0]==='showFoodAdmin'&&q.c[1]==='showFoodOnboarding':JSON.stringify(q.c)==='["showFoodAdmin:couriers"]')&&q.ov===0,T+' P37: touchscreen.tap '+sel+': '+JSON.stringify(q));
   }
   ok(!t.st.errors.length,T+' sayfa hatası: '+t.st.errors.join(' | '));await t.p.context().close();
  }

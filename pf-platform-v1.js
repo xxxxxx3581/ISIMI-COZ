@@ -601,7 +601,7 @@ function isoDay(off){var d=new Date();d.setDate(d.getDate()+(off||0));return d.t
 function foodPendN(o){return (Array.isArray(o&&o.pending_couriers)?o.pending_couriers:[]).filter(function(c){return c&&c.status==='pending'}).length}
 var FOOD_ST={new:'Yeni',accepted:'Kabul',preparing:'Hazırlanıyor',ready:'Hazır',courier_search:'Kurye aranıyor',courier_assigned:'Kurye atandı',picked_up:'Kuryede',on_the_way:'Yolda',delivered:'Teslim',cancelled:'İptal',rejected:'Reddedildi'};
 PF._admFood=function(fn,arg){var w=window;if(typeof w.showFoodAdmin!=='function'){toast('Yemek modülü yüklenemedi.');return}
-  ADM.tab=null;ADM.direct=false;closeSheet();w.showFoodAdmin();if(fn&&fn!=='showFoodAdmin'&&typeof w[fn]==='function'){if(arg!=null)w[fn](arg);else w[fn]()}};
+  ADM.tab=null;ADM.direct=false;closeSheet();if(fn==='showFoodAdmin'&&arg!=null){w.showFoodAdmin(arg);return}w.showFoodAdmin();if(fn&&fn!=='showFoodAdmin'&&typeof w[fn]==='function'){if(arg!=null)w[fn](arg);else w[fn]()}};
 var ADMIN={
   food:async function(el){
     var o=await rpc('food_admin_overview',{})||{};var a=foodPendN(o),b=Array.isArray(o.open_issues)?o.open_issues.length:0,sd=+o.searching_deliveries||0,sc=o.orders_by_status&&typeof o.orders_by_status==='object'?o.orders_by_status:null;
@@ -610,7 +610,7 @@ var ADMIN={
     var pillB=function(cls,t,n,fn,arg){return '<button type="button" class="pfxSt pfxStB '+cls+'" data-food="'+fn+'"'+(arg?' data-arg="'+arg+'"':'')+' aria-label="'+esc(t+': '+n+', aç')+'" onclick="PF._admFood(\''+fn+'\''+(arg?',\''+arg+'\'':'')+')"><i aria-hidden="true"></i>'+esc(t+': '+n)+'</button>'};
     var go=[['showFoodOpsCenter','🛰️','Operasyon merkezi'],['showFoodOnboarding','🗂️','Başvurular'],['showFoodAdminPromos','📣','Reklam ve kampanya alanları'],['showFoodAdminReviews','⭐','Yorum moderasyonu'],['showFoodAdmin','🍽️','Restoranlar / kuryeler / sorunlar']];
     /* P33: özet etiketleri tek satır (sarar), son 7 gün durumları aynı satırda; 5 kısayol 2 sütun kart (ikon üstte, ad altta) */
-    el.innerHTML='<div class="pfxStrip pfxFoodSum" role="status" aria-label="Yemek özeti">'+pillB(sd?'mock':'on','Kurye arayan sipariş',sd,'showFoodOpsCenter')+pillB(a?'mock':'on','Kurye başvurusu',a,'showFoodOnboarding','courier')+pillB(b?'off':'on','Açık sorun',b,'showFoodAdmin')+
+    el.innerHTML='<div class="pfxStrip pfxFoodSum" role="status" aria-label="Yemek özeti">'+pillB(sd?'mock':'on','Kurye arayan sipariş',sd,'showFoodOpsCenter')+/* P38: doğrudan karar ekranı */pillB(a?'mock':'on','Kurye başvurusu',a,'showFoodAdmin','couriers')+pillB(b?'off':'on','Açık sorun',b,'showFoodAdmin')+
       (sc?Object.keys(sc).map(function(k,i){return '<span class="pfxSt">'+esc((i?'':'Son 7 gün · ')+(FOOD_ST[k]||k)+': '+sc[k])+'</span>'}).join(''):'')+'</div>'+
       '<div class="pfxFoodGo">'+go.map(function(x){return '<button type="button" class="pfxBtn" data-food="'+x[0]+'" onclick="PF._admFood(\''+x[0]+'\')"><span class="ic" aria-hidden="true">'+x[1]+'</span><span class="t">'+esc(x[2])+'</span></button>'}).join('')+'</div>';
   },
