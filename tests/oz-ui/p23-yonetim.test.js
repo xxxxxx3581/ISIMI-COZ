@@ -51,12 +51,25 @@ const AUDIT=()=>{const L=c=>{const m=c.match(/[\d.]+/g).map(Number);const f=v=>{
   await pane('queues');
   r=await p.evaluate(()=>{const s=document.querySelector('#pfxAdmHome [data-pane=queues]');
    return {vis:!s.hidden,today:document.querySelector('#pfxAdmHome [data-pane=today]').hidden,oz:[...s.querySelectorAll('.pfxOzBig')].map(b=>b.firstChild.textContent+':'+(b.querySelector('.pfxCnt')||{}).textContent),
-    grid:[...s.querySelectorAll('.pfxQG .pfxQB')].map(b=>{const t=b.querySelector('b').getBoundingClientRect(),c=b.querySelector('.pfxCnt');const cr=c&&c.getBoundingClientRect();return {k:b.dataset.tab,on:b.classList.contains('on'),n:c?c.textContent:null,bd:getComputedStyle(b).borderTopColor,clear:!cr||t.right<=cr.left+1}})}});
+    grid:[...s.querySelectorAll('.pfxQG .pfxQB')].map(b=>{const t=b.querySelector('b').getBoundingClientRect(),c=b.querySelector('.pfxCnt');const cr=c&&c.getBoundingClientRect();return {k:b.dataset.tab,on:b.classList.contains('on'),n:c?c.textContent:null,bd:getComputedStyle(b).borderTopColor,/* P35: rozet köşede yazının üstünde — başlıkla kesişmez */clear:!cr||t.right<=cr.left+1||t.top>=cr.bottom-1}})}});
   ok(r.vis&&r.today,'['+T+'] Kuyruklar bölmesi açıldı');
   ok(r.oz.join('|')==='Satıcılar :1|Siparişler :3|İadeler :1','['+T+'] Özüne Dön kartı: '+JSON.stringify(r.oz));
   const g=r.grid;ok(g.slice(0,3).map(x=>x.k).join(',')==='lreview,reports,venues'&&g.slice(0,3).every(x=>x.on)&&g.slice(3).filter(x=>['docs','listings','providers','susp'].includes(x.k)).every(x=>!x.on&&x.n===null)&&g.every(x=>x.clear),'['+T+'] ızgara: >0 olanlar renkli ve üstte, sayısı okunmayan sönük/rozetsiz, başlık rozetle çakışmaz: '+JSON.stringify(g));
   a=await p.evaluate(AUDIT);ok(!a.bad.length&&!a.small.length,'['+T+'] Kuyruklar kontrast ≥4.5 ve ≥44px: '+JSON.stringify(a));
   await shot('yonetim-kuyruklar-'+T);
+  // P35: çipler sarar (kaydırma yok, ≤2 satır, ≥44px, "Destek"); her kartta tür rengi (sayı 0 da olsa); 3 sütun kompakt, ≥48px; yükseklik eskinin yarısından az
+  r=await p.evaluate(()=>{const s=document.querySelector('#pfxAdmHome [data-pane=queues]');const qf=s.querySelector('.pfxQF');const ch=[...qf.querySelectorAll('.pfxChip')];const R=e=>e.getBoundingClientRect();const qr=R(qf);
+   const qb=[...s.querySelectorAll('.pfxQG .pfxQB')];const g0=s.querySelector('.pfxQG');const H=()=>[...s.querySelectorAll('.pfxQG')].reduce((n,g)=>n+R(g).height,0);
+   const res={chips:ch.map(c=>c.textContent.trim().replace(/\s\d+$/,'')),chipVis:ch.every(c=>{const r=R(c);return r.left>=qr.left-1&&r.right<=qr.right+1&&r.height>=44}),chipRows:new Set(ch.map(c=>Math.round(R(c).top))).size,qfX:qf.scrollWidth>qf.clientWidth,
+    tone:qb.map(b=>b.dataset.tab+':'+((b.className.match(/pfxTn-(\w)/)||[])[1]||'-')),ozTone:[...s.querySelectorAll('.pfxOzC .pfxChips .pfxChip')].map(b=>b.dataset.tab+':'+((b.className.match(/pfxTn-(\w)/)||[])[1]||'-')),
+    cols:new Set([...g0.querySelectorAll('.pfxQB')].map(b=>Math.round(R(b).left))).size,minH:Math.min(...qb.map(b=>R(b).height)),zeroTint:qb.filter(b=>!b.classList.contains('on')).every(b=>getComputedStyle(b).backgroundColor!=='rgba(0, 0, 0, 0)'&&getComputedStyle(b).borderLeftWidth==='4px'),hNew:Math.round(H())};
+   const st=document.createElement('style');st.id='p35old';st.textContent='.pfxAdm3 .pfxQG.pfxQG{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}.pfxAdm3 .pfxQG .pfxQB.pfxQB{min-height:92px!important;padding:12px 48px 12px 14px!important}';document.head.appendChild(st);
+   res.hOld=Math.round(H());st.remove();return res});
+  ok(JSON.stringify(r.chips)==='["Hepsi","Bekleyen","İçerik","Destek","Özüne Dön"]'&&r.chipVis&&r.chipRows<=2&&!r.qfX,'['+T+'] P35: süzgeç çipleri hepsi görünür, kaydırma yok, ≤2 satır, ≥44px: '+JSON.stringify([r.chips,r.chipRows,r.qfX]));
+  const TONE={reports:'r',susp:'r',lreview:'o',venues:'o',food:'o',tickets:'o',listings:'b',docs:'b',providers:'b',kvkk:'s'};
+  ok(r.tone.every(x=>{const [k,t]=x.split(':');return t!=='-'&&(!TONE[k]||TONE[k]===t)})&&r.zeroTint,'['+T+'] P35: her kartta tür rengi (sayı 0 da): '+JSON.stringify(r.tone));
+  ok(r.ozTone.length===7&&r.ozTone.every(x=>x.split(':')[1]!=='-')&&r.ozTone.includes('oz_payouts:g')&&r.ozTone.includes('oz_settings:e'),'['+T+'] P35: Özüne Dön küçük çipleri tür renkli: '+JSON.stringify(r.ozTone));
+  ok(r.cols===3&&r.minH>=48&&r.hNew*2<r.hOld,'['+T+'] P35: 3 sütun, ≥48px, yükseklik eskinin yarısından az: '+JSON.stringify([r.cols,r.minH,r.hNew,r.hOld]));
   // arama + çip
   await p.fill('#pfxAdmHome .pfxQS input','şikâ');await p.waitForTimeout(150);
   r=await p.evaluate(()=>[...document.querySelectorAll('#pfxAdmHome [data-pane=queues] [data-qn]')].filter(b=>!b.hidden).map(b=>b.dataset.tab));

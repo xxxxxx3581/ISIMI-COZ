@@ -1692,6 +1692,22 @@ html:root .hmAcc .hmAccOut2 svg{width:16px;height:16px}
 html:root .hmAcc .hmRoles{flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none;min-height:24px}html:root .hmAcc .hmRoles::-webkit-scrollbar{display:none}html:root .hmAcc .hmRoleT{flex:none;white-space:nowrap}
 html:root .hmAcc .hmAccWsPh{height:68px;margin:0 0 10px;border-radius:16px;border:1px dashed #54422D;background:#3A2D20;opacity:.55}
 /*P24-BITIS*/
+/*P35-BASLA*/ /* Paket 35: yönetim ana liste — süzgeç çipleri sarar (kaydırma yok); Kuyruklar kartları P34 ızgarası gibi 3 sütun kompakt;
+   her kartta tür rengi (sol şerit + hafif ton zemin; --pfx-* P2 değişkenleri), sayı>0 iken mevcut güçlü vurgu (pfxQ-) korunur. */
+.pfxAdm3 .pfxTn-r{--tn:var(--pfx-r)}.pfxAdm3 .pfxTn-o{--tn:var(--pfx-o)}.pfxAdm3 .pfxTn-g{--tn:var(--pfx-g)}.pfxAdm3 .pfxTn-b{--tn:var(--pfx-b)}.pfxAdm3 .pfxTn-s{--tn:var(--pfx-s)}.pfxAdm3 .pfxTn-e{--tn:var(--pfx-e)}
+.pfxAdm3 .pfxQF{flex-wrap:wrap;overflow:visible;gap:6px;padding:0;margin:0 0 10px}.pfxAdm3 .pfxQF .pfxChip{padding:0 14px}
+.pfxAdm3 .pfxQSec .pfxMenuH{margin:10px 2px 6px}
+.pfxAdm3 .pfxQG{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 6px;padding-top:6px}
+.pfxAdm3 .pfxQG .pfxQB{min-height:54px;align-items:center;padding:12px 4px 6px 8px;border-width:1px;border-radius:12px}
+.pfxAdm3 .pfxQG .pfxQB b{font-size:11.5px;letter-spacing:-.15px;overflow-wrap:normal;hyphens:manual;line-height:1.2;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+/* rozet köşede, yazının üstünde (yazıdan yer çalmaz) */.pfxAdm3 .pfxQG .pfxQB .pfxCnt{top:-8px;right:4px;min-width:20px;height:20px;padding:0 5px;font-size:11px}
+.pfxAdm3 .pfxQG .pfxQB[class*=pfxTn-]{border-left:4px solid var(--tn);background:color-mix(in srgb,var(--tn) 10%,transparent)}
+.pfxAdm3 .pfxQG .pfxQB.on[class*=pfxTn-]{border-width:2px;border-left-width:4px;background:color-mix(in srgb,var(--tn) 18%,transparent)}
+.pfxAdm3 .pfxOzC{padding:10px}.pfxAdm3 .pfxOzH{margin:0 0 8px}
+.pfxAdm3 .pfxOzG{gap:6px;margin:0 0 8px}.pfxAdm3 .pfxOzG .pfxOzBig{min-height:60px;padding:8px 10px;gap:4px}
+.pfxAdm3 .pfxOzC .pfxChips{gap:6px}
+.pfxAdm3 .pfxOzC .pfxChip[class*=pfxTn-]{border:1px solid color-mix(in srgb,var(--tn) 60%,transparent);border-left:4px solid var(--tn);background:color-mix(in srgb,var(--tn) 12%,transparent)}
+/*P35-BITIS*/
 /*P23b-BASLA*/ /* Paket 23b: yönetim bölüm içi çerçeve (yalnız görünüm): ← + "Yönetim › bölme" + başlık + Kapat ve kardeş bölüm şeridi yapışkan; alt menü P23 ile aynı.
    Aktif çip --ad-on (krem #F2C14E / koyu #F7D24A); rozet yalnız mevcut sayılardan. Özüne Dön Özet: durum haritası küçük renkli etiketler (--st-* jetonları). */
 .pfxSh.pfxAdmIn>.pfxHd{flex-wrap:wrap;gap:8px 10px;padding:6px 0 10px;margin-bottom:10px;border-bottom:1px solid var(--line,rgba(127,127,127,.3))}
@@ -11362,5 +11378,5 @@ for(const k of ["showGayrimenkulDetail","showOtomobilDetail"]){const f=window[k]
 </body>
 <script src="./a35-seller-identity.js?v=3"></script>
 <script src="./a7-food-v1.js?v=13"></script>
-<script src="./pf-platform-v1.js?v=14"></script>
+<script src="./pf-platform-v1.js?v=15"></script>
 </html>
