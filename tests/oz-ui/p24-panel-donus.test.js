@@ -24,7 +24,7 @@ const {chromium,open,enter}=require('./harness.js');
  await openAdm();ok((await where()).ov===1,'A1: Yönetim paneli açıldı');
  await p.evaluate(()=>document.querySelector('.pfxOv [data-pfx-close]').click());await W(500);same(await where(),b0,'A1 Kapat');
  await openAdm();await p.goBack();await W();same(await where(),b0,'A1 Android geri');
- // P23b: bölüm içinden geri → önce bölme listesi (pencere açık), ikinci geri → pencere kapanır, sayfa yerinde kalır
+ // P23b/P23c: bölme listesinden girilen bölümden geri → önce bölme listesi (pencere açık), ikinci geri → pencere kapanır, sayfa yerinde kalır
  await openAdm();await p.evaluate(()=>PF.openAdmin('reports'));await W(900);await p.goBack();await W();
  ok(await p.evaluate(()=>!!document.getElementById('pfxAdmHome')&&!document.getElementById('pfxAdm')),'A1 bölüm içinden Android geri → bölme listesi');
  await p.goBack();await W();same(await where(),b0,'A1 bölüm içinden 2. Android geri');
@@ -37,8 +37,9 @@ const {chromium,open,enter}=require('./harness.js');
  await p.evaluate(()=>document.querySelector('[data-a=back]').click());await W(1300);same(await where(),b0,'A2 satıcı paneli → ekrandaki ←');
  await p.evaluate(()=>document.querySelector('#ozRoot .ozWs.ad').click());await W(1500);ok((await where()).ov===1,'A2: Özüne Dön yönetimi açıldı');
  await p.evaluate(()=>document.querySelector('.pfxOv [data-pfx-close]').click());await W(500);same(await where(),b0,'A2 yönetim → Kapat');
- /* P23b: Özüne Dön yönetimi Özet bölümünü açar → ilk geri bölme listesi, ikinci geri girilen ekran */
- await p.evaluate(()=>document.querySelector('#ozRoot .ozWs.ad').click());await W(1500);await p.goBack();await W(1200);ok(await p.evaluate(()=>!!document.getElementById('pfxAdmHome')),'A2 yönetim → Android geri → bölme listesi');await p.goBack();await W(1200);same(await where(),b0,'A2 yönetim → 2. Android geri');
+ /* P23c: Özüne Dön yönetimi Özet bölümüne DOĞRUDAN açılır → ← ve ilk Android geri paneli kapatıp girilen ekrana (kaydırma konumuyla) döner */
+ await p.evaluate(()=>document.querySelector('#ozRoot .ozWs.ad').click());await W(1500);await p.goBack();await W(1200);same(await where(),b0,'A2 yönetim (doğrudan bölüm) → Android geri');
+ await p.evaluate(()=>document.querySelector('#ozRoot .ozWs.ad').click());await W(1500);await p.evaluate(()=>document.querySelector('.pfxOv .pfxBack').click());await W(1200);same(await where(),b0,'A2 yönetim (doğrudan bölüm) → ←');
  // ---- A3: Yemek Hesabım → İşletmem / Kurye / Yemek yönetimi
  await p.evaluate(()=>showHome());await W();await p.evaluate(()=>showFoodAccount());await W(1500);
  await p.evaluate(()=>window.scrollTo(0,250));await W(300);b0=await where();

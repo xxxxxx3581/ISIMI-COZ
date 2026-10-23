@@ -78,6 +78,23 @@ const CONTRAST=(sel)=>{const L=c=>{const f=v=>{v/=255;return v<=.03928?v/12.92:M
   await p.evaluate(()=>document.querySelector('.pfxOv .pfxPN [data-pane=system]').click());await W(900);r=await S();ok(r.home&&r.pane==='system','['+T+'] alt menü → Sistem ana görünümü');
   await p.evaluate(()=>PF.openAdmin('audit'));await W(900);
   await p.evaluate(()=>document.querySelector('.pfxOv [data-pfx-close]').click());await W(500);r=await S();ok(!r.open,'['+T+'] Kapat → panelden çıkış');
+  // P23c: Hesabım'dan DOĞRUDAN bölüme açılış → ← ve ilk geri paneli kapatır, Hesabım'a (kaydırma konumuyla) döner; çip geçişi bu durumu korur
+  for(const how of ['geri','ok']){
+   await p.evaluate(()=>{document.querySelectorAll('.pfxOv').forEach(x=>x.remove());window.scrollTo(0,250)});await W(300);const y0=await p.evaluate(()=>Math.round(scrollY));
+   await p.evaluate(()=>{window.PF.roles={is_admin:true,roles:['super']};PF.openAdmin('oz_overview')});await W(1400);
+   await p.evaluate(()=>[...document.querySelectorAll('.pfxAdmS .pfxSC')].find(b=>b.childNodes[0].textContent==='Siparişler').click());await W(1100);
+   r=await S();ok(r.title==='Siparişler','['+T+'] doğrudan giriş + çip geçişi');
+   if(how==='geri'){await p.goBack();await W(1000)}else{await p.evaluate(()=>document.querySelector('.pfxOv .pfxBack').click());await W(600)}
+   r=await S();const y1=await p.evaluate(()=>Math.round(scrollY));
+   ok(!r.open&&await p.evaluate(()=>!!document.querySelector('#app .hmAcc'))&&Math.abs(y1-y0)<=2,'['+T+'] doğrudan giriş → '+(how==='geri'?'Android geri':'←')+' paneli kapatır, Hesabım aynı konumda: '+JSON.stringify({o:r.open,y0,y1}));
+  }
+  // listeden giriş + alt menüden listeye geçiş korunur
+  await openA();await p.evaluate(()=>document.querySelector('#pfxAdmHome .pfxPN [data-pane=queues]').click());await W(300);await p.evaluate(()=>document.querySelector('#pfxAdmHome [data-tab=oz_orders]').click());await W(1200);
+  await p.evaluate(()=>document.querySelector('.pfxOv .pfxBack').click());await W(800);r=await S();ok(r.open&&r.home&&r.pane==='queues','['+T+'] listeden giriş → ← bölme listesi (eski davranış)');
+  await p.evaluate(()=>{document.querySelectorAll('.pfxOv').forEach(x=>x.remove());PF.openAdmin('oz_overview')});await W(1300);
+  await p.evaluate(()=>document.querySelector('.pfxOv .pfxPN [data-pane=queues]').click());await W(900);r=await S();ok(r.open&&r.home&&r.pane==='queues','['+T+'] doğrudan girişte alt menüden bölme listesine geçilebilir');
+  await p.evaluate(()=>document.querySelector('#pfxAdmHome [data-tab=oz_sellers]').click());await W(1200);await p.goBack();await W(900);r=await S();ok(r.open&&r.home,'['+T+'] alt menüyle listeye geçtikten sonra bölümden geri → liste');
+  await p.evaluate(()=>document.querySelectorAll('.pfxOv').forEach(x=>x.remove()));
   // Özüne Dön Özet: Siparişler kutusu küçük renkli etiketler
   await openA();await p.evaluate(()=>PF.openAdmin('oz_overview'));await W(1600);
   r=await p.evaluate(()=>{const k=document.querySelector('[data-kpi=orders]');if(!k)return null;const t=[...k.querySelectorAll('.ozKT')];return {tags:t.map(x=>x.textContent.trim()),fs:t.map(x=>parseFloat(getComputedStyle(x).fontSize)),cls:t.map(x=>x.className)}});

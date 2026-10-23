@@ -450,17 +450,19 @@ PF.openAdmin=async function(tab){
   if(!cur){
     /* AJ2-E: ana liste — üstte "Şimdi bakılacaklar" (yalnız sayısı >0 olanlar; sayılar mevcut okuma çağrılarından), altta sade gruplar.
        Her sekme erişilebilir kalır: sayısı >0 olan "Şimdi"de, diğerleri kendi grubunda; Özüne Dön sekmeleri tek kartta küçük düğmeler. */
-    ADM.tab=null;ADM.tabs=tabs;
+    ADM.tab=null;ADM.tabs=tabs;ADM.direct=false;
     admHome(tabs,PF._admCnt&&Date.now()-PF._admCnt.at<60000?PF._admCnt:null,true);
     if(!(PF._admCnt&&Date.now()-PF._admCnt.at<60000)){var c=await admCounts(tabs);if(ADM.tab===null&&document.getElementById('pfxAdmHome'))admHome(tabs,c,false)}
     return;
   }
+  /* P23c: panel kapalıyken doğrudan bir bölüme açıldıysa (Hesabım kartı, kısayol) ← / geri paneli kapatır; bölme listesinden girildiyse listeye döner; çip geçişi durumu korur */
+  if(!document.querySelector('#pfxSheet #pfxAdmHome,#pfxSheet #pfxAdm'))ADM.direct=true;else if(document.getElementById('pfxAdmHome'))ADM.direct=false;
   ADM.tab=cur[0];ADM.tabs=tabs;ADM.pane=admPaneOf(cur[0]);
   /* P23b: bölüm iç çerçevesi — ← (bölme listesine) + "Yönetim › bölme" yolu + başlık + Kapat, altında kardeş bölüm şeridi (yapışkan), en altta bölme menüsü.
      Çip/menü geçişleri geçmişe kayıt eklemez (pencere geçmişe hiç yazmaz); Android geri → PF.adminBack (bölme listesi). İçerik (ADMIN.*) aynı. */
   var oz=/^oz_/.test(cur[0]),c=PF._admCnt,sib=admSibs(cur[0],tabs),nm=function(t){return t[1].replace(/^Özüne Dön · /,'')};
   var bn=function(k){if(!c)return null;if(ADM_CNT[k]&&c[k])return [c[k].n,ADM_CNT[k]];var Z=c.oz,n=Z?(k==='oz_sellers'?Z.sellers:k==='oz_orders'?Z.orders:k==='oz_returns'?Z.returns:null):null;return n==null?null:[n,k==='oz_returns'?'bad':'warn']};
-  var hd='<button type="button" class="pfxBtn pfxBack" aria-label="Bölümlere dön" onclick="PF._admBack()"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 5l-7 7 7 7"/></svg></button>'+
+  var hd='<button type="button" class="pfxBtn pfxBack" aria-label="'+(ADM.direct?'Geri dön':'Bölümlere dön')+'" onclick="PF._admBack()"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 5l-7 7 7 7"/></svg></button>'+
     '<div class="pfxAdmTt"><small class="pfxAdmP">Yönetim › '+(oz?'Özüne Dön':ADM_PN[ADM.pane])+'</small><h2 class="pfxAdmT">'+esc(nm(cur))+'</h2></div>';
   var sub=sib.length>1?'<nav class="pfxAdmS" aria-label="'+(oz?'Özüne Dön':ADM_PN[ADM.pane])+' bölümleri">'+sib.map(function(t){var on=t[0]===cur[0],b=bn(t[0]);
     return '<button type="button" class="pfxSC'+(on?' on':'')+'" data-tab="'+t[0]+'"'+(on?' aria-current="page"':'')+(b?' aria-label="'+esc(nm(t)+': '+b[0]+' bekleyen')+'"':'')+' onclick="PF.openAdmin(\''+t[0]+'\')">'+esc(nm(t))+(b?'<span class="pfxCnt '+(b[0]>0?b[1]:'z')+'" aria-hidden="true">'+b[0]+'</span>':'')+'</button>'}).join('')+'</nav>':'';
@@ -517,10 +519,10 @@ var ADM_NT={reports:'r',lreview:'a',venues:'a',kvkk:'a',tickets:'a',oz:'b'},ADM_
 var ADM_PN={today:'Bugün',queues:'Kuyruklar',money:'Para',system:'Sistem'};
 function admPaneOf(k){return /^oz_/.test(k)||ADM_QC.indexOf(k)>=0||ADM_QS.indexOf(k)>=0?'queues':ADM_M.indexOf(k)>=0?'money':'system'}
 function admSibs(k,tabs){var z=/^oz_/.test(k),p=admPaneOf(k);return tabs.filter(function(t){return z?/^oz_/.test(t[0]):!/^oz_/.test(t[0])&&admPaneOf(t[0])===p})}
-PF._admBack=function(){if(ADM.tab)ADM.pane=admPaneOf(ADM.tab);PF.openAdmin()};
+PF._admBack=function(){if(ADM.direct&&ADM.tab){ADM.tab=null;ADM.direct=false;closeSheet();return}if(ADM.tab)ADM.pane=admPaneOf(ADM.tab);PF.openAdmin()};
 PF._admGoPane=function(k){ADM.pane=k;PF.openAdmin()};
 /* P23b: Android/tarayıcı geri — bölüm içindeyken paneli kapatmak yerine bölme listesine döner (index.html popstate) */
-PF.adminBack=function(){if(!ADM.tab||!document.querySelector('#pfxSheet #pfxAdm'))return false;PF._admBack();return true};
+PF.adminBack=function(){if(!ADM.tab||ADM.direct||!document.querySelector('#pfxSheet #pfxAdm'))return false;PF._admBack();return true};
 PF._admPane=function(k){ADM.pane=k;var h=document.getElementById('pfxAdmHome');if(!h)return;
   h.querySelectorAll('.pfxPane').forEach(function(p){p.hidden=p.dataset.pane!==k});
   h.querySelectorAll('.pfxPN [data-pane]').forEach(function(b){var on=b.dataset.pane===k;b.classList.toggle('on',on);if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
