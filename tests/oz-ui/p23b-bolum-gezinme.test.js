@@ -31,13 +31,13 @@ const CONTRAST=(sel)=>{const L=c=>{const f=v=>{v/=255;return v<=.03928?v/12.92:M
  await p.evaluate(()=>showHome());await p.waitForTimeout(500);
  const W=t=>p.waitForTimeout(t||900);
  const openA=async(roles)=>{await p.evaluate(r=>{document.querySelectorAll('.pfxOv').forEach(x=>x.remove());window.PF.roles={is_admin:true,roles:r};PF._admCnt=null;PF.openAdmin()},roles||['super']);await W(1400)};
- const S=()=>p.evaluate(()=>{const sh=document.querySelector('.pfxOv .pfxSh');if(!sh)return {open:false};const hd=sh.querySelector('.pfxHd'),bk=hd.querySelector('.pfxBack'),x=hd.querySelector('.pfxX'),s=hd.querySelector('.pfxAdmS');
+ const S=()=>p.evaluate(()=>{const sh=document.querySelector('.pfxOv .pfxSh');if(!sh)return {open:false};const hd=sh.querySelector('.pfxHd'),bk=hd.querySelector('.pfxBack'),x=hd.querySelector('.pfxX');/* P33: kardeş bölümler seçici panelinde; ölçmek için seçici açılır */const sb=hd.querySelector('.pfxSelB');if(sb&&document.getElementById('pfxSelP').hidden)sb.click();const s=hd.querySelector('.pfxSelP');
   const home=document.getElementById('pfxAdmHome');const nav=sh.querySelector('.pfxPN');const sr=s&&s.getBoundingClientRect();const on=s&&s.querySelector('.pfxSC.on');const orr=on&&on.getBoundingClientRect();
   return {open:true,home:!!home,pane:home?(home.querySelector('.pfxPane:not([hidden])')||{}).dataset.pane:null,inner:!!document.getElementById('pfxAdm'),
    path:(hd.querySelector('.pfxAdmP')||{}).textContent||'',title:(hd.querySelector('.pfxAdmT')||{}).textContent||'',
    back:bk?[Math.round(bk.getBoundingClientRect().width),Math.round(bk.getBoundingClientRect().height)]:null,kapat:x?Math.round(x.getBoundingClientRect().height):0,
    chips:s?[...s.querySelectorAll('.pfxSC')].map(b=>({t:b.childNodes[0].textContent,n:(b.querySelector('.pfxCnt')||{}).textContent||'',on:b.classList.contains('on'),bg:getComputedStyle(b).backgroundColor,h:Math.round(b.getBoundingClientRect().height)})):[],
-   onVis:!!(on&&orr.left>=sr.left-1&&orr.right<=sr.right+1),stripScroll:s?s.scrollWidth>s.clientWidth:false,
+   onVis:!!(on&&orr.left>=sr.left-1&&orr.right<=sr.right+1&&orr.top>=sr.top-1&&orr.bottom<=sr.bottom+1),selX:s?s.scrollWidth>s.clientWidth:false,selY:s?s.scrollHeight>s.clientHeight+1:false,cols:s?new Set([...s.querySelectorAll('.pfxSC')].map(b=>Math.round(b.getBoundingClientRect().left))).size:0,sel:sb?{h:Math.round(sb.getBoundingClientRect().height),exp:sb.getAttribute('aria-expanded'),t:sb.querySelector('.l').textContent}:null,
    nav:nav?{items:[...nav.querySelectorAll('.pnItem')].map(b=>b.dataset.pane),on:(nav.querySelector('.pnItem.on')||{}).dataset&&nav.querySelector('.pnItem.on').dataset.pane,bottom:Math.round(nav.getBoundingClientRect().bottom),shB:Math.round(sh.getBoundingClientRect().bottom)}:null,
    ovf:Math.max(document.scrollingElement.scrollWidth-document.scrollingElement.clientWidth,sh.scrollWidth-sh.clientWidth)}});
  const shot=async n=>{if(!SHOTS)return;const el=await p.$('.pfxOv .pfxSh');if(el)await el.screenshot({path:path.join(SHOTS,n+'.png')})};
@@ -48,21 +48,26 @@ const CONTRAST=(sel)=>{const L=c=>{const f=v=>{v/=255;return v<=.03928?v/12.92:M
   await p.evaluate(()=>document.querySelector('#pfxAdmHome [data-tab=oz_sellers]').click());await W(1300);
   let r=await S();
   ok(r.inner&&r.path==='Yönetim › Özüne Dön'&&r.title==='Satıcılar'&&r.back&&r.back[0]>=44&&r.back[1]>=44&&r.kapat>=44,'['+T+'] üst: ← 44px + yol + başlık + Kapat: '+JSON.stringify({p:r.path,t:r.title,b:r.back,k:r.kapat}));
-  ok(JSON.stringify(r.chips.map(c=>c.t))===JSON.stringify(OZ),'['+T+'] Özüne Dön 10 bölüm tek şeritte: '+JSON.stringify(r.chips.map(c=>c.t)));
+  ok(JSON.stringify(r.chips.map(c=>c.t))===JSON.stringify(OZ)&&r.cols===2,'['+T+'] Özüne Dön 10 bölüm seçicide 2 sütun: '+JSON.stringify(r.chips.map(c=>c.t)));
   ok(r.chips.filter(c=>c.on).length===1&&r.chips.find(c=>c.on).t==='Satıcılar'&&r.chips.find(c=>c.on).bg===ON&&r.chips.filter(c=>!c.on).every(c=>c.bg!==ON)&&r.chips.every(c=>c.h>=44),'['+T+'] aktif çip sarı dolu, diğerleri normal, ≥44px: '+JSON.stringify(r.chips.map(c=>[c.t,c.on,c.bg,c.h])));
   ok(JSON.stringify(r.chips.filter(c=>c.n).map(c=>c.t+':'+c.n))==='["Satıcılar:1","Siparişler:3","İadeler:1"]','['+T+'] rozetler yalnız mevcut sayılardan: '+JSON.stringify(r.chips.filter(c=>c.n)));
   ok(r.nav&&JSON.stringify(r.nav.items)==='["today","queues","money","system"]'&&r.nav.on==='queues'&&Math.abs(r.nav.bottom-r.nav.shB)<=2,'['+T+'] alt menü sabit, Kuyruklar aktif: '+JSON.stringify(r.nav));
-  ok(r.ovf<=0&&r.stripScroll,'['+T+'] yatay taşma yok, şerit kendi içinde kayar: '+JSON.stringify([r.ovf,r.stripScroll]));
+  ok(r.ovf<=0&&!r.selX&&!r.selY&&r.onVis,'['+T+'] P33: hepsi görünür, yatay/dikey kaydırma yok, yatay taşma yok: '+JSON.stringify([r.ovf,r.selX,r.selY,r.onVis]));
+  ok(r.sel&&r.sel.h>=44&&r.sel.exp==='true'&&r.sel.t==='Satıcılar','['+T+'] P33: seçici düğmesi ≥44px, geçerli bölüm adı, açık: '+JSON.stringify(r.sel));
+  const ob=await p.evaluate(()=>Math.round(document.getElementById('pfxSelP').getBoundingClientRect().bottom));await p.mouse.click(30,Math.min(ob+24,700));await W(200);let sc=await p.evaluate(()=>({h:document.getElementById('pfxSelP').hidden,e:document.querySelector('.pfxSelB').getAttribute('aria-expanded'),t:(document.querySelector('.pfxOv .pfxAdmT')||{}).textContent}));
+  ok(sc.h&&sc.e==='false'&&sc.t==='Satıcılar','['+T+'] P33: dışarı dokununca seçici kapanır, bölüm aynı: '+JSON.stringify(sc));
+  await p.evaluate(()=>PF._admSel(true));await p.keyboard.press('Escape');await W(150);sc=await p.evaluate(()=>({h:document.getElementById('pfxSelP').hidden,ov:document.querySelectorAll('.pfxOv').length}));
+  ok(sc.h&&sc.ov===1,'['+T+'] P33: Escape seçiciyi kapatır, panel açık kalır: '+JSON.stringify(sc));
   let a=await p.evaluate(CONTRAST,'.pfxOv .pfxHd');ok(!a.bad.length&&!a.small.length,'['+T+'] üst alan kontrast/boyut: '+JSON.stringify(a));
   // yapışkan: içerik uzunken kaydır, başlık + şerit üstte kalır; içerik sonu alt menünün üstünde
   r=await p.evaluate(()=>{const el=document.getElementById('pfxAdm');const f=document.createElement('div');f.id='t23bF';f.style.height='1600px';el.appendChild(f);const sh=document.querySelector('.pfxOv .pfxSh');sh.scrollTop=700;
-   const hd=sh.querySelector('.pfxHd').getBoundingClientRect(),s=sh.querySelector('.pfxAdmS').getBoundingClientRect(),st=sh.getBoundingClientRect();const top=Math.round(hd.top-st.top);
+   const hd=sh.querySelector('.pfxHd').getBoundingClientRect(),s=sh.querySelector('.pfxSelB').getBoundingClientRect(),st=sh.getBoundingClientRect();const top=Math.round(hd.top-st.top);
    sh.scrollTop=sh.scrollHeight;const nb=sh.querySelector('.pfxPN').getBoundingClientRect(),lb=el.getBoundingClientRect();f.remove();return {top,sVis:s.top>=st.top-1,lastB:Math.round(lb.bottom),navT:Math.round(nb.top)}});
   ok(r.top<=2&&r.sVis&&r.lastB<=r.navT+1,'['+T+'] başlık + şerit yapışkan, içerik alt menünün üstünde biter: '+JSON.stringify(r));
   await p.evaluate(()=>{document.querySelector('.pfxOv .pfxSh').scrollTop=0});await shot('p23b-'+T+'-saticilar');
   // 3 çip geçişi: geçmişe kayıt yok; aktif çip görünür
   const h0=await p.evaluate(()=>({n:history.length,i:window.V2_NAV&&V2_NAV.idx,u:location.href}));
-  for(const k of ['Siparişler','Slaytlar','İadeler']){await p.evaluate(k=>[...document.querySelectorAll('.pfxAdmS .pfxSC')].find(b=>b.childNodes[0].textContent===k).click(),k);await W(1100);
+  for(const k of ['Siparişler','Slaytlar','İadeler']){await p.evaluate(k=>{PF._admSel(true);[...document.querySelectorAll('.pfxSelP .pfxSC')].find(b=>b.childNodes[0].textContent===k).click()},k);await W(1100);
    r=await S();ok(r.title===k&&r.chips.find(c=>c.on).t===k&&r.onVis,'['+T+'] çip → '+k+', aktif görünür: '+JSON.stringify({t:r.title,v:r.onVis}))}
   const h1=await p.evaluate(()=>({n:history.length,i:window.V2_NAV&&V2_NAV.idx,u:location.href}));
   ok(JSON.stringify(h0)===JSON.stringify(h1),'['+T+'] çip geçişleri geçmişe kayıt eklemedi: '+JSON.stringify([h0,h1]));
@@ -82,7 +87,7 @@ const CONTRAST=(sel)=>{const L=c=>{const f=v=>{v/=255;return v<=.03928?v/12.92:M
   for(const how of ['geri','ok']){
    await p.evaluate(()=>{document.querySelectorAll('.pfxOv').forEach(x=>x.remove());window.scrollTo(0,250)});await W(300);const y0=await p.evaluate(()=>Math.round(scrollY));
    await p.evaluate(()=>{window.PF.roles={is_admin:true,roles:['super']};PF.openAdmin('oz_overview')});await W(1400);
-   await p.evaluate(()=>[...document.querySelectorAll('.pfxAdmS .pfxSC')].find(b=>b.childNodes[0].textContent==='Siparişler').click());await W(1100);
+   await p.evaluate(()=>{PF._admSel(true);[...document.querySelectorAll('.pfxSelP .pfxSC')].find(b=>b.childNodes[0].textContent==='Siparişler').click()});await W(1100);
    r=await S();ok(r.title==='Siparişler','['+T+'] doğrudan giriş + çip geçişi');
    if(how==='geri'){await p.goBack();await W(1000)}else{await p.evaluate(()=>document.querySelector('.pfxOv .pfxBack').click());await W(600)}
    r=await S();const y1=await p.evaluate(()=>Math.round(scrollY));
@@ -102,11 +107,11 @@ const CONTRAST=(sel)=>{const L=c=>{const f=v=>{v/=255;return v<=.03928?v/12.92:M
   ok(r.now&&r.now.n==='2'&&r.now.sub==='1 kurye başvurusu · 1 açık sorun'&&r.q==='2','['+T+'] P32b: Yemek Bugün + Kuyruklar, sayı yalnız bekleyen kurye 1 + sorun 1 = 2: '+JSON.stringify(r));
   await p.evaluate(()=>document.querySelector('#pfxAdmHome .pfxNowC[data-tab=food]').click());await W(1200);
   r=await p.evaluate(()=>({t:(document.querySelector('.pfxOv .pfxAdmT')||{}).textContent,path:(document.querySelector('.pfxOv .pfxAdmP')||{}).textContent,
-   go:[...document.querySelectorAll('#pfxAdm .pfxFoodGo .pfxBtn')].map(b=>b.dataset.food),pills:[...document.querySelectorAll('#pfxAdm .pfxSt')].map(x=>x.textContent),h:[...document.querySelectorAll('#pfxAdm .pfxFoodGo .pfxBtn')].map(b=>Math.round(b.getBoundingClientRect().height))}));
-  ok(r.t==='Yemek'&&r.path==='Yönetim › Kuyruklar'&&JSON.stringify(r.go)==='["showFoodOpsCenter","showFoodOnboarding","showFoodAdminPromos","showFoodAdminReviews","showFoodAdmin"]'&&r.h.every(h=>h>=44),'['+T+'] P32: Yemek bölümü 5 kısayol: '+JSON.stringify(r));
-  ok(JSON.stringify(r.pills.slice(0,3))==='["Kurye arayan sipariş: 3","Kurye başvurusu: 1","Açık sorun: 1"]'&&r.pills.includes('Yeni: 4'),'['+T+'] P32: Yemek özeti: '+JSON.stringify(r.pills));
+   go:[...document.querySelectorAll('#pfxAdm .pfxFoodGo .pfxBtn')].map(b=>b.dataset.food),sumRow:document.querySelectorAll('#pfxAdm .pfxStrip').length===1,goCols:new Set([...document.querySelectorAll('#pfxAdm .pfxFoodGo .pfxBtn')].map(b=>Math.round(b.getBoundingClientRect().left))).size,pills:[...document.querySelectorAll('#pfxAdm .pfxSt')].map(x=>x.textContent),h:[...document.querySelectorAll('#pfxAdm .pfxFoodGo .pfxBtn')].map(b=>Math.round(b.getBoundingClientRect().height))}));
+  ok(r.t==='Yemek'&&r.path==='Yönetim › Kuyruklar'&&JSON.stringify(r.go)==='["showFoodOpsCenter","showFoodOnboarding","showFoodAdminPromos","showFoodAdminReviews","showFoodAdmin"]'&&r.h.every(h=>h>=44)&&r.goCols===2,'['+T+'] P32/P33: Yemek bölümü 5 kısayol 2 sütun kart: '+JSON.stringify(r));
+  ok(JSON.stringify(r.pills.slice(0,3))==='["Kurye arayan sipariş: 3","Kurye başvurusu: 1","Açık sorun: 1"]'&&r.pills.includes('Son 7 gün · Yeni: 4')&&r.pills.includes('Teslim: 10')&&r.sumRow,'['+T+'] P32: Yemek özeti: '+JSON.stringify(r.pills));
   a=await p.evaluate(CONTRAST,'#pfxAdm');ok(!a.bad.length&&!a.small.length,'['+T+'] P32: Yemek bölümü kontrast/boyut: '+JSON.stringify(a));
-  ok((await S()).ovf<=0,'['+T+'] P32: Yemek bölümü yatay taşma');await shot('p32-'+T+'-yemek');
+  await p.evaluate(()=>PF._admSel(false));await shot('p33-'+T+'-yemek-kapali');ok((await S()).ovf<=0,'['+T+'] P32: Yemek bölümü yatay taşma');await shot('p33-'+T+'-yemek-acik');await p.evaluate(()=>PF._admSel(false));
   await p.evaluate(()=>{window.__fc=[];const k=['showFoodAdmin','showFoodOpsCenter'];window.__fo={};k.forEach(n=>{window.__fo[n]=window[n];window[n]=function(){window.__fc.push(n)}})});
   await p.evaluate(()=>document.querySelector('#pfxAdm .pfxFoodGo [data-food=showFoodOpsCenter]').click());await W(300);
   r=await p.evaluate(()=>({c:window.__fc,ov:document.querySelectorAll('.pfxOv').length}));
