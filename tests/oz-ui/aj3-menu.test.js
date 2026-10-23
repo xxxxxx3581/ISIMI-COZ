@@ -1,7 +1,7 @@
 // AJ2-E: yan menü + yönetim paneli ana listesi — 390px (taşma 320/768/1280), iki tema, sahte RPC (ağ), veri yazmaz.
 // P2: Özüne Dön grubu "Şimdi bakılacaklar"ın hemen altında; bekleyen kartları en az 52px (turuncu kutu içinde); satır rozetleri yalnız sayı ("1"); bekleyen satırlar gruplarda da görünür.
 // Çalıştırma: NODE_PATH=/opt/node-tools/node_modules node tests/oz-ui/aj3-menu.test.js
-// Doğrulanan: menü sırası (Başlat → kategori kısayolları → İşlerim → Hizmet verenler için → Diğer çalışma alanları → [Yönetim] → Hesap → Çıkış);
+// Doğrulanan: menü sırası (P28: üst satır Çıkış → Başlat → kategori şeridi → İşlerim 2x2 → Çalışma alanlarım → [Yönetim] → alt çubuk Ayarlar/Yardım);
 // rozetler yalnız mevcut okumalardan (window.__hzCnt: hzPing/hzCustAlerts; PF._admN: panel sayıları) ve sayı + yazı ("2 yeni"); bilinmiyorsa rozet yok,
 // 0 ise gri "0"; yeni talep varsa satır vurgulu; "Yönetim" yalnız PF.roles.is_admin iken; "Ayarlar ve hesap" aynı yerde açılan alt liste
 // (tema, dil, gizlilik, destek, yasal, künye, paylaş — hiçbiri silinmedi), aria-expanded; Yardım satırı adı korunur; tema geçişi; iki temada
@@ -25,13 +25,15 @@ const READS=['pf_admin_reports','pf_admin_listing_queue','pf_admin_venue_queue',
  const openD=async(admin,cnt)=>{await p.evaluate(([a,c])=>{window.PF.roles=a?{is_admin:true,roles:['super']}:{is_admin:false,roles:[]};if(c===null)delete window.__hzCnt;else window.__hzCnt=c;updateAuthArea();openAppDrawer()},[admin,cnt]);await p.waitForTimeout(300)};
  const closeD=()=>p.evaluate(()=>closeAppDrawer());
  const D=()=>p.evaluate(()=>{const d=document.getElementById('appDrawer');const kids=[...d.children].filter(x=>x.offsetParent||x.id==='drwAdmin');
-  const seq=kids.map(x=>x.classList.contains('appDrawerSec')?'§'+x.textContent:x.classList.contains('drwStart')?'Başlat':x.classList.contains('drwChips')?'chips:'+x.querySelectorAll('button').length:x.id==='drwAdmin'?(x.textContent?'§'+x.querySelector('.appDrawerSec').textContent+'|'+x.querySelector('button').innerText.replace(/\s+/g,' ').trim():''):x.id==='drawerAuth'?'auth:'+x.innerText.replace(/\s+/g,' ').trim():x.classList.contains('appDrawerHead')?'head':x.classList.contains('appDrawerNav')?'nav:'+[...x.children].filter(b=>b.tagName==='BUTTON').map(b=>b.innerText.replace(/\s+/g,' ').trim()).join(' / '):'?').filter(Boolean);
+  /* P28: yeni düzen — head (üst satır, Çıkış/Giriş), Başlat, tek satır şerit, İşlerim 2x2 (grid), Çalışma alanlarım, [Yönetim kartı], alt çubuk */
+  const T=x=>x.innerText.replace(/\s+/g,' ').trim();
+  const seq=kids.map(x=>x.classList.contains('appDrawerSec')?'§'+x.textContent:x.classList.contains('drwStart')?'Başlat':x.classList.contains('drwChips')?'chips:'+x.querySelectorAll('button').length:x.classList.contains('drwGrid')?'grid:'+[...x.children].map(T).join(' / '):x.classList.contains('drwW3')?'w3:'+[...x.children].map(T).join(' / '):x.id==='drwAdmin'?(x.textContent?'adm:'+T(x.querySelector('button')):''):x.classList.contains('drwBar')?'bar:'+[...x.children].map(T).join(' / '):x.classList.contains('appDrawerHead')?'head:'+T(document.getElementById('drawerAuth')):x.classList.contains('appDrawerNav')?'nav:'+[...x.children].filter(b=>b.tagName==='BUTTON').map(T).join(' / '):'?').filter(Boolean);
   const b=i=>{const e=document.getElementById(i);return e?{hid:e.hidden,t:e.textContent,c:e.className,al:e.getAttribute('aria-label')}:null};
   return {seq,mine:b('drwMineN'),req:b('drwReqN'),reqHot:document.getElementById('drwReq').classList.contains('hot'),adm:b('drwAdmN'),
    chips:[...d.querySelectorAll('.drwChips')[0].querySelectorAll('button')].map(x=>x.textContent.trim()),aria:d.getAttribute('aria-hidden')}});
  // üye (yönetici değil), sayılar: 3 yeni talep, 2 yeni teklif
  await openD(false,{prov:3,cust:2});let d=await D();
- ok(d.seq.join(' | ')==='head | Başlat | chips:5 | §İşlerim | nav:📂 Benim işlerim 2 yeni / ♡ Favorilerim / 🔖 Kayıtlı aramalar | §Hizmet verenler için | nav:📋 Gelen talepler 3 yeni / 🔧 Usta & Hizmet panelim › | §Diğer çalışma alanları | chips:3 | §Hesap | nav:⚙️ Ayarlar ve hesap Tema · Dil · Yasal › / ❓ Yardım — ne yapmak istiyorsun? › | auth:Çıkış yap',
+ ok(d.seq.join(' | ')==='head:Çıkış yap | Başlat | chips:5 | §İşlerim | grid:Benim işlerim 2 yeni / Gelen talepler 3 yeni / Favorilerim / Kayıtlı aramalar | §Çalışma alanlarım | nav:Usta & Hizmet panelim › | w3:Resmî işlemler / Gayrimenkul işlemleri / Araç işlemleri | bar:Ayarlar ve hesap / Yardım',
   'menü sırası (üye): '+JSON.stringify(d.seq));
  ok(d.chips.join('|')==='🔎 Tüm ilanlar|🚗 Araç|🏠 Konut|🏢 İş yeri|🌳 Arsa','kategori kısayolları: '+d.chips.join('|'));
  ok(d.mine&&!d.mine.hid&&d.mine.t==='2 yeni'&&/\bok\b/.test(d.mine.c)&&d.mine.al==='2 yeni teklif','Benim işlerim yeşil "2 yeni": '+JSON.stringify(d.mine));
@@ -88,7 +90,7 @@ const READS=['pf_admin_reports','pf_admin_listing_queue','pf_admin_venue_queue',
  ok(await p.evaluate(()=>/Şikâyetler/.test((document.querySelector('.pfxAdmT')||{}).textContent||'')),'Şikâyetler kartı ilgili ekranı açar');
  await p.evaluate(()=>document.querySelectorAll('.pfxOv').forEach(x=>x.remove()));
  await openD(true,{prov:0,cust:0});d=await D();
- ok(d.seq.indexOf('§Yönetim|🛡️ Yönetim paneli 11')===d.seq.indexOf('chips:3')+1&&d.adm&&d.adm.t==='11'&&/\bbad\b/.test(d.adm.c)&&d.adm.al==='11 bekleyen iş','yönetici: Hesap\'tan önce "Yönetim paneli" + kırmızı toplam (11): '+JSON.stringify([d.seq,d.adm]));
+ ok(d.seq.indexOf('adm:Yönetim paneli 11')===d.seq.findIndex(x=>/^w3:/.test(x))+1&&d.adm&&d.adm.t==='11'&&/\bbad\b/.test(d.adm.c)&&d.adm.al==='11 bekleyen iş','yönetici: Çalışma alanlarının altında "Yönetim paneli" kartı + kırmızı toplam (11): '+JSON.stringify([d.seq,d.adm]));
  await p.keyboard.press('Escape');await p.waitForTimeout(200);ok(await p.evaluate(()=>document.getElementById('appDrawer').getAttribute('aria-hidden'))==='true','Esc menüyü kapatır');
  // hepsi 0 → Her şey yolunda
  DATA=ZERO;await p.evaluate(()=>{PF._admCnt=null;PF.openAdmin()});await p.waitForTimeout(1500);h=await H();

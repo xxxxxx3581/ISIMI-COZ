@@ -414,7 +414,8 @@ function injectDrawer(){
   if(acct&&adm){
     acct.innerHTML=(logged?'<button type="button" onclick="closeAppDrawer();PF.openPrivacy()">🔐 Gizlilik ve verilerim</button><button type="button" onclick="closeAppDrawer();PF.openSupport()">🎧 Destek ve uyuşmazlık</button>':'')+
       '<button type="button" onclick="closeAppDrawer();PF.openLegal()">📜 Yasal metinler</button><button type="button" onclick="closeAppDrawer();PF.openCompany()">🏢 Künye ve iletişim</button>';
-    adm.innerHTML=admin?'<div class="appDrawerSec">Yönetim</div><div class="appDrawerNav"><button type="button" class="drwAdm" onclick="closeAppDrawer();PF.openAdmin()">🛡️ Yönetim paneli <span class="drwBdg bad" id="drwAdmN" hidden></span></button></div>':'';
+    /* P28: Çalışma alanlarım altında lacivert çerçeveli kart (yetki aynı: PF.roles.is_admin; rozet PF._admN) */
+    adm.innerHTML=admin?'<div class="appDrawerNav"><button type="button" class="drwAdm" onclick="closeAppDrawer();PF.openAdmin()"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/></svg>Yönetim paneli <span class="drwBdg bad" id="drwAdmN" hidden></span></button></div>':'';
     try{if(typeof window.drwBadges==='function')window.drwBadges()}catch(e){}
     return;
   }
@@ -423,7 +424,7 @@ function injectDrawer(){
     (logged?'<button type="button" onclick="closeAppDrawer();PF.openPrivacy()">🔐 Gizlilik ve verilerim</button><button type="button" onclick="closeAppDrawer();PF.openSupport()">🎧 Destek ve uyuşmazlık</button>':'')+
     '<button type="button" onclick="closeAppDrawer();PF.openLegal()">📜 Yasal metinler</button><button type="button" onclick="closeAppDrawer();PF.openCompany()">🏢 Künye ve iletişim</button></div>'+
     (admin?'<div class="appDrawerSec">Yönetim</div><div class="appDrawerNav"><button type="button" onclick="closeAppDrawer();PF.openAdmin()">🛡️ Yönetim paneli</button></div>':'');
-  var auth=document.getElementById('drawerAuth');if(auth)d.insertBefore(sec,auth);else d.appendChild(sec);
+  var auth=document.getElementById('drawerAuth');if(auth&&auth.parentNode===d)d.insertBefore(sec,auth);else d.appendChild(sec);
 }
 function injectFooter(){
   if(document.getElementById('pfxFoot'))return;css();
