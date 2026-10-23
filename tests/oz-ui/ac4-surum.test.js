@@ -53,11 +53,12 @@
 // P32: referans cc6692e'e tek sefer taşındı (önceki: 52688eb; arada yalnız pf-platform-v1.js ?v=9 → ?v=10; oz-market-v1.js ?v=22 aynen).
 // P32b: referans 234413a'e tek sefer taşındı (önceki: cc6692e; arada yalnız pf-platform-v1.js ?v=10 → ?v=11; oz-market-v1.js ?v=22 aynen).
 // P33: referans cc70988'e tek sefer taşındı (önceki: 234413a; arada bölüm seçici + Yemek bölümü CSS'i, pf-platform-v1.js ?v=11 → ?v=12; oz-market-v1.js ?v=22 aynen).
+// P33b: referans 9fb33ee'e tek sefer taşındı (önceki: cc70988; arada yalnız pf-platform-v1.js ?v=12 → ?v=13; oz-market-v1.js ?v=22 aynen).
 const fs=require('fs'),path=require('path'),cp=require('child_process');
 const {chromium,open,enter}=require('./harness.js');
 const ROOT=path.resolve(__dirname,'../..');
 const cur=fs.readFileSync(path.join(ROOT,'index.html'),'utf8');
-const base=cp.execSync('git show cc70988:index.html',{cwd:ROOT,encoding:'utf8',maxBuffer:64<<20});
+const base=cp.execSync('git show 9fb33ee:index.html',{cwd:ROOT,encoding:'utf8',maxBuffer:64<<20});
 const blk=s=>{const a=s.indexOf('/*K21-BASLA*/'),b=s.indexOf('/*K21-BITIS*/');return s.slice(a,b)};
 const nocom=s=>s.replace(/\/\*[\s\S]*?\*\//g,'');
 const nover=s=>s.replace(/oz-market-v1\.js\?v=\d+/g,'oz-market-v1.js?v=N');
