@@ -1785,6 +1785,10 @@ html[data-theme="light"] .appDrawer .drwW3 button:nth-child(2) .ic{color:#9A6410
 /* P39: Turnstile kutusu (yalnız anahtar doluyken) — kırpılmaz, ortalı */
 #authModal .authCaptcha{display:flex;justify-content:center;max-width:100%;min-height:65px;margin:10px 0 6px}
 #authModal .authCaptcha:empty{min-height:0;margin:0}
+/* P40: krem temada giriş/kayıt/şifre pencereleri okunur. Kök neden: ana ekranın sabit koyu kahve kuralı (body:has(#app .v2Home.hmx){color:#F6ECDC})
+   body'nin yazı rengini değiştiriyor; #authModal body'nin doğrudan çocuğu olduğundan bu açık rengi miras alıyor, krem temada kart zemini beyaz (--card).
+   Krem temada kart yazısı tema metin rengine (--text) bağlanır; koyu tema aynen. */
+html[data-theme="light"] #authModal .modalCard{color:var(--text)}
 /*P28-BITIS*/
 /*P26-BASLA*/ /* Paket 26: Özüne Dön satıcı Siparişler — Paket 25 düzeni (aynı sınıflar: .nxHd/.nxAge, .nxNA, .fdCols/.fdCol/.fdColE; aynı --st-* jetonları).
    Burada yalnız Özüne Dön zemin/yazı jetonları (--oz-*) ve sayaç seçili çerçevesi. */
