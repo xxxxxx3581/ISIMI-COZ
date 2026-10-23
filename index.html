@@ -1782,6 +1782,9 @@ html[data-theme="light"] .appDrawer .drwW3 button:nth-child(2) .ic{color:#9A6410
 .appDrawer .drwGuest .drwIn{border:0;background:var(--nx-pri);color:#fff}
 .appDrawer .drwGuest .drwUp{border:2px solid var(--nx-pri);background:transparent;color:var(--text)}
 .appDrawer .drwGuest button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+/* P39: Turnstile kutusu (yalnız anahtar doluyken) — kırpılmaz, ortalı */
+#authModal .authCaptcha{display:flex;justify-content:center;max-width:100%;min-height:65px;margin:10px 0 6px}
+#authModal .authCaptcha:empty{min-height:0;margin:0}
 /*P28-BITIS*/
 /*P26-BASLA*/ /* Paket 26: Özüne Dön satıcı Siparişler — Paket 25 düzeni (aynı sınıflar: .nxHd/.nxAge, .nxNA, .fdCols/.fdCol/.fdColE; aynı --st-* jetonları).
    Burada yalnız Özüne Dön zemin/yazı jetonları (--oz-*) ve sayaç seçili çerçevesi. */
@@ -9413,6 +9416,28 @@ function updateAuthArea(){
   var dg=document.getElementById('drwGuest');
   if(dg){ dg.hidden=logged; dg.innerHTML=logged?'':'<button type="button" class="drwIn" onclick="closeAppDrawer();openAuthModal(\'login\')">Giriş yap</button><button type="button" class="drwUp" onclick="closeAppDrawer();openAuthModal(\'signup\')">Kayıt ol</button>'; }
 }
+/* P39: CAPTCHA hazırlığı (Cloudflare Turnstile). Anahtar BOŞKEN hiçbir şey değişmez: kutu yok, betik yüklenmez, istek gövdelerine alan eklenmez.
+   Anahtar doluysa giriş/kayıt/şifre sıfırlama/doğrulama e-postası isteklerine gotrue_meta_security.captcha_token eklenir (tek kullanımlık; her istekten sonra yenilenir). */
+window.PF_TURNSTILE_SITEKEY=window.PF_TURNSTILE_SITEKEY||'';
+var CAP={tok:null,wid:null,loading:null,failed:false};
+const CAP_ERR='Güvenlik doğrulaması başarısız; kutuyu yenileyip tekrar dene.',CAP_FAIL='Doğrulama kutusu yüklenemedi, sayfayı yenile';
+function capOn(){return !!window.PF_TURNSTILE_SITEKEY}
+function capLoad(){if(window.turnstile)return Promise.resolve();if(CAP.loading)return CAP.loading;
+ CAP.loading=new Promise(function(res,rej){var s=document.createElement('script');s.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';s.async=true;
+  s.onload=function(){window.turnstile?res():(CAP.loading=null,rej())};s.onerror=function(){CAP.loading=null;s.remove();rej()};document.head.appendChild(s)});return CAP.loading}
+function capMsg(t){var m=document.getElementById('authCapMsg'),btn=document.getElementById('authSubmit');if(!t){if(m)m.remove();return}
+ if(!m&&btn){m=document.createElement('div');m.id='authCapMsg';m.className='authError';m.setAttribute('role','alert');btn.insertAdjacentElement('afterend',m)}if(m)m.textContent=t}
+function capFail(){CAP.failed=true;CAP.tok=null;capMsg(CAP_FAIL)}
+function capMount(){if(!capOn())return;var btn=document.getElementById('authSubmit');if(!btn)return;var box=document.getElementById('authCaptcha');
+ if(!box){box=document.createElement('div');box.id='authCaptcha';box.className='authCaptcha';btn.parentNode.insertBefore(box,btn)}
+ CAP.tok=null;CAP.wid=null;CAP.failed=false;
+ capLoad().then(function(){if(!document.body.contains(box))return;try{
+  CAP.wid=window.turnstile.render(box,{sitekey:window.PF_TURNSTILE_SITEKEY,theme:document.documentElement.getAttribute('data-theme')==='light'?'light':'dark',size:box.clientWidth&&box.clientWidth<300?'compact':'normal',language:'tr',
+   callback:function(t){CAP.tok=t;capMsg('')},'expired-callback':function(){CAP.tok=null},'error-callback':function(){CAP.tok=null}})}catch(e){capFail()}}).catch(capFail)}
+function capReset(){CAP.tok=null;try{if(window.turnstile&&CAP.wid!=null)window.turnstile.reset(CAP.wid)}catch(e){}}
+function capReady(){if(!capOn())return true;if(CAP.failed){capMsg(CAP_FAIL);return false}if(!CAP.tok){capMsg('Güvenlik doğrulamasını tamamla');return false}return true}
+function capBody(o){return capOn()?Object.assign({},o,{gotrue_meta_security:{captcha_token:CAP.tok}}):o}
+function capIsErr(m){return capOn()&&/captcha/i.test(String(m||''))}
 function openAuthModal(mode){
  document.getElementById("authModal")?.remove();
  const title=mode==='signup'?'Hesap oluştur':'Giriş yap';
@@ -9421,7 +9446,7 @@ function openAuthModal(mode){
  const switchMode=mode==='signup'?'login':'signup';
  const switchLabel=mode==='signup'?'Giriş yap':'Kayıt ol';
  const html=`<div class="modal" id="authModal"><div class="modalCard"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center"><h2>${title}</h2><button class="authBtn" type="button" onclick="closeAuthModal()">Kapat</button></div><label>E-posta</label><input id="authEmail" type="email" autocomplete="email" placeholder="ornek@email.com"><label>Şifre</label><input id="authPassword" type="password" autocomplete="${mode==='signup'?'new-password':'current-password'}" placeholder="En az 6 karakter">${mode==='signup'?'':'<div style="text-align:right;margin:8px 0 4px"><button class="authBtn" type="button" id="authForgot" onclick="openForgotPassword()">Şifremi unuttum?</button></div>'}<div id="authError"></div><button class="btn primary" id="authSubmit" type="button" onclick="submitAuth('${mode}')">${button}</button><p class="muted small" style="text-align:center;margin-bottom:0">${switchText} <button class="authBtn" type="button" onclick="openAuthModal('${switchMode}')">${switchLabel}</button></p></div></div>`;
- document.body.insertAdjacentHTML('beforeend',html);pwEyes(document.getElementById('authModal'));
+ document.body.insertAdjacentHTML('beforeend',html);pwEyes(document.getElementById('authModal'));capMount();
  setTimeout(()=>document.getElementById('authEmail')?.focus(),50);
 }
 function closeAuthModal(){document.getElementById("authModal")?.remove()}
@@ -9442,19 +9467,22 @@ function openForgotPassword(note){
   '<p class="muted small">Kayıtlı e-posta adresini yaz. Hesabın varsa şifre sıfırlama bağlantısı gönderilir.</p><label>E-posta</label><input id="authEmail" type="email" autocomplete="email" placeholder="ornek@email.com"><div id="authError"></div>'+
   '<button class="btn primary" id="authSubmit" type="button" onclick="sendPasswordReset()">SIFIRLAMA BAĞLANTISI GÖNDER</button><p class="muted small" style="text-align:center;margin-bottom:0"><button class="authBtn" type="button" onclick="openAuthModal(\'login\')">← Girişe dön</button></p>');
  const i=document.getElementById('authEmail');if(i){i.value=pre;setTimeout(()=>i.focus(),50);}
+ capMount();
 }
 async function sendPasswordReset(){
  const email=(document.getElementById('authEmail')?.value||'').trim(),btn=document.getElementById('authSubmit');
  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){pwMsg('Geçerli bir e-posta adresi yaz.');return}
+ if(!capReady())return;
  btn.disabled=true;btn.textContent='GÖNDERİLİYOR...';
  try{
   const redirectTo=location.origin+location.pathname;
-  const r=await fetch(SUPABASE_URL+'/auth/v1/recover?redirect_to='+encodeURIComponent(redirectTo),{method:'POST',headers:{"apikey":SUPABASE_KEY,"Content-Type":"application/json"},body:JSON.stringify({email})});
+  const r=await fetch(SUPABASE_URL+'/auth/v1/recover?redirect_to='+encodeURIComponent(redirectTo),{method:'POST',headers:{"apikey":SUPABASE_KEY,"Content-Type":"application/json"},body:JSON.stringify(capBody({email}))});capReset();
+  if(capOn()&&!r.ok){const d=await r.clone().json().catch(()=>({}));if(capIsErr(d.error_code||d.msg||d.message||d.error_description)){pwMsg(CAP_ERR);btn.disabled=false;btn.textContent='SIFIRLAMA BAĞLANTISI GÖNDER';return}}
   if(r.status===429){pwMsg('Çok fazla deneme yapıldı. Birkaç dakika sonra tekrar dene.');btn.disabled=false;btn.textContent='SIFIRLAMA BAĞLANTISI GÖNDER';return}
   /* Hesap var/yok bilgisi açığa çıkmasın: diğer tüm yanıtlarda aynı genel mesaj */
   pwMsg('Bu e-posta adresi kayıtlıysa şifre sıfırlama bağlantısı gönderildi. Gelen kutunu (ve gereksiz klasörünü) kontrol et.',true);
   btn.textContent='GÖNDERİLDİ';setTimeout(()=>{if(document.body.contains(btn)){btn.disabled=false;btn.textContent='TEKRAR GÖNDER'}},30000);
- }catch(e){pwMsg('Bağlantı kurulamadı. İnternetini kontrol edip tekrar dene.');btn.disabled=false;btn.textContent='SIFIRLAMA BAĞLANTISI GÖNDER'}
+ }catch(e){capReset();pwMsg('Bağlantı kurulamadı. İnternetini kontrol edip tekrar dene.');btn.disabled=false;btn.textContent='SIFIRLAMA BAĞLANTISI GÖNDER'}
 }
 let PW_TOKEN=null;
 function openPasswordRecovery(){
@@ -9492,10 +9520,11 @@ async function submitAuth(mode){
  const email=document.getElementById('authEmail')?.value.trim(); const password=document.getElementById('authPassword')?.value; const err=document.getElementById('authError'); const btn=document.getElementById('authSubmit');
  if(!email||!password){if(err)err.innerHTML='<div class="authError">E-posta ve şifre gerekli.</div>';return}
  if(password.length<6){if(err)err.innerHTML='<div class="authError">Şifre en az 6 karakter olmalı.</div>';return}
+ if(!capReady())return;
  btn.disabled=true;btn.textContent='BEKLEYİN...';
  try{
    let url=SUPABASE_URL+'/auth/v1/'+(mode==='signup'?'signup?redirect_to='+encodeURIComponent(location.origin+location.pathname):'token?grant_type=password');
-   const r=await fetch(url,{method:'POST',headers:{"apikey":SUPABASE_KEY,"Content-Type":"application/json"},body:JSON.stringify({email,password})});
+   const r=await fetch(url,{method:'POST',headers:{"apikey":SUPABASE_KEY,"Content-Type":"application/json"},body:JSON.stringify(capBody({email,password}))});capReset();
    const data=await r.json().catch(()=>({}));
    if(!r.ok)throw new Error(data.error_description||data.msg||data.message||'Kimlik doğrulama başarısız.');
    if(mode==='signup' && !data.access_token){
@@ -9505,7 +9534,9 @@ async function submitAuth(mode){
  }catch(e){
    const m=String((e&&e.message)||e||'');
    if(err){
-     if(/not confirmed|email_not_confirmed/i.test(m)){
+     if(capIsErr(m)){
+       err.innerHTML='<div class="authError">'+CAP_ERR+'</div>';
+     }else if(/not confirmed|email_not_confirmed/i.test(m)){
        err.innerHTML='<div class="authError">E-posta adresin henüz doğrulanmamış. Gelen kutundaki (ve gereksiz klasöründeki) doğrulama bağlantısına tıkla, sonra tekrar giriş yap.<br><button type="button" class="btn secondary smallBtn" style="margin-top:8px" onclick="resendSignupEmail(this)">Doğrulama e-postasını tekrar gönder</button></div>';
      }else if(/invalid login credentials/i.test(m)){
        err.innerHTML='<div class="authError">E-posta veya şifre hatalı.</div>';
@@ -9515,14 +9546,16 @@ async function submitAuth(mode){
        err.innerHTML='<div class="authError">'+escapeHTML(m)+'</div>';
      }
    }
- }finally{if(btn){btn.disabled=false;btn.textContent=buttonText(mode)}}
+ }finally{capReset();if(btn){btn.disabled=false;btn.textContent=buttonText(mode)}}
 }
 /* Doğrulama e-postasını yeniden gönder (hesabın varlığını ele vermeyen genel mesaj) */
 async function resendSignupEmail(b){
  const email=(document.getElementById('authEmail')||{}).value;const em=String(email||'').trim();
  if(!em){alert('Önce e-posta adresini yaz.');return;}
+ if(!capReady())return;
  if(b){b.disabled=true;b.textContent='GÖNDERİLİYOR...';}
- try{await fetch(SUPABASE_URL+'/auth/v1/resend?redirect_to='+encodeURIComponent(location.origin+location.pathname),{method:'POST',headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify({type:'signup',email:em})});}catch(e){}
+ try{const r=await fetch(SUPABASE_URL+'/auth/v1/resend?redirect_to='+encodeURIComponent(location.origin+location.pathname),{method:'POST',headers:{apikey:SUPABASE_KEY,'Content-Type':'application/json'},body:JSON.stringify(capBody({type:'signup',email:em}))});capReset();
+  if(capOn()&&!r.ok){const d=await r.json().catch(()=>({}));if(capIsErr(d.error_code||d.msg||d.message||d.error_description)){capMsg(CAP_ERR);if(b){b.disabled=false;b.textContent='Doğrulama e-postasını tekrar gönder';}return;}}}catch(e){capReset();}
  if(b){b.textContent='Gönderildi ✓';}
  alert('Bu adrese ait doğrulanmamış bir hesap varsa doğrulama e-postası tekrar gönderildi. Birkaç dakika içinde gelmezse gereksiz klasörünü kontrol et.');
 }
