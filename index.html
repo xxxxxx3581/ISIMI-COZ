@@ -1701,17 +1701,10 @@ html:root .hmAcc .hmAccWsPh{height:68px;margin:0 0 10px;border-radius:16px;borde
 .pfxSh.pfxAdmIn .pfxAdmP{display:block;font-size:12.5px;font-weight:700;color:var(--muted,#94a8bd);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 html[data-theme="light"] .pfxSh.pfxAdmIn .pfxAdmP{color:#4b5563}
 .pfxSh.pfxAdmIn h2.pfxAdmT{margin:0;font-size:22px;line-height:1.2;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-/* P33: bölüm seçici (şerit yerine) — tek satır düğme, açılan 2 sütun kart paneli (kendi içinde dikey kayar) */
-.pfxSh.pfxAdmIn .pfxBSel{flex:1 0 100%;position:relative}
-.pfxSh.pfxAdmIn .pfxSelB{display:flex;align-items:center;gap:8px;width:100%;min-height:48px;padding:0 14px;border-radius:14px;border:1px solid var(--line,rgba(127,127,127,.3));background:transparent;color:var(--text);font:inherit;font-size:15px;font-weight:800;cursor:pointer}
-.pfxSh.pfxAdmIn .pfxSelB .l{flex:1;min-width:0;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.pfxSh.pfxAdmIn .pfxSelB .v{flex:none;font-size:13px;transition:transform .15s}.pfxSh.pfxAdmIn .pfxSelB[aria-expanded="true"] .v{transform:rotate(180deg)}
-.pfxSh.pfxAdmIn .pfxSelB .pfxCnt.warn{background:var(--ad-a);color:var(--ad-ink)}.pfxSh.pfxAdmIn .pfxSelB .pfxCnt.bad{background:var(--ad-r);color:var(--ad-ink)}
-.pfxSh.pfxAdmIn .pfxSelB:focus-visible{outline:3px solid var(--ad-on);outline-offset:2px}
-.pfxSh.pfxAdmIn .pfxSelP{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:5;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;padding:10px;border:1px solid var(--line,rgba(127,127,127,.3));border-radius:16px;background:var(--card,#0d1b2e);box-shadow:0 12px 30px rgba(0,0,0,.35);max-height:min(60vh,440px);overflow-y:auto;overscroll-behavior:contain}
-.pfxSh.pfxAdmIn .pfxSelP[hidden]{display:none}
-.pfxSh.pfxAdmIn .pfxSelP .pfxSC{justify-content:space-between;width:100%;min-height:48px;padding:8px 12px;border-radius:12px;white-space:normal;text-align:left;line-height:1.2;overflow-wrap:anywhere}
-@media (prefers-reduced-motion:reduce){.pfxSh.pfxAdmIn .pfxSelB .v{transition:none}}
+/* P34: kardeş bölümler hep açık kompakt ızgara — 3 sütun, ≥44px, küçük yazı (2 satıra sarar), köşede küçük rozet; geçerli sarı (.pfxSC.on) */
+.pfxSh.pfxAdmIn .pfxSecG{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0 0 14px;padding-top:6px}
+.pfxSh.pfxAdmIn .pfxSecG .pfxSC{position:relative;justify-content:center;width:100%;min-width:0;min-height:44px;padding:4px 6px;border-radius:10px;font-size:12.5px;line-height:1.15;white-space:normal;text-align:center;overflow-wrap:anywhere}
+.pfxSh.pfxAdmIn .pfxSecG .pfxSC .pfxCnt{position:absolute;top:-6px;right:3px;min-width:18px;height:18px;padding:0 5px;font-size:10.5px}
 /* P33: Yemek bölümü — özet tek satır (sarar), kısayollar 2 sütun kart */
 #pfxAdm .pfxFoodSum{gap:6px}
 #pfxAdm .pfxFoodGo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
@@ -11369,5 +11362,5 @@ for(const k of ["showGayrimenkulDetail","showOtomobilDetail"]){const f=window[k]
 </body>
 <script src="./a35-seller-identity.js?v=3"></script>
 <script src="./a7-food-v1.js?v=13"></script>
-<script src="./pf-platform-v1.js?v=13"></script>
+<script src="./pf-platform-v1.js?v=14"></script>
 </html>

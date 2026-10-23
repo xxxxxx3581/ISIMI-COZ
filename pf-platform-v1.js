@@ -443,7 +443,6 @@ var TABS=[['docs','Belgeler','moderator'],['venues','İşletme başvuruları','m
 var ADM_GROUPS=[['Moderasyon',['lreview','reports','listings','docs','venues','providers','susp','food','words']],['Destek ve yasal',['tickets','kvkk','legal','company']],['Finans',['finance','campaigns','revenue']],['Operasyon',['settings','dispatch','hero']],['Sistem',['audit']]];
 var ADM_ICON={food:'🍽️',lreview:'⏳',docs:'📄',venues:'🏪',reports:'🚩',listings:'📋',providers:'🔧',susp:'⛔',words:'🔤',tickets:'🎧',kvkk:'🔒',legal:'⚖️',company:'🏢',finance:'💰',campaigns:'🎟️',revenue:'📈',settings:'⚙️',dispatch:'🛵',hero:'🖼️',audit:'🗂️'};
 PF.openAdmin=async function(tab){
-  /* P33b: yeniden çizim/bölüm değişiminde açık seçicinin dinleyicileri kalmasın */if(ADM._selOff){ADM._selOff();ADM._selOff=null}
   if(!need())return;
   if(!PF.roles)try{PF.roles=await rpc('pf_my_roles',{})}catch(e){}
   if(!(PF.roles&&PF.roles.is_admin)){toast('Yönetim yetkin yok.');return}
@@ -466,14 +465,12 @@ PF.openAdmin=async function(tab){
   var bn=function(k){if(!c)return null;if(ADM_CNT[k]&&c[k])return [c[k].n,ADM_CNT[k]];var Z=c.oz,n=Z?(k==='oz_sellers'?Z.sellers:k==='oz_orders'?Z.orders:k==='oz_returns'?Z.returns:null):null;return n==null?null:[n,k==='oz_returns'?'bad':'warn']};
   var hd='<button type="button" class="pfxBtn pfxBack" aria-label="'+(ADM.direct?'Geri dön':'Bölümlere dön')+'" onclick="PF._admBack()"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 5l-7 7 7 7"/></svg></button>'+
     '<div class="pfxAdmTt"><small class="pfxAdmP">Yönetim › '+(oz?'Özüne Dön':ADM_PN[ADM.pane])+'</small><h2 class="pfxAdmT">'+esc(nm(cur))+'</h2></div>';
-  /* P33: kayan şerit yerine bölüm seçici — geçerli bölüm ▾; açılan panelde tüm kardeş bölümler 2 sütun kart (aynı .pfxSC, aynı PF.openAdmin, aynı rozet) */
-  var cb=bn(cur[0]);
-  var sub=sib.length>1?'<div class="pfxBSel"><button type="button" class="pfxSelB" aria-haspopup="true" aria-expanded="false" aria-controls="pfxSelP" onclick="PF._admSel()"><span class="l">'+esc(nm(cur))+'</span>'+(cb?'<span class="pfxCnt '+(cb[0]>0?cb[1]:'z')+'" aria-hidden="true">'+cb[0]+'</span>':'')+'<span class="v" aria-hidden="true">▾</span></button>'+
-    '<nav class="pfxSelP" id="pfxSelP" hidden aria-label="'+(oz?'Özüne Dön':ADM_PN[ADM.pane])+' bölümleri">'+sib.map(function(t){var on=t[0]===cur[0],b=bn(t[0]);
-    return '<button type="button" class="pfxSC'+(on?' on':'')+'" data-tab="'+t[0]+'"'+(on?' aria-current="page"':'')+(b?' aria-label="'+esc(nm(t)+': '+b[0]+' bekleyen')+'"':'')+' onclick="PF.openAdmin(\''+t[0]+'\')">'+esc(nm(t))+(b?'<span class="pfxCnt '+(b[0]>0?b[1]:'z')+'" aria-hidden="true">'+b[0]+'</span>':'')+'</button>'}).join('')+'</nav></div>':'';
+  /* P34: kardeş bölümler hep açık kompakt ızgara (3 sütun; aynı .pfxSC, aynı rozet, aynı PF.openAdmin); #pfxAdm'nin kardeşi, içerikle birlikte kayar */
+  var grid=sib.length>1?'<nav class="pfxSecG" aria-label="'+(oz?'Özüne Dön':ADM_PN[ADM.pane])+' bölümleri">'+sib.map(function(t){var on=t[0]===cur[0],b=bn(t[0]);
+    return '<button type="button" class="pfxSC'+(on?' on':'')+'" data-tab="'+t[0]+'"'+(on?' aria-current="page"':'')+(b?' aria-label="'+esc(nm(t)+': '+b[0]+' bekleyen')+'"':'')+' onclick="PF.openAdmin(\''+t[0]+'\')">'+esc(nm(t))+(b?'<span class="pfxCnt '+(b[0]>0?b[1]:'z')+'" aria-hidden="true">'+b[0]+'</span>':'')+'</button>'}).join('')+'</nav>':'';
   var pv=ADM_PANES.filter(function(x){return x[0]==='today'||tabs.some(function(t){return admPaneOf(t[0])===x[0]})}),tot=PF._admN||0;
   var nav=pv.length>1?'<nav class="pfxPN pnNav" aria-label="Yönetim bölümleri">'+pv.map(function(x){var on=x[0]===ADM.pane;return '<button type="button" class="pnItem'+(on?' on':'')+'" data-pane="'+x[0]+'"'+(on?' aria-current="page"':'')+' onclick="PF._admGoPane(\''+x[0]+'\')"><span class="ic" aria-hidden="true">'+pIco(x[2],22)+'</span><span class="l">'+x[1]+'</span>'+(x[0]==='today'&&tot>0?'<i class="pnBdg" aria-label="'+tot+' bekleyen iş">'+tot+'</i>':'')+'</button>'}).join('')+'</nav>':'';
-  var ov=sheet('Yönetim paneli','<div id="pfxAdm">'+loading()+'</div>'+nav,{cls:'pfxAdm3 pfxAdmIn',hd:hd,sub:sub});
+  var ov=sheet('Yönetim paneli',grid+'<div id="pfxAdm">'+loading()+'</div>'+nav,{cls:'pfxAdm3 pfxAdmIn',hd:hd});
   var el=document.getElementById('pfxAdm');
   try{await (ADMIN[ADM.tab]||function(){})(el)}catch(e){el.innerHTML=errHTML(e)}
 };
@@ -525,14 +522,6 @@ var ADM_NT={reports:'r',lreview:'a',venues:'a',kvkk:'a',tickets:'a',oz:'b',food:
 var ADM_PN={today:'Bugün',queues:'Kuyruklar',money:'Para',system:'Sistem'};
 function admPaneOf(k){return /^oz_/.test(k)||ADM_QC.indexOf(k)>=0||ADM_QS.indexOf(k)>=0?'queues':ADM_M.indexOf(k)>=0?'money':'system'}
 function admSibs(k,tabs){var z=/^oz_/.test(k),p=admPaneOf(k);return tabs.filter(function(t){return z?/^oz_/.test(t[0]):!/^oz_/.test(t[0])&&admPaneOf(t[0])===p})}
-/* P33: bölüm seçici aç/kapat — dışarı dokunma ve Escape kapatır; seçim PF.openAdmin (geçmişe kayıt eklemez) */
-PF._admSel=function(open){/* P33b: önce eski dinleyiciler temizlenir (seçici DOM'dan kalkmışsa da) */if(ADM._selOff){ADM._selOff();ADM._selOff=null}
-  var b=document.querySelector('#pfxSheet .pfxSelB'),pn=document.getElementById('pfxSelP');if(!b||!pn)return;
-  if(open==null)open=pn.hidden;pn.hidden=!open;b.setAttribute('aria-expanded',String(open));
-  if(open){var out=function(e){if(!e.target.closest||!e.target.closest('.pfxBSel'))PF._admSel(false)},key=function(e){if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();PF._admSel(false);b.focus()}};
-    document.addEventListener('pointerdown',out,true);document.addEventListener('keydown',key,true);
-    ADM._selOff=function(){document.removeEventListener('pointerdown',out,true);document.removeEventListener('keydown',key,true)};
-    var on=pn.querySelector('.on');if(on)try{on.focus({preventScroll:true})}catch(e){}}};
 PF._admBack=function(){if(ADM.direct&&ADM.tab){ADM.tab=null;ADM.direct=false;closeSheet();return}if(ADM.tab)ADM.pane=admPaneOf(ADM.tab);PF.openAdmin()};
 PF._admGoPane=function(k){ADM.pane=k;PF.openAdmin()};
 /* P23b: Android/tarayıcı geri — bölüm içindeyken paneli kapatmak yerine bölme listesine döner (index.html popstate) */
