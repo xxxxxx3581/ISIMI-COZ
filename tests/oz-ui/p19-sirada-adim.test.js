@@ -164,15 +164,17 @@ const PULSE_OK=/Kabul et|Teslim aldım|canlı izle/;
      return o(fn,x)}});
    await enter(p);ok(await p.evaluate(()=>document.body.classList.contains('ozLt'))===light,tg+' Özüne Dön tema');
    await p.evaluate(()=>OZ.go('seller',{tab:'ozet'}));await p.waitForTimeout(1600);
-   const expS={new:[['✓ Kabul et','soAct:accept','btnNextXL']],prep:[['📦 Hazırlandı','soAct:pack','btnNextAmber'],['🚚 Kargoya ver','soShip','btnNextBlue']]};
+   /* P26: satıcı sipariş kartında Kabul et 56px (XL değil), Reddet solda */
+   const expS={new:[['✓ Kabul et','soAct:accept','btnNext']],prep:[['📦 Hazırlandı','soAct:pack','btnNextAmber'],['🚚 Kargoya ver','soShip','btnNextBlue']]};
    for(const sg of ['new','prep']){
     await p.evaluate(sg=>document.querySelector('#ozSP .ozSoCnt [data-st='+sg+']').click(),sg);await p.waitForTimeout(1300);
-    m=await measure(p,'#ozSP');await common(p,tg+' Özüne Dön satıcı '+sg,'#ozSP',m,rm);
+    /* P26: ≥900px'te satıcı kartları durum sütununda (.fdCol[data-k]) ölçülür */
+    const sRoot=w>=900?'#ozSP .fdCol[data-k='+sg+']':'#ozSP';m=await measure(p,sRoot);await common(p,tg+' Özüne Dön satıcı '+sg,sRoot,m,rm);
     ok(await p.evaluate(()=>[...document.querySelectorAll('#ozSP .ozSoC')].filter(c=>c.querySelector('[data-a=soAct]')).every(c=>c.querySelectorAll('.btnNext').length===1)),tg+' Özüne Dön satıcı '+sg+': her kartta tam bir birincil');
     const got=m?m.pri.map(x=>[x.t,x.a,x.c]):[];const ex=expS[sg];
     ok(ex.every(e=>got.some(g=>g[0]===e[0]&&e[1].startsWith(g[1])&&g[2].includes(e[2])))&&got.length===ex.length,tg+' Özüne Dön satıcı '+sg+': '+JSON.stringify(got));
     ok(await p.evaluate(ex=>ex.every(e=>!!document.querySelector('#ozSP .btnNext'+(e[1]==='soShip'?'[data-a=soShip]':'[data-a=soAct][data-act='+e[1].split(':')[1]+']'))),ex),tg+' Özüne Dön satıcı '+sg+': data-a/data-act aynı');
-    if(sg==='new'){ok(m&&m.danger.length>=1&&m.danger.every(x=>x.t==='✕ Reddet'||x.t==='✕ İptal et'),tg+' Özüne Dön satıcı: Reddet çerçeveli: '+JSON.stringify(m&&m.danger));ok(m&&m.pri.every(x=>x.h>=64),tg+' Özüne Dön Kabul et 64px')}
+    if(sg==='new'){ok(m&&m.danger.length>=1&&m.danger.every(x=>x.t==='✕ Reddet'||x.t==='✕ İptal et'),tg+' Özüne Dön satıcı: Reddet çerçeveli: '+JSON.stringify(m&&m.danger));ok(m&&m.pri.every(x=>x.h>=56),tg+' Özüne Dön Kabul et ≥56px')}
     if(!rm)await shot(p,'oz-satici-'+sg+'-'+K);
    }
    if(!rm){await p.evaluate(()=>document.querySelector('#ozSP .ozSoCnt [data-st=new]').click());await p.waitForTimeout(1300);

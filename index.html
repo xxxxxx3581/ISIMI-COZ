@@ -1714,6 +1714,25 @@ html:root .ozKpi .ozKT{display:inline-flex;align-items:center;gap:4px;padding:3p
 html:root .ozKpi .ozKT.ok{background:var(--st-done)}html:root .ozKpi .ozKT.warn{background:var(--st-prep)}html:root .ozKpi .ozKT.bad{background:var(--st-new)}
 html:root .ozKpi .ozKT b{font-size:12.5px;font-weight:900;color:inherit;letter-spacing:0}
 /*P23b-BITIS*/
+/*P26-BASLA*/ /* Paket 26: Özüne Dön satıcı Siparişler — Paket 25 düzeni (aynı sınıflar: .nxHd/.nxAge, .nxNA, .fdCols/.fdCol/.fdColE; aynı --st-* jetonları).
+   Burada yalnız Özüne Dön zemin/yazı jetonları (--oz-*) ve sayaç seçili çerçevesi. */
+html:root body .ozSoCnt .c.c.on{border-color:var(--oz-text);box-shadow:0 0 0 1px var(--oz-text)}
+html:root body.ozWorld:not(.ozLt) .ozSoCnt .c.c.on{border-color:var(--st-ink);box-shadow:0 0 0 2px var(--oz-text)}
+html:root body .ozSoCnt.k4 .c{height:auto;min-height:64px}html:root body .ozSoCnt.k4 .c b{font-size:26px;line-height:1.05}
+html:root body .ozSoCnt.nxColH{display:block;margin:0 0 12px}html:root body .ozSoCnt.nxColH .c{width:100%;min-height:72px;align-items:center;justify-content:center;text-align:center}
+html:root body .ozSoCnt.nxColH .c b{font-size:30px}html:root body .ozSoCnt.nxColH .c small{font-size:13px}
+html:root .ozSoC.gn{--stg:var(--st-new)}html:root .ozSoC.gp{--stg:var(--st-prep)}html:root .ozSoC.gs{--stg:var(--st-ship)}
+html:root .ozSoC.nxNew{border:2px solid var(--st-new)}
+html:root .ozSoC .nxHd{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 10px;margin:-12px -12px 10px;padding:10px 12px;border-radius:inherit;border-bottom-left-radius:0;border-bottom-right-radius:0;
+ background:color-mix(in srgb,var(--stg,transparent) 15%,var(--oz-card));border-bottom:1px solid color-mix(in srgb,var(--stg,var(--oz-line)) 35%,var(--oz-card))}
+html:root .ozSoC .nxHd .id{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 8px;min-width:0}
+html:root .ozSoC .nxHd .id b{font-size:18px;font-weight:900;color:var(--oz-text);overflow-wrap:anywhere}html:root .ozSoC .nxHd .bn{font-size:13.5px;font-weight:700;color:var(--oz-text)}
+html:root .ozSoC .nxHd .nxAge{font-size:13px;font-weight:800;color:var(--oz-text);white-space:nowrap}
+html:root .ozSoC .nxSt{margin:0 0 4px}html:root .ozSoC .nxMp{margin:4px 0 0;color:var(--oz-muted);font-size:13.5px}
+html:root .ozSoC .nxTot{margin:4px 0 8px}html:root .ozSoC .nxTot b{font-size:21px;font-weight:900;color:var(--oz-text);white-space:nowrap}
+#ozSP .fdColE{border-color:var(--oz-line);color:var(--oz-muted)}
+html:root body #ozSP .fdCol .ozSoActs .btnDanger.btnDanger.btnDanger.btnSide{flex:0 0 auto;width:auto;padding:0 12px;white-space:nowrap}
+/*P26-BITIS*/
 /*P27-BASLA*/ /* Paket 27: üç Hesabım'da "Çıkış yap" profil satırının sağında (tek yer; aynı çıkış işlevi). Profil metni kısalır, düğme sabit genişlikte. */
 html:root .hmAcc .hmAccMe .acts{flex:0 0 auto;display:flex;flex-direction:column;align-items:stretch;gap:6px}
 html:root .hmAcc .hmAccMe .acts .hmAccOut2{justify-content:center;padding:0 10px;font-size:13.5px;white-space:nowrap}
@@ -1748,13 +1767,13 @@ html:not([data-theme="light"]) .fd .fdCntB.fdCntB.on{border-color:var(--st-ink);
 .fdBiz .bd .nxTot{margin-top:6px}.fdBiz .bd .nxTot b{font-size:22px;font-weight:900;white-space:nowrap}.fdBiz .bd .nxTot small{display:block;color:var(--muted);font-size:12.5px}
 .fdBiz .bd .bdg{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 /* aksiyon: Reddet dar çerçeveli solda, Kabul et geniş yeşil (56px) */
-html:root body .fdBiz .ft.nxNA .btnDanger.btnDanger.btnDanger.btnSide{flex:0 0 34%;width:auto;min-height:56px}
-.fdBiz .ft.nxNA .btnNext{flex:1 1 auto;min-width:0}
+html:root body .fdBiz .ft.nxNA .btnDanger.btnDanger.btnDanger.btnSide,html:root body .ozSoActs.nxNA .btnDanger.btnDanger.btnDanger.btnSide{flex:0 0 34%;width:auto;min-height:56px}
+.fdBiz .ft.nxNA .btnNext,html:root .ozSoActs.nxNA>.ozBtn.btnNext{flex:1 1 auto;min-width:0}
 /* geniş ekran: Yeni | Hazırlanıyor | Yolda sütunları; başlık = sayaç kutusu */
-.fd .fdCols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:start}
-.fd .fdCol{min-width:0}.fd .fdCol>.fdCntB.fdCntB{width:100%;min-height:72px;margin:0 0 12px;display:flex;flex-direction:column;justify-content:center}
-.fd .fdColL>.fdBiz{margin:0 0 12px}
-.fd .fdColE{margin:0;padding:22px 12px;text-align:center;border:1px dashed var(--line);border-radius:14px;color:var(--muted);font-weight:700}
+.fd .fdCols,#ozSP .fdCols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;align-items:start}
+.fd .fdCol,#ozSP .fdCol{min-width:0}.fd .fdCol>.fdCntB.fdCntB{width:100%;min-height:72px;margin:0 0 12px;display:flex;flex-direction:column;justify-content:center}
+.fd .fdColL>.fdBiz,#ozSP .fdColL>.ozSoC{margin:0 0 12px!important}
+.fd .fdColE,#ozSP .fdColE{margin:0;padding:22px 12px;text-align:center;border:1px dashed var(--line);border-radius:14px;color:var(--muted);font-weight:700}
 /*P25-BITIS*/
 /*K21-BASLA*/
 /*OZ AJ1 P1 renk jetonları (koyu = önceki hex değerleri, birebir). Çekirdek: rol bazlı (T metin, L çizgi, B zemin); --oz-x<HEX><ROL> tek kullanımlık ara tonlar. Krem tema bu değerleri body.ozWorld.ozLt altında değiştirir.*/
@@ -3896,7 +3915,7 @@ function hmGo(key){
 function hmSoon(){ try{ v2Toast('Özüne Dön çok yakında!'); }catch(e){} }
 /*K21-JS-BASLA*/ /* Özüne Dön: modül tembel yüklenir; pazar kapalıysa (veya hata olursa) yalnızca hmSoon() gösterilir. */
 var OZ_LOADING=null, OZ_TAP=false;
-function ozLoad(){ if(window.OZ&&window.OZ.__v) return Promise.resolve(window.OZ); if(OZ_LOADING) return OZ_LOADING; OZ_LOADING=new Promise(function(res,rej){ var s=document.createElement('script'); s.src='./oz-market-v1.js?v=20'; s.async=true; s.onload=function(){ if(window.OZ&&window.OZ.__v) res(window.OZ); else { OZ_LOADING=null; rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); } }; s.onerror=function(){ OZ_LOADING=null; s.remove(); rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); }; document.head.appendChild(s); }); return OZ_LOADING; }
+function ozLoad(){ if(window.OZ&&window.OZ.__v) return Promise.resolve(window.OZ); if(OZ_LOADING) return OZ_LOADING; OZ_LOADING=new Promise(function(res,rej){ var s=document.createElement('script'); s.src='./oz-market-v1.js?v=21'; s.async=true; s.onload=function(){ if(window.OZ&&window.OZ.__v) res(window.OZ); else { OZ_LOADING=null; rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); } }; s.onerror=function(){ OZ_LOADING=null; s.remove(); rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); }; document.head.appendChild(s); }); return OZ_LOADING; }
 window.ozLoad=ozLoad;
 function ozTap(){ if(OZ_TAP) return; OZ_TAP=true; ozLoad().then(function(oz){ return oz.tryEnter(); }).then(function(ok){ if(!ok) hmSoon(); }).catch(function(){ hmSoon(); }).then(function(){ OZ_TAP=false; }); }
 /* P10: iyzico (sandbox) ödeme dönüşü ?oz_pay=<ödeme id> → parametre adres çubuğundan silinir, Özüne Dön açılıp ödeme sonucu gösterilir */
