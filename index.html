@@ -1692,6 +1692,28 @@ html:root .hmAcc .hmAccOut2 svg{width:16px;height:16px}
 html:root .hmAcc .hmRoles{flex-wrap:nowrap!important;overflow-x:auto;scrollbar-width:none;min-height:24px}html:root .hmAcc .hmRoles::-webkit-scrollbar{display:none}html:root .hmAcc .hmRoleT{flex:none;white-space:nowrap}
 html:root .hmAcc .hmAccWsPh{height:68px;margin:0 0 10px;border-radius:16px;border:1px dashed #54422D;background:#3A2D20;opacity:.55}
 /*P24-BITIS*/
+/*P23b-BASLA*/ /* Paket 23b: yönetim bölüm içi çerçeve (yalnız görünüm): ← + "Yönetim › bölme" + başlık + Kapat ve kardeş bölüm şeridi yapışkan; alt menü P23 ile aynı.
+   Aktif çip --ad-on (krem #F2C14E / koyu #F7D24A); rozet yalnız mevcut sayılardan. Özüne Dön Özet: durum haritası küçük renkli etiketler (--st-* jetonları). */
+.pfxSh.pfxAdmIn>.pfxHd{flex-wrap:wrap;gap:8px 10px;padding:6px 0 10px;margin-bottom:10px;border-bottom:1px solid var(--line,rgba(127,127,127,.3))}
+.pfxSh.pfxAdmIn>.pfxHd .pfxBack{flex:0 0 44px;width:44px;height:44px;min-height:44px;margin:0;padding:0;display:grid;place-items:center;border-radius:12px}
+.pfxSh.pfxAdmIn>.pfxHd .pfxX{min-height:44px;padding:0 16px}
+.pfxSh.pfxAdmIn .pfxAdmTt{flex:1 1 0;min-width:0}
+.pfxSh.pfxAdmIn .pfxAdmP{display:block;font-size:12.5px;font-weight:700;color:var(--muted,#94a8bd);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html[data-theme="light"] .pfxSh.pfxAdmIn .pfxAdmP{color:#4b5563}
+.pfxSh.pfxAdmIn h2.pfxAdmT{margin:0;font-size:22px;line-height:1.2;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pfxSh.pfxAdmIn .pfxAdmS{flex:1 0 100%;display:flex;gap:8px;overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;padding:2px 0;margin:0}
+.pfxSh.pfxAdmIn .pfxAdmS::-webkit-scrollbar{display:none}
+.pfxSh.pfxAdmIn .pfxSC{flex:none;display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 16px;border-radius:999px;border:1px solid var(--line,rgba(127,127,127,.3));background:transparent;color:var(--text);font:inherit;font-size:15px;font-weight:800;white-space:nowrap;cursor:pointer}
+.pfxSh.pfxAdmIn .pfxSC.on{background:var(--ad-on);border-color:var(--ad-on);color:var(--ad-on-ink)}
+.pfxSh.pfxAdmIn .pfxSC:focus-visible,.pfxSh.pfxAdmIn .pfxBack:focus-visible{outline:3px solid var(--ad-on);outline-offset:2px}
+.pfxSh.pfxAdmIn .pfxSC .pfxCnt{min-width:24px;height:24px}
+.pfxSh.pfxAdmIn .pfxSC .pfxCnt.warn{background:var(--ad-a);color:var(--ad-ink)}.pfxSh.pfxAdmIn .pfxSC .pfxCnt.bad{background:var(--ad-r);color:var(--ad-ink)}
+.pfxSh.pfxAdmIn .pfxSC.on .pfxCnt{background:#fff;color:#1F1A12}
+html:root .ozKpi .ozKTags{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+html:root .ozKpi .ozKT{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:999px;font-size:12.5px;font-weight:800;line-height:1.35;background:var(--st-issue);color:var(--st-ink)}
+html:root .ozKpi .ozKT.ok{background:var(--st-done)}html:root .ozKpi .ozKT.warn{background:var(--st-prep)}html:root .ozKpi .ozKT.bad{background:var(--st-new)}
+html:root .ozKpi .ozKT b{font-size:12.5px;font-weight:900;color:inherit;letter-spacing:0}
+/*P23b-BITIS*/
 /*P25-BASLA*/ /* Paket 25: Yemek işletme "Bugün" sipariş kartları + sayaçlar + geniş ekranda 3 sütun (yalnız görünüm). Renkler P19/P21 jetonları:
    --st-new/--st-prep/--st-ship (krem: #C4492F/#9A6410/#2F6FA8 + beyaz yazı; koyu ve Mutfak modu: açık tonlar + --st-ink koyu yazı). */
 .fd .fdCntB.fdCntB{--stc:var(--st-new);display:flex;flex-direction:column;justify-content:center;gap:2px;font:inherit;cursor:pointer;min-width:0;min-height:84px;align-items:center;text-align:center;border:2px solid var(--stc);border-radius:16px;background:var(--stc);color:var(--st-ink);padding:8px 6px}
@@ -3865,7 +3887,7 @@ function hmGo(key){
 function hmSoon(){ try{ v2Toast('Özüne Dön çok yakında!'); }catch(e){} }
 /*K21-JS-BASLA*/ /* Özüne Dön: modül tembel yüklenir; pazar kapalıysa (veya hata olursa) yalnızca hmSoon() gösterilir. */
 var OZ_LOADING=null, OZ_TAP=false;
-function ozLoad(){ if(window.OZ&&window.OZ.__v) return Promise.resolve(window.OZ); if(OZ_LOADING) return OZ_LOADING; OZ_LOADING=new Promise(function(res,rej){ var s=document.createElement('script'); s.src='./oz-market-v1.js?v=18'; s.async=true; s.onload=function(){ if(window.OZ&&window.OZ.__v) res(window.OZ); else { OZ_LOADING=null; rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); } }; s.onerror=function(){ OZ_LOADING=null; s.remove(); rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); }; document.head.appendChild(s); }); return OZ_LOADING; }
+function ozLoad(){ if(window.OZ&&window.OZ.__v) return Promise.resolve(window.OZ); if(OZ_LOADING) return OZ_LOADING; OZ_LOADING=new Promise(function(res,rej){ var s=document.createElement('script'); s.src='./oz-market-v1.js?v=19'; s.async=true; s.onload=function(){ if(window.OZ&&window.OZ.__v) res(window.OZ); else { OZ_LOADING=null; rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); } }; s.onerror=function(){ OZ_LOADING=null; s.remove(); rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); }; document.head.appendChild(s); }); return OZ_LOADING; }
 window.ozLoad=ozLoad;
 function ozTap(){ if(OZ_TAP) return; OZ_TAP=true; ozLoad().then(function(oz){ return oz.tryEnter(); }).then(function(ok){ if(!ok) hmSoon(); }).catch(function(){ hmSoon(); }).then(function(){ OZ_TAP=false; }); }
 /* P10: iyzico (sandbox) ödeme dönüşü ?oz_pay=<ödeme id> → parametre adres çubuğundan silinir, Özüne Dön açılıp ödeme sonucu gösterilir */
@@ -9216,7 +9238,8 @@ document.addEventListener('keydown',function(e){
 window.addEventListener('popstate',function(e){
   var st=e.state, i=(st&&typeof st.v2==='number')?st.v2:null;
   if(V2_NAV.skip>0){ V2_NAV.skip--; if(i!=null) V2_NAV.idx=i; if(V2_NAV.homeUrl!=null&&V2_NAV.skip===0){ V2_NAV.idx=0; try{ history.replaceState({v2:0},'',V2_NAV.homeUrl); }catch(_){} V2_NAV.homeUrl=null; } return; }
-  if(v2OverlaysOpen()){ v2CloseOverlays(); V2_NAV.skip=1; history.go(1); return; }   /* açık pencere varsa geri tuşu önce onu kapatır */
+  /* P23b: yönetim panelinde bir bölümün içindeyken geri → bölme listesi (pencere açık kalır; üstünde başka pencere yoksa) */
+  if(v2OverlaysOpen()){ var adm=!document.querySelector('.v2Sheet,.ozOv:not(.ozOvH),#authModal')&&!(document.getElementById('appDrawer')||{classList:{contains:function(){return false}}}).classList.contains('on')&&window.PF&&typeof PF.adminBack==='function'&&PF.adminBack(); if(!adm) v2CloseOverlays(); V2_NAV.skip=1; history.go(1); return; }   /* açık pencere varsa geri tuşu önce onu kapatır */
   if(i==null) return;
   var ent=V2_NAV.stack[i]; V2_NAV.idx=i;
   V2_NAV.busy=true;
@@ -11246,5 +11269,5 @@ for(const k of ["showGayrimenkulDetail","showOtomobilDetail"]){const f=window[k]
 </body>
 <script src="./a35-seller-identity.js?v=3"></script>
 <script src="./a7-food-v1.js?v=12"></script>
-<script src="./pf-platform-v1.js?v=6"></script>
+<script src="./pf-platform-v1.js?v=7"></script>
 </html>

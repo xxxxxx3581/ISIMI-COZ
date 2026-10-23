@@ -24,8 +24,10 @@ const {chromium,open,enter}=require('./harness.js');
  await openAdm();ok((await where()).ov===1,'A1: Yönetim paneli açıldı');
  await p.evaluate(()=>document.querySelector('.pfxOv [data-pfx-close]').click());await W(500);same(await where(),b0,'A1 Kapat');
  await openAdm();await p.goBack();await W();same(await where(),b0,'A1 Android geri');
- // bölüm içinden geri: önce pencere kapanır, sayfa yerinde kalır
- await openAdm();await p.evaluate(()=>PF.openAdmin('reports'));await W(900);await p.goBack();await W();same(await where(),b0,'A1 bölüm içinden Android geri');
+ // P23b: bölüm içinden geri → önce bölme listesi (pencere açık), ikinci geri → pencere kapanır, sayfa yerinde kalır
+ await openAdm();await p.evaluate(()=>PF.openAdmin('reports'));await W(900);await p.goBack();await W();
+ ok(await p.evaluate(()=>!!document.getElementById('pfxAdmHome')&&!document.getElementById('pfxAdm')),'A1 bölüm içinden Android geri → bölme listesi');
+ await p.goBack();await W();same(await where(),b0,'A1 bölüm içinden 2. Android geri');
  // ---- A2: Özüne Dön Hesabım → Satıcı paneli / Yönetim
  await p.evaluate(()=>showHome());await W();await enter(p);await p.evaluate(()=>OZ.go('account',{}));await W(1300);
  await p.evaluate(()=>window.scrollTo(0,300));await W(300);b0=await where();
@@ -35,7 +37,8 @@ const {chromium,open,enter}=require('./harness.js');
  await p.evaluate(()=>document.querySelector('[data-a=back]').click());await W(1300);same(await where(),b0,'A2 satıcı paneli → ekrandaki ←');
  await p.evaluate(()=>document.querySelector('#ozRoot .ozWs.ad').click());await W(1500);ok((await where()).ov===1,'A2: Özüne Dön yönetimi açıldı');
  await p.evaluate(()=>document.querySelector('.pfxOv [data-pfx-close]').click());await W(500);same(await where(),b0,'A2 yönetim → Kapat');
- await p.evaluate(()=>document.querySelector('#ozRoot .ozWs.ad').click());await W(1500);await p.goBack();await W(1200);same(await where(),b0,'A2 yönetim → Android geri');
+ /* P23b: Özüne Dön yönetimi Özet bölümünü açar → ilk geri bölme listesi, ikinci geri girilen ekran */
+ await p.evaluate(()=>document.querySelector('#ozRoot .ozWs.ad').click());await W(1500);await p.goBack();await W(1200);ok(await p.evaluate(()=>!!document.getElementById('pfxAdmHome')),'A2 yönetim → Android geri → bölme listesi');await p.goBack();await W(1200);same(await where(),b0,'A2 yönetim → 2. Android geri');
  // ---- A3: Yemek Hesabım → İşletmem / Kurye / Yemek yönetimi
  await p.evaluate(()=>showHome());await W();await p.evaluate(()=>showFoodAccount());await W(1500);
  await p.evaluate(()=>window.scrollTo(0,250));await W(300);b0=await where();

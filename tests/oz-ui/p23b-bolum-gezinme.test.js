@@ -1,0 +1,99 @@
+// Paket 23b: yönetim bölüm içi gezinme (yalnız arayüz) — 390px, krem (açık) ve koyu tema, sahte RPC.
+// Çalıştırma: NODE_PATH=/opt/node-tools/node_modules node tests/oz-ui/p23b-bolum-gezinme.test.js   (P23B_SHOTS=<klasör> verilirse ekran görüntüsü yazar)
+// Doğrulanan: üstte ← (44px) + "Yönetim › bölme" + büyük başlık + Kapat; kardeş bölüm şeridi (Özüne Dön'ün 10 bölümü tek şeritte), aktif çip sarı dolu ve
+// görünür, rozetler yalnız mevcut sayılardan; başlık + şerit kayarken yapışkan; alt menü (Kuyruklar aktif) en altta, içerikle çakışmaz; çip geçişleri
+// geçmişe kayıt eklemez, 3 geçişten sonra Android geri → bölme listesi, bir geri daha → panel kapanır; ← → bölme listesi; Kapat → panel kapanır;
+// alt menü → o bölmenin ana görünümü; Özüne Dön Özet "Siparişler" kutusu küçük renkli etiketler (yazı + sayı); yetkisiz bölüm şeritte/menüde yok;
+// kontrast ≥4.5, düğmeler ≥44px, yatay taşma yok (şerit kendi içinde kayar).
+const {chromium,open}=require('./harness.js');
+const fs=require('fs'),path=require('path');
+const SHOTS=process.env.P23B_SHOTS||'';if(SHOTS)fs.mkdirSync(SHOTS,{recursive:true});
+const SAMPLE={pf_public_settings:{},pf_my_roles:{is_admin:true,roles:['super']},pf_admin_reports:[{id:'r1'},{id:'r2'}],pf_admin_listing_queue:[{id:'l1'},{id:'l2'}],
+ pf_admin_venue_queue:[{venue_id:'v1',stage:'in_review'}],pf_admin_data_requests:[],pf_admin_tickets:[],
+ oz_admin_overview:{orders_open:3,returns_open:1,sellers_pending:1,orders:{returned:1,delivered:2}},oz_admin_settings:{oz_market_enabled:false,oz_orders_enabled:false,oz_payment_mock_enabled:true}};
+const OZ=['Özet','Ayarlar','Satıcılar','Ürünler','Siparişler','İadeler','Ödemeler','Kategoriler','Moderasyon','Slaytlar'];
+/* sayfa içi: ön plan/zemin kontrastı (yarı saydam zeminler üst üste karıştırılır) */
+const CONTRAST=(sel)=>{const L=c=>{const f=v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)};return .2126*f(c[0])+.7152*f(c[1])+.0722*f(c[2])};
+ const P=c=>{const m=c.match(/[\d.]+/g).map(Number);return /^color\(srgb/.test(c)?m.map((v,i)=>i<3?v*255:v):m};const mix=(f,b)=>{const a=f.length>3?f[3]:1;return [0,1,2].map(i=>f[i]*a+b[i]*(1-a))};
+ const eff=e=>{const st=[];for(;e;e=e.parentElement){const c=P(getComputedStyle(e).backgroundColor);if(c.length<4||c[3]>0){st.push(c);if(c.length<4||c[3]>=1)break}}let b=[255,255,255];st.reverse().forEach(c=>{b=mix(c,b)});return b};
+ const bad=[],small=[];document.querySelectorAll(sel).forEach(R=>R.querySelectorAll('b,small,span,button,h2').forEach(e=>{const r=e.getBoundingClientRect();if(!r.height||!(e.textContent||'').trim())return;
+  if(e.tagName==='BUTTON'&&r.height<44-.5)small.push((e.textContent||e.getAttribute('aria-label')||'').trim().slice(0,18)+':'+Math.round(r.height));
+  if([...e.children].some(c=>c.textContent.trim()===e.textContent.trim()))return;const z=eff(e),fg=mix(P(getComputedStyle(e).color),z);const x=L(fg),y=L(z);const v=(Math.max(x,y)+.05)/(Math.min(x,y)+.05);if(v<4.5)bad.push((e.textContent||'').trim().slice(0,20)+':'+v.toFixed(2))}));
+ return {bad,small}};
+(async()=>{
+ const br=await chromium.launch({executablePath:process.env.CHROMIUM||'/opt/pw-browsers/chromium'});
+ const fails=[];const ok=(c,m)=>{if(!c)fails.push(m)};
+ const {p,st}=await open(br,{w:390,h:844,visible:true,view:'',theme:''});
+ let DATA=SAMPLE;
+ await p.route('**/rest/v1/rpc/*',r=>{const fn=r.request().url().split('/rpc/')[1].split('?')[0];return r.fulfill({status:200,contentType:'application/json',body:JSON.stringify(fn in DATA?DATA[fn]:[])})});
+ await p.reload();await p.waitForTimeout(1500);
+ await p.addStyleTag({content:'*,*::before,*::after{animation:none!important;transition:none!important}'});
+ await p.evaluate(()=>showHome());await p.waitForTimeout(500);
+ const W=t=>p.waitForTimeout(t||900);
+ const openA=async(roles)=>{await p.evaluate(r=>{document.querySelectorAll('.pfxOv').forEach(x=>x.remove());window.PF.roles={is_admin:true,roles:r};PF._admCnt=null;PF.openAdmin()},roles||['super']);await W(1400)};
+ const S=()=>p.evaluate(()=>{const sh=document.querySelector('.pfxOv .pfxSh');if(!sh)return {open:false};const hd=sh.querySelector('.pfxHd'),bk=hd.querySelector('.pfxBack'),x=hd.querySelector('.pfxX'),s=hd.querySelector('.pfxAdmS');
+  const home=document.getElementById('pfxAdmHome');const nav=sh.querySelector('.pfxPN');const sr=s&&s.getBoundingClientRect();const on=s&&s.querySelector('.pfxSC.on');const orr=on&&on.getBoundingClientRect();
+  return {open:true,home:!!home,pane:home?(home.querySelector('.pfxPane:not([hidden])')||{}).dataset.pane:null,inner:!!document.getElementById('pfxAdm'),
+   path:(hd.querySelector('.pfxAdmP')||{}).textContent||'',title:(hd.querySelector('.pfxAdmT')||{}).textContent||'',
+   back:bk?[Math.round(bk.getBoundingClientRect().width),Math.round(bk.getBoundingClientRect().height)]:null,kapat:x?Math.round(x.getBoundingClientRect().height):0,
+   chips:s?[...s.querySelectorAll('.pfxSC')].map(b=>({t:b.childNodes[0].textContent,n:(b.querySelector('.pfxCnt')||{}).textContent||'',on:b.classList.contains('on'),bg:getComputedStyle(b).backgroundColor,h:Math.round(b.getBoundingClientRect().height)})):[],
+   onVis:!!(on&&orr.left>=sr.left-1&&orr.right<=sr.right+1),stripScroll:s?s.scrollWidth>s.clientWidth:false,
+   nav:nav?{items:[...nav.querySelectorAll('.pnItem')].map(b=>b.dataset.pane),on:(nav.querySelector('.pnItem.on')||{}).dataset&&nav.querySelector('.pnItem.on').dataset.pane,bottom:Math.round(nav.getBoundingClientRect().bottom),shB:Math.round(sh.getBoundingClientRect().bottom)}:null,
+   ovf:Math.max(document.scrollingElement.scrollWidth-document.scrollingElement.clientWidth,sh.scrollWidth-sh.clientWidth)}});
+ const shot=async n=>{if(!SHOTS)return;const el=await p.$('.pfxOv .pfxSh');if(el)await el.screenshot({path:path.join(SHOTS,n+'.png')})};
+ for(const th of ['light','dark']){const T=th==='light'?'krem':'koyu';const ON=th==='light'?'rgb(242, 193, 78)':'rgb(247, 210, 74)';
+  /* gerçek akış gibi: Ana sayfa → Hesabım (uygulama geçmişinde önceki kayıt var) → Yönetim paneli */
+  await p.evaluate(t=>{applyAppTheme(t);showHome()},th);await W(400);await p.evaluate(()=>showAccount());await W(600);DATA=SAMPLE;await openA();
+  await p.evaluate(()=>document.querySelector('#pfxAdmHome .pfxPN [data-pane=queues]').click());await W(300);
+  await p.evaluate(()=>document.querySelector('#pfxAdmHome [data-tab=oz_sellers]').click());await W(1300);
+  let r=await S();
+  ok(r.inner&&r.path==='Yönetim › Özüne Dön'&&r.title==='Satıcılar'&&r.back&&r.back[0]>=44&&r.back[1]>=44&&r.kapat>=44,'['+T+'] üst: ← 44px + yol + başlık + Kapat: '+JSON.stringify({p:r.path,t:r.title,b:r.back,k:r.kapat}));
+  ok(JSON.stringify(r.chips.map(c=>c.t))===JSON.stringify(OZ),'['+T+'] Özüne Dön 10 bölüm tek şeritte: '+JSON.stringify(r.chips.map(c=>c.t)));
+  ok(r.chips.filter(c=>c.on).length===1&&r.chips.find(c=>c.on).t==='Satıcılar'&&r.chips.find(c=>c.on).bg===ON&&r.chips.filter(c=>!c.on).every(c=>c.bg!==ON)&&r.chips.every(c=>c.h>=44),'['+T+'] aktif çip sarı dolu, diğerleri normal, ≥44px: '+JSON.stringify(r.chips.map(c=>[c.t,c.on,c.bg,c.h])));
+  ok(JSON.stringify(r.chips.filter(c=>c.n).map(c=>c.t+':'+c.n))==='["Satıcılar:1","Siparişler:3","İadeler:1"]','['+T+'] rozetler yalnız mevcut sayılardan: '+JSON.stringify(r.chips.filter(c=>c.n)));
+  ok(r.nav&&JSON.stringify(r.nav.items)==='["today","queues","money","system"]'&&r.nav.on==='queues'&&Math.abs(r.nav.bottom-r.nav.shB)<=2,'['+T+'] alt menü sabit, Kuyruklar aktif: '+JSON.stringify(r.nav));
+  ok(r.ovf<=0&&r.stripScroll,'['+T+'] yatay taşma yok, şerit kendi içinde kayar: '+JSON.stringify([r.ovf,r.stripScroll]));
+  let a=await p.evaluate(CONTRAST,'.pfxOv .pfxHd');ok(!a.bad.length&&!a.small.length,'['+T+'] üst alan kontrast/boyut: '+JSON.stringify(a));
+  // yapışkan: içerik uzunken kaydır, başlık + şerit üstte kalır; içerik sonu alt menünün üstünde
+  r=await p.evaluate(()=>{const el=document.getElementById('pfxAdm');const f=document.createElement('div');f.id='t23bF';f.style.height='1600px';el.appendChild(f);const sh=document.querySelector('.pfxOv .pfxSh');sh.scrollTop=700;
+   const hd=sh.querySelector('.pfxHd').getBoundingClientRect(),s=sh.querySelector('.pfxAdmS').getBoundingClientRect(),st=sh.getBoundingClientRect();const top=Math.round(hd.top-st.top);
+   sh.scrollTop=sh.scrollHeight;const nb=sh.querySelector('.pfxPN').getBoundingClientRect(),lb=el.getBoundingClientRect();f.remove();return {top,sVis:s.top>=st.top-1,lastB:Math.round(lb.bottom),navT:Math.round(nb.top)}});
+  ok(r.top<=2&&r.sVis&&r.lastB<=r.navT+1,'['+T+'] başlık + şerit yapışkan, içerik alt menünün üstünde biter: '+JSON.stringify(r));
+  await p.evaluate(()=>{document.querySelector('.pfxOv .pfxSh').scrollTop=0});await shot('p23b-'+T+'-saticilar');
+  // 3 çip geçişi: geçmişe kayıt yok; aktif çip görünür
+  const h0=await p.evaluate(()=>({n:history.length,i:window.V2_NAV&&V2_NAV.idx,u:location.href}));
+  for(const k of ['Siparişler','Slaytlar','İadeler']){await p.evaluate(k=>[...document.querySelectorAll('.pfxAdmS .pfxSC')].find(b=>b.childNodes[0].textContent===k).click(),k);await W(1100);
+   r=await S();ok(r.title===k&&r.chips.find(c=>c.on).t===k&&r.onVis,'['+T+'] çip → '+k+', aktif görünür: '+JSON.stringify({t:r.title,v:r.onVis}))}
+  const h1=await p.evaluate(()=>({n:history.length,i:window.V2_NAV&&V2_NAV.idx,u:location.href}));
+  ok(JSON.stringify(h0)===JSON.stringify(h1),'['+T+'] çip geçişleri geçmişe kayıt eklemedi: '+JSON.stringify([h0,h1]));
+  await p.goBack();await W(900);r=await S();
+  ok(r.open&&r.home&&r.pane==='queues','['+T+'] 3 geçişten sonra Android geri → bölme listesi (Kuyruklar): '+JSON.stringify({o:r.open,h:r.home,p:r.pane}));
+  await p.goBack();await W(900);r=await S();ok(!r.open,'['+T+'] ikinci geri → panel kapandı');
+  ok(await p.evaluate(()=>!!document.querySelector('#app .hmAcc')),'['+T+'] panelden çıkış sonrası girilen ekranda (Hesabım)');
+  // ← → bölme listesi; alt menü → o bölme; Kapat → çıkış
+  await openA();await p.evaluate(()=>PF.openAdmin('reports'));await W(1000);r=await S();
+  ok(r.path==='Yönetim › Kuyruklar'&&r.title==='Şikâyetler'&&!r.chips.some(c=>OZ.includes(c.t)&&/^(Özet|Slaytlar)$/.test(c.t))&&r.chips.find(c=>c.on).t==='Şikâyetler'&&r.chips.find(c=>c.t==='Şikâyetler').n==='2','['+T+'] Kuyruklar bölümü: yol, kardeşler, rozet: '+JSON.stringify({p:r.path,c:r.chips.map(c=>c.t+':'+c.n)}));
+  await p.evaluate(()=>document.querySelector('.pfxOv .pfxBack').click());await W(900);r=await S();ok(r.home&&r.pane==='queues','['+T+'] ← → Kuyruklar listesi');
+  await p.evaluate(()=>PF.openAdmin('finance'));await W(1000);r=await S();ok(r.path==='Yönetim › Para'&&r.nav&&r.nav.on==='money','['+T+'] Finans: bölme Para aktif: '+JSON.stringify({p:r.path,n:r.nav}));
+  await p.evaluate(()=>document.querySelector('.pfxOv .pfxPN [data-pane=system]').click());await W(900);r=await S();ok(r.home&&r.pane==='system','['+T+'] alt menü → Sistem ana görünümü');
+  await p.evaluate(()=>PF.openAdmin('audit'));await W(900);
+  await p.evaluate(()=>document.querySelector('.pfxOv [data-pfx-close]').click());await W(500);r=await S();ok(!r.open,'['+T+'] Kapat → panelden çıkış');
+  // Özüne Dön Özet: Siparişler kutusu küçük renkli etiketler
+  await openA();await p.evaluate(()=>PF.openAdmin('oz_overview'));await W(1600);
+  r=await p.evaluate(()=>{const k=document.querySelector('[data-kpi=orders]');if(!k)return null;const t=[...k.querySelectorAll('.ozKT')];return {tags:t.map(x=>x.textContent.trim()),fs:t.map(x=>parseFloat(getComputedStyle(x).fontSize)),cls:t.map(x=>x.className)}});
+  ok(r&&JSON.stringify(r.tags)==='["İade edildi 1","Teslim edildi 2"]'&&r.fs.every(v=>v<=13)&&r.cls[0]!==r.cls[1],'['+T+'] Özet Siparişler etiketleri (yazı + sayı, küçük, renkli): '+JSON.stringify(r));
+  a=await p.evaluate(CONTRAST,'[data-kpi=orders]');ok(!a.bad.length,'['+T+'] Özet etiket kontrastı: '+JSON.stringify(a.bad));
+  await shot('p23b-'+T+'-ozet');
+  ok((await S()).ovf<=0,'['+T+'] Özet yatay taşma');
+ }
+ // yetkisiz: finans rolü yalnız Para bölümleri; Özüne Dön yok
+ await openA(['finance']);await p.evaluate(()=>PF.openAdmin('campaigns'));await W(1000);let r=await S();
+ ok(JSON.stringify(r.chips.map(c=>c.t))==='["Finans","Kampanyalar","Gelir"]'&&r.nav&&JSON.stringify(r.nav.items)==='["today","money"]','[yetki] finans: yalnız yetkili kardeşler ve bölmeler: '+JSON.stringify({c:r.chips.map(c=>c.t),n:r.nav&&r.nav.items}));
+ await openA(['moderator']);await p.evaluate(()=>PF.openAdmin('reports'));await W(1000);r=await S();
+ ok(r.chips.length&&r.chips.every(c=>!/Destek|KVKK|Özet|Finans/.test(c.t)),'[yetki] moderatör: destek/KVKK/Özüne Dön/finans çipi yok: '+JSON.stringify(r.chips.map(c=>c.t)));
+ ok(await p.evaluate(()=>{PF.openAdmin('oz_overview');return true})&&!(await S()).chips.some(c=>c.t==='Özet'),'[yetki] moderatör Özüne Dön bölümüne giremez');
+ ok(!st.errors.length,'sayfa hatası: '+st.errors.join(' | '));
+ await br.close();
+ if(fails.length){console.error('p23b-bolum-gezinme BAŞARISIZ:\n - '+fails.join('\n - '));process.exit(1)}
+ console.log('p23b-bolum-gezinme: tüm kontroller geçti');process.exit(0);
+})().catch(e=>{console.error('p23b-bolum-gezinme HATA:',e);process.exit(1)});

@@ -75,7 +75,8 @@ document.head.appendChild(s)}
 function sheet(title,html,opt){
   css();opt=opt||{};closeSheet(opt.keep);
   var ov=document.createElement('div');ov.className='pfxOv';ov.id=opt.id||'pfxSheet';ov.setAttribute('role','dialog');ov.setAttribute('aria-modal','true');ov.setAttribute('aria-label',title);
-  ov.innerHTML='<div class="pfxSh"><div class="pfxHd"><h2>'+esc(title)+'</h2>'+(opt.noClose?'':'<button type="button" class="pfxX" data-pfx-close>Kapat</button>')+'</div><div class="pfxBody">'+html+'</div></div>';
+  /* P23b: opt.cls → .pfxSh ek sınıfı; opt.hd → başlık yerine özel üst alan; opt.sub → üst alanın altında (yapışkan) satır */
+  ov.innerHTML='<div class="pfxSh'+(opt.cls?' '+opt.cls:'')+'"><div class="pfxHd">'+(opt.hd||'<h2>'+esc(title)+'</h2>')+(opt.noClose?'':'<button type="button" class="pfxX" data-pfx-close>Kapat</button>')+(opt.sub||'')+'</div><div class="pfxBody">'+html+'</div></div>';
   ov.addEventListener('click',function(e){if(e.target===ov&&!opt.noClose)closeSheet();if(e.target.closest&&e.target.closest('[data-pfx-close]'))closeSheet()});
   document.body.appendChild(ov);return ov;
 }
@@ -454,8 +455,19 @@ PF.openAdmin=async function(tab){
     if(!(PF._admCnt&&Date.now()-PF._admCnt.at<60000)){var c=await admCounts(tabs);if(ADM.tab===null&&document.getElementById('pfxAdmHome'))admHome(tabs,c,false)}
     return;
   }
-  ADM.tab=cur[0];
-  sheet('Yönetim paneli','<button type="button" class="pfxBtn pfxBack" onclick="PF.openAdmin()">← Bölümler</button><h3 class="pfxAdmT">'+(ADM_ICON[cur[0]]||'')+' '+esc(cur[1])+'</h3><div id="pfxAdm">'+loading()+'</div>');
+  ADM.tab=cur[0];ADM.tabs=tabs;ADM.pane=admPaneOf(cur[0]);
+  /* P23b: bölüm iç çerçevesi — ← (bölme listesine) + "Yönetim › bölme" yolu + başlık + Kapat, altında kardeş bölüm şeridi (yapışkan), en altta bölme menüsü.
+     Çip/menü geçişleri geçmişe kayıt eklemez (pencere geçmişe hiç yazmaz); Android geri → PF.adminBack (bölme listesi). İçerik (ADMIN.*) aynı. */
+  var oz=/^oz_/.test(cur[0]),c=PF._admCnt,sib=admSibs(cur[0],tabs),nm=function(t){return t[1].replace(/^Özüne Dön · /,'')};
+  var bn=function(k){if(!c)return null;if(ADM_CNT[k]&&c[k])return [c[k].n,ADM_CNT[k]];var Z=c.oz,n=Z?(k==='oz_sellers'?Z.sellers:k==='oz_orders'?Z.orders:k==='oz_returns'?Z.returns:null):null;return n==null?null:[n,k==='oz_returns'?'bad':'warn']};
+  var hd='<button type="button" class="pfxBtn pfxBack" aria-label="Bölümlere dön" onclick="PF._admBack()"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 5l-7 7 7 7"/></svg></button>'+
+    '<div class="pfxAdmTt"><small class="pfxAdmP">Yönetim › '+(oz?'Özüne Dön':ADM_PN[ADM.pane])+'</small><h2 class="pfxAdmT">'+esc(nm(cur))+'</h2></div>';
+  var sub=sib.length>1?'<nav class="pfxAdmS" aria-label="'+(oz?'Özüne Dön':ADM_PN[ADM.pane])+' bölümleri">'+sib.map(function(t){var on=t[0]===cur[0],b=bn(t[0]);
+    return '<button type="button" class="pfxSC'+(on?' on':'')+'" data-tab="'+t[0]+'"'+(on?' aria-current="page"':'')+(b?' aria-label="'+esc(nm(t)+': '+b[0]+' bekleyen')+'"':'')+' onclick="PF.openAdmin(\''+t[0]+'\')">'+esc(nm(t))+(b?'<span class="pfxCnt '+(b[0]>0?b[1]:'z')+'" aria-hidden="true">'+b[0]+'</span>':'')+'</button>'}).join('')+'</nav>':'';
+  var pv=ADM_PANES.filter(function(x){return x[0]==='today'||tabs.some(function(t){return admPaneOf(t[0])===x[0]})}),tot=PF._admN||0;
+  var nav=pv.length>1?'<nav class="pfxPN pnNav" aria-label="Yönetim bölümleri">'+pv.map(function(x){var on=x[0]===ADM.pane;return '<button type="button" class="pnItem'+(on?' on':'')+'" data-pane="'+x[0]+'"'+(on?' aria-current="page"':'')+' onclick="PF._admGoPane(\''+x[0]+'\')"><span class="ic" aria-hidden="true">'+pIco(x[2],22)+'</span><span class="l">'+x[1]+'</span>'+(x[0]==='today'&&tot>0?'<i class="pnBdg" aria-label="'+tot+' bekleyen iş">'+tot+'</i>':'')+'</button>'}).join('')+'</nav>':'';
+  var ov=sheet('Yönetim paneli','<div id="pfxAdm">'+loading()+'</div>'+nav,{cls:'pfxAdm3 pfxAdmIn',hd:hd,sub:sub});
+  var sa=ov.querySelector('.pfxAdmS'),so=sa&&sa.querySelector('.on');if(so)sa.scrollLeft=Math.max(0,so.offsetLeft-(sa.clientWidth-so.offsetWidth)/2);
   var el=document.getElementById('pfxAdm');
   try{await (ADMIN[ADM.tab]||function(){})(el)}catch(e){el.innerHTML=errHTML(e)}
 };
@@ -501,6 +513,14 @@ var ADM_PANES=[['today','Bugün','home'],['queues','Kuyruklar','list'],['money',
 var ADM_QC=['lreview','reports','venues','docs','listings','providers','susp'],ADM_QS=['tickets','kvkk'],ADM_M=['finance','campaigns','revenue'],ADM_S=['settings','dispatch','hero','words','legal','company','audit'];
 /* renk anlamı (yazı/sayı ile birlikte): şikâyet kırmızı, ilan/başvuru/KVKK/destek amber, Özüne Dön mavi */
 var ADM_NT={reports:'r',lreview:'a',venues:'a',kvkk:'a',tickets:'a',oz:'b'},ADM_NI={reports:'flag',lreview:'clock',venues:'store',kvkk:'lock',oz:'box'};
+/* P23b: bölümün ait olduğu bölme (ana görünümdeki yeri) ve aynı bölmedeki yetkili kardeşler; Özüne Dön bölümleri tek şerit */
+var ADM_PN={today:'Bugün',queues:'Kuyruklar',money:'Para',system:'Sistem'};
+function admPaneOf(k){return /^oz_/.test(k)||ADM_QC.indexOf(k)>=0||ADM_QS.indexOf(k)>=0?'queues':ADM_M.indexOf(k)>=0?'money':'system'}
+function admSibs(k,tabs){var z=/^oz_/.test(k),p=admPaneOf(k);return tabs.filter(function(t){return z?/^oz_/.test(t[0]):!/^oz_/.test(t[0])&&admPaneOf(t[0])===p})}
+PF._admBack=function(){if(ADM.tab)ADM.pane=admPaneOf(ADM.tab);PF.openAdmin()};
+PF._admGoPane=function(k){ADM.pane=k;PF.openAdmin()};
+/* P23b: Android/tarayıcı geri — bölüm içindeyken paneli kapatmak yerine bölme listesine döner (index.html popstate) */
+PF.adminBack=function(){if(!ADM.tab||!document.querySelector('#pfxSheet #pfxAdm'))return false;PF._admBack();return true};
 PF._admPane=function(k){ADM.pane=k;var h=document.getElementById('pfxAdmHome');if(!h)return;
   h.querySelectorAll('.pfxPane').forEach(function(p){p.hidden=p.dataset.pane!==k});
   h.querySelectorAll('.pfxPN [data-pane]').forEach(function(b){var on=b.dataset.pane===k;b.classList.toggle('on',on);if(on)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')});
