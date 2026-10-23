@@ -113,7 +113,20 @@ const CONTRAST=(sel)=>{const L=c=>{const f=v=>{v/=255;return v<=.03928?v/12.92:M
   await p.evaluate(()=>document.querySelector('#pfxAdm .pfxFoodGo [data-food=showFoodOpsCenter]').click());await W(300);
   r=await p.evaluate(()=>({c:window.__fc,ov:document.querySelectorAll('.pfxOv').length}));
   ok(JSON.stringify(r.c)==='["showFoodAdmin","showFoodOpsCenter"]'&&r.ov===0,'['+T+'] P32: kısayol paneli kapatır, showFoodAdmin → showFoodOpsCenter: '+JSON.stringify(r));
-  await p.evaluate(()=>{for(const n in window.__fo)window[n]=window.__fo[n]});DATA=SAMPLE;
+  await p.evaluate(()=>{for(const n in window.__fo)window[n]=window.__fo[n]});
+  // P37: özet etiketleri düğme — doğru showFood… çağrısı (Kurye başvurusu → Başvurular, Kuryeler süzgeci)
+  for(const [fn,arg] of [['showFoodOnboarding','courier'],['showFoodOpsCenter',null],['showFoodAdmin',null]]){
+   await p.evaluate(()=>PF.openAdmin('food'));await W(1200);
+   r=await p.evaluate(([fn])=>{const b=document.querySelector('#pfxAdm .pfxStB[data-food='+fn+']');if(!b)return null;const R=b.getBoundingClientRect();
+    window.__fc=[];window.__fo={};['showFoodAdmin','showFoodOnboarding','showFoodOpsCenter'].forEach(n=>{window.__fo[n]=window[n];window[n]=function(a){window.__fc.push(n+(a?':'+a:''))}});
+    const tag=b.tagName,al=b.getAttribute('aria-label'),h=Math.round(R.height);b.click();return {tag,al,h,c:window.__fc,ov:document.querySelectorAll('.pfxOv').length}},[fn]);
+   await p.evaluate(()=>{for(const n in window.__fo)window[n]=window.__fo[n]});
+   const exp=fn==='showFoodAdmin'?['showFoodAdmin']:['showFoodAdmin',fn+(arg?':'+arg:'')];
+   ok(r&&r.tag==='BUTTON'&&/: \d+, aç$/.test(r.al)&&r.h>=44&&JSON.stringify(r.c)===JSON.stringify(exp)&&r.ov===0,'['+T+'] P37: etiket düğme → '+exp.join(' → ')+': '+JSON.stringify(r));
+  }
+  await openA();await p.evaluate(()=>PF.openAdmin('food'));await W(1200);
+  a=await p.evaluate(CONTRAST,'#pfxAdm .pfxFoodSum');ok(!a.bad.length&&!a.small.length,'['+T+'] P37: etiket kontrastı ≥4.5 ve ≥44px: '+JSON.stringify(a));
+  await shot('p37-'+T+'-yemek');DATA=SAMPLE;
   // Özüne Dön Özet: Siparişler kutusu küçük renkli etiketler
   await openA();await p.evaluate(()=>PF.openAdmin('oz_overview'));await W(1600);
   r=await p.evaluate(()=>{const k=document.querySelector('[data-kpi=orders]');if(!k)return null;const t=[...k.querySelectorAll('.ozKT')];return {tags:t.map(x=>x.textContent.trim()),fs:t.map(x=>parseFloat(getComputedStyle(x).fontSize)),cls:t.map(x=>x.className)}});
@@ -133,6 +146,27 @@ const CONTRAST=(sel)=>{const L=c=>{const f=v=>{v/=255;return v<=.03928?v/12.92:M
  ok(await p.evaluate(()=>!document.querySelector('#pfxAdmHome [data-tab=food]')),'[yetki] moderatör: Yemek bölümü görünmez');
  await p.evaluate(()=>PF.openAdmin('food'));await W(900);ok(await p.evaluate(()=>(document.querySelector('.pfxOv .pfxAdmT')||{}).textContent!=='Yemek'),'[yetki] moderatör Yemek bölümüne giremez');
  ok(!st.errors.length,'sayfa hatası: '+st.errors.join(' | '));
+ // P37: gerçek dokunmatik bağlam (hasTouch + isMobile), 390px krem + koyu: Yemek bölümündeki her düğmenin merkezinde kendisi var; tap çalışır
+ for(const th of ['light','dark']){const T='[dokunmatik '+(th==='light'?'krem':'koyu')+']';
+  const t=await open(br,{w:390,h:844,visible:true,view:'',theme:'',touch:true});const tp=t.p;
+  const TD=Object.assign({},SAMPLE,{food_admin_overview:{pending_couriers:[{id:'c1',status:'pending'}],open_issues:[{id:'i1'}],searching_deliveries:2,orders_by_status:{delivered:1}}});
+  await tp.route('**/rest/v1/rpc/*',q=>{const fn=q.request().url().split('/rpc/')[1].split('?')[0];return q.fulfill({status:200,contentType:'application/json',body:JSON.stringify(fn in TD?TD[fn]:[])})});
+  await tp.reload();await tp.waitForTimeout(1500);
+  await tp.evaluate(t=>{applyAppTheme(t);showHome()},th);await tp.waitForTimeout(400);await tp.evaluate(()=>showAccount());await tp.waitForTimeout(700);
+  await tp.evaluate(()=>{window.PF.roles={is_admin:true,roles:['super']};PF._admCnt=null;PF.openAdmin('food')});await tp.waitForTimeout(1400);
+  let q=await tp.evaluate(()=>[...document.querySelectorAll('.pfxOv .pfxSh button')].map(b=>{b.scrollIntoView({block:'center'});const r=b.getBoundingClientRect();const e=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
+   return {t:(b.getAttribute('aria-label')||b.textContent).trim().slice(0,24),ok:!!e&&(e===b||b.contains(e)),hit:e&&!(e===b||b.contains(e))?String(e.className||e.tagName):''}}));
+  ok(q.length>=20&&q.every(x=>x.ok),T+' P37: tüm düğmelerde elementFromPoint(merkez) = düğme ('+q.length+'): '+JSON.stringify(q.filter(x=>!x.ok)));
+  for(const sel of ['.pfxFoodGo [data-food=showFoodOnboarding]','.pfxStB[data-food=showFoodOnboarding]']){
+   await tp.evaluate(()=>PF.openAdmin('food'));await tp.waitForTimeout(1100);
+   const c=await tp.evaluate(s=>{window.__fc=[];window.__fo={};['showFoodAdmin','showFoodOnboarding'].forEach(n=>{window.__fo[n]=window[n];window[n]=function(a){window.__fc.push(n+(a?':'+a:''))}});
+    const b=document.querySelector('#pfxAdm '+s);b.scrollIntoView({block:'center'});const r=b.getBoundingClientRect();return [r.x+r.width/2,r.y+r.height/2]},sel);
+   await tp.touchscreen.tap(c[0],c[1]);await tp.waitForTimeout(400);
+   q=await tp.evaluate(()=>{const r={c:window.__fc,ov:document.querySelectorAll('.pfxOv').length};for(const n in window.__fo)window[n]=window.__fo[n];return r});
+   ok(q.c[0]==='showFoodAdmin'&&/^showFoodOnboarding/.test(q.c[1]||'')&&(sel.indexOf('pfxStB')<0||q.c[1]==='showFoodOnboarding:courier')&&q.ov===0,T+' P37: touchscreen.tap '+sel+': '+JSON.stringify(q));
+  }
+  ok(!t.st.errors.length,T+' sayfa hatası: '+t.st.errors.join(' | '));await t.p.context().close();
+ }
  await br.close();
  if(fails.length){console.error('p23b-bolum-gezinme BAŞARISIZ:\n - '+fails.join('\n - '));process.exit(1)}
  console.log('p23b-bolum-gezinme: tüm kontroller geçti');process.exit(0);

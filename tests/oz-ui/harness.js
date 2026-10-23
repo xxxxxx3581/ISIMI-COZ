@@ -68,8 +68,9 @@ function fixtures(o){o=o||{};
 }
 /* AD1: ürün listesi varsayılanı artık Izgara; AD öncesi testler Liste kartını (gcCard) dener → tercih boşsa 'list' yazılır. view:'' gerçek varsayılanı bırakır. */
 /* AJ1 P2: tema — mevcut testler koyu temaya göre yazıldı → varsayılan theme='dark' (isimi_oz_theme yazılır); theme:'' yazmaz (uygulama varsayılanı: krem). */
-async function open(br,{w,h,logged=true,fx={},dsf=1,visible=false,view='list',theme='dark'}={}){
- const ctx=await br.newContext({viewport:{width:w,height:h},deviceScaleFactor:dsf});
+async function open(br,{w,h,logged=true,fx={},dsf=1,visible=false,view='list',theme='dark',touch=false}={}){
+ /* P37: touch → gerçek dokunmatik bağlam (hasTouch + isMobile) */
+ const ctx=await br.newContext(Object.assign({viewport:{width:w,height:h},deviceScaleFactor:dsf},touch?{hasTouch:true,isMobile:true}:{}));
  const p=await ctx.newPage();const st={errors:[],calls:[],posts:[]};
  p.on('pageerror',e=>st.errors.push('pageerror: '+e.message));
  p.on('console',m=>{if(m.type()==='error'&&!/Failed to load resource|net::ERR|favicon/i.test(m.text()))st.errors.push('console: '+m.text())});

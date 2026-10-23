@@ -1723,6 +1723,9 @@ html[data-theme="light"] .pfxSh.pfxAdmIn .pfxAdmP{color:#4b5563}
 .pfxSh.pfxAdmIn .pfxSecG .pfxSC .pfxCnt{position:absolute;top:-6px;right:3px;min-width:18px;height:18px;padding:0 5px;font-size:10.5px}
 /* P33: Yemek bölümü — özet tek satır (sarar), kısayollar 2 sütun kart */
 #pfxAdm .pfxFoodSum{gap:6px}
+/* P37: tıklanır özet etiketleri — aynı hap görünümü, ≥44px dokunma alanı, odak halkası */
+#pfxAdm .pfxFoodSum .pfxStB{min-height:44px;padding:0 12px;background:transparent;color:var(--text);font:inherit;font-size:12.5px;font-weight:800;cursor:pointer;touch-action:manipulation}
+#pfxAdm .pfxFoodSum .pfxStB:focus-visible{outline:3px solid var(--ad-on);outline-offset:2px}
 #pfxAdm .pfxFoodGo{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 #pfxAdm .pfxFoodGo .pfxBtn{display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:10px;width:100%;min-height:88px;margin:0;padding:12px 14px;text-align:left}
 #pfxAdm .pfxFoodGo .pfxBtn:last-child:nth-child(odd){grid-column:1/-1}
@@ -11378,5 +11381,5 @@ for(const k of ["showGayrimenkulDetail","showOtomobilDetail"]){const f=window[k]
 </body>
 <script src="./a35-seller-identity.js?v=3"></script>
 <script src="./a7-food-v1.js?v=14"></script>
-<script src="./pf-platform-v1.js?v=15"></script>
+<script src="./pf-platform-v1.js?v=16"></script>
 </html>
