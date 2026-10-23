@@ -443,6 +443,7 @@ var TABS=[['docs','Belgeler','moderator'],['venues','İşletme başvuruları','m
 var ADM_GROUPS=[['Moderasyon',['lreview','reports','listings','docs','venues','providers','susp','food','words']],['Destek ve yasal',['tickets','kvkk','legal','company']],['Finans',['finance','campaigns','revenue']],['Operasyon',['settings','dispatch','hero']],['Sistem',['audit']]];
 var ADM_ICON={food:'🍽️',lreview:'⏳',docs:'📄',venues:'🏪',reports:'🚩',listings:'📋',providers:'🔧',susp:'⛔',words:'🔤',tickets:'🎧',kvkk:'🔒',legal:'⚖️',company:'🏢',finance:'💰',campaigns:'🎟️',revenue:'📈',settings:'⚙️',dispatch:'🛵',hero:'🖼️',audit:'🗂️'};
 PF.openAdmin=async function(tab){
+  /* P33b: yeniden çizim/bölüm değişiminde açık seçicinin dinleyicileri kalmasın */if(ADM._selOff){ADM._selOff();ADM._selOff=null}
   if(!need())return;
   if(!PF.roles)try{PF.roles=await rpc('pf_my_roles',{})}catch(e){}
   if(!(PF.roles&&PF.roles.is_admin)){toast('Yönetim yetkin yok.');return}
@@ -525,9 +526,9 @@ var ADM_PN={today:'Bugün',queues:'Kuyruklar',money:'Para',system:'Sistem'};
 function admPaneOf(k){return /^oz_/.test(k)||ADM_QC.indexOf(k)>=0||ADM_QS.indexOf(k)>=0?'queues':ADM_M.indexOf(k)>=0?'money':'system'}
 function admSibs(k,tabs){var z=/^oz_/.test(k),p=admPaneOf(k);return tabs.filter(function(t){return z?/^oz_/.test(t[0]):!/^oz_/.test(t[0])&&admPaneOf(t[0])===p})}
 /* P33: bölüm seçici aç/kapat — dışarı dokunma ve Escape kapatır; seçim PF.openAdmin (geçmişe kayıt eklemez) */
-PF._admSel=function(open){var b=document.querySelector('#pfxSheet .pfxSelB'),pn=document.getElementById('pfxSelP');if(!b||!pn)return;
+PF._admSel=function(open){/* P33b: önce eski dinleyiciler temizlenir (seçici DOM'dan kalkmışsa da) */if(ADM._selOff){ADM._selOff();ADM._selOff=null}
+  var b=document.querySelector('#pfxSheet .pfxSelB'),pn=document.getElementById('pfxSelP');if(!b||!pn)return;
   if(open==null)open=pn.hidden;pn.hidden=!open;b.setAttribute('aria-expanded',String(open));
-  if(ADM._selOff){ADM._selOff();ADM._selOff=null}
   if(open){var out=function(e){if(!e.target.closest||!e.target.closest('.pfxBSel'))PF._admSel(false)},key=function(e){if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();PF._admSel(false);b.focus()}};
     document.addEventListener('pointerdown',out,true);document.addEventListener('keydown',key,true);
     ADM._selOff=function(){document.removeEventListener('pointerdown',out,true);document.removeEventListener('keydown',key,true)};

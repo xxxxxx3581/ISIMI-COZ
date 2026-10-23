@@ -100,6 +100,14 @@ const CONTRAST=(sel)=>{const L=c=>{const f=v=>{v/=255;return v<=.03928?v/12.92:M
   await p.evaluate(()=>document.querySelector('.pfxOv .pfxPN [data-pane=queues]').click());await W(900);r=await S();ok(r.open&&r.home&&r.pane==='queues','['+T+'] doğrudan girişte alt menüden bölme listesine geçilebilir');
   await p.evaluate(()=>document.querySelector('#pfxAdmHome [data-tab=oz_sellers]').click());await W(1200);await p.goBack();await W(900);r=await S();ok(r.open&&r.home,'['+T+'] alt menüyle listeye geçtikten sonra bölümden geri → liste');
   await p.evaluate(()=>document.querySelectorAll('.pfxOv').forEach(x=>x.remove()));
+  // P33b: seçici aç → bölüm seç → paneli kapat → dokun → Escape uygulama genelinde yutulmaz, dinleyici kalmaz
+  await openA();await p.evaluate(()=>PF.openAdmin('reports'));await W(900);
+  await p.evaluate(()=>{PF._admSel(true);[...document.querySelectorAll('.pfxSelP .pfxSC')].find(b=>b.dataset.tab!=='reports').click()});await W(900);
+  await p.evaluate(()=>PF._admSel(true));await p.evaluate(()=>document.querySelector('.pfxOv [data-pfx-close]').click());await W(300);
+  await p.mouse.click(200,300);await W(200);
+  r=await p.evaluate(()=>{const e=new KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true});let seen=false;const h=()=>{seen=true};document.addEventListener('keydown',h);document.dispatchEvent(e);document.removeEventListener('keydown',h);
+   PF._admSel(false);return {dp:e.defaultPrevented,seen,ov:document.querySelectorAll('.pfxOv').length}});
+  ok(!r.dp&&r.seen&&r.ov===0,'['+T+'] P33b: panel kapandıktan sonra Escape yutulmaz (dinleyici sızıntısı yok): '+JSON.stringify(r));
   // P32: Yemek bölümü — sayı = pending_couriers + open_issues (mevcut food_admin_overview), 5 kısayol, kısayol paneli kapatıp mevcut Yemek ekranını açar
   DATA=Object.assign({},SAMPLE,{/* P32b: 1 bekleyen + 1 reddedilen + 1 askıdaki kurye → yalnız 1 sayılır */food_admin_overview:{pending_couriers:[{id:'c1',status:'pending'},{id:'c2',status:'rejected'},{id:'c3',status:'suspended'}],open_issues:[{id:'i1'}],searching_deliveries:3,orders_by_status:{new:4,delivered:10}}});await openA();
   r=await p.evaluate(()=>{const H=document.getElementById('pfxAdmHome');const now=H.querySelector('[data-pane=today] .pfxNowC[data-tab=food]');const q=H.querySelector('[data-pane=queues] .pfxQB[data-tab=food]');
