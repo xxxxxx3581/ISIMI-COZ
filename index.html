@@ -1783,6 +1783,16 @@ html:root .ozMe .tx{flex:1 1 auto}html:root .ozMe b{white-space:nowrap;overflow:
 html:root .ozMe .ozOut{flex:0 0 auto;margin-left:auto;padding:0 10px;font-size:13.5px;white-space:nowrap}
 .fdwAcc .fdwMe .tx{flex:1 1 auto}.fdwAcc .fdwMe b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fdwAcc .fdwMe .fdwOut2{flex:0 0 auto;margin-left:auto;padding:0 10px;font-size:13.5px;white-space:nowrap}
+/* P27b: İşimi Çöz Hesabım profil kartı iki katman; e-posta ve rol etiketleri kesilmez (Paket 24b tek satır kuralı yalnız bu kartta kaldırıldı;
+   roller yüklenirken iki satırlık yer ayrılır, veri gelince kart zıplamaz) */
+html:root .hmAcc .hmAccMe.hmMe2{display:block}
+html:root .hmAcc .hmMe2 .r1{display:flex;align-items:center;gap:12px}
+html:root .hmAcc .hmMe2 .r1 .tx b{white-space:normal;overflow-wrap:anywhere;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+html:root .hmAcc .hmMe2 .r2{margin-top:10px;min-width:0}
+html:root .hmAcc .hmMe2 .r2 .em{display:block;font-size:13px;color:#CDBB9F;white-space:normal;overflow:visible;overflow-wrap:anywhere;word-break:break-word}
+html:root .hmAcc .hmMe2 .hmRoles{flex-wrap:wrap!important;overflow:visible;min-height:0}html:root .hmAcc .hmMe2 .hmRoles:empty{display:none}
+html:root .hmAcc .hmMe2 .hmRoles.ld{display:flex;min-height:54px}
+html:root .hmAcc .hmMe2 .hmRoleT{display:inline-flex;align-items:center;height:24px;box-sizing:border-box;line-height:1}
 /*P27-BITIS*/
 /*P25-BASLA*/ /* Paket 25: Yemek işletme "Bugün" sipariş kartları + sayaçlar + geniş ekranda 3 sütun (yalnız görünüm). Renkler P19/P21 jetonları:
    --st-new/--st-prep/--st-ship (krem: #C4492F/#9A6410/#2F6FA8 + beyaz yazı; koyu ve Mutfak modu: açık tonlar + --st-ink koyu yazı). */
@@ -4020,7 +4030,7 @@ function hmWsFill(){
   try{
     var box=document.querySelector('#app .hmAcc #hmAccWs'),rl=document.querySelector('#app .hmAcc #hmRoles');if(!box) return;
     var s=getAuthSession(),u=s&&s.user;if(!u||HM_ROLES.uid!==u.id) return;
-    var rb=hmRoleBits(u);if(rl){ rl.innerHTML=rb.tags; }
+    var rb=hmRoleBits(u);if(rl){ rl.innerHTML=rb.tags;rl.classList.remove('ld'); }
     var h0=box.offsetHeight;box.innerHTML=rb.ws?'<div class="hmAccH">ÇALIŞMA ALANLARIM</div>'+rb.ws:'';box.classList.remove('ld');
     var red=false;try{ red=matchMedia('(prefers-reduced-motion:reduce)').matches; }catch(e){}
     var h1=box.scrollHeight;if(red||h0===h1) return;
@@ -4066,7 +4076,8 @@ function hmAccountHtml(u){
   var rb=hmRoleBits(u);var tags=rb.tags,wsH=rb.ws;
   var th=hmThemeGet()==='dark';
   return '<div class="hmAcc"><div class="hmAccT">Hesabım</div>'+
-    '<div class="hmAccMe"><span class="av">'+E(ini)+'</span><span class="tx"><b>'+E(name||'Hesabım')+'</b><small>'+E(mail)+'</small>'+'<span class="hmRoles" id="hmRoles" aria-label="Rollerin">'+tags+'</span>'+'</span><span class="acts"><button type="button" class="hmAccOut2" data-k="out" onclick="hmAcc(this.dataset.k)">'+hmAccIc(IC.out)+'<span>Çıkış yap</span></button><button type="button" class="ed" data-k="edit" onclick="hmAcc(this.dataset.k)">Düzenle</button></span></div>'+
+    /* P27b: iki katman — üstte avatar + ad + (Çıkış yap, Düzenle); altında tam genişlik e-posta (kırpılmaz) ve rol etiketleri (alt satıra geçer) */
+    '<div class="hmAccMe hmMe2"><div class="r1"><span class="av">'+E(ini)+'</span><span class="tx"><b>'+E(name||'Hesabım')+'</b></span><span class="acts"><button type="button" class="hmAccOut2" data-k="out" onclick="hmAcc(this.dataset.k)">'+hmAccIc(IC.out)+'<span>Çıkış yap</span></button><button type="button" class="ed" data-k="edit" onclick="hmAcc(this.dataset.k)">Düzenle</button></span></div><div class="r2"><small class="em">'+E(mail)+'</small><span class="hmRoles'+(rb.loading&&!tags?' ld':'')+'" id="hmRoles" aria-label="Rollerin">'+tags+'</span></div></div>'+
     '<div class="hmAccQ"><button type="button" data-k="orders" onclick="hmAcc(this.dataset.k)">'+hmAccIc(IC.orders)+'<b>Siparişlerim</b></button><button type="button" data-k="favs" onclick="hmAcc(this.dataset.k)">'+hmAccIc(IC.favs)+'<b>Favorilerim</b></button></div>'+
     '<div class="hmAccWsBox'+(rb.loading&&!wsH?' ld':'')+'" id="hmAccWs" aria-live="polite">'+(wsH?'<div class="hmAccH">ÇALIŞMA ALANLARIM</div>'+wsH:rb.loading?'<div class="hmAccH">ÇALIŞMA ALANLARIM</div><div class="hmAccWsPh" aria-hidden="true"></div>':'')+'</div>'+
     '<div class="hmAccH">HESAP</div><div class="hmAccL">'+row('msgs','Mesajlarım')+row('mylist','İlanlarım',true)+row('addr','Adreslerim')+row('bell','Bildirimler')+row('help','Yardım ve destek')+row('privacy','Gizlilik ve KVKK')+row('terms','Kullanım şartları')+row('more','Diğer ayarlar')+'</div>'+

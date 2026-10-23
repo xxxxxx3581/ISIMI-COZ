@@ -26,9 +26,22 @@ const M=([row,btn,root])=>{const L=c=>{const m=c.match(/[\d.]+/g).map(Number);co
   for(const longMail of [false,true]){
    if(longMail)await p.evaluate(L=>{const s=JSON.parse(localStorage.getItem('isimi_coz_auth_session'));s.user.email=L;s.user.user_metadata=Object.assign({},s.user.user_metadata,{full_name:'Çok Uzun Adlı Bir Kullanıcı Örneği Soyadı'});localStorage.setItem('isimi_coz_auth_session',JSON.stringify(s))},LONG);
    await p.evaluate(()=>{showHome();showAccount()});await p.waitForTimeout(900);
-   const m=await p.evaluate(M,['.hmAccMe','.hmAccOut2','#app .hmAcc']);chk('['+th+'] İşimi Çöz'+(longMail?' (uzun e-posta)':''),m,longMail);
+   /* P27b: İşimi Çöz kartında e-posta artık kırpılmaz (ikinci katman); düğmeler üst katmanda (.r1) */
+   const m=await p.evaluate(M,['.hmAccMe .r1','.hmAccOut2','#app .hmAcc']);chk('['+th+'] İşimi Çöz'+(longMail?' (uzun e-posta)':''),m,false);
    ok((await overflow(p))<=0,'['+th+'] İşimi Çöz yatay taşma');
   }
+  /* P27b: 360 ve 390px'te uzun e-posta + rol etiketleri: kesik yok, taşma yok, düğmeler ≥44px */
+  await p.evaluate(()=>{const o=window.supabaseAuthRequest;window.supabaseAuthRequest=async function(m,pth){if(pth==='rpc/food_whoami')return {venues:[{id:'v1',name:'Lezzet Durağı',role:'owner'}],courier:{status:'approved'},is_admin:false};return o.apply(this,arguments)};HM_ROLES.uid=null;HM_ROLES.state=null});
+  for(const w of [360,390]){await p.setViewportSize({width:w,height:844});await p.evaluate(()=>{showHome();showAccount()});await p.waitForTimeout(1700);
+   const k=await p.evaluate(()=>{const C=document.querySelector('#app .hmAccMe');const cr=C.getBoundingClientRect();const em=C.querySelector('.r2 .em');const tg=[...C.querySelectorAll('.hmRoleT')];const rl=C.querySelector('#hmRoles');
+    return {em:em&&em.textContent,emClip:!em||em.scrollWidth>em.clientWidth+1||getComputedStyle(em).textOverflow==='ellipsis'&&em.scrollWidth>em.clientWidth,
+     tags:tg.map(t=>{const r=t.getBoundingClientRect();return {t:t.textContent,clip:t.scrollWidth>t.clientWidth+1||r.right>cr.right-1||r.left<cr.left}}),rlClip:rl.scrollWidth>rl.clientWidth+1,
+     btn:[...C.querySelectorAll('.r1 button')].map(b=>Math.round(b.getBoundingClientRect().height)),order:!!C.querySelector('.r1 .hmAccOut2')&&C.querySelector('.r1').compareDocumentPosition(C.querySelector('.r2'))&Node.DOCUMENT_POSITION_FOLLOWING}});
+   ok(k.em===LONG&&!k.emClip,'['+th+' '+w+'] İşimi Çöz: uzun e-posta tam görünür (kırpma yok): '+JSON.stringify([k.em,k.emClip]));
+   ok(k.tags.length>=3&&k.tags.every(x=>!x.clip)&&!k.rlClip,'['+th+' '+w+'] İşimi Çöz: rol etiketleri kesilmez ('+k.tags.length+'): '+JSON.stringify(k.tags));
+   ok(k.btn.length===2&&k.btn.every(h=>h>=44)&&k.order,'['+th+' '+w+'] İşimi Çöz: Çıkış/Düzenle üst katmanda ≥44px, e-posta+roller altında: '+JSON.stringify(k.btn));
+   ok((await overflow(p))<=0,'['+th+' '+w+'] İşimi Çöz yatay taşma');}
+  await p.setViewportSize({width:390,height:844});
   ok(await p.evaluate(()=>{const e=document.querySelector('#app .hmAccEnd');return !!e&&!e.querySelector('[data-k=out]')&&!!e.querySelector('.hmAccTh')}),'['+th+'] İşimi Çöz: altta çıkış yok, tema seçici duruyor');
   ok(await p.evaluate(()=>{const R=document.querySelector('#app .hmAcc');const me=R.querySelector('.hmAccMe .ed');return !!me&&me.getBoundingClientRect().height>=44}),'['+th+'] İşimi Çöz: Düzenle duruyor, ≥44px');
   await p.evaluate(()=>{window.__out=[];const f=window.hmAcc;window.hmAcc=function(k){window.__out.push(k);if(k!=='out')return f.apply(this,arguments)}});
