@@ -1714,6 +1714,15 @@ html:root .ozKpi .ozKT{display:inline-flex;align-items:center;gap:4px;padding:3p
 html:root .ozKpi .ozKT.ok{background:var(--st-done)}html:root .ozKpi .ozKT.warn{background:var(--st-prep)}html:root .ozKpi .ozKT.bad{background:var(--st-new)}
 html:root .ozKpi .ozKT b{font-size:12.5px;font-weight:900;color:inherit;letter-spacing:0}
 /*P23b-BITIS*/
+/*P27-BASLA*/ /* Paket 27: üç Hesabım'da "Çıkış yap" profil satırının sağında (tek yer; aynı çıkış işlevi). Profil metni kısalır, düğme sabit genişlikte. */
+html:root .hmAcc .hmAccMe .acts{flex:0 0 auto;display:flex;flex-direction:column;align-items:stretch;gap:6px}
+html:root .hmAcc .hmAccMe .acts .hmAccOut2{justify-content:center;padding:0 10px;font-size:13.5px;white-space:nowrap}
+html:root .hmAcc .hmAccMe .acts .ed{min-height:44px;height:auto}
+html:root .ozMe .tx{flex:1 1 auto}html:root .ozMe b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html:root .ozMe .ozOut{flex:0 0 auto;margin-left:auto;padding:0 10px;font-size:13.5px;white-space:nowrap}
+.fdwAcc .fdwMe .tx{flex:1 1 auto}.fdwAcc .fdwMe b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fdwAcc .fdwMe .fdwOut2{flex:0 0 auto;margin-left:auto;padding:0 10px;font-size:13.5px;white-space:nowrap}
+/*P27-BITIS*/
 /*P25-BASLA*/ /* Paket 25: Yemek işletme "Bugün" sipariş kartları + sayaçlar + geniş ekranda 3 sütun (yalnız görünüm). Renkler P19/P21 jetonları:
    --st-new/--st-prep/--st-ship (krem: #C4492F/#9A6410/#2F6FA8 + beyaz yazı; koyu ve Mutfak modu: açık tonlar + --st-ink koyu yazı). */
 .fd .fdCntB.fdCntB{--stc:var(--st-new);display:flex;flex-direction:column;justify-content:center;gap:2px;font:inherit;cursor:pointer;min-width:0;min-height:84px;align-items:center;text-align:center;border:2px solid var(--stc);border-radius:16px;background:var(--stc);color:var(--st-ink);padding:8px 6px}
@@ -3887,7 +3896,7 @@ function hmGo(key){
 function hmSoon(){ try{ v2Toast('Özüne Dön çok yakında!'); }catch(e){} }
 /*K21-JS-BASLA*/ /* Özüne Dön: modül tembel yüklenir; pazar kapalıysa (veya hata olursa) yalnızca hmSoon() gösterilir. */
 var OZ_LOADING=null, OZ_TAP=false;
-function ozLoad(){ if(window.OZ&&window.OZ.__v) return Promise.resolve(window.OZ); if(OZ_LOADING) return OZ_LOADING; OZ_LOADING=new Promise(function(res,rej){ var s=document.createElement('script'); s.src='./oz-market-v1.js?v=19'; s.async=true; s.onload=function(){ if(window.OZ&&window.OZ.__v) res(window.OZ); else { OZ_LOADING=null; rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); } }; s.onerror=function(){ OZ_LOADING=null; s.remove(); rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); }; document.head.appendChild(s); }); return OZ_LOADING; }
+function ozLoad(){ if(window.OZ&&window.OZ.__v) return Promise.resolve(window.OZ); if(OZ_LOADING) return OZ_LOADING; OZ_LOADING=new Promise(function(res,rej){ var s=document.createElement('script'); s.src='./oz-market-v1.js?v=20'; s.async=true; s.onload=function(){ if(window.OZ&&window.OZ.__v) res(window.OZ); else { OZ_LOADING=null; rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); } }; s.onerror=function(){ OZ_LOADING=null; s.remove(); rej(new Error('Özüne Dön açılamadı. Sayfayı yenileyip tekrar dene.')); }; document.head.appendChild(s); }); return OZ_LOADING; }
 window.ozLoad=ozLoad;
 function ozTap(){ if(OZ_TAP) return; OZ_TAP=true; ozLoad().then(function(oz){ return oz.tryEnter(); }).then(function(ok){ if(!ok) hmSoon(); }).catch(function(){ hmSoon(); }).then(function(){ OZ_TAP=false; }); }
 /* P10: iyzico (sandbox) ödeme dönüşü ?oz_pay=<ödeme id> → parametre adres çubuğundan silinir, Özüne Dön açılıp ödeme sonucu gösterilir */
@@ -3994,14 +4003,13 @@ function hmAccountHtml(u){
   var rb=hmRoleBits(u);var tags=rb.tags,wsH=rb.ws;
   var th=hmThemeGet()==='dark';
   return '<div class="hmAcc"><div class="hmAccT">Hesabım</div>'+
-    '<div class="hmAccMe"><span class="av">'+E(ini)+'</span><span class="tx"><b>'+E(name||'Hesabım')+'</b><small>'+E(mail)+'</small>'+'<span class="hmRoles" id="hmRoles" aria-label="Rollerin">'+tags+'</span>'+'</span><button type="button" class="ed" data-k="edit" onclick="hmAcc(this.dataset.k)">Düzenle</button></div>'+
+    '<div class="hmAccMe"><span class="av">'+E(ini)+'</span><span class="tx"><b>'+E(name||'Hesabım')+'</b><small>'+E(mail)+'</small>'+'<span class="hmRoles" id="hmRoles" aria-label="Rollerin">'+tags+'</span>'+'</span><span class="acts"><button type="button" class="hmAccOut2" data-k="out" onclick="hmAcc(this.dataset.k)">'+hmAccIc(IC.out)+'<span>Çıkış yap</span></button><button type="button" class="ed" data-k="edit" onclick="hmAcc(this.dataset.k)">Düzenle</button></span></div>'+
     '<div class="hmAccQ"><button type="button" data-k="orders" onclick="hmAcc(this.dataset.k)">'+hmAccIc(IC.orders)+'<b>Siparişlerim</b></button><button type="button" data-k="favs" onclick="hmAcc(this.dataset.k)">'+hmAccIc(IC.favs)+'<b>Favorilerim</b></button></div>'+
     '<div class="hmAccWsBox'+(rb.loading&&!wsH?' ld':'')+'" id="hmAccWs" aria-live="polite">'+(wsH?'<div class="hmAccH">ÇALIŞMA ALANLARIM</div>'+wsH:rb.loading?'<div class="hmAccH">ÇALIŞMA ALANLARIM</div><div class="hmAccWsPh" aria-hidden="true"></div>':'')+'</div>'+
     '<div class="hmAccH">HESAP</div><div class="hmAccL">'+row('msgs','Mesajlarım')+row('mylist','İlanlarım',true)+row('addr','Adreslerim')+row('bell','Bildirimler')+row('help','Yardım ve destek')+row('privacy','Gizlilik ve KVKK')+row('terms','Kullanım şartları')+row('more','Diğer ayarlar')+'</div>'+
     '<div class="hmAccEnd"><div class="hmAccTh" role="group" aria-label="Görünüm (ana ekran ve Özüne Dön)"><span class="l">Görünüm</span>'+
       '<button type="button"'+(!th?' class="on" aria-pressed="true"':' data-k="theme" onclick="hmAcc(this.dataset.k)" aria-pressed="false"')+'>Açık (krem)</button>'+
-      '<button type="button"'+(th?' class="on" aria-pressed="true"':' data-k="theme" onclick="hmAcc(this.dataset.k)" aria-pressed="false"')+'>Koyu</button></div>'+
-    '<button type="button" class="hmAccOut2" data-k="out" onclick="hmAcc(this.dataset.k)">'+hmAccIc(IC.out)+'<span>Çıkış yap</span></button></div></div>';
+      '<button type="button"'+(th?' class="on" aria-pressed="true"':' data-k="theme" onclick="hmAcc(this.dataset.k)" aria-pressed="false"')+'>Koyu</button></div></div></div>';
 }
 function hmAcc(k){
   var s=null; try{ s=getAuthSession(); }catch(e){}
@@ -11268,6 +11276,6 @@ for(const k of ["showGayrimenkulDetail","showOtomobilDetail"]){const f=window[k]
 </script>
 </body>
 <script src="./a35-seller-identity.js?v=3"></script>
-<script src="./a7-food-v1.js?v=12"></script>
+<script src="./a7-food-v1.js?v=13"></script>
 <script src="./pf-platform-v1.js?v=8"></script>
 </html>

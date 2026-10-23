@@ -25,12 +25,12 @@ const AUDIT=root=>{const L=c=>{const m=c.match(/[\d.]+/g).map(Number);const f=v=
   await p.evaluate(()=>OZ.go('account',{}));await p.waitForTimeout(1200);
   let r=await p.evaluate(()=>{const R=document.getElementById('ozRoot');const pos=s=>{const e=R.querySelector(s);return e?[...R.querySelectorAll('*')].indexOf(e):-1};
    const q=[...R.querySelectorAll('.ozQuick2 button')];const ws=[...R.querySelectorAll('.ozWs')];
-   return {order:[pos('.ozMe'),pos('.ozQuick2'),pos('.ozWs'),pos('[data-k=addresses]'),pos('.ozThSel'),pos('.ozOut')],av:(R.querySelector('.ozMe .av')||{}).textContent,email:(R.querySelector('.ozMe small')||{}).textContent,
+   return {/* P27: çıkış profil satırında (tek adet) */order:[pos('.ozMe'),pos('.ozMe .ozOut'),pos('.ozQuick2'),pos('.ozWs'),pos('[data-k=addresses]'),pos('.ozThSel')],outN:R.querySelectorAll('.ozOut').length,av:(R.querySelector('.ozMe .av')||{}).textContent,email:(R.querySelector('.ozMe small')||{}).textContent,
     tags:[...R.querySelectorAll('.ozRoleT')].map(x=>x.textContent),q:q.map(b=>b.textContent+':'+Math.round(b.getBoundingClientRect().height)),
     ws:ws.map(b=>({t:b.querySelector('b').textContent,s:b.querySelector('small').textContent,h:Math.round(b.getBoundingClientRect().height),bg:getComputedStyle(b).backgroundColor,bd:getComputedStyle(b).borderTopColor,a:b.dataset.a})),
     acc:[...R.querySelectorAll('.ozAccL .ozRowBtn b')].map(x=>x.textContent),th:(R.querySelector('.ozThSel [aria-pressed=true]')||{}).textContent,
     out:(()=>{const o=R.querySelector('.ozOut');return o?{t:o.textContent,bd:getComputedStyle(o).borderTopColor,bg:getComputedStyle(o).backgroundColor,h:Math.round(o.getBoundingClientRect().height)}:null})(),home:!!R.querySelector('[data-a=exit]')}});
-  ok(r.order.every((x,i)=>x>=0&&(i===0||x>r.order[i-1])),'['+th+'] Özüne Dön Hesabım sırası: '+JSON.stringify(r.order));
+  ok(r.order.every((x,i)=>x>=0&&(i===0||x>r.order[i-1]))&&r.outN===1,'['+th+'] Özüne Dön Hesabım sırası (çıkış profil satırında, tek): '+JSON.stringify([r.order,r.outN]));
   ok(r.av==='T'&&r.email==='test@ornek.com'&&JSON.stringify(r.tags)==='["Satıcı · Onaylı","Yönetici"]','['+th+'] profil + yalnız mevcut roller: '+JSON.stringify([r.av,r.email,r.tags]));
   ok(r.q.length===2&&/^Siparişlerim:/.test(r.q[0])&&/^Favorilerim:/.test(r.q[1])&&r.q.every(x=>+x.split(':')[1]>=76),'['+th+'] iki büyük kutu ≥76px: '+JSON.stringify(r.q));
   ok(r.ws.length===2&&r.ws[0].t==='Satıcı paneli'&&/^rgb\((31, 107, 69|40, 128, 79)\)$/.test(r.ws[0].bg)&&r.ws[1].t==='Özüne Dön yönetimi'&&r.ws[1].a==='admin'&&r.ws[1].bd!=='rgba(0, 0, 0, 0)'&&r.ws.every(x=>x.h>=64&&x.s),'['+th+'] çalışma alanları (satıcı yeşil, yönetim çerçeveli, ≥64px, alt yazı): '+JSON.stringify(r.ws));

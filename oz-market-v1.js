@@ -941,7 +941,7 @@ VIEWS_EXTRA({
     var more=(!ms&&s.seller_signup_enabled?row('store','Satıcı ol','Ürünlerini Özüne Dön\'de sat','nav',{k:'seller'}):'');
     var lt=themeGet()==='light';
     paint(pageHead('Hesabım')+
-      '<div class="ozMe"><span class="av" aria-hidden="true">'+E((nm||u.email||'?').charAt(0).toLocaleUpperCase('tr'))+'</span><span class="tx"><b>'+E(nm||'Hesabım')+'</b><small>'+E(u.email||'')+'</small>'+(tags?'<span class="ozRoles">'+tags+'</span>':'')+'</span></div>'+
+      '<div class="ozMe"><span class="av" aria-hidden="true">'+E((nm||u.email||'?').charAt(0).toLocaleUpperCase('tr'))+'</span><span class="tx"><b>'+E(nm||'Hesabım')+'</b><small>'+E(u.email||'')+'</small>'+(tags?'<span class="ozRoles">'+tags+'</span>':'')+'</span><button type="button" class="ozOut" data-a="ozLogout">'+ico('out',16)+'<span>Çıkış yap</span></button></div>'+
       '<div class="ozQuick2"><button type="button" data-a="nav" data-k="orders">'+ico('box',26)+'<b>Siparişlerim</b></button><button type="button" data-a="nav" data-k="favs">'+ico('heart',26)+'<b>Favorilerim</b></button></div>'+
       (wsH||more?'<h2 class="ozAccH">Çalışma alanlarım</h2>'+wsH+(more?'<div class="ozList ozAccL">'+more+'</div>':''):'')+
       '<h2 class="ozAccH">Hesap</h2><div class="ozList ozAccL">'+
@@ -949,8 +949,7 @@ VIEWS_EXTRA({
         row('bell','Bildirimler','Sipariş ve mağaza bildirimleri','bell')+'</div>'+
       '<div class="ozAccEnd"><div class="ozThSel" role="group" aria-label="Görünüm"><span class="l">Görünüm</span>'+
         '<button type="button"'+(lt?' class="on" aria-pressed="true"':' class="ozThB" data-a="ozTheme" aria-pressed="false"')+'>Açık (krem)</button>'+
-        '<button type="button"'+(!lt?' class="on" aria-pressed="true"':' class="ozThB" data-a="ozTheme" aria-pressed="false"')+'>Koyu</button></div>'+
-        '<button type="button" class="ozOut" data-a="ozLogout">'+ico('out',16)+'<span>Çıkış yap</span></button></div>'+homeRow);
+        '<button type="button"'+(!lt?' class="on" aria-pressed="true"':' class="ozThB" data-a="ozTheme" aria-pressed="false"')+'>Koyu</button></div></div>'+homeRow);
     newDotSync();
   }
 });

@@ -2947,7 +2947,7 @@ async function showFoodAccount(){
      tek kartta hesap listesi, tema seçici (applyAppTheme) ve küçük çıkış. whoami okunamazsa bugünkü genel satırlar kalır. */
   const lt=document.documentElement.getAttribute('data-theme')==='light';
   const gen=r('store','İşletmem','Restoranını yönet veya işletmeni ekle','showFoodBusiness()')+r('bike','Kurye','Kurye paneli veya kurye başvurusu','showFoodCourier()');
-  render('<div class="fdwAcc"><div class="fdwMe"><span class="av" aria-hidden="true">'+E((name||u.email||'?').trim().charAt(0).toLocaleUpperCase('tr'))+'</span><span class="tx"><b>'+E(name||'Hesabım')+'</b><small>'+E(u.email||'')+'</small><span class="fdwRoles" id="fdwRoles"></span></span></div>'+
+  render('<div class="fdwAcc"><div class="fdwMe"><span class="av" aria-hidden="true">'+E((name||u.email||'?').trim().charAt(0).toLocaleUpperCase('tr'))+'</span><span class="tx"><b>'+E(name||'Hesabım')+'</b><small>'+E(u.email||'')+'</small><span class="fdwRoles" id="fdwRoles"></span></span><button type="button" class="fdwOut2" onclick="foodLogout()">'+fdIco('out',16)+'<span>Çıkış yap</span></button></div>'+
     '<div class="fdwQuick"><button type="button" onclick="showFoodOrders()">'+fdIco('receipt',24)+'<b>Siparişlerim</b></button><button type="button" onclick="foodAccFavs()">'+fdIco('heart',24)+'<b>Favorilerim</b></button></div>'+
     '<div id="fdwWsBox"><div class="fdSecH"><b>Çalışma alanlarım</b></div><div class="fdwList" id="fdwAccRoles">'+gen+'</div></div>'+
     '<div class="fdSecH"><b>Hesap</b></div><div class="fdwList">'+r('pin','Adreslerim','Teslimat adreslerini yönet',"foodAddrSheet('account')")+r('ticket','Kuponlarım','Kullanabileceğin indirimler','showFoodCoupons()')+r('bell','Bildirimler','Sipariş ve kampanya bildirimleri','showFoodNotifications()')+
@@ -2955,8 +2955,7 @@ async function showFoodAccount(){
     (pfFn('openPrivacy')?r('shield','Gizlilik ve verilerim','KVKK, izinler, verilerini indir','PF.openPrivacy()'):'')+'</div>'+
     '<div class="fdwList" id="fdwAccMore">'+r('out','İşimi Çöz’e dön','Ana platforma geç','showHome()')+'</div>'+
     '<div class="fdwAccEnd"><div class="fdwThSel" role="group" aria-label="Görünüm"><span class="l">Görünüm</span>'+
-      '<button type="button" class="'+(lt?'on':'')+'" aria-pressed="'+lt+'" onclick="foodAccTheme(\'light\')">Açık</button><button type="button" class="'+(!lt?'on':'')+'" aria-pressed="'+!lt+'" onclick="foodAccTheme(\'dark\')">Koyu</button></div>'+
-      '<button type="button" class="fdwOut2" onclick="foodLogout()">'+fdIco('out',16)+'<span>Çıkış yap</span></button></div></div>');
+      '<button type="button" class="'+(lt?'on':'')+'" aria-pressed="'+lt+'" onclick="foodAccTheme(\'light\')">Açık</button><button type="button" class="'+(!lt?'on':'')+'" aria-pressed="'+!lt+'" onclick="foodAccTheme(\'dark\')">Koyu</button></div></div></div>');
   try{const w=await whoami();if(!alive(tok)||!w)return;
     const vs=w.venues||[],c=w.courier,own=vs.some(v=>v.role==='owner'),RL={owner:'İşletme sahibi',manager:'İşletme yöneticisi',staff:'İşletme personeli'};
     const tags=(vs.length?'<span class="fdwRoleT b">'+E(own?RL.owner:(RL[vs[0].role]||'İşletme'))+'</span>':'')+(c?'<span class="fdwRoleT c">Kurye'+(c.status&&c.status!=='approved'&&c.status!=='active'?' · '+E({pending:'başvuru inceleniyor',rejected:'başvuru reddedildi',suspended:'askıda'}[c.status]||c.status):'')+'</span>':'')+(w.is_admin?'<span class="fdwRoleT a">Yönetici</span>':'');

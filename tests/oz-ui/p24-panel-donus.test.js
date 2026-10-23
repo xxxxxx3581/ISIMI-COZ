@@ -63,12 +63,12 @@ const {chromium,open,enter}=require('./harness.js');
   await p.evaluate(t=>{try{localStorage.setItem('isimi_oz_theme',t)}catch(e){}},pref);
   await p.evaluate(()=>showHome());await W();await p.evaluate(()=>showAccount());await W();
   let r=await p.evaluate(()=>{const R=document.querySelector('#app .hmAcc');const pos=s=>{const e=R.querySelector(s);return e?[...R.querySelectorAll('*')].indexOf(e):-1};
-   return {order:[pos('.hmAccMe'),pos('.hmAccQ'),pos('.hmAccWs'),pos('.hmAccL'),pos('.hmAccTh'),pos('.hmAccOut2')],tags:[...R.querySelectorAll('.hmRoleT')].map(x=>x.textContent),
+   return {/* P27: çıkış profil satırında (tek adet) */order:[pos('.hmAccMe'),pos('.hmAccMe .hmAccOut2'),pos('.hmAccQ'),pos('.hmAccWs'),pos('.hmAccL'),pos('.hmAccTh')],outN:R.querySelectorAll('.hmAccOut2,[data-k=out]').length,tags:[...R.querySelectorAll('.hmRoleT')].map(x=>x.textContent),
     q:[...R.querySelectorAll('.hmAccQ button')].map(b=>b.dataset.k+':'+Math.round(b.getBoundingClientRect().height)),
     ws:[...R.querySelectorAll('.hmAccWs')].map(b=>({k:b.dataset.k,t:b.querySelector('b').textContent,h:Math.round(b.getBoundingClientRect().height),bg:getComputedStyle(b).backgroundColor,bd:getComputedStyle(b).borderTopColor})),
     rows:[...R.querySelectorAll('.hmAccL .hmAccR')].map(b=>b.dataset.k+(b.querySelector('.hmAccSoon')?'(Yakında)':'')),th:(R.querySelector('.hmAccTh [aria-pressed=true]')||{}).textContent,
     out:(()=>{const o=R.querySelector('.hmAccOut2');return o&&{k:o.dataset.k,bd:getComputedStyle(o).borderTopColor,bg:getComputedStyle(o).backgroundColor}})()}});
-  ok(r.order.every((x,i)=>x>=0&&(i===0||x>r.order[i-1])),'['+pref+'] B: sıra profil → kutular → çalışma alanları → hesap → tema → çıkış: '+JSON.stringify(r.order));
+  ok(r.order.every((x,i)=>x>=0&&(i===0||x>r.order[i-1])),'['+pref+'] B: sıra profil (+ çıkış) → kutular → çalışma alanları → hesap → tema: '+JSON.stringify(r.order));ok(r.outN===1,'['+pref+'] B: tek çıkış düğmesi: '+r.outN);
   ok(JSON.stringify(r.tags)==='["Satıcı · Onaylı","İşletme sahibi","Kurye","Yönetici"]','['+pref+'] B: yalnız bilinen roller: '+JSON.stringify(r.tags));
   ok(JSON.stringify(r.q.map(x=>x.split(':')[0]))==='["orders","favs"]'&&r.q.every(x=>+x.split(':')[1]>=76),'['+pref+'] B: Siparişlerim/Favorilerim ≥76px: '+JSON.stringify(r.q));
   ok(JSON.stringify(r.ws.map(x=>x.k))==='["ws_seller","ws_biz","ws_courier","ws_admin"]'&&r.ws[0].bg==='rgb(31, 107, 69)'&&r.ws[1].bg==='rgb(154, 100, 16)'&&r.ws[2].bg==='rgb(47, 111, 168)'&&r.ws[3].bd==='rgb(111, 143, 208)'&&r.ws.every(x=>x.h>=64),'['+pref+'] B: çalışma alanları (yeşil/amber/mavi/lacivert, ≥64px): '+JSON.stringify(r.ws));
