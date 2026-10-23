@@ -123,14 +123,15 @@ const PULSE_OK=/Kabul et|Teslim aldım|canlı izle/;
    ({ctx,p,st}=await foodPage(br,{w,h:844,visible:true,light}));
    if(rm)await p.emulateMedia({reducedMotion:'reduce'});
    await p.evaluate(()=>showFoodBusiness('v1'));await p.waitForTimeout(1200);
-   const expB={new:[2,'✓ Kabul et','btnNextXL','accepted'],prep:[1,'📦 Sipariş hazır',null,'ready'],ready:[1,'🛵 Yola çıktı','btnNextBlue','on_the_way']};
+   /* P25: Kabul et 56px (XL değil); ≥900px'te kartlar durum sütununda (.fdCol[data-k]) ölçülür */
+   const expB={new:[2,'✓ Kabul et','btnNext','accepted'],prep:[1,'📦 Sipariş hazır',null,'ready'],ready:[1,'🛵 Yola çıktı','btnNextBlue','on_the_way']};
    for(const tab of ['new','prep','ready']){
     if(tab!=='new'){await p.evaluate(t=>foodBizTab(t),tab);await p.waitForTimeout(700)}
-    m=await measure(p,'#fdBList');await common(p,tg+' Yemek işletme '+tab,'#fdBList',m,rm);const e=expB[tab];
+    const bRoot=w>=900?'#fdBList .fdCol[data-k='+tab+']':'#fdBList';m=await measure(p,bRoot);await common(p,tg+' Yemek işletme '+tab,bRoot,m,rm);const e=expB[tab];
     ok(await p.evaluate(()=>[...document.querySelectorAll('#fdBList .fdBiz')].every(c=>c.querySelectorAll('.btnNext').length===1)),tg+' Yemek işletme '+tab+': her kartta tam bir birincil');
     ok(m&&m.pri.length===e[0]&&m.pri.every(x=>x.t===e[1]&&(!e[2]||x.c.includes(e[2]))&&new RegExp("^foodVenueAct\\('\\w+','"+e[3]+"',this,").test(x.on)),tg+' Yemek işletme '+tab+': '+JSON.stringify(m&&m.pri));
     if(tab==='new'){
-     ok(m&&m.pri.every(x=>x.h>=64),tg+' Yemek işletme: Kabul et 64px: '+JSON.stringify(m&&m.pri.map(x=>x.h)));
+     ok(m&&m.pri.every(x=>x.h>=56),tg+' Yemek işletme: Kabul et ≥56px: '+JSON.stringify(m&&m.pri.map(x=>x.h)));
      ok(m&&m.danger.length===2&&m.danger.every(x=>x.t==='✕ Reddet'),tg+' Yemek işletme: Reddet çerçeveli olumsuz: '+JSON.stringify(m&&m.danger));
      ok(await p.evaluate(()=>{const f=document.querySelectorAll('#fdBList .fdBiz.nxFirst');return f.length===1&&/#N1/.test(f[0].textContent)&&/SIRADAKİ SİPARİŞ/.test(f[0].textContent)}),tg+' Yemek işletme: en eski yeni sipariş "SIRADAKİ SİPARİŞ"');
      ok(await p.evaluate(()=>{const b=document.querySelector('#fdTabs button.on');return !!b&&b.classList.contains('nxHot')&&!!b.querySelector('em.nxNew')}),tg+' Yemek işletme: Yeni sekmesi dolu + kırmızı sayaç');

@@ -1776,7 +1776,7 @@ function alarmDraw(){
   setHTML('fdAlarmBox',n?'<button type="button" class="fdAlarm" onclick="foodAlarmTap()">🔔<span>'+n+' yeni sipariş onay bekliyor'+(soundOk()?'':'<br><small style="font-weight:600">🔇 Sesli uyarı için ekrana bir kez dokun</small>')+'</span>Göster ›</button>':'');
 }
 window.foodAlarmTap=function(){audioCtx(true);foodBizTab('new');setTimeout(()=>{beep();alarmDraw()},120)};
-function timersTick(){qa('[data-deadline]').forEach(el=>{const m=Math.ceil((new Date(el.dataset.deadline)-Date.now())/60000);el.classList.toggle('late',m<=2);el.textContent=m>0?'· ⏳ Yanıt için '+m+' dk':'· ⏳ Süre doldu, otomatik iptal ediliyor'});qa('[data-eta]').forEach(el=>{const m=Math.round((new Date(el.dataset.eta)-Date.now())/60000);el.classList.toggle('late',m<0);el.textContent=m>=0?'⏱ '+m+' dk kaldı':'⏰ '+(-m)+' dk gecikti'})}
+function timersTick(){qa('[data-deadline]').forEach(el=>{const m=Math.ceil((new Date(el.dataset.deadline)-Date.now())/60000);el.classList.toggle('late',m<=2);el.textContent=el.classList.contains('nxAcc')?(m>0?' · Kabul süresi '+m+' dk':' · Süre doldu, otomatik iptal'):m>0?'· ⏳ Yanıt için '+m+' dk':'· ⏳ Süre doldu, otomatik iptal ediliyor'});qa('[data-eta]').forEach(el=>{const m=Math.round((new Date(el.dataset.eta)-Date.now())/60000);el.classList.toggle('late',m<0);el.textContent=m>=0?'⏱ '+m+' dk kaldı':'⏰ '+(-m)+' dk gecikti'})}
 function isMgr(){return BZ.role==='owner'||BZ.role==='manager'}
 function subnav(venueId,on){
   if(!isMgr())return '';
@@ -1832,6 +1832,8 @@ async function showFoodBusiness(venueId){FDW_TAB='';
   const origTitle=document.title;onCleanup(()=>{document.title=origTitle});BZ.origTitle=origTitle;
   BZ.newCount=0;const alarm=setInterval(()=>{if(BZ.newCount>0&&document.visibilityState==='visible')beep()},6000);onCleanup(()=>clearInterval(alarm));
   const tick=setInterval(timersTick,30000);onCleanup(()=>clearInterval(tick));
+  /* P25: genişlik 900px eşiğini geçince sekme ↔ 3 sütun düzeni yeniden çizilir (aynı bizLoad) */
+  if(window.matchMedia){const mq=matchMedia(BZ_WIDE);const onMq=()=>{if(BZ.tab!=='past')bizLoad(tok,false)};mq.addEventListener('change',onMq);onCleanup(()=>mq.removeEventListener('change',onMq))}
   const unlock=()=>{audioCtx(true);/* bandı dokunuş bittikten sonra güncelle: dokunuş sırasında sayfa kayarsa tıklama boşa gider */setTimeout(alarmDraw,450)};document.addEventListener('pointerdown',unlock,{once:true});onCleanup(()=>document.removeEventListener('pointerdown',unlock));
   try{const st=await foodSettings();BZ.acceptMin=+st.accept_timeout_min||null}catch(e){}
   await bizLoad(tok,false);
@@ -1844,19 +1846,23 @@ async function showFoodBusiness(venueId){FDW_TAB='';
 }
 async function bizLoad(tok,more){
   try{
-    const tab=TABS.find(t=>t[0]===BZ.tab);const secs=tab[2]||[BZ.past];const lim=tab[2]?50:20;
+    const tab=TABS.find(t=>t[0]===BZ.tab);const wide=bizWide();
+    /* P25: geniş ekranda (≥900px) Yeni | Hazırlanıyor | Yolda sütunları için aynı RPC'nin aynı bölümleri (sekme geçişindeki çağrılar) birlikte okunur */
+    const secs=wide?[].concat(...BZ_COLS.map(c=>TABS.find(t=>t[0]===c[0])[2])):tab[2]||[BZ.past];const lim=tab[2]?50:20;
     const res=await Promise.all(secs.map(s=>RPC('food_venue_orders',{p_venue_id:BZ.venueId,p_section:s,p_limit:lim,p_offset:more?BZ.offset:0})));
     if(!alive(tok))return;
     const r0=res[0]||{};const s=r0.summary||{},c=r0.counts||{};
-    let orders=[].concat(...res.map(r=>r.orders||[]));
+    let orders=[].concat(...res.map((r,i)=>(r.orders||[]).map(o=>(o._k=wide?BZ_COLS.find(c=>TABS.find(t=>t[0]===c[0])[2].includes(secs[i]))[0]:null,o))));
     orders.sort((a,b)=>tab[2]?new Date(a.created_at)-new Date(b.created_at):new Date(b.created_at)-new Date(a.created_at));
     BZ.orders=more?BZ.orders.concat(orders):orders;BZ.offset=BZ.orders.length;
     BZ.firstNew=(BZ.orders.filter(o=>o.status==='new').sort((a,b)=>new Date(a.created_at)-new Date(b.created_at))[0]||{}).id||null;
     const cnt=t=>t[2]?t[2].reduce((n,k)=>n+(+c[k]||0),0):null;
     const nNew=+c.new||0;BZ.newCount=nNew;alarmDraw();pnBadge(nNew);
     /* P21: Bugün sayaçları (mevcut sayımlar); dokununca ilgili sekme */
-    setHTML('fdCnt3',[['new','Yeni','n'],['prep','Hazırlanıyor','p'],['ready','Yolda','s']].map(([k,l,cl])=>{const n=cnt(TABS.find(x=>x[0]===k));
-      return '<button type="button" class="'+cl+(BZ.tab===k?' on':'')+'" aria-pressed="'+(BZ.tab===k)+'" onclick="foodBizTab(\''+k+'\');const t=document.getElementById(\'fdTabs\');if(t)t.scrollIntoView({block:\'start\'})"><b>'+n+'</b><span>'+l+'</span>'+(k==='ready'?'<small>hazır dahil</small>':'')+'</button>'}).join(''));
+    /* P25: sayaç kutuları dolu durum renginde, seçili olana koyu çerçeve; geniş ekranda sütun başlığı olur (üstteki satır boş kalır) */
+    const cntBtn=([k,l,cl])=>{const n=cnt(TABS.find(x=>x[0]===k));
+      return '<button type="button" class="fdCntB '+cl+(BZ.tab===k?' on':'')+'" aria-pressed="'+(BZ.tab===k)+'" onclick="foodBizTab(\''+k+'\');const t=document.getElementById(\'fdTabs\');if(t)t.scrollIntoView({block:\'start\'})"><b>'+n+'</b><span>'+l+'</span>'+(k==='ready'?'<small>hazır dahil</small>':'')+'</button>'};
+    setHTML('fdCnt3',wide&&BZ.tab!=='past'?'':BZ_COLS.map(cntBtn).join(''));
     document.title=(nNew?'('+nNew+') Yeni sipariş · ':'')+(BZ.origTitle||document.title.replace(/^\(\d+\) Yeni sipariş · /,''));
     setHTML('fdKpi','<div class="'+(nNew?'hot':'')+'"><b>'+nNew+'</b><span>Bekleyen</span></div><div><b>'+(s.today_orders||0)+'</b><span>Bugün sipariş</span></div><div><b>'+M(s.today_revenue_kurus||0)+'</b><span>Bugün hakediş</span></div>');
     /* P19: sayaç rozeti durum renginde (Yeni #C4492F, Mutfakta amber, Hazır/yolda mavi); yeni sipariş varken Yeni sekmesi dolu */
@@ -1865,7 +1871,8 @@ async function bizLoad(tok,more){
     setHTML('fdPastF',BZ.tab==='past'?'<div class="fdChips"><button type="button" class="fdChip'+(BZ.past==='done'?' on':'')+'" onclick="foodBizPast(\'done\')">Tamamlanan · '+(+c.done||0)+'</button><button type="button" class="fdChip'+(BZ.past==='cancelled'?' on':'')+'" onclick="foodBizPast(\'cancelled\')">İptal / red · '+(+c.cancelled||0)+'</button></div>'+
       (s.avg_prep_min!=null?'<p class="fdMuted fdSmall" style="margin:0 0 10px">Bugün: '+(s.today_delivered||0)+' tamamlanan · '+(s.today_cancelled||0)+' iptal · ort. hazırlık '+s.avg_prep_min+' dk</p>':''):'');
     const emptyTxt={new:['🛎️','Yeni sipariş yok','Sipariş geldiğinde burada anında görünür ve sesli uyarı alırsın.'],prep:['👨‍🍳','Mutfakta sipariş yok','Kabul ettiğin siparişler burada.'],ready:['📦','Hazır veya yolda sipariş yok','Hazır, kurye bekleyen ve yoldaki siparişler burada.'],past:['🧾','Kayıt yok','']}[BZ.tab];
-    if(BZ.tab==='past'){pastDraw();}else setHTML('fdBList',BZ.orders.length?'<div class="fdwBizG">'+BZ.orders.map(bizCard).join('')+'</div>':empty(emptyTxt[0],emptyTxt[1],emptyTxt[2]));timersTick();
+    if(BZ.tab==='past'){pastDraw();}else if(wide)setHTML('fdBList','<div class="fdCols">'+BZ_COLS.map(c=>{const l=BZ.orders.filter(o=>o._k===c[0]);
+      return '<section class="fdCol" data-k="'+c[0]+'" aria-label="'+c[1]+'">'+cntBtn(c)+(l.length?'<div class="fdColL">'+l.map(bizCard).join('')+'</div>':'<p class="fdColE">Sipariş yok</p>')+'</section>'}).join('')+'</div>');else setHTML('fdBList',BZ.orders.length?'<div class="fdwBizG">'+BZ.orders.map(bizCard).join('')+'</div>':empty(emptyTxt[0],emptyTxt[1],emptyTxt[2]));timersTick();
     setHTML('fdBMore',!tab[2]&&orders.length===20?'<button type="button" class="fb block" onclick="foodBizMore(this)">Daha fazla</button>':'');
   }catch(e){setHTML('fdBList',errBox(e,'showFoodBusiness()'))}
 }
@@ -1895,6 +1902,9 @@ function pastDraw(){
   const i=document.getElementById('fdPQ');i.addEventListener('input',debounce(()=>{BZ.pq=i.value;const l=document.getElementById('fdPList');const ff=pastFilter(BZ.orders);if(l)l.innerHTML=ff.length?ff.map(bizCard).join(''):empty('🧾','Bu filtrede sipariş yok','Aramayı değiştir.')},250));
 }
 window.foodPastDay=function(k){BZ.pday=k;pastDraw()};
+/* P25: ≥900px'te Bugün siparişleri 3 sütun; altında mevcut sekme davranışı */
+const BZ_WIDE='(min-width:900px)',BZ_COLS=[['new','Yeni','n'],['prep','Hazırlanıyor','p'],['ready','Yolda','s']];
+function bizWide(){return BZ.tab!=='past'&&!!window.matchMedia&&matchMedia(BZ_WIDE).matches}
 window.foodBizTab=function(k){BZ.tab=k;BZ.offset=0;setHTML('fdBList',skel('row',2));bizLoad(SCREEN,false)};
 window.foodBizPast=function(k){BZ.past=k;BZ.offset=0;setHTML('fdBList',skel('row',2));bizLoad(SCREEN,false)};
 window.foodBizMore=async function(btn){await once('bizMore',btn,()=>bizLoad(SCREEN,true))};
@@ -1916,27 +1926,35 @@ function bizActs(o){
   }
 }
 /* P19: birincil aksiyonun rengi hedef duruma göre (yalnız görünüm; foodVenueAct aynı) */
-function bizPriCls(to){return to==='accepted'?'btnNext btnNextXL btnPulse':to==='preparing'?'btnNext btnNextAmber':['on_the_way','picked_up'].includes(to)?'btnNext btnNextBlue':'btnNext'}
+function bizPriCls(to){return to==='accepted'?'btnNext btnPulse':to==='preparing'?'btnNext btnNextAmber':['on_the_way','picked_up'].includes(to)?'btnNext btnNextBlue':'btnNext'}
 function bizPriIco(to){return {accepted:'✓ ',preparing:'👨‍🍳 ',ready:'📦 ',on_the_way:'🛵 ',picked_up:'🛵 ',delivered:'✓ '}[to]||''}
+/* P25: kart üst şeridi durum grubuna göre açık tonlu (n Yeni, p Hazırlanıyor, s Yolda); geçmişte nötr */
+function bizGrp(st){return st==='new'?'n':['accepted','preparing'].includes(st)?'p':TERMINAL.includes(st)?'':'s'}
 function bizCard(o){
   const late=o.estimated_ready_at&&['accepted','preparing'].includes(o.status)&&new Date(o.estimated_ready_at)<new Date();
-  const a=bizActs(o);const past=TERMINAL.includes(o.status);
+  const a=bizActs(o);const past=TERMINAL.includes(o.status);const g=bizGrp(o.status);
   const call='foodVenueAct(\''+E(o.id)+'\',\'%TO%\',this,\''+o.delivery_mode+'\')';
   const moreJson=E(JSON.stringify((a.more||[]).map(x=>[x.to,x.l,x.bad?1:0])));
-  const dl=o.status==='new'&&BZ.acceptMin?new Date(new Date(o.created_at).getTime()+BZ.acceptMin*60000).toISOString():null;
-  const first=o.status==='new'&&o.id===BZ.firstNew;
-  return '<div class="fdBiz'+(o.status==='new'?' new':'')+(first?' nxFirst':'')+'"><div class="hd"><div>'+(first?'<span class="nxFirstL">SIRADAKİ SİPARİŞ</span><br>':'')+'<b>#'+E(o.no)+'</b> <span class="fdMuted fdSmall">· '+ago(o.created_at)+'</span>'+(dl?' <span class="fdTimer" data-deadline="'+E(dl)+'"></span>':'')+'<div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap">'+badge(o.status)+'<span class="fdPill">'+(o.delivery_mode==='pickup'?'🛍️':'🛵')+' '+E(MODE[o.delivery_mode]||'')+'</span>'+(late?'<span class="fdBadge bad">⏰ Gecikiyor</span>':'')+'</div></div>'+
-    '<div class="tot"><b>'+M(o.total_kurus)+'</b><small>'+E(PAY[o.payment_method]||'')+'</small>'+(past&&o.status==='delivered'?'<small>Hakediş '+M(o.restaurant_share_kurus)+'</small>':'')+'</div></div>'+
-    '<div class="its">'+(o.items||[]).map(i=>'<div><span class="q">'+i.quantity+'×</span>'+E(i.name)+((i.options||[]).length?'<small>'+E(i.options.map(x=>(x.kind==='remove'?'Çıkar: ':'')+x.option).join(', '))+'</small>':'')+'</div>').join('')+'</div>'+
+  const dl=o.status==='new'&&BZ.acceptMin&&o.created_at?new Date(new Date(o.created_at).getTime()+BZ.acceptMin*60000).toISOString():null;
+  const first=o.status==='new'&&o.id===BZ.firstNew;const its=o.items||[];
+  const pri=a.pri?'<button type="button" class="fb pri '+bizPriCls(a.pri.to)+'" onclick="'+call.replace('%TO%',a.pri.to)+'">'+bizPriIco(a.pri.to)+E(a.pri.l)+'</button>':'<span style="flex:1"></span>';
+  const side=a.side?'<button type="button" class="fb ghostBad btnDanger btnSide" onclick="'+call.replace('%TO%',a.side.to)+'">✕ '+E(a.side.l)+'</button>':'';
+  return '<div class="fdBiz'+(o.status==='new'?' new':'')+(first?' nxFirst':'')+(g?' g'+g:'')+'"><div class="hd nxHd"><div class="id">'+(first?'<span class="nxFirstL">SIRADAKİ SİPARİŞ</span>':'')+'<b>#'+E(o.no)+'</b></div>'+
+      '<span class="nxAge'+(dl?' acc':'')+'">'+ago(o.created_at)+(dl?'<span class="fdTimer nxAcc" data-deadline="'+E(dl)+'"></span>':'')+'</span></div>'+
+    '<div class="bd"><div class="sum">'+its.map(i=>i.quantity+' × '+E(i.name)).join(', ')+'</div>'+
+      its.filter(i=>(i.options||[]).length).map(i=>'<small class="opt">'+E(i.name)+': '+E(i.options.map(x=>(x.kind==='remove'?'Çıkar: ':'')+x.option).join(', '))+'</small>').join('')+
+      '<div class="mp">'+[MODE[o.delivery_mode],PAY[o.payment_method]].filter(Boolean).map(E).join(' · ')+'</div>'+
+      '<div class="nxTot"><b>'+M(o.total_kurus)+'</b>'+(past&&o.status==='delivered'?'<small>Hakediş '+M(o.restaurant_share_kurus)+'</small>':'')+'</div>'+
+      '<div class="bdg">'+badge(o.status)+(late?'<span class="fdBadge bad">⏰ Gecikiyor</span>':'')+'</div></div>'+
     (o.note?'<div class="fdNote warn note">📝 '+E(o.note)+'</div>':'')+
     '<div class="inf">'+(o.address_text?'<div>📍 '+E(o.address_text)+'</div>':'')+(o.phone?'<div>📞 <a href="tel:'+E(o.phone)+'">'+E(o.phone)+'</a></div>':'')+
       (o.estimated_ready_at&&['accepted','preparing'].includes(o.status)?'<div>Hazır olacak: <b>'+hm(o.estimated_ready_at)+'</b> · <span class="fdTimer" data-eta="'+E(o.estimated_ready_at)+'"></span></div>':o.estimated_ready_at&&!past?'<div>⏱ Hazır olacak: <b>'+hm(o.estimated_ready_at)+'</b></div>':'')+
       (o.courier?'<div>🛵 '+E(o.courier.name)+' · '+E(VEH[o.courier.vehicle]||'')+(o.courier.phone?' · <a href="tel:'+E(o.courier.phone)+'">Ara</a>':'')+'</div>':'')+
       (o.cancel_reason?'<div class="fdBad">Sebep: '+E(o.cancel_reason)+'</div>':'')+'</div>'+
     (a.info?'<div class="fdNote info note">'+E(a.info)+'</div>':'')+
-    ((a.pri||a.side||(a.more&&a.more.length))?'<div class="ft">'+
-      (a.pri?'<button type="button" class="fb pri '+bizPriCls(a.pri.to)+'" onclick="'+call.replace('%TO%',a.pri.to)+'">'+bizPriIco(a.pri.to)+E(a.pri.l)+'</button>':'<span style="flex:1"></span>')+
-      (a.side?'<button type="button" class="fb ghostBad btnDanger btnSide" onclick="'+call.replace('%TO%',a.side.to)+'">✕ '+E(a.side.l)+'</button>':'')+
+    ((a.pri||a.side||(a.more&&a.more.length))?'<div class="ft'+(a.side?' nxNA':'')+'">'+
+      /* P25: yeni siparişte Reddet (dar, çerçeveli) solda, Kabul et (geniş, yeşil) sağda; diğer durumlar P19 sırası */
+      (a.side?side+pri:pri)+
       (a.more&&a.more.length?'<button type="button" class="fb btnSoft nxMore" aria-label="Diğer işlemler" onclick="foodBizMoreActs(\''+E(o.id)+'\',\''+o.delivery_mode+'\',this)" data-more="'+moreJson+'">⋯</button>':'')+'</div>':'<div style="height:12px"></div>')+'</div>';
 }
 window.foodBizMoreActs=function(id,mode,btn){
