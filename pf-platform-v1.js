@@ -437,11 +437,11 @@ function injectFooter(){
 /* ------------------------------------------------------------------ yönetim paneli */
 var ADM={tab:null};
 function hasRole(r){var R=PF.roles&&PF.roles.roles||[];return R.indexOf('super')>=0||R.indexOf(r)>=0}
-var TABS=[['docs','Belgeler','moderator'],['venues','İşletme başvuruları','moderator'],['lreview','Onay bekleyen ilanlar','moderator'],['reports','Şikâyetler','moderator'],['listings','İlanlar','moderator'],['providers','Ustalar','moderator'],['susp','Askıya almalar','moderator'],['tickets','Destek','support'],
+var TABS=[['docs','Belgeler','moderator'],['venues','İşletme başvuruları','moderator'],['lreview','Onay bekleyen ilanlar','moderator'],['reports','Şikâyetler','moderator'],['listings','İlanlar','moderator'],['providers','Ustalar','moderator'],['susp','Askıya almalar','moderator'],/* P32 */['food','Yemek','ops'],['tickets','Destek','support'],
   ['kvkk','KVKK başvuruları','legal'],['legal','Yasal metinler','legal'],['company','Şirket bilgileri','legal'],['finance','Finans','finance'],['campaigns','Kampanyalar','finance'],['revenue','Gelir','finance'],
   ['settings','Ayarlar','ops'],['dispatch','Kurye dağıtımı','ops'],['hero','Ana ekran fotoğrafları','ops'],['words','Yasaklı kelimeler','ops'],['audit','Denetim kaydı','super']];
-var ADM_GROUPS=[['Moderasyon',['lreview','reports','listings','docs','venues','providers','susp','words']],['Destek ve yasal',['tickets','kvkk','legal','company']],['Finans',['finance','campaigns','revenue']],['Operasyon',['settings','dispatch','hero']],['Sistem',['audit']]];
-var ADM_ICON={lreview:'⏳',docs:'📄',venues:'🏪',reports:'🚩',listings:'📋',providers:'🔧',susp:'⛔',words:'🔤',tickets:'🎧',kvkk:'🔒',legal:'⚖️',company:'🏢',finance:'💰',campaigns:'🎟️',revenue:'📈',settings:'⚙️',dispatch:'🛵',hero:'🖼️',audit:'🗂️'};
+var ADM_GROUPS=[['Moderasyon',['lreview','reports','listings','docs','venues','providers','susp','food','words']],['Destek ve yasal',['tickets','kvkk','legal','company']],['Finans',['finance','campaigns','revenue']],['Operasyon',['settings','dispatch','hero']],['Sistem',['audit']]];
+var ADM_ICON={food:'🍽️',lreview:'⏳',docs:'📄',venues:'🏪',reports:'🚩',listings:'📋',providers:'🔧',susp:'⛔',words:'🔤',tickets:'🎧',kvkk:'🔒',legal:'⚖️',company:'🏢',finance:'💰',campaigns:'🎟️',revenue:'📈',settings:'⚙️',dispatch:'🛵',hero:'🖼️',audit:'🗂️'};
 PF.openAdmin=async function(tab){
   if(!need())return;
   if(!PF.roles)try{PF.roles=await rpc('pf_my_roles',{})}catch(e){}
@@ -475,8 +475,8 @@ PF.openAdmin=async function(tab){
   try{await (ADMIN[ADM.tab]||function(){})(el)}catch(e){el.innerHTML=errHTML(e)}
 };
 /* AJ2-E: yönetim ana listesi sayıları — YALNIZ mevcut okuma çağrıları (yeni RPC/SQL yok); yetkisi olmayan sekme çağrılmaz, hata → o sayı yok */
-var ADM_NOW=[['reports','Şikâyetler','bad'],['lreview','Onay bekleyen ilanlar','warn'],['venues','İşletme başvuruları','warn'],['kvkk','KVKK başvuruları','warn'],['oz','Özüne Dön siparişleri','warn']];
-var ADM_G2=[['İçerik ve kullanıcılar',['lreview','reports','venues','listings','docs','providers','susp','hero','words']],['Destek, yasal, sistem',['tickets','kvkk','legal','company','audit']],['Finans ve operasyon',['finance','campaigns','revenue','settings','dispatch']]];
+var ADM_NOW=[['reports','Şikâyetler','bad'],/* P32 */['food','Yemek','warn'],['lreview','Onay bekleyen ilanlar','warn'],['venues','İşletme başvuruları','warn'],['kvkk','KVKK başvuruları','warn'],['oz','Özüne Dön siparişleri','warn']];
+var ADM_G2=[['İçerik ve kullanıcılar',['lreview','reports','venues','food','listings','docs','providers','susp','hero','words']],['Destek, yasal, sistem',['tickets','kvkk','legal','company','audit']],['Finans ve operasyon',['finance','campaigns','revenue','settings','dispatch']]];
 async function admCounts(tabs){
   var has=function(k){return tabs.some(function(t){return t[0]===k})},n=function(v){return Array.isArray(v)?v:[]},J=[],c={at:Date.now()};
   var job=function(k,p,fn){if(!p)return;J.push(p.then(function(v){fn(v)},function(){}))};
@@ -484,6 +484,8 @@ async function admCounts(tabs){
   job('lreview',has('lreview')&&rpc('pf_admin_listing_queue',{}),function(v){var l=n(v),o=l.map(function(x){return Date.parse(x.created_at||x.submitted_at||'')}).filter(function(x){return x===x});c.lreview={n:l.length,old:o.length?Math.min.apply(null,o):null}});
   job('venues',has('venues')&&rpc('pf_admin_venue_queue',{p_stage:null}),function(v){c.venues={n:n(v).filter(function(x){return x.stage==='in_review'}).length}});
   job('kvkk',has('kvkk')&&rpc('pf_admin_data_requests',{p_status:null}),function(v){c.kvkk={n:n(v).filter(function(x){return x.status==='open'||x.status==='in_progress'}).length}});
+  /* P32: Yemek — yalnız mevcut food_admin_overview okuması; n = bekleyen kurye başvurusu + açık sorun (hata → o sayı yok) */
+  job('food',has('food')&&rpc('food_admin_overview',{}),function(v){if(v&&typeof v==='object'&&!Array.isArray(v)){var a=n(v.pending_couriers).length,b=n(v.open_issues).length;c.food={n:a+b,couriers:a,issues:b}}});
   job('tickets',has('tickets')&&rpc('pf_admin_tickets',{p_status:null,p_kind:null}),function(v){c.tickets={n:n(v).filter(function(x){return x.status==='open'||x.status==='in_review'}).length}});
   /* P2: oz_admin_overview siparişleri durum haritası (orders) olarak verir; açık = yeni + kabul + hazırlanıyor (orders_open varsa o) */
   job('oz',has('oz_orders')&&rpc('oz_admin_overview',{}),function(v){if(v&&typeof v==='object'&&!Array.isArray(v)){var m=v.orders&&typeof v.orders==='object'?v.orders:{};
@@ -496,15 +498,15 @@ async function admCounts(tabs){
   PF._admCnt=c;PF._admN=any?sum:null;try{if(typeof window.drwBadges==='function')window.drwBadges()}catch(e){}
   return c;
 }
-function admNowSub(k,c){var x=c[k];if(k==='reports')return 'Önce bunlara bak';if(k==='lreview'){if(x.old){var d=Math.max(0,Math.floor((Date.now()-x.old)/864e5));return d?'En eskisi '+d+' gün önce':'En eskisi bugün'}return 'Onay bekliyor'}
+function admNowSub(k,c){var x=c[k];if(k==='reports')return 'Önce bunlara bak';if(k==='food')return [x.couriers?x.couriers+' kurye başvurusu':'',x.issues?x.issues+' açık sorun':''].filter(Boolean).join(' · ');if(k==='lreview'){if(x.old){var d=Math.max(0,Math.floor((Date.now()-x.old)/864e5));return d?'En eskisi '+d+' gün önce':'En eskisi bugün'}return 'Onay bekliyor'}
   if(k==='venues')return 'İncelemede';if(k==='kvkk')return 'Yanıt süresi işliyor';if(k==='oz')return [x.orders?x.orders+' açık sipariş':'',x.returns?x.returns+' iade':''].filter(Boolean).join(' · ');return ''}
 /* P2: satır renk şeridi (sol 5px) — kırmızı acil, turuncu bekleyen, altın para, mavi içerik, gri sistem/yasal, yeşil operasyon; Ayarlar "dikkat" */
-var ADM_TONE={reports:'r',susp:'r',lreview:'o',venues:'o',tickets:'o',finance:'g',campaigns:'g',revenue:'g',listings:'b',docs:'b',providers:'b',hero:'b',words:'s',kvkk:'s',legal:'s',company:'s',audit:'s',dispatch:'e',settings:'x'};
+var ADM_TONE={food:'o',reports:'r',susp:'r',lreview:'o',venues:'o',tickets:'o',finance:'g',campaigns:'g',revenue:'g',listings:'b',docs:'b',providers:'b',hero:'b',words:'s',kvkk:'s',legal:'s',company:'s',audit:'s',dispatch:'e',settings:'x'};
 /* P2: sayı rozeti yalnız mevcut okumadan gelen sayılar için (Belgeler vb. için sayı okunmuyor → rozet yok) */
-var ADM_CNT={reports:'bad',lreview:'warn',venues:'warn',tickets:'warn',kvkk:'warn'};
+var ADM_CNT={reports:'bad',lreview:'warn',venues:'warn',tickets:'warn',kvkk:'warn',food:'warn'};
 /* P23: yönetim ana görünümü 4 bölme (Bugün / Kuyruklar / Para / Sistem), sheet içinde yapışkan alt menü. Rol filtresi (tabs), sayı
    okumaları (admCounts, PF._admCnt, PF._admN) ve bölüm iç ekranları (ADMIN.*) aynı. Tüm bölmeler DOM'da; yalnız görünürlük değişir. */
-var ADM_PI={home:'<path d="M4 11l8-7 8 7v9H4z"/>',list:'<path d="M4 6h16M4 12h16M4 18h10"/>',trend:'<path d="M3 17l6-6 4 4 8-8M15 7h6v6"/>',
+var ADM_PI={food:'<path d="M7 3v8M4 3v5a3 3 0 0 0 3 3 3 3 0 0 0 3-3V3M7 11v10M17 3c-2 1.5-3 4-3 7 0 2 1 3 3 3v8"/>',home:'<path d="M4 11l8-7 8 7v9H4z"/>',list:'<path d="M4 6h16M4 12h16M4 18h10"/>',trend:'<path d="M3 17l6-6 4 4 8-8M15 7h6v6"/>',
   shield:'<path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/>',flag:'<path d="M5 21V4h11l-2 4 2 4H5"/>',clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
   store:'<path d="M4 9l1.5-5h13L20 9M4 9h16v11H4zM9 20v-6h6v6"/>',box:'<path d="M3 7l9-4 9 4v10l-9 4-9-4zM3 7l9 4 9-4M12 11v10"/>',
   lock:'<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',search:'<circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/>',
@@ -513,9 +515,9 @@ var ADM_PI={home:'<path d="M4 11l8-7 8 7v9H4z"/>',list:'<path d="M4 6h16M4 12h16
   gear:'<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/>'};
 function pIco(k,s){s=s||22;return '<svg viewBox="0 0 24 24" width="'+s+'" height="'+s+'" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">'+(ADM_PI[k]||'')+'</svg>'}
 var ADM_PANES=[['today','Bugün','home'],['queues','Kuyruklar','list'],['money','Para','trend'],['system','Sistem','shield']];
-var ADM_QC=['lreview','reports','venues','docs','listings','providers','susp'],ADM_QS=['tickets','kvkk'],ADM_M=['finance','campaigns','revenue'],ADM_S=['settings','dispatch','hero','words','legal','company','audit'];
+var ADM_QC=['lreview','reports','venues','food','docs','listings','providers','susp'],ADM_QS=['tickets','kvkk'],ADM_M=['finance','campaigns','revenue'],ADM_S=['settings','dispatch','hero','words','legal','company','audit'];
 /* renk anlamı (yazı/sayı ile birlikte): şikâyet kırmızı, ilan/başvuru/KVKK/destek amber, Özüne Dön mavi */
-var ADM_NT={reports:'r',lreview:'a',venues:'a',kvkk:'a',tickets:'a',oz:'b'},ADM_NI={reports:'flag',lreview:'clock',venues:'store',kvkk:'lock',oz:'box'};
+var ADM_NT={reports:'r',lreview:'a',venues:'a',kvkk:'a',tickets:'a',oz:'b',food:'a'},ADM_NI={food:'food',reports:'flag',lreview:'clock',venues:'store',kvkk:'lock',oz:'box'};
 /* P23b: bölümün ait olduğu bölme (ana görünümdeki yeri) ve aynı bölmedeki yetkili kardeşler; Özüne Dön bölümleri tek şerit */
 var ADM_PN={today:'Bugün',queues:'Kuyruklar',money:'Para',system:'Sistem'};
 function admPaneOf(k){return /^oz_/.test(k)||ADM_QC.indexOf(k)>=0||ADM_QS.indexOf(k)>=0?'queues':ADM_M.indexOf(k)>=0?'money':'system'}
@@ -590,7 +592,20 @@ function admHome(tabs,c,loading){
   sheet('Yönetim paneli',h);admQApply();
 }
 function isoDay(off){var d=new Date();d.setDate(d.getDate()+(off||0));return d.toISOString().slice(0,10)}
+/* P32: yönetim paneli "Yemek" bölümü — özet (food_admin_overview) + mevcut Yemek yönetim ekranlarına kısayollar (a7-food-v1.js aynen).
+   Kısayol: panel kapanır, Yemek yönetimi Hesabım'daki gibi showFoodAdmin() ile açılır (geçmiş kaydı P24 kuralıyla), gerekirse ilgili ekran üstüne çizilir. */
+var FOOD_ST={new:'Yeni',accepted:'Kabul',preparing:'Hazırlanıyor',ready:'Hazır',courier_search:'Kurye aranıyor',courier_assigned:'Kurye atandı',picked_up:'Kuryede',on_the_way:'Yolda',delivered:'Teslim',cancelled:'İptal',rejected:'Reddedildi'};
+PF._admFood=function(fn){var w=window;if(typeof w.showFoodAdmin!=='function'){toast('Yemek modülü yüklenemedi.');return}
+  ADM.tab=null;ADM.direct=false;closeSheet();w.showFoodAdmin();if(fn&&fn!=='showFoodAdmin'&&typeof w[fn]==='function')w[fn]()};
 var ADMIN={
+  food:async function(el){
+    var o=await rpc('food_admin_overview',{})||{};var a=Array.isArray(o.pending_couriers)?o.pending_couriers.length:0,b=Array.isArray(o.open_issues)?o.open_issues.length:0,sd=+o.searching_deliveries||0,sc=o.orders_by_status&&typeof o.orders_by_status==='object'?o.orders_by_status:null;
+    var pill=function(cls,t){return '<span class="pfxSt '+cls+'"><i aria-hidden="true"></i>'+esc(t)+'</span>'};
+    var go=[['showFoodOpsCenter','🛰️ Operasyon merkezi'],['showFoodOnboarding','🗂️ Başvurular'],['showFoodAdminPromos','📣 Reklam ve kampanya alanları'],['showFoodAdminReviews','⭐ Yorum moderasyonu'],['showFoodAdmin','🍽️ Restoranlar / kuryeler / sorunlar']];
+    el.innerHTML='<div class="pfxStrip" role="status" aria-label="Yemek özeti">'+pill(sd?'mock':'on','Kurye bekleyen: '+sd)+pill(a?'mock':'on','Kurye başvurusu: '+a)+pill(b?'off':'on','Açık sorun: '+b)+'</div>'+
+      (sc&&Object.keys(sc).length?'<div class="pfxStrip" aria-label="Son 7 gün siparişler">'+Object.keys(sc).map(function(k){return '<span class="pfxSt">'+esc((FOOD_ST[k]||k)+': '+sc[k])+'</span>'}).join('')+'</div>':'')+
+      '<div class="pfxMenu pfxFoodGo">'+go.map(function(x){return '<button type="button" class="pfxBtn" data-food="'+x[0]+'" onclick="PF._admFood(\''+x[0]+'\')"><span>'+esc(x[1])+'</span><span aria-hidden="true">›</span></button>'}).join('')+'</div>';
+  },
   docs:async function(el){
     var q=await rpc('pf_admin_document_queue',{p_status:'in_review',p_subject_type:null});
     el.innerHTML=(q||[]).length?(q||[]).map(function(d){return '<div class="pfxCard"><div class="pfxRow"><b>'+esc(d.type_label||d.type_code)+'</b><span class="pfxTag">'+esc(d.subject_type)+'</span></div><div class="pfxMuted">'+esc(d.subject_name||d.subject_id)+' · '+esc(d.file_name)+' · '+esc(fmtDate(d.created_at))+(d.expires_on?' · geçerlilik '+esc(d.expires_on):'')+'</div>'+

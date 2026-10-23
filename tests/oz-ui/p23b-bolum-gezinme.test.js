@@ -95,6 +95,23 @@ const CONTRAST=(sel)=>{const L=c=>{const f=v=>{v/=255;return v<=.03928?v/12.92:M
   await p.evaluate(()=>document.querySelector('.pfxOv .pfxPN [data-pane=queues]').click());await W(900);r=await S();ok(r.open&&r.home&&r.pane==='queues','['+T+'] doğrudan girişte alt menüden bölme listesine geçilebilir');
   await p.evaluate(()=>document.querySelector('#pfxAdmHome [data-tab=oz_sellers]').click());await W(1200);await p.goBack();await W(900);r=await S();ok(r.open&&r.home,'['+T+'] alt menüyle listeye geçtikten sonra bölümden geri → liste');
   await p.evaluate(()=>document.querySelectorAll('.pfxOv').forEach(x=>x.remove()));
+  // P32: Yemek bölümü — sayı = pending_couriers + open_issues (mevcut food_admin_overview), 5 kısayol, kısayol paneli kapatıp mevcut Yemek ekranını açar
+  DATA=Object.assign({},SAMPLE,{food_admin_overview:{pending_couriers:[{id:'c1'},{id:'c2'}],open_issues:[{id:'i1'}],searching_deliveries:3,orders_by_status:{new:4,delivered:10}}});await openA();
+  r=await p.evaluate(()=>{const H=document.getElementById('pfxAdmHome');const now=H.querySelector('[data-pane=today] .pfxNowC[data-tab=food]');const q=H.querySelector('[data-pane=queues] .pfxQB[data-tab=food]');
+   return {now:now?{n:now.querySelector('.pfxNum').textContent,sub:(now.querySelector('small')||{}).textContent||''}:null,q:q?(q.querySelector('.pfxCnt')||{}).textContent:null}});
+  ok(r.now&&r.now.n==='3'&&r.now.sub==='2 kurye başvurusu · 1 açık sorun'&&r.q==='3','['+T+'] P32: Yemek Bugün + Kuyruklar, sayı 2+1=3: '+JSON.stringify(r));
+  await p.evaluate(()=>document.querySelector('#pfxAdmHome .pfxNowC[data-tab=food]').click());await W(1200);
+  r=await p.evaluate(()=>({t:(document.querySelector('.pfxOv .pfxAdmT')||{}).textContent,path:(document.querySelector('.pfxOv .pfxAdmP')||{}).textContent,
+   go:[...document.querySelectorAll('#pfxAdm .pfxFoodGo .pfxBtn')].map(b=>b.dataset.food),pills:[...document.querySelectorAll('#pfxAdm .pfxSt')].map(x=>x.textContent),h:[...document.querySelectorAll('#pfxAdm .pfxFoodGo .pfxBtn')].map(b=>Math.round(b.getBoundingClientRect().height))}));
+  ok(r.t==='Yemek'&&r.path==='Yönetim › Kuyruklar'&&JSON.stringify(r.go)==='["showFoodOpsCenter","showFoodOnboarding","showFoodAdminPromos","showFoodAdminReviews","showFoodAdmin"]'&&r.h.every(h=>h>=44),'['+T+'] P32: Yemek bölümü 5 kısayol: '+JSON.stringify(r));
+  ok(JSON.stringify(r.pills.slice(0,3))==='["Kurye bekleyen: 3","Kurye başvurusu: 2","Açık sorun: 1"]'&&r.pills.includes('Yeni: 4'),'['+T+'] P32: Yemek özeti: '+JSON.stringify(r.pills));
+  a=await p.evaluate(CONTRAST,'#pfxAdm');ok(!a.bad.length&&!a.small.length,'['+T+'] P32: Yemek bölümü kontrast/boyut: '+JSON.stringify(a));
+  ok((await S()).ovf<=0,'['+T+'] P32: Yemek bölümü yatay taşma');await shot('p32-'+T+'-yemek');
+  await p.evaluate(()=>{window.__fc=[];const k=['showFoodAdmin','showFoodOpsCenter'];window.__fo={};k.forEach(n=>{window.__fo[n]=window[n];window[n]=function(){window.__fc.push(n)}})});
+  await p.evaluate(()=>document.querySelector('#pfxAdm .pfxFoodGo [data-food=showFoodOpsCenter]').click());await W(300);
+  r=await p.evaluate(()=>({c:window.__fc,ov:document.querySelectorAll('.pfxOv').length}));
+  ok(JSON.stringify(r.c)==='["showFoodAdmin","showFoodOpsCenter"]'&&r.ov===0,'['+T+'] P32: kısayol paneli kapatır, showFoodAdmin → showFoodOpsCenter: '+JSON.stringify(r));
+  await p.evaluate(()=>{for(const n in window.__fo)window[n]=window.__fo[n]});DATA=SAMPLE;
   // Özüne Dön Özet: Siparişler kutusu küçük renkli etiketler
   await openA();await p.evaluate(()=>PF.openAdmin('oz_overview'));await W(1600);
   r=await p.evaluate(()=>{const k=document.querySelector('[data-kpi=orders]');if(!k)return null;const t=[...k.querySelectorAll('.ozKT')];return {tags:t.map(x=>x.textContent.trim()),fs:t.map(x=>parseFloat(getComputedStyle(x).fontSize)),cls:t.map(x=>x.className)}});
@@ -109,6 +126,10 @@ const CONTRAST=(sel)=>{const L=c=>{const f=v=>{v/=255;return v<=.03928?v/12.92:M
  await openA(['moderator']);await p.evaluate(()=>PF.openAdmin('reports'));await W(1000);r=await S();
  ok(r.chips.length&&r.chips.every(c=>!/Destek|KVKK|Özet|Finans/.test(c.t)),'[yetki] moderatör: destek/KVKK/Özüne Dön/finans çipi yok: '+JSON.stringify(r.chips.map(c=>c.t)));
  ok(await p.evaluate(()=>{PF.openAdmin('oz_overview');return true})&&!(await S()).chips.some(c=>c.t==='Özet'),'[yetki] moderatör Özüne Dön bölümüne giremez');
+ // P32: Yemek rolü (ops/super) yoksa bölüm hiçbir yerde yok
+ DATA=Object.assign({},SAMPLE,{food_admin_overview:{pending_couriers:[{id:'c1'}],open_issues:[]}});await openA(['moderator']);
+ ok(await p.evaluate(()=>!document.querySelector('#pfxAdmHome [data-tab=food]')),'[yetki] moderatör: Yemek bölümü görünmez');
+ await p.evaluate(()=>PF.openAdmin('food'));await W(900);ok(await p.evaluate(()=>(document.querySelector('.pfxOv .pfxAdmT')||{}).textContent!=='Yemek'),'[yetki] moderatör Yemek bölümüne giremez');
  ok(!st.errors.length,'sayfa hatası: '+st.errors.join(' | '));
  await br.close();
  if(fails.length){console.error('p23b-bolum-gezinme BAŞARISIZ:\n - '+fails.join('\n - '));process.exit(1)}
