@@ -1749,6 +1749,12 @@ html[data-theme="light"] .appDrawer .drwW3 button:nth-child(2) .ic{color:#9A6410
 .appDrawer .drwBar{position:sticky;bottom:calc(-20px - env(safe-area-inset-bottom,0px));z-index:2;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:auto -12px calc(-20px - env(safe-area-inset-bottom,0px));padding:10px 12px calc(10px + env(safe-area-inset-bottom,0px));background:var(--card,#0f1c24);border-top:1px solid var(--line)}
 .appDrawer .drwBar button{display:flex;align-items:center;justify-content:center;gap:8px;min-height:56px;padding:0 8px;border:1px solid var(--line);border-radius:14px;background:var(--card2);color:var(--text);font:inherit;font-size:13.5px;font-weight:800;cursor:pointer;min-width:0;text-align:center;line-height:1.15}
 .appDrawer .drwBar button .ic{display:flex;flex:none}
+/* P28b: giriş yapmamış: Giriş yap (dolu) + Kayıt ol (çerçeveli), eşit genişlik, ≥48px */
+.appDrawer .drwGuest{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 12px}.appDrawer .drwGuest[hidden]{display:none}
+.appDrawer .drwGuest button{min-height:50px;border-radius:14px;font:inherit;font-size:15px;font-weight:800;cursor:pointer}
+.appDrawer .drwGuest .drwIn{border:0;background:var(--nx-pri);color:#fff}
+.appDrawer .drwGuest .drwUp{border:2px solid var(--nx-pri);background:transparent;color:var(--text)}
+.appDrawer .drwGuest button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 /*P28-BITIS*/
 /*P26-BASLA*/ /* Paket 26: Özüne Dön satıcı Siparişler — Paket 25 düzeni (aynı sınıflar: .nxHd/.nxAge, .nxNA, .fdCols/.fdCol/.fdColE; aynı --st-* jetonları).
    Burada yalnız Özüne Dön zemin/yazı jetonları (--oz-*) ve sayaç seçili çerçevesi. */
@@ -3215,6 +3221,7 @@ html:root .ozPP .cv .ppFav.on{color:#FF5C7A}
   <!-- P28: üst satır (logo, Çıkış/Giriş, Kapat) → Başlat → tek satır kategori şeridi → İşlerim 2x2 → Çalışma alanlarım → [Yönetim] → alt sabit çubuk (Ayarlar ve hesap, Yardım).
        Tüm eski öğeler, id'ler ve işlevler aynı; rozetler yalnız mevcut okumalardan (drwBadges). -->
   <div class="appDrawerHead"><button type="button" class="drwBrand" onclick="closeAppDrawer();showHome()" aria-label="İşimi Çöz ana sayfa"><span class="v2LogoLine"><span class="v2LogoMk" aria-hidden="true"><svg viewBox="0 0 32 32" width="24" height="24" focusable="false"><path d="M7.2 16.8l5.4 5.6 12.2-14" fill="none" stroke="currentColor" stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="v2Wm"><b>İşimi</b><i>Çöz</i></span></span></button><span class="drwHdA"><span id="drawerAuth" class="drwAuthTop"></span><button type="button" class="btn secondary smallBtn" onclick="closeAppDrawer()">Kapat</button></span></div>
+  <div class="drwGuest" id="drwGuest" hidden></div>
   <button type="button" class="drwStart" onclick="closeAppDrawer();v2StartSheet()"><span class="pl" aria-hidden="true">+</span><span class="tx"><b>Başlat</b><small>İlan, hizmet veya resmî işlem</small></span></button>
   <div class="drwChips drwChipsRow" role="group" aria-label="İlan ara">
     <button type="button" onclick="closeAppDrawer();kesfetOpen('all',true)">🔎 Tüm ilanlar</button>
@@ -9362,9 +9369,11 @@ function updateAuthArea(){
     '<button type="button" class="v2Mini" onclick="openAuthModal(\'login\')">Giriş</button><span aria-hidden="true">·</span><button type="button" class="v2Mini pri" onclick="openAuthModal(\'signup\')">Kaydol</button>';
   var da=document.getElementById('drawerAuth');
   if(da) da.innerHTML=logged?
-    /* P28: menünün üst satırında tek Çıkış (aynı işlev) / giriş yapmamışsa Giriş yap (aynı işlev) */
-    '<button type="button" class="drwOut" onclick="closeAppDrawer();logoutUser()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h11"/></svg>Çıkış yap</button>':
-    '<button type="button" class="drwIn" onclick="closeAppDrawer();openAuthModal(\'login\')"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 4H5v16h4M14 8l4 4-4 4M18 12H7"/></svg>Giriş yap</button>';
+    /* P28: menünün üst satırında tek Çıkış (aynı işlev); P28b: giriş yapmamışta üst satırda yalnız logo + Kapat */
+    '<button type="button" class="drwOut" onclick="closeAppDrawer();logoutUser()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h11"/></svg>Çıkış yap</button>':'';
+  /* P28b: giriş yapmamış görünüm — üst satırın altında iki eşit düğme (aynı işlevler: openAuthModal login / signup) */
+  var dg=document.getElementById('drwGuest');
+  if(dg){ dg.hidden=logged; dg.innerHTML=logged?'':'<button type="button" class="drwIn" onclick="closeAppDrawer();openAuthModal(\'login\')">Giriş yap</button><button type="button" class="drwUp" onclick="closeAppDrawer();openAuthModal(\'signup\')">Kayıt ol</button>'; }
 }
 function openAuthModal(mode){
  document.getElementById("authModal")?.remove();

@@ -1,7 +1,7 @@
 // Paket 28: İşimi Çöz ana menü (çekmece) yeniden düzeni (yalnız arayüz) — 390px, krem ve koyu, sahte RPC (ağ), veri yazmaz.
 // Çalıştırma: NODE_PATH=/opt/node-tools/node_modules node tests/oz-ui/p28-cekmece.test.js
 // Doğrulanan: sıra (üst satır → Başlat → tek satır kategori şeridi → İşlerim 2x2 → Çalışma alanlarım → [Yönetim] → alt çubuk); tek "Çıkış yap" üst satırda
-// (≥44px, ikon+yazı, aynı logoutUser), giriş yapmamışta aynı yerde "Giriş yap" (openAuthModal); tüm eski öğeler ve işlevleri (onclick aynı) erişilebilir;
+// (≥44px, ikon+yazı, aynı logoutUser), giriş yapmamışta (P28b) üst satırın altında eşit "Giriş yap" / "Kayıt ol" (openAuthModal login/signup); tüm eski öğeler ve işlevleri (onclick aynı) erişilebilir;
 // kutular ≥88px, rozet yalnız mevcut okumadan; Yönetim kartı yalnız PF.roles.is_admin, rozet PF._admN; alt çubuk 56px, çekmecenin dibinde, içerikle çakışmaz;
 // "Ayarlar ve hesap" alt listesi alt çubuğun üstünde açılır; Kapat / dışarı dokun / Esc kapatır; yatay taşma yok (yalnız şerit kayar).
 const {chromium,open}=require('./harness.js');
@@ -64,7 +64,15 @@ const OLD=[['showMine()','Benim işlerim'],['showFavorites()','Favorilerim'],['s
   await openD(false,null,null);await p.keyboard.press('Escape');ok(await p.evaluate(()=>!document.getElementById('appDrawer').classList.contains('on')&&document.body.style.overflow===''),T+' Esc kapatır, sayfa kaydırması geri gelir');
   // giriş yapmamış
   await p.evaluate(()=>{window.__ses=localStorage.getItem('isimi_coz_auth_session');localStorage.removeItem('isimi_coz_auth_session')});await openD(false,null,null);g=await G();
-  ok(!g.outs.length&&g.ins.length===1&&g.ins[0].inHead&&g.ins[0].h>=44&&/openAuthModal\('login'\)/.test(g.ins[0].on),T+' giriş yapmamış: üst satırda Giriş yap, Çıkış yok: '+JSON.stringify([g.outs,g.ins]));
+  /* P28b: giriş yapmamış — üst satırda yalnız logo + Kapat; altında eşit iki düğme Giriş yap (dolu) + Kayıt ol (çerçeveli), ≥48px, aynı işlevler */
+  ok(!g.outs.length&&g.ins.length===1&&!g.ins[0].inHead&&g.ins[0].h>=48&&/openAuthModal\('login'\)/.test(g.ins[0].on),T+' giriş yapmamış: Giriş yap üst satırın altında, Çıkış yok: '+JSON.stringify([g.outs,g.ins]));
+  r=await p.evaluate(()=>{const R=e=>e.getBoundingClientRect();const w=document.getElementById('drwGuest'),h=document.querySelector('#appDrawer .appDrawerHead');const b=[...w.querySelectorAll('button')];
+   return {head:[...h.querySelectorAll('button')].filter(x=>R(x).height).map(x=>x.textContent.trim()),after:R(w).top>=R(h).bottom-1&&w.previousElementSibling===h,b:b.map(x=>({t:x.textContent.trim(),on:x.getAttribute('onclick'),h:Math.round(R(x).height),w:Math.round(R(x).width),bg:getComputedStyle(x).backgroundColor,bd:getComputedStyle(x).borderTopWidth}))}});
+  ok(r.after&&JSON.stringify(r.head.slice(1))==='["Kapat"]'&&r.b.length===2&&r.b[0].t==='Giriş yap'&&r.b[1].t==='Kayıt ol'&&/openAuthModal\('signup'\)/.test(r.b[1].on)&&r.b.every(x=>x.h>=48)&&Math.abs(r.b[0].w-r.b[1].w)<=1&&r.b[0].bg!=='rgba(0, 0, 0, 0)'&&r.b[1].bg==='rgba(0, 0, 0, 0)'&&r.b[1].bd==='2px',
+   T+' giriş yapmamış: üst satırda logo + Kapat, altında eşit Giriş yap (dolu) / Kayıt ol (çerçeveli): '+JSON.stringify(r));
+  for(const [i,m] of [[0,'login'],[1,'signup']]){await p.evaluate(()=>{window.__am=[];window.__oam=window.openAuthModal;window.openAuthModal=function(x){window.__am.push(x)}});if(i)await openD(false,null,null);
+   await p.evaluate(i=>document.querySelectorAll('#drwGuest button')[i].click(),i);ok(JSON.stringify(await p.evaluate(()=>window.__am))==='["'+m+'"]',T+' giriş yapmamış: düğme '+m+' → openAuthModal');await p.evaluate(()=>{window.openAuthModal=window.__oam})}
+  await openD(false,null,null);
   ok(g.sw<=0,T+' giriş yapmamış taşma yok');
   await p.evaluate(()=>{closeAppDrawer();localStorage.setItem('isimi_coz_auth_session',window.__ses);updateAuthArea()});
  }
