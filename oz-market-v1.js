@@ -1997,6 +1997,12 @@ D.addEventListener('change',function(e){var el=e.target;if(el&&el.type==='file'&
 var AP_STEPS=['Mağaza','Belgeler','Kargo','Gönder'];
 function apBar(step,dn,has){return '<nav class="ozApBar" aria-label="Başvuru adımları"><ol>'+AP_STEPS.map(function(l,k){var i=k+1,cls=i===step?'cur':dn[i]?'done':'';
   return '<li class="'+cls+'"><button type="button" data-a="nav" data-k="sellerApply" data-tab="'+i+'"'+(i===step?' aria-current="step"':'')+(!has&&i>1?' disabled':'')+' aria-label="'+i+'. adım: '+l+(dn[i]?' (tamam)':'')+'"><span class="n" aria-hidden="true">'+(dn[i]&&i!==step?'✓':i)+'</span><span class="l">'+l+'</span></button></li>'}).join('')+'</ol><p class="ozApL">Adım '+step+' / 4 · '+AP_STEPS[step-1]+'</p></nav>'}
+/* P31: TCKN (11 hane) / vergi no (10 hane) algoritma kontrolü — yalnız rakam. Formda yalnız kayıtlı numaradan farklı yeni numaraya uygulanır (sunucu kuralıyla aynı). */
+function ozTaxOk(s){s=String(s||'');if(!/^\d+$/.test(s))return false;var d=s.split('').map(Number),i,t=0;
+  if(d.length===11){if(d[0]===0)return false;var d10=(((d[0]+d[2]+d[4]+d[6]+d[8])*7-(d[1]+d[3]+d[5]+d[7]))%10+10)%10;for(i=0;i<10;i++)t+=d[i];return d10===d[9]&&t%10===d[10]}
+  if(d.length===10){for(i=0;i<9;i++){var a=(d[i]+(9-i))%10,v=(a*Math.pow(2,9-i))%9;if(a!==0&&v===0)v=9;t+=v}return (10-(t%10))%10===d[9]}
+  return false}
+OZ.ozTaxOk=ozTaxOk;
 /* P20: form alanı hatası alanın altında (kırmızı + ikon); doğrulama kuralları ve metinleri saveStore'da aynen */
 /* P20 düzeltme: eksik/hatalı alanların HEPSİ işaretlenir (kırmızı çerçeve + alan altında kısa metin), üstte "N alan eksik: …" özeti,
    ilk alana ortalı kaydırma + odak. Koşullar saveStore'daki doğrulamayla birebir aynı (kayıt kuralı değişmez; yalnız gösterim). */
@@ -2005,6 +2011,7 @@ function storeIssues(){var g=function(k){return val('ozS_'+k)};var lock=sellerLo
   if(!lock&&qs('input[name=ozTax]')&&!qs('input[name=ozTax]:checked'))add('taxset','Vergi durumu','Vergi durumu seçilmeli.');
   if(!lock&&g('legal_name').length<3)add('legal_name','Ad soyad / unvan','Ad soyad veya ticari unvan yazılmalı.');
   if(!lock&&!/^\d{10,11}$/.test(g('tax_no')))add('tax_no','TCKN / Vergi no','TCKN 11, vergi no 10 hane olmalı.');
+  else if(!lock&&g('tax_no')!==String((SELLER.data||{}).tax_no||'')&&!ozTaxOk(g('tax_no')))add('tax_no','TCKN / Vergi no','TC kimlik / vergi numarası geçersiz; lütfen kontrol et.');
   if(!/^TR\d{24}$/.test(ibanClean(g('iban'))))add('iban','IBAN','TR ile başlayan 26 karakterlik IBAN yazılmalı.');
   if(g('iban_holder').length<3)add('iban_holder','Hesap sahibi adı','Hesap sahibi adı yazılmalı.');
   var dg=g('phone').replace(/\D/g,'');if(dg.length<10||dg.length>13)add('phone','Telefon','Geçerli bir telefon yazılmalı.');
@@ -2526,6 +2533,7 @@ async function saveStore(btn){
   var err='';var hd=Number(g('handling_days'));var fs=g('free_ship')?tlToKurus(g('free_ship')):null;
   if(g('display_name').length<3)err='Mağaza adını yaz.';else if(!lock&&qs('input[name=ozTax]')&&!taxEl)err='Vergi durumunu seç.';else if(!lock&&g('legal_name').length<3)err='Ad soyad veya ticari unvanı yaz.';
   else if(!lock&&!/^\d{10,11}$/.test(g('tax_no')))err='TCKN 11, vergi numarası 10 haneli olmalı.';
+  else if(!lock&&g('tax_no')!==String((SELLER.data||{}).tax_no||'')&&!ozTaxOk(g('tax_no')))err='TC kimlik / vergi numarası geçersiz; lütfen kontrol et.';
   else if(!/^TR\d{24}$/.test(iban))err='TR ile başlayan 26 karakterlik IBAN yaz.';
   else if(g('iban_holder').length<3)err='Hesap sahibi adını yaz.';
   else{var dg=g('phone').replace(/\D/g,'');if(dg.length<10||dg.length>13)err='Geçerli bir telefon numarası yaz.';else if(!g('city'))err='İl yaz.';else if(!g('ship_from_city'))err='Kargonun çıkacağı ili yaz.';else if(!(hd>=1&&hd<=14))err='Hazırlık süresi 1-14 iş günü olmalı.';else if(fs!==null&&!(fs>0))err='Kargo bedava tutarını doğru yaz (örn. 1.000 veya 1.000,50) ya da boş bırak.'}

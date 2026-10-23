@@ -116,6 +116,16 @@ const SHOTS=process.env.P20_SHOTS||'';if(SHOTS)fs.mkdirSync(SHOTS,{recursive:tru
   ok(r.lab==='Adım 1 / 4 · Mağaza'&&r.f==='ozS_tax_no'&&r.inv==='true'&&/TCKN 11/.test(r.m||''),'['+th+'] 4. adım → Mağaza: 1. adım, TC/vergi no işaretli + odakta: '+JSON.stringify(r));
   await p.evaluate(()=>{window.__OZ_FX.T.oz_sellers[0].tax_no='1234567890'});await go('sellerApply',{tab:'2'});
   ok(await p.evaluate(()=>document.querySelector('#ozRoot .ozApL').textContent==='Adım 2 / 4 · Belgeler'),'['+th+'] 4. adım: eksik satır → 2. adım');
+  // P31: TCKN/VKN algoritma kontrolü (ozTaxOk) + formda yalnız kayıtlıdan farklı yeni numaraya uygulanır
+  r=await p.evaluate(()=>['10000000146','10000000147','1234567890','1234567891','11111111111'].map(x=>OZ.ozTaxOk(x)));
+  ok(JSON.stringify(r)==='[true,false,true,false,false]','['+th+'] ozTaxOk örnekleri: '+JSON.stringify(r));
+  const taxTry=async v=>{await go('sellerApply',{tab:'1'});await p.evaluate(v=>{const i=document.getElementById('ozS_tax_no');i.value=v;i.dispatchEvent(new Event('input',{bubbles:true}));document.querySelector('#ozRoot [data-a=storeSave]').click()},v);await p.waitForTimeout(700);
+   return p.evaluate(()=>({m:(document.querySelector('#ozRoot .ozFErr[data-for=tax_no]')||{}).textContent||'',inv:document.getElementById('ozS_tax_no').getAttribute('aria-invalid')}))};
+  r=await taxTry('12345678901');ok(/TC kimlik \/ vergi numarası geçersiz; lütfen kontrol et\./.test(r.m)&&r.inv==='true','['+th+'] uydurma numara: tax_no alanında hata: '+JSON.stringify(r));await p.evaluate(()=>{const i=document.getElementById('ozS_tax_no');i.scrollIntoView({block:'center'})});await shot(p,'oz-p31-tax-'+th);
+  r=await taxTry('1234567890');ok(!/geçersiz/.test(r.m),'['+th+'] geçerli VKN: tax_no hatası yok: '+JSON.stringify(r));
+  await p.evaluate(()=>{window.__OZ_FX.T.oz_sellers[0].tax_no='12345678901'});r=await taxTry('12345678901');
+  ok(!/geçersiz/.test(r.m),'['+th+'] kayıtlı numara değişmediyse algoritma kontrolü çalışmaz: '+JSON.stringify(r));
+  await p.evaluate(()=>{window.__OZ_FX.T.oz_sellers[0].tax_no='1234567890'});
   // A6: inceleniyor / reddedildi
   await p.evaluate(()=>{window.__OZ_FX.R.oz_seller_dashboard=Object.assign({},window.__OZ_FX.R.oz_seller_dashboard,{status:'pending',status_reason:null})});await go('seller',{});
   r=await p.evaluate(()=>{const c=document.querySelector('#ozRoot .ozStC');return c?{cls:c.className,tl:[...c.querySelectorAll('.ozApTl li')].map(l=>l.className+':'+l.textContent),bd:getComputedStyle(c).borderTopColor}:null});
