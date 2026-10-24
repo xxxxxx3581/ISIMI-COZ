@@ -2596,10 +2596,12 @@ function crDocsCard(d){
         (t.has_expiry?'<label>Geçerlilik bitiş tarihi</label><input type="date" value="'+E(t.expires_on||'')+'">':'')+
         '<button type="button" class="fb block" style="margin-top:8px" onclick="foodCrDocUp(this,\''+E(t.code)+'\')">'+(t.status?'Yeniden yükle':'Yükle')+'</button></div></div>'}).join('')+'</div>';
 }
+/* Yükleme sonrası yalnız kart yenilenir (durumlar tekrar çekilir); okunamazsa kart olduğu gibi kalır */
+async function crDocsRefresh(){let d;try{d=await RPC('pf_my_courier_docs')}catch(e){return}const el=document.getElementById('crDocs');if(el)el.outerHTML=crDocsCard(d)}
 window.foodCrDocUp=async function(btn,code){
   const row=btn.closest('.fdCrDoc');const f=row&&row.querySelector('input[type=file]').files[0];if(!f){toast('Dosya seç.','warn');return}
   const ex=(row.querySelector('input[type=date]')||{}).value||null;
-  await once('crDoc'+code,btn,async()=>{try{await PF.uploadDocument('courier',UID(),code,f,ex);toast('Belge yüklendi, incelemeye gönderildi');showFoodCourier()}catch(e){toast(errMsg(e),'err')}});
+  await once('crDoc'+code,btn,async()=>{try{await PF.uploadDocument('courier',UID(),code,f,ex);toast('Belge yüklendi, incelemeye gönderildi');crDocsRefresh()}catch(e){toast(errMsg(e),'err')}});
 };
 async function courierApplication(tok,c){
   let info={status:c.status,review_note:null,applied_at:null,reviewed_at:null};
@@ -2607,15 +2609,20 @@ async function courierApplication(tok,c){
   let docs=null;try{docs=await RPC('pf_my_courier_docs')}catch(e){docs=null}
   if(!alive(tok))return;
   const docOn=!!(docs&&docs.enabled===true);
+  let drawn=false;
   const draw=(st,left)=>{
     const rej=st==='rejected';
-    render(bar('Kurye başvurusu','foodPanelBack()')+roleBar('courier')+
-      '<div class="fdTrackHero'+(rej?' bad':'')+'"><div class="st"><span class="e">'+(rej?'❌':'⏳')+'</span><div><h2>'+(rej?'Başvurun reddedildi':'Başvurun inceleniyor')+'</h2><p>'+(rej?'Bilgilerini güncelleyip tekrar başvurabilirsin.':'İnceleme bitince burada ve bildirimlerde göreceksin.')+'</p></div></div></div>'+
-      '<div class="fdCard"><ol class="fdApply">'+
+    const proc=
         '<li class="done"><i>✓</i><div><b>Başvuru alındı</b><small>'+E(info.display_name||'')+' · '+E(VEH[info.vehicle_type]||'')+(info.applied_at?' · '+E(dt(info.applied_at)):'')+'</small></div></li>'+
         '<li class="'+(rej?'done':'cur')+'"><i>'+(rej?'✓':'<span class="fdSpin" style="width:14px;height:14px"></span>')+'</i><div><b>İnceleniyor</b><small>'+(rej?'İnceleme tamamlandı':left==='manual'?'Platform yönetimi başvurunu inceleyecek':'Demo inceleme'+(left>0?' · yaklaşık '+left+' sn':' · sonuçlanıyor…'))+'</small></div></li>'+
-        '<li class="'+(rej?'bad':'')+'"><i>'+(rej?'✕':'3')+'</i><div><b>'+(rej?'Reddedildi':'Onay')+'</b><small>'+(rej?E(info.review_note||'Gerekçe belirtilmedi.'):'Onaylanınca teslimat almaya başlarsın')+'</small></div></li>'+
-      '</ol></div>'+
+        '<li class="'+(rej?'bad':'')+'"><i>'+(rej?'✕':'3')+'</i><div><b>'+(rej?'Reddedildi':'Onay')+'</b><small>'+(rej?E(info.review_note||'Gerekçe belirtilmedi.'):'Onaylanınca teslimat almaya başlarsın')+'</small></div></li>';
+    /* tick: yalnız süreç listesi güncellenir; Belgelerin kartı (seçilen dosya/tarih) yerinde kalır */
+    const ol=drawn&&document.querySelector('#fdRoot ol.fdApply');
+    if(ol){ol.innerHTML=proc;return}
+    drawn=true;
+    render(bar('Kurye başvurusu','foodPanelBack()')+roleBar('courier')+
+      '<div class="fdTrackHero'+(rej?' bad':'')+'"><div class="st"><span class="e">'+(rej?'❌':'⏳')+'</span><div><h2>'+(rej?'Başvurun reddedildi':'Başvurun inceleniyor')+'</h2><p>'+(rej?'Bilgilerini güncelleyip tekrar başvurabilirsin.':'İnceleme bitince burada ve bildirimlerde göreceksin.')+'</p></div></div></div>'+
+      '<div class="fdCard"><ol class="fdApply">'+proc+'</ol></div>'+
       crDocsCard(docs)+
       (rej?'<button type="button" class="fb pri block" style="margin-top:12px" onclick="foodCourierReapply()">Bilgileri güncelle ve tekrar başvur</button>':'')+
       (docOn?'':'<p class="fdDemo">Bu bir demo iş akışıdır; resmî bir kurye onay süreci değildir. Onay otomatik demo incelemesiyle ya da platform yönetimi tarafından verilir.</p>'));
