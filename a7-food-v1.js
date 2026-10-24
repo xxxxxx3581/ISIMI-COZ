@@ -2580,11 +2580,33 @@ function courierApplyForm(prev){
     '<label>Araç</label><div class="fdChips wrap" id="crV">'+Object.entries(VEH).map(([k,l])=>'<button type="button" class="fdChip'+(k===((prev&&prev.vehicle_type)||'motorbike')?' on':'')+'" data-v="'+k+'">'+l+'</button>').join('')+'</div>'+
     '<div id="crCons"></div><div class="fdErr" id="crE" hidden></div><button type="button" class="fb pri block" style="margin-top:14px" onclick="foodCourierRegister(this)">'+(prev?'Tekrar başvur':'Başvur')+'</button>'+
     '<p class="fdDemo">Bu bir demo iş akışıdır; resmî bir kurye onay süreci değildir.</p></div>');
+  /* Belge süreci açıksa (pf_my_courier_docs.enabled) demo uyarısı gösterilmez; okunamazsa ekran aynen */
+  RPC('pf_my_courier_docs').then(d=>{if(d&&d.enabled===true&&document.getElementById('crN'))qa('#fdRoot .fdDemo').forEach(x=>x.remove())}).catch(()=>{});
 }
+/* Kurye belgeleri: başvuru incelenirken / reddedilince türlere göre yükleme (PF.uploadDocument; durumlar pf_my_courier_docs'tan) */
+const CR_DOC_ST={in_review:['İncelemede','acc'],approved:['Onaylı','ok'],rejected:['Reddedildi','bad'],expired:['Süresi doldu','bad']};
+function crDocsCard(d){
+  if(!d||d.enabled!==true||!pfOn()||!Array.isArray(d.types)||!d.types.length)return '';
+  const n=d.types.filter(t=>t.status==='in_review'||t.status==='approved').length;
+  return '<div class="fdCard" id="crDocs" style="margin-top:12px"><h3 class="fdGrpH">📄 Belgelerin</h3><p class="fdMuted fdSmall" id="crDocsN" style="margin:0 0 4px">'+n+'/'+d.types.length+' belge yüklendi</p>'+
+    d.types.map(t=>{const s=CR_DOC_ST[t.status];const lab=!t.status?'Yüklenmedi':t.status==='rejected'?'Reddedildi: '+(t.reject_reason||'Gerekçe belirtilmedi.'):s?s[0]:String(t.status);
+      return '<div class="fdCrDoc" data-code="'+E(t.code)+'" style="padding:10px 0 4px;border-top:1px solid var(--line)"><div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start"><div style="min-width:0"><b>'+E(t.label||t.code)+'</b>'+
+        (t.description?'<small class="fdMuted fdSmall" style="display:block">'+E(t.description)+'</small>':'')+'</div><span class="fdBadge '+(s?s[1]:'mute')+'" style="white-space:normal;text-align:right">'+E(lab)+'</span></div>'+
+        '<div class="fdForm" style="margin-top:8px"><input type="file" accept="image/*,application/pdf" aria-label="'+E((t.label||t.code)+' dosyası')+'">'+
+        (t.has_expiry?'<label>Geçerlilik bitiş tarihi</label><input type="date" value="'+E(t.expires_on||'')+'">':'')+
+        '<button type="button" class="fb block" style="margin-top:8px" onclick="foodCrDocUp(this,\''+E(t.code)+'\')">'+(t.status?'Yeniden yükle':'Yükle')+'</button></div></div>'}).join('')+'</div>';
+}
+window.foodCrDocUp=async function(btn,code){
+  const row=btn.closest('.fdCrDoc');const f=row&&row.querySelector('input[type=file]').files[0];if(!f){toast('Dosya seç.','warn');return}
+  const ex=(row.querySelector('input[type=date]')||{}).value||null;
+  await once('crDoc'+code,btn,async()=>{try{await PF.uploadDocument('courier',UID(),code,f,ex);toast('Belge yüklendi, incelemeye gönderildi');showFoodCourier()}catch(e){toast(errMsg(e),'err')}});
+};
 async function courierApplication(tok,c){
   let info={status:c.status,review_note:null,applied_at:null,reviewed_at:null};
   try{const r=await Q('GET','food_couriers?select=status,review_note,applied_at,reviewed_at,display_name,phone,vehicle_type&user_id=eq.'+UID());if(r&&r[0])info=Object.assign(c,r[0])}catch(e){}
+  let docs=null;try{docs=await RPC('pf_my_courier_docs')}catch(e){docs=null}
   if(!alive(tok))return;
+  const docOn=!!(docs&&docs.enabled===true);
   const draw=(st,left)=>{
     const rej=st==='rejected';
     render(bar('Kurye başvurusu','foodPanelBack()')+roleBar('courier')+
@@ -2594,8 +2616,9 @@ async function courierApplication(tok,c){
         '<li class="'+(rej?'done':'cur')+'"><i>'+(rej?'✓':'<span class="fdSpin" style="width:14px;height:14px"></span>')+'</i><div><b>İnceleniyor</b><small>'+(rej?'İnceleme tamamlandı':left==='manual'?'Platform yönetimi başvurunu inceleyecek':'Demo inceleme'+(left>0?' · yaklaşık '+left+' sn':' · sonuçlanıyor…'))+'</small></div></li>'+
         '<li class="'+(rej?'bad':'')+'"><i>'+(rej?'✕':'3')+'</i><div><b>'+(rej?'Reddedildi':'Onay')+'</b><small>'+(rej?E(info.review_note||'Gerekçe belirtilmedi.'):'Onaylanınca teslimat almaya başlarsın')+'</small></div></li>'+
       '</ol></div>'+
+      crDocsCard(docs)+
       (rej?'<button type="button" class="fb pri block" style="margin-top:12px" onclick="foodCourierReapply()">Bilgileri güncelle ve tekrar başvur</button>':'')+
-      '<p class="fdDemo">Bu bir demo iş akışıdır; resmî bir kurye onay süreci değildir. Onay otomatik demo incelemesiyle ya da platform yönetimi tarafından verilir.</p>');
+      (docOn?'':'<p class="fdDemo">Bu bir demo iş akışıdır; resmî bir kurye onay süreci değildir. Onay otomatik demo incelemesiyle ya da platform yönetimi tarafından verilir.</p>'));
   };
   window.foodCourierReapply=()=>courierApplyForm(info);
   if(info.status==='rejected')return draw('rejected',0);
