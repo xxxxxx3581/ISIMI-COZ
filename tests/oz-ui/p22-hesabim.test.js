@@ -3,7 +3,7 @@
 // Sıra: profil (avatar harfi, ad, e-posta, yalnız mevcut rol etiketleri) → Siparişlerim/Favorilerim (≥52px; P42 öncesi ≥76) → Çalışma alanlarım (yalnız mevcut
 // paneller; Satıcı yeşil, İşletme amber, Kurye mavi, Yönetim lacivert çerçeve; ≥52px (P42 öncesi ≥64); renk + yazı) → Hesap listesi → Açık/Koyu seçici + küçük
 // kırmızı çerçeveli "Çıkış yap". Mevcut bağlantılar erişilebilir (satıcı ol, işletme ekle, kurye ol, yönetim, İşimi Çöz'e dön). Metin kontrastı ≥4.5,
-// dokunma ≥44px, yatay taşma yok, içerik sonu alt menünün üstünde.
+// dokunma ≥44px, yatay taşma yok, içerik sonu alt menünün üstünde. P42: İşimi Çöz profilinde uzun ad + %130 yazıda Düzenle/e-posta çakışmaz.
 const {chromium,open,enter,overflow}=require('./harness.js');
 const fs=require('fs'),path=require('path');
 const SHOTS=process.env.P22_SHOTS||'';if(SHOTS)fs.mkdirSync(SHOTS,{recursive:true});
@@ -79,6 +79,20 @@ const AUDIT=root=>{const L=c=>{const m=c.match(/[\d.]+/g).map(Number);const f=v=
    ok(!st.errors.length,'['+th+'] Yemek sayfa hatası: '+st.errors.join(' | '));
    await ctx.close();
   }
+ }
+ /* P42: İşimi Çöz profil kartı — ad 40 karakter + html font-size %130: Düzenle ile e-posta kutuları çakışmaz, Düzenle ≥44px (krem + koyu) */
+ for(const light of [true,false]){const th=light?'krem':'koyu';
+  const {ctx,p,st}=await open(br,{w:390,h:844,visible:true});
+  await p.evaluate(t=>{try{localStorage.setItem('isimi_oz_theme',t)}catch(e){}const s=JSON.parse(localStorage.getItem('isimi_coz_auth_session'));
+   s.user.email='cok.uzun.bir.eposta.adresi.ornegi@ornek-alan-adi.com.tr';s.user.user_metadata=Object.assign({},s.user.user_metadata,{full_name:'Ayşe Gülsüm Karadenizlioğlu Yıldırımtepe'});
+   localStorage.setItem('isimi_coz_auth_session',JSON.stringify(s));document.documentElement.style.fontSize='130%'},light?'light':'dark');
+  await p.evaluate(()=>{showHome();showAccount()});await p.waitForTimeout(900);
+  const r=await p.evaluate(()=>{const C=document.querySelector('#app .hmAccMe');const em=C&&C.querySelector('.em'),ed=C&&C.querySelector('.ed'),nm=C&&C.querySelector('.r1 .tx b');if(!em||!ed)return null;
+   const a=em.getBoundingClientRect(),b=ed.getBoundingClientRect();const x=a.left<b.right&&b.left<a.right&&a.top<b.bottom&&b.top<a.bottom;
+   return {nl:nm&&nm.textContent.length,fs:getComputedStyle(document.documentElement).fontSize,hit:x,edH:Math.round(b.height),em:[Math.round(a.left),Math.round(a.right)],ed:[Math.round(b.left),Math.round(b.right)],in:b.right<=C.getBoundingClientRect().right+1}});
+  ok(r&&r.nl===40&&r.fs==='20.8px'&&!r.hit&&r.edH>=44&&r.in,'['+th+'] İşimi Çöz: uzun ad + %130 yazıda Düzenle e-postayla çakışmaz, ≥44px: '+JSON.stringify(r));
+  ok((await overflow(p))<=0,'['+th+'] İşimi Çöz (%130) yatay taşma');
+  ok(!st.errors.length,'['+th+'] İşimi Çöz sayfa hatası: '+st.errors.join(' | '));await ctx.close();
  }
  await br.close();
  if(shots.length)console.log('ekran görüntüleri ('+shots.length+'): '+SHOTS);

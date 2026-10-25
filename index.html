@@ -1829,7 +1829,7 @@ html:root .hmAcc .hmMe2 .hmRoles.ld{display:flex;min-height:54px}
 html:root .hmAcc .hmMe2 .hmRoleT{display:inline-flex;align-items:center;height:24px;box-sizing:border-box;line-height:1}
 /*P27-BITIS*/
 /*P42-BASLA*/ /* Paket 42: üç Hesabım ekranı (Özüne Dön, Yemek, İşimi Çöz) 390px'te sıkı — yalnız görünüm; renkler/etiketler aynı, dokunma ≥44px.
-   Profil: avatar 56 (İşimi Çöz 52), küçük rol etiketleri; İşimi Çöz'de Çıkış yap en üst satırda, Düzenle e-posta satırının sağında (küçük metin düğmesi, ≥44px).
+   Profil: avatar 56 (İşimi Çöz 52), küçük rol etiketleri; İşimi Çöz'de Çıkış yap en üst satırda, Düzenle e-posta satırında sağda (akışta, küçük metin düğmesi, ≥44px).
    Kısayollar yatay (ikon solda) ~56px; çalışma alanı kartları 56px / aralık 8 / padding 8x12; bölüm boşlukları ~%30 az. */
 html:root .ozMe{margin:0 0 10px;gap:12px}html:root .ozMe .av{width:56px;height:56px;font-size:24px}html:root .ozMe b{font-size:18px}
 html:root .ozRoles{gap:5px;margin-top:3px}html:root .ozRoleT{padding:2px 8px;font-size:11.5px}
@@ -1844,10 +1844,11 @@ html:root .ozWs{min-height:56px;margin:0 0 8px;padding:8px 12px}html:root .ozWs 
 .fdwAcc .fdSecH{margin:12px 0 7px}.fdwAcc .fdwWsL,.fdwAcc .fdwAccEnd{margin-bottom:10px}
 .fdwAcc .fdwWs{min-height:56px;margin:0 0 8px;padding:8px 12px}.fdwAcc .fdwWs small{font-size:12px}
 html:root .hmAcc .hmAccT{margin:4px 0 10px}html:root .hmAcc .hmAccH{margin:11px 0 6px}
-html:root .hmAcc .hmAccMe.hmMe2{position:relative;padding:10px 12px;margin:0 0 11px}
+html:root .hmAcc .hmAccMe.hmMe2{padding:10px 12px;margin:0 0 11px}
 html:root .hmAcc .hmMe2 .r1{min-height:52px}
-html:root .hmAcc .hmMe2 .acts .ed{position:absolute;right:8px;top:64px;min-height:44px;padding:0 6px;border:0;border-radius:10px;text-decoration:underline;text-underline-offset:3px}
-html:root .hmAcc .hmMe2 .r2{margin-top:2px}html:root .hmAcc .hmMe2 .r2 .em{min-height:44px;display:flex;align-items:center;padding-right:76px;box-sizing:border-box}
+html:root .hmAcc .hmMe2 .r2{margin-top:2px}html:root .hmAcc .hmMe2 .emRow{display:flex;align-items:center;gap:8px;min-height:44px}
+html:root .hmAcc .hmMe2 .r2 .em{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html:root .hmAcc .hmMe2 .emRow .ed{flex:0 0 auto;min-height:44px;height:auto;padding:0 6px;border:0;border-radius:10px;text-decoration:underline;text-underline-offset:3px}
 html:root .hmAcc .hmMe2 .hmRoles{margin-top:0}
 html:root .hmAcc .hmMe2 .hmRoles{gap:4px}html:root .hmAcc .hmMe2 .hmRoles.ld{min-height:22px}html:root .hmAcc .hmMe2 .hmRoleT{height:22px;padding:0 7px;font-size:11px}
 html:root .hmAcc .hmAccQ{gap:8px;margin:0 0 4px}
@@ -4136,8 +4137,8 @@ function hmAccountHtml(u){
   var rb=hmRoleBits(u);var tags=rb.tags,wsH=rb.ws;
   var th=hmThemeGet()==='dark';
   return '<div class="hmAcc"><div class="hmAccT">Hesabım</div>'+
-    /* P27b: iki katman — üstte avatar + ad + (Çıkış yap, Düzenle); altında tam genişlik e-posta (kırpılmaz) ve rol etiketleri (alt satıra geçer) */
-    '<div class="hmAccMe hmMe2"><div class="r1"><span class="av">'+E(ini)+'</span><span class="tx"><b>'+E(name||'Hesabım')+'</b></span><span class="acts"><button type="button" class="hmAccOut2" data-k="out" onclick="hmAcc(this.dataset.k)">'+hmAccIc(IC.out)+'<span>Çıkış yap</span></button><button type="button" class="ed" data-k="edit" onclick="hmAcc(this.dataset.k)">Düzenle</button></span></div><div class="r2"><small class="em">'+E(mail)+'</small><span class="hmRoles'+(rb.loading&&!tags?' ld':'')+'" id="hmRoles" aria-label="Rollerin">'+tags+'</span></div></div>'+
+    /* P27b: iki katman — üstte avatar + ad + Çıkış yap; altında e-posta satırı (P42: e-posta + Düzenle yan yana, e-posta gerekirse … ile kısalır) ve rol etiketleri */
+    '<div class="hmAccMe hmMe2"><div class="r1"><span class="av">'+E(ini)+'</span><span class="tx"><b>'+E(name||'Hesabım')+'</b></span><span class="acts"><button type="button" class="hmAccOut2" data-k="out" onclick="hmAcc(this.dataset.k)">'+hmAccIc(IC.out)+'<span>Çıkış yap</span></button></span></div><div class="r2"><div class="emRow"><small class="em">'+E(mail)+'</small><button type="button" class="ed" data-k="edit" onclick="hmAcc(this.dataset.k)">Düzenle</button></div><span class="hmRoles'+(rb.loading&&!tags?' ld':'')+'" id="hmRoles" aria-label="Rollerin">'+tags+'</span></div></div>'+
     '<div class="hmAccQ"><button type="button" data-k="orders" onclick="hmAcc(this.dataset.k)">'+hmAccIc(IC.orders)+'<b>Siparişlerim</b></button><button type="button" data-k="favs" onclick="hmAcc(this.dataset.k)">'+hmAccIc(IC.favs)+'<b>Favorilerim</b></button></div>'+
     '<div class="hmAccWsBox'+(rb.loading&&!wsH?' ld':'')+'" id="hmAccWs" aria-live="polite">'+(wsH?'<div class="hmAccH">ÇALIŞMA ALANLARIM</div>'+wsH:rb.loading?'<div class="hmAccH">ÇALIŞMA ALANLARIM</div><div class="hmAccWsPh" aria-hidden="true"></div>':'')+'</div>'+
     '<div class="hmAccH">HESAP</div><div class="hmAccL">'+row('msgs','Mesajlarım')+row('mylist','İlanlarım',true)+row('addr','Adreslerim')+row('bell','Bildirimler')+row('help','Yardım ve destek')+row('privacy','Gizlilik ve KVKK')+row('terms','Kullanım şartları')+row('more','Diğer ayarlar')+'</div>'+
