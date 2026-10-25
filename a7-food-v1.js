@@ -3080,32 +3080,40 @@ window.foodPromoClick=function(id){
   if(p.target_kind==='search'&&p.target_value)return showFoodSearch(p.target_value);
   if(p.venue_id)return showFoodVenue(p.venue_id);
 };
-function promoSlide(p){
+function promoSlide(p,noCta){
   return '<button type="button" class="fdwSl'+(p.image_url?'':' noimg')+'" data-promo="'+E(p.id)+'" onclick="foodPromoClick(\''+E(p.id)+'\')" aria-label="'+E(p.title)+'">'+
     (p.image_url?'<img src="'+E(p.image_url)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">':'')+
-    '<span class="ov">'+(p.sponsored?'<small class="sp">Sponsorlu</small>':'')+'<b>'+E(p.title)+'</b>'+(p.subtitle?'<em>'+E(p.subtitle)+'</em>':'')+(p.cta?'<i>'+E(p.cta)+' ›</i>':'')+'</span></button>';
+    '<span class="ov">'+(p.sponsored?'<small class="sp">Sponsorlu</small>':'')+'<b>'+E(p.title)+'</b>'+(p.subtitle?'<em>'+E(p.subtitle)+'</em>':'')+(p.cta&&!noCta?'<i>'+E(p.cta)+' ›</i>':'')+'</span></button>';
 }
 /* Gerçek içerikli yedek slaytlar: kapak fotoğrafı olan, açık ve puanlı restoranlar (sahte rakam yok) */
 function heroFallback(){
   return HF.rows.filter(v=>v.cover_url&&openNow(v)).sort((a,b)=>(+b.rating_count)-(+a.rating_count)).slice(0,4).map(v=>({id:'',_v:v}));
 }
+const HERO_MS=2000,HERO_RESUME_MS=4000;
 function heroRender(tok){
   const box=document.getElementById('fdwHero');if(!box)return;
   const pr=promosFor('home_hero');
-  const slides=pr.length?pr.map(promoSlide):heroFallback().map(x=>{const v=x._v;const cs=venueCats(v);
+  /* P43: slaytın tamamı tıklanır; "Menüyü gör" / cta düğmesi yok */
+  const slides=pr.length?pr.map(p=>promoSlide(p,1)):heroFallback().map(x=>{const v=x._v;const cs=venueCats(v);
     return '<button type="button" class="fdwSl" onclick="showFoodVenue(\''+E(v.id)+'\')" aria-label="'+E(v.name)+'"><img src="'+E(v.cover_url)+'" alt="" loading="lazy" decoding="async" onerror="this.remove()">'+
-      '<span class="ov"><small>Öne çıkan restoran</small><b>'+E(v.name)+'</b><em>'+E([cs.slice(0,2).join(' · '),etaText(v)].filter(Boolean).join(' · '))+'</em><i>Menüyü gör ›</i></span></button>'});
+      '<span class="ov"><small>Öne çıkan restoran</small><b>'+E(v.name)+'</b><em>'+E([cs.slice(0,2).join(' · '),etaText(v)].filter(Boolean).join(' · '))+'</em></span></button>'});
   if(!slides.length){box.innerHTML='';return}
   box.innerHTML='<div class="fdwHero" aria-roledescription="carousel" aria-label="Kampanyalar ve öne çıkanlar"><div class="tr" id="fdwHeroTr">'+slides.join('')+'</div>'+
     (slides.length>1?'<div class="dots" aria-hidden="true">'+slides.map((_,i)=>'<i class="'+(i?'':'on')+'"></i>').join('')+'</div>':'')+'</div>'+
     (pr.length?'<div class="fdwNoteT">Görseller temsilidir.</div>':'');
   const tr=document.getElementById('fdwHeroTr');if(!tr||slides.length<2){promoSeen();return}
-  let idx=0,user=false,timer=null;const dots=qa('.fdwHero .dots i');
+  let idx=0,hold=false,resumeT=null;const dots=qa('.fdwHero .dots i');
   const upd=()=>{const w=tr.clientWidth||1;idx=Math.round(tr.scrollLeft/w);dots.forEach((d,i)=>d.classList.toggle('on',i===idx))};
   tr.addEventListener('scroll',()=>{clearTimeout(tr._t);tr._t=setTimeout(upd,80)},{passive:true});
-  ['touchstart','pointerdown','wheel'].forEach(ev=>tr.addEventListener(ev,()=>{user=true},{passive:true}));
+  /* P43: 2 sn'de bir geçer; dokunma/kaydırma sırasında durur, parmak kalktıktan 4 sn sonra devam eder; sekme gizliyken geçmez;
+     azaltılmış hareket tercihinde de döner ama animasyonsuz */
+  const pause=()=>{hold=true;clearTimeout(resumeT)},resume=()=>{clearTimeout(resumeT);resumeT=setTimeout(()=>{hold=false},HERO_RESUME_MS)};
+  ['touchstart','pointerdown'].forEach(ev=>tr.addEventListener(ev,pause,{passive:true}));
+  ['touchend','touchcancel','pointerup','pointercancel'].forEach(ev=>tr.addEventListener(ev,resume,{passive:true}));
+  tr.addEventListener('wheel',()=>{pause();resume()},{passive:true});
   const reduce=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
-  if(!reduce){timer=setInterval(()=>{if(user||!document.body.contains(tr))return;idx=(idx+1)%slides.length;tr.scrollTo({left:idx*tr.clientWidth,behavior:'smooth'})},5500);onCleanup(()=>clearInterval(timer))}
+  const timer=setInterval(()=>{if(hold||document.hidden||!document.body.contains(tr))return;idx=(idx+1)%slides.length;tr.scrollTo({left:idx*tr.clientWidth,behavior:reduce?'auto':'smooth'})},HERO_MS);
+  onCleanup(()=>{clearInterval(timer);clearTimeout(resumeT)});
   promoSeen();
 }
 function promoBanner(pl){const p=promosFor(pl)[0];if(!p)return '';return '<div class="fdwMidB">'+promoSlide(p)+'</div>'}
@@ -3932,6 +3940,25 @@ html[data-theme="light"] .fdProd .fdStep button{color:#B8892A}
 .fdProd .rc .ac:has(.fdStep:not([hidden])){top:auto;right:50%;bottom:-14px;transform:translateX(50%)}
 body.fdwFlBarOn #pfxFoot{margin-bottom:calc(174px + env(safe-area-inset-bottom,0px))}
 /*P3-BITIS*/
+/*P43-BASLA*/ /* P43: Yemek Keşfet ilk ekranı sıkı (390x844'te "Tüm restoranlar" ve ilk kart görünür) — yalnız görünüm; renk/etiket/davranış aynı.
+   Adres ve arama satırı 46px, slayt ~92px (cta yok), mutfak daireleri 46px, çipler 34px (görünmez dolguyla dokunma ≥44px), alt indirim şeridi ince ≤56px. */
+.fdwHomeTop{margin:0 0 7px}
+.fdwHomeTop .fdAddr{min-height:46px;padding:4px 12px;gap:8px}.fdwHomeTop .fdAddr small{font-size:11px;line-height:1.25}.fdwHomeTop .fdAddr b{font-size:14px;line-height:1.3}
+body.fdWorld .fdSearchBtn{height:46px;margin:0 0 8px}body.fdWorld .fdSearchBtn .f{height:34px}
+.fdwHero{margin:2px 0 4px}
+.fdwHero .fdwSl{height:clamp(84px,23.5vw,140px)}
+.fdwHero .fdwSl .ov{padding:8px 14px 12px}.fdwHero .fdwSl b{-webkit-line-clamp:1}
+.fdCuis{gap:8px;padding:0 0 2px}
+.fdCuis button{flex:0 0 60px;gap:4px;font-size:12px;min-height:44px}.fdCuis button em{max-width:60px;line-height:1.25}
+.fdCuis button span{width:46px;height:46px;border-radius:14px;font-size:20px}
+.fdwChips{padding:5px 0 8px}
+.fdwChip{position:relative;height:34px}.fdwChip::after{content:'';position:absolute;left:0;right:0;top:-5px;bottom:-8px}
+#fdList .fdSecT{margin:12px 0 7px}
+#fdwFlash .fdwFlash.min{padding:4px 8px 4px 10px}
+#fdwFlash .fdwFlash.min .bar{min-height:44px;gap:8px}
+#fdwFlash .fdwFlash.min .tx{align-self:flex-start;padding-top:3px}#fdwFlash .fdwFlash.min .tx b{font-size:13px;line-height:1.25;-webkit-line-clamp:1}
+#fdwFlash .fdwFlash.min .x{position:relative}#fdwFlash .fdwFlash.min .x::after{content:'';position:absolute;inset:-4px}
+/*P43-BITIS*/
 `;document.head.appendChild(s);
 }
 
