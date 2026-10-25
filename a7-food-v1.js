@@ -3938,7 +3938,8 @@ html[data-theme="light"] .fdProd .fdStep button{color:#B8892A}
 .fdProd .rc .ac{position:absolute;top:-20px;right:-20px;z-index:2}
 .fdProd .rc .ac .fdAdd{margin:0}
 .fdProd .rc .ac:has(.fdStep:not([hidden])){top:auto;right:50%;bottom:-14px;transform:translateX(50%)}
-body.fdwFlBarOn #pfxFoot{margin-bottom:calc(174px + env(safe-area-inset-bottom,0px))}
+/* Keşfet alt boşluk: altbilgi alt menü (+ ince indirim şeridi ~55px) üstünde ~12px payla biter */
+body.fdwFlBarOn #pfxFoot{margin-bottom:calc(130px + env(safe-area-inset-bottom,0px))}body.fdWorld.fdwHome:not(.fdwFlBarOn) #pfxFoot{margin-bottom:calc(77px + env(safe-area-inset-bottom,0px))}
 /*P3-BITIS*/
 /*P43-BASLA*/ /* P43: Yemek Keşfet ilk ekranı sıkı (390x844'te "Tüm restoranlar" ve ilk kart görünür) — yalnız görünüm; renk/etiket/davranış aynı.
    Adres ve arama satırı 46px, slayt ~92px (cta yok), mutfak daireleri 46px, çipler 34px (görünmez dolguyla dokunma ≥44px), alt indirim şeridi ince ≤56px. */
