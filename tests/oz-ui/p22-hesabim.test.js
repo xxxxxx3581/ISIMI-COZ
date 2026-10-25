@@ -1,7 +1,7 @@
 // Paket 22: ortak Hesabım şablonu (yalnız arayüz) — 390px, krem/açık ve koyu tema, sahte veri, ağa çıkmaz.
 // Çalıştırma: NODE_PATH=/opt/node-tools/node_modules node tests/oz-ui/p22-hesabim.test.js   (P22_SHOTS=<klasör> verilirse ekran görüntüsü yazar)
-// Sıra: profil (avatar harfi, ad, e-posta, yalnız mevcut rol etiketleri) → Siparişlerim/Favorilerim (≥76px) → Çalışma alanlarım (yalnız mevcut
-// paneller; Satıcı yeşil, İşletme amber, Kurye mavi, Yönetim lacivert çerçeve; ≥64px; renk + yazı) → Hesap listesi → Açık/Koyu seçici + küçük
+// Sıra: profil (avatar harfi, ad, e-posta, yalnız mevcut rol etiketleri) → Siparişlerim/Favorilerim (≥52px; P42 öncesi ≥76) → Çalışma alanlarım (yalnız mevcut
+// paneller; Satıcı yeşil, İşletme amber, Kurye mavi, Yönetim lacivert çerçeve; ≥52px (P42 öncesi ≥64); renk + yazı) → Hesap listesi → Açık/Koyu seçici + küçük
 // kırmızı çerçeveli "Çıkış yap". Mevcut bağlantılar erişilebilir (satıcı ol, işletme ekle, kurye ol, yönetim, İşimi Çöz'e dön). Metin kontrastı ≥4.5,
 // dokunma ≥44px, yatay taşma yok, içerik sonu alt menünün üstünde.
 const {chromium,open,enter,overflow}=require('./harness.js');
@@ -32,8 +32,8 @@ const AUDIT=root=>{const L=c=>{const m=c.match(/[\d.]+/g).map(Number);const f=v=
     out:(()=>{const o=R.querySelector('.ozOut');return o?{t:o.textContent,bd:getComputedStyle(o).borderTopColor,bg:getComputedStyle(o).backgroundColor,h:Math.round(o.getBoundingClientRect().height)}:null})(),home:!!R.querySelector('[data-a=exit]')}});
   ok(r.order.every((x,i)=>x>=0&&(i===0||x>r.order[i-1]))&&r.outN===1,'['+th+'] Özüne Dön Hesabım sırası (çıkış profil satırında, tek): '+JSON.stringify([r.order,r.outN]));
   ok(r.av==='T'&&r.email==='test@ornek.com'&&JSON.stringify(r.tags)==='["Satıcı · Onaylı","Yönetici"]','['+th+'] profil + yalnız mevcut roller: '+JSON.stringify([r.av,r.email,r.tags]));
-  ok(r.q.length===2&&/^Siparişlerim:/.test(r.q[0])&&/^Favorilerim:/.test(r.q[1])&&r.q.every(x=>+x.split(':')[1]>=76),'['+th+'] iki büyük kutu ≥76px: '+JSON.stringify(r.q));
-  ok(r.ws.length===2&&r.ws[0].t==='Satıcı paneli'&&/^rgb\((31, 107, 69|40, 128, 79)\)$/.test(r.ws[0].bg)&&r.ws[1].t==='Özüne Dön yönetimi'&&r.ws[1].a==='admin'&&r.ws[1].bd!=='rgba(0, 0, 0, 0)'&&r.ws.every(x=>x.h>=64&&x.s),'['+th+'] çalışma alanları (satıcı yeşil, yönetim çerçeveli, ≥64px, alt yazı): '+JSON.stringify(r.ws));
+  ok(r.q.length===2&&/^Siparişlerim:/.test(r.q[0])&&/^Favorilerim:/.test(r.q[1])&&r.q.every(x=>+x.split(':')[1]>=52),'['+th+'] iki kutu ≥52px (P42 sıkı): '+JSON.stringify(r.q));
+  ok(r.ws.length===2&&r.ws[0].t==='Satıcı paneli'&&/^rgb\((31, 107, 69|40, 128, 79)\)$/.test(r.ws[0].bg)&&r.ws[1].t==='Özüne Dön yönetimi'&&r.ws[1].a==='admin'&&r.ws[1].bd!=='rgba(0, 0, 0, 0)'&&r.ws.every(x=>x.h>=52&&x.s),'['+th+'] çalışma alanları (satıcı yeşil, yönetim çerçeveli, ≥52px, alt yazı): '+JSON.stringify(r.ws));
   ok(JSON.stringify(r.acc)==='["Adreslerim","Bildirimler"]'&&r.th===(light?'Açık (krem)':'Koyu')&&r.out&&r.out.t==='Çıkış yap'&&r.out.bg==='rgba(0, 0, 0, 0)'&&r.out.h>=44&&r.home,'['+th+'] hesap listesi, tema seçici, küçük çıkış, İşimi Çöz bağlantısı: '+JSON.stringify([r.acc,r.th,r.out,r.home]));
   let a=await p.evaluate(AUDIT,'#ozRoot');ok(!a.bad.length,'['+th+'] Özüne Dön kontrast ≥4.5: '+a.bad.join(', '));ok(!a.small.length,'['+th+'] Özüne Dön ≥44px: '+a.small.join(', '));
   ok((await overflow(p))<=0,'['+th+'] Özüne Dön yatay taşma');
@@ -61,12 +61,12 @@ const AUDIT=root=>{const L=c=>{const m=c.match(/[\d.]+/g).map(Number);const f=v=
      rows:[...R.querySelectorAll('.fdwList .fdwRow b')].map(x=>x.textContent),th:(R.querySelector('.fdwThSel [aria-pressed=true]')||{}).textContent,out:!!R.querySelector('.fdwOut2[onclick="foodLogout()"]')}});
    if(who==='hepsi'){
     ok(JSON.stringify(r.tags)==='["İşletme sahibi","Kurye","Yönetici"]','['+th+'] Yemek roller: '+JSON.stringify(r.tags));
-    ok(JSON.stringify(r.ws.map(x=>x.t))==='["İşletmem","Kurye","Yemek yönetimi"]'&&r.ws[0].bg==='rgb(154, 100, 16)'&&r.ws[1].bg==='rgb(47, 111, 168)'&&r.ws[2].bd!=='rgba(0, 0, 0, 0)'&&r.ws.every(x=>x.h>=64),'['+th+'] Yemek çalışma alanları (amber/mavi/lacivert): '+JSON.stringify(r.ws));
+    ok(JSON.stringify(r.ws.map(x=>x.t))==='["İşletmem","Kurye","Yemek yönetimi"]'&&r.ws[0].bg==='rgb(154, 100, 16)'&&r.ws[1].bg==='rgb(47, 111, 168)'&&r.ws[2].bd!=='rgba(0, 0, 0, 0)'&&r.ws.every(x=>x.h>=52),'['+th+'] Yemek çalışma alanları (amber/mavi/lacivert): '+JSON.stringify(r.ws));
     ok(r.ws[0].on==='showFoodBusiness()'&&r.ws[1].on==='showFoodCourier()'&&r.ws[2].on==='showFoodAdmin()','['+th+'] Yemek çalışma alanları aynı işlevler');
    }else{
     ok(!r.tags.length&&!r.ws.length&&r.rows.includes('İşletme ekle')&&r.rows.includes('Kurye ol'),'['+th+'] Yemek: panel yoksa kart yok, işletme ekle / kurye ol "Daha fazla"da: '+JSON.stringify(r));
    }
-   ok(r.q.length===2&&r.q.every(x=>+x.split(':')[1]>=76),'['+th+'] Yemek iki büyük kutu ≥76px: '+JSON.stringify(r.q));
+   ok(r.q.length===2&&r.q.every(x=>+x.split(':')[1]>=52),'['+th+'] Yemek iki kutu ≥52px (P42 sıkı): '+JSON.stringify(r.q));
    ok(['Adreslerim','Kuponlarım','Bildirimler','Yardım ve destek','Hesap ve güvenlik'].every(x=>r.rows.includes(x))&&r.rows.includes('İşimi Çöz’e dön')&&r.out&&r.th===(light?'Açık':'Koyu'),'['+th+'] Yemek hesap listesi, tema, çıkış: '+JSON.stringify([r.rows,r.th,r.out]));
    a=await p.evaluate(AUDIT,'#fdRoot');ok(!a.bad.length,'['+th+'/'+who+'] Yemek kontrast ≥4.5: '+a.bad.join(', '));ok(!a.small.length,'['+th+'/'+who+'] Yemek ≥44px: '+a.small.join(', '));
    ok((await overflow(p))<=0,'['+th+'] Yemek yatay taşma');
