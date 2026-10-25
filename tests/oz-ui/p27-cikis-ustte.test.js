@@ -2,6 +2,7 @@
 // Çalıştırma: NODE_PATH=/opt/node-tools/node_modules node tests/oz-ui/p27-cikis-ustte.test.js
 // Doğrulanan: düğme profil satırında ve metnin sağında, sayfada tek "Çıkış yap", ≥44px, ikon + yazı, kırmızı çerçeveli/saydam, yazı kontrastı ≥4.5;
 // tıklanınca mevcut çıkış işlevi (hmAcc('out') / Özüne Dön ozLogout onayı / foodLogout) çağrılır; uzun e-posta kısalır, düğme kartın içinde kalır, yatay taşma yok.
+// P42b: İşimi Çöz'de Düzenle e-posta satırında (.emRow, ≥44px); normal e-posta 390px'te kısalmaz, çok uzun e-posta … ile kısalır ve Düzenle ile çakışmaz.
 const {chromium,open,enter,overflow}=require('./harness.js');
 const LONG='cok.uzun.bir.eposta.adresi.ornegi.icin.yazildi@uzun-alan-adi-ornek.com.tr';
 /* sayfa içi ölçüm: profil satırı + çıkış düğmesi */
@@ -33,15 +34,21 @@ const M=([row,btn,root])=>{const L=c=>{const m=c.match(/[\d.]+/g).map(Number);co
   /* P27b: 360 ve 390px'te uzun e-posta + rol etiketleri: kesik yok, taşma yok, düğmeler ≥44px */
   await p.evaluate(()=>{const o=window.supabaseAuthRequest;window.supabaseAuthRequest=async function(m,pth){if(pth==='rpc/food_whoami')return {venues:[{id:'v1',name:'Lezzet Durağı',role:'owner'}],courier:{status:'approved'},is_admin:false};return o.apply(this,arguments)};HM_ROLES.uid=null;HM_ROLES.state=null});
   for(const w of [360,390]){await p.setViewportSize({width:w,height:844});await p.evaluate(()=>{showHome();showAccount()});await p.waitForTimeout(1700);
-   const k=await p.evaluate(()=>{const C=document.querySelector('#app .hmAccMe');const cr=C.getBoundingClientRect();const em=C.querySelector('.r2 .em');const tg=[...C.querySelectorAll('.hmRoleT')];const rl=C.querySelector('#hmRoles');
-    return {em:em&&em.textContent,emClip:!em||em.scrollWidth>em.clientWidth+1||getComputedStyle(em).textOverflow==='ellipsis'&&em.scrollWidth>em.clientWidth,
+   const k=await p.evaluate(()=>{const C=document.querySelector('#app .hmAccMe');const cr=C.getBoundingClientRect();const em=C.querySelector('.r2 .em'),ed=C.querySelector('.r2 .emRow .ed');const ea=em&&em.getBoundingClientRect(),eb=ed&&ed.getBoundingClientRect();const tg=[...C.querySelectorAll('.hmRoleT')];const rl=C.querySelector('#hmRoles');
+    return {em:em&&em.textContent,ell:!!em&&em.scrollWidth>em.clientWidth&&getComputedStyle(em).textOverflow==='ellipsis',emIn:!!ea&&ea.left>=cr.left&&ea.right<=cr.right+1,
+     hit:!ea||!eb||ea.left<eb.right&&eb.left<ea.right&&ea.top<eb.bottom&&eb.top<ea.bottom,edH:eb?Math.round(eb.height):0,outR1:!!C.querySelector('.r1 .hmAccOut2'),edR1:!!C.querySelector('.r1 .ed'),
      tags:tg.map(t=>{const r=t.getBoundingClientRect();return {t:t.textContent,clip:t.scrollWidth>t.clientWidth+1||r.right>cr.right-1||r.left<cr.left}}),rlClip:rl.scrollWidth>rl.clientWidth+1,
-     btn:[...C.querySelectorAll('.r1 button')].map(b=>Math.round(b.getBoundingClientRect().height)),order:!!C.querySelector('.r1 .hmAccOut2')&&C.querySelector('.r1').compareDocumentPosition(C.querySelector('.r2'))&Node.DOCUMENT_POSITION_FOLLOWING}});
-   ok(k.em===LONG&&!k.emClip,'['+th+' '+w+'] İşimi Çöz: uzun e-posta tam görünür (kırpma yok): '+JSON.stringify([k.em,k.emClip]));
+     btn:[...C.querySelectorAll('.r1 button')].map(b=>Math.round(b.getBoundingClientRect().height)),/* P42b: Düzenle e-posta satırında */order:!!C.querySelector('.r1 .hmAccOut2')&&C.querySelector('.r1').compareDocumentPosition(C.querySelector('.r2'))&Node.DOCUMENT_POSITION_FOLLOWING}});
+   /* P42b: çok uzun e-posta metni aynen, satırda … ile kısalır, kart dışına taşmaz ve Düzenle ile çakışmaz */
+   ok(k.em===LONG&&k.ell&&k.emIn&&!k.hit,'['+th+' '+w+'] İşimi Çöz: çok uzun e-posta … ile kısalır, Düzenle ile çakışmaz: '+JSON.stringify([k.em,k.ell,k.emIn,k.hit]));
    ok(k.tags.length>=3&&k.tags.every(x=>!x.clip)&&!k.rlClip,'['+th+' '+w+'] İşimi Çöz: rol etiketleri kesilmez ('+k.tags.length+'): '+JSON.stringify(k.tags));
-   ok(k.btn.length===2&&k.btn.every(h=>h>=44)&&k.order,'['+th+' '+w+'] İşimi Çöz: Çıkış/Düzenle üst katmanda ≥44px, e-posta+roller altında: '+JSON.stringify(k.btn));
+   ok(k.outR1&&k.btn.length===1&&k.btn[0]>=44&&!k.edR1&&k.edH>=44&&k.order,'['+th+' '+w+'] İşimi Çöz: Çıkış yap üst satırda (.r1) ≥44px, Düzenle e-posta satırında (.emRow) ≥44px, e-posta+roller altında: '+JSON.stringify([k.btn,k.edH,k.outR1,k.edR1]));
    ok((await overflow(p))<=0,'['+th+' '+w+'] İşimi Çöz yatay taşma');}
   await p.setViewportSize({width:390,height:844});
+  /* P42b: normal e-posta 390px'te kısalmaz */
+  await p.evaluate(()=>{const s=JSON.parse(localStorage.getItem('isimi_coz_auth_session'));s.user.email='ferhaterkan3547@gmail.com';s.user.user_metadata=Object.assign({},s.user.user_metadata,{full_name:'Ferhat Erkan'});localStorage.setItem('isimi_coz_auth_session',JSON.stringify(s));showHome();showAccount()});await p.waitForTimeout(900);
+  {const n=await p.evaluate(()=>{const e=document.querySelector('#app .hmAccMe .r2 .em');return e?{t:e.textContent,sw:e.scrollWidth,cw:e.clientWidth}:null});
+   ok(n&&n.t==='ferhaterkan3547@gmail.com'&&n.sw<=n.cw,'['+th+'] İşimi Çöz: normal e-posta 390px\'te kısalmaz: '+JSON.stringify(n))}
   ok(await p.evaluate(()=>{const e=document.querySelector('#app .hmAccEnd');return !!e&&!e.querySelector('[data-k=out]')&&!!e.querySelector('.hmAccTh')}),'['+th+'] İşimi Çöz: altta çıkış yok, tema seçici duruyor');
   ok(await p.evaluate(()=>{const R=document.querySelector('#app .hmAcc');const me=R.querySelector('.hmAccMe .ed');return !!me&&me.getBoundingClientRect().height>=44}),'['+th+'] İşimi Çöz: Düzenle duruyor, ≥44px');
   await p.evaluate(()=>{window.__out=[];const f=window.hmAcc;window.hmAcc=function(k){window.__out.push(k);if(k!=='out')return f.apply(this,arguments)}});
