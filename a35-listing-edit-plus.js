@@ -1,6 +1,6 @@
 (()=>{
 if(window.__A356B_V2__)return;window.__A356B_V2__=1;
-const U='https://zvffspbowdzvrrzefhkr.supabase.co',K='sb_publishable_L_qb9Q4fHktE51PEqEhTAg_O4R0eDiW';
+const U=PF_ENV.url,K=PF_ENV.key;
 const S=()=>{try{return JSON.parse(localStorage.getItem('isimi_coz_auth_session')||'null')}catch(_){return null}},T=()=>S()?.access_token||S()?.accessToken||null,I=()=>S()?.user?.id||S()?.user_id||null;
 const esc=v=>String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]||c));
 async function req(m,p,b){const t=T();if(!t)throw Error('Oturum bulunamadı.');const o={method:m,headers:{apikey:K,Authorization:'Bearer '+t,Accept:'application/json','Content-Type':'application/json',Prefer:'return=representation'}};if(b!==undefined)o.body=JSON.stringify(b);const r=await fetch(U+'/rest/v1/'+p,o),x=await r.text();let d;try{d=x?JSON.parse(x):null}catch(_){d=x}if(!r.ok)throw Error(d?.message||'HTTP '+r.status);return d}

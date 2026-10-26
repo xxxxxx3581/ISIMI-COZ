@@ -6,7 +6,7 @@
   const E=v=>typeof esc==='function'?esc(v):String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]||c));
   const S=()=>{try{return JSON.parse(localStorage.getItem('isimi_coz_auth_session')||'null')}catch(_){return null}};
   const UID=()=>S()?.user?.id||S()?.user_id||null, TOK=()=>S()?.access_token||S()?.accessToken||null;
-  const U='https://zvffspbowdzvrrzefhkr.supabase.co',K='sb_publishable_L_qb9Q4fHktE51PEqEhTAg_O4R0eDiW';
+  const U=PF_ENV.url,K=PF_ENV.key;
   async function api(method,path,body){const t=TOK();if(!t)throw Error('Bu işlem için giriş yapmalısın.');const h={apikey:K,Authorization:'Bearer '+t,Accept:'application/json','Content-Type':'application/json',Prefer:'return=representation'};const r=await fetch(U+'/rest/v1/'+path,{method,headers:h,body:body===undefined?undefined:JSON.stringify(body)}),x=await r.text();let d;try{d=x?JSON.parse(x):null}catch(_){d=x}if(!r.ok)throw Error(d?.message||'İşlem başarısız.');return d}
   async function pub(path){if(typeof supabaseRequest==='function')return await supabaseRequest('GET',path);return[]}
   const toast=m=>{const x=document.createElement('div');x.textContent=m;x.style.cssText='position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:99999;background:#13251f;color:#fff;padding:11px 15px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.25);font-size:14px';document.body.appendChild(x);setTimeout(()=>x.remove(),2200)};

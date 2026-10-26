@@ -4,7 +4,7 @@
 (()=>{
   if(window.__A3510_PHOTO_FIX__)return;
   window.__A3510_PHOTO_FIX__=1;
-  const U='https://zvffspbowdzvrrzefhkr.supabase.co',K='sb_publishable_L_qb9Q4fHktE51PEqEhTAg_O4R0eDiW';
+  const U=PF_ENV.url,K=PF_ENV.key;
   const S=()=>{try{return JSON.parse(localStorage.getItem('isimi_coz_auth_session')||'null')}catch(_){return null}};
   const T=()=>S()?.access_token||S()?.accessToken||null;
   const I=()=>S()?.user?.id||S()?.user_id||null;

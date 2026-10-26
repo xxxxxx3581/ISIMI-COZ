@@ -10,6 +10,7 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="İşimi Çöz">
 <title>İşimi Çöz — İzmir</title>
+<script src="./pf-env-v1.js?v=1"></script>
 <script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('isimi-theme')==='light'?'light':'dark')}catch(e){}try{document.documentElement.setAttribute('data-hm-theme',localStorage.getItem('isimi_oz_theme')==='dark'?'dark':'light')}catch(e){}</script>
 <script>/* Şifre sıfırlama dönüşü (Supabase recovery): token yalnız bellekte tutulur, URL'den hemen silinir */
 (function(){try{var s0=new URLSearchParams(location.search);if(s0.get('type')==='recovery'&&s0.get('token_hash')){window.__pwRecovery={hash:s0.get('token_hash')};s0.delete('type');s0.delete('token_hash');var qs=s0.toString();history.replaceState(null,'',location.pathname+(qs?'?'+qs:'')+location.hash);return}
@@ -3386,8 +3387,8 @@ var __kesfetTS={gayrimenkul:0,otomobil:0}, __kesfetInflight={};
 var V2_NAV={stack:[],idx:-1,skip:0,busy:false,replaceNext:false};
 
 
-const SUPABASE_URL="https://zvffspbowdzvrrzefhkr.supabase.co";
-const SUPABASE_KEY="sb_publishable_L_qb9Q4fHktE51PEqEhTAg_O4R0eDiW";
+const SUPABASE_URL=PF_ENV.url;
+const SUPABASE_KEY=PF_ENV.key;
 
 const SERVICES={
  klima:{name:"Klima",emoji:"❄️",desc:"Bakım, montaj, arıza ve temizlik"},
@@ -11445,5 +11446,5 @@ for(const k of ["showGayrimenkulDetail","showOtomobilDetail"]){const f=window[k]
 </body>
 <script src="./a35-seller-identity.js?v=3"></script>
 <script src="./a7-food-v1.js?v=17"></script>
-<script src="./pf-platform-v1.js?v=17"></script>
+<script src="./pf-platform-v1.js?v=18"></script>
 </html>

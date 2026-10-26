@@ -11,7 +11,7 @@ if(window.PF&&window.PF.__v)return;
 var PF=window.PF={__v:1,enabled:false,settings:{},roles:null,legal:null};
 
 /* ------------------------------------------------------------------ temel */
-function SBURL(){try{return SUPABASE_URL}catch(e){return 'https://zvffspbowdzvrrzefhkr.supabase.co'}}
+function SBURL(){try{return SUPABASE_URL}catch(e){return window.PF_ENV.url}}
 function SBKEY(){try{return SUPABASE_KEY}catch(e){return ''}}
 function sess(){try{return typeof getAuthSession==='function'?getAuthSession():null}catch(e){return null}}
 function uid(){var s=sess();return s&&s.user&&s.user.id||null}
