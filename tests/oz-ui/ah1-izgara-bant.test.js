@@ -1,5 +1,5 @@
 // AH1: ürün ızgarası foto düzeni — 390px, sahte RPC. Çalıştırma: node tests/oz-ui/ah1-izgara-bant.test.js
-// AJ2-D2: telefonda sütun arası 12px ve büyük yazıda da 3 sütun (eski: 16px, büyük yazıda 2 sütun).
+// AJ2-D2: telefonda sütun arası 12px ve büyük yazıda da 3 sütun (eski: 16px, büyük yazıda 2 sütun). Paket 2 / Adım 2: telefonda (≤719px) artık her zaman 2 sütun; son satırın tüm kartları 4 köşe 18px denetlenir.
 // AJ2-D (bilinçli tasarım değişikliği): sütun arası 16px; foto çerçevesi 18px köşe ve neredeyse görünmez 1px çizgi (sayfa zeminine karşı
 // kontrast <1.2; gölge/outline yok); "+" çerçevenin sağ üst köşesinden 11px dışarı taşar → "kendi sütununda" yerine "komşu karta değmez";
 // "Tükendi" sol üstte çerçevenin içinde. Kart/düğme/fotoğrafta kenarlık/gölge/outline yok şartı aynen.
@@ -39,10 +39,10 @@ const {chromium,open,enter,overflow}=require('./harness.js');
    r.forEach((c,i)=>{const want='18,18,18,18';
     ok(c.rad===want,'['+where+'] '+c.id+' köşeler '+want+': '+c.rad);ok(!c.deco,'['+where+'] '+c.id+' kenarlık/gölge/outline yok');ok(c.frame==='ok','['+where+'] '+c.id+' foto çerçevesi neredeyse görünmez: '+c.frame);ok(c.ctlIn,'['+where+'] '+c.id+' "+"/adım alanı komşu karta değmez');
     if(i>0)ok(Math.abs(c.L-r[i-1].Rt-12)<0.01,'['+where+'] '+r[i-1].id+'→'+c.id+' foto çerçeveleri arası 12px: '+(c.L-r[i-1].Rt));
-    if(n===3&&r.length===3){ok(c.pl==='2px'&&c.nmL==='2px'&&c.nmR==='2px','['+where+'] '+c.id+' yazı iç boşluğu 2px: '+[c.pl,c.nmL,c.nmR])}
+    if(n===2&&r.length===2){ok(c.pl==='2px'&&c.nmL==='2px'&&c.nmR==='2px','['+where+'] '+c.id+' yazı iç boşluğu 2px: '+[c.pl,c.nmL,c.nmR])}
     if(c.so)ok(c.so[0]>=7&&c.so[0]<=16&&c.so[1]>=7&&c.so[1]<=16,'['+where+'] "Tükendi" sol üstte çerçevenin içinde: '+c.so)})})};
- let g=await G();chk(g,3,'390px');
- ok(g&&g.rows.length===3&&g.rows[2].length===1&&g.rows[2][0].rad==='18,18,18,18','son satırdaki tek ürün dört köşe 18px: '+JSON.stringify(g&&g.rows[2]));
+ let g=await G();chk(g,2,'390px');
+ ok(g&&g.rows.length===4&&g.rows[g.rows.length-1].length===1&&g.rows[g.rows.length-1].every(c=>c.rad==='18,18,18,18'),'7 ürün 2 sütunda 4 satır; son satırdaki bütün kartlar dört köşe 18px: '+JSON.stringify(g&&g.rows[g.rows.length-1]));
  ok(await overflow(p)<=0,'390px taşma yok');
  // tıklama davranışı
  const qty=()=>p.evaluate(()=>JSON.parse(localStorage.getItem('isimi_oz_cart')||'[]').reduce((n,x)=>n+x.qty,0));
@@ -51,8 +51,8 @@ const {chromium,open,enter,overflow}=require('./harness.js');
  await p.evaluate(()=>{const x=document.querySelector('.ozOv [data-a=sheetClose]');if(x)x.click()});await p.waitForTimeout(400);
  // büyük yazı → 2 sütun, aynı kural
  await p.evaluate(()=>{document.documentElement.style.fontSize='24px'});await p.waitForTimeout(500);
- g=await G();chk(g,3,'büyük yazı');
- ok(g&&g.rows[g.rows.length-1].length===1&&g.rows[g.rows.length-1][0].rad==='18,18,18,18','büyük yazıda (3 sütun) son tek ürün dört köşe 18px');
+ g=await G();chk(g,2,'büyük yazı');
+ ok(g&&g.rows[g.rows.length-1].length>=1&&g.rows[g.rows.length-1].every(c=>c.rad==='18,18,18,18'),'büyük yazıda (2 sütun) son satırdaki bütün kartlar dört köşe 18px');
  await p.evaluate(()=>{document.documentElement.style.fontSize=''});await p.waitForTimeout(400);
  // raf eskisi gibi
  await p.evaluate(()=>{localStorage.setItem('isimi_oz_recent',JSON.stringify({s1:[0,1,2].map(i=>({id:'q'+i,name:'Ürün '+i,image:'https://img.test/recel.jpg',price_kurus:9000,nv:1}))}))});

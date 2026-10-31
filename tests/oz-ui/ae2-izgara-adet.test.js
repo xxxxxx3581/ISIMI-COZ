@@ -3,7 +3,7 @@
 // AF1: yalnız konum/ölçü beklentileri güncellendi — "− n +" fotoğraf üstündeki hap yerine kartın üst şeridinde (her bölüm ≥32×36).
 // Doğrulanan: tek seçenekli ürün "+" ile eklenince fotoğrafın üst kenarında tek hap (− n +), foto genişliğini aşmaz, her bölüm ≥32×44px;
 // "Artır" adet 2, "Azalt" 1, ikinci "Azalt" 0 → ürün sepetten çıkar, hap kalkar, "+" geri gelir; aria "Azalt"/"Artır", adet okunur;
-// seçenekli üründe hap yok: "+" seçenek penceresi, eklenince "+" ve adet rozeti (eski davranış); 390px 3 sütun, taşma/çakışma yok; AA;
+// seçenekli üründe hap yok: "+" seçenek penceresi, eklenince "+" ve adet rozeti (eski davranış); 390px 2 sütun (Paket 2 / Adım 2: eski 3), taşma/çakışma yok; AA;
 // "Son baktığın ürünler" rafındaki aynı kartta da aynı hap; karta dokunuş yine paneli açar.
 const {chromium,open,enter,overflow}=require('./harness.js');
 (async()=>{
@@ -50,12 +50,12 @@ const {chromium,open,enter,overflow}=require('./harness.js');
  ok(await p.evaluate(()=>!!document.querySelector('.ozOv.ozPkS')),'seçenekli "+" seçenek penceresi açar');
  await click(p,'.ozOv .ozPkO[data-v=v1]',300);await click(p,'.ozOv [data-a=pkAdd]',900);
  h=await H('#ozRoot .ozGrs','p0');ok(h&&!h.hap&&h.plus&&h.bd==='1','seçenekli üründe hap yok, "+" ve rozet 1: '+JSON.stringify(h));
- // 3 sütun, taşma yok (hap açıkken)
+ // 2 sütun, taşma yok (hap açıkken)
  await click(p,'#ozRoot .ozGr[data-pid="p2"] .ac .ozPlus',1100);
  const g=await p.evaluate(()=>{const gr=document.querySelector('#ozRoot .ozGrs');const cs=[...gr.querySelectorAll('.ozGr')];
   const he=document.querySelector('#ozRoot .ozGr[data-pid="p2"] .ozPStep');if(!he)return {cols:getComputedStyle(gr).gridTemplateColumns.split(' ').length,inCard:false};const hap=he.getBoundingClientRect(),own=document.querySelector('#ozRoot .ozGr[data-pid="p2"]').getBoundingClientRect();
   return {cols:getComputedStyle(gr).gridTemplateColumns.split(' ').length,inCard:hap.left>=own.left&&hap.right<=own.right}});
- ok(g.cols===3&&g.inCard&&await overflow(p)<=0,'390px 3 sütun, hap kart içinde, taşma yok: '+JSON.stringify(g));
+ ok(g.cols===2&&g.inCard&&await overflow(p)<=0,'390px 2 sütun, hap kart içinde, taşma yok: '+JSON.stringify(g));
  // karta dokunuş paneli açar
  await click(p,'#ozRoot .ozGr[data-pid="p2"] .go',1300);
  ok(await p.evaluate(()=>!!document.querySelector('.ozOv.ozPdS')),'karta dokunuş paneli açmalı');

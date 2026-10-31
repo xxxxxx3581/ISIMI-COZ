@@ -1,7 +1,8 @@
-// AJ2-D2: telefonda ürün ızgarası — sabit 3 sütun, sabit yazı satırları, puan/yorum. Sahte RPC, veri yazmaz.
+// AJ2-D2 (Paket 2 / Adım 2'de 2 sütuna çevrildi): telefonda ürün ızgarası — sabit 2 sütun, hizalı yazı satırları, puan/yorum. Sahte RPC, veri yazmaz.
 // Çalıştırma: NODE_PATH=/opt/node-tools/node_modules node tests/oz-ui/aj4-izgara-telefon.test.js
-// Doğrulanan: 320/360/390/412/600px × kök yazı 16/18/20px → 3 sütun (300px → 2), yatay taşma yok, ad en fazla 2 satır, fiyat ve eski fiyat
-// kesilmez, sağ sütundaki "+" ekran kenarında kırpılmaz ve komşu karta değmez; aynı satırdaki kartlarda ad/puan/fiyat/ikincil satır aynı y'de;
+// Doğrulanan: 300/320/360/390/412/600px × kök yazı 16/18/20px → 2 sütun (≤719px), yatay taşma yok, ad kırpılmaz (uzun ad kartı uzatır; ≥6 satır uyarı sınırı),
+// yardımcı yazılar ≥12px, ad ≥14px (kök 16px'te tam 14px), fiyat ve eski fiyat kesilmez, her "+" kaydırılıp görünür alana alınınca ≥44×44, tıklanabilir,
+// ekran kenarında kırpılmaz ve komşu karta değmez; 768/1024px önceki düzende (4/5 sütun, ad 13px, yardımcı 11px); 320px'te satıcı kategori şeridi kırpılmaz; aynı satırdaki kartlarda ad/puan/fiyat/ikincil satır aynı y'de;
 // puanlı kartta "★ 4,9 (23)" (Türkçe virgül, erişilebilirlik etiketi "5 üzerinden 4,9 puan, 23 değerlendirme", dokunma ≥44px) → dokununca
 // ürün paneli yorumlar görünümüyle açılır; yorumsuz kartta "Yeni" etiketi (satır hizası aynı); seçenekli üründe en düşük seçenek fiyatı
 // "X ₺'den" tek satırda; indirimli üründe ikincil satır "eski fiyat (üstü çizili) + birim fiyat"; iki tema.
@@ -16,7 +17,8 @@ const {chromium,open,enter}=require('./harness.js');
    price_kurus:[36000,28000,9000,14500,21000,135000][i],seller_id:'s1',in_stock:true,rating_avg:[4.9,4.8,0,4.6,5,4.7][i],rating_count:[23,12,0,8,3,41][i],nv:i===0?2:1}));
   T.oz_products=R.oz_search_products.map((x,i)=>({id:x.id,description:'',net_content:['1 L','500 g','250 ml','500 g','400 g','1000 gr'][i]}));
   T.oz_variants=[{product_id:'q0',label:'1 L',price_kurus:36000,stock:5,sort:0},{product_id:'q0',label:'5 L',price_kurus:165000,stock:5,sort:1}].concat(R.oz_search_products.slice(1).map((x,i)=>({product_id:x.id,label:T.oz_products[i+1].net_content,price_kurus:x.price_kurus,compare_at_kurus:x.id==='q1'?35000:x.id==='q5'?149900:null,stock:5,sort:0})));
-  R.oz_producer_detail={id:'s1',display_name:'Yayla',city:'Muğla',product_count:6,categories:[]};R.oz_producer_reviews=[];R.oz_product_reviews=[]});
+  R.oz_producer_detail={id:'s1',display_name:'Yayla',city:'Muğla',product_count:6,categories:[]};R.oz_producer_reviews=[];R.oz_product_reviews=[];
+  R.oz_home=Object.assign({},R.oz_home,{categories:['Zeytinyağı','Bal','Peynir','Reçel & Marmelat','Baharat','Kuruyemiş','Süt Ürünleri','Turşu'].map((n,i)=>({id:'k'+i,slug:'k'+i,name:n,image_url:null,perishable:false}))})});
  await enter(p);await p.addStyleTag({content:'*,*::before,*::after{animation:none!important;transition:none!important}'});
  const G=()=>p.evaluate(()=>{const g=document.querySelector('#ozRoot .ozGrs');if(!g)return null;const cs=[...g.querySelectorAll('.ozGr')];
   const top=(c,s)=>{const e=c.querySelector(s);return e?Math.round(e.getBoundingClientRect().top):null};
@@ -26,19 +28,41 @@ const {chromium,open,enter}=require('./harness.js');
     return {id:c.dataset.pid,row:Math.round(R.top),nmLines:Math.round(nm.getBoundingClientRect().height/lh),t:[top(c,'.nm'),top(c,'.mr'),top(c,'.pr'),top(c,'.up')],
      prCut:pr.scrollWidth>pr.clientWidth+.5||(b&&b.getBoundingClientRect().right>pr.getBoundingClientRect().right+.5),
      opCut:op?op.scrollWidth>op.clientWidth+.5||op.getBoundingClientRect().right>c.querySelector('.up').getBoundingClientRect().right+.5:false,
-     plus:Q?{right:Math.round(Q.right),top:Math.round(Q.top),free:nx?Q.right<=nx.getBoundingClientRect().left-.5:Q.right<=innerWidth,hit:(()=>{const s=pl.querySelector('svg').getBoundingClientRect();const e=document.elementFromPoint((s.left+s.right)/2,(s.top+s.bottom)/2);return !e||pl.contains(e)})()}:null}})}});
+     nmClip:nm.scrollHeight>nm.clientHeight+1||getComputedStyle(nm).webkitLineClamp!=='none'||getComputedStyle(nm).overflow!=='visible',
+     fz:{nm:parseFloat(getComputedStyle(nm).fontSize),h:Math.min(...[...c.querySelectorAll('.nt,.rt,.nw,.up,.so,.pr .dn')].map(e=>parseFloat(getComputedStyle(e).fontSize))),pr:parseFloat(getComputedStyle(pr).fontSize),hd:Math.min(...[...c.querySelectorAll('.nt,.rt,.up,.so')].map(e=>parseFloat(getComputedStyle(e).fontSize))),
+      dn:(e=>e?parseFloat(getComputedStyle(e).fontSize):null)(c.querySelector('.pr .dn')),nw:(e=>e?parseFloat(getComputedStyle(e).fontSize):null)(c.querySelector('.nw'))}}})}});
+ // "+" düğmeleri: her biri önce görünür alana (ortaya) kaydırılır, sonra boyut, tıklanabilirlik, kenar ve komşu denetlenir (ekran dışındaki düğme doğrudan hata sayılmaz)
+ const PL=()=>p.evaluate(()=>{const cs=[...document.querySelectorAll('#ozRoot .ozGrs .ozGr')];return cs.map(c=>{const pl=c.querySelector('.ac .ozPlus');if(!pl)return null;pl.scrollIntoView({block:'center'});
+  const R=pl.getBoundingClientRect(),s=pl.querySelector('svg').getBoundingClientRect(),e=document.elementFromPoint((s.left+s.right)/2,(s.top+s.bottom)/2),cr=c.getBoundingClientRect(),
+   nx=cs.find(x=>x!==c&&Math.abs(x.getBoundingClientRect().top-cr.top)<2&&x.getBoundingClientRect().left>cr.left);
+  return {id:c.dataset.pid,w:Math.round(R.width),h:Math.round(R.height),right:Math.round(R.right),inView:R.top>=0&&R.bottom<=innerHeight,free:nx?R.right<=nx.getBoundingClientRect().left-.5:R.right<=innerWidth,hit:!!e&&pl.contains(e)}}).filter(Boolean)});
  // genişlik × kök yazı
  for(const fs of [16,18,20])for(const w of [300,320,360,390,412,600]){await p.setViewportSize({width:w,height:900});await p.evaluate(fs=>{document.documentElement.style.fontSize=fs+'px'},fs);
   await p.evaluate(()=>OZ.go('plist',{seller:'s1',sname:'Yayla'}));await p.waitForTimeout(900);await p.evaluate(()=>window.scrollTo(0,0));
-  const g=await G();const want=w<320?2:3;const tag='['+w+'px/'+fs+'px]';
+  const g=await G();const want=2;/* ≤719px: her zaman 2 sütun */const tag='['+w+'px/'+fs+'px]';
   if(!g){fails.push(tag+' ızgara yok');continue}
   ok(g.cols===want,tag+' '+want+' sütun: '+g.cols);ok(g.sw<=0,tag+' yatay taşma yok: '+g.sw);
-  ok(g.cards.every(c=>c.nmLines<=2),tag+' ad en fazla 2 satır: '+JSON.stringify(g.cards.map(c=>c.nmLines)));
+  ok(g.cards.every(c=>!c.nmClip),tag+' ad kırpılmıyor (line-clamp yok, taşan metin yok): '+JSON.stringify(g.cards.map(c=>c.nmClip)));
+  ok(g.cards.every(c=>c.nmLines<=6),tag+' ad en fazla 6 satır (uyarı sınırı; metin kesilmez): '+JSON.stringify(g.cards.map(c=>c.nmLines)));
+  ok(g.cards.every(c=>c.fz.h>=12&&c.fz.nm>=14&&(fs!==16||c.fz.nm===14)),tag+' yardımcı yazılar ≥12px, ad ≥14px (kök 16px\'te tam 14px): '+JSON.stringify(g.cards.map(c=>[c.fz.nm,c.fz.h])));
   ok(g.cards.every(c=>!c.prCut&&!c.opCut),tag+' fiyat/eski fiyat kesilmez: '+JSON.stringify(g.cards.filter(c=>c.prCut||c.opCut).map(c=>c.id)));
-  ok(g.cards.every(c=>!c.plus||(c.plus.right<=g.vw&&c.plus.free&&c.plus.hit)),tag+' "+" kırpılmaz, komşu karta değmez: '+JSON.stringify(g.cards.map(c=>c.plus)));
+  const pls=await PL();
+  ok(pls.length>0&&pls.every(x=>x.w>=44&&x.h>=44&&x.inView&&x.right<=g.vw&&x.free&&x.hit),tag+' "+" kaydırınca görünür, ≥44×44, tıklanabilir, kırpılmaz, komşu karta değmez: '+JSON.stringify(pls));
   const rows={};g.cards.forEach(c=>{(rows[c.row]=rows[c.row]||[]).push(c.t.join(','))});
   ok(Object.values(rows).every(r=>r.every(x=>x.split(',').every((v,i)=>Math.abs(v-r[0].split(',')[i])<=1))),tag+' aynı satırda ad/puan/fiyat/ikincil satır hizalı (alt piksel yuvarlama ≤1px): '+JSON.stringify(rows))}
  await p.evaluate(()=>{document.documentElement.style.fontSize=''});await p.setViewportSize({width:390,height:844});
+ // ≥720px: Paket 2 / Adım 2 öncesiyle aynı (768px: 4 sütun, 1024px: 5 sütun; ad 13px, yardımcı 11px, fiyat 15px)
+ for(const [w,cols] of [[768,4],[1024,5]]){await p.setViewportSize({width:w,height:900});await p.evaluate(()=>OZ.go('plist',{seller:'s1',sname:'Yayla'}));await p.waitForTimeout(900);await p.evaluate(()=>window.scrollTo(0,0));
+  const g=await G();const tag='['+w+'px]';if(!g){fails.push(tag+' ızgara yok');continue}
+  ok(g.cols===cols&&g.sw<=0,tag+' önceki düzen: '+cols+' sütun, yatay taşma yok: '+g.cols+'/'+g.sw);
+  ok(g.cards.every(c=>c.fz.nm===13&&c.fz.hd===11&&Math.abs(c.fz.pr-15)<.01&&(c.fz.dn===null||Math.abs(c.fz.dn-10.8)<.05)&&(c.fz.nw===null||c.fz.nw===10)),tag+' yazı boyutları değişmedi (ad 13, nt/rt/up/so 11, fiyat 15, \'den 10,8, Yeni 10): '+JSON.stringify(g.cards.map(c=>[c.fz.nm,c.fz.hd,c.fz.pr,c.fz.dn,c.fz.nw])))}
+ // satıcı sayfası kategori şeridi: 320px'te 4 sütun, 12px etiketler kırpılmaz; 360px'te 5 sütun
+ for(const [w,cols] of [[320,4],[360,5]]){await p.setViewportSize({width:w,height:900});await p.evaluate(()=>OZ.go('store',{id:'s1'}));await p.waitForTimeout(1300);
+  const k=await p.evaluate(()=>{const g=document.querySelector('#ozRoot .ozPPCats');if(!g)return null;const ls=[...g.querySelectorAll('.ozCt .l')];
+   return {n:ls.length,cols:getComputedStyle(g).gridTemplateColumns.split(' ').length,fs:Math.min(...ls.map(l=>parseFloat(getComputedStyle(l).fontSize))),clip:ls.filter(l=>l.scrollHeight>l.clientHeight+1||l.scrollWidth>l.clientWidth+1).map(l=>l.textContent),sw:document.scrollingElement.scrollWidth-document.scrollingElement.clientWidth}});
+  const tag='['+w+'px]';ok(k&&k.n>=8,tag+' kategori şeridi var (8 etiket): '+JSON.stringify(k));if(!k||!k.n)continue;
+  ok(k.cols===cols&&k.fs>=12&&!k.clip.length&&k.sw<=0,tag+' kategori şeridi '+cols+' sütun, etiket ≥12px, kırpılma/taşma yok: '+JSON.stringify(k))}
+ await p.setViewportSize({width:390,height:844});
  // içerik: puan, Yeni, fiyat biçimleri — iki tema
  for(const th of ['light','dark']){await p.evaluate(t=>{localStorage.setItem('isimi_oz_theme',t);document.body.classList.toggle('ozLt',t==='light')},th);
   await p.evaluate(()=>OZ.go('plist',{seller:'s1',sname:'Yayla'}));await p.waitForTimeout(900);

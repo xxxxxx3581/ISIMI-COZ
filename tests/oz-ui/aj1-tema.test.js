@@ -142,7 +142,7 @@ const {chromium,open,enter}=require('./harness.js');
      prC:getComputedStyle(pr.querySelector('b,.uf,.nvp')).color,prFull:pr.scrollWidth<=pr.clientWidth+.5,order:[top('.nm'),top('.nt'),top('.pr'),top('.up')],prTop:top('.pr'),rowTop:Math.round(R.top),
      plus:Q?{w:Math.round(Q.width),h:Math.round(Q.height),vis:Math.round(V.width),bg:getComputedStyle(sv).backgroundColor,ink:getComputedStyle(pl).color,dis:pl.disabled,rad:getComputedStyle(sv).borderTopLeftRadius,
       dx:Math.round(Math.abs((V.left+V.right)/2-P.right)),dy:Math.round(Math.abs((V.top+V.bottom)/2-P.top)),off:Math.hypot((V.left+V.right)/2-(I.right-12),(V.top+V.bottom)/2-(I.top+12))>=V.width/2+12-.5,
-      free:nx?Q.right<=nx.getBoundingClientRect().left-.5:Q.right<=innerWidth,top:Math.round(Q.top),hit:(()=>{const e=document.elementFromPoint((V.left+V.right)/2,(V.top+V.bottom)/2);return !!e&&pl.contains(e)})()}:null}});
+      free:nx?Q.right<=nx.getBoundingClientRect().left-.5:Q.right<=innerWidth,top:Math.round(Q.top)}:null}});
    return {cg:gs.columnGap,rg:gs.rowGap,cs}});
   const acc2=th==='light'?'rgb(31, 107, 69)':'rgb(79, 182, 127)';
   ok(g&&g.cg==='12px'&&g.rg==='20px','['+th+'] ızgara sütun arası 12px (D2), satır arası 20px: '+JSON.stringify(g&&[g.cg,g.rg]));
@@ -152,7 +152,11 @@ const {chromium,open,enter}=require('./harness.js');
   ok(g&&g.cs.every(c=>c.order.every((v,i,a)=>i===0||v>a[i-1])),'['+th+'] yazı sırası ad → miktar → fiyat → ikincil satır: '+JSON.stringify(g&&g.cs.map(c=>c.order)));
   const rows={};(g?g.cs:[]).forEach(c=>{(rows[c.rowTop]=rows[c.rowTop]||[]).push(c.prTop)});
   ok(Object.values(rows).every(r=>r.every(v=>v===r[0])),'['+th+'] aynı satırda fiyat aynı y hizasında: '+JSON.stringify(rows));
-  const pls=g?g.cs.filter(c=>c.plus).map(c=>c.plus):[];const gTop=await p.evaluate(()=>Math.round(document.querySelector('#ozRoot .ozGrs').getBoundingClientRect().top));
+  const pls=g?g.cs.filter(c=>c.plus).map(c=>c.plus):[];
+  /* Paket 2 / Adım 2: telefonda 2 sütunda alttaki sıra ekran dışında/alt menünün altında kalabilir → her "+" önce görünür alana (ortaya) kaydırılır, sonra elementFromPoint ile gerçek tıklanabilirlik denetlenir (aj4 ile aynı yöntem); sonra kaydırma eski yerine döner */
+  const hits=await p.evaluate(()=>{const y0=window.scrollY;const r=[...document.querySelectorAll('#ozRoot .ozGrs .ozGr')].map(c=>c.querySelector('.ac .ozPlus')).filter(Boolean).map(pl=>{pl.scrollIntoView({block:'center'});const V=pl.querySelector('svg').getBoundingClientRect(),e=document.elementFromPoint((V.left+V.right)/2,(V.top+V.bottom)/2);return !!e&&pl.contains(e)});window.scrollTo(0,y0);return r});
+  ok(hits.length===pls.length,'['+th+'] "+" sayısı tutarlı: '+hits.length+'/'+pls.length);pls.forEach((x,i)=>{x.hit=hits[i]===true});
+  await p.waitForTimeout(150);const gTop=await p.evaluate(()=>Math.round(document.querySelector('#ozRoot .ozGrs').getBoundingClientRect().top));
   ok(pls.length&&pls.every(x=>x.w>=44&&x.h>=44&&x.vis===26&&(x.dis?x.bg!=='rgb(242, 193, 78)':x.bg==='rgb(242, 193, 78)'&&x.ink==='rgb(31, 22, 14)')&&x.rad==='50%'&&x.dx<=3&&x.dy<=3&&x.off&&x.free&&x.hit&&x.top>=gTop),'['+th+'] "+" çerçevenin sağ üst köşesinde (AJ2-D3: 26px altın sarısı daire, koyu artı; pasifte gri; yarısı dışarıda, fotoğrafa binmez, komşu karta değmez, kırpılmaz), 44×44: '+JSON.stringify(pls[0]));
  }
  // AJ2-B: sipariş detayı — "Kargo firmasının sayfasında takip et" orman yeşili dolgu + beyaz kalın; "İade talebi oluştur" (.ozRet) kehribar;

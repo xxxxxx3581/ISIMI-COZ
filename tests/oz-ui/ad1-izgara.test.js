@@ -1,6 +1,6 @@
 // AD1: ürün listesi "Izgara / Liste" görünümü — 390px, sahte RPC. Çalıştırma: node tests/oz-ui/ad1-izgara.test.js
 // AJ2-D3: "+" dairesi 26px, dolgu altın sarısı #F2C14E (iki tema), koyu artı #1F160E (eski: 24px krem daire).
-// AJ2-D2: telefonda (320–719px) yazı boyutundan bağımsız sabit 3 sütun, sütun arası 12px → büyük yazıda da 3 sütun; ızgara kartında puan
+// AJ2-D2 (Paket 2 / Adım 2'de 2 sütuna çevrildi): telefonda (320–719px) yazı boyutundan bağımsız sabit 2 sütun, sütun arası 12px → büyük yazıda da 2 sütun; ızgara kartında puan
 // ("★ 4,9 (23)" / "Yeni") bilerek var (kalp/açıklama/nokta hâlâ yok); seçenekli fiyat "650,00 ₺'den" + ikincil satır "≈ … ₺/L'den".
 // AJ2-D: yalnız aralık ve "+" konumu güncellendi — sütun arası 16px; "+" çerçevenin SAĞ ÜST köşesinde, görünür 24px krem daire merkezi
 // köşede (yarısı dışarıda, fotoğrafa binmez), dokunma 44×44, komşu karta değmez.
@@ -10,7 +10,7 @@
 // AG1: yalnız konum/ölçü/seçici beklentileri güncellendi — kart çerçevesiz/zeminsiz, "+" fotoğrafın ALTINDA fiyatın sağında (44×44), seçenekli fiyat "≈ X ₺" + "/kg'dan".
 // P1: kartta görünen seçenek metni "N seçenek" ("2 hacim" yerine); "+" ekran okuyucu metni aynı.
 // AF1: yalnız konum/seçici beklentileri güncellendi — "+" artık fotoğrafın dışında üst şeritte (44×36 dokunma), alt satır kısa ("2 hacim").
-// Doğrulanan: varsayılan Izgara (satıcı ürün listesi, arama, favoriler); 390px'te 3 sütun, 10px boşluk; kare foto (cover, ortalı);
+// Doğrulanan: varsayılan Izgara (satıcı ürün listesi, arama, favoriler); 390px'te 2 sütun, 12px boşluk; kare foto (cover, ortalı);
 // "+" fotoğrafın sağ üstünde, dokunma alanı ≥44px, görsel ~31px, kart dışına taşmaz; kartta kalp/yıldız/açıklama/nokta yok;
 // "+" tıklaması paneli açmaz, karta dokunuş "+" eklemez (panel açılır); seçenekli üründe "+" küçük seçenek penceresi; tek fiyatlıda
 // adet artar (rozet 1 → 2); stoksuzda "Tükendi" + soluk foto + "+" pasif ama görünür; aria (kart "ad, fiyat"; "+" "Sepete ekle" /
@@ -37,7 +37,7 @@ const {chromium,open,enter,overflow}=require('./harness.js');
   return {cols,gap:cs.columnGap,n:cards.length,lap,row0,extra:cards.some(c=>c.querySelector('.ozFav,.ds,.dt')||[...c.querySelectorAll('.rt')].some(r=>!r.closest('.mr'))),
    sw:document.scrollingElement.scrollWidth-document.scrollingElement.clientWidth}});
  let g=await G();
- ok(!g.none&&g.cols===3&&g.gap==='12px'&&g.n===6,'varsayılan Izgara, 390px 3 sütun, sütun arası 12px: '+JSON.stringify(g));
+ ok(!g.none&&g.cols===2&&g.gap==='12px'&&g.n===6,'varsayılan Izgara, 390px 2 sütun, sütun arası 12px: '+JSON.stringify(g));
  ok(!g.extra,'ızgara kartında kalp/açıklama/nokta olmamalı (yıldız yalnız puan satırında)');ok(!g.lap&&g.sw<=0,'üst üste binme/taşma yok');
  ok(g.row0&&g.row0.every(h=>h===g.row0[0]),'aynı satırda kart yükseklikleri eşit: '+JSON.stringify(g.row0));
  const C=id=>p.evaluate(id=>{const c=document.querySelector('#ozRoot .ozGr[data-pid="'+id+'"]');if(!c)return null;
@@ -97,7 +97,7 @@ const {chromium,open,enter,overflow}=require('./harness.js');
  // büyük yazı → 2 sütun
  await p.evaluate(()=>OZ.go('plist',{seller:'s1',sname:'Yayla Üreticileri'}));await p.waitForTimeout(1500);
  await p.evaluate(()=>{document.documentElement.style.fontSize='24px'});await p.waitForTimeout(300);
- g=await G();ok(g.cols===3&&!g.lap&&g.sw<=0,'büyük yazıda da 3 sütun (telefon), taşma/üst üste binme yok: '+JSON.stringify(g));
+ g=await G();ok(g.cols===2&&!g.lap&&g.sw<=0,'büyük yazıda da 2 sütun (telefon), taşma/üst üste binme yok: '+JSON.stringify(g));
  await p.evaluate(()=>{document.documentElement.style.fontSize=''});
  ok(!st.errors.length,'sayfa hatası: '+st.errors.join(' | '));
  // yenileme: Liste seç → sayfayı yenile → (sahte veri olmadan) liste sayfasında anahtar "Liste" seçili gelir

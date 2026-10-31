@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="theme-color" content="#07111f">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -1371,9 +1371,9 @@ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmTile:after{b
 @media (max-width:359px){html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmTile:after{background:linear-gradient(to top,rgba(20,15,8,.74) 0%,rgba(20,15,8,.61) 55%,rgba(20,15,8,0) 76%)}}
 html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmTile .tx b,html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmTile .tx small,html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmSl:not(.food) .s{text-shadow:0 1px 3px rgba(0,0,0,.55)}
 /* AJ2-G2: afiş karartması yazının bittiği yerde (px; yazı soldan sabit px genişlikte) sıfırlanır, sağ taraf karartmasız.
-   Dar ekran (≤403px, başlık iki satır, yazı ≤~234px): .6 ≥ AA eşiği (.57) 250px’e kadar, 300px’te 0. Geniş: tek satır başlık ~316px (büyük yazı, eşik .45). */
-html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmSl:not(.food):before{background:linear-gradient(90deg,rgba(15,11,6,.78) 0,rgba(15,11,6,.6) 250px,rgba(15,11,6,.47) 326px,rgba(15,11,6,0) 372px)}
-@media (max-width:403px){html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmSl:not(.food):before{background:linear-gradient(90deg,rgba(15,11,6,.78) 0,rgba(15,11,6,.6) 250px,rgba(15,11,6,0) 300px)}}
+   Dar ekran (≤403px, başlık iki satır, yazı ≤~234px): .6 ≥ AA eşiği (.57) 290px’e kadar, 340px’te 0. Geniş: tek satır başlık ~316px (büyük yazı, eşik .45); .6 290px’te, .47 344px’te, 388px’te 0. */
+html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmSl:not(.food):before{background:linear-gradient(90deg,rgba(15,11,6,.78) 0,rgba(15,11,6,.6) 290px,rgba(15,11,6,.47) 344px,rgba(15,11,6,0) 388px)}
+@media (max-width:403px){html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmSl:not(.food):before{background:linear-gradient(90deg,rgba(15,11,6,.78) 0,rgba(15,11,6,.6) 290px,rgba(15,11,6,0) 340px)}}
 /* AJ2-G2: Özüne Dön yeşil katmanı yazı bölgesinde (≤~154px; küçük yazı eşiği .85) koyu, sağda hafif (logo için .3) */
 html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmSl[data-k="market"]:before{background:linear-gradient(90deg,rgba(31,107,69,.97) 0,rgba(31,107,69,.88) 170px,rgba(31,107,69,.3) 100%)}
 /* AJ2-C3 (krem): afiş dört köşe 22px + sayfa zemini renginde 6px iç çerçeve (dış kutu büyümez, tıklamayı geçirir) + hafif gölge; karolar 22px köşe
@@ -3273,6 +3273,68 @@ html:root .ozPP .cv .ppFav.on{color:#FF5C7A}
 <style id="svcProvEntryCss">.svcProvEntry{display:flex;align-items:center;gap:12px;width:100%;box-sizing:border-box;margin:0 0 12px;padding:12px 14px;border-radius:16px;border:1.5px solid rgba(124,92,255,.45);background:rgba(124,92,255,.10);color:var(--text);font:inherit;text-align:left;cursor:pointer}.svcProvEntry .ic{flex:0 0 42px;width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:21px;background:rgba(124,92,255,.18)}.svcProvEntry .tx{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.25}.svcProvEntry small{font-size:12px;font-weight:700;color:var(--muted)}.svcProvEntry b{font-size:16px;font-weight:900}.svcProvEntry em{font-style:normal;font-size:12.5px;color:var(--muted)}.svcProvEntry .go{flex:0 0 auto;font-size:24px;font-weight:700;color:#7c5cff}.svcProvEntry:active{transform:scale(.99)}.svcProvEntry:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}html[data-theme="light"] .svcProvEntry{background:#f3effe;border-color:#c9bbff}html[data-theme="light"] .svcProvEntry .go{color:#5b3fd6}</style>
 <style id="v2HomeBtnCss">.v2HomeBtn{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:42px;min-width:42px;padding:0 12px 0 10px;border-radius:12px;border:1px solid var(--line);background:var(--card);color:var(--text);font:inherit;font-size:13px;font-weight:800;cursor:pointer}.v2HomeBtn:active{transform:scale(.97)}.v2HomeBtn:focus-visible{outline:2px solid var(--v2-pri);outline-offset:2px}@media(max-width:430px){.v2HomeBtn{padding:0}.v2HomeBtn span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}}.v2KTop .v2HomeBtn{margin-left:4px}@media(max-width:430px){.v2KTop:has(.v2HomeBtn) .v2Back{font-size:0;gap:0;width:42px;min-width:42px;padding:0;justify-content:center}.v2KTop:has(.v2HomeBtn) .v2Back::before{content:"←";font-size:19px;font-weight:800;line-height:1}}@media(max-width:374px){.v2KTop:has(.v2HomeBtn) h1{font-size:17.5px}}.back.v2BackRow{display:flex;align-items:center;gap:8px}.back.v2BackRow>.btn{flex:1 1 auto;min-width:0}</style>
 <style id="v2FoodBrandCss">.homeFeaturedBody{padding:0 0 14px 14px;box-sizing:border-box}.homeFeaturedCta{padding:7px 12px!important;font-size:12px!important;gap:4px;border-radius:999px;background:rgba(255,255,255,.92)!important;color:#0b3d2e!important;box-shadow:0 4px 14px rgba(0,0,0,.14)!important;opacity:1!important;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}.homeFeaturedCta span{font-size:15px;line-height:1}</style>
+<style id="pkt1MobileCss">/* Paket 1: yalnızca mobil (≤719px). Masaüstü değişmez. */
+@media (max-width:719px){
+.v2Sel{font-size:16px}
+html:root .ozSearch .ozIn{font-size:16px}
+html:root .ozSortSel select{font-size:16px}
+.ldCarouselStage.ldImgErr img{visibility:hidden}
+.ldCarouselStage.ldImgErr::after{content:"Fotoğraf yüklenemedi";position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;text-align:center;color:#9fb0c5;font-size:14px;font-weight:700;pointer-events:none}
+html:root .ozToast,html:root .ozToast.err{bottom:auto;top:calc(var(--oz-top,0px) + 10px);max-width:calc(100% - 32px);box-sizing:border-box}
+}</style>
+<style id="pkt2Step1Css">/* Paket 2 / Adım 1: alt menü etiketleri. Yalnızca mobil (≤719px). Masaüstü değişmez. */
+@media (max-width:719px){
+html:root .bottomInner .navBtn{font-size:14px!important;padding-left:0;padding-right:0}
+html:root .ozNavB,html:root body.ozSellerNav .ozNavB{font-size:14px}
+html:root .ozNavB[data-k=orders] .l{font-size:0;line-height:0}
+html:root .ozNavB[data-k=orders] .l::after{content:"Siparişler";content:"Siparişler"/"";font-size:14px;line-height:1.15}
+}
+@media (max-width:374px){
+html:root .bottomInner .navBtn{font-size:13px!important}
+}
+@media (max-width:359px){
+html:root .bottomInner{gap:0}
+html:root .bottomInner .navBtn{letter-spacing:-.4px}
+}
+@media (max-width:329px){
+html:root .bottomInner #navHome{font-size:12.5px!important}
+}
+@media (max-width:339px){
+html:root .ozNavB,html:root body.ozSellerNav .ozNavB{font-size:13px}
+html:root .ozNavB[data-k=orders] .l::after{font-size:13px}
+}
+</style>
+<style id="pkt2Step2Css">/* Paket 2 / Adım 2: kısa etiketler (M3, M6, M7). Yalnızca mobil (≤719px). Masaüstü/tablet değişmez. */
+@media (max-width:719px){
+html:root .ozCts .ozCt .l,html:root .ozPPCats .ozCt .l{font-size:12px}
+html:root .hmSoon,html:root .hmAcc .hmAccSoon{font-size:12px;height:22px}
+html:root .v2Tag,html:root .v2Ph,html:root .appDrawerSec,html:root .ozPC .so,html:root .ozKr .so,html:root .ozClaim,html:root .ozRoleT,html:root .ozPrd2 .pc,html:root .hmSl .hmAktif,html:root .ozSellTag,html:root .fdNew,html:root .fdPill,html:root .fdReq,html:root .fdCo .fdCoSave{font-size:12px}
+/* M4/M5: Özüne Dön ürün ızgarası telefonda 2 sütun; kart yazı ölçeği sabit 1rem (yardımcı satırlar 12px, ürün adı 14px).
+   Ürün adı kırpılmaz: 2 satırlık alan en az, uzun ad kartı uzatır. Miktar+puan ve fiyat bloğu kartın altına hizalanır
+   (aynı sıradaki kartlarda hizalı); puan düğmesi (.rvb) de alttan konumlanır. */
+html:root .ozGrs{grid-template-columns:repeat(2,minmax(0,1fr))}
+html:root .ozGrs .ozGr.g2{font-size:1rem}
+html:root .ozGrs .ozGr.g2 .nm{display:block;-webkit-line-clamp:unset;overflow:visible;height:auto;min-height:2.6em;margin:.75em 2px .25em;font-size:.875em}
+html:root .ozGrs .ozGr.g2 .mr{margin:auto 2px 0}
+html:root .ozGrs .ozGr.g2 .mr .nt,html:root .ozGrs .ozGr.g2 .rt,html:root .ozGrs .ozGr.g2 .nw,html:root .ozGrs .ozGr.g2 .up{font-size:.75em}
+html:root .ozGrs .ozGr.g2 .pr .dn{font-size:.8em}
+html:root .ozGrs .ozGr .so{font-size:.75rem}
+html:root .ozGrs .ozGr.g2 .rvw{top:auto;bottom:calc(3.19375em - 22px);padding-top:0}
+html:root .ozGrs .ozGr.g2.st .rvw{bottom:calc(3.19375em + 18px)}
+/* M4: liste görünümü kartı (.ozGc) yardımcı yazıları 12px */
+html:root .ozGc .so,html:root .ozGc .rt small,html:root .ozGc .pr s,html:root .ozGc .pr small.u{font-size:12px}
+/* Adım 3: kullanıcıya görünen 12px altı metinler 12px (yalnız ≤719px; QR, ikon ve dekoratif rozetlere dokunulmaz) */
+@media (min-width:375px){html:root .hmSc button,html:root .hmTile .tx small,html:root .hmTile[data-k="market"] .tx small{font-size:12px}}
+html:root .v2St span small{font-size:12px}
+html:root .fdwNav button,html:root .fdAddr small,html:root .fdwHomeTop .fdAddr small,html:root .fdwRateBtn .rc,html:root .fdwRateBtn .rc i,html:root .fdStar small{font-size:12px}
+html:root .ozHeroT .tc span{font-size:12px}
+html:root .ozOd .ozProg li{font-size:12px}
+@media (min-width:375px){html:root .ozSoCnt.k4 .c small{font-size:12px}}
+@media (min-width:360px){html:root .ozSteps>*,html:root .ozSteps li span{font-size:12px}}
+}
+/* M3: satıcı sayfası kategori şeridi, çok dar ekranda (≤339px) 4 sütun: 12px etiket kırpılmadan sığsın */
+@media (max-width:339px){html:root .ozPPCats{grid-template-columns:repeat(4,minmax(0,1fr))}}
+</style>
 </head>
 <body>
 <div id="connectionStatus" class="connection offline" title="Supabase">SB…</div>
@@ -3417,6 +3479,20 @@ function getRequests(){return read(KEYS.requests,[])}
 function getProvider(){return read(KEYS.provider,null)}
 function providerLogged(){return read(KEYS.providerLogged,false)}
 function escapeHTML(v){return String(v??"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#039;")}
+/* Paket 1 (B2): kullanıcıya ham teknik hata gösterme. Teknik ayrıntı konsola gider; anlamlı (Türkçe) sunucu mesajları aynen geçer. */
+function friendlyErr(e,fb){
+  var raw=(e&&e.message)||(typeof e==='string'?e:'');
+  var gen=fb||'Beklenmeyen bir sorun oluştu. Lütfen tekrar dene.';
+  if(!raw)return gen;
+  var out=null;
+  if(/Failed to fetch|NetworkError|Load failed|network request failed|ERR_INTERNET/i.test(raw))out='Bağlantı sorunu. İnternetini kontrol edip tekrar dene.';
+  else if(/jwt expired|\bJWT\b/i.test(raw))out='Oturumun sona erdi. Lütfen tekrar giriş yap.';
+  else if(/permission denied|row-level security|violates row-level/i.test(raw))out='Bu işlem için yetkin yok.';
+  else if(/Cannot read propert|is not a function|is not defined|is not iterable|Unexpected (token|end)|SyntaxError|TypeError|ReferenceError|RangeError|Maximum call stack|statement timeout|duplicate key|violates|constraint|null value|PGRST|SQLSTATE|schema cache/i.test(raw))out=gen;
+  if(out===null)return raw;
+  try{console.warn('[hata]',raw)}catch(x){}
+  return out;
+}
 function app(h){var el=document.getElementById("app");el.innerHTML=h;window.scrollTo(0,0);try{v2AddHomeBtn(el)}catch(e){}}
 /* Geri butonu olan ekranlara, yanına küçük bir "Ana sayfa" düğmesi ekler (ana ekranın kendisine eklemez). */
 var V2_HOME_ICO='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V20h14V9.5"/><path d="M10 20v-6h4v6"/></svg>';
@@ -5303,12 +5379,14 @@ function listingDetailCarouselHtml(urls){
   return '<div class="ldCarousel" data-ld-carousel data-ld-index="0">'+
     '<div class="ldCarouselStage">'+
     '<button type="button" data-gm-photo-idx="0" style="border:0;padding:0;width:100%;height:100%;display:block;cursor:zoom-in;background:transparent">'+
-    '<img data-ld-img src="'+first+'" alt="">'+
+    '<img data-ld-img src="'+first+'" alt="" onerror="ldImgFail(this)">'+
     '</button>'+arrows+'</div>'+
     '<div class="ldCarouselMeta">'+count+dots+'</div>'+
     '<p class="small muted" style="text-align:center;margin:4px 0 0">Fotoğrafa dokunarak büyüt</p>'+
     '</div>';
 }
+/* Paket 1 (B10): fotoğraf yüklenemezse kırık simge yerine yer tutucu (CSS yalnızca ≤719px) */
+function ldImgFail(img){ try{ var st=img&&img.closest&&img.closest('.ldCarouselStage'); if(st) st.classList.add('ldImgErr'); }catch(e){} }
 function bindListingDetailCarousel(root, urls){
   const el=root&&root.querySelector('[data-ld-carousel]');
   const list=(urls||[]).filter(Boolean);
@@ -5319,6 +5397,7 @@ function bindListingDetailCarousel(root, urls){
     el.setAttribute('data-ld-index', String(idx));
     const img=el.querySelector('[data-ld-img]');
     const openBtn=el.querySelector('[data-gm-photo-idx]');
+    var stg=el.querySelector('.ldCarouselStage'); if(stg) stg.classList.remove('ldImgErr');
     if(img) img.src=list[idx];
     if(openBtn) openBtn.setAttribute('data-gm-photo-idx', String(idx));
     const c=el.querySelector('[data-ld-count]');
@@ -6774,7 +6853,7 @@ async function createRequest(){
     showRequests();
   }catch(e){
     console.error(e);
-    alert('Talep kaydedilemedi.\n\n'+(e.message||e));
+    alert('Talep kaydedilemedi.\n\n'+friendlyErr(e));
   }
   b.disabled=false;b.textContent='TALEBİ OLUŞTUR';
 }
@@ -7047,7 +7126,7 @@ async function rejectOffer(offerId,talepNo){
     await showRequestDetail(talepNo);
   }catch(e){
     console.error(e);
-    alert('Teklif reddedilemedi.\n\n'+(e.message||e));
+    alert('Teklif reddedilemedi.\n\n'+friendlyErr(e));
   }
 }
 
@@ -7059,7 +7138,7 @@ async function acceptRequest(talepNo){
     const local=getProvider();
     if(local&&providerLogged())showProviderPanel(local);
     else showProviderRequestDetail(talepNo);
-  }catch(e){alert('Talep kabul edilemedi.\n\n'+(e.message||e));}
+  }catch(e){alert('Talep kabul edilemedi.\n\n'+friendlyErr(e));}
 }
 
 /* === Service reviews V1 — uses existing public.reviews === */
@@ -7129,7 +7208,7 @@ async function submitServiceReview(talepNo){
     await showRequestDetail(talepNo);
   }catch(e){
     console.error(e);
-    alert('Değerlendirme kaydedilemedi.\n\n'+(e.message||e)+'\n\nMevcut reviews tablosuna yazılamadı. Oturum ve RLS izinlerini kontrol edin.');
+    alert('Değerlendirme kaydedilemedi.\n\n'+friendlyErr(e)+'\n\nOturumunu kontrol edip tekrar dene.');
   }
 }
 async function renderCustomerReviewBlock(r,talepNo,jobBox,inlineSlot){
@@ -7182,7 +7261,7 @@ async function completeRequest(talepNo){
       await showRequestDetail(talepNo);
     }
   }catch(e){
-    alert('Tamamlama kaydedilemedi.\n\n'+String(e.message||e).replace(/^[A-Z_]+:\s*/,''));
+    alert('Tamamlama kaydedilemedi.\n\n'+friendlyErr(String(e.message||e).replace(/^[A-Z_]+:\s*/,'')));
   }
 }
 
@@ -7217,7 +7296,7 @@ async function completeRequestFromCustomer(talepNo){
     await showRequestDetail(talepNo);
   }catch(e){
     console.error(e);
-    alert('Tamamlama kaydedilemedi.\n\n'+(e.message||e));
+    alert('Tamamlama kaydedilemedi.\n\n'+friendlyErr(e));
   }
 }
 
@@ -7262,7 +7341,7 @@ async function showRequestDetail(talepNo,force){
     await showRequestDetailData(r);
   }catch(e){
     console.error(e);
-    alert('Talep detayı açılamadı.\n\n'+(e.message||e));
+    alert('Talep detayı açılamadı.\n\n'+friendlyErr(e));
   }
 }
 
@@ -8129,7 +8208,7 @@ async function kesfetRenderResults(keepCache){
     v2KesfetPaint(); v2KesfetSyncChrome(); v2FilterSyncCount();
   }catch(e){
     console.error('kesfetRenderResults',e);
-    if(box===document.getElementById('kesfetGrid')) box.innerHTML='<div class="v2Empty"><h3>İlanlar yüklenemedi</h3><div class="small">'+escapeHTML(e&&e.message?e.message:'Bağlantını kontrol edip tekrar dene.')+'</div><div class="row"><button type="button" class="v2Btn sm pri" onclick="kesfetRenderResults(false)">Tekrar dene</button></div></div>';
+    if(box===document.getElementById('kesfetGrid')) box.innerHTML='<div class="v2Empty"><h3>İlanlar yüklenemedi</h3><div class="small">'+escapeHTML(e&&e.message?friendlyErr(e,'Bağlantını kontrol edip tekrar dene.'):'Bağlantını kontrol edip tekrar dene.')+'</div><div class="row"><button type="button" class="v2Btn sm pri" onclick="kesfetRenderResults(false)">Tekrar dene</button></div></div>';
   }
 }
 
@@ -8240,7 +8319,7 @@ async function showFavorites(){
     var ordered=ids.map(function(i){return by[i];}).filter(Boolean);
     if(!document.getElementById('v2FavBox')) return;
     box.innerHTML=ordered.length?'<div class="v2Grid is-list">'+ordered.map(function(r){return kesfetCardHtml(r,r.listing_type==='otomobil'?'otomobil':'gayrimenkul');}).join('')+'</div>':'<div class="v2Empty"><h3>Favori ilanlar artık yayında değil</h3></div>';
-  }catch(e){ box.innerHTML='<div class="v2Empty"><h3>Favoriler yüklenemedi</h3><div class="small">'+escapeHTML(e&&e.message||'')+'</div></div>'; }
+  }catch(e){ box.innerHTML='<div class="v2Empty"><h3>Favoriler yüklenemedi</h3><div class="small">'+escapeHTML(e&&e.message?friendlyErr(e,'Bağlantını kontrol edip tekrar dene.'):'')+'</div></div>'; }
 }
 
 function v2ListingUrl(type,id){ return location.origin+location.pathname+'#ilan='+type+':'+encodeURIComponent(id); }
@@ -8596,7 +8675,7 @@ async function v2LoadDetail(listingId,type){
     v2PfListingActs(box,row,0);
   }catch(err){
     console.error('v2LoadDetail',err);
-    if(box) box.innerHTML='<div class="v2Empty"><h3>Detay yüklenemedi</h3><div class="small">'+escapeHTML(err&&err.message?err.message:String(err))+'</div><div class="row"><button type="button" class="v2Btn sm" onclick="v2LoadDetail(\''+id+'\',\''+type+'\')">Tekrar dene</button></div></div>';
+    if(box) box.innerHTML='<div class="v2Empty"><h3>Detay yüklenemedi</h3><div class="small">'+escapeHTML(friendlyErr(err,'Bağlantını kontrol edip tekrar dene.'))+'</div><div class="row"><button type="button" class="v2Btn sm" onclick="v2LoadDetail(\''+id+'\',\''+type+'\')">Tekrar dene</button></div></div>';
   }
 }
 
@@ -8752,7 +8831,7 @@ function v2WorkCardHtml(o,acts){
   return h+'</div>';
 }
 
-function v2Eval(code){ return function(){ try{ (new Function(code))(); }catch(e){ console.error('v2Eval',code,e); v2Toast('İşlem açılamadı: '+(e&&e.message||e)); } }; }
+function v2Eval(code){ return function(){ try{ (new Function(code))(); }catch(e){ console.error('v2Eval',code,e); v2Toast('İşlem açılamadı: '+friendlyErr(e,'Lütfen tekrar dene.')); } }; }
 
 function v2ListingWorkCard(row,acts){
   var st=myListingStatusMeta(row.status,row), ns=myListingNextStep(row), tx=myListingTxnHint(row), md=row.metadata||{};
@@ -8962,7 +9041,7 @@ async function v2EditListing(id,type,from){
       pc.addEventListener('change',function(){ pw.style.display=pc.checked?'':'none'; });
       v2BindPartsEditor(pw.querySelector('.v2PEd'),window.__v2EditParts);
     }
-  }catch(err){ console.error(err); document.getElementById('v2EditBox').innerHTML='<div class="v2Empty"><h3>İlan açılamadı</h3><div class="small">'+escapeHTML(err&&err.message||'')+'</div></div>'; }
+  }catch(err){ console.error(err); document.getElementById('v2EditBox').innerHTML='<div class="v2Empty"><h3>İlan açılamadı</h3><div class="small">'+escapeHTML(err&&err.message?friendlyErr(err,'Bağlantını kontrol edip tekrar dene.'):'')+'</div></div>'; }
 }
 
 async function v2SaveEdit(row,car,maxPh){
@@ -9178,7 +9257,7 @@ async function v2Workspace(listingId,type,preloadedRow){
     v2WsPaint();
   }catch(err){
     console.error('v2Workspace',err);
-    var bx=document.getElementById('v2WsBody'); if(bx) bx.innerHTML='<div class="v2Empty"><h3>Çalışma alanı açılamadı</h3><div class="small">'+escapeHTML(err&&err.message||'')+'</div><div class="row"><button type="button" class="v2Btn sm" onclick="v2Workspace(\''+id+'\',\''+type+'\')">Tekrar dene</button></div></div>';
+    var bx=document.getElementById('v2WsBody'); if(bx) bx.innerHTML='<div class="v2Empty"><h3>Çalışma alanı açılamadı</h3><div class="small">'+escapeHTML(err&&err.message?friendlyErr(err,'Bağlantını kontrol edip tekrar dene.'):'')+'</div><div class="row"><button type="button" class="v2Btn sm" onclick="v2Workspace(\''+id+'\',\''+type+'\')">Tekrar dene</button></div></div>';
   }
 }
 
@@ -9267,7 +9346,7 @@ async function v2SellFlow(subject,text){
       if(b.getAttribute('data-new')) return v2StartSale(type,text);
       var pid=b.getAttribute('data-pick'); if(pid) v2Workspace(pid,type);
     });
-  }catch(err){ console.error('v2SellFlow',err); v2Toast('İşin açılamadı: '+(err&&err.message||'bağlantı hatası')); }
+  }catch(err){ console.error('v2SellFlow',err); v2Toast('İşin açılamadı: '+friendlyErr(err,'bağlantı hatası')); }
 }
 
 function v2StartSale(type,text){
@@ -9984,7 +10063,7 @@ async function saveCase(silent=false){
  }catch(e){
    console.error('Hallet dosya kayıt hatası:',e);
    if(btn){btn.disabled=false;btn.textContent='DOSYAYI KAYDET';}
-   alert('Dosya kaydedilemedi.\n\n'+(e.message||'Bilinmeyen hata'));
+   alert('Dosya kaydedilemedi.\n\n'+friendlyErr(e,'Bilinmeyen hata'));
  }
 }
 const QUESTIONS=[
@@ -10011,7 +10090,7 @@ function open(){ensureStyle();const r=root();r.classList.add('hv');r.style.displ
 function close(){const r=root();r.classList.remove('hv');r.style.display='none';r.innerHTML='';document.body.style.overflow=document.body.dataset.halletOverflow||''}
 function render(x){const r=open();const keep=!!r.querySelector('.hw');const prev=keep?(r.scrollTop||0):0;r.innerHTML='<div class="ha"><div class="hw">'+x+'</div></div>';if(keep){requestAnimationFrame(function(){try{r.scrollTop=prev}catch(e){}})}else{r.scrollTop=0}}
 function top(back){return '<div class="ht"><strong>İşini Hallet</strong><span style="display:inline-flex;gap:6px"><button class="topb" data-a="home" aria-label="Ana sayfa" title="Ana sayfa">⌂ Ana sayfa</button><button class="topb" data-a="'+(back||'close')+'">'+(back?'← Geri':'Kapat')+'</button></span></div>'}
-function gate(){H.step=0;H.answers={};H.documents={};H.documentStatuses={};H.documentFiles={};H.caseId=null;H.createdAt=null;H.dbId=null;render(top('close')+'<div class="hc"><div class="hk">Dijital işlem asistanı</div><h1>Bugün ne yapmak istiyorsun?</h1><p class="hm">İşlem, evrak, kurum veya hizmet — net seç, adım adım ilerle.</p><p class="hm" role="note" style="font-size:12px;opacity:.85;margin-top:6px">ℹ️ İşini Hallet bir kamu kurumu değildir ve resmî kurumlarla bağlantısı yoktur. Bilgiler rehberlik amaçlıdır; resmî işlem ilgili kurumda tamamlanır. Güncel şart ve ücretleri kurumdan teyit et.</p><div class="hg"><button class="hb hp" data-a="islem">📋 Bir işlem yapmak istiyorum</button><button class="hb" data-a="cases">📁 İşlem Dosyalarım</button><button class="hb" data-a="evrak">📄 Evrak hazırlamak istiyorum</button><button class="hb" data-a="kurum">🏛️ Bir kuruma başvuracağım</button><button class="hb" data-a="isimi">🛠️ Hizmet / usta bulmam gerekiyor</button></div><div class="card" style="text-align:left;margin-top:12px;padding:12px;border:1px solid rgba(13,159,104,.4);background:rgba(13,159,104,.08);border-radius:14px"><div class="hk">🔒 Ücretli İşlem Hazırlığı <span class="small">Ücretli işlem</span></div><p class="hm">Kişiye özel evrak ve işlem takibi bu kapının arkasındadır. Şimdilik ödeme alınmaz.</p><button class="hb hp" data-a="official_prep">İşlem hazırlığına devam et →</button></div></div>')}
+function gate(){H.step=0;H.answers={};H.documents={};H.documentStatuses={};H.documentFiles={};H.caseId=null;H.createdAt=null;H.dbId=null;render(top('close')+'<div class="hc"><div class="hk">Dijital işlem asistanı</div><h1>Bugün ne yapmak istiyorsun?</h1><p class="hm">İşlem, evrak, kurum veya hizmet — net seç, adım adım ilerle.</p><p class="hm" role="note" style="font-size:12px;opacity:.85;margin-top:6px">ℹ️ İşini Hallet bir kamu kurumu değildir ve resmî kurumlarla bağlantısı yoktur. Bilgiler rehberlik amaçlıdır; resmî işlem ilgili kurumda tamamlanır. Güncel şart ve ücretleri kurumdan teyit et.</p><div class="hg"><button class="hb hp" data-a="islem">📋 Bir işlem yapmak istiyorum</button><button class="hb" data-a="cases">📁 İşlem Dosyalarım</button><button class="hb" data-a="evrak">📄 Evrak hazırlamak istiyorum</button><button class="hb" data-a="kurum">🏛️ Bir kuruma başvuracağım</button><button class="hb" data-a="isimi">🛠️ Hizmet / usta bulmam gerekiyor</button></div><div class="card" style="text-align:left;margin-top:12px;padding:12px;border:1px solid rgba(13,159,104,.4);background:rgba(13,159,104,.08);border-radius:14px"><div class="hk">🔒 Ücretli İşlem Hazırlığı</div><p class="hm">Kişiye özel evrak ve işlem takibi bu kapının arkasındadır. Şimdilik ödeme alınmaz.</p><button class="hb hp" data-a="official_prep">İşlem hazırlığına devam et →</button></div></div>')}
 async function cases(){
  const session=getAuthSession();
  if(!session?.access_token||!session?.user?.id){openAuthModal('login');return;}
@@ -10136,7 +10215,7 @@ async function cases(){
  }catch(e){
    console.error('Hallet dosyalar yükleme hatası:',e);
    const box=document.getElementById('halletCasesBox');
-   if(box)box.innerHTML='<div class="err"><strong>Dosyalar yüklenemedi.</strong><br>'+esc(e.message||'Bilinmeyen hata')+'</div><button class="hb" data-a="gate">← İşlemlere dön</button>';
+   if(box)box.innerHTML='<div class="err"><strong>Dosyalar yüklenemedi.</strong><br>'+esc(friendlyErr(e,'Bilinmeyen hata'))+'</div><button class="hb" data-a="gate">← İşlemlere dön</button>';
  }
 }
 async function openCase(id){
@@ -10214,7 +10293,7 @@ async function openCase(id){
    await loadCaseSteps();
    await ensureCaseSteps();
    result(true);
- }catch(e){console.error('Hallet dosya açma hatası:',e);alert('Dosya açılamadı.\n\n'+(e.message||'Bilinmeyen hata'));}
+ }catch(e){console.error('Hallet dosya açma hatası:',e);alert('Dosya açılamadı.\n\n'+friendlyErr(e,'Bilinmeyen hata'));}
 }
 function islem(){render(top('gate')+'<div class="hc"><div class="hk">İşlem seçimi</div><h2>Bugün ne yapmak istiyorsun?</h2><p class="hm">Aktif modüller hemen açılır. Diğerleri güvenli şekilde sıraya alınmıştır.</p><div class="hg"><button class="hb hp" data-a="tasinmaz">🏠 Taşınmaz işlemleri</button><button class="hb" data-a="arac">🚗 Araç işlemleri</button><button class="hb" data-a="evrak">📄 Evrak hazırlama</button><button class="hb" data-a="kurum">🏛️ Kurum başvurusu</button><button class="hb" data-a="cases">📁 İşlem Dosyalarım</button></div></div>')}
 function evrak(){render(top('gate')+'<div class="hc"><div class="hk">Evrak hazırlama</div><h2>Hangi evrağı hazırlamak istiyorsun?</h2><p class="hm">Belgeler bilgilendirme / taslak amaçlıdır; resmî sözleşme veya başvuru yerine geçmez.</p><div class="hg"><button class="hb hp" data-a="evrak_satis_bilgi">🏠 Konut satış bilgi formu</button><button class="hb" data-a="evrak_type" data-t="dilekce" data-fresh="1">✉️ Dilekçe taslağı</button><button class="hb" data-a="evrak_type" data-t="kira" data-fresh="1">📝 Kira sözleşmesi taslağı</button><button class="hb" data-a="evrak_type" data-t="genel_basvuru" data-fresh="1">📋 Genel başvuru formu</button><button class="hb" data-a="evrak_type" data-t="arac_kiralama" data-fresh="1">🚗 Araç kiralama talebi</button><button class="hb" data-a="evrak_back">← Geri</button></div></div>')}
@@ -10370,7 +10449,7 @@ async function evrakTypeSave(typeKey){
   cases();
  }catch(e){
   console.error(e);
-  alert('Kayıt başarısız: '+(e?.message||e));
+  alert('Kayıt başarısız: '+friendlyErr(e));
  }
 }
 function evrakOpenSaved(row,m){
@@ -11445,6 +11524,6 @@ for(const k of ["showGayrimenkulDetail","showOtomobilDetail"]){const f=window[k]
 </script>
 </body>
 <script src="./a35-seller-identity.js?v=3"></script>
-<script src="./a7-food-v1.js?v=18"></script>
+<script src="./a7-food-v1.js?v=19"></script>
 <script src="./pf-platform-v1.js?v=18"></script>
 </html>

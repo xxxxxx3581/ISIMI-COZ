@@ -22,6 +22,7 @@ const qa=(s,r)=>[...(r||document).querySelectorAll(s)];
 function errMsg(e){
   let m=(e&&e.message)||String(e||'');
   if(/Failed to fetch|NetworkError|Load failed|network/i.test(m))return 'Bağlantı sorunu. İnternetini kontrol edip tekrar dene.';
+  if(/Cannot read propert|is not a function|is not defined|is not iterable|Unexpected (token|end)|SyntaxError|TypeError|ReferenceError|RangeError|Maximum call stack/i.test(m)){try{console.warn('[Yemek] hata:',m)}catch(x){}return 'Beklenmeyen bir sorun oluştu. Lütfen tekrar dene.';}
   m=m.replace(/^FOOD_[A-Z]+:\s*/,'');
   if(/JWT|jwt expired/i.test(m))return 'Oturumun sona erdi. Lütfen tekrar giriş yap.';
   if(/permission denied|row-level security|violates row-level/i.test(m))return 'Bu işlem için yetkin yok.';
