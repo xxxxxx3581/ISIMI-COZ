@@ -3335,6 +3335,53 @@ html:root .ozOd .ozProg li{font-size:12px}
 /* M3: satıcı sayfası kategori şeridi, çok dar ekranda (≤339px) 4 sütun: 12px etiket kırpılmadan sığsın */
 @media (max-width:339px){html:root .ozPPCats{grid-template-columns:repeat(4,minmax(0,1fr))}}
 </style>
+<style id="dsHomeT1Css">/* Tasarım Paketi T1 (ana sayfa, yalnız krem tema): masaüstü/tablet düzeni + kapalı yan menü gölgesi. Mobil (<900px) değişmez; koyu tema değişmez. */
+.appDrawer:not(.on){box-shadow:none}
+@media (min-width:900px){
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .app{max-width:1120px}
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmSlider{height:280px}
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmTiles{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:20px}
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmTile{height:176px}
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmTile .tx{left:16px;bottom:14px}
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmTile .tx b{font-size:18px}
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmTile .tx small{font-size:13px}
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmH{margin-top:28px}
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmSc{margin-top:12px;gap:12px}
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmSc button{font-size:13px}
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .v2Recent{margin-top:28px}
+}
+</style>
+<style id="dsHomeT2Css">/* Tasarım Paketi T2 (ana sayfa, yalnız krem tema, yalnız mobil ≤719px): Yemek öne çıkar, diğer üç kutu tek sırada. Köşe/kenar/DOM sırası değişmez. */
+@media (max-width:719px){
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmTiles{grid-template-columns:repeat(6,minmax(0,1fr))}
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmTile{grid-column:span 2;height:116px}
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmTile[data-k="food"]{grid-column:1/-1;height:140px}
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmTile[data-k="food"] .tx{left:16px;bottom:14px}
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmTile[data-k="food"] .tx b{font-size:22px}
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmTile[data-k="food"] .tx small{font-size:13px}
+ /* 3'lü sırada Özüne Dön: fotoğraftaki başak işareti sağ kenarda; kırpılır ve yazı satır atlar (kesilmez) */
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmTile[data-k="market"] img{object-position:0 50%}
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmTile[data-k="market"] .tx{padding-right:0}
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmTile[data-k="market"] .tx small{white-space:normal}
+ /* küçük kutularda başlık/alt yazı iki-üç satıra çıkar: koyu geçiş yazının tamamını kapsar (kontrast AA) */
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmTile:not([data-k="food"]):after{background:linear-gradient(to top,rgba(20,15,8,.74) 0%,rgba(20,15,8,.64) 62%,rgba(20,15,8,0) 90%)}
+}
+@media (max-width:359px){
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmTile:not([data-k="food"]):after{background:linear-gradient(to top,rgba(20,15,8,.74) 0%,rgba(20,15,8,.66) 72%,rgba(20,15,8,0) 94%)}
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmTile:not([data-k="food"]){height:128px}
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmTile[data-k="market"] .tx{padding-right:24px}
+}
+</style>
+<style id="dsHomeT3Css">/* Tasarım Paketi T3 (ana sayfa, yalnız krem tema): ortak marka dili. Yazı ölçeği 12/13/14/16/22/24; tek yükseltilmiş gölge; çizgi simge rengi. Koyu tema değişmez. */
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .v2RecentBox .ic{color:#1F6B45}
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmSl .s{font-size:13px}
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmSl .oz2{font-size:12px}
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmH,html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .v2SecH h3,html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .v2Recent h3{font-size:16px}
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmTile .tx b{font-size:16px}
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmSlider,html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmTile,html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .v2RecentBox,html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) nav.bottom{box-shadow:0 6px 18px rgba(60,40,10,.14)}
+ /* T4: "Yakında" rozeti sakin: parlak sarı yerine krem yüzey + koyu yazı (kutu fotoğrafıyla yarışmaz) */
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmSoon{background:rgba(255,253,248,.94);color:#4A4132;font-weight:700;box-shadow:none}
+</style>
 </head>
 <body>
 <div id="connectionStatus" class="connection offline" title="Supabase">SB…</div>
@@ -8790,7 +8837,7 @@ async function v2RecentVerify(){
 function v2RecentClear(){ try{ localStorage.removeItem('recent_listings'); }catch(e){} showHome(); }
 
 function v2RecentHtml(){
-  var a=v2RecentList(); if(!a.length) return '<section class="v2Recent v2RecentEmpty"><div class="v2SecH"><h3 style="margin:0">En son gezdiklerim</h3></div><div class="v2RecentBox"><span class="ic" aria-hidden="true">🕘</span><div><b>Henüz gezdiğin bir şey yok</b><small>Baktığın ilanlar burada görünecek.</small></div></div></section>';
+  var a=v2RecentList(); if(!a.length) return '<section class="v2Recent v2RecentEmpty"><div class="v2SecH"><h3 style="margin:0">En son gezdiklerim</h3></div><div class="v2RecentBox"><span class="ic" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span><div><b>Henüz gezdiğin bir şey yok</b><small>Baktığın ilanlar burada görünecek.</small></div></div></section>';
   return '<section class="v2Recent"><div class="v2SecH"><h3 style="margin:0">En son gezdiklerim</h3><button type="button" class="v2DescMore" onclick="v2RecentClear()">Temizle</button></div><div class="v2Rail">'+
     a.map(function(r){ return kesfetCardHtml(r,r.listing_type==='otomobil'?'otomobil':'gayrimenkul'); }).join('')+'</div></section>';
 }
