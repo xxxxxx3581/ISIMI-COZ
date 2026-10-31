@@ -3336,6 +3336,8 @@ html:root .ozOd .ozProg li{font-size:12px}
 @media (max-width:339px){html:root .ozPPCats{grid-template-columns:repeat(4,minmax(0,1fr))}}
 </style>
 <style id="dsHomeT1Css">/* Tasarım Paketi T1 (ana sayfa, yalnız krem tema): masaüstü/tablet düzeni + kapalı yan menü gölgesi. Mobil (<900px) değişmez; koyu tema değişmez. */
+/* ds jetonları: ana sayfa krem teması renkleri tek yerde (değerler mevcut sabitlerle birebir aynı; koyu tema tanımlamaz) */
+html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx){--ds-bg:#F6F0E3;--ds-card:#FFFDF8;--ds-line:#E1D6BF;--ds-ink:#1F2A22;--ds-mut:#5B5242;--ds-green:#1F6B45;--ds-amber:#F2C14E;--ds-amber-ink:#8A5A00;--ds-radius:22px}
 .appDrawer:not(.on){box-shadow:none}
 @media (min-width:900px){
  html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .app{max-width:1120px}
@@ -3373,7 +3375,7 @@ html:root .ozOd .ozProg li{font-size:12px}
 }
 </style>
 <style id="dsHomeT3Css">/* Tasarım Paketi T3 (ana sayfa, yalnız krem tema): ortak marka dili. Yazı ölçeği 12/13/14/16/22/24; tek yükseltilmiş gölge; çizgi simge rengi. Koyu tema değişmez. */
- html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .v2RecentBox .ic{color:#1F6B45}
+ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .v2RecentBox .ic{color:var(--ds-green)}
  html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmSl .s{font-size:13px}
  html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmSl .oz2{font-size:12px}
  html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmH,html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .v2SecH h3,html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .v2Recent h3{font-size:16px}
