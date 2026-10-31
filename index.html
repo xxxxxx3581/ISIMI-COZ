@@ -3384,6 +3384,15 @@ html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx){--ds-bg:#F6F0E3
  /* T4: "Yakında" rozeti sakin: parlak sarı yerine krem yüzey + koyu yazı (kutu fotoğrafıyla yarışmaz) */
  html:root:not([data-hm-theme="dark"]) body:has(#app .v2Home.hmx) .hmSoon{background:rgba(255,253,248,.94);color:#4A4132;font-weight:700;box-shadow:none}
 </style>
+<style id="dsHomeT5Css">
+.hmUrgent{display:flex;align-items:center;gap:12px;width:100%;min-height:56px;margin-top:12px;padding:8px 14px;border:0;border-radius:18px;background:#F2C14E;color:#2B1F00;font:inherit;text-align:left;cursor:pointer}
+.hmUrgent .ic{flex:none;display:grid;place-items:center}
+.hmUrgent .t{display:flex;flex-direction:column;gap:1px}
+.hmUrgent b{font-size:16px;font-weight:800}
+.hmUrgent small{font-size:12.5px;font-weight:600}
+.hmUrgent:focus-visible{outline:3px solid #1F2A22;outline-offset:2px}
+@media (min-width:900px){.hmUrgent{max-width:520px}}
+</style>
 </head>
 <body>
 <div id="connectionStatus" class="connection offline" title="Supabase">SB…</div>
@@ -4442,6 +4451,7 @@ function hmHomeHtml(){
     '<form class="hmSearch" onsubmit="return v2HomeSearch(event)" role="search">'+I('<circle cx="11" cy="11" r="6.5"/><path d="M16 16l5 5"/>',20)+
       '<input id="homeAskInput" type="search" enterkeyhint="search" autocomplete="off" aria-label="Yemek, ilan, usta ara" placeholder="Yemek, ilan, usta ara">'+
       '<button type="button" class="mic" onclick="homeMicAsk()" aria-label="Sesle söyle">'+I('<path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3"/>',20)+'</button></form>'+
+    (hmLockOn('services')?'':'<button type="button" class="hmUrgent" onclick="hmGo(\'services\')"><span class="ic">'+I('<path d="M13 3L5 13h6l-1 8 8-10h-6z"/>',24)+'</span><span class="t"><b>Acil usta lazım</b><small>Talebini aç, ustalar yanıtlasın</small></span></button>')+
     '<div class="hmH">Kısayollar</div>'+
     '<div class="hmSc" role="group" aria-label="Kısayollar">'+
       sc('orders','Siparişler',I('<path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6"/>'))+
